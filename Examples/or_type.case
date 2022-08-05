@@ -1,15 +1,15 @@
 type (A)Or(B)
 values
-  LeftToOr A
-  RightToOr B
+  Avalue A
+  Bvalue B
 
 (Int)Or(String)
-a = LeftToOr 1
+a = Avalue 1
 
 (Int)Or(String)
-b = RightToOr "One"
+b = Bvalue "One"
 
 (Int)Or(String) -> Bool
-f = case
-  LeftToOr _ -> True
-  RightToOr _ -> False
+is_avalue = case
+  Avalue _ -> True
+  Bvalue _ -> False
