@@ -1,0 +1,30 @@
+tuple_type Pair(A, B) 
+value
+  Pair
+    PairFirst : A
+    PairSecond : B
+
+tuple_type Triple(A, B, C)
+value
+  Triple
+    TripleFirst : A
+    TripleSecond : B
+    TripleThird : C
+
+type_predicate (F)IsFirstOf(T)
+functions
+  get_first : T -> F
+
+type_proposition (A)IsFirstOf(Pair(A, B))
+proof
+  get_first = getPairFirst
+
+type_proposition (A)IsFirstOf(Triple(A, B, C))
+proof
+  get_first = getTripleFirst
+
+Int
+a = get_first (Pair 1 "one")
+
+Int
+b = get_first (Triple 1 "one" '1')

@@ -1,0 +1,15 @@
+type (A)Or(B)
+values
+  LeftToOr A
+  RightToOr B
+
+(Int)Or(String)
+a = LeftToOr 1
+
+(Int)Or(String)
+b = RightToOr "One"
+
+(Int)Or(String) -> Bool
+f = case
+  LeftToOr _ -> True
+  RightToOr _ -> False

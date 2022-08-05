@@ -1,0 +1,14 @@
+tuple_type PairOf(A, B)
+value
+  PairValues
+    First : A
+    Second : B
+
+PairOf(Int, String)
+a = PairValues 1 "one"
+
+Int
+i = getFirstOf a
+
+PairOf(Int, String)
+b = changeFirstOf a 2

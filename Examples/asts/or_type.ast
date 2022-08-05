@@ -1,0 +1,101 @@
+<program>
+    |------------------------------------------------|
+( <type_definition> )*                          ( <value> )+
+    |                                                ---------------------|-------|-------|
+<type_definition>                                                      <value> <value> <value>
+    |                                                                     |       |       |
+<multiple_constructors_type_definition>                                   -----   |       |
+    |                                                                         |   |       |
+"type " <type_name> "\nvalues\n"         <constructor>    ( <constructor> )+  |   |       |
+            |                                  |                         |    |   |       |
+            |                                  ----------------------    |    |   |       |
+            |                                                       |    |    |   |       |
+( <capital_first_id> | "," | ( "(" <type_variable> ")" ) )+         |    |    |   |       |
+            |                                                       |    |    |   |       |
+"(" <type_variable> ")" <capital_first_id> "(" <type_variable> ")"  |    |    |   |       |
+            |                    |                     |            |    |    |   |       |
+            A                    Or                    B            |    |    |   |       |
+                                                                    |    |    |   |       |
+        |------------------------------------------------------------    |    |   |       |
+"\t" <constructor_name> ( " " <input_type> )* "\n"                       |    |   |       |
+        |                          |                      |---------------    |   |       |
+      AToOr               " " <input_type>           <constructor>            |   |       |
+                                   |                      |                   |   |       |
+                                   A                      |                   |   |       |
+                                                          |                   |   |       |
+        |--------------------------------------------------                   |   |       |
+"\t" <constructor_name> ( " " <input_type> )* "\n"                            |   |       |
+        |                          |                                          |   |       |
+      BToOr               " " <input_type>                                    |   |       |
+                                   |                                          |   |       |
+                                   B                                          |   |       |
+                                                                              |   |       |
+        |----------------------------------------------------------------------   |       |
+<type_expression> "\n" <value_name> "=" <value_expression> "\n\n"                 |       |
+        |                 |                   |                                   |       |
+     <type>              <id>           <application>                             |       |
+        |                 |                 |---------------|                     |       |
+   <type_name>            a        <value_expression> <value_expression>          |       |
+        |                                   |                |                    |       |
+        |                          <constructor_name>     <constant>              |       |
+        |                                   |                |                    |       |
+        |                                 AToOr              1                    |       |
+        |                                                                         |       |
+( <capital_first_id> | "," | ( "(" <type_variable> ")" ) )+                       |       |
+        |                                                                         |       |
+<capital_first_id> <capital_first_id> <capital_first_id>                          |       |
+        |                   |                  |                                  |       |
+       Int                 Or                String                               |       |
+                                                                                  |       |
+        |--------------------------------------------------------------------------       |
+<type_expression> "\n" <value_name> "=" <value_expression> "\n\n"                         |
+        |                 |                   |                                           |
+     <type>              <id>           <application>                                     |
+        |                 |                 |---------------|                             |
+   <type_name>            b        <value_expression> <value_expression>                  |
+        |                                   |                |                            |
+        |                          <constructor_name>     <constant>                      |
+        |                                   |                |                            |
+        |                                 BToOr            "one"                          |
+        |                                                                                 |
+( <capital_first_id> | "," | ( "(" <type_variable> ")" ) )+                               |
+        |                                                                                 |
+<capital_first_id> <capital_first_id> <capital_first_id>                                  |
+        |                   |                  |                                          | 
+       Int                 Or                String                                       |
+                                                                                          |
+        |----------------------------------------------------------------------------------
+<type_expression> "\n"           <value_name> "=" <value_expression> "\n\n"                  
+        |                              |                 |           
+     <type>                           <id>         <case_matching>                      
+        |                              |                 |                      
+<type_name> ( "->" <type_name> )*      f          "case\n" ( <match> )+                      
+        |                                                        |-------| 
+<type_name> "->" <type_name>                                  <match> <match>           
+        |   ----------|                                         |        |------------|
+        |   |                                                   |                     |
+        |   |   "\t" <constructor_name> (" " <value_name> )* "->" <value_expression>  |
+        |   |                 |                   |                       |           |
+        |   |               AToOr        " " <value_name>         <constructor_name>  |       
+        |   |                                     |                       |           |
+        |   |                                    "_"                    True          |
+        |   |                                                                         |
+        |   |                 |-------------------|-----------------------|------------
+        |   |   "\t" <constructor_name> (" " <value_name> )* "->" <value_expression>
+        |   |                 |                   |                       | 
+        |   |               BToOr        " " <value_name>         <constructor_name>       
+        |   |                                     |                       |
+        |   |                                    "_"                    False
+        |   ----------|                                       
+        |             |                                       
+        |    ( <capital_first_id> | "," | ( "(" <type_variable> ")" ) )+  
+        |             |                                       
+        |     <capital_first_id>  
+        |             |                                       
+        |            Bool                                
+        |                                                                          
+( <capital_first_id> | "," | ( "(" <type_variable> ")" ) )+                               
+        |                                                                                 
+<capital_first_id> <capital_first_id> <capital_first_id>                           
+        |                   |                  |                                   
+       Int                 Or                String                                
