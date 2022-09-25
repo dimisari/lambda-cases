@@ -1,0 +1,31 @@
+left-to-right function composition (not built-in, just love left-to-right function
+composition and ".>" looks like a good operator name for it)
+
+  given
+    function_name0 : Type0 -> Type1 
+    function_name1 : Type1 -> Type2 
+
+  Type0 -> Type2
+  function_name2 = function_name0 .> function_name1 
+
+Tuple Application
+
+  f : A -> B -> C
+  pair : A,B
+  f pair : C
+
+Syntactic Sugar Types
+  7 x Int 
+  or 
+  7 * Int
+  or 
+  7 , Int
+  for arrays
+
+Questions 
+
+  Haskell Core?
+
+Observations
+
+  Maybe ~ List with length <= 1

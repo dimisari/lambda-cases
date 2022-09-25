@@ -1,0 +1,157 @@
+type definition
+
+  type TypeName A B
+  values 
+    ValueCreator0
+      value_name0:Type0 value_name1:Type1 value_name2:A value_name3:Type2
+      value_name4:Type3  
+    ValueCreator1 value_name5:B value_name6:Type4
+
+  Comments:
+
+  > 4 value_name:Type pairs in ValueCreator ->
+    all in different line than ValueCreator and indented more
+    4 types/line
+    <= 4 types in last line
+  <= 4 value_name:Type pairs in ValueCreator -> all in same line as ValueCreator 
+
+  variations of "type" line:
+
+  original
+
+    type TypeName A B
+
+  variation 1
+  here MoreTypeName must have at least one character
+
+    type TypeName(A)MoreTypeName(B)EvenMoreTypeName
+
+  variation 2
+  here TypeName or MoreTypeName must have at least one character
+
+    type TypeName(A, B)MoreTypeName
+
+  combination of variations also possible
+
+    for example for a type with 4 input types:
+    type TypeName(A, B)MoreTypeName(C)EvenMoreTypeName D
+
+tuple type definition
+
+  only differences: "type" -> "tuple_type", "values" -> "value"
+
+  tuple_type TypeName A B
+  value
+    ValueCreator0
+      value_name0:Type0 value_name1:Type1 value_name2:A value_name3:Type2
+      value_name4:Type3  
+
+value definition 
+
+  TypeName
+  value_name = value expression of type Typename
+
+function definition
+
+  input value_names can be "_" if they are not used is the result expression
+
+  1st way
+
+    Type0 -> Type1 -> Type2
+    function_name = value_name0 -> value_name1 -> result expression of type Type2
+
+  2nd way
+  here fname or more_fname must have at least one character
+
+    Type0 -> Type1 -> Type2
+    fname(vname0, vname1)more_fname = result expression of type Type2
+
+    the following expressions are possible and they have the corresponding types
+
+    fname(some_type0_value,)more_fname : Type1 -> Type2
+    fname(,some_type1_value)more_fname : Type0 -> Type2
+    fname(,)more_fname : Type0 -> Type1 -> Type2
+
+  3rd way
+  here more_fname must have at least one character
+
+    Type0 -> Type1 -> Type2
+    fname(vname0)more_fname(vname1)even_more_fname = result expression of type Type2
+
+    the following expressions are possible and they have the corresponding types
+
+    fname(some_type0_value)more_fname()even_more_fname : Type1 -> Type2
+    fname()more_fname(some_type1_value)even_more_fname : Type0 -> Type2
+    fname()more_fname()even_more_fname : Type0 -> Type1 -> Type2
+
+  4th way
+  here only the types that come with a value_name are creating lambda abstractions
+
+    value_name:Type0 -> Type1 -> Type2
+    function_name = result expression of type Type1 -> Type2
+
+    or
+
+    Type0 -> value_name:Type1 -> Type2
+    function_name = result expression of type Type0 -> Type2
+
+  for longer result expressions newline and indent
+
+    for example in the 1st way:
+
+    Type0 -> Type1  
+    function_name = value_name_of_type_type0 ->
+      longer result expression of type Type1
+
+function definition with case syntax
+
+  Here the value_names of each ValueCreator given in the type definition can be used in the
+  corresponding result expression. Therefore, we only pattern match on the ValueCreator.
+
+  Type0 -> Type1  
+  function_name = case
+    Type0ValueCreator0 -> result expression of type Type1 
+    Type0ValueCreator1 -> result expression of type Type1
+    value_name_of_type_type0 -> default result expression of type Type1
+
+  case is a value expression, there for the syntax below is also possible
+
+  Type0 -> Type1 -> Type2
+  function_name = value_name_of_type_type0 -> case
+    Type1ValueCreator0 -> result expression of type Type2
+    Type1ValueCreator1 -> result expression of type Type2
+    value_name_of_type_type1 -> default result expression of type Type2
+
+  or using the other lambda abstration
+
+  value_name:Type0 -> Type1 -> Type2
+  function_name = case
+    Type1ValueCreator0 -> result expression of type Type2
+    Type1ValueCreator1 -> result expression of type Type2
+    value_name_of_type_type1 -> default result expression of type Type2
+
+type_predicate definition
+
+  type_predicate Predicate_About(A, B)_And(C)
+  functions
+    fun1 : A -> B -> C 
+    fun2 : (C -> A) -> B -> A
+
+type_proposition definition
+
+  type_proposition Predicate_About(Int, Real)_And(String)
+  proof
+    fun1 = specific_fun_1
+    fun2 = specific_fun_2
+
+  here specific_fun_1 and specific_fun_2 must be defined and have the types below:
+    specific_fun_1 : Int -> Real -> String
+    specific_fun_2 : (String -> Int) -> Real -> Int
+
+import syntax
+
+  import 
+    f1, f2, f3
+      from l1
+    f4, f5, f6
+      from l2

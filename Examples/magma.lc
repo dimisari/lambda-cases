@@ -8,11 +8,22 @@ functions
 
 type_proposition (Int)IsAnAdditionMagma
 proof 
-  + = IntAddition
+  + = int_addition
+
+type_proposition (Float)IsAnAdditionMagma
+proof 
+  + = float_addition
 
 type_proposition (Int)IsAProductMagma
 proof 
-  * = IntProduct
+  * = int_product
+
+type_proposition (float)IsAProductMagma
+proof 
+  * = float_product
 
 Int
 i = 1+2*3
+
+Float
+f = 3.14+2.71*1.61
