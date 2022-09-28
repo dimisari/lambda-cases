@@ -2,9 +2,9 @@ tuple type examples
 
   pair
 
-    tuple_type PairOf(A, B) 
+    tuple_type PairOf << A, B
     value
-      PairValues pair_first:A pair_second:B
+      PairValues << pair_first:A, pair_second:B
 
     Automatically generate:
 
@@ -15,9 +15,9 @@ tuple type examples
 
   triple
 
-    tuple_type TripleOf(A, B, C)
+    tuple_type TripleOf << A, B, C
     value
-      TripleValues triple_first:A triple_second:B triple_third:C
+      TripleValues << triple_first:A, triple_second:B, triple_third:C
 
     Automatically generate:
 
@@ -61,7 +61,7 @@ tuple type examples
       where we have:
       get_second : (A)HasSecond(B) => A -> B
 
-  Anonymous tuples built in:
+  Anonymous tuples syntactic sugar:
 
     Type0, Type1
     means
@@ -90,37 +90,37 @@ PossiblySome
 
   type PossiblySome A
   values
-    Value value:A
+    Value << value:A
     Nothing
 
   Automatically generate:
 
-    isValue : PossiblySome A -> Boolean
-    isNothing : PossiblySome A -> Boolean
+    isValue : PossiblySome << A -> Boolean
+    isNothing : PossiblySome << A -> Boolean
 
-    get_value : PossiblySome A -> PossiblySome A
+    get_value : PossiblySome << A -> PossiblySome << A
     (happens to be = identity so it's pretty useless, but the idea is going to be better 
     illustrated in ListOf(A)s)
 
-    change_value : PossiblySome A -> A -> PossiblySome (PossiblySome A)
-    (isValue -> Value (Value value) else -> Nothing,
+    change_value : PossiblySome << A -> A -> PossiblySome << (PossiblySome << A)
+    (isValue -> value >> Value >> Value else -> Nothing,
     again the idea is going to be better illustrated in ListOf(A)s)
 
 Lists
 
   type ListOf(A)s
   values
-    HeadAndTail head:A tail:ListOf(A)s
+    HeadAndTail << head:A, tail:ListOf(A)s
     EmptyList
 
   Automatically generate:
 
-    get_head : ListOf(A)s -> PossiblySome A
-    change_head : ListOf(A)s -> A -> PossiblySome ListOf(A)s
-    get_tail : ListOf(A)s -> PossiblySome ListOf(A)s
-    change_tail : ListOf(A)s -> ListOf(A)s -> PossiblySome ListOf(A)s
-
     PossiblySome because we have other value constructors
+
+    get_head : ListOf(A)s -> PossiblySome << A
+    change_head : ListOf(A)s -> A -> PossiblySome << ListOf(A)s
+    get_tail : ListOf(A)s -> PossiblySome << ListOf(A)s
+    change_tail : ListOf(A)s -> ListOf(A)s -> PossiblySome << ListOf(A)s
 
     isHeadAndTail : ListOf(A)s -> Boolean
     isEmptyList : ListOf(A)s -> Boolean

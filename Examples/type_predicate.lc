@@ -1,10 +1,10 @@
-tuple_type PairOf(A, B) 
+tuple_type PairOf << A, B
 value
-  PairValues(pair_first:A, pair_second:B)
+  PairValues << pair_first:A, pair_second:B
 
-tuple_type TripleOf(A, B, C)
+tuple_type TripleOf << A, B, C
 value
-  TripleValues(triple_first:A, triple_second:B, triple_third:C)
+  TripleValues << triple_first:A, triple_second:B, triple_third:C
 
 type_predicate (A)IsFirstOf(B)
 functions
@@ -19,12 +19,12 @@ proof
   get_first = get_triple_first
 
 Int
-a = get_first PairValues(1, "one")
+a = 1, "one" >> PairValues >> get_first
 
 Int
-b = get_first TripleValues(1, "one", '1')
+b = 1, "one", '1' >> TripleValues >> get_first
 
 IO Empty
-(a == b) =: case
+a == b >> case
   True -> print "Turns out they are the same!"
   False -> print "Nope!"

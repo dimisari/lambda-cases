@@ -1,11 +1,11 @@
 type definition
 
-  type TypeName A B
+  type TypeName << A, B
   values 
-    ValueCreator0
-      value_name0:Type0 value_name1:Type1 value_name2:A value_name3:Type2
+    ValueCreator0 <<
+      value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
       value_name4:Type3  
-    ValueCreator1 value_name5:B value_name6:Type4
+    ValueCreator1 << value_name5:B, value_name6:Type4
 
   Comments:
 
@@ -19,22 +19,27 @@ type definition
 
   original
 
-    type TypeName A B
+    type TypeName << A, B
+
+  application variations with ">>", "<<"
+
+    type A >> TypeName << B
+    type A,B >> TypeName
 
   variation 1
-  here MoreTypeName must have at least one character
+  here TypeName, MoreTypeName, EvenMoreTypeName must all have at least one character
 
     type TypeName(A)MoreTypeName(B)EvenMoreTypeName
 
   variation 2
-  here TypeName or MoreTypeName must have at least one character
+  here TypeName, MoreTypeName must both have at least one character
 
     type TypeName(A, B)MoreTypeName
 
   combination of variations also possible
 
-    for example for a type with 4 input types:
-    type TypeName(A, B)MoreTypeName(C)EvenMoreTypeName D
+    for example for a type with 6 input types:
+    type A >> TypeName(B, C)MoreTypeName(D)EvenMoreTypeName << E, F
 
 tuple type definition
 
@@ -42,8 +47,8 @@ tuple type definition
 
   tuple_type TypeName A B
   value
-    ValueCreator0
-      value_name0:Type0 value_name1:Type1 value_name2:A value_name3:Type2
+    ValueCreator0 <<
+      value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
       value_name4:Type3  
 
 value definition 
@@ -61,7 +66,7 @@ function definition
     function_name = value_name0 -> value_name1 -> result expression of type Type2
 
   2nd way
-  here fname or more_fname must have at least one character
+  here fname, more_fname must both have at least one character
 
     Type0 -> Type1 -> Type2
     fname(vname0, vname1)more_fname = result expression of type Type2
@@ -73,7 +78,7 @@ function definition
     fname(,)more_fname : Type0 -> Type1 -> Type2
 
   3rd way
-  here more_fname must have at least one character
+  here fname, more_fname, even_more_fname must all have at least one character
 
     Type0 -> Type1 -> Type2
     fname(vname0)more_fname(vname1)even_more_fname = result expression of type Type2
@@ -95,7 +100,7 @@ function definition
     Type0 -> value_name:Type1 -> Type2
     function_name = result expression of type Type0 -> Type2
 
-  for longer result expressions newline and indent
+  for longer result expressions newline and indent after "value_name ->"
 
     for example in the 1st way:
 
@@ -132,14 +137,14 @@ function definition with case syntax
 
 type_predicate definition
 
-  type_predicate Predicate_About(A, B)_And(C)
+  type_predicate Predicate_About(A, B)_And << C
   functions
     fun1 : A -> B -> C 
     fun2 : (C -> A) -> B -> A
 
 type_proposition definition
 
-  type_proposition Predicate_About(Int, Real)_And(String)
+  type_proposition Predicate_About(Int, Real)_And << String
   proof
     fun1 = specific_fun_1
     fun2 = specific_fun_2

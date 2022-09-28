@@ -1,0 +1,6 @@
+a = 5
+b = -1
+while a positive {
+  print a
+  a += b
+}

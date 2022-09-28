@@ -1,18 +1,18 @@
-type (A)Or(B)
+type A >> Or << B
 values
-  LeftTypeValue left_type_value:A
-  RightTypeValue right_type_value:B
+  LeftTypeValue << left_type_value:A
+  RightTypeValue << right_type_value:B
 
-(Int)Or(String)
-a = LeftTypeValue 1
+Int >> Or << String
+a = LeftTypeValue << 1
 
-(Int)Or(String)
-b = RightTypeValue "One"
+Int >> Or << String
+b = RightTypeValue << "One"
 
-(Int)Or(String) -> Bool
-is_left_type_value = case
+Int >> Or << String -> Bool
+isLeftTypeValue = case
   LeftTypeValue -> True
   RightTypeValue -> False
 
-PossiblySome Int
-c = get_left_type_value a
+PossiblySome << Int
+c = get_left_type_value << a

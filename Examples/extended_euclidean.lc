@@ -1,13 +1,12 @@
 Int, Int, Int, Int -> x:Int -> Int -> Int, Int, Int
-extended_gcd_help = k_prev, k_prevprev, l_prev, l_prevprev -> case
-  0 -> x, k_prevprev, l_prevprev 
+extended_gcd_help = k_prev, k_prev_prev, l_prev, l_prev_prev -> case
+  0 -> x, kpp, lpp 
   y -> 
-    (z -> w -> (-div x y)*z + w) ==> compute_next ->
-    compute_next k_prev k_prevprev ==> next_k_prev ->
-    compute_next l_prev l_prevprev ==> next_l_prev ->
-    extended_gcd_help (next_k_prev, k_prev, next_l_prev, l_prev) y (mod x y)
+    (prev -> prev_prev -> pp - (x >> div << y) * p) >> compute_next ->
+    compute_next << kp << kpp >> next_k_prev ->
+    compute_next << lp << lpp >> next_l_prev ->
+    x >> mod << y >> x_mod_y ->
+    extended_gcd_help << nkp, kp, nlp, lp << y << xmy
 
 x:Int -> y:Int -> Int, Int, Int
-extended_gcd = extended_gcd_help (0, 1, 1, 0) x y 
-
--- ==> : a -> (a -> b) -> b is  left-to-right function applicaton
+extended_gcd = extended_gcd_help << 0, 1, 1, 0 << x << y 

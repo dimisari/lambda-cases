@@ -18,12 +18,12 @@ type_proposition (Int)IsAProductMagma
 proof 
   * = int_product
 
-type_proposition (float)IsAProductMagma
+type_proposition (Float)IsAProductMagma
 proof 
   * = float_product
 
 Int
-i = 1+2*3
+i = 1 + 2 * 3
 
 Float
-f = 3.14+2.71*1.61
+f = 3.14 + 2.71 * 1.61
