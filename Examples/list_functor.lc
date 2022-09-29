@@ -1,6 +1,6 @@
 type ListOf(A)s
 values
-  HeadAndTail << head:A, tail:ListOf(A)s
+  HeadAndTail <~ head:A, tail:ListOf(A)s
   EmptyList
 
 type_predicate (T)IsAFunctor
@@ -9,12 +9,12 @@ functions
 
 (A -> B) -> ListOf(A)s -> ListOf(B)s
 apply(f)to_each_in = case 
-  HeadAndTail -> HeadAndTail << (f << head), (apply(f)to_each_in << tail) 
+  HeadAndTail -> HeadAndTail <~ (f <~ head), (apply(f)to_each_in <~ tail) 
   EmptyList -> EmptyList
 
-type_proposition (ListOf()s)IsAFunctor
+type_proposition ListOf()s ~> IsAFunctor
 proof
   apply_internally = apply()to_each_in
 
 IO Empty
-apply_internally << is_odd << [1,2,3,4] >> print
+apply_internally <~ is_odd <~ [1,2,3,4] ~> print

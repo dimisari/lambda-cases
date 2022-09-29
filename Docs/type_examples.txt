@@ -1,28 +1,20 @@
 OrNothing
 
-  type A >> OrNothing
+  type A ~> OrNothing
   values
-    Value << value:A
+    Value <~ value:A
     Nothing
 
   Automatically generate:
 
-    isValue : A >> OrNothing -> Boolean
-    isNothing : A >> OrNothing -> Boolean
-
-    get_value : A >> OrNothing -> A >> OrNothing
-    (happens to be the identity function so it's pretty useless, but the idea is going to be
-    better illustrated in ListOf(A)s)
-
-    change_value : A >> OrNothing -> A -> A >> OrNothing >> OrNothing
-    (isValue -> value >> Value >> Value else -> Nothing,
-    again the idea is going to be better illustrated in ListOf(A)s)
+    isValue : A ~> OrNothing -> Boolean
+    isNothing : A ~> OrNothing -> Boolean
 
 Lists
 
   type ListOf(A)s
   values
-    HeadAndTail << head:A, tail:ListOf(A)s
+    HeadAndTail <~ head:A, tail:ListOf(A)s
     EmptyList
 
   Automatically generate:
@@ -32,8 +24,8 @@ Lists
 
     Below we have OrNothing because other ValueConstructors are possible
 
-    get_head : ListOf(A)s -> A >> OrNothing
-    change_head : ListOf(A)s -> A -> ListOf(A)s >> OrNothing
+    get_head : ListOf(A)s -> A ~> OrNothing
+    change_head : ListOf(A)s -> A -> ListOf(A)s ~> OrNothing
 
-    get_tail : ListOf(A)s -> ListOf(A)s >> OrNothing
-    change_tail : ListOf(A)s -> ListOf(A)s -> ListOf(A)s >> OrNothing
+    get_tail : ListOf(A)s -> ListOf(A)s ~> OrNothing
+    change_tail : ListOf(A)s -> ListOf(A)s -> ListOf(A)s ~> OrNothing

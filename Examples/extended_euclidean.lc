@@ -1,12 +1,26 @@
-Int, Int, Int, Int -> x:Int -> Int -> Int, Int, Int
-extended_gcd_help = k_prev, k_prev_prev, l_prev, l_prev_prev -> case
-  0 -> x, kpp, lpp 
-  y -> 
-    (prev -> prev_prev -> pp - (x >> div << y) * p) >> compute_next ->
-    compute_next << kp << kpp >> next_k_prev ->
-    compute_next << lp << lpp >> next_l_prev ->
-    x >> mod << y >> x_mod_y ->
-    extended_gcd_help << nkp, kp, nlp, lp << y << xmy
+tuple_type GcdAndCoefficients 
+value
+  GAC <~ gcd:Int, a:Int, b:Int
 
-x:Int -> y:Int -> Int, Int, Int
-extended_gcd = extended_gcd_help << 0, 1, 1, 0 << x << y 
+tuple_type PreviousCoefficients 
+value
+  PC <~ prev:Int, prev_prev:Int
+
+init_as, init_bs: PreviousCoefficients, PreviousCoefficients
+  = (PC <~ 0, 1), (PC <~ 1, 0)
+
+Int -> Int -> GcdAndCoefficients
+extended_gcd = extended_gcd_help <~ init_as <~ init_bs 
+
+PreviousCoefficients -> PreviousCoefficients -> Int -> Int -> GcdAndCoefficients
+extended_gcd_help = as -> bs -> x -> case
+  0 -> GAC <~ x, (get_prev_prev <~ as), (get_prev_prev <~ bs)
+  y -> 
+    compute_new: PreviousCoefficients -> PreviousCoefficients
+      = old ->
+      prev, prev_prev, current: Int, Int, Int
+        = (get_prev <~ old), (get_prev_prev <~ old), (prev_prev - (x ~> div <~ y) * prev)
+      output
+        = PC <~ current, prev
+    output
+      = extended_gcd_help <~ (compute_new as) <~ (compute_new <~ bs) <~ y <~ (x ~> mod <~ y)

@@ -1,60 +1,60 @@
 type definition
 
-  type TypeName << A, B
+  type TypeName <~ A, B
   values 
-    ValueCreator0 <<
+    ValueCreator0 <~
       value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
       value_name4:Type3  
-    ValueCreator1 << value_name5:B, value_name6:Type4
+    ValueCreator1 <~ value_name5:B, value_name6:Type4
 
   Comments:
 
-  > 4 value_name:Type pairs in ValueCreator ->
-    all in different line than ValueCreator and indented more
-    4 types/line
-    <= 4 types in last line
-  <= 4 value_name:Type pairs in ValueCreator -> all in same line as ValueCreator 
+    > 4 value_name:Type pairs in ValueCreator ->
+      all in different line than ValueCreator and indented more
+      4 types/line
+      <= 4 types in last line
+    <= 4 value_name:Type pairs in ValueCreator -> all in same line as ValueCreator 
 
   variations of "type" line:
 
   original
 
-    type TypeName << A, B
+    type TypeName <~ A, B
 
-  application variations (">>", "<<")
+  ~>/<~ variations
 
-    type A >> TypeName << B
-    type A,B >> TypeName
+    type A ~> TypeName <~ B
+    type A,B ~> TypeName
 
-  variation 1
-  here TypeName, MoreTypeName, EvenMoreTypeName must all have at least one character
+  seperate parentheses in the middle variation
+    here TypeName, MoreTypeName, EvenMoreTypeName must all have at least one character
 
     type TypeName(A)MoreTypeName(B)EvenMoreTypeName
 
-  variation 2
-  here TypeName, MoreTypeName must both have at least one character
+  one parentheses in the middle variation
+    here TypeName, MoreTypeName must both have at least one character
 
     type TypeName(A, B)MoreTypeName
 
   combination of variations also possible
 
     for example for a type with 6 input types:
-    type A >> TypeName(B, C)MoreTypeName(D)EvenMoreTypeName << E, F
+    type A ~> TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <~ E, F
 
 tuple type definition
 
   only differences: "type" -> "tuple_type", "values" -> "value"
 
-  tuple_type TypeName A B
+  tuple_type TypeName <~ A, B
   value
-    ValueCreator0 <<
+    ValueCreator <~
       value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
       value_name4:Type3  
 
 value definition 
 
-  TypeName
-  value_name = value expression of type Typename
+  value_name:TypeName
+    = value expression of type Typename
 
 function definition
 
@@ -88,17 +88,6 @@ function definition
     fname(some_type0_value)more_fname()even_more_fname : Type1 -> Type2
     fname()more_fname(some_type1_value)even_more_fname : Type0 -> Type2
     fname()more_fname()even_more_fname : Type0 -> Type1 -> Type2
-
-  4th way
-  here only the types that come with a value_name are creating lambda abstractions
-
-    value_name:Type0 -> Type1 -> Type2
-    function_name = result expression of type Type1 -> Type2
-
-    or
-
-    Type0 -> value_name:Type1 -> Type2
-    function_name = result expression of type Type0 -> Type2
 
   for longer result expressions newline and indent after "value_name ->"
 
@@ -139,14 +128,14 @@ type_predicate definition
 
   (Using '_' between words for distinction from type syntax. Is it necessary??)
 
-  type_predicate Predicate_About(A, B)_And << C
+  type_predicate Predicate_About(A, B)_And <~ C
   functions
     fun1 : A -> B -> C 
     fun2 : (C -> A) -> B -> A
 
 type_proposition definition
 
-  type_proposition Predicate_About(Int, Real)_And << String
+  type_proposition Predicate_About(Int, Real)_And <~ String
   proof
     fun1 = specific_fun_1
     fun2 = specific_fun_2

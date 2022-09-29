@@ -6,6 +6,14 @@ types in initial module
   TripleOf << A, B, C
   QuadrupleOf << A, B, C, D
 
+let syntax?
+  
+  value_name0 = value expression 0
+  value_name1 = value expression 1
+  value_name2 = value expression 2
+  in
+  result expression
+
 left-to-right function composition (not built-in, just love left-to-right function
 composition and ".>" looks like a good operator name for it)
 
