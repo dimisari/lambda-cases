@@ -1,3 +1,11 @@
+types in initial module
+
+  Int, Real, Char, String
+
+  PairOf << A, B
+  TripleOf << A, B, C
+  QuadrupleOf << A, B, C, D
+
 left-to-right function composition (not built-in, just love left-to-right function
 composition and ".>" looks like a good operator name for it)
 

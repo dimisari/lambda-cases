@@ -1,108 +1,20 @@
-tuple type examples
+OrNothing
 
-  pair
-
-    tuple_type PairOf << A, B
-    value
-      PairValues << pair_first:A, pair_second:B
-
-    Automatically generate:
-
-    get_pair_first : PairOf(A, B) -> A
-    change_pair_first : PairOf(A, B) -> A -> PairOf(A, B)
-    get_pair_second : PairOf(A, B) -> B
-    change_pair_second : PairOf(A, B) -> B -> PairOf(A, B)
-
-  triple
-
-    tuple_type TripleOf << A, B, C
-    value
-      TripleValues << triple_first:A, triple_second:B, triple_third:C
-
-    Automatically generate:
-
-      get_triple_first : TripleOf(A, B, C) -> A
-      change_triple_first : TripleOf(A, B, C) -> A -> TripleOf(A, B, C)
-      get_triple_second : TripleOf(A, B, C) -> B
-      change_triple_second : TripleOf(A, B, C) -> B -> TripleOf(A, B, C)
-      get_triple_third : TripleOf(A, B, C) -> C
-      change_triple_third : TripleOf(A, B, C) -> C -> TripleOf(A, B, C)
-
-    Here we can define the useful type_predicates below to create the polymorphic
-    get_first and get_second functions:
-
-      type_predicate (A)HasFirst(B)
-      functions
-        get_first : A -> B
-
-      type_proposition (PairOf(A, B))HasFirst(A)
-      proof
-        get_first = get_pair_first
-
-      type_proposition (TripleOf(A, B, C))HasFirst(A)
-      proof
-        get_first = get_triple_first
-
-      where we have:
-      get_first : (A)HasFirst(B) => A -> B
-
-      type_predicate (A)HasSecond(B)
-      functions
-        get_second : A -> B
-
-      type_proposition (PairOf(A, B))HasSecond(A)
-      proof
-        get_second = get_pair_second
-
-      type_proposition (TripleOf(A, B, C))HasSecond(A)
-      proof
-        get_second = get_triple_second
-
-      where we have:
-      get_second : (A)HasSecond(B) => A -> B
-
-  Anonymous tuples syntactic sugar:
-
-    Type0, Type1
-    means
-    PairOf(Type0, Type1)
-
-    Type0, Type1, Type2 
-    means
-    TripleOf(Type0, Type1, Type2)
-
-    Type0, Type1, Type2, Type3
-    means
-    QuadrupleOf(Type0, Type1, Type2, Type3)
-
-    with type_predicates like the HasFirst, HasSecond above (in pair, triple sections) we can
-    define the polymorphic functions
-
-    get_first, get_second, get_third
-
-    get_fourth is not polymorphic since we stop at Quadruples (bigger tuples should probably
-    be named differently according to the context)
-
-
-type examples
- 
-PossiblySome 
-
-  type PossiblySome A
+  type A >> OrNothing
   values
     Value << value:A
     Nothing
 
   Automatically generate:
 
-    isValue : PossiblySome << A -> Boolean
-    isNothing : PossiblySome << A -> Boolean
+    isValue : A >> OrNothing -> Boolean
+    isNothing : A >> OrNothing -> Boolean
 
-    get_value : PossiblySome << A -> PossiblySome << A
-    (happens to be = identity so it's pretty useless, but the idea is going to be better 
-    illustrated in ListOf(A)s)
+    get_value : A >> OrNothing -> A >> OrNothing
+    (happens to be the identity function so it's pretty useless, but the idea is going to be
+    better illustrated in ListOf(A)s)
 
-    change_value : PossiblySome << A -> A -> PossiblySome << (PossiblySome << A)
+    change_value : A >> OrNothing -> A -> A >> OrNothing >> OrNothing
     (isValue -> value >> Value >> Value else -> Nothing,
     again the idea is going to be better illustrated in ListOf(A)s)
 
@@ -115,12 +27,13 @@ Lists
 
   Automatically generate:
 
-    PossiblySome because we have other value constructors
-
-    get_head : ListOf(A)s -> PossiblySome << A
-    change_head : ListOf(A)s -> A -> PossiblySome << ListOf(A)s
-    get_tail : ListOf(A)s -> PossiblySome << ListOf(A)s
-    change_tail : ListOf(A)s -> ListOf(A)s -> PossiblySome << ListOf(A)s
-
     isHeadAndTail : ListOf(A)s -> Boolean
     isEmptyList : ListOf(A)s -> Boolean
+
+    Below we have OrNothing because other ValueConstructors are possible
+
+    get_head : ListOf(A)s -> A >> OrNothing
+    change_head : ListOf(A)s -> A -> ListOf(A)s >> OrNothing
+
+    get_tail : ListOf(A)s -> ListOf(A)s >> OrNothing
+    change_tail : ListOf(A)s -> ListOf(A)s -> ListOf(A)s >> OrNothing

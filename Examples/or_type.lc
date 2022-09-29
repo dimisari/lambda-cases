@@ -1,18 +1,18 @@
 type A >> Or << B
 values
-  LeftTypeValue << left_type_value:A
-  RightTypeValue << right_type_value:B
+  LeftType << left_type_value:A
+  RightType << right_type_value:B
 
 Int >> Or << String
-a = LeftTypeValue << 1
+a = LeftType << 1
 
 Int >> Or << String
-b = RightTypeValue << "One"
+b = RightType << "One"
 
 Int >> Or << String -> Bool
 isLeftTypeValue = case
-  LeftTypeValue -> True
-  RightTypeValue -> False
+  LeftType -> True
+  RightType -> False
 
 PossiblySome << Int
 c = get_left_type_value << a

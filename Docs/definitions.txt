@@ -21,7 +21,7 @@ type definition
 
     type TypeName << A, B
 
-  application variations with ">>", "<<"
+  application variations (">>", "<<")
 
     type A >> TypeName << B
     type A,B >> TypeName
@@ -136,6 +136,8 @@ function definition with case syntax
     value_name_of_type_type1 -> default result expression of type Type2
 
 type_predicate definition
+
+  (Using '_' between words for distinction from type syntax. Is it necessary??)
 
   type_predicate Predicate_About(A, B)_And << C
   functions
