@@ -1,3 +1,3 @@
 # lambda-case
 
-functional
+purely functional programming language
