@@ -1,12 +1,12 @@
-tuple_type PairOf << A, B
+tuple_type PairOf <-: A, B
 value
-  PairValues << pair_first:A, pair_second:B
+  PairValues <-: pair_first:A, pair_second:B
 
-PairOf << Int, String
-a = PairValues << 1, "one"
+PairOf <-: Int, String
+a = PairValues <-: 1, "one"
 
 Int
-i = get_pair_first << a
+i = get_pair_first<--a
 
-PairOf << Int, String
-b = change_pair_first << a << 2
+PairOf <-: Int, String
+b = change_pair_first <-: a, 2

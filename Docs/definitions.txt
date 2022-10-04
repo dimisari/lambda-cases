@@ -1,69 +1,61 @@
 type definition
 
-  type TypeName <~ A, B
+  type TypeName <-: A, B
   values 
-    ValueCreator0 <~
+    ValueCombiner0 <-:
       value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
       value_name4:Type3  
-    ValueCreator1 <~ value_name5:B, value_name6:Type4
-
-  Comments:
-
-    > 4 value_name:Type pairs in ValueCreator ->
-      all in different line than ValueCreator and indented more
-      4 types/line
-      <= 4 types in last line
-    <= 4 value_name:Type pairs in ValueCreator -> all in same line as ValueCreator 
+    ValueCombiner1 <-: value_name5:B, value_name6:Type4
 
   variations of "type" line:
 
   original
 
-    type TypeName <~ A, B
+    type TypeName <-: A, B
 
-  ~>/<~ variations
+  :->/->/<- variations
 
-    type A ~> TypeName <~ B
-    type A,B ~> TypeName
-
-  seperate parentheses in the middle variation
-    here TypeName, MoreTypeName, EvenMoreTypeName must all have at least one character
-
-    type TypeName(A)MoreTypeName(B)EvenMoreTypeName
+    type A,B :-> TypeName
+    type A-->TypeName<--B
 
   one parentheses in the middle variation
+
     here TypeName, MoreTypeName must both have at least one character
 
     type TypeName(A, B)MoreTypeName
 
+  seperate parentheses in the middle variation
+
+    here TypeName, MoreTypeName, EvenMoreTypeName must all have at least one character
+
+    type TypeName(A)MoreTypeName(B)EvenMoreTypeName
+
   combination of variations also possible
 
     for example for a type with 6 input types:
-    type A ~> TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <~ E, F
+    type A-->TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <-: E, F
 
 tuple type definition
 
   only differences: "type" -> "tuple_type", "values" -> "value"
 
-  tuple_type TypeName <~ A, B
+  tuple_type TypeName <-: A, B
   value
-    ValueCreator <~
+    ValueCombiner <-:
       value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
       value_name4:Type3  
 
 value definition 
 
-  value_name:TypeName
+  value_name: TypeName
     = value expression of type Typename
 
 function definition
 
-  input value_names can be "_" if they are not used is the result expression
-
   1st way
 
-    Type0 -> Type1 -> Type2
-    function_name = value_name0 -> value_name1 -> result expression of type Type2
+    function_name: Type0 -> Type1 -> Type2
+      = value_name0 -> value_name1 -> result expression of type Type2
 
   2nd way
   here fname, more_fname must both have at least one character
@@ -93,56 +85,49 @@ function definition
 
     for example in the 1st way:
 
-    Type0 -> Type1  
-    function_name = value_name_of_type_type0 ->
-      longer result expression of type Type1
+    function_name:Type0 -> Type1  
+      = value_name_of_type_type0 ->
+        longer result expression of type Type1
 
 function definition with case syntax
 
-  Here the value_names of each ValueCreator given in the type definition can be used in the
-  corresponding result expression. Therefore, we only pattern match on the ValueCreator.
+  Here the value_names of each ValueCombiner given in the type definition can be used in the
+  corresponding result expression. Therefore, we only pattern match on the ValueCombiner.
 
-  Type0 -> Type1  
-  function_name = case
-    Type0ValueCreator0 -> result expression of type Type1 
-    Type0ValueCreator1 -> result expression of type Type1
-    value_name_of_type_type0 -> default result expression of type Type1
+  function_name: Type0 -> Type1  
+    = case
+      Type0ValueCombiner0 -> result expression of type Type1 
+      Type0ValueCombiner1 -> result expression of type Type1
+      value_name_of_type_type0 -> default result expression of type Type1
 
   case is a value expression, there for the syntax below is also possible
 
-  Type0 -> Type1 -> Type2
-  function_name = value_name_of_type_type0 -> case
-    Type1ValueCreator0 -> result expression of type Type2
-    Type1ValueCreator1 -> result expression of type Type2
-    value_name_of_type_type1 -> default result expression of type Type2
-
-  or using the other lambda abstration
-
-  value_name:Type0 -> Type1 -> Type2
-  function_name = case
-    Type1ValueCreator0 -> result expression of type Type2
-    Type1ValueCreator1 -> result expression of type Type2
-    value_name_of_type_type1 -> default result expression of type Type2
+  function_name: Type0 -> Type1 -> Type2
+    = value_name_of_type_type0 ->
+      case
+        Type1ValueCombiner0 -> result expression of type Type2
+        Type1ValueCombiner1 -> result expression of type Type2
+        value_name_of_type_type1 -> default result expression of type Type2
 
 type_predicate definition
 
   (Using '_' between words for distinction from type syntax. Is it necessary??)
 
-  type_predicate Predicate_About(A, B)_And <~ C
+  type_predicate Predicate_About(A, B)_And<--C
   functions
-    fun1 : A -> B -> C 
-    fun2 : (C -> A) -> B -> A
+    fun1: A -> B -> C 
+    fun2: (C -> A) -> B -> A
 
 type_proposition definition
 
-  type_proposition Predicate_About(Int, Real)_And <~ String
+  type_proposition Predicate_About(Int, Real)_And<--String
   proof
     fun1 = specific_fun_1
     fun2 = specific_fun_2
 
   here specific_fun_1 and specific_fun_2 must be defined and have the types below:
-    specific_fun_1 : Int -> Real -> String
-    specific_fun_2 : (String -> Int) -> Real -> Int
+    specific_fun_1: Int -> Real -> String
+    specific_fun_2: (String -> Int) -> Real -> Int
 
 import syntax
 
@@ -151,3 +136,14 @@ import syntax
       from l1
     f4, f5, f6
       from l2
+
+Comments:
+
+  > 4 value_name:Type pairs in ValueCombiner ->
+    all in different line than ValueCombiner and indented more
+    4 types/line
+    <= 4 types in last line
+  <= 4 value_name:Type pairs in ValueCombiner -> all in same line as ValueCombiner 
+
+  input value_names can be "_" if they are not used is the result expression
+

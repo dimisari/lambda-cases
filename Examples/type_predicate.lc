@@ -1,30 +1,25 @@
-tuple_type PairOf << A, B
-value
-  PairValues << pair_first:A, pair_second:B
+tuple_type PairOf <-: A, B
+value PairValues <-: pair_first:A, pair_second:B
 
-tuple_type TripleOf << A, B, C
-value
-  TripleValues << triple_first:A, triple_second:B, triple_third:C
+tuple_type TripleOf <-: A, B, C
+value TripleValues <-: triple_first:A, triple_second:B, triple_third:C
 
-type_predicate (A)IsFirstOf(B)
-functions
-  get_first : B -> A
+type_predicate A-->IsFirstOf<--B
+functions get_first: B -> A
 
-type_proposition (A)IsFirstOf(Pair(A, B))
-proof
-  get_first = get_pair_first
+type_proposition A-->IsFirstOf<--(PairOf <-: A, B)
+proof get_first = get_pair_first
 
-type_proposition (A)IsFirstOf(Triple(A, B, C))
-proof
-  get_first = get_triple_first
+type_proposition A-->IsFirstOf<--(TripleOf <-: A, B, C)
+proof get_first = get_triple_first
 
-Int
-a = 1, "one" >> PairValues >> get_first
+a: Int
+  = 1, "one" >> PairValues >> get_first
 
-Int
-b = 1, "one", '1' >> TripleValues >> get_first
+b: Int
+  = 1, "one", '1' >> TripleValues >> get_first
 
-IO Empty
-a == b >> case
+main: IO Empty
+(a == b)-->case
   True -> print "Turns out they are the same!"
   False -> print "Nope!"

@@ -1,91 +1,89 @@
 pair
 
-  tuple_type PairOf <~ A, B
-  value
-    PairValues <~ pair_first:A, pair_second:B
+  tuple_type PairOf <-: A, B
+  value PO <-: pair_first:A, pair_second:B
 
   Automatically generate:
 
-  get_pair_first : PairOf <~ A, B -> A
-  change_pair_first : PairOf <~ A, B -> A -> PairOf <~ A, B
+  get_pair_first: (PairOf <-: A, B) -> A
+  change_pair_first: (PairOf <-: A, B) -> A -> (PairOf <-: A, B)
 
-  get_pair_second : PairOf <~ A, B -> B
-  change_pair_second : PairOf <~ A, B -> B -> PairOf <~ A, B
+  get_pair_second: (PairOf <-: A, B) -> B
+  change_pair_second: (PairOf <-: A, B) -> B -> (PairOf <-: A, B)
 
 triple
 
-  tuple_type TripleOf <~ A, B, C
-  value
-    TripleValues <~ triple_first:A, triple_second:B, triple_third:C
+  tuple_type TripleOf <-: A, B, C
+  value TO <-: triple_first:A, triple_second:B, triple_third:C
 
   Automatically generate:
 
-    get_triple_first : TripleOf <~ A, B, C -> A
-    change_triple_first : TripleOf <~ A, B, C -> A -> TripleOf <~ A, B, C
+    get_triple_first: (TripleOf <-: A, B, C) -> A
+    change_triple_first: (TripleOf <-: A, B, C) -> A -> (TripleOf <-: A, B, C)
 
-    get_triple_second : TripleOf <~ A, B, C -> B
-    change_triple_second : TripleOf <~ A, B, C -> B -> TripleOf <~ A, B, C
+    get_triple_second: (TripleOf <-: A, B, C) -> B
+    change_triple_second: (TripleOf <-: A, B, C) -> B -> (TripleOf <-: A, B, C)
 
-    get_triple_third : TripleOf <~ A, B, C -> C
-    change_triple_third : TripleOf <~ A, B, C -> C -> TripleOf <~ A, B, C
+    get_triple_third: (TripleOf <-: A, B, C) -> C
+    change_triple_third: (TripleOf <-: A, B, C) -> C -> (TripleOf <-: A, B, C)
 
   Here we can define the useful type_predicates below to create the polymorphic
   get_first and get_second functions:
 
-    type_predicate A ~> Has_First <~ B
+    type_predicate A-->Has_First<--B
     functions
-      get_first : A -> B
+      get_first: A -> B
 
 
-    type_proposition PairOf <~ A, B ~> Has_First <~ A
+    type_proposition PairOf <-: A, B-->Has_First<--A
     proof
       get_first = get_pair_first
 
-    type_proposition TripleOf <~ A, B, C ~> Has_First <~ A
+    type_proposition (TripleOf <-: A, B, C)-->Has_First<--A
     proof
       get_first = get_triple_first
 
 
     where we have:
-    get_first : A ~> Has_First <~ B => A -> B
+    get_first: A-->Has_First<--B => A -> B
 
 
-    type_predicate A ~> Has_Second <~ B
+    type_predicate A-->Has_Second<--B
     functions
-      get_second : A -> B
+      get_second: A -> B
 
 
-    type_proposition PairOf <~ A, B ~> Has_Second <~ B
+    type_proposition PairOf <-: A, B-->Has_Second<--B
     proof
       get_second = get_pair_second
 
-    type_proposition TripleOf <~ A, B, C ~> Has_Second <~ B
+    type_proposition (TripleOf <-: A, B, C)-->Has_Second<--B
     proof
       get_second = get_triple_second
 
 
     where we have:
-    get_second : A ~> Has_Second <~ B => A -> B
+    get_second: A-->Has_Second<--B => A -> B
 
 
 tuple_types in initial module
 
-  PairOf <~ A, B
-  TripleOf <~ A, B, C
-  QuadrupleOf <~ A, B, C, D
+  PairOf <-: A, B
+  TripleOf <-: A, B, C
+  QuadrupleOf <-: A, B, C, D
 
 type_propositions for Polymorphic functions in initial module
 
-  PairOf <~ A, B ~> Has_First <~ A
-  TripleOf <~ A, B, C ~> Has_First <~ A
-  QuadrupleOf <~ A, B, C, D ~> Has_First <~ A
+  PairOf <-: A, B-->Has_First<--A
+  TripleOf <-: A, B, C-->Has_First<--A
+  QuadrupleOf <-: A, B, C, D-->Has_First<--A
 
-  PairOf <~ A,B ~> Has_Second <~ A
-  TripleOf <~ A,B,C ~> Has_Second <~ A
-  QuadrupleOf <~ A,B,C,D ~> Has_Second <~A
+  PairOf <-: A,B-->Has_Second<--A
+  TripleOf <-: A,B,C-->Has_Second<--A
+  QuadrupleOf <-: A,B,C,D-->Has_Second<--A
 
-  TripleOf <~ A,B,C ~> Has_Third <~ A
-  QuadrupleOf <~ A,B,C,D ~> Has_Third <~A
+  TripleOf <-: A,B,C-->Has_Third<--A
+  QuadrupleOf <-: A,B,C,D-->Has_Third<--A
 
 resulting polymorphic functions: get_first, get_second, get_third
 

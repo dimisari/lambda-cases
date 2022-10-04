@@ -2,24 +2,26 @@ types in initial module
 
   Int, Real, Char, String
 
-  PairOf << A, B
-  TripleOf << A, B, C
-  QuadrupleOf << A, B, C, D
+  PairOf <-: A, B
+  TripleOf <-: A, B, C
+  QuadrupleOf <-: A, B, C, D
 
-let syntax?
+let syntax
   
-  value_name0 = value expression 0
-  value_name1 = value expression 1
-  value_name2 = value expression 2
-  in
+  intermediates
+  value_name0: Type Expression 0
+    = value expression 0
+  value_name1, value_name2: Type Expression 1, Type Expression 2
+    = value expression 1, value expression 2
+  output
   result expression
 
 left-to-right function composition (not built-in, just love left-to-right function
 composition and ".>" looks like a good operator name for it)
 
   given
-    function_name0 : Type0 -> Type1 
-    function_name1 : Type1 -> Type2 
+    function_name0: Type0 -> Type1 
+    function_name1: Type1 -> Type2 
 
   Type0 -> Type2
   function_name2 = function_name0 .> function_name1 
