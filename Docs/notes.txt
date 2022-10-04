@@ -5,8 +5,10 @@ types in initial module
   PairOf <-: A, B
   TripleOf <-: A, B, C
   QuadrupleOf <-: A, B, C, D
+  ListOf(A)s
+  A-->OrNothing
 
-let syntax
+intermediates-output syntax
   
   intermediates
   value_name0: Type Expression 0

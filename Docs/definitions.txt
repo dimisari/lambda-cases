@@ -13,12 +13,12 @@ type definition
 
     type TypeName <-: A, B
 
-  :->/->/<- variations
+  (:->/--> and <--) variations
 
     type A,B :-> TypeName
     type A-->TypeName<--B
 
-  one parentheses in the middle variation
+  one parenthesis in the middle variation
 
     here TypeName, MoreTypeName must both have at least one character
 
@@ -85,7 +85,7 @@ function definition
 
     for example in the 1st way:
 
-    function_name:Type0 -> Type1  
+    function_name: Type0 -> Type1  
       = value_name_of_type_type0 ->
         longer result expression of type Type1
 
@@ -100,7 +100,7 @@ function definition with case syntax
       Type0ValueCombiner1 -> result expression of type Type1
       value_name_of_type_type0 -> default result expression of type Type1
 
-  case is a value expression, there for the syntax below is also possible
+  case is a value expression, therefore the syntax below is also possible
 
   function_name: Type0 -> Type1 -> Type2
     = value_name_of_type_type0 ->
@@ -139,11 +139,10 @@ import syntax
 
 Comments:
 
-  > 4 value_name:Type pairs in ValueCombiner ->
+  > 4 (value_name:Type) pairs in ValueCombiner ->
     all in different line than ValueCombiner and indented more
     4 types/line
     <= 4 types in last line
-  <= 4 value_name:Type pairs in ValueCombiner -> all in same line as ValueCombiner 
+  <= 4 (value_name:Type) pairs in ValueCombiner -> all in same line as ValueCombiner 
 
   input value_names can be "_" if they are not used is the result expression
-

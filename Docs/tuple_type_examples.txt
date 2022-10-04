@@ -35,7 +35,7 @@ triple
       get_first: A -> B
 
 
-    type_proposition PairOf <-: A, B-->Has_First<--A
+    type_proposition (PairOf <-: A, B)-->Has_First<--A
     proof
       get_first = get_pair_first
 
@@ -53,7 +53,7 @@ triple
       get_second: A -> B
 
 
-    type_proposition PairOf <-: A, B-->Has_Second<--B
+    type_proposition (PairOf <-: A, B)-->Has_Second<--B
     proof
       get_second = get_pair_second
 
@@ -74,16 +74,16 @@ tuple_types in initial module
 
 type_propositions for Polymorphic functions in initial module
 
-  PairOf <-: A, B-->Has_First<--A
-  TripleOf <-: A, B, C-->Has_First<--A
-  QuadrupleOf <-: A, B, C, D-->Has_First<--A
+  (PairOf <-: A, B)-->Has_First<--A
+  (TripleOf <-: A, B, C)-->Has_First<--A
+  (QuadrupleOf <-: A, B, C, D)-->Has_First<--A
 
-  PairOf <-: A,B-->Has_Second<--A
-  TripleOf <-: A,B,C-->Has_Second<--A
-  QuadrupleOf <-: A,B,C,D-->Has_Second<--A
+  (PairOf <-: A,B)-->Has_Second<--B
+  (TripleOf <-: A,B,C)-->Has_Second<--B
+  (QuadrupleOf <-: A,B,C,D)-->Has_Second<--B
 
-  TripleOf <-: A,B,C-->Has_Third<--A
-  QuadrupleOf <-: A,B,C,D-->Has_Third<--A
+  (TripleOf <-: A,B,C)-->Has_Third<--C
+  (QuadrupleOf <-: A,B,C,D)-->Has_Third<--C
 
 resulting polymorphic functions: get_first, get_second, get_third
 

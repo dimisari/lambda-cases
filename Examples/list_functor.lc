@@ -3,13 +3,13 @@ values
   HeadAndTail <-: head:A, tail:ListOf(A)s
   EmptyList
 
-type_predicate (T)IsAFunctor
+type_predicate T-->IsAFunctor
 functions
   apply_internally: (A -> B) -> T<--A -> T<--B
 
 apply(f)to_each_in: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = case 
-    HeadAndTail -> HeadAndTail <-: f<--head, apply(f)to_each_in<--tail
+    HeadAndTail -> f<--head, apply(f)to_each_in<--tail :-> HeadAndTail
     EmptyList -> EmptyList
 
 type_proposition ListOf()s-->IsAFunctor
