@@ -13,6 +13,18 @@ parse_with = flip parse ""
 
 -- Type after parsing
 
+data Tuple =
+  T { get_tuple_name :: String, get_combiner :: Combiner }
+  deriving (Eq, Show)
+
+data Combiner =
+  C { get_combiner_name :: String, get_combiner_pairs :: [ NameAndType ] }
+  deriving (Eq, Show)
+
+data NameAndType =
+  CP { get_name :: String, get_type :: TypeExpr }
+  deriving (Eq, Show)
+
 data LowestTypeExpr = IntType | Parenthesis TypeExpr deriving (Eq, Show)
 
 data TypeExpr =
