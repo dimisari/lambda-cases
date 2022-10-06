@@ -1,0 +1,65 @@
+value definition 
+
+  value_name: TypeExpression
+    = value expression of type TypeExpression
+
+function definition (functions are values!)
+
+  1st way
+
+    function_name: Type0 -> Type1 -> Type2
+      = value_name0 -> value_name1 -> result expression of type Type2
+
+  2nd way
+
+    here fname, more_fname must both have at least one character
+
+    Type0 -> Type1 -> Type2
+    fname(vname0, vname1)more_fname = result expression of type Type2
+
+    the following expressions are possible and they have the corresponding types
+
+    fname(some_type0_value,)more_fname : Type1 -> Type2
+    fname(,some_type1_value)more_fname : Type0 -> Type2
+    fname(,)more_fname : Type0 -> Type1 -> Type2
+
+  3rd way
+
+    here fname, more_fname, even_more_fname must all have at least one character
+
+    Type0 -> Type1 -> Type2
+    fname(vname0)more_fname(vname1)even_more_fname = result expression of type Type2
+
+    the following expressions are possible and they have the corresponding types
+
+    fname(some_type0_value)more_fname()even_more_fname : Type1 -> Type2
+    fname()more_fname(some_type1_value)even_more_fname : Type0 -> Type2
+    fname()more_fname()even_more_fname : Type0 -> Type1 -> Type2
+
+  for longer result expressions newline and indent after "value_name ->"
+
+    for example in the 1st way:
+
+    function_name: Type0 -> Type1  
+      = value_name_of_type_type0 ->
+        longer result expression of type Type1
+
+function definition with case syntax
+
+  Here the value_names of each ValueCombiner given in the type definition can be used in the
+  corresponding result expression. Therefore, we only pattern match on the ValueCombiner.
+
+  function_name: Type0 -> Type1  
+    = case
+      Type0ValueCombiner0 -> result expression of type Type1 
+      Type0ValueCombiner1 -> result expression of type Type1
+      value_name_of_type_type0 -> default result expression of type Type1
+
+  case is a value expression, therefore the syntax below is also possible
+
+  function_name: Type0 -> Type1 -> Type2
+    = value_name_of_type_type0 ->
+      case
+        Type1ValueCombiner0 -> result expression of type Type2
+        Type1ValueCombiner1 -> result expression of type Type2
+        value_name_of_type_type1 -> default result expression of type Type2

@@ -1,0 +1,37 @@
+type_predicate definition
+
+  (Using '_' between words for distinction from type syntax. Is it necessary??)
+
+  type_predicate Predicate_About(A, B)_And<--C
+  functions
+    fun1: A -> B -> C 
+    fun2: (C -> A) -> B -> A
+
+type_proposition definition
+
+  type_proposition Predicate_About(Int, Real)_And<--String
+  proof
+    fun1 = specific_fun_1
+    fun2 = specific_fun_2
+
+  here specific_fun_1 and specific_fun_2 must be defined and have the types below:
+    specific_fun_1: Int -> Real -> String
+    specific_fun_2: (String -> Int) -> Real -> Int
+
+import syntax
+
+  import 
+    f1, f2, f3
+      from l1
+    f4, f5, f6
+      from l2
+
+Comments:
+
+  > 4 (value_name:Type) pairs in ValueCombiner ->
+    all in different line than ValueCombiner and indented more
+    4 types/line
+    <= 4 types in last line
+  <= 4 (value_name:Type) pairs in ValueCombiner -> all in same line as ValueCombiner 
+
+  input value_names can be "_" if they are not used is the result expression

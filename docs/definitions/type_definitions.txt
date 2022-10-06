@@ -1,0 +1,35 @@
+type definition
+
+  type TypeName <-: A, B
+  values 
+    ValueCombiner0 <-:
+      value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
+      value_name4:Type3  
+    ValueCombiner1 <-: value_name5:B, value_name6:Type4
+
+variations of "type" line
+
+  original
+
+    type TypeName <-: A, B
+
+  (:->/--> and <--) variations
+
+    type A,B :-> TypeName
+    type A-->TypeName<--B
+
+  one parenthesis in the middle variation
+
+    here TypeName, MoreTypeName must both have at least one character
+
+    type TypeName(A, B)MoreTypeName
+
+  seperate parentheses in the middle variation
+
+    here TypeName, MoreTypeName, EvenMoreTypeName must all have at least one character
+
+    type TypeName(A)MoreTypeName(B)EvenMoreTypeName
+
+combination of variations example
+
+  type A-->TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <-: E, F

@@ -1,0 +1,26 @@
+tuple_type PreviousCoeffs 
+value (previous_previous:Int, previous:Int)
+
+init_previous_coeffs_of_a, init_previous_coeffs_of_b: PreviousCoeffs, PreviousCoeffs
+  = (1, 0), (0, 1)
+
+tuple_type GcdAndCoeffs 
+value (gcd:Int, a:Int, b:Int)
+
+extended_euclidean: Int, Int :> GcdAndCoeffs
+  = extended_euclidean_help <-: init_previous_coeffs_of_a, init_previous_coeffs_of_b 
+
+extended_euclidean_help: PreviousCoeffs, PreviousCoeffs, Int, Int :> GcdAndCoeffs
+  = previous_coeffs_of_a, previous_coeffs_of_b, x :> case
+    0 -> (x, get_previous_previous<--pcoa, get_previous_previous<--pcob)
+    y -> 
+      intermediates
+      compute_new: PreviousCoeffs -> PreviousCoeffs
+        = old_previous_coeffs ->
+          intermediates
+          previous_previous, previous, current: Int, Int, Int 
+            = get_previous_previous<--opc, get_previous<--opc, pp - x-->div<--y * p 
+          output
+          (current, previous)
+      output
+      extended_euclidean_help <-: compute_new<--as, compute_new<--bs, y, x-->mod<--y
