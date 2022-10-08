@@ -10,8 +10,8 @@ b: Int-->Or<--String
 
 print_int_or_string: Int-->Or<--String -> IO Empty
   = case 
-    LeftType -> get-->(+1)-->to_string-->("Total after adding 1: " + )-->print
-    RightType -> get-->("Turns out it says: " + )-->print
+    LeftType -> get-->( + 1 )-->to_string-->( "Total after adding 1: " + )-->print
+    RightType -> get-->( "Turns out it says: " + )-->print
 
 main: IO Empty
   = print_int_or_string<--a ;> print_int_or_string<--b
