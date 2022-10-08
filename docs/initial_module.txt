@@ -1,0 +1,36 @@
+atomic types
+
+  Int, Real, Char, String
+
+  Begin with Number, String ?
+  Is String atomic ?
+
+tuple_types 
+
+  A, B :-> Pair
+  A, B, C :-> Triple
+  A, B, C, D :-> Quadruple
+
+type_propositions for Polymorphic functions in initial module
+
+  (A, B :-> Pair)-->Has_First<--A
+  (A, B, C :-> Triple)-->Has_First<--A
+  (A, B, C, D :-> Quadruple)-->Has_First<--A
+
+  (A, B :-> Pair)-->Has_Second<--B
+  (A, B, C :-> Triple)-->Has_Second<--B
+  (A, B, C, D :-> Quadruple)-->Has_Second<--B
+
+  (A, B, C :-> Triple)-->Has_Third<--C
+  (A, B, C, D :-> Quadruple)-->Has_Third<--C
+
+resulting polymorphic functions: get_first, get_second, get_third
+
+  get_fourth is not polymorphic since we stop at Quadruple (bigger tuples should probably
+  be made as new types and named differently according to the context)
+
+or_types
+
+  ListOf(A)s
+  A-->OrNothing
+

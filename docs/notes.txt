@@ -1,16 +1,3 @@
-types in initial module
-
-  Int, Real, Char, String
-
-  Begin with Number, String ?
-
-  A, B :-> Pair
-  A, B, C :-> Triple
-  A, B, C, D :-> Quadruple
-
-  ListOf(A)s
-  A-->OrNothing
-
 left-to-right function composition (not built-in, just love left-to-right function
 composition and "o>" looks like a good operator name for it)
 
@@ -24,15 +11,11 @@ composition and "o>" looks like a good operator name for it)
 Tuple Application
 
   f : A -> B -> C
-  pair : A,B
-  f pair : C
+  pair : A,B :-> Pair
+  f<--pair : C
 
 Syntactic Sugar Types
-  7 x Int 
-  or 
-  7 * Int
-  or 
-  7 , Int
+  7 x Int | 7 * Int | 7 , Int
   for arrays
 
 Questions 

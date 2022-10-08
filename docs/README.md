@@ -1,1 +1,1 @@
-# Text files describing the language
+# Files describing the language
