@@ -1,10 +1,3 @@
-tuple_type HeadAndTail<--A 
-value (head:A, tail:ListOf(A)s)
-
-or_type ListOf(A)s
-values 
-  NonEmpty<--(HeadAndTail<--A) | Empty
-
 apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = case 
     NonEmpty -> (get_head-->f, get_tail-->apply(f)to_each)-->NonEmpty

@@ -1,0 +1,16 @@
+or_type ListOf(A)s
+values 
+  NonEmpty<--(head:A, tail:ListOf(A)s) | Empty
+
+Automatically generate:
+
+  isNonEmpty: ListOf(A)s -> Boolean
+  isEmpty: ListOf(A)s -> Boolean
+
+  Below we have OrNothing because other Patterns are possible
+
+  get_head: ListOf(A)s -> A-->OrNothing
+  change_head: ListOf(A)s -> A -> ListOf(A)s-->OrNothing
+
+  get_tail: ListOf(A)s -> ListOf(A)s-->OrNothing
+  change_tail: ListOf(A)s -> ListOf(A)s -> ListOf(A)s-->OrNothing
