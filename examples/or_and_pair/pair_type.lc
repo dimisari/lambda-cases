@@ -4,7 +4,7 @@ value (pair_first:A, pair_second:B)
 print_int_string: (Int, String :-> Pair) -> IO Empty
   = pair ->
     get_pair_first<--pair-->to_string-->( "First: "  + )-->( + ", Second: " )-->
-    (+ get_pair_second<--pair)-->(+ "\n")-->print
+    ( + get_pair_second<--pair )-->( + "\n" )-->print
 
 a: Int, String :-> Pair
   = (1, "one")
@@ -22,5 +22,5 @@ c: PairOf <-: Int, String
   = change_pair_second <-: a, "two"
 
 main: IO Empty
-  = print_int_string<--a ;> i-->to_string-->print ;> print_int_string<--b ;> print<--s ;>
-    print_int_string<--c
+  = print_int_string<--a ;> i-->to_string-->print ;> print_int_string<--b ;>
+    print<--s ;> print_int_string<--c

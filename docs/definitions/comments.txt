@@ -1,7 +1,0 @@
-> 4 (value_name:Type) pairs in ValueCombiner ->
-  all in different line than ValueCombiner and indented more
-  4 types/line
-  <= 4 types in last line
-<= 4 (value_name:Type) pairs in ValueCombiner -> all in same line as ValueCombiner 
-
-input value_names can be "_" if they are not used is the result expression

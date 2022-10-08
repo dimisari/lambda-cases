@@ -11,35 +11,6 @@ spaces_then = ( spaces1 *> ) :: Parser a -> Parser a
 parse_with :: Parser a -> String -> Either ParseError a
 parse_with = flip parse "" 
 
--- Type after parsing
-
-data LowestTypeExpr = IntType | Parenthesis TypeExpr deriving (Eq, Show)
-
-data TypeExpr =
-  IntType | ProductType [ TypeExpr ] | TypeWithVariableName String TypeExpr |
-  FunctionType TypeExpr TypeExpr
-  deriving (Eq, Show)
-
-parse_int :: Parser TypeExpr 
-parse_int = string "Int" >> return IntType
-
-parse_comma_seperated :: Parser TypeExpr -> Parser [ TypeExpr ]
-parse_comma_seperated = \parse_type_expr -> sepBy1 parse_type_expr (string ", ")
-
-parse_product_parser :: Parser TypeExpr -> Parser TypeExpr 
-parse_product_parser = parse_comma_seperated .> fmap ProductType
-
-data ValueExpr =
-  ValueName String | Paren ValueExpr | Product [ ValueExpr ] |
-  LeftApplication ValueExpr ValueExpr | RightApplication ValueExpr ValueExpr |
-  Abstraction String ValueExpr |
-  Case [ (ValueExpr, ValueExpr) ]
-  deriving (Eq, Show)
-
-data AssignmentExpr = NameAndValue String ValueExpr  deriving (Eq, Show)
-
-data TypeAssignmentExpr = TypeAndAssignment TypeExpr AssignmentExpr  deriving (Eq, Show)
-  
 -- Statement parsers
 
 data Statement =
