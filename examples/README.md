@@ -1,1 +1,1 @@
-# examples of lambda case programs
+# examples of lambda-case programs

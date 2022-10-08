@@ -49,3 +49,7 @@ Questions
 Observations
 
   Maybe ~ List with length <= 1
+
+f <-: a, b 
+is 
+f<--a<--b

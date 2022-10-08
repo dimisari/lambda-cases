@@ -1,7 +1,15 @@
-tuple type definition
+tuple_type TypeName <-: A, B
+value
+  value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
+  value_name4:Type3
 
-  tuple_type TypeName <-: A, B
-  value
-    ( value_name0:Type0, value_name1:Type1, value_name2:A, value_name3:Type2,
-    , value_name4:Type3
-    )
+Comments:
+  - get and set functions should be generated automatically
+  - get_value_name0: (TypeName <-: A,B) -> Type0
+  - get_value_name1: (TypeName <-: A,B) -> Type1
+  - get_value_name2: (TypeName <-: A,B) -> A
+  - ...
+  - set_value_name0: (TypeName <-: A,B), Type0 :> (TypeName <-: A,B)
+  - set_value_name1: (TypeName <-: A,B), Type1 :> (TypeName <-: A,B)
+  - set_value_name2: (TypeName <-: A,B), A :> (TypeName <-: A,B)
+  - ...

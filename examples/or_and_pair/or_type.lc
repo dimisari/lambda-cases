@@ -1,0 +1,17 @@
+type A-->Or<--B
+values
+  LeftType<--A | RightType<--B
+
+a: Int-->Or<--String
+  = LeftType<--1
+
+b: Int-->Or<--String
+  = RightType<--"One"
+
+print_int_or_string: Int-->Or<--String -> IO Empty
+  = case 
+    LeftType -> get-->(+1)-->to_string-->("Total after adding 1: " + )-->print
+    RightType -> get-->("Turns out it says: " + )-->print
+
+main: IO Empty
+  = print_int_or_string<--a ;> print_int_or_string<--b
