@@ -1,6 +1,3 @@
-tuple_type A, B :-> Pair
-value (pair_first:A, pair_second:B)
-
 print_int_string: (Int, String :-> Pair) -> IO Empty
   = pair ->
     get_pair_first<--pair-->to_string-->( "First: "  + )-->( + ", Second: " )-->

@@ -1,0 +1,13 @@
+tuple_type A, B, C :-> Triple
+value (triple_first:A, triple_second:B, triple_third:C)
+
+Automatically generate:
+
+  get_triple_first: (A, B, C :-> Triple) -> A
+  change_triple_first: (A, B, C :-> Triple) -> A -> (A, B, C :-> Triple)
+
+  get_triple_second: (A, B, C :-> Triple) -> B
+  change_triple_second: (A, B, C :-> Triple) -> B -> (A, B, C :-> Triple)
+
+  get_triple_third: (A, B, C :-> Triple) -> C
+  change_triple_third: (A, B, C :-> Triple) -> C -> (A, B, C :-> Triple)

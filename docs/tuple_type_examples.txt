@@ -1,69 +1,40 @@
-pair
+Here we can define the useful type_predicates below to create the polymorphic
+get_first and get_second functions:
 
-  tuple_type A, B :-> Pair
-  value (pair_first:A, pair_second:B)
-
-  Automatically generate:
-
-  get_pair_first: (A, B :-> Pair) -> A
-  change_pair_first: (A, B :-> Pair) -> A -> (A, B :-> Pair)
-
-  get_pair_second: (A, B :-> Pair) -> B
-  change_pair_second: (A, B :-> Pair) -> B -> (A, B :-> Pair)
-
-triple
-
-  tuple_type A, B, C :-> Triple
-  value (triple_first:A, triple_second:B, triple_third:C)
-
-  Automatically generate:
-
-    get_triple_first: (A, B, C :-> Triple) -> A
-    change_triple_first: (A, B, C :-> Triple) -> A -> (A, B, C :-> Triple)
-
-    get_triple_second: (A, B, C :-> Triple) -> B
-    change_triple_second: (A, B, C :-> Triple) -> B -> (A, B, C :-> Triple)
-
-    get_triple_third: (A, B, C :-> Triple) -> C
-    change_triple_third: (A, B, C :-> Triple) -> C -> (A, B, C :-> Triple)
-
-  Here we can define the useful type_predicates below to create the polymorphic
-  get_first and get_second functions:
-
-    type_predicate A-->Has_First<--B
-    functions
-      get_first: A -> B
+  type_predicate A-->Has_First<--B
+  functions
+    get_first: A -> B
 
 
-    type_proposition (A, B :-> Pair)-->Has_First<--A
-    proof
-      get_first = get_pair_first
+  type_proposition (A, B :-> Pair)-->Has_First<--A
+  proof
+    get_first = get_pair_first
 
-    type_proposition (A, B, C :-> Triple)-->Has_First<--A
-    proof
-      get_first = get_triple_first
-
-
-    where we have:
-    get_first: A-->Has_First<--B => A -> B
+  type_proposition (A, B, C :-> Triple)-->Has_First<--A
+  proof
+    get_first = get_triple_first
 
 
-    type_predicate A-->Has_Second<--B
-    functions
-      get_second: A -> B
+  where we have:
+  get_first: A-->Has_First<--B => A -> B
 
 
-    type_proposition (A, B :-> Pair)-->Has_Second<--B
-    proof
-      get_second = get_pair_second
-
-    type_proposition (A, B, C :-> Triple)-->Has_Second<--B
-    proof
-      get_second = get_triple_second
+  type_predicate A-->Has_Second<--B
+  functions
+    get_second: A -> B
 
 
-    where we have:
-    get_second: A-->Has_Second<--B => A -> B
+  type_proposition (A, B :-> Pair)-->Has_Second<--B
+  proof
+    get_second = get_pair_second
+
+  type_proposition (A, B, C :-> Triple)-->Has_Second<--B
+  proof
+    get_second = get_triple_second
+
+
+  where we have:
+  get_second: A-->Has_Second<--B => A -> B
 
 
 tuple_types in initial module
