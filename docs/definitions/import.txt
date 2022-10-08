@@ -1,0 +1,7 @@
+import syntax
+
+import 
+  f1, f2, f3
+    from l1
+  f4, f5, f6
+    from l2

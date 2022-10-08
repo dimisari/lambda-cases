@@ -1,10 +1,12 @@
 types in initial module
 
   Int, Real, Char, String
+  Begin with Number, String ?
 
-  PairOf <-: A, B
-  TripleOf <-: A, B, C
-  QuadrupleOf <-: A, B, C, D
+  A, B :-> Pair
+  A, B, C :-> Triple
+  A, B, C, D :-> Quadruple
+
   ListOf(A)s
   A-->OrNothing
 

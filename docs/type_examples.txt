@@ -1,9 +1,8 @@
 OrNothing
 
-  type A-->OrNothing
+  or_type A-->OrNothing
   values
-    Value<--value:A
-    Nothing
+    Value<--A | Nothing
 
   Automatically generate:
 
@@ -12,17 +11,16 @@ OrNothing
 
 Lists
 
-  type ListOf(A)s
-  values
-    HeadAndTail <-: head:A, tail:ListOf(A)s
-    EmptyList
+  or_type ListOf(A)s
+  values 
+    NonEmpty<--(head:A, tail:ListOf(A)s) | Empty
 
   Automatically generate:
 
-    isHeadAndTail: ListOf(A)s -> Boolean
-    isEmptyList: ListOf(A)s -> Boolean
+    isNonEmpty: ListOf(A)s -> Boolean
+    isEmpty: ListOf(A)s -> Boolean
 
-    Below we have OrNothing because other ValueConstructors are possible
+    Below we have OrNothing because other Patterns are possible
 
     get_head: ListOf(A)s -> A-->OrNothing
     change_head: ListOf(A)s -> A -> ListOf(A)s-->OrNothing

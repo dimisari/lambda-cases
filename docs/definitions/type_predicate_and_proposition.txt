@@ -17,21 +17,3 @@ type_proposition definition
   here specific_fun_1 and specific_fun_2 must be defined and have the types below:
     specific_fun_1: Int -> Real -> String
     specific_fun_2: (String -> Int) -> Real -> Int
-
-import syntax
-
-  import 
-    f1, f2, f3
-      from l1
-    f4, f5, f6
-      from l2
-
-Comments:
-
-  > 4 (value_name:Type) pairs in ValueCombiner ->
-    all in different line than ValueCombiner and indented more
-    4 types/line
-    <= 4 types in last line
-  <= 4 (value_name:Type) pairs in ValueCombiner -> all in same line as ValueCombiner 
-
-  input value_names can be "_" if they are not used is the result expression
