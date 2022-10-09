@@ -1,22 +1,17 @@
 import Text.Parsec
-  ( parse, ParseError, (<|>), try
-  , space, char, letter, string, eof
-  , many, many1)
+  ( parse, ParseError, (<|>), try , space, char, letter, string, eof , many, many1)
 import Text.Parsec.String (Parser)
 import Text.ParserCombinators.Parsec.Number (int)
 
 -- Helpers
 
-[ letters, spaces1 ] =
-  map many1 [ letter, space ]
+[ letters, spaces1 ] = map many1 [ letter, space ]
   :: [ Parser String ]
 
-spaces_then =
-    ( spaces1 *> )
-    :: Parser a -> Parser a
+spaces_then = ( spaces1 *> )
+  :: Parser a -> Parser a
 
-(.>) =
-  flip (.)
+(.>) = flip (.)
   :: (a -> b) -> (b -> c) -> a -> c
 
 -- Statement parsers
@@ -40,10 +35,8 @@ data Statement =
   , spaces_then ( string "positive {" ) *> spaces_then statements <* char '}' ]
   :: [ Parser [ Statement ] ]
 
-parse_string =
-  parse ( statements <* eof ) "temp.in"
+parse_string = parse ( statements <* eof ) "temp.in"
   :: String -> Either ParseError [ Statement ]
 
-main =
-  readFile "temp.in" >>= parse_string .> print
+main = readFile "temp.in" >>= parse_string .> print
   :: IO ()

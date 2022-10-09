@@ -4,25 +4,27 @@ import Text.ParserCombinators.Parsec.Number
 
 -- Helpers
 
-[ letters, spaces1 ] = map many1 [ letter, space ] :: [ Parser String ]
-spaces_then = ( spaces1 *> ) :: Parser a -> Parser a
-(.>) = flip (.) :: (a -> b) -> (b -> c) -> a -> c
+[ letters, spaces1 ] = map many1 [ letter, space ]
+  :: [ Parser String ]
 
-parse_with :: Parser a -> String -> Either ParseError a
+spaces_then = ( spaces1 *> )
+  :: Parser a -> Parser a
+
+(.>) = flip (.)
+  :: (a -> b) -> (b -> c) -> a -> c
+
 parse_with = flip parse "" 
+  :: Parser a -> String -> Either ParseError a
 
 -- Type after parsing
 
-data Tuple =
-  T { get_tuple_name :: String, get_combiner :: Combiner }
+data Tuple = T { get_tuple_name :: String, get_combiner :: Combiner }
   deriving (Eq, Show)
 
-data Combiner =
-  C { get_combiner_name :: String, get_combiner_pairs :: [ NameAndType ] }
+data Combiner = C { get_combiner_name :: String, get_combiner_pairs :: [ NameAndType ] }
   deriving (Eq, Show)
 
-data NameAndType =
-  CP { get_name :: String, get_type :: TypeExpr }
+data NameAndType = CP { get_name :: String, get_type :: TypeExpr }
   deriving (Eq, Show)
 
 data LowestTypeExpr = IntType | Parenthesis TypeExpr deriving (Eq, Show)
