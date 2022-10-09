@@ -1,7 +1,7 @@
 module TypeExpression where
 
 import Prelude (Eq, Show, pure, (<*), (*>), (<*>), (<$>))
-import Text.Parsec ( (<|>), try, char, string, many1)
+import Text.Parsec ( (<|>), try, char, string, sepBy1)
 import Text.Parsec.String (Parser)
 
 -- TypeExpression
@@ -26,14 +26,7 @@ data TupleOrIntType = TupleType [ TypeExpression ] | IntType
 tuple_or_int_p = tuple_type_p <|> int_type_p
   :: Parser TupleOrIntType
 
-tuple_type_p =
-  let 
-    open_paren_and_first_p = char '(' *> type_expression_p
-      :: Parser TypeExpression
-    rest_and_close_paren_p = many1 (string ", " *> type_expression_p) <* char ')' 
-      :: Parser [ TypeExpression ]
-  in
-  TupleType <$> (pure (:) <*> open_paren_and_first_p <*> rest_and_close_paren_p)
+tuple_type_p = TupleType <$> (char '(' *> sepBy1 type_expression_p (string ", ") <* char ')')
   :: Parser TupleOrIntType
 
 int_type_p = string "Int" *> pure IntType
