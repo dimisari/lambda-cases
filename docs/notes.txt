@@ -14,9 +14,13 @@ Tuple Application
   pair : A,B :-> Pair
   f<--pair : C
 
-Syntactic Sugar Types
-  7 x Int | 7 * Int | 7 , Int
-  for arrays
+Syntactic Sugar
+  -Operatir :->
+    ( a, b :-> f ) is (f<--a<--b)
+
+  -Types
+    7 x Int | 7 * Int | 7 , Int
+    for arrays
 
 Questions 
 
@@ -26,8 +30,5 @@ Observations
 
   Maybe ~ List with length <= 1
 
-f <-: a, b 
-is 
-f<--a<--b
 
 input value_names can be "_" if they are not used is the result expression
