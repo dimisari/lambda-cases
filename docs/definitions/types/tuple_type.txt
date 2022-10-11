@@ -1,15 +1,15 @@
-tuple_type TypeName <-: A, B
+tuple_type TypeName :-> A, B
 value
   ( value_name0:Int, value_name1:String, value_name2:A, value_name3:ListOf(A)s
   , value_name4:ListOf(B)s )
 
 Comments:
   - get and set functions should be generated automatically
-  - get_value_name0: (TypeName <-: A,B) -> Int
-  - get_value_name1: (TypeName <-: A,B) -> String
-  - get_value_name2: (TypeName <-: A,B) -> A
+  - get_value_name0: ( A,B :-> TypeName ) -> Int
+  - get_value_name1: ( A,B :-> TypeName ) -> String
+  - get_value_name2: ( A,B :-> TypeName ) -> A
   - ...
-  - set_value_name0: (TypeName <-: A,B), Int :> (TypeName <-: A,B)
-  - set_value_name1: (TypeName <-: A,B), String :> (TypeName <-: A,B)
-  - set_value_name2: (TypeName <-: A,B), A :> (TypeName <-: A,B)
+  - set_value_name0: ( A,B :-> TypeName ), Int :> ( A,B :-> TypeName )
+  - set_value_name1: ( A,B :-> TypeName ), String :> ( A,B :-> TypeName )
+  - set_value_name2: ( A,B :-> TypeName ), A :> ( A,B :-> TypeName )
   - ...

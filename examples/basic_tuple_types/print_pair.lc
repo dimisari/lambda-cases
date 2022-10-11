@@ -1,23 +1,26 @@
-print_int_string: (Int, String :-> Pair) -> IO Empty
+print_int_string: Int, String :-> Pair -> IOOperation Empty
   = pair ->
-    get_pair_first<--pair-->to_string-->( "First: "  + )-->( + ", Second: " )-->
-    ( + get_pair_second<--pair )-->( + "\n" )-->print
+    intermediates
+    first, second : Int, String 
+      = pair-->get_pair_first, pair--> get_pair_second
+    output
+      "First: "  + first-->to_string + ", Second: " + second + "\n"  -->print
 
 a: Int, String :-> Pair
   = (1, "one")
 
 i: Int
-  = get_pair_first<--a
+  = a-->get_pair_first
 
 b: Int, String :-> Pair
-  = change_pair_first <-: a, 2
+  = a, 2 :-> change_pair_first
 
 s: String
-  = get_pair_second<--a
+  = a-->get_pair_second
 
 c: PairOf <-: Int, String
-  = change_pair_second <-: a, "two"
+  = a, "two" :-> change_pair_second 
 
-main: IO Empty
-  = print_int_string<--a ;> i-->to_string-->print ;> print_int_string<--b ;>
-    print<--s ;> print_int_string<--c
+main: IOOperation Empty
+  = a-->print_int_string ;> i-->to_string-->print ;> b-->print_int_string ;>
+    s-->print ;> c-->print_int_string
