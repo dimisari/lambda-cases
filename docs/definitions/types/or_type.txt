@@ -1,4 +1,4 @@
-or_type TypeName <-: A, B
+or_type A,B :-> TypeName
 values 
   Pattern0<--A | Pattern1<--B | Pattern3<--Int | Pattern4<--ListOf(A)s
 
