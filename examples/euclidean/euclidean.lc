@@ -1,7 +1,7 @@
 gcd : Int, Int :> Int
-  = x, y :> gcd_help <-: (max <-: x, y), (min <-: x, y)
+  = x, y :> ( x, y :-> max ), ( x, y :-> min ) :-> gcd_help
 
 gcd_help : Int, Int :> Int
   = x -> case
     0 -> x
-    y -> gcd_help <-: y, x-->mod<--y
+    y -> y, x-->mod<--y :-> gcd_help
