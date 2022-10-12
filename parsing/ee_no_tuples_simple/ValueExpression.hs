@@ -9,9 +9,6 @@ import TypeExpression (TypeExpression)
 -- ValueExpression
 
 data ValueExpression =
-  IsolatedAtomic AtomicExpression |
-  Subtraction ValueExpression ValueExpression |
-  Multiplication ValueExpression ValueExpression |
   Abstraction String ValueExpression |
   Case [ ( ValueExpression, ValueExpression ) ] |
   InteremediatesOutput [ NameTypeAndValue ]
@@ -35,5 +32,5 @@ data NameTypeAndValueLists = NTAVL
 
 -- Probably going to need 
 
-to_NTAV_list :: NameTypeAndValueLists -> [ NameTypeAndValue ]
 to_NTAV_list = undefined
+  :: NameTypeAndValueLists -> [ NameTypeAndValue ]

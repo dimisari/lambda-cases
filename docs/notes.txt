@@ -1,5 +1,6 @@
-left-to-right function composition (not built-in, just love left-to-right function
-composition and "o>" looks like a good operator name for it)
+left-to-right function composition
+  not built-in, just love left-to-right function composition and "o>" looks like a good
+  operator name for it
 
   given
     function_name0: Type0 -> Type1 
@@ -15,7 +16,7 @@ Tuple Application
   f<--pair : C
 
 Syntactic Sugar
-  -Operatir :->
+  -Operator :->
     ( a, b :-> f ) is (f<--a<--b)
 
   -Types
@@ -30,5 +31,6 @@ Observations
 
   Maybe ~ List with length <= 1
 
-
 input value_names can be "_" if they are not used is the result expression
+
+anonymous tuple_types?? only projection functions??

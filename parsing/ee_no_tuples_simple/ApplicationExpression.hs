@@ -34,21 +34,21 @@ high_precedence_expression_p =
 
 data ApplicationExpression = 
   LeftApplication HighPrecedenceExpression ApplicationExpression |
-  RightApplication HighPrecedenceExpression ApplicationExpression 
+  RightApplication HighPrecedenceExpression ApplicationExpression |
+  HighPrecedence HighPrecedenceExpression
   deriving (Eq, Show)
 
 application_expression_p =
-  try left_application_expression_p <|> right_application_expression_p
+  try left_application_expression_p <|> try right_application_expression_p <|>
+  (HighPrecedence <$> high_precedence_expression_p)
   :: Parser ApplicationExpression
 
 left_application_expression_p =
   LeftApplication
-    <$> (high_precedence_expression_p <* string "<--")
-    <*> application_expression_p
+    <$> (high_precedence_expression_p <* string "<--") <*> application_expression_p
     :: Parser ApplicationExpression
 
 right_application_expression_p = 
   RightApplication
-    <$> (high_precedence_expression_p <* string "-->")
-    <*> application_expression_p
+    <$> (high_precedence_expression_p <* string "-->") <*> application_expression_p
   :: Parser ApplicationExpression

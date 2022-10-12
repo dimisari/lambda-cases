@@ -1,5 +1,8 @@
-initial_previous_coeffs_of_a, initial_previous_coeffs_of_b: (Int, Int), (Int, Int)
-  = (1, 0), (0, 1)
+initial_previous_coeffs_of_a: (Int, Int)
+  = (1, 0)
+
+initial_previous_coeffs_of_b: (Int, Int)
+  = (0, 1)
 
 extended_euclidean: Int -> Int -> (Int, Int, Int)
   = extended_euclidean_help<--initial_previous_coeffs_of_a<--initial_previous_coeffs_of_b
@@ -12,11 +15,17 @@ extended_euclidean_help: (Int, Int) -> (Int, Int) -> Int -> Int -> (Int, Int, In
       compute_new: (Int, Int) -> (Int, Int)
         = old_previous_coefficients ->
           intermediates
-          previous_previous, previous, current: Int, Int, Int 
-            = opc-->get_first, opc-->get_second, previous_previous - x-->div<--y * previous
+          previous_previous: Int
+            = opc-->get_first
+          previous: Int
+            = opc-->get_second
+          current: Int
+            = previous_previous - x-->div<--y * previous
           output
           (previous, current)
-      new_previous_coeffs_of_a, new_previous_coeffs_of_b: (Int, Int), (Int, Int)
-        = pcoa-->compute_new, pcob-->compute_new
+      new_previous_coeffs_of_a: (Int, Int)
+        = pcoa-->compute_new
+      new_previous_coeffs_of_b: (Int, Int)
+        = pcob-->compute_new
       output
       extended_euclidean_help<--npcoa<--npcob<--y<--(x-->mod<--y)

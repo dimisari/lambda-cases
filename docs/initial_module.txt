@@ -2,7 +2,7 @@ atomic types
 
   Int, Real, Char, String
 
-  Begin with Number, String ?
+  Begin with Num, Char ?
   Is String atomic ?
 
 tuple_types 
