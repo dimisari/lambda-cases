@@ -1,14 +1,21 @@
+{-# LANGUAGE LambdaCase #-}
+
 module AtomicExpression where
 
-import Prelude (Eq, Show, String, (<$>), pure, (*>))
+import Prelude (Eq, show, Show, String, (<$>), pure, (*>), (++))
 import Text.Parsec ((<|>), char)
 import Text.Parsec.String (Parser)
-import Helpers (letters_underscore)
+import Helpers (lowers_underscore)
 
 -- ConstantExpression
 
 data ConstantExpression = Constant0 | Constant1
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show ConstantExpression where
+  show = \case
+    Constant0 -> "0\n"
+    Constant1 -> "1\n"
 
 constant_p = zero_p <|> one_p
   :: Parser ConstantExpression
@@ -22,9 +29,12 @@ one_p = char '1' *> pure Constant1
 -- NameExpression
 
 newtype NameExpression = NameExpression String
-  deriving (Eq, Show)
+  deriving (Eq)
 
-name_expression_p = NameExpression <$> letters_underscore
+instance Show NameExpression where
+  show  = \(NameExpression n) -> n ++ "\n"
+
+name_expression_p = NameExpression <$> lowers_underscore
   :: Parser NameExpression
 
 -- AtomicExpression

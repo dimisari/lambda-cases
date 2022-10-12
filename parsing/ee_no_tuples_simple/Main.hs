@@ -1,9 +1,10 @@
 module Main where
 
-import ApplicationExpression
-import AtomicExpression
-import Helpers
 import TypeExpression
+import AtomicExpression
+import ApplicationExpression
+import AlgebraicExpressions
 import ValueExpression
+import Helpers
 
 main = undefined

@@ -1,30 +1,23 @@
+{-# LANGUAGE LambdaCase #-}
+
 module ApplicationExpression where
 
-import Prelude (Eq, Show, undefined, (<$>), (<*), (*>), (<*>))
+import Prelude (Eq, Show, show, undefined, (<$>), (<*), (*>), (<*>), (++))
 import Text.Parsec ((<|>), try, char, sepBy1, string)
 import Text.Parsec.String (Parser)
 import AtomicExpression (AtomicExpression, atomic_expression_p)
-import ValueExpression (ValueExpression, value_expression_p)
-
--- ParenthesisExpression
-
-data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
-  deriving (Eq, Show)
-
-parenthesis_expression_p =
-  char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
-  :: Parser ParenthesisExpression
-
-for_precedence_p = ForPrecedence <$> value_expression_p
-  :: Parser ParenthesisExpression
-
-tuple_expression_p = Tuple <$> sepBy1 value_expression_p (string ", ")
-  :: Parser ParenthesisExpression
+import ValueExpression
+  (ValueExpression, value_expression_p, ParenthesisExpression, parenthesis_expression_p)
 
 -- HighPrecedenceExpression
 
 data HighPrecedenceExpression = Parenthesis ParenthesisExpression | Atomic AtomicExpression
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show HighPrecedenceExpression where
+  show = \case
+    Parenthesis pe -> show pe
+    Atomic ae -> show ae
 
 high_precedence_expression_p =
   (Parenthesis <$> parenthesis_expression_p) <|> (Atomic <$> atomic_expression_p)
@@ -36,7 +29,13 @@ data ApplicationExpression =
   LeftApplication HighPrecedenceExpression ApplicationExpression |
   RightApplication HighPrecedenceExpression ApplicationExpression |
   HighPrecedence HighPrecedenceExpression
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show ApplicationExpression where
+  show = \case
+    LeftApplication hpe ae -> show hpe ++ "\tleft " ++ show ae
+    RightApplication hpe ae -> show hpe ++ "\tright " ++ show ae
+    HighPrecedence hpe -> show hpe
 
 application_expression_p =
   try left_application_expression_p <|> try right_application_expression_p <|>

@@ -1,10 +1,24 @@
 module ValueExpression where
 
-import Prelude (Eq, Show, String, undefined)
-import Text.Parsec ()
+import Prelude (Eq, Show, String, undefined, (<$>), (<*), (*>))
+import Text.Parsec (string, sepBy1, char, (<|>), try)
 import Text.Parsec.String (Parser)
-import AtomicExpression (AtomicExpression)
 import TypeExpression (TypeExpression)
+
+-- ParenthesisExpression
+
+data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
+  deriving (Eq, Show)
+
+parenthesis_expression_p =
+  char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
+  :: Parser ParenthesisExpression
+
+for_precedence_p = ForPrecedence <$> value_expression_p
+  :: Parser ParenthesisExpression
+
+tuple_expression_p = Tuple <$> sepBy1 value_expression_p (string ", ")
+  :: Parser ParenthesisExpression
 
 -- ValueExpression
 
