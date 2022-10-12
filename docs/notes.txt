@@ -23,10 +23,6 @@ Syntactic Sugar
     7 x Int | 7 * Int | 7 , Int
     for arrays
 
-Questions 
-
-  Haskell Core?
-
 Observations
 
   Maybe ~ List with length <= 1
@@ -36,3 +32,5 @@ input value_names can be "_" if they are not used is the result expression
 anonymous tuple_types?? only projection functions??
 
 graph reduction
+
+Questions: Haskell Core?
