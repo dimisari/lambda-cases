@@ -34,3 +34,5 @@ Observations
 input value_names can be "_" if they are not used is the result expression
 
 anonymous tuple_types?? only projection functions??
+
+graph reduction

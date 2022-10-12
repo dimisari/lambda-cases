@@ -1,32 +1,7 @@
-or_type A,B :-> TypeName
+or_type A, B :-> TypeName
 values 
-  Pattern0<--A | Pattern1<--B | Pattern3<--Int | Pattern4<--ListOf(A)s
-
-variations of "or_type" line:
-
-  - original
-
-    type TypeName <-: A, B
-
-  - (:->/--> and <--) variations
-
-    type A,B :-> TypeName
-    type A-->TypeName<--B
-
-  - one parenthesis in the middle variation
-    (TypeName and MoreTypeName must have at least one character)
-
-    type TypeName(A, B)MoreTypeName
-
-  - seperate parentheses in the middle variation
-    (TypeName, MoreTypeName and EvenMoreTypeName must have at least one character)
-
-    type TypeName(A)MoreTypeName(B)EvenMoreTypeName
-
-combination of variations example
-
-  type A-->TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <-: E, F
+  Pattern0<--A | Pattern1<--B | Pattern2<--Int | Pattern3<--ListOf(A)s
 
 Comments:
-  - projection functions are inherited from tuple_type inputs
-  - projection function for Atomic Types (like Int) is: get
+  - projection functions are inherited from tuple_type inputs in case syntax
+  - projection function for Atomic Types (like Int) or or_types is: get
