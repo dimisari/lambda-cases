@@ -1,3 +1,4 @@
+
 Here the value_names of each Pattern given in the type definition can be used in the
 corresponding result expression. Therefore, we only pattern match on the Patterns.
 

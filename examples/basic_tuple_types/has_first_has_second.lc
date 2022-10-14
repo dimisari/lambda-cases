@@ -1,36 +1,26 @@
 type_predicate A-->Has_First<--B
-functions
-  get_first: A -> B
+function get_first: A -> B
 
 
 type_proposition (A, B :-> Pair)-->Has_First<--A
-proof
-  get_first = get_pair_first
+proof get_first = get_pair_first
 
 type_proposition (A, B, C :-> Triple)-->Has_First<--A
-proof
-  get_first = get_triple_first
+proof get_first = get_triple_first
 
 
-where we have:
-get_first: A-->Has_First<--B => A -> B
+where we have: get_first: A-->Has_First<--B => A -> B
 
 
 type_predicate A-->Has_Second<--B
-functions
-  get_second: A -> B
+function get_second: A -> B
 
 
 type_proposition (A, B :-> Pair)-->Has_Second<--B
-proof
-  get_second = get_pair_second
+proof get_second = get_pair_second
 
 type_proposition (A, B, C :-> Triple)-->Has_Second<--B
-proof
-  get_second = get_triple_second
+proof get_second = get_triple_second
 
 
-where we have:
-get_second: A-->Has_Second<--B => A -> B
-
-
+where we have: get_second: A-->Has_Second<--B => A -> B

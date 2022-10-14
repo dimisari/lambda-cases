@@ -1,8 +1,0 @@
-or_type A-->OrNothing
-values
-  Value<--A | Nothing
-
-Automatically generate:
-
-  isValue: A-->OrNothing -> Boolean
-  isNothing: A-->OrNothing -> Boolean

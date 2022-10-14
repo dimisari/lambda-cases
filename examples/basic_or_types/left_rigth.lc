@@ -1,12 +1,5 @@
-type A-->Or<--B
-values
-  LeftType<--A | RightType<--B
-
-a: Int-->Or<--String
-  = LeftType<--1
-
-b: Int-->Or<--String
-  = RightType<--"One"
+a, b: Int-->Or<--String, Int-->Or<--String
+  = LeftType 1, RightType "One"
 
 print_int_or_string: Int-->Or<--String -> IO Empty
   = case 

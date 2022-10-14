@@ -1,6 +1,6 @@
 apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = case 
-    NonEmpty -> get_head-->f, get_tail-->apply(f)to_each :-> NonEmpty
+    NonEmpty -> NonEmpty ( head-->f, tail-->apply(f)to_each )
     Empty -> Empty
 
 type_predicate T-->IsAFunctor

@@ -1,7 +1,7 @@
 tuple_type SortedAbsoluteValues
-value (max_abs: Int, min_abs: Int)
+value ( max_abs: Int, min_abs: Int )
 
-to_sorted_asbolute_values : Int, Int :> SortedAbsoluteValues
+to_sorted_asbolute_values: Int, Int :> SortedAbsoluteValues
   = x, y :> 
     intermediates
     abs_x, abs_y, max_abs, min_abs: Int, Int, Int, Int
@@ -9,10 +9,9 @@ to_sorted_asbolute_values : Int, Int :> SortedAbsoluteValues
     output
     (max_abs, min_abs)
 
-gcd : Int, Int :> Int
-  = to_sorted_asbolute_values o> gcd_help
+gcd: Int, Int :> Int = to_sorted_asbolute_values o> gcd_help
 
-gcd_help : SortedAbsoluteValues -> Int
+gcd_help: SortedAbsoluteValues -> Int
   = ( min_abs == 0 )-->case
     True -> max_abs
-    False -> (y, x-->mod<--y)-->gcd_help
+    False -> (min_abs, max_abs-->mod<--min_abs)-->gcd_help

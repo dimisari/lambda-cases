@@ -16,9 +16,6 @@ Tuple Application
   f<--pair : C
 
 Syntactic Sugar
-  -Operator :->
-    ( a, b :-> f ) is (f<--a<--b)
-
   -Types
     7 x Int | 7 * Int | 7 , Int
     for arrays

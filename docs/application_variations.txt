@@ -1,0 +1,40 @@
+
+type application:
+
+  - (:->/<-:/--> and <--) variations:
+
+    A, B :-> TypeName
+    TypeName <-: A, B
+    A-->TypeName<--B
+
+  - one parenthesis in the middle variation
+    (TypeName and MoreTypeName must have at least one character)
+
+    TypeName(A, B)MoreTypeName
+
+  - seperate parentheses in the middle variation
+    (TypeName, MoreTypeName and EvenMoreTypeName must have at least one character)
+
+    TypeName(A)MoreTypeName(B)EvenMoreTypeName
+
+combination of variations example:
+
+  A-->TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <-: E, F
+
+same for function application:
+
+  - (:->/<-:/--> and <--) variations:
+
+    a, b :-> f
+    f <-: A, B
+    a-->f<--b
+
+  - one parenthesis in the middle variation
+    (f_name_start and more_f_name must have at least one character)
+
+    f_name_start(A, B)more_f_name
+
+  - seperate parentheses in the middle variation
+    (f_name_start, more_f_name and even_more_f_name must have at least one character)
+
+    f_name_start(A)more_f_name(B)even_more_f_name

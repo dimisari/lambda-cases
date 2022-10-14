@@ -1,10 +1,24 @@
-tuple_type A, B :-> Pair
-value (pair_first:A, pair_second:B)
+tuple_type A, B :-> Pair value ( pair_first: A, pair_second: B )
 
-Automatically generate:
+print_int_string: ( Int, String :-> Pair ) -> Empty-->WithIOEffects
+  = match_tuple ->
+    ("First: " + pair_first-->to_string + ", Second: " + pair_second + "\n")-->print
 
-get_pair_first: (A, B :-> Pair) -> A
-change_pair_first: (A, B :-> Pair) -> A -> (A, B :-> Pair)
+a: Int, String :-> Pair
+  = (1, "one")
 
-get_pair_second: (A, B :-> Pair) -> B
-change_pair_second: (A, B :-> Pair) -> B -> (A, B :-> Pair)
+i: Int
+  = a-->get_pair_first
+
+b: Int, String :-> Pair
+  = a, 2 :-> change_pair_first
+
+s: String
+  = a-->get_pair_second
+
+c: PairOf <-: Int, String
+  = a, "two" :-> change_pair_second 
+
+main: Empty-->WithIOEffects
+  = a-->print_int_string ;> i-->to_string-->print ;> b-->print_int_string ;>
+    s-->print ;> c-->print_int_string
