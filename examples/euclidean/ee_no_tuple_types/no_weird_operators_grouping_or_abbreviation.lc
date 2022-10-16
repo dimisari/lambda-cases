@@ -1,3 +1,4 @@
+
 initial_previous_coeffs_of_a: ( Int, Int )
   = ( 1, 0 )
 
