@@ -5,7 +5,7 @@ module AlgebraicExpressions where
 import Prelude (Eq, Show, show, (<*>), (<*), (<$>), (++))
 import Text.Parsec (try, string, (<|>))
 import Text.Parsec.String (Parser)
-import low_level.AtomicExpression (AtomicExpression)
+import AtomicExpression (AtomicExpression)
 import TypeExpression (TypeExpression)
 import ApplicationExpression (ApplicationExpression, application_expression_p)
 

@@ -1,10 +1,8 @@
 module Main where
 
-import TypeExpression
-import AtomicExpression
-import ApplicationExpression
-import AlgebraicExpressions
-import ValueExpression
-import Helpers
+import LowLevel.TypeExpression
+import LowLevel.AtomicExpression
+import LowLevel.Helpers
+import ValueExpressions
 
 main = undefined

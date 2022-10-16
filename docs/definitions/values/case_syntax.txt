@@ -6,6 +6,7 @@ function_name: Type0 -> Type1
   = case
     Type0Pattern0 -> result expression of type Type1 
     Type0Pattern1 -> result expression of type Type1
+    value_name_of_type_type0 -> default result expression of type Type1
 
 also for default result ignoring the input of the rest of the pattern. Instead of:
 

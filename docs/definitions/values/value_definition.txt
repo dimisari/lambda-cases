@@ -34,11 +34,3 @@ function definition (functions are values!)
     fname(some_type0_value)more_fname()even_more_fname : Type1 -> Type2
     fname()more_fname(some_type1_value)even_more_fname : Type0 -> Type2
     fname()more_fname()even_more_fname : Type0 -> Type1 -> Type2
-
-  for longer result expressions newline and indent after "value_name ->"
-
-    for example in the 1st way:
-
-    function_name: Type0 -> Type1
-      = value_name_of_type_type0 ->
-        longer result expression of type Type1

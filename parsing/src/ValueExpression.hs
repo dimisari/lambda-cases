@@ -5,17 +5,6 @@ import Text.Parsec (string, sepBy1, char, (<|>), try)
 import Text.Parsec.String (Parser)
 import TypeExpression (TypeExpression)
 
--- ParenthesisExpression
-
-data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
-  deriving (Eq, Show)
-
-[ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
-  [ char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
-  , ForPrecedence <$> value_expression_p
-  , Tuple <$> ( char ' ' *> sepBy1 value_expression_p (string ", ") <* char ' ' ) ]
-  :: [ Parser ParenthesisExpression ]
-
 -- ValueExpression
 
 data ValueExpression =
@@ -26,6 +15,17 @@ data ValueExpression =
 
 value_expression_p = undefined
   :: Parser ValueExpression
+
+-- ParenthesisExpression
+
+data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
+  deriving (Eq, Show)
+
+[ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
+  [ char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
+  , ForPrecedence <$> value_expression_p
+  , Tuple <$> ( char ' ' *> sepBy1 value_expression_p (string ", ") <* char ' ' ) ]
+  :: [ Parser ParenthesisExpression ]
 
 -- NameTypeAndValue
 

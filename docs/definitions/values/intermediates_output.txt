@@ -1,4 +1,6 @@
 
+example:
+
 f: Type0 -> Type1
   = value_name_of_type_0 -> 
     intermediates
