@@ -17,9 +17,9 @@ type application:
 
     TypeName(A)MoreTypeName(B)EvenMoreTypeName
 
-combination of variations example:
+  - combination of variations example:
 
-  A-->TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <-: E, F
+    A-->TypeName(B, C)MoreTypeName(D)EvenMoreTypeName <-: E, F
 
 same for function application:
 

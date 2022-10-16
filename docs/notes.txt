@@ -1,4 +1,5 @@
 left-to-right function composition
+
   not built-in, just love left-to-right function composition and "o>" looks like a good
   operator name for it
 
@@ -6,28 +7,25 @@ left-to-right function composition
     function_name0: Type0 -> Type1 
     function_name1: Type1 -> Type2 
 
-  Type0 -> Type2
-  function_name2 = function_name0 o> function_name1 
+  function_name2: Type0 -> Type2
+    = function_name0 o> function_name1 
 
 Tuple Application
 
   f : A -> B -> C
-  pair : A,B :-> Pair
+  pair : ( A, B )
   f<--pair : C
 
 Syntactic Sugar
-  -Types
+
+  - Types:
+
+    arrays
     7 x Int | 7 * Int | 7 , Int
-    for arrays
 
 Observations
 
   Maybe ~ List with length <= 1
 
-input value_names can be "_" if they are not used is the result expression
+Questions: Haskell Core?  graph reduction?
 
-anonymous tuple_types?? only projection functions??
-
-graph reduction
-
-Questions: Haskell Core?

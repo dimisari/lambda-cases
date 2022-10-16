@@ -4,13 +4,9 @@ apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
     NonEmpty -> NonEmpty ( head-->f, tail-->apply(f)to_each )
     Empty -> Empty
 
-type_predicate T-->IsAFunctor
-functions
-  apply_internally: (A -> B) -> T<--A -> T<--B
+type_predicate T-->IsAFunctor function apply_internally: (A -> B) -> T<--A -> T<--B
 
-type_proposition ListOf()s-->IsAFunctor
-proof
-  apply_internally = apply()to_each
+type_proposition ListOf()s-->IsAFunctor proof apply_internally = apply()to_each
 
-Empty-->WithIOEffects
-is_odd, [ 1, 2, 3, 4 ] :-> apply_internally --> print
+main: Empty-->WithIOEffects
+  is_odd, [ 1, 2, 3, 4 ] :-> apply_internally --> print

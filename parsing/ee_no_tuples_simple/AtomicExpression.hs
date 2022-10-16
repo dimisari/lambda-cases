@@ -9,30 +9,20 @@ import Helpers (lowers_underscore)
 
 -- ConstantExpression
 
-data ConstantExpression = Constant0 | Constant1
-  deriving (Eq)
-
+data ConstantExpression = Constant0 | Constant1 deriving (Eq)
 instance Show ConstantExpression where
   show = \case
-    Constant0 -> "0\n"
-    Constant1 -> "1\n"
+    Constant0 -> "0."
+    Constant1 -> "1."
 
-constant_p = zero_p <|> one_p
-  :: Parser ConstantExpression
-
-zero_p = char '0' *> pure Constant0
-  :: Parser ConstantExpression
-
-one_p = char '1' *> pure Constant1
-  :: Parser ConstantExpression
+[ zero_p, one_p, constant_p ] =
+  [ char '0' *> pure Constant0, char '1' *> pure Constant1, zero_p <|> one_p ]
+  :: [ Parser ConstantExpression ]
 
 -- NameExpression
 
-newtype NameExpression = NameExpression String
-  deriving (Eq)
-
-instance Show NameExpression where
-  show  = \(NameExpression n) -> n ++ "\n"
+newtype NameExpression = NameExpression String deriving (Eq)
+instance Show NameExpression where show  = \(NameExpression n) -> n ++ "."
 
 name_expression_p = NameExpression <$> lowers_underscore
   :: Parser NameExpression

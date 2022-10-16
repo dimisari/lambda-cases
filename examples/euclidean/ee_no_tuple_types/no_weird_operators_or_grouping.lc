@@ -13,19 +13,16 @@ extended_euclidean_help: (Int, Int) -> (Int, Int) -> Int -> Int -> (Int, Int, In
     y -> 
       intermediates
       compute_new: (Int, Int) -> (Int, Int)
-        = old_previous_coefficients ->
+        = match_tuple ->
           intermediates
           previous_previous: Int
-            = opc-->get_first
+            = first
           previous: Int
-            = opc-->get_second
+            = second
           current: Int
             = previous_previous - x-->div<--y * previous
           output
-          (previous, current)
-      new_previous_coeffs_of_a: (Int, Int)
-        = pcoa-->compute_new
-      new_previous_coeffs_of_b: (Int, Int)
-        = pcob-->compute_new
+          ( previous, current )
       output
-      extended_euclidean_help<--npcoa<--npcob<--y<--(x-->mod<--y)
+      extended_euclidean_help<--(compute_new<--pcoa)<--(compute_new<--pcob)
+        <--y<--(x-->mod<--y)

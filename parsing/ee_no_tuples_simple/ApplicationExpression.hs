@@ -11,7 +11,8 @@ import ValueExpression
 
 -- HighPrecedenceExpression
 
-data HighPrecedenceExpression = Parenthesis ParenthesisExpression | Atomic AtomicExpression
+data HighPrecedenceExpression =
+  Parenthesis ParenthesisExpression | Atomic AtomicExpression
   deriving (Eq)
 
 instance Show HighPrecedenceExpression where
@@ -33,8 +34,8 @@ data ApplicationExpression =
 
 instance Show ApplicationExpression where
   show = \case
-    LeftApplication hpe ae -> show hpe ++ "\tleft " ++ show ae
-    RightApplication hpe ae -> show hpe ++ "\tright " ++ show ae
+    LeftApplication hpe ae -> show hpe ++ " left_application " ++ show ae
+    RightApplication hpe ae -> show hpe ++ " right_application " ++ show ae
     HighPrecedence hpe -> show hpe
 
 application_expression_p =
@@ -42,12 +43,10 @@ application_expression_p =
   (HighPrecedence <$> high_precedence_expression_p)
   :: Parser ApplicationExpression
 
-left_application_expression_p =
-  LeftApplication
+[ left_application_expression_p, right_application_expression_p ] = 
+  [ LeftApplication
     <$> (high_precedence_expression_p <* string "<--") <*> application_expression_p
-    :: Parser ApplicationExpression
-
-right_application_expression_p = 
-  RightApplication
+  , RightApplication
     <$> (high_precedence_expression_p <* string "-->") <*> application_expression_p
-  :: Parser ApplicationExpression
+  ]
+  :: [ Parser ApplicationExpression ]

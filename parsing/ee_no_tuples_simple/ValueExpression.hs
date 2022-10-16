@@ -10,15 +10,11 @@ import TypeExpression (TypeExpression)
 data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
   deriving (Eq, Show)
 
-parenthesis_expression_p =
-  char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
-  :: Parser ParenthesisExpression
-
-for_precedence_p = ForPrecedence <$> value_expression_p
-  :: Parser ParenthesisExpression
-
-tuple_expression_p = Tuple <$> sepBy1 value_expression_p (string ", ")
-  :: Parser ParenthesisExpression
+[ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
+  [ char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
+  , ForPrecedence <$> value_expression_p
+  , Tuple <$> ( char ' ' *> sepBy1 value_expression_p (string ", ") <* char ' ' ) ]
+  :: [ Parser ParenthesisExpression ]
 
 -- ValueExpression
 
