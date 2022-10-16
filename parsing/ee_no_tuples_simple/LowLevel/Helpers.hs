@@ -1,8 +1,8 @@
 module LowLevel.Helpers where
 
-import Prelude (String, Either, flip)
-import Text.Parsec ((<|>), char, lower, many1, ParseError, parse)
-import Text.Parsec.String (Parser)
+import Prelude ( String, Either, flip )
+import Text.Parsec ( (<|>), char, lower, many1, ParseError, parse )
+import Text.Parsec.String ( Parser )
 
 -- Helpers
 

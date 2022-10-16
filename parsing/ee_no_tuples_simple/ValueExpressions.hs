@@ -9,11 +9,21 @@ import LowLevel.TypeExpression ( TypeExpression )
 import LowLevel.AtomicExpression
   ( AtomicExpression, atomic_expression_p, NameExpression )
 
+-- ParenthesisExpression
+
+data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
+  deriving (Eq, Show)
+
+[ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
+  [ char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
+  , ForPrecedence <$> value_expression_p
+  , Tuple <$> (char ' ' *> sepBy1 value_expression_p (string ", ") <* char ' ') ]
+  :: [ Parser ParenthesisExpression ]
+
 -- HighPrecedenceExpression
 
 data HighPrecedenceExpression =
-  Parenthesis ParenthesisExpression | Atomic AtomicExpression
-  deriving (Eq)
+  Parenthesis ParenthesisExpression | Atomic AtomicExpression deriving (Eq)
 
 instance Show HighPrecedenceExpression where
   show = \case
@@ -40,14 +50,15 @@ instance Show ApplicationExpression where
 
 application_expression_p =
   try left_application_expression_p <|> try right_application_expression_p <|>
-  (HighPrecedence <$> high_precedence_expression_p)
+  high_precedence_p
   :: Parser ApplicationExpression
 
-[ left_application_expression_p, right_application_expression_p ] = 
+[ left_application_expression_p, right_application_expression_p, high_precedence_p ] = 
   [ LeftApplication
     <$> (high_precedence_expression_p <* string "<--") <*> application_expression_p
   , RightApplication
-    <$> (high_precedence_expression_p <* string "-->") <*> application_expression_p ]
+    <$> (high_precedence_expression_p <* string "-->") <*> application_expression_p
+  , HighPrecedence <$> high_precedence_expression_p ]
   :: [ Parser ApplicationExpression ]
 
 -- MultiplicationExpression
@@ -65,8 +76,7 @@ instance Show MultiplicationExpression where
 [ multiplication_p, multiplication_expression_p ] =
   [ Multiplication
     <$> (application_expression_p <* string " * ") <*> multiplication_expression_p
-  , try multiplication_p <|> (Application <$> application_expression_p)
-  ]
+  , try multiplication_p <|> (Application <$> application_expression_p) ]
   :: [ Parser MultiplicationExpression ]
 
 -- SubtractionExpression
@@ -82,41 +92,42 @@ instance Show SubtractionExpression where
     MultiplicationExp me -> show me
 
 subtraction_expression_p =
-  try subtraction_p <|> (MultiplicationExp <$> multiplication_expression_p)
+  try subtraction_p <|> multiplication_exp_p
   :: Parser SubtractionExpression
 
-subtraction_p =
-  Subtraction
+[ subtraction_p, multiplication_exp_p ] =
+  [ Subtraction
     <$> (multiplication_expression_p <* string " - ") <*> multiplication_expression_p
-  :: Parser SubtractionExpression
+  , (MultiplicationExp <$> multiplication_expression_p) ]
+  :: [ Parser SubtractionExpression ]
 
--- ValueExpression
+-- ResultExpression
 
 type ResultExpression = SubtractionExpression
 
-data AbstractionExpression =
-  Abstraction NameExpression AbstractionExpression |
-  Result ResultExpression
+-- AbstractionExpression
 
-data CaseExpression = Case [ ( ResultExpression, ResultExpression ) ]
+data AbstractionExpression =
+  Abstraction NameExpression AbstractionExpression | Result ResultExpression
+  deriving (Eq, Show)
+
+abstraction_expression_p =
+  try abstraction_p <|> result_p :: Parser AbstractionExpression
+
+abstraction_p = undefined :: Parser AbstractionExpression
+
+result_p = undefined :: Parser AbstractionExpression
+
+-- ValueExpression
 
 data ValueExpression =
-  ApplicationExpression | CaseExpression | InteremediatesOutput [ NameTypeAndValue ]
+  ApplicationExp AbstractionExpression |
+  Case [ ( ResultExpression, ResultExpression ) ] |
+  InteremediatesAndOutput [ NameTypeAndValue ]
   deriving (Eq, Show)
 
 value_expression_p = undefined
   :: Parser ValueExpression
-
--- ParenthesisExpression
-
-data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
-  deriving (Eq, Show)
-
-[ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
-  [ char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
-  , ForPrecedence <$> value_expression_p
-  , Tuple <$> ( char ' ' *> sepBy1 value_expression_p (string ", ") <* char ' ' ) ]
-  :: [ Parser ParenthesisExpression ]
 
 -- NameTypeAndValue
 

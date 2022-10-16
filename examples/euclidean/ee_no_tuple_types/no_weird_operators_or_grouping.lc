@@ -1,29 +1,23 @@
 
-initial_previous_coeffs_of_a: ( Int, Int )
+initial_a_coeffs: ( Int, Int )
   = ( 1, 0 )
 
-initial_previous_coeffs_of_b: ( Int, Int )
+initial_b_coeffs: ( Int, Int )
   = ( 0, 1 )
 
 extended_euclidean: Int -> Int -> ( Int, Int, Int )
-  = extended_euclidean_help<--initial_previous_coeffs_of_a<--initial_previous_coeffs_of_b
+  = ee_recursion<--initial_a_coeffs<--initial_b_coeffs
 
-extended_euclidean_help: ( Int, Int ) -> ( Int, Int ) -> Int -> Int -> ( Int, Int, Int )
-  = previous_coeffs_of_a -> previous_coeffs_of_b -> x -> case
-    0 -> ( x, pcoa-->get_first, pcob-->get_first )
+ee_recursion: ( Int, Int ) -> ( Int, Int ) -> Int -> Int -> ( Int, Int, Int )
+  = a_coeffs -> b_coeffs -> x -> case
+    0 -> ( x, a_coeffs-->get_first, b_coeffs-->get_first )
     y -> 
       intermediates
-      compute_new: (Int, Int) -> (Int, Int)
-        = match_tuple ->
-          intermediates
-          previous_previous: Int
-            = first
-          previous: Int
-            = second
-          current: Int
-            = previous_previous - x-->div<--y * previous
-          output
-          ( previous, current )
+      compute_new: ( Int, Int ) -> ( Int, Int )
+        = ( prev_prev, prev ) -> ( prev, prev_prev - x-->div<--y * prev )
+      new_a_coeffs: ( Int, Int )
+        = compute_new<--a_coeffs
+      new_b_coeffs: ( Int, Int )
+        = compute_new<--b_coeffs
       output
-      extended_euclidean_help<--(compute_new<--pcoa)<--(compute_new<--pcob)
-        <--y<--(x-->mod<--y)
+      ee_recursion<--new_a_coeffs<--new_b_coeffs<--y<--(x-->mod<--y)

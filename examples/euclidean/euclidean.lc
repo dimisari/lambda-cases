@@ -8,11 +8,13 @@ to_sorted_asbolute_values: Int, Int :> SortedAbsoluteValues
     abs_x, abs_y, max_abs, min_abs: Int, Int, Int, Int
       = x-->abs, y-->abs, abs_x-->max<--abs_y, abs_x-->min<--abs_y
     output
-    (max_abs, min_abs)
-
-gcd: Int, Int :> Int = to_sorted_asbolute_values o> gcd_help
+    ( max_abs, min_abs )
 
 gcd_help: SortedAbsoluteValues -> Int
-  = ( min_abs == 0 )-->case
+  = (min_abs == 0)-->case
     True -> max_abs
-    False -> (min_abs, max_abs-->mod<--min_abs)-->gcd_help
+    False -> ( min_abs, max_abs-->mod<--min_abs )-->gcd_help
+
+gcd: Int, Int :> Int
+  = to_sorted_asbolute_values o> gcd_help
+

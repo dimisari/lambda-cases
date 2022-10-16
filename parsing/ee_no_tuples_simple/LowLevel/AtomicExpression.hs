@@ -9,7 +9,7 @@ import LowLevel.Helpers (lowers_underscore)
 
 -- ConstantExpression
 
-data ConstantExpression = Constant0 | Constant1 deriving (Eq)
+data ConstantExpression = Constant0 | Constant1 deriving ( Eq )
 instance Show ConstantExpression where
   show = \case
     Constant0 -> "0."
@@ -21,7 +21,7 @@ instance Show ConstantExpression where
 
 -- NameExpression
 
-newtype NameExpression = NameExpression String deriving (Eq)
+newtype NameExpression = NameExpression String deriving ( Eq )
 instance Show NameExpression where show  = \(NameExpression n) -> n ++ "."
 
 name_expression_p = NameExpression <$> lowers_underscore
