@@ -1,6 +1,5 @@
-
-Here the value_names of each Pattern given in the type definition can be used in the
-corresponding result expression. Therefore, we only pattern match on the Patterns.
+Here the field_names in the type TupleType which must be a tuple_type can be used in the
+result expression.
 
 function_name: TupleType -> OtherType
-  = match_tuple -> result expression of type Type1 
+  = match_tuple -> result expression of type OtherType

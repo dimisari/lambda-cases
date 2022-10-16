@@ -1,6 +1,6 @@
 
-f: Type0 -> Type1 -> Type2
-  = value_name0 -> 
+f: Type0 -> Type1
+  = value_name_of_type_0 -> 
     intermediates
     value_name1: TypeExpression0
       = value expression 0

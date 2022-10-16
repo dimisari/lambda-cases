@@ -1,3 +1,6 @@
-case_type A-->OrNothing values Value A | Nothing
-case_type A-->Or<--B values LeftType A | RightType B
+
+case_type A-->ValueOrNothing values Value A | Nothing
+
+case_type A-->LeftOrRight<--B values Left A | Right B
+
 case_type ListOf(A)s values NonEmpty ( head:A, tail:ListOf(A)s ) | Empty

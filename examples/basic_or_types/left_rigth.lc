@@ -1,10 +1,11 @@
-a, b: Int-->Or<--String, Int-->Or<--String
-  = LeftType 1, RightType "One"
 
-print_int_or_string: Int-->Or<--String -> IO Empty
+a, b: Int-->LeftOrRight<--String, Int-->LeftOrRight<--String
+  = Left 1, Right "One"
+
+print_int_or_string: Int-->LeftOrRight<--String -> Empty-->WithIOEffects
   = case 
-    LeftType -> get-->( + 1 )-->to_string-->( "Total after adding 1: " + )-->print
-    RightType -> get-->( "Turns out it says: " + )-->print
+    Left -> pattern_value-->( + 1 )-->to_string-->( "Total after adding 1: " + )-->print
+    Right -> pattern_value-->( "Turns out it says: " + )-->print
 
-main: IO Empty
+main: Empty-->WithIOEffects
   = a-->print_int_or_string ;> b-->print_int_or_string

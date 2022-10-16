@@ -3,42 +3,38 @@ Example:
 
 case_type A, B :-> TypeName
 values
-  Case0 A | Case1 (b_value: B, int_value:Int) | Case2 (A, B :-> Pair) | Case3 ListOf(A)s
+  Case0 A | Case1 (b_value: B, int_value: Int) | Case2 (A, B :-> Pair) | Case3 ListOf(A)s
 
 Comments:
+
   - case syntax can be used for Case matching on or_types only
+
   - default value_name for the value of all Cases: pattern_value
 
     Example function:
 
-    fun: (A, B :-> TypeName) -> A-->OrNothing
+    fun: (A, B :-> TypeName) -> A-->ValueOrNothing
       = case
         Case0 -> Value pattern_value
-        Case1 -> Nothing
-        Case2 -> Nothing
-        Case3 -> Nothing
+        ... -> Nothing
 
   - anonymous tuple_types can be used for naming fields of a Case
 
     Example function:
 
-    fun: (A, B :-> TypeName) -> B-->OrNothing
+    fun: (A, B :-> TypeName) -> B-->ValueOrNothing
       = case
-        Case0 -> Nothing
         Case1 -> Value b_value
-        Case2 -> Nothing
-        Case3 -> Nothing
+        ... -> Nothing
 
   - actual tuple_types can be used in a Case and there is field inheritance
 
     Example function:
 
-    fun: (A, B :-> TypeName) -> A-->OrNothing
+    fun: (A, B :-> TypeName) -> A-->ValueOrNothing
       = case
-        Case0 -> Nothing
-        Case1 -> Nothing
         Case2 -> Value pair_first
-        Case3 -> Nothing
+        ... -> Nothing
 
   - is functions should be generated automatically:
 

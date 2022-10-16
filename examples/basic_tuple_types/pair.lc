@@ -2,23 +2,21 @@ tuple_type A, B :-> Pair value ( pair_first: A, pair_second: B )
 
 print_int_string: ( Int, String :-> Pair ) -> Empty-->WithIOEffects
   = match_tuple ->
-    ("First: " + pair_first-->to_string + ", Second: " + pair_second + "\n")-->print
+    ( "First: " + pair_first-->to_string + ", Second: " + pair_second + "\n")-->print
 
 a: Int, String :-> Pair
-  = (1, "one")
-
+  = ( 1, "one" )
 i: Int
   = a-->get_pair_first
+s: String
+  = a-->get_pair_second
 
 b: Int, String :-> Pair
   = a, 2 :-> change_pair_first
 
-s: String
-  = a-->get_pair_second
-
-c: PairOf <-: Int, String
+c: Int, String :-> Pair
   = a, "two" :-> change_pair_second 
 
 main: Empty-->WithIOEffects
-  = a-->print_int_string ;> i-->to_string-->print ;> b-->print_int_string ;>
-    s-->print ;> c-->print_int_string
+  = a-->print_int_string ;> i-->to_string-->print ;> s-->print ;>
+    b-->print_int_string ;> c-->print_int_string

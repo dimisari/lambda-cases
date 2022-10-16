@@ -14,8 +14,8 @@ function definition (functions are values!)
   - one prenthesis in the middle
     (fname and more_fname must have at least one character)
 
-    Type0 -> Type1 -> Type2
-    fname(vname0, vname1)more_fname = result expression of type Type2
+    fname(vname0, vname1)more_fname: Type0 -> Type1 -> Type2
+      = result expression of type Type2
 
     the following expressions are possible and they have the corresponding types
 
@@ -26,8 +26,8 @@ function definition (functions are values!)
   - seperate parentheses in the middle
     (fname, more_fname and even_more_fname must have at least one character)
 
-    Type0 -> Type1 -> Type2
-    fname(vname0)more_fname(vname1)even_more_fname = result expression of type Type2
+    fname(vname0)more_fname(vname1)even_more_fname: Type0 -> Type1 -> Type2
+      = result expression of type Type2
 
     the following expressions are possible and they have the corresponding types
 
@@ -39,6 +39,6 @@ function definition (functions are values!)
 
     for example in the 1st way:
 
-    function_name: Type0 -> Type1  
+    function_name: Type0 -> Type1
       = value_name_of_type_type0 ->
         longer result expression of type Type1

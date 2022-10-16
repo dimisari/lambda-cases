@@ -1,3 +1,4 @@
+
 apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = case 
     NonEmpty -> NonEmpty ( head-->f, tail-->apply(f)to_each )
@@ -11,5 +12,5 @@ type_proposition ListOf()s-->IsAFunctor
 proof
   apply_internally = apply()to_each
 
-IO Empty
+Empty-->WithIOEffects
 is_odd, [ 1, 2, 3, 4 ] :-> apply_internally --> print
