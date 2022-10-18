@@ -1,13 +1,13 @@
 
 tuple_type PreviousCoeffs value ( previous_previous:Int, previous:Int )
 
-init_previous_coeffs_of_a, init_previous_coeffs_of_b: PreviousCoeffs, PreviousCoeffs
+initial_a_coeffs, initial_b_coeffs: PreviousCoeffs, PreviousCoeffs
   = ( 1, 0 ), ( 0, 1 )
 
 tuple_type GcdAndCoeffs value ( gcd:Int, a:Int, b:Int )
 
 extended_euclidean: Int, Int :> GcdAndCoeffs
-  = init_previous_coeffs_of_a, init_previous_coeffs_of_b :-> ee_recursion
+  = initial_a_coeffs, initial_b_coeffs :-> ee_recursion
 
 ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int :> GcdAndCoeffs
   = a_coeffs, b_coeffs, x :> case

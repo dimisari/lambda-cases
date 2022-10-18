@@ -9,4 +9,4 @@ f: Type0 -> Type1
     value_name2, value_name3: TypeExpression1, TypeExpression2
       = value expression 1, value expression 2
     output
-    result expression
+    result expression of type Type1

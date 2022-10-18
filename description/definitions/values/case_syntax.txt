@@ -1,11 +1,11 @@
 
-Here the field_names of each Pattern input can be used in the corresponding result
-expression. Therefore, we only pattern match on the Patterns. Here Type0 is a case_type.
+Here the field_names of each Case input can be used in the corresponding result
+expression. Therefore, we only match on the Case. Here Type0 is a case_type.
 
 function_name: Type0 -> Type1  
   = case
-    Type0Pattern0 -> result expression of type Type1 
-    Type0Pattern1 -> result expression of type Type1
+    Type0Case0 -> result expression of type Type1 
+    Type0Case1 -> result expression of type Type1
     value_name_of_type_type0 -> default result expression of type Type1
 
 also for default result ignoring the input of the rest of the pattern. Instead of:

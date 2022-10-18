@@ -2,28 +2,38 @@
 
 module ValueExpressions where
 
-import Prelude ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++) )
-import Text.Parsec ( (<|>), try, char, sepBy1, string )
+import Prelude
+  ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), return )
+import Text.Parsec ( (<|>), try, char, many1, string )
 import Text.Parsec.String ( Parser )
 import LowLevel.TypeExpression ( TypeExpression )
 import LowLevel.AtomicExpression
-  ( AtomicExpression, atomic_expression_p, NameExpression )
+  ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
+  , TupleMatchingExpression, tuple_matching_expression_p )
+import LowLevel.Helpers (seperated2)
 
 -- ParenthesisExpression
 
 data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show ParenthesisExpression where
+  show = \case
+    ForPrecedence e -> "(" ++ show e ++ ")"
+    Tuple es -> "Tuple: " ++ show es
 
 [ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
-  [ char '(' *> (try for_precedence_p <|> tuple_expression_p) <* char ')'
-  , ForPrecedence <$> value_expression_p
-  , Tuple <$> (char ' ' *> sepBy1 value_expression_p (string ", ") <* char ' ') ]
+  [ try tuple_expression_p <|> for_precedence_p
+  , ForPrecedence <$> (char '(' *> value_expression_p <* char ')')
+  , Tuple <$> (string "( " *> seperated2 value_expression_p ", " <* string " )")
+  ]
   :: [ Parser ParenthesisExpression ]
 
 -- HighPrecedenceExpression
 
 data HighPrecedenceExpression =
-  Parenthesis ParenthesisExpression | Atomic AtomicExpression deriving (Eq)
+  Parenthesis ParenthesisExpression | Atomic AtomicExpression
+  deriving (Eq)
 
 instance Show HighPrecedenceExpression where
   show = \case
@@ -31,7 +41,7 @@ instance Show HighPrecedenceExpression where
     Atomic ae -> show ae
 
 high_precedence_expression_p =
-  (Parenthesis <$> parenthesis_expression_p) <|> (Atomic <$> atomic_expression_p)
+  Parenthesis <$> parenthesis_expression_p <|> Atomic <$> atomic_expression_p
   :: Parser HighPrecedenceExpression
 
 -- ApplicationExpression
@@ -55,9 +65,9 @@ application_expression_p =
 
 [ left_application_expression_p, right_application_expression_p, high_precedence_p ] = 
   [ LeftApplication
-    <$> (high_precedence_expression_p <* string "<--") <*> application_expression_p
+    <$> high_precedence_expression_p <*> (string "<--" *> application_expression_p)
   , RightApplication
-    <$> (high_precedence_expression_p <* string "-->") <*> application_expression_p
+    <$> high_precedence_expression_p <*> (string "-->" *> application_expression_p)
   , HighPrecedence <$> high_precedence_expression_p ]
   :: [ Parser ApplicationExpression ]
 
@@ -73,10 +83,10 @@ instance Show MultiplicationExpression where
     Multiplication ae me -> "(" ++ show ae ++ " mul " ++ show me ++ ")"
     Application ae -> show ae
 
-[ multiplication_p, multiplication_expression_p ] =
-  [ Multiplication
-    <$> (application_expression_p <* string " * ") <*> multiplication_expression_p
-  , try multiplication_p <|> (Application <$> application_expression_p) ]
+[ multiplication_expression_p, multiplication_p ] =
+  [ try multiplication_p <|> Application <$> application_expression_p
+  , Multiplication
+    <$> application_expression_p <*> (string " * " *> multiplication_expression_p) ]
   :: [ Parser MultiplicationExpression ]
 
 -- SubtractionExpression
@@ -91,54 +101,97 @@ instance Show SubtractionExpression where
     Subtraction me1 me2 -> "(" ++ show me1 ++ " minus " ++ show me2 ++ ")"
     MultiplicationExp me -> show me
 
-subtraction_expression_p =
-  try subtraction_p <|> multiplication_exp_p
+subtraction_expression_p = try subtraction_p <|> multiplication_exp_p
   :: Parser SubtractionExpression
 
 [ subtraction_p, multiplication_exp_p ] =
   [ Subtraction
     <$> (multiplication_expression_p <* string " - ") <*> multiplication_expression_p
-  , (MultiplicationExp <$> multiplication_expression_p) ]
+  , MultiplicationExp <$> multiplication_expression_p ]
   :: [ Parser SubtractionExpression ]
 
 -- ResultExpression
 
 type ResultExpression = SubtractionExpression
 
+-- AbstractionArgument
+
+data AbstractionArgumentExpression =
+  Name NameExpression | TupleMatching TupleMatchingExpression
+  deriving (Eq, Show)
+
+abstraction_argument_expression_p =
+  Name <$> name_expression_p <|> TupleMatching <$> tuple_matching_expression_p
+  :: Parser AbstractionArgumentExpression
+
 -- AbstractionExpression
 
 data AbstractionExpression =
-  Abstraction NameExpression AbstractionExpression | Result ResultExpression
+  Abstraction AbstractionArgumentExpression AbstractionExpression |
+  Result ResultExpression
+  deriving (Eq)
+
+instance Show AbstractionExpression where
+  show = \case
+    Abstraction aae ae -> show aae ++ " abstraction " ++ show ae
+    Result e -> show e
+
+[ abstraction_expression_p, abstraction_p, result_p ] =
+  [ try abstraction_p <|> result_p
+  , Abstraction <$> abstraction_argument_expression_p <*>
+    (string " -> " *> abstraction_expression_p)
+  , Result <$> subtraction_expression_p ]
+  :: [ Parser AbstractionExpression ]
+
+-- CaseExpression
+
+newtype CaseExpression = Case [ ( AtomicExpression, ValueExpression ) ]
   deriving (Eq, Show)
 
-abstraction_expression_p =
-  try abstraction_p <|> result_p :: Parser AbstractionExpression
+case_expression_p = undefined
+  :: Parser CaseExpression
 
-abstraction_p = undefined :: Parser AbstractionExpression
+-- InterOutputExpression
 
-result_p = undefined :: Parser AbstractionExpression
+newtype InterOutputExpression = InteremediatesAndOutput [ NameTypeAndValue ]
+  deriving (Eq, Show)
+
+inter_output_expression_p = undefined
+  :: Parser InterOutputExpression
 
 -- ValueExpression
 
 data ValueExpression =
-  ApplicationExp AbstractionExpression |
-  Case [ ( ResultExpression, ResultExpression ) ] |
-  InteremediatesAndOutput [ NameTypeAndValue ]
-  deriving (Eq, Show)
+  AbstractionExp AbstractionExpression | CaseExp CaseExpression |
+  InterOutputExp InterOutputExpression 
+  deriving (Eq)
 
-value_expression_p = undefined
+instance Show ValueExpression where
+  show = \case
+    AbstractionExp e -> show e
+    CaseExp e -> show e
+    InterOutputExp e -> show e
+
+value_expression_p =
+  AbstractionExp <$> try abstraction_expression_p <|>
+  CaseExp <$> try case_expression_p <|>
+  InterOutputExp <$> inter_output_expression_p
   :: Parser ValueExpression
 
 -- NameTypeAndValue
 
 data NameTypeAndValue = NTAV
-  { get_name :: String, get_type :: TypeExpression, get_value :: ValueExpression }
+  { get_name :: NameExpression, get_type :: TypeExpression
+  , get_value :: ValueExpression }
   deriving (Eq, Show)
+
+name_type_and_value_p = undefined
+  :: Parser NameTypeAndValueLists
 
 --NameTypeAndValueLists
 
 data NameTypeAndValueLists = NTAVL
-  { get_names :: [ String ], get_types :: [ TypeExpression ]
+  { get_names :: [ NameExpression ], get_types :: [ TypeExpression ]
   , get_values :: [ ValueExpression ] }
   deriving (Eq, Show)
 

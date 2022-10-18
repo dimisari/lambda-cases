@@ -8,12 +8,10 @@ type application:
     A-->TypeName<--B
 
   - one parenthesis in the middle variation
-    (TypeName and MoreTypeName must have at least one character)
 
     TypeName(A, B)MoreTypeName
 
   - seperate parentheses in the middle variation
-    (TypeName, MoreTypeName and EvenMoreTypeName must have at least one character)
 
     TypeName(A)MoreTypeName(B)EvenMoreTypeName
 
@@ -30,11 +28,9 @@ same for function application:
     a-->f<--b
 
   - one parenthesis in the middle variation
-    (f_name_start and more_f_name must have at least one character)
 
-    f_name_start(A, B)more_f_name
+    f_name(A, B)more_f_name
 
   - seperate parentheses in the middle variation
-    (f_name_start, more_f_name and even_more_f_name must have at least one character)
 
-    f_name_start(A)more_f_name(B)even_more_f_name
+    f_name(A)more_f_name(B)even_more_f_name
