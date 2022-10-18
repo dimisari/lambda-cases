@@ -1,1 +1,1 @@
-# Examples of types for showing syntax and usage
+# case\_type and tuple\_type Examples with comments

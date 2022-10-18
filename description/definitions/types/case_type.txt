@@ -41,4 +41,3 @@ Comments:
     isCase0: ( A, B :-> TypeName ) -> Bool
     isCase1: ( A, B :-> TypeName ) -> Bool
     ...
-
