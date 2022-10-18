@@ -1,3 +1,3 @@
-# lambda-case
-
-purely functional programming language
+# Language Description
+# Examples
+# Combinator Parsers for the examples
