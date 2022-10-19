@@ -3,8 +3,8 @@
 module LowLevel.AtomicExpression where
 
 import Prelude
-  ( Eq, show, Show, String, (<$>), pure, (<*), (*>), (++), Bool(True), ($), return
-  , (==), elem )
+  ( Eq, Show, show, String, (<$>), pure, (<*), (*>), (++), Bool(True), ($), return
+  , elem )
 import Text.Parsec ( (<|>), char, string, parserFail )
 import Text.Parsec.String ( Parser )
 import LowLevel.Helpers ( lowers_underscore, seperated2 )
@@ -15,8 +15,8 @@ data ConstantExpression = Constant0 | Constant1 deriving ( Eq )
 
 instance Show ConstantExpression where
   show = \case
-    Constant0 -> "0."
-    Constant1 -> "1."
+    Constant0 -> "0"
+    Constant1 -> "1"
 
 [ zero_p, one_p, constant_p ] =
   [ char '0' *> pure Constant0, char '1' *> pure Constant1, zero_p <|> one_p ]
@@ -26,7 +26,7 @@ instance Show ConstantExpression where
 
 newtype NameExpression = NameExpression String deriving ( Eq )
 
-instance Show NameExpression where show  = \(NameExpression n) -> n ++ "."
+instance Show NameExpression where show  = \(NameExpression n) -> n
 
 name_expression_p = do
   lu <- lowers_underscore

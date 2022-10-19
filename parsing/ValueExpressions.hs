@@ -5,7 +5,7 @@ module ValueExpressions where
 import Prelude
   ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), return
   , map, concat )
-import Text.Parsec ( (<|>), try, char, many, many1, string, eof )
+import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 import LowLevel.TypeExpression ( TypeExpression, type_expression_p )
 import LowLevel.AtomicExpression
@@ -21,7 +21,7 @@ data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpres
 instance Show ParenthesisExpression where
   show = \case
     ForPrecedence e -> "(" ++ show e ++ ")"
-    Tuple es -> "Tuple: " ++ show es
+    Tuple es -> "Tuple " ++ show es
 
 [ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
   [ try tuple_expression_p <|> for_precedence_p
@@ -114,7 +114,12 @@ subtraction_expression_p = try subtraction_p <|> multiplication_exp_p
 -- SpecificCaseExpression
 
 data SpecificCaseExpression = SpecificCase AtomicExpression ValueExpression 
-  deriving (Eq, Show)
+  deriving ( Eq )
+ 
+instance Show SpecificCaseExpression where
+  show = \(SpecificCase ae ve) -> 
+    "specific case: " ++ show ae ++ "\n" ++
+    "result: " ++ show ve ++ "\n"
 
 specific_case_expression_p = do 
   many (char ' ' <|> char '\t')
@@ -128,7 +133,11 @@ specific_case_expression_p = do
 -- CaseExpression
 
 newtype CaseExpression = Case [ SpecificCaseExpression ]
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show CaseExpression where
+  show = \(Case sces) ->
+    "case start\n\n" ++ sces --> map (show .> (++ "\n")) --> concat
 
 case_expression_p =
   Case <$> (string "case\n" *> many1 (specific_case_expression_p <* char '\n'))
@@ -146,7 +155,7 @@ instance Show NameTypeAndValueExpression where
     "type: " ++ show te ++ "\n" ++
     "value: " ++ show ve ++ "\n"
 
-name_type_and_value_p = do 
+name_type_and_value_expression_p = do 
   many (char ' ' <|> char '\t')
   ne <- name_expression_p
   string ": "
@@ -155,33 +164,42 @@ name_type_and_value_p = do
   many (char ' ' <|> char '\t')
   string "= "
   ve <- value_expression_p
-  (many1 (char '\n') *> return ()) <|> eof
+  skipMany1 (char '\n') <|> eof
   return $ NameTypeAndValue ne te ve
   :: Parser NameTypeAndValueExpression
+
+-- NameTypeAndValueExpressions
+
+newtype NameTypeAndValueExpressions = NameTypeAndValueExps [ NameTypeAndValueExpression ]
+  deriving (Eq)
+
+instance Show NameTypeAndValueExpressions where
+  show = \(NameTypeAndValueExps ntave) ->
+    ntave --> map (show .> (++ "\n")) --> concat --> ( "\n" ++)
+
+name_type_and_value_expressions_p = 
+  NameTypeAndValueExps <$> many1 (try name_type_and_value_expression_p)
+  :: Parser NameTypeAndValueExpressions
 
 -- IntermediatesOutputExpression
 
 data IntermediatesOutputExpression =
-  IntermediatesOutputExpression [ NameTypeAndValueExpression ] ValueExpression
+  IntermediatesOutputExpression NameTypeAndValueExpressions ValueExpression
   deriving (Eq)
 
 instance Show IntermediatesOutputExpression where
   show = \(IntermediatesOutputExpression ntave ve) -> 
-    let
-    intermediates = ntave --> map (show .> (++ "\n")) --> concat
-      :: String
-    in
-    "intermediates\n" ++ intermediates ++ "output\n" ++ show ve
+    "intermediates\n" ++ show ntave ++ "output\n" ++ show ve
 
 intermediates_output_expression_p = do 
   many (char ' ' <|> char '\t')
   string "intermediates\n"
-  ntavl <- many1 (try name_type_and_value_p)
+  ntave <- name_type_and_value_expressions_p
   many (char ' ' <|> char '\t')
   string "output\n"
   many (char ' ' <|> char '\t')
   ve <- value_expression_p
-  return $ IntermediatesOutputExpression ntavl ve
+  return $ IntermediatesOutputExpression ntave ve
   :: Parser IntermediatesOutputExpression
 
 -- AbstractionArgument
