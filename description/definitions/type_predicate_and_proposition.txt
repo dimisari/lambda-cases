@@ -9,11 +9,11 @@ type_predicate definition
     fun1: A -> B -> C 
     fun2: (C -> A) -> B -> A
 
-type_proposition definition
+type_theorem definition
 
   example:
 
-  type_proposition Predicate_About(Int, Real)_And<--String
+  type_theorem Predicate_About(Int, Real)_And<--String
   proof
     fun1 = specific_fun_1
     fun2 = specific_fun_2

@@ -3,14 +3,15 @@
 module ValueExpressions where
 
 import Prelude
-  ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), return )
-import Text.Parsec ( (<|>), try, char, many1, string )
+  ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), return
+  , map, concat )
+import Text.Parsec ( (<|>), try, char, many, many1, string, eof )
 import Text.Parsec.String ( Parser )
-import LowLevel.TypeExpression ( TypeExpression )
+import LowLevel.TypeExpression ( TypeExpression, type_expression_p )
 import LowLevel.AtomicExpression
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
   , TupleMatchingExpression, tuple_matching_expression_p )
-import LowLevel.Helpers (seperated2)
+import LowLevel.Helpers ( seperated2, (-->), (.>) )
 
 -- ParenthesisExpression
 
@@ -110,9 +111,78 @@ subtraction_expression_p = try subtraction_p <|> multiplication_exp_p
   , MultiplicationExp <$> multiplication_expression_p ]
   :: [ Parser SubtractionExpression ]
 
--- ResultExpression
+-- SpecificCaseExpression
 
-type ResultExpression = SubtractionExpression
+data SpecificCaseExpression = SpecificCase AtomicExpression ValueExpression 
+  deriving (Eq, Show)
+
+specific_case_expression_p = do 
+  many (char ' ' <|> char '\t')
+  ae <- atomic_expression_p
+  string " ->"
+  char ' ' <|> char '\n'
+  ve <- value_expression_p
+  return $ SpecificCase ae ve
+  :: Parser SpecificCaseExpression
+
+-- CaseExpression
+
+newtype CaseExpression = Case [ SpecificCaseExpression ]
+  deriving (Eq, Show)
+
+case_expression_p =
+  Case <$> (string "case\n" *> many1 (specific_case_expression_p <* char '\n'))
+  :: Parser CaseExpression
+
+-- NameTypeAndValueExpression
+
+data NameTypeAndValueExpression =
+  NameTypeAndValue NameExpression TypeExpression ValueExpression
+  deriving (Eq)
+
+instance Show NameTypeAndValueExpression where
+  show = \(NameTypeAndValue ne te ve) -> 
+    "name: " ++ show ne ++ "\n" ++
+    "type: " ++ show te ++ "\n" ++
+    "value: " ++ show ve ++ "\n"
+
+name_type_and_value_p = do 
+  many (char ' ' <|> char '\t')
+  ne <- name_expression_p
+  string ": "
+  te <- type_expression_p
+  char '\n'
+  many (char ' ' <|> char '\t')
+  string "= "
+  ve <- value_expression_p
+  (many1 (char '\n') *> return ()) <|> eof
+  return $ NameTypeAndValue ne te ve
+  :: Parser NameTypeAndValueExpression
+
+-- IntermediatesOutputExpression
+
+data IntermediatesOutputExpression =
+  IntermediatesOutputExpression [ NameTypeAndValueExpression ] ValueExpression
+  deriving (Eq)
+
+instance Show IntermediatesOutputExpression where
+  show = \(IntermediatesOutputExpression ntave ve) -> 
+    let
+    intermediates = ntave --> map (show .> (++ "\n")) --> concat
+      :: String
+    in
+    "intermediates\n" ++ intermediates ++ "output\n" ++ show ve
+
+intermediates_output_expression_p = do 
+  many (char ' ' <|> char '\t')
+  string "intermediates\n"
+  ntavl <- many1 (try name_type_and_value_p)
+  many (char ' ' <|> char '\t')
+  string "output\n"
+  many (char ' ' <|> char '\t')
+  ve <- value_expression_p
+  return $ IntermediatesOutputExpression ntavl ve
+  :: Parser IntermediatesOutputExpression
 
 -- AbstractionArgument
 
@@ -124,69 +194,43 @@ abstraction_argument_expression_p =
   Name <$> name_expression_p <|> TupleMatching <$> tuple_matching_expression_p
   :: Parser AbstractionArgumentExpression
 
--- AbstractionExpression
+-- ResultExpression
 
-data AbstractionExpression =
-  Abstraction AbstractionArgumentExpression AbstractionExpression |
-  Result ResultExpression
-  deriving (Eq)
+data ResultExpression =
+  SubtractionExp SubtractionExpression | CaseExp CaseExpression |
+  IntermediatesOutputExp IntermediatesOutputExpression
+  deriving ( Eq )
 
-instance Show AbstractionExpression where
+instance Show ResultExpression where
   show = \case
-    Abstraction aae ae -> show aae ++ " abstraction " ++ show ae
-    Result e -> show e
+    SubtractionExp e -> show e
+    CaseExp e -> show e
+    IntermediatesOutputExp e -> show e
 
-[ abstraction_expression_p, abstraction_p, result_p ] =
-  [ try abstraction_p <|> result_p
-  , Abstraction <$> abstraction_argument_expression_p <*>
-    (string " -> " *> abstraction_expression_p)
-  , Result <$> subtraction_expression_p ]
-  :: [ Parser AbstractionExpression ]
-
--- CaseExpression
-
-newtype CaseExpression = Case [ ( AtomicExpression, ValueExpression ) ]
-  deriving (Eq, Show)
-
-case_expression_p = undefined
-  :: Parser CaseExpression
-
--- InterOutputExpression
-
-newtype InterOutputExpression = InteremediatesAndOutput [ NameTypeAndValue ]
-  deriving (Eq, Show)
-
-inter_output_expression_p = undefined
-  :: Parser InterOutputExpression
+result_expression_p =
+  SubtractionExp <$> try subtraction_expression_p <|>
+  CaseExp <$> try case_expression_p <|>
+  IntermediatesOutputExp <$> intermediates_output_expression_p
+  :: Parser ResultExpression
 
 -- ValueExpression
 
 data ValueExpression =
-  AbstractionExp AbstractionExpression | CaseExp CaseExpression |
-  InterOutputExp InterOutputExpression 
+  Abstraction AbstractionArgumentExpression ValueExpression |
+  Result ResultExpression
   deriving (Eq)
 
 instance Show ValueExpression where
   show = \case
-    AbstractionExp e -> show e
-    CaseExp e -> show e
-    InterOutputExp e -> show e
+    Abstraction aae ae -> show aae ++ " abstraction " ++ show ae
+    Result e -> show e
 
-value_expression_p =
-  AbstractionExp <$> try abstraction_expression_p <|>
-  CaseExp <$> try case_expression_p <|>
-  InterOutputExp <$> inter_output_expression_p
-  :: Parser ValueExpression
-
--- NameTypeAndValue
-
-data NameTypeAndValue = NTAV
-  { get_name :: NameExpression, get_type :: TypeExpression
-  , get_value :: ValueExpression }
-  deriving (Eq, Show)
-
-name_type_and_value_p = undefined
-  :: Parser NameTypeAndValueLists
+[ value_expression_p, abstraction_p, result_p ] =
+  [ try abstraction_p <|> result_p
+  , Abstraction <$> abstraction_argument_expression_p <*>
+    (string " -> " *> value_expression_p)
+  , Result <$> result_expression_p ]
+  :: [ Parser ValueExpression ]
 
 --NameTypeAndValueLists
 
@@ -198,4 +242,4 @@ data NameTypeAndValueLists = NTAVL
 -- Probably going to need 
 
 to_NTAV_list = undefined
-  :: NameTypeAndValueLists -> [ NameTypeAndValue ]
+  :: NameTypeAndValueLists -> [ NameTypeAndValueExpression ]

@@ -2,22 +2,22 @@
 
 type_predicate T-->IsAnAdditionMagma functions + : T -> T -> T
 
-
-type_proposition Int-->IsAnAdditionMagma proof + = -->int_addition<--
-
-type_proposition String-->IsAnAdditionMagma proof + = -->concat_string<--
-
-type_proposition Float-->IsAnAdditionMagma proof + = -->float_addition<--
+type_theorem Int-->IsAnAdditionMagma proof + = -->int_addition<--
+type_theorem String-->IsAnAdditionMagma proof + = -->concat_string<--
+type_theorem Float-->IsAnAdditionMagma proof + = -->float_addition<--
 
 # product magma
 
 type_predicate T-->IsAProductMagma functions * : T -> T -> T
 
+type_theorem Int-->IsAProductMagma proof * = -->int_product<--
+type_theorem Float-->IsAProductMagma proof * = -->float_product<--
 
-type_proposition Int-->IsAProductMagma proof * = -->int_product<--
+# values
 
-type_proposition Float-->IsAProductMagma proof * = -->float_product<--
-
-i: Int = 1 + 2 * 3
-f: Float = 3.14 + 2.71 * 1.61
-s: String = "ab" + "cd"
+i: Int
+  = 1 + 2 * 3
+f: Float
+  = 3.14 + 2.71 * 1.61
+s: String
+  = "ab" + "cd"

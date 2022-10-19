@@ -1,6 +1,6 @@
 module LowLevel.Helpers where
 
-import Prelude ( String, Either, flip, return, (*>) )
+import Prelude ( String, Either, flip, return, (*>), (.), ($) )
 import Text.Parsec ( (<|>), char, lower, many1, ParseError, parse, string )
 import Text.Parsec.String ( Parser )
 
@@ -18,3 +18,9 @@ seperated2 = (\p -> \s -> do
   return (a:as)
   )
   :: Parser a -> String -> Parser [a]
+
+(.>) = flip (.)
+  :: (a -> b) -> (b -> c) -> (a -> c)
+
+(-->) = flip ($)
+  :: a -> (a -> b) -> b

@@ -2,10 +2,12 @@
 
 module LowLevel.AtomicExpression where
 
-import Prelude (Eq, show, Show, String, (<$>), pure, (<*), (*>), (++))
-import Text.Parsec ((<|>), char, string)
-import Text.Parsec.String (Parser)
-import LowLevel.Helpers (lowers_underscore, seperated2)
+import Prelude
+  ( Eq, show, Show, String, (<$>), pure, (<*), (*>), (++), Bool(True), ($), return
+  , (==), elem )
+import Text.Parsec ( (<|>), char, string, parserFail )
+import Text.Parsec.String ( Parser )
+import LowLevel.Helpers ( lowers_underscore, seperated2 )
 
 -- ConstantExpression
 
@@ -26,7 +28,16 @@ newtype NameExpression = NameExpression String deriving ( Eq )
 
 instance Show NameExpression where show  = \(NameExpression n) -> n ++ "."
 
-name_expression_p = NameExpression <$> lowers_underscore
+name_expression_p = do
+  lu <- lowers_underscore
+  let keywords =
+        [ "tuple_type", "value", "case_type", "values"
+        , "match_tuple", "case", "case_value", "intermediates", "output" 
+        , "type_predicate", "function", "functions", "type_theorem", "proof" ]
+        :: [ String ]
+  case elem lu keywords of 
+    True -> parserFail "keyword"
+    _ -> return $ NameExpression lu
   :: Parser NameExpression
 
 -- TupleMatchingExpression

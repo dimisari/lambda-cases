@@ -3,9 +3,9 @@
 module LowLevel.TypeExpression where
 
 import Prelude ( Eq, show, Show, pure, (<*), (*>), (<*>), (<$>), (++) )
-import Text.Parsec ( (<|>), try,  string, sepBy1)
-import Text.Parsec.String (Parser)
-import LowLevel.Helpers (seperated2)
+import Text.Parsec ( (<|>), try,  string, sepBy1 )
+import Text.Parsec.String ( Parser )
+import LowLevel.Helpers ( seperated2 )
 
 -- TypeExpression
 
