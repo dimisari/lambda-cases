@@ -1,3 +1,16 @@
+Syntactic Sugar
+
+  - Types:
+
+    arrays
+    7 x Int | 7 * Int | 7 , Int
+
+Tuple Application
+
+  f : A -> B -> C
+  pair : ( A, B )
+  f<--pair : C
+
 left-to-right function composition
 
   not built-in, just love left-to-right function composition and "o>" looks like a good
@@ -10,22 +23,8 @@ left-to-right function composition
   function_name2: Type0 -> Type2
     = function_name0 o> function_name1 
 
-Tuple Application
-
-  f : A -> B -> C
-  pair : ( A, B )
-  f<--pair : C
-
-Syntactic Sugar
-
-  - Types:
-
-    arrays
-    7 x Int | 7 * Int | 7 , Int
-
 Observations
 
   Maybe ~ List with length <= 1
 
 Questions: Haskell Core?  graph reduction?
-

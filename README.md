@@ -1,3 +1,4 @@
 # Language Description
 # Examples
-# Combinator Parsers for the examples
+# Parsers for the examples
+# Haskell code generation

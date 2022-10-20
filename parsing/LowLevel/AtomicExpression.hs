@@ -3,55 +3,59 @@
 module LowLevel.AtomicExpression where
 
 import Prelude
-  ( Eq, Show, show, String, (<$>), pure, (<*), (*>), (++), Bool(True), ($), return
+  ( String, Bool(True), Eq, Show, (++), (<$>), (<*), (*>), ($), (>>=), return, show
   , elem )
 import Text.Parsec ( (<|>), char, string, parserFail )
 import Text.Parsec.String ( Parser )
-import LowLevel.Helpers ( lowers_underscore, seperated2 )
+import LowLevel.Helpers ( lowers_underscore, seperated2, (-->) )
+
+{-
+All:
+Keywords, ConstantExpression, NameExpression, TupleMatchingExpression, AtomicExpression
+-}
+
+-- Keywords
+
+keywords =
+  [ "tuple_type", "value", "case_type", "values"
+  , "use_tuple_fields", "case", "case_value", "intermediates", "output" 
+  , "type_predicate", "function", "functions", "type_theorem", "proof" ]
+  :: [ String ]
 
 -- ConstantExpression
 
-data ConstantExpression = Constant0 | Constant1 deriving ( Eq )
+data ConstantExpression = Constant0 | Constant1 deriving ( Eq, Show )
 
-instance Show ConstantExpression where
-  show = \case
-    Constant0 -> "0"
-    Constant1 -> "1"
-
-[ zero_p, one_p, constant_p ] =
-  [ char '0' *> pure Constant0, char '1' *> pure Constant1, zero_p <|> one_p ]
-  :: [ Parser ConstantExpression ]
+constant_p = char '0' *> return Constant0 <|> char '1' *> return Constant1
+  :: Parser ConstantExpression
 
 -- NameExpression
 
-newtype NameExpression = NameExpression String deriving ( Eq )
+newtype NameExpression = Name String deriving ( Eq )
+instance Show NameExpression where show = \(Name n) -> "Name " ++ n
 
-instance Show NameExpression where show  = \(NameExpression n) -> n
-
-name_expression_p = do
-  lu <- lowers_underscore
-  let keywords =
-        [ "tuple_type", "value", "case_type", "values"
-        , "match_tuple", "case", "case_value", "intermediates", "output" 
-        , "type_predicate", "function", "functions", "type_theorem", "proof" ]
-        :: [ String ]
-  case elem lu keywords of 
+name_expression_p =
+  lowers_underscore >>= \lu -> elem lu keywords --> \case
     True -> parserFail "keyword"
-    _ -> return $ NameExpression lu
-  :: Parser NameExpression
+    _ -> return $ Name lu
+  :: Parser NameExpression 
 
 -- TupleMatchingExpression
 
-newtype TupleMatchingExpression = NameExpressions [ String ] deriving ( Eq, Show )
+newtype TupleMatchingExpression = TupleMatching [ NameExpression ] deriving ( Eq, Show )
 
 tuple_matching_expression_p =
-  NameExpressions <$> (string "( " *> seperated2 lowers_underscore ", " <* string " )")
+  TupleMatching <$> (string "( " *> seperated2 name_expression_p ", " <* string " )")
   :: Parser TupleMatchingExpression
 
 -- AtomicExpression
 
-data AtomicExpression = Constant ConstantExpression | Name NameExpression
-  deriving (Eq, Show)
+data AtomicExpression = ConstantExp ConstantExpression | NameExp NameExpression
+  deriving (Eq)
+instance Show AtomicExpression where
+  show = \case
+    ConstantExp e -> show e
+    NameExp e -> show e
 
-atomic_expression_p = (Constant <$> constant_p) <|> (Name <$> name_expression_p)
+atomic_expression_p = (ConstantExp <$> constant_p) <|> (NameExp <$> name_expression_p)
   :: Parser AtomicExpression

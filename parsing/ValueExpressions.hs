@@ -3,8 +3,8 @@
 module ValueExpressions where
 
 import Prelude
-  ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), return
-  , map, concat )
+  ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), (>>=), (>>)
+  , return, map, concat, error )
 import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 import LowLevel.TypeExpression ( TypeExpression, type_expression_p )
@@ -12,6 +12,14 @@ import LowLevel.AtomicExpression
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
   , TupleMatchingExpression, tuple_matching_expression_p )
 import LowLevel.Helpers ( seperated2, (-->), (.>) )
+
+{- 
+All:
+ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression,
+MultiplicationExpression, SubtractionExpression, SpecificCaseExpression, CaseExpression,
+NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpression,
+AbstractionArgument, ResultExpression, ValueExpression
+-}
 
 -- ParenthesisExpression
 
@@ -23,11 +31,11 @@ instance Show ParenthesisExpression where
     ForPrecedence e -> "(" ++ show e ++ ")"
     Tuple es -> "Tuple " ++ show es
 
-[ parenthesis_expression_p, for_precedence_p, tuple_expression_p ] =
-  [ try tuple_expression_p <|> for_precedence_p
-  , ForPrecedence <$> (char '(' *> value_expression_p <* char ')')
-  , Tuple <$> (string "( " *> seperated2 value_expression_p ", " <* string " )")
-  ]
+[ parenthesis_expression_p, tuple_internals_p ] =
+  [ char '(' *>
+    (try tuple_internals_p <|> ForPrecedence <$> value_expression_p)
+    <* char ')'
+  , Tuple <$> (char ' ' *> seperated2 value_expression_p ", " <* char ' ') ]
   :: [ Parser ParenthesisExpression ]
 
 -- HighPrecedenceExpression
@@ -47,69 +55,103 @@ high_precedence_expression_p =
 
 -- ApplicationExpression
 
+data ApplicationDirection = LeftApplication | RightApplication 
+  deriving (Eq, Show)
+
+application_direction_p = 
+  string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
+  :: Parser ApplicationDirection
+
 data ApplicationExpression = 
-  LeftApplication HighPrecedenceExpression ApplicationExpression |
-  RightApplication HighPrecedenceExpression ApplicationExpression |
-  HighPrecedence HighPrecedenceExpression
+  Application
+    [ ( HighPrecedenceExpression, ApplicationDirection ) ] HighPrecedenceExpression
   deriving (Eq)
 
 instance Show ApplicationExpression where
-  show = \case
-    LeftApplication hpe ae -> show hpe ++ " left_application " ++ show ae
-    RightApplication hpe ae -> show hpe ++ " right_application " ++ show ae
-    HighPrecedence hpe -> show hpe
+  show = \(Application hpe_ad_s hpe) -> case hpe_ad_s of
+    [] -> error "application expression should have at least one application direction"
+    _ ->
+      let
+      show_hpe_ad = (\( hpe, ad ) -> show hpe ++ " " ++ show ad ++ " ")
+        :: ( HighPrecedenceExpression, ApplicationDirection ) -> String
+      in
+      hpe_ad_s --> map show_hpe_ad --> concat --> (++ show hpe)
+
+high_precedence_expression_and_application_direction_p = 
+  high_precedence_expression_p >>= \hpe ->
+  application_direction_p >>= \ad ->
+  return ( hpe, ad )
+  :: Parser ( HighPrecedenceExpression, ApplicationDirection )
 
 application_expression_p =
-  try left_application_expression_p <|> try right_application_expression_p <|>
-  high_precedence_p
+  many1 (try high_precedence_expression_and_application_direction_p) >>= \hpe_ad_s -> 
+  high_precedence_expression_p >>= \hpe ->
+  return (Application hpe_ad_s hpe)
   :: Parser ApplicationExpression
-
-[ left_application_expression_p, right_application_expression_p, high_precedence_p ] = 
-  [ LeftApplication
-    <$> high_precedence_expression_p <*> (string "<--" *> application_expression_p)
-  , RightApplication
-    <$> high_precedence_expression_p <*> (string "-->" *> application_expression_p)
-  , HighPrecedence <$> high_precedence_expression_p ]
-  :: [ Parser ApplicationExpression ]
 
 -- MultiplicationExpression
 
-data MultiplicationExpression =
-  Multiplication ApplicationExpression MultiplicationExpression |
-  Application ApplicationExpression
-  deriving (Eq)
+data MultiplicationFactor =
+  ApplicationMF ApplicationExpression | HighPrecedenceMF HighPrecedenceExpression
+  deriving ( Eq )
+
+instance Show MultiplicationFactor where
+  show = \case
+    ApplicationMF e -> show e
+    HighPrecedenceMF e -> show e
+
+multiplication_factor_p =
+  ApplicationMF <$> application_expression_p <|>
+  HighPrecedenceMF <$> high_precedence_expression_p
+  :: Parser MultiplicationFactor
+
+data MultiplicationExpression = Multiplication [ MultiplicationFactor ]
+  deriving ( Eq )
 
 instance Show MultiplicationExpression where
   show = \case
-    Multiplication ae me -> "(" ++ show ae ++ " mul " ++ show me ++ ")"
-    Application ae -> show ae
+    Multiplication aes -> case aes of
+      [] -> error "found less than 2 in multiplication"
+      [ _ ] -> show (Multiplication [])
+      [ ae1, ae2 ] -> "(" ++ show ae1 ++ " mul " ++ show ae2 ++ ")"
+      (ae:aes) -> "(" ++ show ae ++ " mul " ++ show (Multiplication aes) ++ ")"
 
-[ multiplication_expression_p, multiplication_p ] =
-  [ try multiplication_p <|> Application <$> application_expression_p
-  , Multiplication
-    <$> application_expression_p <*> (string " * " *> multiplication_expression_p) ]
-  :: [ Parser MultiplicationExpression ]
+multiplication_expression_p = Multiplication <$> seperated2 multiplication_factor_p " * "
+  :: Parser MultiplicationExpression
 
 -- SubtractionExpression
 
+data SubtractionFactor =
+  ApplicationSF ApplicationExpression | HighPrecedenceSF HighPrecedenceExpression |
+  MultiplicationSF MultiplicationExpression
+  deriving ( Eq )
+
+instance Show SubtractionFactor where
+  show = \case
+    ApplicationSF e -> show e
+    HighPrecedenceSF e -> show e
+    MultiplicationSF e -> show e
+
+subtraction_factor_p =
+  try (MultiplicationSF <$> multiplication_expression_p) <|>
+  ApplicationSF <$> application_expression_p <|>
+  HighPrecedenceSF <$> high_precedence_expression_p 
+  :: Parser SubtractionFactor
+
 data SubtractionExpression =
-  Subtraction MultiplicationExpression MultiplicationExpression |
-  MultiplicationExp MultiplicationExpression
+  Subtraction SubtractionFactor SubtractionFactor | Factor SubtractionFactor
   deriving (Eq)
 
 instance Show SubtractionExpression where
   show = \case
     Subtraction me1 me2 -> "(" ++ show me1 ++ " minus " ++ show me2 ++ ")"
-    MultiplicationExp me -> show me
+    Factor me -> show me
 
-subtraction_expression_p = try subtraction_p <|> multiplication_exp_p
+subtraction_expression_p  =
+  try (Subtraction <$> (subtraction_factor_p <* string " - ") <*> subtraction_factor_p)
+  <|>
+  Factor <$> subtraction_factor_p
   :: Parser SubtractionExpression
-
-[ subtraction_p, multiplication_exp_p ] =
-  [ Subtraction
-    <$> (multiplication_expression_p <* string " - ") <*> multiplication_expression_p
-  , MultiplicationExp <$> multiplication_expression_p ]
-  :: [ Parser SubtractionExpression ]
 
 -- SpecificCaseExpression
 
@@ -121,12 +163,9 @@ instance Show SpecificCaseExpression where
     "specific case: " ++ show ae ++ "\n" ++
     "result: " ++ show ve ++ "\n"
 
-specific_case_expression_p = do 
-  many (char ' ' <|> char '\t')
-  ae <- atomic_expression_p
-  string " ->"
-  char ' ' <|> char '\n'
-  ve <- value_expression_p
+specific_case_expression_p =
+  many (char ' ' <|> char '\t') >> atomic_expression_p >>= \ae ->
+  string " ->" >> (char ' ' <|> char '\n') >> value_expression_p >>= \ve ->
   return $ SpecificCase ae ve
   :: Parser SpecificCaseExpression
 
@@ -155,17 +194,13 @@ instance Show NameTypeAndValueExpression where
     "type: " ++ show te ++ "\n" ++
     "value: " ++ show ve ++ "\n"
 
-name_type_and_value_expression_p = do 
-  many (char ' ' <|> char '\t')
-  ne <- name_expression_p
-  string ": "
-  te <- type_expression_p
-  char '\n'
-  many (char ' ' <|> char '\t')
-  string "= "
-  ve <- value_expression_p
-  skipMany1 (char '\n') <|> eof
-  return $ NameTypeAndValue ne te ve
+name_type_and_value_expression_p =
+  many (char ' ' <|> char '\t') >> name_expression_p >>= \ne ->
+  string ": " >> type_expression_p >>= \te ->
+  char '\n' >> many (char ' ' <|> char '\t') >> string "= " >>
+  value_expression_p >>= \ve ->
+  (skipMany1 (char '\n') <|> eof) >>
+  return (NameTypeAndValue ne te ve)
   :: Parser NameTypeAndValueExpression
 
 -- NameTypeAndValueExpressions
@@ -175,7 +210,7 @@ newtype NameTypeAndValueExpressions = NameTypeAndValueExps [ NameTypeAndValueExp
 
 instance Show NameTypeAndValueExpressions where
   show = \(NameTypeAndValueExps ntave) ->
-    ntave --> map (show .> (++ "\n")) --> concat --> ( "\n" ++)
+    ntave-->map (show .> (++ "\n"))-->concat-->( "\n" ++)
 
 name_type_and_value_expressions_p = 
   NameTypeAndValueExps <$> many1 (try name_type_and_value_expression_p)
@@ -191,14 +226,11 @@ instance Show IntermediatesOutputExpression where
   show = \(IntermediatesOutputExpression ntave ve) -> 
     "intermediates\n" ++ show ntave ++ "output\n" ++ show ve
 
-intermediates_output_expression_p = do 
-  many (char ' ' <|> char '\t')
-  string "intermediates\n"
-  ntave <- name_type_and_value_expressions_p
-  many (char ' ' <|> char '\t')
-  string "output\n"
-  many (char ' ' <|> char '\t')
-  ve <- value_expression_p
+intermediates_output_expression_p = 
+  many (char ' ' <|> char '\t') >> string "intermediates\n" >>
+  name_type_and_value_expressions_p >>= \ntave ->
+  many (char ' ' <|> char '\t') >> string "output\n" >>
+  many (char ' ' <|> char '\t') >> value_expression_p >>= \ve ->
   return $ IntermediatesOutputExpression ntave ve
   :: Parser IntermediatesOutputExpression
 
@@ -206,7 +238,12 @@ intermediates_output_expression_p = do
 
 data AbstractionArgumentExpression =
   Name NameExpression | TupleMatching TupleMatchingExpression
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show AbstractionArgumentExpression where
+  show = \case
+    Name e -> show e
+    TupleMatching e -> show e
 
 abstraction_argument_expression_p =
   Name <$> name_expression_p <|> TupleMatching <$> tuple_matching_expression_p
@@ -249,15 +286,3 @@ instance Show ValueExpression where
     (string " -> " *> value_expression_p)
   , Result <$> result_expression_p ]
   :: [ Parser ValueExpression ]
-
---NameTypeAndValueLists
-
-data NameTypeAndValueLists = NTAVL
-  { get_names :: [ NameExpression ], get_types :: [ TypeExpression ]
-  , get_values :: [ ValueExpression ] }
-  deriving (Eq, Show)
-
--- Probably going to need 
-
-to_NTAV_list = undefined
-  :: NameTypeAndValueLists -> [ NameTypeAndValueExpression ]

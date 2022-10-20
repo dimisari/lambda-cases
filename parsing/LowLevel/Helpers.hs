@@ -1,7 +1,7 @@
 module LowLevel.Helpers where
 
-import Prelude ( String, Either, flip, return, (*>), (.), ($) )
-import Text.Parsec ( (<|>), char, lower, many1, ParseError, parse, string )
+import Prelude ( String, Either, flip, return, (>>=), (*>), (.), ($) )
+import Text.Parsec ( (<|>), char, lower, many1, ParseError, parse, string, try )
 import Text.Parsec.String ( Parser )
 
 -- Helpers
@@ -9,12 +9,9 @@ import Text.Parsec.String ( Parser )
 lowers_underscore = many1 ( lower <|> char '_' )
   :: Parser String
 
-parse_with = flip parse "" 
-  :: Parser a -> String -> Either ParseError a
-
-seperated2 = (\p -> \s -> do
-  a <- p
-  as <- many1 (string s *> p)
+seperated2 = (\p -> \s ->
+  p >>= \a ->
+  try (string s *> p) --> many1 >>= \as ->
   return (a:as)
   )
   :: Parser a -> String -> Parser [a]
