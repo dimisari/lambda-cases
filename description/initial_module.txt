@@ -1,6 +1,6 @@
 atomic types
 
-  Begin with Num, Char and make String list of Char ?
+  Begin with Num, String ?
 
 tuple_types 
 
@@ -8,9 +8,20 @@ tuple_types
   ( A, B, C )
   ( A, B, C, D )
 
-with fields: first, second, third, fourth
+with fields
 
-type_propositions for Polymorphic functions in initial module
+  pair_first, pair_second
+  triple_first, triple_second, triple_third
+  quad_first, quad_second, quad_third, quad_fourth
+
+and polymorphic functions
+
+  first, second, third
+
+  fourth is not polymorphic since we stop at quadruple (bigger tuples should probably
+  be made as new tuple_types and named differently according to the context)
+
+type_propositions for needed for the polymorphic functions
 
   ( A, B )-->Has_First<--A
   ( A, B, C )-->Has_First<--A
@@ -22,11 +33,6 @@ type_propositions for Polymorphic functions in initial module
 
   ( A, B, C )-->Has_Third<--C
   ( A, B, C, D )-->Has_Third<--C
-
-resulting polymorphic functions: get_first, get_second, get_third
-
-  get_fourth is not polymorphic since we stop at quadruple (bigger tuples should probably
-  be made as new tuple_types and named differently according to the context)
 
 or_types
 

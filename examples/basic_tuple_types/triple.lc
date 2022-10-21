@@ -1,1 +1,0 @@
-tuple_type ( A, B, C ) value ( triple_first: A, triple_second: B, triple_third: C )

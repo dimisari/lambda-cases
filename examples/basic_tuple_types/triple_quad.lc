@@ -1,0 +1,4 @@
+tuple_type ( A, B, C ) value ( triple_first: A, triple_second: B, triple_third: C )
+
+tuple_type ( A, B, C, D )
+value ( quad_first: A, quad_second: B, quad_third: C, quad_fourth: D )

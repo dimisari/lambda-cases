@@ -13,8 +13,7 @@ seperated2 = (\p -> \s ->
   p >>= \a ->
   try (string s *> p) --> many1 >>= \as ->
   return (a:as)
-  )
-  :: Parser a -> String -> Parser [a]
+  ) :: Parser a -> String -> Parser [a]
 
 (.>) = flip (.)
   :: (a -> b) -> (b -> c) -> (a -> c)
