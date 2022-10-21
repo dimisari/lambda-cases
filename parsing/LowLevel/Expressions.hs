@@ -1,17 +1,18 @@
 {-# LANGUAGE LambdaCase #-}
 
-module LowLevel.AtomicExpression where
+module LowLevel.Expressions where
 
 import Prelude
   ( String, Bool(True), Eq, Show, (++), (<$>), (<*), (*>), ($), (>>=), return, show
   , elem )
 import Text.Parsec ( (<|>), char, string, parserFail )
 import Text.Parsec.String ( Parser )
-import LowLevel.Helpers ( lowers_underscore, seperated2, (-->) )
+import LowLevel.Helpers ( (-->), lowers_underscore, seperated2 )
 
 {-
 All:
-Keywords, ConstantExpression, NameExpression, TupleMatchingExpression, AtomicExpression
+Keywords, ConstantExpression, NameExpression, TupleMatchingExpression, AtomicExpression,
+ApplicationDirection
 -}
 
 -- Keywords
@@ -59,3 +60,13 @@ instance Show AtomicExpression where
 
 atomic_expression_p = (ConstantExp <$> constant_p) <|> (NameExp <$> name_expression_p)
   :: Parser AtomicExpression
+
+-- ApplicationDirection
+
+data ApplicationDirection = LeftApplication | RightApplication 
+  deriving ( Eq, Show )
+
+application_direction_p = 
+  string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
+  :: Parser ApplicationDirection
+

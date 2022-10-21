@@ -8,19 +8,19 @@ import Prelude
 import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 import LowLevel.TypeExpression ( TypeExpression, type_expression_p )
-import LowLevel.AtomicExpression
+import LowLevel.Expressions
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
-  , TupleMatchingExpression, tuple_matching_expression_p )
+  , TupleMatchingExpression, tuple_matching_expression_p, ApplicationDirection
+  , application_direction_p )
 import LowLevel.Helpers ( seperated2, (-->), (.>) )
 
 {- 
 All:
-ParenthesisExpression, HighPrecedenceExpression,
-ApplicationDirection, ApplicationExpression,
+ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression
 MultiplicationFactor, MultiplicationExpression,
-SubtractionFactor, SubtractionExpression,
-SpecificCaseExpression, CaseExpression,
-NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpression,
+SubtractionFactor, SubtractionExpression
+SpecificCaseExpression, CaseExpression
+NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpression
 AbstractionArgument, NoAbstractionsExpression, ValueExpression
 -}
 
@@ -34,11 +34,10 @@ instance Show ParenthesisExpression where
     ForPrecedence e -> "(" ++ show e ++ ")"
     Tuple es -> "Tuple " ++ show es
 
-[ parenthesis_expression_p, tuple_internals_p ] =
-  [ char '(' *>
-    (try tuple_internals_p <|> ForPrecedence <$> value_expression_p)
-    <* char ')'
-  , Tuple <$> (char ' ' *> seperated2 value_expression_p ", " <* char ' ') ]
+[ parenthesis_expression_p, tuple_internals_p, for_precedence_internals_p ] =
+  [ char '(' *> (try tuple_internals_p <|> for_precedence_internals_p) <* char ')'
+  , Tuple <$> (char ' ' *> seperated2 value_expression_p ", " <* char ' ')
+  , ForPrecedence <$> value_expression_p ]
   :: [ Parser ParenthesisExpression ]
 
 -- HighPrecedenceExpression
@@ -55,15 +54,6 @@ instance Show HighPrecedenceExpression where
 high_precedence_expression_p =
   Parenthesis <$> parenthesis_expression_p <|> Atomic <$> atomic_expression_p
   :: Parser HighPrecedenceExpression
-
--- ApplicationDirection
-
-data ApplicationDirection = LeftApplication | RightApplication 
-  deriving ( Eq, Show )
-
-application_direction_p = 
-  string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
-  :: Parser ApplicationDirection
 
 -- ApplicationExpression
 

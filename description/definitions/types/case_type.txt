@@ -3,19 +3,22 @@ Example:
 
 case_type A, B :-> TypeName
 values
-  Case0 A | Case1 (b_value: B, int_value: Int) | Case2 (A, B :-> Pair) | Case3 ListOf(A)s
+  Case0 A | Case1 (b_value: B, int_value: Int) | Case2 ( A, B ) | Case3 ListOf(A)s
 
 Comments:
 
-  - case syntax can be used for Case matching on or_types only
+  - default value_name for the input of all Cases: case_value
 
-  - default value_name for the value of all Cases: pattern_value
+    Examples:
 
-    Example function:
-
-    fun: (A, B :-> TypeName) -> A-->ValueOrNothing
+    fun1: (A, B :-> TypeName) -> A-->ValueOrNothing
       = case
-        Case0 -> Value pattern_value
+        Case0 -> Value case_value
+        ... -> Nothing
+
+    fun2: (A, B :-> TypeName) -> (A, B)-->ValueOrNothing
+      = case
+        Case2 -> Value case_value
         ... -> Nothing
 
   - anonymous tuple_types can be used for naming fields of a Case
@@ -27,7 +30,7 @@ Comments:
         Case1 -> Value b_value
         ... -> Nothing
 
-  - actual tuple_types can be used in a Case and there is field inheritance
+  - tuple_types can be used in a Case and there is field inheritance
 
     Example function:
 
@@ -38,6 +41,6 @@ Comments:
 
   - is functions should be generated automatically:
 
-    isCase0: ( A, B :-> TypeName ) -> Bool
-    isCase1: ( A, B :-> TypeName ) -> Bool
+    isCase0: (A, B :-> TypeName) -> Bool
+    isCase1: (A, B :-> TypeName) -> Bool
     ...

@@ -1,17 +1,37 @@
 
-Here the field_names of each Case input can be used in the corresponding result
-expression. Therefore, we only match on the Case. Here Type0 is a case_type.
+case_type example:
 
-function_name: Type0 -> Type1  
-  = case
-    Type0Case0 -> result expression of type Type1 
-    Type0Case1 -> result expression of type Type1
-    value_name_of_type_type0 -> default result expression of type Type1
+  Type0 is a case_type. Here the field_names of each Case input can be used in the
+  corresponding result expression. Therefore, we only match on the Case.
 
-also for default result ignoring the input of the rest of the pattern. Instead of:
+  function_name: Type0 -> Type1
+    = case
+      Type0Case0 -> result expression of type Type1
+      Type0Case1 -> result expression of type Type1
+      value_name_of_type_type0 -> default result expression of type Type1
 
-    value_name_of_type_type0 -> default result expression of type Type1
+tuple_type example:
 
-we have:
+  tuple_type Type2 value ( zero: Type0, one: Type1 )
 
-    ... -> default result expression of type Type1
+  Type0 and Type1 are case_types. Here the field_names of each Case input on both types
+  can be used in the corresponding result expression.
+
+  function_name: Type2 -> Type3
+    = case
+      ( Type0Case0, Type1Case0 ) -> result expression of type Type3
+      ( Type0Case0, Type1Case1 ) -> result expression of type Type3
+      ( Type0Case1, Type1Case0 ) -> result expression of type Type3
+      ( Type0Case1, Type1Case1 ) -> result expression of type Type3
+      value_name_of_type_type2 -> default result expression of type Type1
+
+default result:
+
+  to ignore the input in the default result case, instead of:
+
+  value_name -> default result expression 
+
+  we have:
+
+  ... -> default result expression
+

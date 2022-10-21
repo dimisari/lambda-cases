@@ -10,14 +10,14 @@ Comments:
 
   - get and update functions should be generated automatically:
 
-      get_field_name0: ( A, B :-> TypeName ) -> Int
-      get_field_name1: ( A, B :-> TypeName ) -> String
-      get_field_name2: ( A, B :-> TypeName ) -> A
+      get_field_name0: (A, B :-> TypeName) -> Int
+      get_field_name1: (A, B :-> TypeName) -> String
+      get_field_name2: (A, B :-> TypeName) -> A
       ...
 
-      update_field_name0: ( A, B :-> TypeName ), Int :> ( A,B :-> TypeName )
-      update_field_name1: ( A, B :-> TypeName ), String :> ( A,B :-> TypeName )
-      update_field_name2: ( A, B :-> TypeName ), A :> ( A,B :-> TypeName )
+      update_field_name0: (A, B :-> TypeName), Int :> (A,B :-> TypeName)
+      update_field_name1: (A, B :-> TypeName), String :> (A,B :-> TypeName)
+      update_field_name2: (A, B :-> TypeName), A :> (A,B :-> TypeName)
       ...
 
-  - in case syntax or match_tuple syntax we can use each field by its field_name 
+  - in match_tuple syntax we can use each field by its field_name 
