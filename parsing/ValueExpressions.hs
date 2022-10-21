@@ -15,16 +15,19 @@ import LowLevel.Helpers ( seperated2, (-->), (.>) )
 
 {- 
 All:
-ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression,
-MultiplicationExpression, SubtractionExpression, SpecificCaseExpression, CaseExpression,
+ParenthesisExpression, HighPrecedenceExpression,
+ApplicationDirection, ApplicationExpression,
+MultiplicationFactor, MultiplicationExpression,
+SubtractionFactor, SubtractionExpression,
+SpecificCaseExpression, CaseExpression,
 NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpression,
-AbstractionArgument, ResultExpression, ValueExpression
+AbstractionArgument, NoAbstractionsExpression, ValueExpression
 -}
 
 -- ParenthesisExpression
 
 data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show ParenthesisExpression where
   show = \case
@@ -42,7 +45,7 @@ instance Show ParenthesisExpression where
 
 data HighPrecedenceExpression =
   Parenthesis ParenthesisExpression | Atomic AtomicExpression
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show HighPrecedenceExpression where
   show = \case
@@ -53,19 +56,21 @@ high_precedence_expression_p =
   Parenthesis <$> parenthesis_expression_p <|> Atomic <$> atomic_expression_p
   :: Parser HighPrecedenceExpression
 
--- ApplicationExpression
+-- ApplicationDirection
 
 data ApplicationDirection = LeftApplication | RightApplication 
-  deriving (Eq, Show)
+  deriving ( Eq, Show )
 
 application_direction_p = 
   string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
   :: Parser ApplicationDirection
 
+-- ApplicationExpression
+
 data ApplicationExpression = 
   Application
     [ ( HighPrecedenceExpression, ApplicationDirection ) ] HighPrecedenceExpression
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show ApplicationExpression where
   show = \(Application hpe_ad_s hpe) -> case hpe_ad_s of
@@ -89,7 +94,7 @@ application_expression_p =
   return (Application hpe_ad_s hpe)
   :: Parser ApplicationExpression
 
--- MultiplicationExpression
+-- MultiplicationFactor
 
 data MultiplicationFactor =
   ApplicationMF ApplicationExpression | HighPrecedenceMF HighPrecedenceExpression
@@ -105,6 +110,8 @@ multiplication_factor_p =
   HighPrecedenceMF <$> high_precedence_expression_p
   :: Parser MultiplicationFactor
 
+-- MultiplicationExpression
+
 data MultiplicationExpression = Multiplication [ MultiplicationFactor ]
   deriving ( Eq )
 
@@ -119,11 +126,11 @@ instance Show MultiplicationExpression where
 multiplication_expression_p = Multiplication <$> seperated2 multiplication_factor_p " * "
   :: Parser MultiplicationExpression
 
--- SubtractionExpression
+-- SubtractionFactor
 
 data SubtractionFactor =
-  ApplicationSF ApplicationExpression | HighPrecedenceSF HighPrecedenceExpression |
-  MultiplicationSF MultiplicationExpression
+  MultiplicationSF MultiplicationExpression | ApplicationSF ApplicationExpression |
+  HighPrecedenceSF HighPrecedenceExpression
   deriving ( Eq )
 
 instance Show SubtractionFactor where
@@ -138,19 +145,17 @@ subtraction_factor_p =
   HighPrecedenceSF <$> high_precedence_expression_p 
   :: Parser SubtractionFactor
 
+-- SubtractionExpression
+
 data SubtractionExpression =
-  Subtraction SubtractionFactor SubtractionFactor | Factor SubtractionFactor
-  deriving (Eq)
+  Subtraction SubtractionFactor SubtractionFactor 
+  deriving ( Eq )
 
 instance Show SubtractionExpression where
-  show = \case
-    Subtraction me1 me2 -> "(" ++ show me1 ++ " minus " ++ show me2 ++ ")"
-    Factor me -> show me
+  show = \(Subtraction me1 me2) -> "(" ++ show me1 ++ " minus " ++ show me2 ++ ")"
 
 subtraction_expression_p  =
   try (Subtraction <$> (subtraction_factor_p <* string " - ") <*> subtraction_factor_p)
-  <|>
-  Factor <$> subtraction_factor_p
   :: Parser SubtractionExpression
 
 -- SpecificCaseExpression
@@ -172,11 +177,11 @@ specific_case_expression_p =
 -- CaseExpression
 
 newtype CaseExpression = Case [ SpecificCaseExpression ]
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show CaseExpression where
   show = \(Case sces) ->
-    "case start\n\n" ++ sces --> map (show .> (++ "\n")) --> concat
+    "\ncase start\n\n" ++ (sces --> map (show .> (++ "\n")) --> concat)
 
 case_expression_p =
   Case <$> (string "case\n" *> many1 (specific_case_expression_p <* char '\n'))
@@ -186,7 +191,7 @@ case_expression_p =
 
 data NameTypeAndValueExpression =
   NameTypeAndValue NameExpression TypeExpression ValueExpression
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show NameTypeAndValueExpression where
   show = \(NameTypeAndValue ne te ve) -> 
@@ -206,7 +211,7 @@ name_type_and_value_expression_p =
 -- NameTypeAndValueExpressions
 
 newtype NameTypeAndValueExpressions = NameTypeAndValueExps [ NameTypeAndValueExpression ]
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show NameTypeAndValueExpressions where
   show = \(NameTypeAndValueExps ntave) ->
@@ -220,7 +225,7 @@ name_type_and_value_expressions_p =
 
 data IntermediatesOutputExpression =
   IntermediatesOutputExpression NameTypeAndValueExpressions ValueExpression
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show IntermediatesOutputExpression where
   show = \(IntermediatesOutputExpression ntave ve) -> 
@@ -234,11 +239,11 @@ intermediates_output_expression_p =
   return $ IntermediatesOutputExpression ntave ve
   :: Parser IntermediatesOutputExpression
 
--- AbstractionArgument
+-- AbstractionArgumentExpression
 
 data AbstractionArgumentExpression =
   Name NameExpression | TupleMatching TupleMatchingExpression
-  deriving (Eq)
+  deriving ( Eq )
 
 instance Show AbstractionArgumentExpression where
   show = \case
@@ -249,40 +254,46 @@ abstraction_argument_expression_p =
   Name <$> name_expression_p <|> TupleMatching <$> tuple_matching_expression_p
   :: Parser AbstractionArgumentExpression
 
--- ResultExpression
+-- NoAbstractionsExpression
 
-data ResultExpression =
-  SubtractionExp SubtractionExpression | CaseExp CaseExpression |
-  IntermediatesOutputExp IntermediatesOutputExpression
+data NoAbstractionsExpression =
+  SubtractionExp SubtractionExpression | MultiplicationExp MultiplicationExpression |
+  ApplicationExp ApplicationExpression | HighPrecedenceExp HighPrecedenceExpression |
+  CaseExp CaseExpression | IntermediatesOutputExp IntermediatesOutputExpression
   deriving ( Eq )
 
-instance Show ResultExpression where
+instance Show NoAbstractionsExpression where
   show = \case
     SubtractionExp e -> show e
+    MultiplicationExp e -> show e
+    ApplicationExp e -> show e
+    HighPrecedenceExp e -> show e
     CaseExp e -> show e
     IntermediatesOutputExp e -> show e
 
-result_expression_p =
+no_abstraction_expression_p =
   SubtractionExp <$> try subtraction_expression_p <|>
-  CaseExp <$> try case_expression_p <|>
+  MultiplicationExp <$> try multiplication_expression_p <|>
+  ApplicationExp <$> try application_expression_p <|>
+  HighPrecedenceExp <$> try high_precedence_expression_p <|>
+  CaseExp <$> case_expression_p <|>
   IntermediatesOutputExp <$> intermediates_output_expression_p
-  :: Parser ResultExpression
+  :: Parser NoAbstractionsExpression
 
 -- ValueExpression
 
 data ValueExpression =
   Abstraction AbstractionArgumentExpression ValueExpression |
-  Result ResultExpression
-  deriving (Eq)
+  NoAbstraction NoAbstractionsExpression
+  deriving ( Eq )
 
 instance Show ValueExpression where
   show = \case
     Abstraction aae ae -> show aae ++ " abstraction " ++ show ae
-    Result e -> show e
+    NoAbstraction e -> show e
 
-[ value_expression_p, abstraction_p, result_p ] =
-  [ try abstraction_p <|> result_p
-  , Abstraction <$> abstraction_argument_expression_p <*>
-    (string " -> " *> value_expression_p)
-  , Result <$> result_expression_p ]
+[ value_expression_p, abstraction_p ] =
+  [ try abstraction_p <|> NoAbstraction <$> no_abstraction_expression_p
+  , Abstraction <$>
+    abstraction_argument_expression_p <*> (string " -> " *> value_expression_p) ]
   :: [ Parser ValueExpression ]

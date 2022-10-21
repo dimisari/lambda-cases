@@ -28,3 +28,8 @@ Observations
   Maybe ~ List with length <= 1
 
 Questions: Haskell Core?  graph reduction?
+
+Compilation targets to consider:
+  - BEAM (Erlang virtual machine)
+  - WebAssembly
+  - RISC-V
