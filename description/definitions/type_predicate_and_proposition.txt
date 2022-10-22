@@ -1,6 +1,6 @@
-type_predicate definition
+# Using '_' between words for distinction from type syntax. Is it necessary??
 
-  (Using '_' between words for distinction from type syntax. Is it necessary??)
+type_predicate definition
 
   example:
 

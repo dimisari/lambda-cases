@@ -1,27 +1,26 @@
 {-# LANGUAGE LambdaCase #-}
 
-module ValueExpressions where
+module Parsers.ValueExpressions where
 
 import Prelude
   ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), (>>=), (>>)
   , return, map, concat, error )
 import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
-import LowLevel.TypeExpression ( TypeExpression, type_expression_p )
-import LowLevel.Expressions
+
+import Parsers.LowLevel.Expressions
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
   , TupleMatchingExpression, tuple_matching_expression_p, ApplicationDirection
-  , application_direction_p )
-import LowLevel.Helpers ( seperated2, (-->), (.>) )
+  , application_direction_p, TypeExpression, type_expression_p )
+import Parsers.LowLevel.Helpers ( seperated2, (-->), (.>) )
 
 {- 
 All:
 ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression
-MultiplicationFactor, MultiplicationExpression,
-SubtractionFactor, SubtractionExpression
-SpecificCaseExpression, CaseExpression
+MultiplicationFactor, MultiplicationExpression, SubtractionFactor, SubtractionExpression
+SpecificCaseExpression, CasesExpression
 NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpression
-AbstractionArgument, NoAbstractionsExpression, ValueExpression
+AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
 -}
 
 -- ParenthesisExpression
@@ -72,17 +71,17 @@ instance Show ApplicationExpression where
       in
       hpe_ad_s --> map show_hpe_ad --> concat --> (++ show hpe)
 
+application_expression_p =
+  many1 (try high_precedence_expression_and_application_direction_p) >>= \hpe_ad_s -> 
+  high_precedence_expression_p >>= \hpe ->
+  return $ Application hpe_ad_s hpe
+  :: Parser ApplicationExpression
+
 high_precedence_expression_and_application_direction_p = 
   high_precedence_expression_p >>= \hpe ->
   application_direction_p >>= \ad ->
   return ( hpe, ad )
   :: Parser ( HighPrecedenceExpression, ApplicationDirection )
-
-application_expression_p =
-  many1 (try high_precedence_expression_and_application_direction_p) >>= \hpe_ad_s -> 
-  high_precedence_expression_p >>= \hpe ->
-  return (Application hpe_ad_s hpe)
-  :: Parser ApplicationExpression
 
 -- MultiplicationFactor
 
@@ -113,7 +112,8 @@ instance Show MultiplicationExpression where
       [ ae1, ae2 ] -> "(" ++ show ae1 ++ " mul " ++ show ae2 ++ ")"
       (ae:aes) -> "(" ++ show ae ++ " mul " ++ show (Multiplication aes) ++ ")"
 
-multiplication_expression_p = Multiplication <$> seperated2 multiplication_factor_p " * "
+multiplication_expression_p =
+  Multiplication <$> seperated2 multiplication_factor_p " * "
   :: Parser MultiplicationExpression
 
 -- SubtractionFactor
@@ -137,15 +137,16 @@ subtraction_factor_p =
 
 -- SubtractionExpression
 
-data SubtractionExpression =
-  Subtraction SubtractionFactor SubtractionFactor 
+data SubtractionExpression = Subtraction SubtractionFactor SubtractionFactor 
   deriving ( Eq )
 
 instance Show SubtractionExpression where
-  show = \(Subtraction me1 me2) -> "(" ++ show me1 ++ " minus " ++ show me2 ++ ")"
+  show = \(Subtraction sf1 sf2) -> "(" ++ show sf1 ++ " minus " ++ show sf2 ++ ")"
 
-subtraction_expression_p  =
-  try (Subtraction <$> (subtraction_factor_p <* string " - ") <*> subtraction_factor_p)
+subtraction_expression_p =
+  subtraction_factor_p >>= \sf1 ->
+  string " - " >> subtraction_factor_p >>= \sf2 ->
+  return $ Subtraction sf1 sf2
   :: Parser SubtractionExpression
 
 -- SpecificCaseExpression
@@ -164,18 +165,18 @@ specific_case_expression_p =
   return $ SpecificCase ae ve
   :: Parser SpecificCaseExpression
 
--- CaseExpression
+-- CasesExpression
 
-newtype CaseExpression = Case [ SpecificCaseExpression ]
+newtype CasesExpression = Cases [ SpecificCaseExpression ]
   deriving ( Eq )
 
-instance Show CaseExpression where
-  show = \(Case sces) ->
-    "\ncase start\n\n" ++ (sces --> map (show .> (++ "\n")) --> concat)
+instance Show CasesExpression where
+  show = \(Cases sces) ->
+    ("\ncase start\n\n" ++) $ sces --> map (show .> (++ "\n")) --> concat
 
-case_expression_p =
-  Case <$> (string "case\n" *> many1 (specific_case_expression_p <* char '\n'))
-  :: Parser CaseExpression
+cases_expression_p =
+  Cases <$> (string "cases\n" *> many1 (specific_case_expression_p <* char '\n'))
+  :: Parser CasesExpression
 
 -- NameTypeAndValueExpression
 
@@ -190,12 +191,12 @@ instance Show NameTypeAndValueExpression where
     "value: " ++ show ve ++ "\n"
 
 name_type_and_value_expression_p =
-  many (char ' ' <|> char '\t') >> name_expression_p >>= \ne ->
+  let spaces_tabs = many $ char ' ' <|> char '\t'
+  in
+  spaces_tabs >> name_expression_p >>= \ne ->
   string ": " >> type_expression_p >>= \te ->
-  char '\n' >> many (char ' ' <|> char '\t') >> string "= " >>
-  value_expression_p >>= \ve ->
-  (skipMany1 (char '\n') <|> eof) >>
-  return (NameTypeAndValue ne te ve)
+  char '\n' >> spaces_tabs >> string "= " >> value_expression_p >>= \ve ->
+  (skipMany1 (char '\n') <|> eof) >> return (NameTypeAndValue ne te ve)
   :: Parser NameTypeAndValueExpression
 
 -- NameTypeAndValueExpressions
@@ -204,8 +205,8 @@ newtype NameTypeAndValueExpressions = NameTypeAndValueExps [ NameTypeAndValueExp
   deriving ( Eq )
 
 instance Show NameTypeAndValueExpressions where
-  show = \(NameTypeAndValueExps ntave) ->
-    ntave-->map (show .> (++ "\n"))-->concat-->( "\n" ++)
+  show = \(NameTypeAndValueExps ntaves) ->
+    ntaves-->map (show .> (++ "\n"))-->concat-->( "\n" ++)
 
 name_type_and_value_expressions_p = 
   NameTypeAndValueExps <$> many1 (try name_type_and_value_expression_p)
@@ -244,21 +245,21 @@ abstraction_argument_expression_p =
   Name <$> name_expression_p <|> TupleMatching <$> tuple_matching_expression_p
   :: Parser AbstractionArgumentExpression
 
--- NoAbstractionsExpression
+-- NoAbstractionsValueExpression
 
-data NoAbstractionsExpression =
+data NoAbstractionsValueExpression =
   SubtractionExp SubtractionExpression | MultiplicationExp MultiplicationExpression |
   ApplicationExp ApplicationExpression | HighPrecedenceExp HighPrecedenceExpression |
-  CaseExp CaseExpression | IntermediatesOutputExp IntermediatesOutputExpression
+  CasesExp CasesExpression | IntermediatesOutputExp IntermediatesOutputExpression
   deriving ( Eq )
 
-instance Show NoAbstractionsExpression where
+instance Show NoAbstractionsValueExpression where
   show = \case
     SubtractionExp e -> show e
     MultiplicationExp e -> show e
     ApplicationExp e -> show e
     HighPrecedenceExp e -> show e
-    CaseExp e -> show e
+    CasesExp e -> show e
     IntermediatesOutputExp e -> show e
 
 no_abstraction_expression_p =
@@ -266,24 +267,21 @@ no_abstraction_expression_p =
   MultiplicationExp <$> try multiplication_expression_p <|>
   ApplicationExp <$> try application_expression_p <|>
   HighPrecedenceExp <$> try high_precedence_expression_p <|>
-  CaseExp <$> case_expression_p <|>
+  CasesExp <$> cases_expression_p <|>
   IntermediatesOutputExp <$> intermediates_output_expression_p
-  :: Parser NoAbstractionsExpression
+  :: Parser NoAbstractionsValueExpression
 
 -- ValueExpression
 
-data ValueExpression =
-  Abstraction AbstractionArgumentExpression ValueExpression |
-  NoAbstraction NoAbstractionsExpression
+data ValueExpression = Value [ AbstractionArgumentExpression ] NoAbstractionsValueExpression
   deriving ( Eq )
 
 instance Show ValueExpression where
-  show = \case
-    Abstraction aae ae -> show aae ++ " abstraction " ++ show ae
-    NoAbstraction e -> show e
+  show = \(Value aaes nae) ->
+    aaes-->map (show .> (++ " abstraction "))-->concat-->( ++ show nae)
 
-[ value_expression_p, abstraction_p ] =
-  [ try abstraction_p <|> NoAbstraction <$> no_abstraction_expression_p
-  , Abstraction <$>
-    abstraction_argument_expression_p <*> (string " -> " *> value_expression_p) ]
-  :: [ Parser ValueExpression ]
+value_expression_p =
+  many (try $ abstraction_argument_expression_p <* string " -> ") >>= \aaes ->
+  no_abstraction_expression_p >>= \nae ->
+  return $ Value aaes nae
+  :: Parser ValueExpression

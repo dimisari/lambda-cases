@@ -9,7 +9,7 @@ extended_euclidean: Int -> Int -> ( Int, Int, Int )
   = ee_recursion<--initial_a_coeffs<--initial_b_coeffs
 
 ee_recursion: ( Int, Int ) -> ( Int, Int ) -> Int -> Int -> ( Int, Int, Int )
-  = a_coeffs -> b_coeffs -> x -> case
+  = a_coeffs -> b_coeffs -> x -> cases
     0 -> ( x, a_coeffs-->get_first, b_coeffs-->get_first )
     y ->
       intermediates

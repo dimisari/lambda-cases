@@ -1,7 +1,7 @@
 
 Example:
 
-case_type A, B :-> TypeName
+cases_type A, B :-> TypeName
 values
   Case0 A | Case1 (b_value: B, int_value: Int) | Case2 ( A, B ) | Case3 ListOf(A)s
 
@@ -12,12 +12,12 @@ Comments:
     Examples:
 
     fun1: (A, B :-> TypeName) -> A-->ValueOrNothing
-      = case
+      = cases
         Case0 -> Value case_value
         ... -> Nothing
 
     fun2: (A, B :-> TypeName) -> (A, B)-->ValueOrNothing
-      = case
+      = cases
         Case2 -> Value case_value
         ... -> Nothing
 
@@ -26,7 +26,7 @@ Comments:
     Example function:
 
     fun: (A, B :-> TypeName) -> B-->ValueOrNothing
-      = case
+      = cases
         Case1 -> Value b_value
         ... -> Nothing
 
@@ -35,7 +35,7 @@ Comments:
     Example function:
 
     fun: (A, B :-> TypeName) -> A-->ValueOrNothing
-      = case
+      = cases
         Case2 -> Value pair_first
         ... -> Nothing
 

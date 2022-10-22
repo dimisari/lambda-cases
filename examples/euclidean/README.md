@@ -1,4 +1,4 @@
 # Normal Euclidean
-# Extended Euclidean:
-## with tuples, without tuples, without tuples or operators
-## without tuples, operators or grouping
+# Extended Euclidean
+# Extended Euclidean Variations
+## without tuples, without tuples|operators, without tuples|operators|grouping

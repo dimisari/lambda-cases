@@ -1,7 +1,7 @@
-module LowLevel.Helpers where
+module Parsers.LowLevel.Helpers where
 
-import Prelude ( String, Either, flip, return, (>>=), (*>), (.), ($) )
-import Text.Parsec ( (<|>), char, lower, many1, ParseError, parse, string, try )
+import Prelude ( String, flip, return, (>>=), (*>), (.), ($) )
+import Text.Parsec ( (<|>), char, lower, many1, string, try )
 import Text.Parsec.String ( Parser )
 
 -- Helpers

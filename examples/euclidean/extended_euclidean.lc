@@ -10,7 +10,7 @@ extended_euclidean: Int, Int :> GcdAndCoeffs
   = initial_a_coeffs, initial_b_coeffs :-> ee_recursion
 
 ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int :> GcdAndCoeffs
-  = a_coeffs, b_coeffs, x :> case
+  = a_coeffs, b_coeffs, x :> cases
     0 -> ( x, a_coeffs-->get_previous_previous, b_coeffs-->get_previous_previous )
     y -> 
       intermediates

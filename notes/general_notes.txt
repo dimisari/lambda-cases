@@ -33,5 +33,5 @@ Compilation targets to consider:
   - BEAM (Erlang virtual machine)
   - RISC-V
 
-Questions: ?  graph reduction?
-
+Other:
+  - graph reduction

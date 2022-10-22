@@ -18,8 +18,9 @@ and polymorphic functions
 
   first, second, third
 
-  fourth is not polymorphic since we stop at quadruple (bigger tuples should probably
-  be made as new tuple_types and named differently according to the context)
+  (polymorphic) fourth is not defined since we stop at quadruple
+  (bigger tuples should probably be made as new tuple_types and named differently
+  according to the context)
 
 type_propositions for needed for the polymorphic functions
 

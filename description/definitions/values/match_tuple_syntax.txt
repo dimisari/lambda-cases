@@ -6,8 +6,8 @@ Example:
   add_int_pair: IntPair -> Int
     = match_tuple -> first_int + second_int
 
-In general the field_names a the tuple_type can be used in the result expression by 
-using the match_tuple syntax:
+In general the field_names of a tuple_type can be used in the result expression by using
+the match_tuple syntax:
 
   function_name: TupleType -> OtherType
     = match_tuple -> result expression of type OtherType

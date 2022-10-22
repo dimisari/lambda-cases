@@ -1,4 +1,7 @@
 
+intermediates-output syntax defines a value that also has previous values with names and
+types defined
+
 example:
 
   f: Type0 -> Type1
