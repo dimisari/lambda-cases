@@ -8,6 +8,9 @@ import Parsers.LowLevel.Helpers ( (.>) )
 import Parsers.ValueExpressions
   ( NameTypeAndValueExpressions, name_type_and_value_expressions_p )
 
+import CodeGenerators.LowLevelExpressions 
+import CodeGenerators.ValueExpressions
+
 filename = "example.lc"
   :: String
 

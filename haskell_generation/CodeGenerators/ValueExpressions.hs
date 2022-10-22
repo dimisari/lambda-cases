@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module GenerateHaskell where
+module CodeGenerators.ValueExpressions where
 
 import Prelude ( String, (++), undefined, map, concat, reverse, init, last, error )
 
@@ -11,10 +11,9 @@ import Parsers.ValueExpressions
   , AbstractionArgumentExpression(Name, TupleMatching))
 import Parsers.ValueExpressions
 
-import CodeGenerators.LowLevel.Expressions
-  ( tuple_matching_expression_g, name_expression_g, type_expression_g )
-
-import Main (main)
+import CodeGenerators.LowLevelExpressions
+  ( tuple_matching_expression_g, name_expression_g, type_expression_g
+  , atomic_expression_g )
 
 type HaskellSource = String
 

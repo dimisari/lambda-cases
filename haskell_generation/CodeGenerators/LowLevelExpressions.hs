@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module CodeGenerators.LowLevel.Expressions where
+module CodeGenerators.LowLevelExpressions where
 
 import Prelude
   ( String, (++), concat, map, init, last, error )
@@ -10,15 +10,16 @@ import Parsers.LowLevel.Expressions
   , NameExpression( Name )
   , TupleMatchingExpression( TupleMatching ) 
   , TypeExpression( Type )
-  , TupleOrIntType( TupleType, IntType ) )
+  , TupleOrIntType( TupleType, IntType )
+  , AtomicExpression( ConstantExp, NameExp ) )
 import Parsers.LowLevel.Helpers ( (-->), (.>) )
 
 type HaskellSource = String
 
 {-
 All:
-Literal, NameExpression, TupleMatchingExpression, AtomicExpression,
-ApplicationDirection, TypeExpression, TupleOrIntType
+Literal, NameExpression, TupleMatchingExpression, AtomicExpression, TypeExpression,
+TupleOrIntType
 -}
 
 -- Literal
@@ -50,25 +51,11 @@ tuple_matching_expression_g = ( \(TupleMatching nes) -> nes --> \case
 
 -- AtomicExpression
 
--- data AtomicExpression = ConstantExp Literal | NameExp NameExpression
---   deriving (Eq)
--- instance Show AtomicExpression where
---   show = \case
---     ConstantExp e -> show e
---     NameExp e -> show e
--- 
--- atomic_expression_p = (ConstantExp <$> constant_p) <|> (NameExp <$> name_expression_p)
---   :: Parser AtomicExpression
--- 
--- ApplicationDirection
+atomic_expression_g = ( \case
+  ConstantExp e -> literal_g e
+  NameExp e -> name_expression_g e
+  ) :: AtomicExpression -> HaskellSource
 
--- data ApplicationDirection = LeftApplication | RightApplication 
---   deriving ( Eq, Show )
--- 
--- application_direction_p = 
---   string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
---   :: Parser ApplicationDirection
--- 
 -- TypeExpression
 
 type_expression_g = ( \(Type toits toit) -> 
@@ -78,7 +65,14 @@ type_expression_g = ( \(Type toits toit) ->
 -- TupleOrIntType
 
 tuple_or_int_g = ( \case
-  TupleType tes -> "(" ++ (tes-->map (type_expression_g .> (++ ", "))-->concat) ++ ")"
+  TupleType tes ->
+    let
+    all_but_last = init tes-->map (type_expression_g .> (++ ", "))-->concat
+      :: String
+    last_one = tes-->last-->type_expression_g
+      :: String
+    in
+    "( " ++ all_but_last ++ last_one ++ " )"
   IntType -> "Int"
   ) :: TupleOrIntType -> HaskellSource
 
