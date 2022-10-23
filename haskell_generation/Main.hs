@@ -8,6 +8,7 @@ import Prelude
 import Control.Monad ( (>=>) )
 import Text.Parsec ( ParseError, eof, many, parse, char )
 import Text.Parsec.String ( Parser )
+import Control.Monad.State ( evalState )
 
 import Helpers ( (.>) )
 import Parsers.ValueExpressions
@@ -16,10 +17,7 @@ import Parsers.ValueExpressions
 import CodeGenerators.LowLevel ()
 import CodeGenerators.ValueExpressions (name_type_and_value_expressions_g)
 
-filename = "example.lc"
-  :: String
-
-parse_with = flip parse filename
+parse_with = flip parse "example.lc"
   :: Parser a -> String -> Either ParseError a
 
 program_p = many (char '\n') *> name_type_and_value_expressions_p <* eof 
@@ -30,7 +28,8 @@ parse_string = parse_with program_p
 
 type HaskellSource = String
 
-generate_code = parse_string >=> name_type_and_value_expressions_g .> return
+generate_code =
+  parse_string >=> name_type_and_value_expressions_g .> flip evalState 0 .> return
   :: String -> Either ParseError HaskellSource
 
 lambda_case_extenstion = "{-# LANGUAGE LambdaCase #-}\n\n"
@@ -38,8 +37,11 @@ lambda_case_extenstion = "{-# LANGUAGE LambdaCase #-}\n\n"
 
 write_code = (generate_code .> \case
   Left e -> print e
-  Right source -> writeFile "example.hs" $ lambda_case_extenstion ++ source
+  Right source -> 
+    readFile "files/haskell_code_header.hs" >>= \header ->
+    writeFile "files/example.hs" $ header ++ source
   ) :: String -> IO ()
 
-main = readFile filename >>= write_code
+main =
+  readFile "files/example.lc" >>= write_code
   :: IO ()
