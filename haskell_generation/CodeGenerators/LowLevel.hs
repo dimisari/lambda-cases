@@ -1,26 +1,22 @@
 {-# LANGUAGE LambdaCase #-}
 
-module CodeGenerators.LowLevelExpressions where
+module CodeGenerators.LowLevel where
 
-import Prelude
-  ( String, (++), concat, map, init, last, error )
+import Prelude ( String, (++), concat, map, error )
 
-import Parsers.LowLevel.Expressions
-  ( Literal( Constant0, Constant1 ) 
-  , NameExpression( Name )
-  , TupleMatchingExpression( TupleMatching ) 
-  , TypeExpression( Type )
-  , TupleOrIntType( TupleType, IntType )
-  , AtomicExpression( ConstantExp, NameExp ) )
-import Parsers.LowLevel.Helpers ( (-->), (.>) )
-
-type HaskellSource = String
+import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
+import Parsers.LowLevel
+  ( Literal( Constant0, Constant1 ), NameExpression( Name )
+  , TupleMatchingExpression( TupleMatching ), TypeExpression( Type )
+  , TupleOrIntType( TupleType, IntType ), AtomicExpression( ConstantExp, NameExp ) )
 
 {-
 All:
 Literal, NameExpression, TupleMatchingExpression, AtomicExpression, TypeExpression,
 TupleOrIntType
 -}
+
+type HaskellSource = String
 
 -- Literal
 
@@ -39,14 +35,7 @@ name_expression_g = ( \(Name n) -> n
 tuple_matching_expression_g = ( \(TupleMatching nes) -> nes --> \case
   [] -> error "should not have less than 2 in tuple"
   [ _ ] -> tuple_matching_expression_g (TupleMatching [])
-  _ ->
-    let
-    all_but_last = init nes-->map (name_expression_g .> (++ ", "))-->concat
-      :: String
-    last_one = nes-->last-->name_expression_g
-      :: String
-    in
-    "( " ++ all_but_last ++ last_one ++ " )"
+  _ -> parenthesis_comma_sep_g name_expression_g nes
   ) :: TupleMatchingExpression -> HaskellSource
 
 -- AtomicExpression
@@ -65,14 +54,7 @@ type_expression_g = ( \(Type toits toit) ->
 -- TupleOrIntType
 
 tuple_or_int_g = ( \case
-  TupleType tes ->
-    let
-    all_but_last = init tes-->map (type_expression_g .> (++ ", "))-->concat
-      :: String
-    last_one = tes-->last-->type_expression_g
-      :: String
-    in
-    "( " ++ all_but_last ++ last_one ++ " )"
+  TupleType tes -> parenthesis_comma_sep_g type_expression_g tes
   IntType -> "Int"
   ) :: TupleOrIntType -> HaskellSource
 

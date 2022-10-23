@@ -1,14 +1,14 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Parsers.LowLevel.Expressions where
+module Parsers.LowLevel where
 
 import Prelude
   ( String, Bool(True), Eq, Show, (++), (<$>), (<*), (<*>), (*>), ($), (>>=), return
   , show, elem, pure, concat, map )
-import Text.Parsec ( (<|>), char, string, parserFail, many, try )
+import Text.Parsec ( (<|>), char, string, parserFail, many, many1, lower, try )
 import Text.Parsec.String ( Parser )
 
-import Parsers.LowLevel.Helpers ( (-->), (.>), lowers_underscore, seperated2 )
+import Helpers ( (-->), (.>), seperated2 )
 
 {-
 All:
@@ -37,9 +37,9 @@ newtype NameExpression = Name String deriving ( Eq )
 instance Show NameExpression where show = \(Name n) -> "Name " ++ n
 
 name_expression_p =
-  lowers_underscore >>= \lu -> elem lu keywords --> \case
+  many1 (lower <|> char '_') >>= \l_ -> elem l_ keywords --> \case
     True -> parserFail "keyword"
-    _ -> return $ Name lu
+    _ -> return $ Name l_
   :: Parser NameExpression 
 
 -- TupleMatchingExpression

@@ -8,11 +8,11 @@ import Prelude
 import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 
-import Parsers.LowLevel.Expressions
+import Helpers ( seperated2, (-->), (.>) )
+import Parsers.LowLevel
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
   , TupleMatchingExpression, tuple_matching_expression_p, ApplicationDirection
   , application_direction_p, TypeExpression, type_expression_p )
-import Parsers.LowLevel.Helpers ( seperated2, (-->), (.>) )
 
 {- 
 All:
@@ -105,8 +105,7 @@ data MultiplicationExpression = Multiplication [ MultiplicationFactor ]
   deriving ( Eq )
 
 instance Show MultiplicationExpression where
-  show = \case
-    Multiplication aes -> case aes of
+  show = \(Multiplication aes) -> case aes of
       [] -> error "found less than 2 in multiplication"
       [ _ ] -> show (Multiplication [])
       [ ae1, ae2 ] -> "(" ++ show ae1 ++ " mul " ++ show ae2 ++ ")"
