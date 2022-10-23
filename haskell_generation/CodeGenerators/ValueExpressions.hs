@@ -2,8 +2,11 @@
 
 module CodeGenerators.ValueExpressions where
 
-import Prelude ( String, (++), ($), undefined, map, concat, foldl, error )
-import Data.List ( intercalate )
+import Prelude
+  ( String, Int, (>>=), (++), ($), undefined, map, concat, foldl, return, error, fmap
+  , mapM )
+import Data.List ( intercalate, replicate )
+import Control.Monad.State ( State, get, put )
 
 import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
 
@@ -41,27 +44,29 @@ NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpr
 AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
 -}
 
-type HaskellSource = String
+type HaskellSource = State Int String
 
 -- ParenthesisExpression
 
 parenthesis_expression_g = ( \case
-  ForPrecedence ve -> "(" ++ value_expression_g ve ++ ")"
-  Tuple ves -> parenthesis_comma_sep_g value_expression_g ves
+  ForPrecedence ve -> value_expression_g ve >>= ("(" ++) .> (++ ")") .> return
+  Tuple ves -> return $ parenthesis_comma_sep_g value_expression_g ves
   ) :: ParenthesisExpression -> HaskellSource
 
 -- HighPrecedenceExpression
 
 high_precedence_expression_g = ( \case
   Parenthesis pe -> parenthesis_expression_g pe
-  Atomic ae -> atomic_expression_g ae
+  Atomic ae -> return $ atomic_expression_g ae
   ) :: HighPrecedenceExpression -> HaskellSource
 
 -- ApplicationExpression
 
-application_direction_g = ( \generated_so_far -> \generated_hpe -> \case 
-  LeftApplication -> generated_so_far ++ " " ++ generated_hpe
-  RightApplication -> generated_hpe ++ " " ++ generated_so_far
+application_direction_g = ( \generate_so_far -> \generate_hpe -> \ad ->
+  generate_so_far >>= \gsf ->
+  generate_hpe >>= \hpe -> case ad of
+    LeftApplication -> return (gsf ++ " " ++ hpe)
+    RightApplication -> return (hpe ++ " " ++ gsf)
   ) :: HaskellSource -> HaskellSource -> ApplicationDirection -> HaskellSource
 
 application_expression_g = ( \(Application hpe_ad_s hpe) ->
@@ -71,11 +76,11 @@ application_expression_g = ( \(Application hpe_ad_s hpe) ->
     :: [ ( HaskellSource, ApplicationDirection ) ]
   application_expression_help_g = ( \case
     [] -> error "application expression should have at least one application direction"
-    [ ( generated_so_far, ad ) ] ->
-      application_direction_g generated_so_far (high_precedence_expression_g hpe) ad
-    ( generated_so_far, ad1 ):( hpe_generated, ad2 ):the_rest ->
+    [ ( generate_so_far, ad ) ] ->
+      application_direction_g generate_so_far (high_precedence_expression_g hpe) ad
+    ( generate_so_far, ad1 ):( hpe_generated, ad2 ):the_rest ->
       let
-      generated_so_far_next = application_direction_g generated_so_far hpe_generated ad1
+      generated_so_far_next = application_direction_g generate_so_far hpe_generated ad1
         :: HaskellSource
       in
       application_expression_help_g $ ( generated_so_far_next, ad2 ):the_rest
@@ -87,8 +92,8 @@ application_expression_g = ( \(Application hpe_ad_s hpe) ->
 -- MultiplicationFactor
 
 multiplication_factor_g = ( \case
-    ApplicationMF ae -> application_expression_g ae
-    HighPrecedenceMF hpe -> high_precedence_expression_g hpe
+  ApplicationMF ae -> application_expression_g ae
+  HighPrecedenceMF hpe -> high_precedence_expression_g hpe
   ) :: MultiplicationFactor -> HaskellSource
 
 -- MultiplicationExpression
@@ -114,24 +119,26 @@ subtraction_expression_g = ( \(Subtraction sf1 sf2) ->
 -- SpecificCaseExpression
 
 specific_case_expression_g = ( \(SpecificCase ae ve) ->
-  "\t" ++ atomic_expression_g ae -->
-    (++ " -> ") --> (++ value_expression_g ve) --> (++ "\n")
+  get >>= \tab_num ->
+  replicate tab_num "\t" ++ atomic_expression_g ae -->
+    (++ " -> ") --> (++ value_expression_g ve) --> (++ "\n") --> return
   ) :: SpecificCaseExpression -> HaskellSource
 
 -- CasesExpression
 
 cases_expression_g = ( \(Cases sces) ->
-  "\\case\n" ++ sces --> map specific_case_expression_g --> concat
+  "\\case\n" ++ sces --> mapM specific_case_expression_g --> fmap concat --> return
   ) :: CasesExpression -> HaskellSource
 
 -- NameTypeAndValueExpression
 
 name_type_and_value_expression_g = ( \(NameTypeAndValue ne te ve) -> 
+  get >>= \tab_num ->
   let
   combine value_begin type_begin =
-    name_expression_g ne ++ " = " ++
+    replicate tab_num "\t" ++ name_expression_g ne ++ " = " ++
     value_begin ++ value_expression_g ve ++ "\n" ++
-    type_begin ++ type_expression_g te ++ "\n\n"
+    replicate tab_num "\t" ++ type_begin ++ type_expression_g te ++ "\n\n"
   in
   case ve of
     (Value [] nae) -> combine "" "\t:: "
@@ -158,8 +165,8 @@ intermediates_output_expression_g = ( \(IntermediatesOutputExpression ntaves ve)
 -- AbstractionArgumentExpression
 
 abstraction_argument_expression_g = ( \case
-  Name n -> name_expression_g n
-  TupleMatching tm -> tuple_matching_expression_g tm
+  Name n -> return $ name_expression_g n
+  TupleMatching tm -> return $ tuple_matching_expression_g tm
   ) :: AbstractionArgumentExpression -> HaskellSource
 
 -- NoAbstractionsValueExpression
