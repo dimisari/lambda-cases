@@ -1,6 +1,6 @@
 
-intermediates-output syntax defines a value that also has previous values with names and
-types defined
+intermediates-output syntax defines a value that also has intermediate values with names
+and types defined
 
 example:
 

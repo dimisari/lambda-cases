@@ -8,7 +8,7 @@ import Prelude
 import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 
-import Helpers ( seperated2, (-->), (.>) )
+import Helpers ( (-->), (.>), seperated2, spaces_tabs )
 import Parsers.LowLevel
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
   , TupleMatchingExpression, tuple_matching_expression_p, ApplicationDirection
@@ -190,25 +190,61 @@ instance Show NameTypeAndValueExpression where
     "value: " ++ show ve ++ "\n"
 
 name_type_and_value_expression_p =
-  let spaces_tabs = many $ char ' ' <|> char '\t'
-  in
   spaces_tabs >> name_expression_p >>= \ne ->
   string ": " >> type_expression_p >>= \te ->
   char '\n' >> spaces_tabs >> string "= " >> value_expression_p >>= \ve ->
   (skipMany1 (char '\n') <|> eof) >> return (NameTypeAndValue ne te ve)
   :: Parser NameTypeAndValueExpression
 
+-- NameTypeAndValueListsExpression
+
+data NameTypeAndValueListsExpression =
+  NameTypeAndValueLists [ NameExpression ] [ TypeExpression ] [ ValueExpression ]
+  deriving (Eq)
+
+instance Show NameTypeAndValueListsExpression where
+  show = \(NameTypeAndValueLists nes tes ves) -> 
+    "names: " ++  nes --> map (show .> (++ ", ")) --> concat ++ "\n" ++
+    "types: " ++ tes --> map (show .> (++ ", ")) --> concat ++ "\n" ++
+    "values: " ++ ves --> map (show .> (++ ", ")) --> concat ++ "\n"
+
+name_type_and_value_lists_expression_p = 
+  spaces_tabs >> seperated2 name_expression_p ", " >>= \nes ->
+  string ": " >> seperated2 type_expression_p ", " >>= \tes ->
+  char '\n' >> spaces_tabs >>
+  string "= " >> seperated2 value_expression_p ", " >>= \ves ->
+  (skipMany1 (char '\n') <|> eof) >> return (NameTypeAndValueLists nes tes ves)
+  :: Parser NameTypeAndValueListsExpression
+  
+-- NameTypeAndValueOrListsExpression
+
+data NameTypeAndValueOrListsExpression =
+  NameTypeAndValueListsExp NameTypeAndValueListsExpression |
+  NameTypeAndValueExp NameTypeAndValueExpression
+  deriving (Eq)
+
+instance Show NameTypeAndValueOrListsExpression where
+  show = \case
+    NameTypeAndValueListsExp ntavle -> show ntavle
+    NameTypeAndValueExp ntave -> show ntave
+
+name_type_and_value_or_lists_expression_p = 
+  NameTypeAndValueListsExp <$> try name_type_and_value_lists_expression_p <|>
+  NameTypeAndValueExp <$> name_type_and_value_expression_p
+  :: Parser NameTypeAndValueOrListsExpression
+
 -- NameTypeAndValueExpressions
 
-newtype NameTypeAndValueExpressions = NameTypeAndValueExps [ NameTypeAndValueExpression ]
+newtype NameTypeAndValueExpressions =
+  NameTypeAndValues [ NameTypeAndValueOrListsExpression ]
   deriving ( Eq )
 
 instance Show NameTypeAndValueExpressions where
-  show = \(NameTypeAndValueExps ntaves) ->
+  show = \(NameTypeAndValues ntaves) ->
     ntaves-->map (show .> (++ "\n"))-->concat-->( "\n" ++)
 
 name_type_and_value_expressions_p = 
-  NameTypeAndValueExps <$> many1 (try name_type_and_value_expression_p)
+  NameTypeAndValues <$> many1 (try name_type_and_value_or_lists_expression_p)
   :: Parser NameTypeAndValueExpressions
 
 -- IntermediatesOutputExpression

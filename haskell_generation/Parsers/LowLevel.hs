@@ -3,7 +3,7 @@
 module Parsers.LowLevel where
 
 import Prelude
-  ( String, Bool(True), Eq, Show, (++), (<$>), (<*), (<*>), (*>), ($), (>>=), return
+  ( String, Bool( True ), Eq, Show, (++), (<$>), (<*), (<*>), (*>), ($), (>>=), return
   , show, elem, pure, concat, map )
 import Text.Parsec ( (<|>), char, string, parserFail, many, many1, lower, try )
 import Text.Parsec.String ( Parser )

@@ -8,7 +8,7 @@ extended_euclidean: Int, Int :> ( Int, Int, Int )
 ee_recursion: ( Int, Int ), ( Int, Int ), Int, Int :> ( Int, Int, Int )
   = a_coeffs, b_coeffs, x :> cases
     0 -> ( x, a_coeffs-->get_first, b_coeffs-->get_first )
-    y -> 
+    y ->
       intermediates
       compute_new: ( Int, Int ) -> ( Int, Int )
         = ( prev_prev, prev ) -> ( prev, prev_prev - x-->div<--y * prev )

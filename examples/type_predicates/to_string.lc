@@ -1,0 +1,1 @@
+type_predicate A-->HasStringRepresentation function to_string: A -> String

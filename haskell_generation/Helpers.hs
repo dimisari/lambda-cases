@@ -2,7 +2,7 @@ module Helpers where
 
 import Prelude
   ( String, (>>=), (*>), (.), ($), (++), flip, return, init, last, concat, map )
-import Text.Parsec ( many1, string, try )
+import Text.Parsec ( (<|>), many, many1, string, char, try )
 import Text.Parsec.String ( Parser )
 
 seperated2 = (\p -> \s ->
@@ -10,6 +10,9 @@ seperated2 = (\p -> \s ->
   try (string s *> p) --> many1 >>= \as ->
   return (a:as)
   ) :: Parser a -> String -> Parser [a]
+
+spaces_tabs = many $ char ' ' <|> char '\t'
+  :: Parser String
 
 (.>) = flip (.)
   :: (a -> b) -> (b -> c) -> (a -> c)

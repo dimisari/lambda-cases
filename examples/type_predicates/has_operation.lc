@@ -1,14 +1,16 @@
-# addition magma (+): A-->Has_Addition => A -> A -> A
+# has additionm
+# +: A-->Has_Addition => A -> A -> A
 
-type_predicate T-->Has_Addition functions + : T -> T -> T
+type_predicate A-->Has_Addition functions + : A -> A -> A
 
 type_theorem Int-->Has_Addition proof + = -->int_addition<--
 type_theorem Float-->Has_Addition proof + = -->float_addition<--
 type_theorem String-->Has_Addition proof + = -->concat_string<--
 
-# product magma
+# has multiplication
+# *: A-->Has_Multiplication => A -> A -> A
 
-type_predicate T-->Has_Multiplication functions * : T -> T -> T
+type_predicate A-->Has_Multiplication functions * : A -> A -> A
 
 type_theorem Int-->Has_Multiplication proof * = -->int_product<--
 type_theorem Float-->Has_Multiplication proof * = -->float_product<--

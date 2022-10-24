@@ -1,20 +1,15 @@
 atomic types
 
-  Begin with Num, String ?
+  Num, Text?
 
 tuple_types 
 
-  ( A, B )
-  ( A, B, C )
-  ( A, B, C, D )
+  tuple_type ( A, B ) value ( pair_first: A, pair_second: B )
+  tuple_type ( A, B, C ) value ( triple_first: A, triple_second: B, triple_third: C )
+  tuple_type ( A, B, C, D )
+  value ( quad_first: A, quad_second: B, quad_third: C, quad_fourth: D )
 
-with fields
-
-  pair_first, pair_second
-  triple_first, triple_second, triple_third
-  quad_first, quad_second, quad_third, quad_fourth
-
-and polymorphic functions
+  with polymorphic functions
 
   first, second, third
 
@@ -22,7 +17,9 @@ and polymorphic functions
   (bigger tuples should probably be made as new tuple_types and named differently
   according to the context)
 
-type_propositions for needed for the polymorphic functions
+  arrays
+
+type_theorems for needed for the polymorphic functions
 
   ( A, B )-->Has_First<--A
   ( A, B, C )-->Has_First<--A
