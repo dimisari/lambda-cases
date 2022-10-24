@@ -32,9 +32,6 @@ generate_code =
   parse_string >=> name_type_and_value_expressions_g .> flip evalState 0 .> return
   :: String -> Either ParseError HaskellSource
 
-lambda_case_extenstion = "{-# LANGUAGE LambdaCase #-}\n\n"
-  :: HaskellSource
-
 write_code = (generate_code .> \case
   Left e -> print e
   Right source -> 
@@ -42,6 +39,5 @@ write_code = (generate_code .> \case
     writeFile "files/example.hs" $ header ++ source
   ) :: String -> IO ()
 
-main =
-  readFile "files/example.lc" >>= write_code
+main = readFile "files/example.lc" >>= write_code
   :: IO ()

@@ -3,12 +3,12 @@
 module CodeGenerators.ValueExpressions where
 
 import Prelude
-  ( String, Int, (>>=), (>>), (-), (+), (++), ($), undefined, map, concat, foldl, return
-  , error, fmap, mapM, init, last )
+  ( String, Int, (>>=), (>>), (-), (+), (*), (++), ($), undefined, map, concat, foldl
+  , return, error, fmap, mapM, init, last )
 import Data.List ( intercalate, replicate )
 import Control.Monad.State ( State, get, put, modify )
 
-import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
+import Helpers ( (-->), (.>) )
 
 import Parsers.LowLevel ( ApplicationDirection( LeftApplication, RightApplication ) )
 import Parsers.ValueExpressions
@@ -45,6 +45,9 @@ AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
 -}
 
 type HaskellSource = State Int String
+
+indent = ( \i -> replicate (2 * i) ' ' )
+  :: Int -> String
 
 -- ParenthesisExpression
 
@@ -124,8 +127,8 @@ subtraction_expression_g = ( \(Subtraction sf1 sf2) ->
 
 specific_case_expression_g = ( \(SpecificCase ae ve) ->
   value_expression_g ve >>= \ve_g ->
-  get >>= \tab_num ->
-  (replicate tab_num '\t' ++ atomic_expression_g ae ++ " -> " ++ ve_g)-->return
+  get >>= \num ->
+  (indent num ++ atomic_expression_g ae ++ " -> " ++ ve_g)-->return
   ) :: SpecificCaseExpression -> HaskellSource
 
 -- CasesExpression
@@ -141,16 +144,16 @@ cases_expression_g = ( \(Cases sces) ->
 
 name_type_and_value_expression_g = ( \(NameTypeAndValue ne te ve) -> 
   value_expression_g ve >>= \ve_g ->
-  get >>= \tab_num ->
+  get >>= \num ->
   let
-  combine value_begin type_begin =
-    replicate tab_num '\t' ++ name_expression_g ne ++ " =\n" ++
-    replicate (tab_num + 1) '\t' ++ value_begin ++ ve_g ++ "\n" ++
-    replicate (tab_num + 1) '\t' ++ type_begin ++ type_expression_g te ++ "\n"
+  combine value_begin value_end =
+    indent num  ++ name_expression_g ne ++ " = " ++
+    value_begin ++ ve_g ++ value_end ++ "\n" ++
+    indent (num + 1) ++ ":: " ++ type_expression_g te ++ "\n"
   in
   return $ case ve of
-    (Value [] nae) -> combine "" ":: "
-    _ -> combine "( " ") :: "
+    (Value [] nae) -> combine "" ""
+    _ -> combine "( " " )"
   ) :: NameTypeAndValueExpression -> HaskellSource
 
 -- NameTypeAndValueExpressions
@@ -162,13 +165,13 @@ name_type_and_value_expressions_g = ( \(NameTypeAndValueExps ntaves) ->
 -- IntermediatesOutputExpression
 
 intermediates_output_expression_g = ( \(IntermediatesOutputExpression ntaves ve) ->
-  modify (+ 1) >> get >>= \tab_num ->
+  modify (+ 1) >> get >>= \num ->
   name_type_and_value_expressions_g ntaves >>= \ntaves_g ->
   value_expression_g ve >>= \ve_g ->
   modify (\i -> i - 1) >>
-  return (
-    "\n" ++ replicate tab_num '\t' ++ "let\n" ++ ntaves_g ++
-    replicate tab_num '\t' ++ "in\n" ++ replicate tab_num '\t' ++ ve_g
+    return (
+      "\n" ++ indent num ++ "let\n" ++ ntaves_g ++
+      indent num ++ "in\n" ++ indent num ++ ve_g
     )
   ) :: IntermediatesOutputExpression -> HaskellSource
 
