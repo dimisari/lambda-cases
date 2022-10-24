@@ -41,8 +41,8 @@ tuple_matching_expression_g = ( \(TupleMatching nes) -> nes --> \case
 -- AtomicExpression
 
 atomic_expression_g = ( \case
-  ConstantExp e -> literal_g e
-  NameExp e -> name_expression_g e
+  ConstantExp ce -> literal_g ce
+  NameExp ne -> name_expression_g ne
   ) :: AtomicExpression -> HaskellSource
 
 -- TypeExpression
