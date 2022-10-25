@@ -11,9 +11,9 @@ import Text.Parsec.String ( Parser )
 import Helpers ( (-->), (.>), paren_comma_seperated2 )
 
 {-
-All:
-Keywords, Literal, NameExpression, AtomicExpression, TupleMatchingExpression,
-ApplicationDirection, IntOrIntTupleExpression, TypeExpression
+  All:
+  Keywords, Literal, NameExpression, AtomicExpression, TupleMatchingExpression,
+  ApplicationDirection, IntOrIntTupleExpression, TypeExpression
 -}
 
 -- Keywords

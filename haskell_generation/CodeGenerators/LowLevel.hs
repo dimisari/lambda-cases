@@ -8,12 +8,14 @@ import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
 import Parsers.LowLevel
   ( Literal( Constant0, Constant1 ), NameExpression( Name )
   , TupleMatchingExpression( TupleMatching ), TypeExpression( Type )
-  , IntOrIntTupleExpression( TupleType, IntType ), AtomicExpression( ConstantExp, NameExp ) )
+  , IntOrIntTupleExpression( TupleType, IntType )
+  , AtomicExpression( ConstantExp, NameExp )
+  )
 
 {-
-All:
-Literal, NameExpression, TupleMatchingExpression, AtomicExpression, TypeExpression,
-IntOrIntTupleExpression
+  All:
+  Literal, NameExpression, TupleMatchingExpression, AtomicExpression, TypeExpression,
+  IntOrIntTupleExpression
 -}
 
 type HaskellSource = String

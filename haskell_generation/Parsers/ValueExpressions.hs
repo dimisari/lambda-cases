@@ -4,25 +4,28 @@ module Parsers.ValueExpressions where
 
 import Prelude
   ( Eq, Show, String, Bool( True ), show, undefined, (<$>), (<*), (*>), (<*>), (++), ($)
-  , (>>=), (>>), (==), (&&), return, map, length, concat, error )
-import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1, parserFail )
+  , (>>=), (>>), (==), (&&), return, map, length, concat, error, fmap )
+import Text.Parsec
+  ( (<|>), try, char, many, many1, string, eof, skipMany1, parserFail, optional )
 import Text.Parsec.String ( Parser )
 
-import Helpers ( (-->), (.>), seperated2, comma_seperated2, spaces_tabs )
+import Helpers
+  ( (-->), (.>), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded )
 import Parsers.LowLevel
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
   , TupleMatchingExpression, tuple_matching_expression_p, ApplicationDirection
   , application_direction_p, TypeExpression, type_expression_p )
 
 {- 
-All:
-ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression,
-MultiplicationFactor, MultiplicationExpression, SubtractionFactor, SubtractionExpression,
-SpecificCaseExpression, CasesExpression,
-NameTypeAndValueExpression, NameTypeAndValueListsExpression,
-NameTypeAndValueOrListsExpression, NameTypeAndValueExpressions,
-IntermediatesOutputExpression,
-AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
+  All:
+  ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression,
+  MultiplicationFactor, MultiplicationExpression,
+  SubtractionFactor, SubtractionExpression,
+  SpecificCaseExpression, CasesExpression,
+  NameTypeAndValueExpression, NameTypeAndValueListsExpression,
+  NameTypeAndValueOrListsExpression, NameTypeAndValueExpressions,
+  IntermediatesOutputExpression,
+  AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
 -}
 
 -- ParenthesisExpression
@@ -37,7 +40,7 @@ instance Show ParenthesisExpression where
 
 [ parenthesis_expression_p, tuple_internals_p, for_precedence_internals_p ] =
   [ char '(' *> (try tuple_internals_p <|> for_precedence_internals_p) <* char ')'
-  , Tuple <$> (char ' ' *> comma_seperated2 value_expression_p <* char ' ')
+  , fmap Tuple $ char ' ' *> comma_seperated2 value_expression_p <* char ' '
   , ForPrecedence <$> value_expression_p ]
   :: [ Parser ParenthesisExpression ]
 
@@ -67,11 +70,8 @@ instance Show ApplicationExpression where
   show = \(Application hpe_ad_s hpe) -> case hpe_ad_s of
     [] -> error "application expression should have at least one application direction"
     _ ->
-      let
-      show_hpe_ad = (\( hpe, ad ) -> show hpe ++ " " ++ show ad ++ " ")
-        :: ( HighPrecedenceExpression, ApplicationDirection ) -> String
-      in
-      hpe_ad_s --> map show_hpe_ad --> concat --> (++ show hpe)
+      hpe_ad_s-->map (\( hpe, ad ) -> show hpe ++ " " ++ show ad ++ " ")-->concat
+      ++ show hpe
 
 application_expression_p =
   many1 (try high_precedence_expression_and_application_direction_p) >>= \hpe_ad_s -> 
@@ -161,7 +161,7 @@ instance Show SpecificCaseExpression where
     "result: " ++ show ve ++ "\n"
 
 specific_case_expression_p =
-  many (char ' ' <|> char '\t') >> atomic_expression_p >>= \ae ->
+  spaces_tabs >> atomic_expression_p >>= \ae ->
   string " ->" >> (char ' ' <|> char '\n') >> value_expression_p >>= \ve ->
   return $ SpecificCase ae ve
   :: Parser SpecificCaseExpression
@@ -176,7 +176,7 @@ instance Show CasesExpression where
     ("\ncase start\n\n" ++) $ sces --> map (show .> (++ "\n")) --> concat
 
 cases_expression_p =
-  Cases <$> (string "cases\n" *> many1 (specific_case_expression_p <* char '\n'))
+  fmap Cases $ string "cases\n" *> many1 (specific_case_expression_p <* char '\n')
   :: Parser CasesExpression
 
 -- NameTypeAndValueExpression
@@ -192,10 +192,12 @@ instance Show NameTypeAndValueExpression where
     "value: " ++ show ve ++ "\n"
 
 name_type_and_value_expression_p =
-  spaces_tabs >> name_expression_p >>= \ne ->
+  name_expression_p >>= \ne ->
   string ": " >> type_expression_p >>= \te ->
-  char '\n' >> spaces_tabs >> string "= " >> value_expression_p >>= \ve ->
-  (skipMany1 (char '\n') <|> eof) >> return (NameTypeAndValue ne te ve)
+  new_line_space_surrounded >>
+  string "= " >> value_expression_p >>= \ve ->
+  (eof <|> skipMany1 new_line_space_surrounded) >>
+  return (NameTypeAndValue ne te ve)
   :: Parser NameTypeAndValueExpression
 
 -- NameTypeAndValueListsExpression
@@ -213,12 +215,10 @@ instance Show NameTypeAndValueListsExpression where
 name_type_and_value_lists_expression_p = 
   spaces_tabs >> comma_seperated2 name_expression_p >>= \nes ->
   string ": " >> comma_seperated2 type_expression_p >>= \tes ->
-  char '\n' >> spaces_tabs >>
+  new_line_space_surrounded >>
   string "= " >> comma_seperated2 value_expression_p >>= \ves ->
-  (skipMany1 (char '\n') <|> eof) >>
-  case length tes == length nes && length ves == length nes of
-    True -> return $ NameTypeAndValueLists nes tes ves
-    _ -> error "names, types and values must all have the same cardinality"
+  (eof <|> skipMany1 new_line_space_surrounded) >>
+  NameTypeAndValueLists nes tes ves --> return
   :: Parser NameTypeAndValueListsExpression
   
 -- NameTypeAndValueOrListsExpression
@@ -246,10 +246,10 @@ newtype NameTypeAndValueExpressions =
 
 instance Show NameTypeAndValueExpressions where
   show = \(NameTypeAndValues ntaves) ->
-    ntaves-->map (show .> (++ "\n"))-->concat-->( "\n" ++)
+    "\n" ++ ntaves-->map (show .> (++ "\n"))-->concat
 
 name_type_and_value_expressions_p = 
-  NameTypeAndValues <$> many1 (try name_type_and_value_or_lists_expression_p)
+  NameTypeAndValues <$> try name_type_and_value_or_lists_expression_p-->many1
   :: Parser NameTypeAndValueExpressions
 
 -- IntermediatesOutputExpression
@@ -263,10 +263,10 @@ instance Show IntermediatesOutputExpression where
     "intermediates\n" ++ show ntave ++ "output\n" ++ show ve
 
 intermediates_output_expression_p = 
-  many (char ' ' <|> char '\t') >> string "intermediates\n" >>
+  spaces_tabs >> string "intermediates" >> new_line_space_surrounded >>
   name_type_and_value_expressions_p >>= \ntave ->
-  many (char ' ' <|> char '\t') >> string "output\n" >>
-  many (char ' ' <|> char '\t') >> value_expression_p >>= \ve ->
+  spaces_tabs >> string "output" >> new_line_space_surrounded >>
+  value_expression_p >>= \ve ->
   return $ IntermediatesOutputExpression ntave ve
   :: Parser IntermediatesOutputExpression
 
@@ -313,7 +313,8 @@ no_abstraction_expression_p =
 
 -- ValueExpression
 
-data ValueExpression = Value [ AbstractionArgumentExpression ] NoAbstractionsValueExpression
+data ValueExpression =
+  Value [ AbstractionArgumentExpression ] NoAbstractionsValueExpression
   deriving ( Eq )
 
 instance Show ValueExpression where

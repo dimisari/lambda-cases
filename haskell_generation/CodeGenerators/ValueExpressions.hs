@@ -3,8 +3,8 @@
 module CodeGenerators.ValueExpressions where
 
 import Prelude
-  ( String, Int, (>>=), (>>), (-), (+), (*), (++), ($), undefined, map, concat, foldl
-  , return, error, fmap, mapM, init, last )
+  ( String, Int, (>>=), (>>), (-), (+), (*), (++), ($), undefined, map, concat, return
+  , error, mapM, init, last )
 import Data.List ( intercalate, replicate )
 import Control.Monad.State ( State, get, put, modify )
 
@@ -40,12 +40,15 @@ import CodeGenerators.LowLevel
   , atomic_expression_g )
 
 {- 
-All:
-ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression
-MultiplicationFactor, MultiplicationExpression, SubtractionFactor, SubtractionExpression
-SpecificCaseExpression, CasesExpression
-NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpression
-AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
+  All:
+  ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression,
+  MultiplicationFactor, MultiplicationExpression,
+  SubtractionFactor, SubtractionExpression,
+  SpecificCaseExpression, CasesExpression,
+  NameTypeAndValueExpression, NameTypeAndValueListsExpression,
+  NameTypeAndValueOrListsExpression, NameTypeAndValueExpressions,
+  IntermediatesOutputExpression,
+  AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
 -}
 
 type IndentState = State Int
@@ -170,7 +173,7 @@ name_type_and_value_lists_expression_g = ( \(NameTypeAndValueLists nes tes ves) 
     ( ne:nes, te:tes, ve:ves) -> NameTypeAndValue ne te ve:zip3 ( nes, tes, ves )
     ( [], [], [] ) -> []
     _ ->
-      error "name_type_and_value_lists_expression_g: should have had same length lists"
+      error "name_type_and_value_lists_expression_g: lists must have the same length"
     ) :: ( [ NameExpression ], [ TypeExpression ], [ ValueExpression ] ) ->
            [ NameTypeAndValueExpression ]
   in
