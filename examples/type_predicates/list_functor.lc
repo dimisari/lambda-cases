@@ -7,11 +7,11 @@ apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
 
 type_theorem ListOf()s-->IsAFunctor proof applied_internally_to = apply()to_each
 
-first_print: One-->WithIOEffects
+first_print: NoData-->WithIOEffects
   [ 1, 2, 3, 4 ]-->apply(is_odd)to_each-->print
 
-second_print: One-->WithIOEffects
+second_print: NoData-->WithIOEffects
   is_odd-->applied_internally_to<--[ 1, 2, 3, 4 ]-->print
 
-main: One-->WithIOEffects
+main: NoData-->WithIOEffects
   first_print ;> second_print

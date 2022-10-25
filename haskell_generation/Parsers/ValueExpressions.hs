@@ -3,9 +3,9 @@
 module Parsers.ValueExpressions where
 
 import Prelude
-  ( Eq, Show, String, show, undefined, (<$>), (<*), (*>), (<*>), (++), ($), (>>=), (>>)
-  , return, map, concat, error )
-import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1 )
+  ( Eq, Show, String, Bool( True ), show, undefined, (<$>), (<*), (*>), (<*>), (++), ($)
+  , (>>=), (>>), (==), (&&), return, map, length, concat, error )
+import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1, parserFail )
 import Text.Parsec.String ( Parser )
 
 import Helpers ( (-->), (.>), seperated2, spaces_tabs )
@@ -16,10 +16,12 @@ import Parsers.LowLevel
 
 {- 
 All:
-ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression
-MultiplicationFactor, MultiplicationExpression, SubtractionFactor, SubtractionExpression
-SpecificCaseExpression, CasesExpression
-NameTypeAndValueExpression, NameTypeAndValueExpressions, IntermediatesOutputExpression
+ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression,
+MultiplicationFactor, MultiplicationExpression, SubtractionFactor, SubtractionExpression,
+SpecificCaseExpression, CasesExpression,
+NameTypeAndValueExpression, NameTypeAndValueListsExpression,
+NameTypeAndValueOrListsExpression, NameTypeAndValueExpressions,
+IntermediatesOutputExpression,
 AbstractionArgument, NoAbstractionsValueExpression, ValueExpression
 -}
 
@@ -213,20 +215,23 @@ name_type_and_value_lists_expression_p =
   string ": " >> seperated2 type_expression_p ", " >>= \tes ->
   char '\n' >> spaces_tabs >>
   string "= " >> seperated2 value_expression_p ", " >>= \ves ->
-  (skipMany1 (char '\n') <|> eof) >> return (NameTypeAndValueLists nes tes ves)
+  (skipMany1 (char '\n') <|> eof) >>
+  case length tes == length nes && length ves == length nes of
+    True -> return $ NameTypeAndValueLists nes tes ves
+    _ -> error "names, types and values must all have the same cardinality"
   :: Parser NameTypeAndValueListsExpression
   
 -- NameTypeAndValueOrListsExpression
 
 data NameTypeAndValueOrListsExpression =
-  NameTypeAndValueListsExp NameTypeAndValueListsExpression |
-  NameTypeAndValueExp NameTypeAndValueExpression
+  NameTypeAndValueExp NameTypeAndValueExpression |
+  NameTypeAndValueListsExp NameTypeAndValueListsExpression
   deriving (Eq)
 
 instance Show NameTypeAndValueOrListsExpression where
   show = \case
-    NameTypeAndValueListsExp ntavle -> show ntavle
     NameTypeAndValueExp ntave -> show ntave
+    NameTypeAndValueListsExp ntavle -> show ntavle
 
 name_type_and_value_or_lists_expression_p = 
   NameTypeAndValueListsExp <$> try name_type_and_value_lists_expression_p <|>

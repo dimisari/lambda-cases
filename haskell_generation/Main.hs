@@ -14,7 +14,7 @@ import Helpers ( (.>) )
 import Parsers.ValueExpressions
   ( NameTypeAndValueExpressions, name_type_and_value_expressions_p )
 
--- import CodeGenerators.ValueExpressions ( name_type_and_value_expressions_g )
+import CodeGenerators.ValueExpressions ( name_type_and_value_expressions_g )
 
 -- Constants
 
@@ -36,18 +36,19 @@ parse_string = parse_with program_p
 
 -- Generating haskell
 
--- type HaskellSource = String
--- 
--- generate_code =
---   parse_string >=> name_type_and_value_expressions_g .> flip evalState 0 .> return
---   :: String -> Either ParseError HaskellSource
--- 
--- write_code = ( generate_code .> \case
---   Left e -> print e
---   Right source -> 
---     readFile haskell_header >>= \header ->
---     writeFile example_hs $ header ++ source
---   ) :: String -> IO ()
+type HaskellSource = String
 
-main = readFile example_lc >>= parse_string .> print -- >>= write_code
+generate_code =
+  parse_string >=> name_type_and_value_expressions_g .> flip evalState 0 .> return
+  :: String -> Either ParseError HaskellSource
+
+write_code = ( generate_code .> \case
+  Left e -> print e
+  Right source -> 
+    readFile haskell_header >>= \header ->
+    writeFile example_hs $ header ++ source
+  ) :: String -> IO ()
+
+main = readFile example_lc >>= write_code
+  -- >>= parse_string .> print
   :: IO ()

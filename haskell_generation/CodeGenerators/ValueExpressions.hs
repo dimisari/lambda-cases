@@ -10,7 +10,9 @@ import Control.Monad.State ( State, get, put, modify )
 
 import Helpers ( (-->), (.>) )
 
-import Parsers.LowLevel ( ApplicationDirection( LeftApplication, RightApplication ) )
+import Parsers.LowLevel
+  ( ApplicationDirection( LeftApplication, RightApplication ), NameExpression
+  , TypeExpression )
 import Parsers.ValueExpressions
   ( ParenthesisExpression( ForPrecedence, Tuple )
   , HighPrecedenceExpression( Parenthesis, Atomic )
@@ -22,7 +24,9 @@ import Parsers.ValueExpressions
   , SpecificCaseExpression( SpecificCase )
   , CasesExpression( Cases )
   , NameTypeAndValueExpression( NameTypeAndValue )
-  , NameTypeAndValueExpressions( NameTypeAndValueExps )
+  , NameTypeAndValueListsExpression( NameTypeAndValueLists )
+  , NameTypeAndValueOrListsExpression( NameTypeAndValueExp, NameTypeAndValueListsExp )
+  , NameTypeAndValueExpressions( NameTypeAndValues )
   , IntermediatesOutputExpression( IntermediatesOutputExpression )
   , AbstractionArgumentExpression( Name, TupleMatching )
   , NoAbstractionsValueExpression
@@ -158,10 +162,32 @@ name_type_and_value_expression_g = ( \(NameTypeAndValue ne te ve) ->
     _ -> combine "( " " )"
   ) :: NameTypeAndValueExpression -> IndentState HSSource
 
+-- NameTypeAndValueListsExpression
+
+name_type_and_value_lists_expression_g = ( \(NameTypeAndValueLists nes tes ves) -> 
+  let
+  zip3 = ( \case
+    ( ne:nes, te:tes, ve:ves) -> NameTypeAndValue ne te ve:zip3 ( nes, tes, ves )
+    ( [], [], [] ) -> []
+    _ ->
+      error "name_type_and_value_lists_expression_g: should have had same length lists"
+    ) :: ( [ NameExpression ], [ TypeExpression ], [ ValueExpression ] ) ->
+           [ NameTypeAndValueExpression ]
+  in
+  zip3 ( nes, tes, ves )-->mapM name_type_and_value_expression_g >>= concat .> return
+  ) :: NameTypeAndValueListsExpression -> IndentState HSSource
+
+-- NameTypeAndValueOrListsExpression
+
+name_type_and_value_or_lists_expression_g = ( \case 
+  NameTypeAndValueExp ntave -> name_type_and_value_expression_g ntave
+  NameTypeAndValueListsExp ntavle -> name_type_and_value_lists_expression_g ntavle
+  ) :: NameTypeAndValueOrListsExpression -> IndentState HSSource
+
 -- NameTypeAndValueExpressions
 
-name_type_and_value_expressions_g = ( \(NameTypeAndValueExps ntaves) ->
-  ntaves-->mapM name_type_and_value_expression_g >>= concat .> return
+name_type_and_value_expressions_g = ( \(NameTypeAndValues ntaves) ->
+  ntaves-->mapM name_type_and_value_or_lists_expression_g >>= concat .> return
   ) :: NameTypeAndValueExpressions -> IndentState HSSource
 
 -- IntermediatesOutputExpression

@@ -4,6 +4,9 @@ atomic types
 
 tuple_types 
 
+  tuple_type NoData value ()
+  tuple_type A-->InTuple value ( only_value: A )
+
   tuple_type ( A, B ) value ( pair_first: A, pair_second: B )
   tuple_type ( A, B, C ) value ( triple_first: A, triple_second: B, triple_third: C )
   tuple_type ( A, B, C, D )
