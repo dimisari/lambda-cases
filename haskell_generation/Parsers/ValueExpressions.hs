@@ -8,7 +8,7 @@ import Prelude
 import Text.Parsec ( (<|>), try, char, many, many1, string, eof, skipMany1, parserFail )
 import Text.Parsec.String ( Parser )
 
-import Helpers ( (-->), (.>), seperated2, spaces_tabs )
+import Helpers ( (-->), (.>), seperated2, comma_seperated2, spaces_tabs )
 import Parsers.LowLevel
   ( AtomicExpression, atomic_expression_p, NameExpression, name_expression_p
   , TupleMatchingExpression, tuple_matching_expression_p, ApplicationDirection
@@ -37,7 +37,7 @@ instance Show ParenthesisExpression where
 
 [ parenthesis_expression_p, tuple_internals_p, for_precedence_internals_p ] =
   [ char '(' *> (try tuple_internals_p <|> for_precedence_internals_p) <* char ')'
-  , Tuple <$> (char ' ' *> seperated2 value_expression_p ", " <* char ' ')
+  , Tuple <$> (char ' ' *> comma_seperated2 value_expression_p <* char ' ')
   , ForPrecedence <$> value_expression_p ]
   :: [ Parser ParenthesisExpression ]
 
@@ -211,10 +211,10 @@ instance Show NameTypeAndValueListsExpression where
     "values: " ++ ves --> map (show .> (++ ", ")) --> concat ++ "\n"
 
 name_type_and_value_lists_expression_p = 
-  spaces_tabs >> seperated2 name_expression_p ", " >>= \nes ->
-  string ": " >> seperated2 type_expression_p ", " >>= \tes ->
+  spaces_tabs >> comma_seperated2 name_expression_p >>= \nes ->
+  string ": " >> comma_seperated2 type_expression_p >>= \tes ->
   char '\n' >> spaces_tabs >>
-  string "= " >> seperated2 value_expression_p ", " >>= \ves ->
+  string "= " >> comma_seperated2 value_expression_p >>= \ves ->
   (skipMany1 (char '\n') <|> eof) >>
   case length tes == length nes && length ves == length nes of
     True -> return $ NameTypeAndValueLists nes tes ves

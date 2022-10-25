@@ -8,12 +8,12 @@ import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
 import Parsers.LowLevel
   ( Literal( Constant0, Constant1 ), NameExpression( Name )
   , TupleMatchingExpression( TupleMatching ), TypeExpression( Type )
-  , TupleOrIntType( TupleType, IntType ), AtomicExpression( ConstantExp, NameExp ) )
+  , IntOrIntTupleExpression( TupleType, IntType ), AtomicExpression( ConstantExp, NameExp ) )
 
 {-
 All:
 Literal, NameExpression, TupleMatchingExpression, AtomicExpression, TypeExpression,
-TupleOrIntType
+IntOrIntTupleExpression
 -}
 
 type HaskellSource = String
@@ -51,10 +51,10 @@ type_expression_g = ( \(Type toits toit) ->
   toits-->map (tuple_or_int_g .> (++ " -> "))-->concat-->(++ tuple_or_int_g toit)
   ) :: TypeExpression -> HaskellSource
 
--- TupleOrIntType
+-- IntOrIntTupleExpression
 
 tuple_or_int_g = ( \case
   TupleType tes -> parenthesis_comma_sep_g type_expression_g tes
   IntType -> "Int"
-  ) :: TupleOrIntType -> HaskellSource
+  ) :: IntOrIntTupleExpression -> HaskellSource
 
