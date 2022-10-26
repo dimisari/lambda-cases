@@ -147,8 +147,8 @@ specific_case_expression_g = ( \(SpecificCase ae ve) ->
 cases_expression_g = ( \(Cases sces) ->
   modify (+ 1) >>
   (sces-->mapM specific_case_expression_g) >>= \sces_g ->
-  modify (\i -> i - 1) >>
-  ("\\case\n" ++ init sces_g-->map (++ "\n")-->(++ [last sces_g])-->concat)-->return
+  (modify (\i -> i - 1) >>) $
+  return $ "\\case\n" ++ init sces_g-->map (++ "\n")-->(++ [last sces_g])-->concat
   ) :: CasesExpression -> IndentState HaskellSource
 
 -- NameTypeAndValueExpression
@@ -202,7 +202,7 @@ intermediates_output_expression_g = ( \(IntermediatesOutputExpression ntaves ve)
   name_type_and_value_expressions_g ntaves >>= \ntaves_g ->
   value_expression_g ve >>= \ve_g ->
   get >>= \num ->
-  put (num - 1) >>= \_->
+  (put (num - 1) >>) $
   return $
     "\n" ++ indent num ++ "let\n" ++ ntaves_g ++
     indent num ++ "in\n" ++ indent num ++ ve_g
