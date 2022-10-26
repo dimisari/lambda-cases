@@ -319,7 +319,7 @@ data ValueExpression =
 
 instance Show ValueExpression where
   show = \(Value aaes nae) ->
-    aaes-->map (show .> (++ " abstraction "))-->concat-->( ++ show nae)
+    aaes-->map (show .> (++ " abstraction "))-->concat ++ show nae
 
 value_expression_p =
   many (try $ abstraction_argument_expression_p <* string " -> ") >>= \aaes ->

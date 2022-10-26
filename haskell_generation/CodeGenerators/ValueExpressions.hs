@@ -6,8 +6,8 @@ import Prelude
   ( String, Int, (>>=), (>>), (-), (+), (*), (++), ($), undefined, map, concat, return
   , error, mapM, init, last )
 import Data.List ( intercalate, replicate )
+import Control.Monad.State ( (>=>) )
 import Control.Monad.State ( State, get, put, modify )
-
 import Helpers ( (-->), (.>) )
 
 import Parsers.LowLevel
@@ -21,8 +21,7 @@ import Parsers.ValueExpressions
   , MultiplicationExpression( Multiplication )
   , SubtractionFactor( MultiplicationSF, ApplicationSF, HighPrecedenceSF )
   , SubtractionExpression( Subtraction )
-  , SpecificCaseExpression( SpecificCase )
-  , CasesExpression( Cases )
+  , SpecificCaseExpression( SpecificCase ), CasesExpression( Cases )
   , NameTypeAndValueExpression( NameTypeAndValue )
   , NameTypeAndValueListsExpression( NameTypeAndValueLists )
   , NameTypeAndValueOrListsExpression( NameTypeAndValueExp, NameTypeAndValueListsExp )
@@ -52,69 +51,72 @@ import CodeGenerators.LowLevel
 -}
 
 type IndentState = State Int
-type HSSource = String
+type HaskellSource = String
 
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> String
 
 -- ParenthesisExpression
 
-parenthesis_expression_g = ( \case
-  ForPrecedence ve -> value_expression_g ve >>= ("(" ++) .> (++ ")") .> return
+parenthesis_expression_g = ( ( \case
+  ForPrecedence ve -> value_expression_g ve
   Tuple ves -> 
     mapM value_expression_g ves >>= \l ->
-    return $ "( " ++ init l-->map (++ ", ")-->concat ++ l-->last ++ " )"
-  ) :: ParenthesisExpression -> IndentState HSSource
+    return $ " " ++ init l-->map (++ ", ")-->concat ++ l-->last ++ " "
+  ) >=> ("(" ++) .> (++ ")") .> return
+  ) :: ParenthesisExpression -> IndentState HaskellSource
 
 -- HighPrecedenceExpression
 
 high_precedence_expression_g = ( \case
   Parenthesis pe -> parenthesis_expression_g pe
   Atomic ae -> return $ atomic_expression_g ae
-  ) :: HighPrecedenceExpression -> IndentState HSSource
+  ) :: HighPrecedenceExpression -> IndentState HaskellSource
 
 -- ApplicationExpression
 
 application_direction_g = ( \generate_so_far -> \generate_hpe -> \ad ->
-  generate_so_far >>= \gsf ->
-  generate_hpe >>= \hpe -> case ad of
-    LeftApplication -> return $ gsf ++ " " ++ hpe
-    RightApplication -> return $ hpe ++ " " ++ gsf
-  ) :: IndentState HSSource -> IndentState HSSource -> ApplicationDirection
-         -> IndentState HSSource
+  generate_so_far >>= \sf ->
+  generate_hpe >>= \hpe ->
+  return $ case ad of
+    LeftApplication -> sf ++ " " ++ hpe
+    RightApplication -> hpe ++ " " ++ sf
+  ) :: IndentState HaskellSource -> IndentState HaskellSource -> ApplicationDirection
+         -> IndentState HaskellSource
 
 application_expression_g = ( \(Application hpe_ad_s hpe) ->
   let
-  hpe_generated_ad_s =
+  generate_hpe_ad_s =
     map ( \( hpe, ad ) -> ( high_precedence_expression_g hpe, ad ) ) hpe_ad_s
-    :: [ ( IndentState HSSource, ApplicationDirection ) ]
+    :: [ ( IndentState HaskellSource, ApplicationDirection ) ]
   application_expression_help_g = ( \case
     [] -> error "application expression should have at least one application direction"
     [ ( generate_so_far, ad ) ] ->
       application_direction_g generate_so_far (high_precedence_expression_g hpe) ad
-    ( generate_so_far, ad1 ):( hpe_generated, ad2 ):the_rest ->
+    ( generate_so_far, ad1 ):( generate_hpe, ad2 ):the_rest ->
       let
-      generated_so_far_next = application_direction_g generate_so_far hpe_generated ad1
-        :: IndentState HSSource
+      generate_so_far_next = application_direction_g generate_so_far generate_hpe ad1
+        :: IndentState HaskellSource
       in
-      application_expression_help_g $ ( generated_so_far_next, ad2 ):the_rest
-    ) :: [ ( IndentState HSSource, ApplicationDirection ) ] -> IndentState HSSource
+      application_expression_help_g $ ( generate_so_far_next, ad2 ):the_rest
+    ) :: [ ( IndentState HaskellSource, ApplicationDirection ) ]
+          -> IndentState HaskellSource
   in
-  application_expression_help_g hpe_generated_ad_s
-  ) :: ApplicationExpression -> IndentState HSSource
+  application_expression_help_g generate_hpe_ad_s
+  ) :: ApplicationExpression -> IndentState HaskellSource
 
 -- MultiplicationFactor
 
 multiplication_factor_g = ( \case
   ApplicationMF ae -> application_expression_g ae
   HighPrecedenceMF hpe -> high_precedence_expression_g hpe
-  ) :: MultiplicationFactor -> IndentState HSSource
+  ) :: MultiplicationFactor -> IndentState HaskellSource
 
 -- MultiplicationExpression
 
 multiplication_expression_g = ( \(Multiplication mfs) -> 
   mapM multiplication_factor_g mfs >>= intercalate " * " .> return
-  ) :: MultiplicationExpression -> IndentState HSSource
+  ) :: MultiplicationExpression -> IndentState HaskellSource
 
 -- SubtractionFactor
 
@@ -122,7 +124,7 @@ subtraction_factor_g = ( \case
   MultiplicationSF me -> multiplication_expression_g me
   ApplicationSF ae -> application_expression_g ae
   HighPrecedenceSF hpe -> high_precedence_expression_g hpe
-  ) :: SubtractionFactor -> IndentState HSSource
+  ) :: SubtractionFactor -> IndentState HaskellSource
 
 -- SubtractionExpression
 
@@ -130,7 +132,7 @@ subtraction_expression_g = ( \(Subtraction sf1 sf2) ->
   subtraction_factor_g sf1 >>= \sf1_g ->
   subtraction_factor_g sf2 >>= \sf2_g ->
   return $ sf1_g ++ " - " ++ sf2_g
-  ) :: SubtractionExpression -> IndentState HSSource
+  ) :: SubtractionExpression -> IndentState HaskellSource
 
 -- SpecificCaseExpression
 
@@ -138,7 +140,7 @@ specific_case_expression_g = ( \(SpecificCase ae ve) ->
   value_expression_g ve >>= \ve_g ->
   get >>= \num ->
   return $ indent num ++ atomic_expression_g ae ++ " -> " ++ ve_g
-  ) :: SpecificCaseExpression -> IndentState HSSource
+  ) :: SpecificCaseExpression -> IndentState HaskellSource
 
 -- CasesExpression
 
@@ -147,7 +149,7 @@ cases_expression_g = ( \(Cases sces) ->
   (sces-->mapM specific_case_expression_g) >>= \sces_g ->
   modify (\i -> i - 1) >>
   ("\\case\n" ++ init sces_g-->map (++ "\n")-->(++ [last sces_g])-->concat)-->return
-  ) :: CasesExpression -> IndentState HSSource
+  ) :: CasesExpression -> IndentState HaskellSource
 
 -- NameTypeAndValueExpression
 
@@ -163,7 +165,7 @@ name_type_and_value_expression_g = ( \(NameTypeAndValue ne te ve) ->
   return $ case ve of
     (Value [] nae) -> combine "" ""
     _ -> combine "( " " )"
-  ) :: NameTypeAndValueExpression -> IndentState HSSource
+  ) :: NameTypeAndValueExpression -> IndentState HaskellSource
 
 -- NameTypeAndValueListsExpression
 
@@ -178,31 +180,33 @@ name_type_and_value_lists_expression_g = ( \(NameTypeAndValueLists nes tes ves) 
            [ NameTypeAndValueExpression ]
   in
   zip3 ( nes, tes, ves )-->mapM name_type_and_value_expression_g >>= concat .> return
-  ) :: NameTypeAndValueListsExpression -> IndentState HSSource
+  ) :: NameTypeAndValueListsExpression -> IndentState HaskellSource
 
 -- NameTypeAndValueOrListsExpression
 
 name_type_and_value_or_lists_expression_g = ( \case 
   NameTypeAndValueExp ntave -> name_type_and_value_expression_g ntave
   NameTypeAndValueListsExp ntavle -> name_type_and_value_lists_expression_g ntavle
-  ) :: NameTypeAndValueOrListsExpression -> IndentState HSSource
+  ) :: NameTypeAndValueOrListsExpression -> IndentState HaskellSource
 
 -- NameTypeAndValueExpressions
 
 name_type_and_value_expressions_g = ( \(NameTypeAndValues ntaves) ->
   ntaves-->mapM name_type_and_value_or_lists_expression_g >>= concat .> return
-  ) :: NameTypeAndValueExpressions -> IndentState HSSource
+  ) :: NameTypeAndValueExpressions -> IndentState HaskellSource
 
 -- IntermediatesOutputExpression
 
 intermediates_output_expression_g = ( \(IntermediatesOutputExpression ntaves ve) ->
-  modify (+ 1) >> get >>= \num ->
+  modify (+ 1) >>
   name_type_and_value_expressions_g ntaves >>= \ntaves_g ->
   value_expression_g ve >>= \ve_g ->
-  modify (\i -> i - 1) >>
-  ("\n" ++ indent num ++ "let\n" ++ ntaves_g ++ indent num ++ "in\n" ++ indent num ++
-   ve_g)-->return
-  ) :: IntermediatesOutputExpression -> IndentState HSSource
+  get >>= \num ->
+  put (num - 1) >>= \_->
+  return $
+    "\n" ++ indent num ++ "let\n" ++ ntaves_g ++
+    indent num ++ "in\n" ++ indent num ++ ve_g
+  ) :: IntermediatesOutputExpression -> IndentState HaskellSource
 
 -- AbstractionArgumentExpression
 
@@ -214,18 +218,21 @@ abstraction_argument_expression_g = ( \case
 -- NoAbstractionsValueExpression
 
 no_abstraction_expression_g = ( \case
-    SubtractionExp se -> subtraction_expression_g se
-    MultiplicationExp me -> multiplication_expression_g me
-    ApplicationExp ae -> application_expression_g ae
-    HighPrecedenceExp hpe -> high_precedence_expression_g hpe
-    CasesExp ce -> cases_expression_g ce
-    IntermediatesOutputExp ioe -> intermediates_output_expression_g ioe 
-  ) :: NoAbstractionsValueExpression -> IndentState HSSource
+  SubtractionExp se -> subtraction_expression_g se
+  MultiplicationExp me -> multiplication_expression_g me
+  ApplicationExp ae -> application_expression_g ae
+  HighPrecedenceExp hpe -> high_precedence_expression_g hpe
+  CasesExp ce -> cases_expression_g ce
+  IntermediatesOutputExp ioe -> intermediates_output_expression_g ioe 
+  ) :: NoAbstractionsValueExpression -> IndentState HaskellSource
 
 -- ValueExpression
 
 value_expression_g = ( \(Value aaes nae) ->
-  no_abstraction_expression_g nae >>= \nae_g ->
-  aaes-->map ( abstraction_argument_expression_g .> ("\\" ++) .> (++ " -> "))-->concat
-    -->(++ nae_g)-->return
-  ) :: ValueExpression -> IndentState HSSource
+  let
+  aaes_g =
+    aaes-->map ( abstraction_argument_expression_g .> ("\\" ++) .> (++ " -> "))-->concat
+    :: HaskellSource 
+  in
+  no_abstraction_expression_g nae >>= (aaes_g ++) .> return 
+  ) :: ValueExpression -> IndentState HaskellSource
