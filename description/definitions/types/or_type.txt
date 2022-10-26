@@ -1,7 +1,7 @@
 
 Example:
 
-cases_type A, B :-> TypeName
+or_type A, B :-> TypeName
 values
   Case0 A | Case1 (b_value: B, int_value: Int) | Case2 ( A, B ) | Case3 ListOf(A)s
 

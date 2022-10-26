@@ -20,4 +20,4 @@ Comments:
       update_field_name2: (A, B :-> TypeName), A :> (A,B :-> TypeName)
       ...
 
-  - in match_tuple syntax we can use each field by its field_name 
+  - in use_tuple_fields syntax we can use each field by its field_name 

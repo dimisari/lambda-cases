@@ -4,10 +4,10 @@ Example:
   tuple_type IntPair value ( first_int: Int, second_int: Int )
 
   add_int_pair: IntPair -> Int
-    = match_tuple -> first_int + second_int
+    = use_tuple_fields -> first_int + second_int
 
 In general the field_names of a tuple_type can be used in the result expression by using
-the match_tuple syntax:
+the use_tuple_fields syntax:
 
   function_name: TupleType -> OtherType
-    = match_tuple -> result expression of type OtherType
+    = use_tuple_fields -> result expression of type OtherType
