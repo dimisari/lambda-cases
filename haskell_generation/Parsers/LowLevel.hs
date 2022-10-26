@@ -19,7 +19,7 @@ import Helpers ( (-->), (.>), paren_comma_seperated2 )
 -- Keywords
 
 keywords =
-  [ "tuple_type", "value", "cases_type", "values"
+  [ "tuple_type", "value", "or_type", "values"
   , "use_tuple_fields", "cases", "case_value", "intermediates", "output" 
   , "type_predicate", "function", "functions", "type_theorem", "proof" ]
   :: [ String ]

@@ -1,7 +1,7 @@
 tuple_type ( A, B ) value ( pair_first: A, pair_second: B )
 
 print_int_string: ( Int, String ) -> NoData-->WithIOEffects
-  = match_tuple ->
+  = use_tuple_fields ->
     ("First: " + pair_first-->to_string + ", Second: " + pair_second + "\n")-->print
 
 a: ( Int, String )
