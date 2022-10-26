@@ -22,7 +22,7 @@ tuple_types
 
   arrays
 
-type_theorems for needed for the polymorphic functions
+type_theorems needed for the polymorphic functions
 
   ( A, B )-->Has_First<--A
   ( A, B, C )-->Has_First<--A
