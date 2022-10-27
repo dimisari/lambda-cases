@@ -138,29 +138,34 @@ subtraction_expression_g = ( \(Subtraction sf1 sf2) ->
 
 specific_case_expression_g = ( \(SpecificCase ae ve) ->
   value_expression_g ve >>= \ve_g ->
-  get >>= \num ->
-  return $ indent num ++ atomic_expression_g ae ++ " -> " ++ ve_g
+  get >>= \i ->
+  return $ indent i ++ atomic_expression_g ae ++ " -> " ++ ve_g
   ) :: SpecificCaseExpression -> IndentState HaskellSource
 
 -- CasesExpression
 
 cases_expression_g = ( \(Cases sces) ->
-  modify (+ 1) >>
-  (sces-->mapM specific_case_expression_g) >>= \sces_g ->
-  (modify (\i -> i - 1) >>) $
-  return $ "\\case\n" ++ init sces_g-->map (++ "\n")-->(++ [last sces_g])-->concat
+  get >>= \i ->
+  put (i + 1) >>
+  mapM specific_case_expression_g sces>>= \sces_g ->
+  let
+  hs_source =
+    "\\case\n" ++ init sces_g-->map (++ "\n")-->(++ [last sces_g])-->concat
+    :: HaskellSource
+  in
+  put i >> return hs_source
   ) :: CasesExpression -> IndentState HaskellSource
 
 -- NameTypeAndValueExpression
 
 name_type_and_value_expression_g = ( \(NameTypeAndValue ne te ve) -> 
   value_expression_g ve >>= \ve_g ->
-  get >>= \num ->
+  get >>= \i ->
   let
   combine value_begin value_end =
-    indent num  ++ name_expression_g ne ++ " = " ++
+    indent i  ++ name_expression_g ne ++ " = " ++
     value_begin ++ ve_g ++ value_end ++ "\n" ++
-    indent (num + 1) ++ ":: " ++ type_expression_g te ++ "\n"
+    indent (i + 1) ++ ":: " ++ type_expression_g te ++ "\n"
   in
   return $ case ve of
     (Value [] nae) -> combine "" ""
@@ -198,14 +203,17 @@ name_type_and_value_expressions_g = ( \(NameTypeAndValues ntaves) ->
 -- IntermediatesOutputExpression
 
 intermediates_output_expression_g = ( \(IntermediatesOutputExpression ntaves ve) ->
-  modify (+ 1) >>
+  get >>= \i ->
+  put (i + 1) >>
   name_type_and_value_expressions_g ntaves >>= \ntaves_g ->
   value_expression_g ve >>= \ve_g ->
-  get >>= \num ->
-  (put (num - 1) >>) $
-  return $
-    "\n" ++ indent num ++ "let\n" ++ ntaves_g ++
-    indent num ++ "in\n" ++ indent num ++ ve_g
+  let
+  hs_source =
+    "\n" ++ indent (i + 1) ++ "let\n" ++ ntaves_g ++
+    indent (i + 1) ++ "in\n" ++ indent (i + 1) ++ ve_g
+    :: HaskellSource
+  in
+  put i >> return hs_source
   ) :: IntermediatesOutputExpression -> IndentState HaskellSource
 
 -- AbstractionArgumentExpression

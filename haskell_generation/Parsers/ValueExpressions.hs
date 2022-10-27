@@ -3,8 +3,8 @@
 module Parsers.ValueExpressions where
 
 import Prelude
-  ( Eq, Show, String, Bool( True ), show, undefined, (<$>), (<*), (*>), (<*>), (++), ($)
-  , (>>=), (>>), (==), (&&), return, map, length, concat, error, fmap )
+  ( Eq, Show, (<$>), (<*), (*>), (++), ($), (>>=), (>>), (==), (&&), return, show
+  , map, length, concat, error, fmap )
 import Text.Parsec
   ( (<|>), try, char, many, many1, string, eof, skipMany1, parserFail, optional )
 import Text.Parsec.String ( Parser )
