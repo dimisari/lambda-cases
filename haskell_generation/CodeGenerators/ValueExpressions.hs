@@ -3,8 +3,8 @@
 module CodeGenerators.ValueExpressions where
 
 import Prelude
-  ( String, Int, (>>=), (>>), (-), (+), (*), (++), ($), undefined, map, concat, return
-  , error, mapM, init, last )
+  ( String, Int, Bool( True ), (>>=), (>>), (-), (+), (*), (++), ($), undefined, map
+  , concat, return, error, mapM, init, last )
 import Data.List ( intercalate, replicate )
 import Control.Monad.State ( (>=>) )
 import Control.Monad.State ( State, get, put, modify )
@@ -12,31 +12,34 @@ import Helpers ( (-->), (.>) )
 
 import Parsers.LowLevel
   ( ApplicationDirection( LeftApplication, RightApplication ), NameExpression
-  , TypeExpression )
+  , TypeExpression, AbstractionArgumentsExpression( AbstractionArguments ) )
 import Parsers.ValueExpressions
   ( ParenthesisExpression( ForPrecedence, Tuple )
   , HighPrecedenceExpression( Parenthesis, Atomic )
-  , ApplicationExpression( Application )
-  , MultiplicationFactor( ApplicationMF, HighPrecedenceMF )
+  , OneArgumentApplicationsExpression( OneArgumentApplications )
+  , MultiplicationFactor( OneArgApplicationMF, HighPrecedenceMF )
   , MultiplicationExpression( Multiplication )
-  , SubtractionFactor( MultiplicationSF, ApplicationSF, HighPrecedenceSF )
+  , SubtractionFactor( MultiplicationSF, OneArgApplicationSF, HighPrecedenceSF )
   , SubtractionExpression( Subtraction )
   , SpecificCaseExpression( SpecificCase ), CasesExpression( Cases )
   , NameTypeAndValueExpression( NameTypeAndValue )
   , NameTypeAndValueListsExpression( NameTypeAndValueLists )
   , NameTypeAndValueOrListsExpression( NameTypeAndValueExp, NameTypeAndValueListsExp )
   , NameTypeAndValueExpressions( NameTypeAndValues )
-  , IntermediatesOutputExpression( IntermediatesOutputExpression )
-  , AbstractionArgumentExpression( Name, TupleMatching )
+  , IntermediatesOutputExpression( IntermediatesOutput )
+  , NoAbstractionsValueExpression1
+    ( SubtractionExp, MultiplicationExp, OneArgApplicationsExp
+    , HighPrecedenceExp )
+  , ArgumentValueExpression( ArgumentValue )
+  , ManyArgumentsApplicationExpression( ManyArgumentsApplication )
   , NoAbstractionsValueExpression
-    ( SubtractionExp, MultiplicationExp, ApplicationExp, HighPrecedenceExp, CasesExp
-    , IntermediatesOutputExp )
+    ( ManyArgsApplicationExp, NoAbstractionsValueExp1, CasesExp, IntermediatesOutputExp )
   , ValueExpression(Value)
   )
 
 import CodeGenerators.LowLevel
   ( tuple_matching_expression_g, name_expression_g, type_expression_g
-  , atomic_expression_g )
+  , atomic_expression_g, abstraction_arguments_g )
 
 {- 
   All:
@@ -73,42 +76,37 @@ high_precedence_expression_g = ( \case
   Atomic ae -> return $ atomic_expression_g ae
   ) :: HighPrecedenceExpression -> IndentState HaskellSource
 
--- ApplicationExpression
+-- OneArgumentApplicationsExpression
 
-application_direction_g = ( \generate_so_far -> \generate_hpe -> \ad ->
-  generate_so_far >>= \sf ->
-  generate_hpe >>= \hpe ->
-  return $ case ad of
-    LeftApplication -> sf ++ " " ++ hpe
-    RightApplication -> hpe ++ " " ++ sf
-  ) :: IndentState HaskellSource -> IndentState HaskellSource -> ApplicationDirection
-         -> IndentState HaskellSource
-
-application_expression_g = ( \(Application hpe_ad_s hpe) ->
-  let
-  generate_hpe_ad_s =
-    map ( \( hpe, ad ) -> ( high_precedence_expression_g hpe, ad ) ) hpe_ad_s
-    :: [ ( IndentState HaskellSource, ApplicationDirection ) ]
-  application_expression_help_g = ( \case
+one_arg_applications_expression_g = ( \(OneArgumentApplications init_hpe ad_hpe_s) ->
+  case ad_hpe_s of
     [] -> error "application expression should have at least one application direction"
-    [ ( generate_so_far, ad ) ] ->
-      application_direction_g generate_so_far (high_precedence_expression_g hpe) ad
-    ( generate_so_far, ad1 ):( generate_hpe, ad2 ):the_rest ->
+    _ -> 
       let
-      generate_so_far_next = application_direction_g generate_so_far generate_hpe ad1
-        :: IndentState HaskellSource
+      recursive_f = ( \generate_so_far -> \case 
+        ( ad, hpe ):rest ->
+          generate_so_far >>= \sf ->
+          high_precedence_expression_g hpe >>= \hpe_g ->
+          let
+            combine =
+              return $ case ad of
+                LeftApplication -> sf ++ " " ++ hpe_g
+                RightApplication -> hpe_g ++ " " ++ sf
+              :: IndentState HaskellSource
+          in
+          recursive_f combine rest
+        [] -> generate_so_far
+        ) :: IndentState HaskellSource ->
+             [ ( ApplicationDirection, HighPrecedenceExpression) ] ->
+             IndentState HaskellSource
       in
-      application_expression_help_g $ ( generate_so_far_next, ad2 ):the_rest
-    ) :: [ ( IndentState HaskellSource, ApplicationDirection ) ]
-          -> IndentState HaskellSource
-  in
-  application_expression_help_g generate_hpe_ad_s
-  ) :: ApplicationExpression -> IndentState HaskellSource
+      recursive_f (high_precedence_expression_g init_hpe) ad_hpe_s
+  ) :: OneArgumentApplicationsExpression -> IndentState HaskellSource
 
 -- MultiplicationFactor
 
 multiplication_factor_g = ( \case
-  ApplicationMF ae -> application_expression_g ae
+  OneArgApplicationMF ae -> one_arg_applications_expression_g ae
   HighPrecedenceMF hpe -> high_precedence_expression_g hpe
   ) :: MultiplicationFactor -> IndentState HaskellSource
 
@@ -122,7 +120,7 @@ multiplication_expression_g = ( \(Multiplication mfs) ->
 
 subtraction_factor_g = ( \case
   MultiplicationSF me -> multiplication_expression_g me
-  ApplicationSF ae -> application_expression_g ae
+  OneArgApplicationSF ae -> one_arg_applications_expression_g ae
   HighPrecedenceSF hpe -> high_precedence_expression_g hpe
   ) :: SubtractionFactor -> IndentState HaskellSource
 
@@ -168,7 +166,7 @@ name_type_and_value_expression_g = ( \(NameTypeAndValue ne te ve) ->
     indent (i + 1) ++ ":: " ++ type_expression_g te ++ "\n"
   in
   return $ case ve of
-    (Value [] nae) -> combine "" ""
+    (Value (AbstractionArguments []) nae) -> combine "" ""
     _ -> combine "( " " )"
   ) :: NameTypeAndValueExpression -> IndentState HaskellSource
 
@@ -202,7 +200,7 @@ name_type_and_value_expressions_g = ( \(NameTypeAndValues ntaves) ->
 
 -- IntermediatesOutputExpression
 
-intermediates_output_expression_g = ( \(IntermediatesOutputExpression ntaves ve) ->
+intermediates_output_expression_g = ( \(IntermediatesOutput ntaves ve) ->
   get >>= \i ->
   put (i + 1) >>
   name_type_and_value_expressions_g ntaves >>= \ntaves_g ->
@@ -216,31 +214,48 @@ intermediates_output_expression_g = ( \(IntermediatesOutputExpression ntaves ve)
   put i >> return hs_source
   ) :: IntermediatesOutputExpression -> IndentState HaskellSource
 
--- AbstractionArgumentExpression
+-- NoAbstractionsValueExpression1
 
-abstraction_argument_expression_g = ( \case
-  Name n -> name_expression_g n
-  TupleMatching tm -> tuple_matching_expression_g tm
-  ) :: AbstractionArgumentExpression -> String
+no_abstractions_value_expression1_g = ( \case
+  SubtractionExp se -> subtraction_expression_g se
+  MultiplicationExp me -> multiplication_expression_g me
+  OneArgApplicationsExp ae -> one_arg_applications_expression_g ae
+  HighPrecedenceExp hpe -> high_precedence_expression_g hpe
+  ) :: NoAbstractionsValueExpression1 -> IndentState HaskellSource
+
+-- ArgumentValueExpression
+
+argument_value_expression_g = ( \(ArgumentValue aae nave1) -> 
+  no_abstractions_value_expression1_g nave1 >>= \nave1_g ->
+  return $ abstraction_arguments_g aae ++ nave1_g
+  ) :: ArgumentValueExpression -> IndentState HaskellSource
+
+-- ManyArgumentsApplicationExpression
+
+many_arguments_application_g = ( \(ManyArgumentsApplication ves ne) -> 
+  let
+  argument_value_expression_help_g = \case 
+    (ArgumentValue (AbstractionArguments []) (HighPrecedenceExp hpe)) ->
+      high_precedence_expression_g hpe
+    ve -> argument_value_expression_g ve >>= \ve_g -> return $ "(" ++ ve_g ++ ")"
+    :: ArgumentValueExpression -> IndentState HaskellSource
+  in
+  mapM argument_value_expression_help_g ves >>= \ves_g ->
+  return $ name_expression_g ne ++ ves_g-->map (" " ++)-->concat
+  ) :: ManyArgumentsApplicationExpression -> IndentState HaskellSource
 
 -- NoAbstractionsValueExpression
 
-no_abstraction_expression_g = ( \case
-  SubtractionExp se -> subtraction_expression_g se
-  MultiplicationExp me -> multiplication_expression_g me
-  ApplicationExp ae -> application_expression_g ae
-  HighPrecedenceExp hpe -> high_precedence_expression_g hpe
+no_abstractions_value_expression_g = ( \case
+  ManyArgsApplicationExp e -> many_arguments_application_g e
+  NoAbstractionsValueExp1 e -> no_abstractions_value_expression1_g e
   CasesExp ce -> cases_expression_g ce
   IntermediatesOutputExp ioe -> intermediates_output_expression_g ioe 
   ) :: NoAbstractionsValueExpression -> IndentState HaskellSource
 
 -- ValueExpression
 
-value_expression_g = ( \(Value aaes nae) ->
-  let
-  aaes_g =
-    aaes-->map ( abstraction_argument_expression_g .> ("\\" ++) .> (++ " -> "))-->concat
-    :: HaskellSource 
-  in
-  no_abstraction_expression_g nae >>= (aaes_g ++) .> return 
+value_expression_g = ( \(Value aae nave) ->
+  no_abstractions_value_expression_g nave >>= \nave_g ->
+  return $ abstraction_arguments_g aae ++ nave_g
   ) :: ValueExpression -> IndentState HaskellSource

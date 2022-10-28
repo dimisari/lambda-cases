@@ -3,17 +3,18 @@
 module Parsers.LowLevel where
 
 import Prelude
-  ( String, Bool( True ), Eq, Show, (++), (<$>), (<*), (<*>), (*>), ($), (>>=), return
-  , show, elem, pure, concat, map )
+  ( String, Bool( True ), Eq, Show, (++), (<$>), (<*), (<*>), (*>), ($), (>>=), (>>)
+  , return, show, elem, pure, concat, map )
 import Text.Parsec ( (<|>), char, string, parserFail, many, many1, lower, try )
 import Text.Parsec.String ( Parser )
 
-import Helpers ( (-->), (.>), paren_comma_seperated2 )
+import Helpers ( (-->), (.>), comma_seperated2, paren_comma_seperated2 )
 
 {-
   All:
-  Keywords, Literal, NameExpression, AtomicExpression, TupleMatchingExpression,
-  ApplicationDirection, IntOrIntTupleExpression, TypeExpression
+  Keywords, Literal, NameExpression, AtomicExpression, ApplicationDirection,
+  TupleMatchingExpression, AbstractionArgumentExpression, AbstractionArgumentsExpression,
+  HighPrecedenceTypeExpression, TypeExpression
 -}
 
 -- Keywords
@@ -26,7 +27,8 @@ keywords =
 
 -- Literal
 
-data Literal = Constant0 | Constant1 deriving ( Eq, Show )
+data Literal = Constant0 | Constant1
+  deriving ( Eq, Show )
 
 constant_p =
   char '0' *> return Constant0 <|> char '1' *> return Constant1
@@ -56,14 +58,6 @@ atomic_expression_p =
   ConstantExp <$> constant_p <|> NameExp <$> name_expression_p
   :: Parser AtomicExpression
 
--- TupleMatchingExpression
-
-newtype TupleMatchingExpression = TupleMatching [ NameExpression ] deriving ( Eq, Show )
-
-tuple_matching_expression_p =
-  TupleMatching <$> paren_comma_seperated2 name_expression_p
-  :: Parser TupleMatchingExpression
-
 -- ApplicationDirection
 
 data ApplicationDirection = LeftApplication | RightApplication 
@@ -73,27 +67,77 @@ application_direction_p =
   string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
   :: Parser ApplicationDirection
 
--- IntOrIntTupleExpression
+-- TupleMatchingExpression
 
-data IntOrIntTupleExpression = TupleType [ TypeExpression ] | IntType
+newtype TupleMatchingExpression = TupleMatching [ NameExpression ]
   deriving ( Eq, Show )
 
-tuple_or_int_p =
-  TupleType <$> paren_comma_seperated2 type_expression_p <|>
+tuple_matching_expression_p =
+  TupleMatching <$> paren_comma_seperated2 name_expression_p
+  :: Parser TupleMatchingExpression
+
+-- AbstractionArgumentExpression
+
+data AbstractionArgumentExpression =
+  NameExp_ab NameExpression | TupleMatchingExp TupleMatchingExpression
+  deriving ( Eq )
+
+instance Show AbstractionArgumentExpression where
+  show = \case
+    NameExp_ab e -> show e
+    TupleMatchingExp e -> show e
+
+abstraction_argument_expression_p =
+  NameExp_ab <$> name_expression_p <|> TupleMatchingExp <$> tuple_matching_expression_p
+  :: Parser AbstractionArgumentExpression
+
+-- AbstractionArgumentsExpression
+
+newtype AbstractionArgumentsExpression =
+  AbstractionArguments [ AbstractionArgumentExpression ]
+  deriving ( Eq )
+
+instance Show AbstractionArgumentsExpression where
+  show = \(AbstractionArguments aaes) ->
+    aaes-->map (show .> (++ " abstraction "))-->concat
+
+abstraction_arguments_expression_p =
+  AbstractionArguments <$>
+    many (try $ abstraction_argument_expression_p <* string " -> ")
+  :: Parser AbstractionArgumentsExpression
+
+-- HighPrecedenceTypeExpression
+
+data HighPrecedenceTypeExpression =
+  TupleType [ TypeExpression ] | ForPrecedenceType TypeExpression | IntType
+  deriving ( Eq, Show )
+
+high_precedence_type_expression_p =
+  TupleType <$> try (paren_comma_seperated2 type_expression_p) <|>
+  ForPrecedenceType <$> (char '(' *> type_expression_p <* char ')') <|>
   string "Int" *> pure IntType
-  :: Parser IntOrIntTupleExpression
+  :: Parser HighPrecedenceTypeExpression
 
 -- TypeExpression
 
-data TypeExpression = Type [ IntOrIntTupleExpression ] IntOrIntTupleExpression
+data TypeExpression = Type [ HighPrecedenceTypeExpression ] HighPrecedenceTypeExpression
   deriving ( Eq )
 
 instance Show TypeExpression where
-  show = \(Type ioites ioite) ->
-    ioites-->map (show .> (++ " right_arrow "))-->concat-->( ++ show ioite)
+  show = \(Type hptes hpte) ->
+    hptes-->map (show .> (++ " right_arrow "))-->concat-->( ++ show hpte)
 
-type_expression_p =
-  many (try $ tuple_or_int_p <* string " -> ") >>= \ioites ->
-  tuple_or_int_p >>= \ioite ->
-  return $ Type ioites ioite
+type_expression_p = try type_expression2_p <|> type_expression1_p
+  :: Parser TypeExpression
+
+type_expression1_p =
+  many (try $ high_precedence_type_expression_p <* string " -> ") >>= \hptes ->
+  high_precedence_type_expression_p >>= \hpte ->
+  return $ Type hptes hpte
+  :: Parser TypeExpression
+
+type_expression2_p =
+  comma_seperated2 type_expression1_p >>= \tes ->
+  string " :> " >> type_expression1_p >>= \(Type hptes hpte) ->
+  return $ Type (map ForPrecedenceType tes ++ hptes) hpte
   :: Parser TypeExpression
