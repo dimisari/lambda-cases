@@ -12,12 +12,12 @@ import Text.Parsec.String ( Parser )
 import Helpers
   ( (-->), (.>), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded )
 import Parsers.LowLevel
-  ( NameExpression, AtomicExpression, ApplicationDirection
+  ( ValueName, AtomicExpression, ApplicationDirection
   , TupleMatchingExpression
   , AbstractionArgumentExpression
   , AbstractionArgumentsExpression ( AbstractionArguments )
   , TypeExpression
-  , name_expression_p, atomic_expression_p, application_direction_p
+  , value_name_p, atomic_expression_p, application_direction_p
   , tuple_matching_expression_p
   , abstraction_argument_expression_p
   , abstraction_arguments_expression_p
@@ -193,7 +193,7 @@ cases_expression_p =
 -- NameTypeAndValueExpression
 
 data NameTypeAndValueExpression =
-  NameTypeAndValue NameExpression TypeExpression ValueExpression
+  NameTypeAndValue ValueName TypeExpression ValueExpression
   deriving ( Eq )
 
 instance Show NameTypeAndValueExpression where
@@ -203,7 +203,7 @@ instance Show NameTypeAndValueExpression where
     "value: " ++ show ve ++ "\n"
 
 name_type_and_value_expression_p =
-  name_expression_p >>= \ne ->
+  value_name_p >>= \ne ->
   string ": " >> type_expression_p >>= \te ->
   new_line_space_surrounded >>
   string "= " >> value_expression_p >>= \ve ->
@@ -214,7 +214,7 @@ name_type_and_value_expression_p =
 -- NameTypeAndValueListsExpression
 
 data NameTypeAndValueListsExpression =
-  NameTypeAndValueLists [ NameExpression ] [ TypeExpression ] [ ValueExpression ]
+  NameTypeAndValueLists [ ValueName ] [ TypeExpression ] [ ValueExpression ]
   deriving (Eq)
 
 instance Show NameTypeAndValueListsExpression where
@@ -224,7 +224,7 @@ instance Show NameTypeAndValueListsExpression where
     "values: " ++ ves --> map (show .> (++ ", ")) --> concat ++ "\n"
 
 name_type_and_value_lists_expression_p = 
-  spaces_tabs >> comma_seperated2 name_expression_p >>= \nes ->
+  spaces_tabs >> comma_seperated2 value_name_p >>= \nes ->
   string ": " >> comma_seperated2 type_expression_p >>= \tes ->
   new_line_space_surrounded >>
   string "= " >> comma_seperated2 value_expression_p >>= \ves ->
@@ -332,12 +332,12 @@ argument_value_expression2_p =
 -- ManyArgumentsApplicationExpression
 
 data ManyArgumentsApplicationExpression = 
-  ManyArgumentsApplication [ ArgumentValueExpression ] NameExpression
+  ManyArgumentsApplication [ ArgumentValueExpression ] ValueName
   deriving ( Eq, Show )
 
 many_arguments_application_p =
   comma_seperated2 argument_value_expression_p >>= \aves ->
-  string " :-> " >> name_expression_p >>= \ne ->
+  string " :-> " >> value_name_p >>= \ne ->
   return $ ManyArgumentsApplication aves ne
   :: Parser ManyArgumentsApplicationExpression
 

@@ -1,17 +1,19 @@
-type_predicate T-->IsAFunctor function applied_internally_to: (A -> B) -> T<--A -> T<--B
+type_predicate T-->IsAFunctor
+function apply()internally: (A -> B) -> T<--A -> T<--B
 
 apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = cases
-    NonEmpty -> NonEmpty ( head-->f, tail-->apply(f)to_each )
-    Empty -> Empty
+    HeadAndTail -> HeadAndTail ( head-->f, tail-->apply(f)to_each )
+    Head -> Head ( head-->f )
 
-type_theorem ListOf()s-->IsAFunctor proof applied_internally_to = apply()to_each
+type_theorem ListOf()s-->IsAFunctor
+proof apply()internally = apply()to_each
 
-first_print: NoData-->WithIOEffects
+first_print: Empty-->WithIOEffects
   [ 1, 2, 3, 4 ]-->apply(is_odd)to_each-->print
 
-second_print: NoData-->WithIOEffects
-  is_odd-->applied_internally_to<--[ 1, 2, 3, 4 ]-->print
+second_print: Empty-->WithIOEffects
+  [ 1, 2, 3, 4 ]-->apply(is_odd)internally-->print
 
-main: NoData-->WithIOEffects
+main: Empty-->WithIOEffects
   first_print ;> second_print

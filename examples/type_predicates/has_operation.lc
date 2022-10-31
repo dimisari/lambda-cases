@@ -1,25 +1,25 @@
-# has additionm
 # +: A-->Has_Addition => A -> A -> A
 
-type_predicate A-->Has_Addition functions + : A -> A -> A
+type_predicate A-->Has_Addition
+operator + : A -> A -> A
 
 type_theorem Int-->Has_Addition proof + = -->int_addition<--
-type_theorem Float-->Has_Addition proof + = -->float_addition<--
-type_theorem String-->Has_Addition proof + = -->concat_string<--
+type_theorem Real-->Has_Addition proof + = -->real_addition<--
+type_theorem Text-->Has_Addition proof + = -->concat<--
 
-# has multiplication
-# *: A-->Has_Multiplication => A -> A -> A
+# +: A-->Has_Multiplication => A -> A -> A
 
-type_predicate A-->Has_Multiplication functions * : A -> A -> A
+type_predicate A-->Has_Multiplication
+operator + : A -> A -> A
 
-type_theorem Int-->Has_Multiplication proof * = -->int_product<--
-type_theorem Float-->Has_Multiplication proof * = -->float_product<--
+type_theorem Int-->Has_Multiplication proof * = -->int_multiplication<--
+type_theorem Real-->Has_Multiplication proof * = -->real_multiplication<--
 
 # values 
 
 i: Int
   = 1 + 2 * 3
-f: Float
-  = 3.14 + 2.71 * 1.61
-s: String
+r: Int
+  = 1.62 + 2.72 * 3.14
+text: Text
   = "ab" + "cd"

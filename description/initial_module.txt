@@ -1,12 +1,13 @@
 atomic types
 
-  Num, Text?
+  Int, Real, Text
 
 tuple_types 
 
-  tuple_type NoData value ()
-  tuple_type A-->InTuple value ( only_value: A )
+  arrays: ex. 10 * Int
 
+  tuple_type Empty value ()
+  tuple_type ( A ) value ( value: A ) # needed??
   tuple_type ( A, B ) value ( pair_first: A, pair_second: B )
   tuple_type ( A, B, C ) value ( triple_first: A, triple_second: B, triple_third: C )
   tuple_type ( A, B, C, D )
@@ -19,8 +20,6 @@ tuple_types
   (polymorphic) fourth is not defined since we stop at quadruple
   (bigger tuples should probably be made as new tuple_types and named differently
   according to the context)
-
-  arrays
 
 type_theorems needed for the polymorphic functions
 
@@ -37,5 +36,6 @@ type_theorems needed for the polymorphic functions
 
 or_types
 
+  A-->OrNothing
+  A-->Or<--B
   ListOf(A)s
-  A-->ValueOrNothing

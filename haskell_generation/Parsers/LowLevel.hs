@@ -12,7 +12,7 @@ import Helpers ( (-->), (.>), comma_seperated2, paren_comma_seperated2 )
 
 {-
   All:
-  Keywords, Literal, NameExpression, AtomicExpression, ApplicationDirection,
+  Keywords, Literal, ValueName, AtomicExpression, ApplicationDirection,
   TupleMatchingExpression, AbstractionArgumentExpression, AbstractionArgumentsExpression,
   HighPrecedenceTypeExpression, TypeExpression
 -}
@@ -30,24 +30,24 @@ keywords =
 data Literal = Constant0 | Constant1
   deriving ( Eq, Show )
 
-constant_p =
+literal_p =
   char '0' *> return Constant0 <|> char '1' *> return Constant1
   :: Parser Literal
 
--- NameExpression
+-- ValueName
 
-newtype NameExpression = Name String deriving ( Eq )
-instance Show NameExpression where show = \(Name n) -> "Name " ++ n
+newtype ValueName = Name String deriving ( Eq )
+instance Show ValueName where show = \(Name n) -> "Name " ++ n
 
-name_expression_p =
+value_name_p =
   many1 (lower <|> char '_') >>= \l_ -> elem l_ keywords --> \case
     True -> parserFail "keyword"
     _ -> return $ Name l_
-  :: Parser NameExpression 
+  :: Parser ValueName 
 
 -- AtomicExpression
 
-data AtomicExpression = ConstantExp Literal | NameExp NameExpression
+data AtomicExpression = ConstantExp Literal | NameExp ValueName
   deriving ( Eq )
 instance Show AtomicExpression where
   show = \case
@@ -55,7 +55,7 @@ instance Show AtomicExpression where
     NameExp e -> show e
 
 atomic_expression_p =
-  ConstantExp <$> constant_p <|> NameExp <$> name_expression_p
+  ConstantExp <$> literal_p <|> NameExp <$> value_name_p
   :: Parser AtomicExpression
 
 -- ApplicationDirection
@@ -69,17 +69,17 @@ application_direction_p =
 
 -- TupleMatchingExpression
 
-newtype TupleMatchingExpression = TupleMatching [ NameExpression ]
+newtype TupleMatchingExpression = TupleMatching [ ValueName ]
   deriving ( Eq, Show )
 
 tuple_matching_expression_p =
-  TupleMatching <$> paren_comma_seperated2 name_expression_p
+  TupleMatching <$> paren_comma_seperated2 value_name_p
   :: Parser TupleMatchingExpression
 
 -- AbstractionArgumentExpression
 
 data AbstractionArgumentExpression =
-  NameExp_ab NameExpression | TupleMatchingExp TupleMatchingExpression
+  NameExp_ab ValueName | TupleMatchingExp TupleMatchingExpression
   deriving ( Eq )
 
 instance Show AbstractionArgumentExpression where
@@ -88,7 +88,7 @@ instance Show AbstractionArgumentExpression where
     TupleMatchingExp e -> show e
 
 abstraction_argument_expression_p =
-  NameExp_ab <$> name_expression_p <|> TupleMatchingExp <$> tuple_matching_expression_p
+  NameExp_ab <$> value_name_p <|> TupleMatchingExp <$> tuple_matching_expression_p
   :: Parser AbstractionArgumentExpression
 
 -- AbstractionArgumentsExpression

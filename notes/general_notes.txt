@@ -3,7 +3,7 @@ Syntactic Sugar
   - Types:
 
     arrays
-    7 x Int | 7 * Int | 7 , Int
+    7Num
 
 Tuple Application
 
@@ -22,10 +22,6 @@ left-to-right function composition
 
   function_name2: Type0 -> Type2
     = function_name0 o> function_name1 
-
-Observations
-
-  Maybe ~ List with length <= 1
 
 Compilation targets to consider:
   - Haskell Core

@@ -1,6 +1,7 @@
 
-or_type A-->ValueOrNothing values Value A | Nothing
+or_type A-->Or<--B values FirstType A | SecondType B
 
-or_type A-->LeftOrRight<--B values Left A | Right B
+or_type A-->OrNothing value Value A | Nothing
 
-or_type ListOf(A)s values NonEmpty ( head:A, tail:ListOf(A)s ) | Empty
+or_type ListOf(A)s
+values HeadAndTail ( head: A, tail: ListOf(A)s ) | Head ( head: A )

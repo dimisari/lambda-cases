@@ -11,7 +11,7 @@ import Control.Monad.State ( State, get, put, modify )
 import Helpers ( (-->), (.>) )
 
 import Parsers.LowLevel
-  ( ApplicationDirection( LeftApplication, RightApplication ), NameExpression
+  ( ApplicationDirection( LeftApplication, RightApplication ), ValueName
   , TypeExpression, AbstractionArgumentsExpression( AbstractionArguments ) )
 import Parsers.ValueExpressions
   ( ParenthesisExpression( ForPrecedence, Tuple )
@@ -179,7 +179,7 @@ name_type_and_value_lists_expression_g = ( \(NameTypeAndValueLists nes tes ves) 
     ( [], [], [] ) -> []
     _ ->
       error "name_type_and_value_lists_expression_g: lists must have the same length"
-    ) :: ( [ NameExpression ], [ TypeExpression ], [ ValueExpression ] ) ->
+    ) :: ( [ ValueName ], [ TypeExpression ], [ ValueExpression ] ) ->
            [ NameTypeAndValueExpression ]
   in
   zip3 ( nes, tes, ves )-->mapM name_type_and_value_expression_g >>= concat .> return

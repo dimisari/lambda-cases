@@ -20,7 +20,7 @@ import CodeGenerators.ValueExpressions
 -- Constants
 
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example2", "IOfiles/", io_files ++ "haskell_code_header.hs"
+  [ "example", "IOfiles/", io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc", io_files ++ example_name ++ ".hs" ] 
   :: [ String ]
 

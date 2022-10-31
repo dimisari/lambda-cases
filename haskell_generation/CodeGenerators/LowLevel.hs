@@ -6,7 +6,7 @@ import Prelude ( String, (++), concat, map, error )
 
 import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
 import Parsers.LowLevel
-  ( Literal( Constant0, Constant1 ), NameExpression( Name )
+  ( Literal( Constant0, Constant1 ), ValueName( Name )
   , AtomicExpression( ConstantExp, NameExp ), TupleMatchingExpression( TupleMatching )
   , AbstractionArgumentExpression( NameExp_ab, TupleMatchingExp )
   , AbstractionArgumentsExpression( AbstractionArguments )
@@ -16,7 +16,7 @@ import Parsers.LowLevel
 
 {-
   All:
-  Literal, NameExpression, AtomicExpression, TupleMatchingExpression,
+  Literal, ValueName, AtomicExpression, TupleMatchingExpression,
   AbstractionArgumentExpression, AbstractionArgumentsExpression,
   HighPrecedenceTypeExpression, TypeExpression
 -}
@@ -30,10 +30,10 @@ literal_g = ( \case
   Constant1 -> "1"
   ) :: Literal -> HaskellSource
 
--- NameExpression
+-- ValueName
 
 name_expression_g = ( \(Name n) -> n
-  ) :: NameExpression -> HaskellSource
+  ) :: ValueName -> HaskellSource
 
 -- AtomicExpression
 

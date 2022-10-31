@@ -1,4 +1,4 @@
-# Using '_' between words for distinction from type syntax. Is it necessary??
+# Using '_' between words for distinction from type syntax
 
 type_predicate definition
 
@@ -13,12 +13,12 @@ type_theorem definition
 
   example:
 
-  type_theorem Predicate_About(Int, Real)_And<--String
+  type_theorem Predicate_About(Int, (Int, Int))_And<--Text
   proof
     fun1 = specific_fun_1
     fun2 = specific_fun_2
 
   here specific_fun_1 and specific_fun_2 must be defined and have the types below:
 
-    specific_fun_1: Int -> Real -> String
-    specific_fun_2: (String -> Int) -> Real -> Int
+    specific_fun_1: Int -> (Int, Int) -> Text
+    specific_fun_2: (Text -> Int) -> (Int, Int) -> Int

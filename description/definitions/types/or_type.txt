@@ -3,20 +3,20 @@ Example:
 
 or_type A, B :-> TypeName
 values
-  Case0 A | Case1 (b_value: B, int_value: Int) | Case2 ( A, B ) | Case3 ListOf(A)s
+  Case0 A | Case1 (b: B, int: Int) | Case2 ( A, B ) | Case3 ListOf(A)s
 
 Comments:
 
-  - default value_name for the input of all Cases: case_value
+  - default value_name for the value of all Cases: case_value
 
     Examples:
 
-    fun1: (A, B :-> TypeName) -> A-->ValueOrNothing
+    fun1: (A, B :-> TypeName) -> A-->OrNothing
       = cases
         Case0 -> Value case_value
         ... -> Nothing
 
-    fun2: (A, B :-> TypeName) -> (A, B)-->ValueOrNothing
+    fun2: (A, B :-> TypeName) -> ( A, B )-->OrNothing
       = cases
         Case2 -> Value case_value
         ... -> Nothing
@@ -25,16 +25,16 @@ Comments:
 
     Example function:
 
-    fun: (A, B :-> TypeName) -> B-->ValueOrNothing
+    fun: (A, B :-> TypeName) -> B-->OrNothing
       = cases
-        Case1 -> Value b_value
+        Case1 -> Value b
         ... -> Nothing
 
   - tuple_types can be used in a Case and there is field inheritance
 
     Example function:
 
-    fun: (A, B :-> TypeName) -> A-->ValueOrNothing
+    fun: (A, B :-> TypeName) -> A-->OrNothing
       = cases
         Case2 -> Value pair_first
         ... -> Nothing
