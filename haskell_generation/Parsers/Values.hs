@@ -23,12 +23,11 @@ import Parsers.LowLevel
   All:
   ParenthesisValue, ParenLitOrName, OneArgFunctionApplications,
   MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction,
+  NoAbstractionsValue1, ManyArgsAppArgValue, ManyArgsApplication,
   SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
   NTAVOrNTAVLists, NamesTypesAndValues,
   IntermediatesOutput,
-  NoAbstractionsValue1, ManyArgsAppArgValue,
-  ManyArgsApplication,
   NoAbstractionsValue, Value
 -}
 

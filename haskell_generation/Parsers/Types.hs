@@ -1,19 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Parsers.LowLevel where
+module Parsers.Types where
 
-import Prelude
-  ( String, Bool( True ), Eq, Show, (++), (<$>), (<*), (<*>), (*>), ($), (>>=), (>>)
-  , return, show, elem, pure, concat, map )
-import Text.Parsec ( (<|>), char, string, parserFail, many, many1, lower, try )
+import Prelude ()
+import Text.Parsec ()
 import Text.Parsec.String ( Parser )
 
-import Helpers ( (-->), (.>), comma_seperated2, paren_comma_seperated2 )
+import Helpers ()
 
 {-
   All:
-  Keywords, Literal, ValueName, LiteralOrValueName, ApplicationDirection,
-  TupleMatching, Abstraction, Abstractions, TupleParenOrIntType, ValueType
 -}
 
 -- Keywords

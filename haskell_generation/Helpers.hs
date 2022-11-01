@@ -5,6 +5,8 @@ import Prelude
 import Text.Parsec ( (<|>), many, many1, string, char, try )
 import Text.Parsec.String ( Parser )
 
+-- parsing 
+
 seperated2 = (\p -> \s ->
   p >>= \a ->
   try (string s *> p) --> many1 >>= \as ->
@@ -23,20 +25,18 @@ spaces_tabs = many $ char ' ' <|> char '\t'
 new_line_space_surrounded = spaces_tabs *> char '\n' *> spaces_tabs
   :: Parser String
 
-(.>) = flip (.)
-  :: (a -> b) -> (b -> c) -> (a -> c)
+-- function application/composition
 
 (-->) = flip ($)
   :: a -> (a -> b) -> b
 
+(.>) = flip (.)
+  :: (a -> b) -> (b -> c) -> (a -> c)
+
+-- haskell generation 
+
 type HaskellSource = String 
 
 parenthesis_comma_sep_g = ( \g -> \l ->
-  let
-  all_but_last = init l-->map (g .> (++ ", "))-->concat
-    :: HaskellSource
-  last_one = l-->last-->g
-    :: HaskellSource
-  in
-  "( " ++ all_but_last ++ last_one ++ " )"
+  "( " ++ init l-->map (g .> (++ ", "))-->concat ++ l-->last-->g ++ " )"
   ) :: (a -> HaskellSource) -> [ a ] -> HaskellSource

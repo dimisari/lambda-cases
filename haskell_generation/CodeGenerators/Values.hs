@@ -36,14 +36,14 @@ import CodeGenerators.LowLevel
 
 {- 
   All:
-  ParenthesisValue, ParenLitOrName, ApplicationExpression,
-  MultiplicationFactor, Multiplication,
-  SubtractionFactor, Subtraction,
+  ParenthesisValue, ParenLitOrName, OneArgFunctionApplications,
+  MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction,
+  NoAbstractionsValue1, ManyArgsAppArgValue, ManyArgsApplication,
   SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
   NTAVOrNTAVLists, NamesTypesAndValues,
   IntermediatesOutput,
-  Abstraction, NoAbstractionsValue, Value
+  NoAbstractionsValue, Value
 -}
 
 type IndentState = State Int
