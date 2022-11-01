@@ -13,7 +13,7 @@ import Helpers ( (-->), (.>), comma_seperated2, paren_comma_seperated2 )
 {-
   All:
   Keywords, Literal, ValueName, LiteralOrValueName, ApplicationDirection,
-  TupleMatching, AbstractionArgument, AbstractionArguments,
+  TupleMatching, Abstraction, Abstractions,
   TupleParenOrIntType, ValueType
 -}
 
@@ -30,8 +30,7 @@ keywords =
 data Literal = Constant0 | Constant1
   deriving ( Eq, Show )
 
-literal_p =
-  char '0' *> return Constant0 <|> char '1' *> return Constant1
+literal_p = char '0' *> return Constant0 <|> char '1' *> return Constant1
   :: Parser Literal
 
 -- ValueName
@@ -55,8 +54,7 @@ instance Show LiteralOrValueName where
     Literal l -> show l
     ValueName vn -> show vn
 
-literal_or_value_name_p =
-  Literal <$> literal_p <|> ValueName <$> value_name_p
+literal_or_value_name_p = Literal <$> literal_p <|> ValueName <$> value_name_p
   :: Parser LiteralOrValueName
 
 -- ApplicationDirection
@@ -73,37 +71,32 @@ application_direction_p =
 newtype TupleMatching = FieldNames [ ValueName ]
   deriving ( Eq, Show )
 
-tuple_matching_p =
-  FieldNames <$> paren_comma_seperated2 value_name_p
+tuple_matching_p = FieldNames <$> paren_comma_seperated2 value_name_p
   :: Parser TupleMatching
 
--- AbstractionArgument
+-- Abstraction
 
-data AbstractionArgument =
-  ValueNameAbstraction ValueName | TupleMatchingAbstraction TupleMatching
+data Abstraction = ValueNameAb ValueName | TupleMatching TupleMatching
   deriving ( Eq )
 
-instance Show AbstractionArgument where
+instance Show Abstraction where
   show = \case
-    ValueNameAbstraction vn -> show vn
-    TupleMatchingAbstraction tm -> show tm
+    ValueNameAb vn -> show vn
+    TupleMatching tm -> show tm
 
-abstraction_argument_p =
-  ValueNameAbstraction <$> value_name_p <|> TupleMatchingAbstraction <$> tuple_matching_p
-  :: Parser AbstractionArgument
+abstraction_p = ValueNameAb <$> value_name_p <|> TupleMatching <$> tuple_matching_p
+  :: Parser Abstraction
 
--- AbstractionArguments
+-- Abstractions
 
-newtype AbstractionArguments = AbstractionArguments [ AbstractionArgument ]
+newtype Abstractions = Abstractions [ Abstraction ]
   deriving ( Eq )
 
-instance Show AbstractionArguments where
-  show = \(AbstractionArguments aas) ->
-    aas-->map (show .> (++ " abstraction "))-->concat
+instance Show Abstractions where
+  show = \(Abstractions as) -> as-->map (show .> (++ " abstraction "))-->concat
 
-abstraction_arguments_p =
-  AbstractionArguments <$> many (try $ abstraction_argument_p <* string " -> ")
-  :: Parser AbstractionArguments
+abstractions_p = Abstractions <$> many (try $ abstraction_p <* string " -> ")
+  :: Parser Abstractions
 
 -- TupleParenOrIntType
 

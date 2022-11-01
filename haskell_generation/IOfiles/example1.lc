@@ -2,7 +2,7 @@
 tuple_type PreviousCoeffs
 value ( previous_previous: Int, previous: Int )
 
-initial_a_coeffs, initial_b_coeffs: PreviousCoeffs, PreviousCoeffs
+initial_a_coeffs, initial_b_coeffs: all PreviousCoeffs
   = ( 1, 0 ), ( 0, 1 )
 
 tuple_type GcdAndCoeffs

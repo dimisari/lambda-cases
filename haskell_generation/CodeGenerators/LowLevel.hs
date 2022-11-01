@@ -8,16 +8,14 @@ import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
 import Parsers.LowLevel
   ( Literal( Constant0, Constant1 ), ValueName( VN )
   , LiteralOrValueName( Literal, ValueName ), TupleMatching( FieldNames )
-  , AbstractionArgument( ValueNameAbstraction, TupleMatchingAbstraction )
-  , AbstractionArguments( AbstractionArguments )
+  , Abstraction( ValueNameAb, TupleMatching )
+  , Abstractions( Abstractions )
   , TupleParenOrIntType( TupleType, ParenthesisType, IntType )
-  , ValueType( AbstractionTypesAndResultType )
-  )
+  , ValueType( AbstractionTypesAndResultType ) )
 
 {-
   All:
-  Literal, ValueName, LiteralOrValueName, TupleMatching,
-  AbstractionArgument, AbstractionArguments,
+  Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions,
   TupleParenOrIntType, ValueType
 -}
 
@@ -32,51 +30,51 @@ literal_g = ( \case
 
 -- ValueName
 
-value_name_g = ( \(VN n) -> n
+value_name_g = ( \(VN vn) -> vn
   ) :: ValueName -> HaskellSource
 
 -- LiteralOrValueName
 
 literal_or_value_name_g = ( \case
-  Literal ce -> literal_g ce
-  ValueName ne -> value_name_g ne
+  Literal l -> literal_g l
+  ValueName vn -> value_name_g vn
   ) :: LiteralOrValueName -> HaskellSource
 
 -- TupleMatching
 
-tuple_matching_g = ( \(FieldNames nes) -> nes --> \case
+tuple_matching_g = ( \(FieldNames vns) -> vns --> \case
   [] -> error "should not have less than 2 in tuple"
   [ _ ] -> tuple_matching_g (FieldNames [])
-  _ -> parenthesis_comma_sep_g value_name_g nes
+  _ -> parenthesis_comma_sep_g value_name_g vns
   ) :: TupleMatching -> HaskellSource
 
--- AbstractionArgument
+-- Abstraction
 
-abstraction_argument_g = ( \case
-  ValueNameAbstraction e -> value_name_g e
-  TupleMatchingAbstraction e -> tuple_matching_g e
-  ) :: AbstractionArgument -> HaskellSource
+abstraction_g = ( \case
+  ValueNameAb vn -> value_name_g vn
+  TupleMatching tm -> tuple_matching_g tm
+  ) :: Abstraction -> HaskellSource
 
--- AbstractionArguments
+-- Abstractions
 
-abstraction_arguments_g = ( \(AbstractionArguments aaes) ->
-  aaes-->map (\x -> "\\" ++ abstraction_argument_g x ++ " -> ")-->concat
-  ) :: AbstractionArguments -> HaskellSource
+abstractions_g = ( \(Abstractions as) ->
+  as-->map (\a -> "\\" ++ abstraction_g a ++ " -> ")-->concat
+  ) :: Abstractions -> HaskellSource
 
 -- TupleParenOrIntType
 
 tuple_paren_or_int_type_g = ( \case
-  TupleType tes -> parenthesis_comma_sep_g value_type_g tes
-  ParenthesisType te -> case te of
-    (AbstractionTypesAndResultType [] hpte) -> tuple_paren_or_int_type_g hpte
-    _ -> "(" ++ value_type_g te ++ ")"
+  TupleType vts -> parenthesis_comma_sep_g value_type_g vts
+  ParenthesisType vt -> case vt of
+    (AbstractionTypesAndResultType [] tpoit) -> tuple_paren_or_int_type_g tpoit
+    _ -> "(" ++ value_type_g vt ++ ")"
   IntType -> "Int"
   ) :: TupleParenOrIntType -> HaskellSource
 
 -- ValueType
 
-value_type_g = ( \(AbstractionTypesAndResultType hptes hpte) -> 
-  hptes-->map (tuple_paren_or_int_type_g .> (++ " -> "))-->concat
-  ++ tuple_paren_or_int_type_g hpte
+value_type_g = ( \(AbstractionTypesAndResultType tpoits tpoit) -> 
+  tpoits-->map (tuple_paren_or_int_type_g .> (++ " -> "))-->concat
+  ++ tuple_paren_or_int_type_g tpoit
   ) :: ValueType -> HaskellSource
 

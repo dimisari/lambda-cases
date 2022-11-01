@@ -11,16 +11,16 @@ import Text.Parsec.String ( Parser )
 import Control.Monad.State ( evalState )
 
 import Helpers ( (.>) )
-import Parsers.ValueExpressions
-  ( NameTypeAndValueExpressions, name_type_and_value_expressions_p )
+import Parsers.Values
+  ( NamesTypesAndValues, names_types_and_values_p )
 
-import CodeGenerators.ValueExpressions
-  ( HaskellSource, name_type_and_value_expressions_g )
+import CodeGenerators.Values
+  ( HaskellSource, names_types_and_values_g )
 
 -- Constants
 
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example", "IOfiles/", io_files ++ "haskell_code_header.hs"
+  [ "example1", "IOfiles/", io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc", io_files ++ example_name ++ ".hs" ] 
   :: [ String ]
 
@@ -29,9 +29,9 @@ import CodeGenerators.ValueExpressions
 parse_with = flip parse $ example_name ++ ".lc"
   :: Parser a -> String -> Either ParseError a
 
-type Program = NameTypeAndValueExpressions
+type Program = NamesTypesAndValues
 
-program_p = many (char '\n') *> name_type_and_value_expressions_p <* eof 
+program_p = many (char '\n') *> names_types_and_values_p <* eof 
   :: Parser Program
 
 parse_string = parse_with program_p
@@ -39,7 +39,7 @@ parse_string = parse_with program_p
 
 -- Generating haskell
 
-program_g = name_type_and_value_expressions_g .> flip evalState 0
+program_g = names_types_and_values_g .> flip evalState 0
   :: Program -> HaskellSource
 
 generate_code = parse_string >=> program_g .> return
