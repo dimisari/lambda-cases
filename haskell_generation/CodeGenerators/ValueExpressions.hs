@@ -12,14 +12,14 @@ import Helpers ( (-->), (.>) )
 
 import Parsers.LowLevel
   ( ApplicationDirection( LeftApplication, RightApplication ), ValueName
-  , TypeExpression, AbstractionArgumentsExpression( AbstractionArguments ) )
+  , ValueType, AbstractionArguments( AbstractionArguments ) )
 import Parsers.ValueExpressions
-  ( ParenthesisExpression( ForPrecedence, Tuple )
-  , HighPrecedenceExpression( Parenthesis, Atomic )
-  , OneArgumentApplicationsExpression( OneArgumentApplications )
-  , MultiplicationFactor( OneArgApplicationMF, HighPrecedenceMF )
-  , MultiplicationExpression( Multiplication )
-  , SubtractionFactor( MultiplicationSF, OneArgApplicationSF, HighPrecedenceSF )
+  ( ParenthesisValue( Parenthesis, Tuple )
+  , ParenLitOrName( ParenthesisValue, LiteralOrValueName )
+  , OneArgFunctionApplications( OneArgFunctionApplications )
+  , MultiplicationFactor( OneArgApplicationsMF, ParenLitOrNameMF )
+  , Multiplication( Multiplication )
+  , SubtractionFactor( MultiplicationSF, OneArgApplicationsSF, ParenLitOrNameSF )
   , SubtractionExpression( Subtraction )
   , SpecificCaseExpression( SpecificCase ), CasesExpression( Cases )
   , NameTypeAndValueExpression( NameTypeAndValue )
@@ -38,13 +38,13 @@ import Parsers.ValueExpressions
   )
 
 import CodeGenerators.LowLevel
-  ( tuple_matching_expression_g, name_expression_g, type_expression_g
-  , atomic_expression_g, abstraction_arguments_g )
+  ( tuple_matching_g, value_name_g, value_type_g
+  , literal_or_value_name_g, abstraction_arguments_g )
 
 {- 
   All:
-  ParenthesisExpression, HighPrecedenceExpression, ApplicationExpression,
-  MultiplicationFactor, MultiplicationExpression,
+  ParenthesisValue, ParenLitOrName, ApplicationExpression,
+  MultiplicationFactor, Multiplication,
   SubtractionFactor, SubtractionExpression,
   SpecificCaseExpression, CasesExpression,
   NameTypeAndValueExpression, NameTypeAndValueListsExpression,
@@ -59,26 +59,26 @@ type HaskellSource = String
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> String
 
--- ParenthesisExpression
+-- ParenthesisValue
 
 parenthesis_expression_g = ( ( \case
-  ForPrecedence ve -> value_expression_g ve
+  Parenthesis ve -> value_expression_g ve
   Tuple ves -> 
     mapM value_expression_g ves >>= \l ->
     return $ " " ++ init l-->map (++ ", ")-->concat ++ l-->last ++ " "
   ) >=> ("(" ++) .> (++ ")") .> return
-  ) :: ParenthesisExpression -> IndentState HaskellSource
+  ) :: ParenthesisValue -> IndentState HaskellSource
 
--- HighPrecedenceExpression
+-- ParenLitOrName
 
 high_precedence_expression_g = ( \case
-  Parenthesis pe -> parenthesis_expression_g pe
-  Atomic ae -> return $ atomic_expression_g ae
-  ) :: HighPrecedenceExpression -> IndentState HaskellSource
+  ParenthesisValue pe -> parenthesis_expression_g pe
+  LiteralOrValueName ae -> return $ literal_or_value_name_g ae
+  ) :: ParenLitOrName -> IndentState HaskellSource
 
--- OneArgumentApplicationsExpression
+-- OneArgFunctionApplications
 
-one_arg_applications_expression_g = ( \(OneArgumentApplications init_hpe ad_hpe_s) ->
+one_arg_applications_expression_g = ( \(OneArgFunctionApplications init_hpe ad_hpe_s) ->
   case ad_hpe_s of
     [] -> error "application expression should have at least one application direction"
     _ -> 
@@ -97,31 +97,31 @@ one_arg_applications_expression_g = ( \(OneArgumentApplications init_hpe ad_hpe_
           recursive_f combine rest
         [] -> generate_so_far
         ) :: IndentState HaskellSource ->
-             [ ( ApplicationDirection, HighPrecedenceExpression) ] ->
+             [ ( ApplicationDirection, ParenLitOrName) ] ->
              IndentState HaskellSource
       in
       recursive_f (high_precedence_expression_g init_hpe) ad_hpe_s
-  ) :: OneArgumentApplicationsExpression -> IndentState HaskellSource
+  ) :: OneArgFunctionApplications -> IndentState HaskellSource
 
 -- MultiplicationFactor
 
 multiplication_factor_g = ( \case
-  OneArgApplicationMF ae -> one_arg_applications_expression_g ae
-  HighPrecedenceMF hpe -> high_precedence_expression_g hpe
+  OneArgApplicationsMF ae -> one_arg_applications_expression_g ae
+  ParenLitOrNameMF hpe -> high_precedence_expression_g hpe
   ) :: MultiplicationFactor -> IndentState HaskellSource
 
--- MultiplicationExpression
+-- Multiplication
 
 multiplication_expression_g = ( \(Multiplication mfs) -> 
   mapM multiplication_factor_g mfs >>= intercalate " * " .> return
-  ) :: MultiplicationExpression -> IndentState HaskellSource
+  ) :: Multiplication -> IndentState HaskellSource
 
 -- SubtractionFactor
 
 subtraction_factor_g = ( \case
   MultiplicationSF me -> multiplication_expression_g me
-  OneArgApplicationSF ae -> one_arg_applications_expression_g ae
-  HighPrecedenceSF hpe -> high_precedence_expression_g hpe
+  OneArgApplicationsSF ae -> one_arg_applications_expression_g ae
+  ParenLitOrNameSF hpe -> high_precedence_expression_g hpe
   ) :: SubtractionFactor -> IndentState HaskellSource
 
 -- SubtractionExpression
@@ -137,7 +137,7 @@ subtraction_expression_g = ( \(Subtraction sf1 sf2) ->
 specific_case_expression_g = ( \(SpecificCase ae ve) ->
   value_expression_g ve >>= \ve_g ->
   get >>= \i ->
-  return $ indent i ++ atomic_expression_g ae ++ " -> " ++ ve_g
+  return $ indent i ++ literal_or_value_name_g ae ++ " -> " ++ ve_g
   ) :: SpecificCaseExpression -> IndentState HaskellSource
 
 -- CasesExpression
@@ -161,9 +161,9 @@ name_type_and_value_expression_g = ( \(NameTypeAndValue ne te ve) ->
   get >>= \i ->
   let
   combine value_begin value_end =
-    indent i  ++ name_expression_g ne ++ " = " ++
+    indent i  ++ value_name_g ne ++ " = " ++
     value_begin ++ ve_g ++ value_end ++ "\n" ++
-    indent (i + 1) ++ ":: " ++ type_expression_g te ++ "\n"
+    indent (i + 1) ++ ":: " ++ value_type_g te ++ "\n"
   in
   return $ case ve of
     (Value (AbstractionArguments []) nae) -> combine "" ""
@@ -179,7 +179,7 @@ name_type_and_value_lists_expression_g = ( \(NameTypeAndValueLists nes tes ves) 
     ( [], [], [] ) -> []
     _ ->
       error "name_type_and_value_lists_expression_g: lists must have the same length"
-    ) :: ( [ ValueName ], [ TypeExpression ], [ ValueExpression ] ) ->
+    ) :: ( [ ValueName ], [ ValueType ], [ ValueExpression ] ) ->
            [ NameTypeAndValueExpression ]
   in
   zip3 ( nes, tes, ves )-->mapM name_type_and_value_expression_g >>= concat .> return
@@ -241,7 +241,7 @@ many_arguments_application_g = ( \(ManyArgumentsApplication ves ne) ->
     :: ArgumentValueExpression -> IndentState HaskellSource
   in
   mapM argument_value_expression_help_g ves >>= \ves_g ->
-  return $ name_expression_g ne ++ ves_g-->map (" " ++)-->concat
+  return $ value_name_g ne ++ ves_g-->map (" " ++)-->concat
   ) :: ManyArgumentsApplicationExpression -> IndentState HaskellSource
 
 -- NoAbstractionsValueExpression

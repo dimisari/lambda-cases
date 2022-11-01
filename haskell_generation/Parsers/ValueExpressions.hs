@@ -12,21 +12,21 @@ import Text.Parsec.String ( Parser )
 import Helpers
   ( (-->), (.>), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded )
 import Parsers.LowLevel
-  ( ValueName, AtomicExpression, ApplicationDirection
-  , TupleMatchingExpression
-  , AbstractionArgumentExpression
-  , AbstractionArgumentsExpression ( AbstractionArguments )
-  , TypeExpression
-  , value_name_p, atomic_expression_p, application_direction_p
-  , tuple_matching_expression_p
-  , abstraction_argument_expression_p
-  , abstraction_arguments_expression_p
-  , type_expression_p )
+  ( ValueName, LiteralOrValueName, ApplicationDirection
+  , TupleMatching
+  , AbstractionArgument
+  , AbstractionArguments ( AbstractionArguments )
+  , ValueType
+  , value_name_p, literal_or_value_name_p, application_direction_p
+  , tuple_matching_p
+  , abstraction_argument_p
+  , abstraction_arguments_p
+  , value_type_p )
 
 {- 
   All:
-  ParenthesisExpression, HighPrecedenceExpression, OneArgumentApplicationsExpression,
-  MultiplicationFactor, MultiplicationExpression,
+  ParenthesisValue, ParenLitOrName, OneArgFunctionApplications,
+  MultiplicationFactor, Multiplication,
   SubtractionFactor, SubtractionExpression,
   SpecificCaseExpression, CasesExpression,
   NameTypeAndValueExpression, NameTypeAndValueListsExpression,
@@ -37,114 +37,113 @@ import Parsers.LowLevel
   NoAbstractionsValueExpression, ValueExpression
 -}
 
--- ParenthesisExpression
+-- ParenthesisValue
 
-data ParenthesisExpression = ForPrecedence ValueExpression | Tuple [ ValueExpression ]
+data ParenthesisValue = Parenthesis ValueExpression | Tuple [ ValueExpression ]
   deriving ( Eq )
 
-instance Show ParenthesisExpression where
+instance Show ParenthesisValue where
   show = \case
-    ForPrecedence e -> "(" ++ show e ++ ")"
-    Tuple es -> "Tuple " ++ show es
+    Parenthesis v -> "(" ++ show v ++ ")"
+    Tuple vs -> "Tuple " ++ show vs
 
-[ parenthesis_expression_p, tuple_internals_p, for_precedence_internals_p ] =
-  [ char '(' *> (try tuple_internals_p <|> for_precedence_internals_p) <* char ')'
+[ parenthesis_value_p, tuple_internals_p, parenthesis_internals_p ] =
+  [ char '(' *> (try tuple_internals_p <|> parenthesis_internals_p) <* char ')'
   , fmap Tuple $ char ' ' *> comma_seperated2 value_expression_p <* char ' '
-  , ForPrecedence <$> value_expression_p ]
-  :: [ Parser ParenthesisExpression ]
+  , Parenthesis <$> value_expression_p ]
+  :: [ Parser ParenthesisValue ]
 
--- HighPrecedenceExpression
+-- ParenLitOrName
 
-data HighPrecedenceExpression =
-  Parenthesis ParenthesisExpression | Atomic AtomicExpression
+data ParenLitOrName =
+  ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName
   deriving ( Eq )
 
-instance Show HighPrecedenceExpression where
+instance Show ParenLitOrName where
   show = \case
-    Parenthesis pe -> show pe
-    Atomic ae -> show ae
+    ParenthesisValue pv -> show pv
+    LiteralOrValueName lovn -> show lovn
 
-high_precedence_expression_p =
-  Parenthesis <$> parenthesis_expression_p <|> Atomic <$> atomic_expression_p
-  :: Parser HighPrecedenceExpression
+paren_lit_or_name_p =
+  ParenthesisValue <$> parenthesis_value_p <|>
+  LiteralOrValueName <$> literal_or_value_name_p
+  :: Parser ParenLitOrName
 
--- OneArgumentApplicationsExpression
+-- OneArgFunctionApplications
 
-data OneArgumentApplicationsExpression = 
-  OneArgumentApplications
-    HighPrecedenceExpression [ ( ApplicationDirection, HighPrecedenceExpression ) ]
+data OneArgFunctionApplications = 
+  OneArgFunctionApplications ParenLitOrName [ ( ApplicationDirection, ParenLitOrName ) ]
   deriving ( Eq )
 
-instance Show OneArgumentApplicationsExpression where
-  show = \(OneArgumentApplications hpe ad_hpe_s) -> case ad_hpe_s of
+instance Show OneArgFunctionApplications where
+  show = \(OneArgFunctionApplications plon ad_plon_s) -> case ad_plon_s of
     [] -> error "application expression should have at least one application direction"
     _ ->
-      show hpe ++
-      ad_hpe_s-->map ( \( ad, hpe ) -> show ad ++ " " ++ show hpe ++ " " )-->concat
+      show plon ++
+      ad_plon_s-->map ( \( ad, plon ) -> show ad ++ " " ++ show plon ++ " " )-->concat
 
-one_arg_applications_expression_p =
-  high_precedence_expression_p >>= \hpe ->
-  many1 ad_hpe_p >>= \ad_hpe_s -> 
-  return $ OneArgumentApplications hpe ad_hpe_s
-  :: Parser OneArgumentApplicationsExpression
+one_arg_function_applications_p =
+  paren_lit_or_name_p >>= \plon ->
+  many1 ad_plon_p >>= \ad_plon_s -> 
+  return $ OneArgFunctionApplications plon ad_plon_s
+  :: Parser OneArgFunctionApplications
 
-ad_hpe_p = 
+ad_plon_p = 
   application_direction_p >>= \ad ->
-  high_precedence_expression_p >>= \hpe ->
-  return ( ad, hpe )
-  :: Parser ( ApplicationDirection,  HighPrecedenceExpression )
+  paren_lit_or_name_p >>= \plon ->
+  return ( ad, plon )
+  :: Parser ( ApplicationDirection, ParenLitOrName )
 
 -- MultiplicationFactor
 
 data MultiplicationFactor =
-  OneArgApplicationMF OneArgumentApplicationsExpression |
-  HighPrecedenceMF HighPrecedenceExpression
+  OneArgApplicationsMF OneArgFunctionApplications | ParenLitOrNameMF ParenLitOrName
   deriving ( Eq )
 
 instance Show MultiplicationFactor where
   show = \case
-    OneArgApplicationMF e -> show e
-    HighPrecedenceMF e -> show e
+    OneArgApplicationsMF oafas -> show oafas
+    ParenLitOrNameMF plon -> show plon
 
 multiplication_factor_p =
-  OneArgApplicationMF <$> try one_arg_applications_expression_p <|>
-  HighPrecedenceMF <$> high_precedence_expression_p
+  OneArgApplicationsMF <$> try one_arg_function_applications_p <|>
+  ParenLitOrNameMF <$> paren_lit_or_name_p
   :: Parser MultiplicationFactor
 
--- MultiplicationExpression
+-- Multiplication
 
-data MultiplicationExpression = Multiplication [ MultiplicationFactor ]
+data Multiplication = Multiplication [ MultiplicationFactor ]
   deriving ( Eq )
 
-instance Show MultiplicationExpression where
-  show = \(Multiplication aes) -> case aes of
-      [] -> error "found less than 2 in multiplication"
+instance Show Multiplication where
+  show = \(Multiplication mfs) -> case mfs of
+      [] -> error "found less than 2 mfs in multiplication"
       [ _ ] -> show (Multiplication [])
-      [ ae1, ae2 ] -> "(" ++ show ae1 ++ " mul " ++ show ae2 ++ ")"
-      (ae:aes) -> "(" ++ show ae ++ " mul " ++ show (Multiplication aes) ++ ")"
+      [ mf1, mf2 ] -> "(" ++ show mf1 ++ " mul " ++ show mf2 ++ ")"
+      (mf:mfs) -> "(" ++ show mf ++ " mul " ++ show (Multiplication mfs) ++ ")"
 
-multiplication_expression_p =
+multiplication_p =
   Multiplication <$> seperated2 multiplication_factor_p " * "
-  :: Parser MultiplicationExpression
+  :: Parser Multiplication
 
 -- SubtractionFactor
 
 data SubtractionFactor =
-  MultiplicationSF MultiplicationExpression |
-  OneArgApplicationSF OneArgumentApplicationsExpression |
-  HighPrecedenceSF HighPrecedenceExpression
+  MultiplicationSF Multiplication |
+  OneArgApplicationsSF OneArgFunctionApplications |
+  ParenLitOrNameSF ParenLitOrName
   deriving ( Eq )
 
 instance Show SubtractionFactor where
   show = \case
-    OneArgApplicationSF e -> show e
-    HighPrecedenceSF e -> show e
     MultiplicationSF e -> show e
+    OneArgApplicationsSF e -> show e
+    ParenLitOrNameSF e -> show e
 
 subtraction_factor_p =
-  MultiplicationSF <$> try multiplication_expression_p <|>
-  OneArgApplicationSF <$> try one_arg_applications_expression_p <|>
-  HighPrecedenceSF <$> high_precedence_expression_p 
+  MultiplicationSF <$> try multiplication_p <|>
+  OneArgApplicationsSF <$> try one_arg_function_applications_p <|>
+  ParenLitOrNameSF <$> paren_lit_or_name_p 
   :: Parser SubtractionFactor
 
 -- SubtractionExpression
@@ -163,7 +162,7 @@ subtraction_expression_p =
 
 -- SpecificCaseExpression
 
-data SpecificCaseExpression = SpecificCase AtomicExpression ValueExpression 
+data SpecificCaseExpression = SpecificCase LiteralOrValueName ValueExpression 
   deriving ( Eq )
  
 instance Show SpecificCaseExpression where
@@ -172,7 +171,7 @@ instance Show SpecificCaseExpression where
     "result: " ++ show ve ++ "\n"
 
 specific_case_expression_p =
-  spaces_tabs >> atomic_expression_p >>= \ae ->
+  spaces_tabs >> literal_or_value_name_p >>= \ae ->
   string " ->" >> (char ' ' <|> char '\n') >> value_expression_p >>= \ve ->
   return $ SpecificCase ae ve
   :: Parser SpecificCaseExpression
@@ -193,7 +192,7 @@ cases_expression_p =
 -- NameTypeAndValueExpression
 
 data NameTypeAndValueExpression =
-  NameTypeAndValue ValueName TypeExpression ValueExpression
+  NameTypeAndValue ValueName ValueType ValueExpression
   deriving ( Eq )
 
 instance Show NameTypeAndValueExpression where
@@ -204,7 +203,7 @@ instance Show NameTypeAndValueExpression where
 
 name_type_and_value_expression_p =
   value_name_p >>= \ne ->
-  string ": " >> type_expression_p >>= \te ->
+  string ": " >> value_type_p >>= \te ->
   new_line_space_surrounded >>
   string "= " >> value_expression_p >>= \ve ->
   (eof <|> skipMany1 new_line_space_surrounded) >>
@@ -214,7 +213,7 @@ name_type_and_value_expression_p =
 -- NameTypeAndValueListsExpression
 
 data NameTypeAndValueListsExpression =
-  NameTypeAndValueLists [ ValueName ] [ TypeExpression ] [ ValueExpression ]
+  NameTypeAndValueLists [ ValueName ] [ ValueType ] [ ValueExpression ]
   deriving (Eq)
 
 instance Show NameTypeAndValueListsExpression where
@@ -225,7 +224,7 @@ instance Show NameTypeAndValueListsExpression where
 
 name_type_and_value_lists_expression_p = 
   spaces_tabs >> comma_seperated2 value_name_p >>= \nes ->
-  string ": " >> comma_seperated2 type_expression_p >>= \tes ->
+  string ": " >> comma_seperated2 value_type_p >>= \tes ->
   new_line_space_surrounded >>
   string "= " >> comma_seperated2 value_expression_p >>= \ves ->
   (eof <|> skipMany1 new_line_space_surrounded) >>
@@ -284,9 +283,9 @@ intermediates_output_expression_p =
 -- NoAbstractionsValueExpression1
 
 data NoAbstractionsValueExpression1 =
-  SubtractionExp SubtractionExpression | MultiplicationExp MultiplicationExpression |
-  OneArgApplicationsExp OneArgumentApplicationsExpression |
-  HighPrecedenceExp HighPrecedenceExpression 
+  SubtractionExp SubtractionExpression | MultiplicationExp Multiplication |
+  OneArgApplicationsExp OneArgFunctionApplications |
+  HighPrecedenceExp ParenLitOrName 
   deriving ( Eq )
 
 instance Show NoAbstractionsValueExpression1 where
@@ -298,15 +297,15 @@ instance Show NoAbstractionsValueExpression1 where
 
 no_abstraction_expression1_p =
   SubtractionExp <$> try subtraction_expression_p <|>
-  MultiplicationExp <$> try multiplication_expression_p <|>
-  OneArgApplicationsExp <$> try one_arg_applications_expression_p <|>
-  HighPrecedenceExp <$> high_precedence_expression_p
+  MultiplicationExp <$> try multiplication_p <|>
+  OneArgApplicationsExp <$> try one_arg_function_applications_p <|>
+  HighPrecedenceExp <$> paren_lit_or_name_p
   :: Parser NoAbstractionsValueExpression1
 
 -- ArgumentValueExpression
 
 data ArgumentValueExpression =
-  ArgumentValue AbstractionArgumentsExpression NoAbstractionsValueExpression1
+  ArgumentValue AbstractionArguments NoAbstractionsValueExpression1
   deriving ( Eq )
 
 instance Show ArgumentValueExpression where
@@ -317,13 +316,13 @@ argument_value_expression_p =
   :: Parser ArgumentValueExpression
 
 argument_value_expression1_p =
-  abstraction_arguments_expression_p >>= \aae ->
+  abstraction_arguments_p >>= \aae ->
   no_abstraction_expression1_p >>= \nae1 ->
   return $ ArgumentValue aae nae1
   :: Parser ArgumentValueExpression
 
 argument_value_expression2_p =
-  comma_seperated2 abstraction_argument_expression_p >>= \aaes1 ->
+  comma_seperated2 abstraction_argument_p >>= \aaes1 ->
   string " :> " >>
   argument_value_expression1_p >>= \(ArgumentValue (AbstractionArguments aaes2) nave) ->
   return $ ArgumentValue (AbstractionArguments $ aaes1 ++ aaes2) nave
@@ -367,7 +366,7 @@ no_abstraction_expression_p =
 -- ValueExpression
 
 data ValueExpression =
-  Value AbstractionArgumentsExpression NoAbstractionsValueExpression
+  Value AbstractionArguments NoAbstractionsValueExpression
   deriving ( Eq )
 
 instance Show ValueExpression where
@@ -377,13 +376,13 @@ value_expression_p = try value_expression2_p <|> value_expression1_p
   :: Parser ValueExpression
 
 value_expression1_p =
-  abstraction_arguments_expression_p >>= \aae ->
+  abstraction_arguments_p >>= \aae ->
   no_abstraction_expression_p >>= \nae ->
   return $ Value aae nae
   :: Parser ValueExpression
 
 value_expression2_p =
-  comma_seperated2 abstraction_argument_expression_p >>= \aaes1 ->
+  comma_seperated2 abstraction_argument_p >>= \aaes1 ->
   string " :> " >> value_expression1_p >>= \(Value (AbstractionArguments aaes2) nave) ->
   return $ Value (AbstractionArguments $ aaes1 ++ aaes2) nave
   :: Parser ValueExpression

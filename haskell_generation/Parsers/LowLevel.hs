@@ -12,9 +12,9 @@ import Helpers ( (-->), (.>), comma_seperated2, paren_comma_seperated2 )
 
 {-
   All:
-  Keywords, Literal, ValueName, AtomicExpression, ApplicationDirection,
-  TupleMatchingExpression, AbstractionArgumentExpression, AbstractionArgumentsExpression,
-  HighPrecedenceTypeExpression, TypeExpression
+  Keywords, Literal, ValueName, LiteralOrValueName, ApplicationDirection,
+  TupleMatching, AbstractionArgument, AbstractionArguments,
+  TupleParenOrIntType, ValueType
 -}
 
 -- Keywords
@@ -36,27 +36,28 @@ literal_p =
 
 -- ValueName
 
-newtype ValueName = Name String deriving ( Eq )
-instance Show ValueName where show = \(Name n) -> "Name " ++ n
+newtype ValueName = VN String
+  deriving ( Eq )
+instance Show ValueName where show = \(VN n) -> "Name " ++ n
 
 value_name_p =
   many1 (lower <|> char '_') >>= \l_ -> elem l_ keywords --> \case
     True -> parserFail "keyword"
-    _ -> return $ Name l_
+    _ -> return $ VN l_
   :: Parser ValueName 
 
--- AtomicExpression
+-- LiteralOrValueName
 
-data AtomicExpression = ConstantExp Literal | NameExp ValueName
+data LiteralOrValueName = Literal Literal | ValueName ValueName
   deriving ( Eq )
-instance Show AtomicExpression where
+instance Show LiteralOrValueName where
   show = \case
-    ConstantExp e -> show e
-    NameExp e -> show e
+    Literal l -> show l
+    ValueName vn -> show vn
 
-atomic_expression_p =
-  ConstantExp <$> literal_p <|> NameExp <$> value_name_p
-  :: Parser AtomicExpression
+literal_or_value_name_p =
+  Literal <$> literal_p <|> ValueName <$> value_name_p
+  :: Parser LiteralOrValueName
 
 -- ApplicationDirection
 
@@ -67,77 +68,75 @@ application_direction_p =
   string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
   :: Parser ApplicationDirection
 
--- TupleMatchingExpression
+-- TupleMatching
 
-newtype TupleMatchingExpression = TupleMatching [ ValueName ]
+newtype TupleMatching = FieldNames [ ValueName ]
   deriving ( Eq, Show )
 
-tuple_matching_expression_p =
-  TupleMatching <$> paren_comma_seperated2 value_name_p
-  :: Parser TupleMatchingExpression
+tuple_matching_p =
+  FieldNames <$> paren_comma_seperated2 value_name_p
+  :: Parser TupleMatching
 
--- AbstractionArgumentExpression
+-- AbstractionArgument
 
-data AbstractionArgumentExpression =
-  NameExp_ab ValueName | TupleMatchingExp TupleMatchingExpression
+data AbstractionArgument =
+  ValueNameAbstraction ValueName | TupleMatchingAbstraction TupleMatching
   deriving ( Eq )
 
-instance Show AbstractionArgumentExpression where
+instance Show AbstractionArgument where
   show = \case
-    NameExp_ab e -> show e
-    TupleMatchingExp e -> show e
+    ValueNameAbstraction vn -> show vn
+    TupleMatchingAbstraction tm -> show tm
 
-abstraction_argument_expression_p =
-  NameExp_ab <$> value_name_p <|> TupleMatchingExp <$> tuple_matching_expression_p
-  :: Parser AbstractionArgumentExpression
+abstraction_argument_p =
+  ValueNameAbstraction <$> value_name_p <|> TupleMatchingAbstraction <$> tuple_matching_p
+  :: Parser AbstractionArgument
 
--- AbstractionArgumentsExpression
+-- AbstractionArguments
 
-newtype AbstractionArgumentsExpression =
-  AbstractionArguments [ AbstractionArgumentExpression ]
+newtype AbstractionArguments = AbstractionArguments [ AbstractionArgument ]
   deriving ( Eq )
 
-instance Show AbstractionArgumentsExpression where
-  show = \(AbstractionArguments aaes) ->
-    aaes-->map (show .> (++ " abstraction "))-->concat
+instance Show AbstractionArguments where
+  show = \(AbstractionArguments aas) ->
+    aas-->map (show .> (++ " abstraction "))-->concat
 
-abstraction_arguments_expression_p =
-  AbstractionArguments <$>
-    many (try $ abstraction_argument_expression_p <* string " -> ")
-  :: Parser AbstractionArgumentsExpression
+abstraction_arguments_p =
+  AbstractionArguments <$> many (try $ abstraction_argument_p <* string " -> ")
+  :: Parser AbstractionArguments
 
--- HighPrecedenceTypeExpression
+-- TupleParenOrIntType
 
-data HighPrecedenceTypeExpression =
-  TupleType [ TypeExpression ] | ForPrecedenceType TypeExpression | IntType
+data TupleParenOrIntType = TupleType [ ValueType ] | ParenthesisType ValueType | IntType
   deriving ( Eq, Show )
 
-high_precedence_type_expression_p =
-  TupleType <$> try (paren_comma_seperated2 type_expression_p) <|>
-  ForPrecedenceType <$> (char '(' *> type_expression_p <* char ')') <|>
+tuple_paren_or_int_type_p =
+  TupleType <$> try (paren_comma_seperated2 value_type_p) <|>
+  ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
   string "Int" *> pure IntType
-  :: Parser HighPrecedenceTypeExpression
+  :: Parser TupleParenOrIntType
 
--- TypeExpression
+-- ValueType
 
-data TypeExpression = Type [ HighPrecedenceTypeExpression ] HighPrecedenceTypeExpression
+data ValueType =
+  AbstractionTypesAndResultType [ TupleParenOrIntType ] TupleParenOrIntType
   deriving ( Eq )
 
-instance Show TypeExpression where
-  show = \(Type hptes hpte) ->
-    hptes-->map (show .> (++ " right_arrow "))-->concat-->( ++ show hpte)
+instance Show ValueType where
+  show = \(AbstractionTypesAndResultType tpoits tpoit) ->
+    tpoits-->map (show .> (++ " right_arrow "))-->concat ++ show tpoit
 
-type_expression_p = try type_expression2_p <|> type_expression1_p
-  :: Parser TypeExpression
+value_type_p = try value_type_2_p <|> value_type_1_p
+  :: Parser ValueType
 
-type_expression1_p =
-  many (try $ high_precedence_type_expression_p <* string " -> ") >>= \hptes ->
-  high_precedence_type_expression_p >>= \hpte ->
-  return $ Type hptes hpte
-  :: Parser TypeExpression
+value_type_1_p =
+  many (try $ tuple_paren_or_int_type_p <* string " -> ") >>= \tpoits ->
+  tuple_paren_or_int_type_p >>= \tpoit ->
+  return $ AbstractionTypesAndResultType tpoits tpoit
+  :: Parser ValueType
 
-type_expression2_p =
-  comma_seperated2 type_expression1_p >>= \tes ->
-  string " :> " >> type_expression1_p >>= \(Type hptes hpte) ->
-  return $ Type (map ForPrecedenceType tes ++ hptes) hpte
-  :: Parser TypeExpression
+value_type_2_p =
+  comma_seperated2 value_type_1_p >>= \tes ->
+  string " :> " >> value_type_1_p >>= \(AbstractionTypesAndResultType tpoits tpoit) ->
+  return $ AbstractionTypesAndResultType (map ParenthesisType tes ++ tpoits) tpoit
+  :: Parser ValueType

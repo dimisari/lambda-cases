@@ -6,19 +6,19 @@ import Prelude ( String, (++), concat, map, error )
 
 import Helpers ( (-->), (.>), parenthesis_comma_sep_g )
 import Parsers.LowLevel
-  ( Literal( Constant0, Constant1 ), ValueName( Name )
-  , AtomicExpression( ConstantExp, NameExp ), TupleMatchingExpression( TupleMatching )
-  , AbstractionArgumentExpression( NameExp_ab, TupleMatchingExp )
-  , AbstractionArgumentsExpression( AbstractionArguments )
-  , HighPrecedenceTypeExpression( TupleType, ForPrecedenceType, IntType )
-  , TypeExpression( Type )
+  ( Literal( Constant0, Constant1 ), ValueName( VN )
+  , LiteralOrValueName( Literal, ValueName ), TupleMatching( FieldNames )
+  , AbstractionArgument( ValueNameAbstraction, TupleMatchingAbstraction )
+  , AbstractionArguments( AbstractionArguments )
+  , TupleParenOrIntType( TupleType, ParenthesisType, IntType )
+  , ValueType( AbstractionTypesAndResultType )
   )
 
 {-
   All:
-  Literal, ValueName, AtomicExpression, TupleMatchingExpression,
-  AbstractionArgumentExpression, AbstractionArgumentsExpression,
-  HighPrecedenceTypeExpression, TypeExpression
+  Literal, ValueName, LiteralOrValueName, TupleMatching,
+  AbstractionArgument, AbstractionArguments,
+  TupleParenOrIntType, ValueType
 -}
 
 type HaskellSource = String
@@ -32,51 +32,51 @@ literal_g = ( \case
 
 -- ValueName
 
-name_expression_g = ( \(Name n) -> n
+value_name_g = ( \(VN n) -> n
   ) :: ValueName -> HaskellSource
 
--- AtomicExpression
+-- LiteralOrValueName
 
-atomic_expression_g = ( \case
-  ConstantExp ce -> literal_g ce
-  NameExp ne -> name_expression_g ne
-  ) :: AtomicExpression -> HaskellSource
+literal_or_value_name_g = ( \case
+  Literal ce -> literal_g ce
+  ValueName ne -> value_name_g ne
+  ) :: LiteralOrValueName -> HaskellSource
 
--- TupleMatchingExpression
+-- TupleMatching
 
-tuple_matching_expression_g = ( \(TupleMatching nes) -> nes --> \case
+tuple_matching_g = ( \(FieldNames nes) -> nes --> \case
   [] -> error "should not have less than 2 in tuple"
-  [ _ ] -> tuple_matching_expression_g (TupleMatching [])
-  _ -> parenthesis_comma_sep_g name_expression_g nes
-  ) :: TupleMatchingExpression -> HaskellSource
+  [ _ ] -> tuple_matching_g (FieldNames [])
+  _ -> parenthesis_comma_sep_g value_name_g nes
+  ) :: TupleMatching -> HaskellSource
 
--- AbstractionArgumentExpression
+-- AbstractionArgument
 
 abstraction_argument_g = ( \case
-  NameExp_ab e -> name_expression_g e
-  TupleMatchingExp e -> tuple_matching_expression_g e
-  ) :: AbstractionArgumentExpression -> HaskellSource
+  ValueNameAbstraction e -> value_name_g e
+  TupleMatchingAbstraction e -> tuple_matching_g e
+  ) :: AbstractionArgument -> HaskellSource
 
--- AbstractionArgumentsExpression
+-- AbstractionArguments
 
 abstraction_arguments_g = ( \(AbstractionArguments aaes) ->
   aaes-->map (\x -> "\\" ++ abstraction_argument_g x ++ " -> ")-->concat
-  ) :: AbstractionArgumentsExpression -> HaskellSource
+  ) :: AbstractionArguments -> HaskellSource
 
--- HighPrecedenceTypeExpression
+-- TupleParenOrIntType
 
-high_precedence_type_expression_g = ( \case
-  TupleType tes -> parenthesis_comma_sep_g type_expression_g tes
-  ForPrecedenceType te -> case te of
-    (Type [] hpte) -> high_precedence_type_expression_g hpte
-    _ -> "(" ++ type_expression_g te ++ ")"
+tuple_paren_or_int_type_g = ( \case
+  TupleType tes -> parenthesis_comma_sep_g value_type_g tes
+  ParenthesisType te -> case te of
+    (AbstractionTypesAndResultType [] hpte) -> tuple_paren_or_int_type_g hpte
+    _ -> "(" ++ value_type_g te ++ ")"
   IntType -> "Int"
-  ) :: HighPrecedenceTypeExpression -> HaskellSource
+  ) :: TupleParenOrIntType -> HaskellSource
 
--- TypeExpression
+-- ValueType
 
-type_expression_g = ( \(Type hptes hpte) -> 
-  hptes-->map (high_precedence_type_expression_g .> (++ " -> "))-->concat
-  ++ high_precedence_type_expression_g hpte
-  ) :: TypeExpression -> HaskellSource
+value_type_g = ( \(AbstractionTypesAndResultType hptes hpte) -> 
+  hptes-->map (tuple_paren_or_int_type_g .> (++ " -> "))-->concat
+  ++ tuple_paren_or_int_type_g hpte
+  ) :: ValueType -> HaskellSource
 
