@@ -7,8 +7,8 @@ import Prelude
   , concat, return, error, mapM, init, last )
 import Data.List ( intercalate, replicate )
 import Control.Monad.State ( (>=>), State, get, put )
-import Helpers ( (-->), (.>) )
 
+import Helpers ( Haskell, (-->), (.>) )
 import Parsers.LowLevel
   ( ApplicationDirection( LeftApplication, RightApplication ), ValueName, ValueType
   , Abstractions( Abstractions ) )
@@ -29,7 +29,6 @@ import Parsers.Values
   , ManyArgsApplication( ManyArgsApplication )
   , NoAbstractionsValue ( ManyArgsApp, NoAbstractionsValue1, Cases, IntermediatesOutput )
   , Value( Value ) )
-
 import CodeGenerators.LowLevel
   ( tuple_matching_g, value_name_g, value_type_g, literal_or_value_name_g
   , abstractions_g )
@@ -47,10 +46,9 @@ import CodeGenerators.LowLevel
 -}
 
 type IndentState = State Int
-type HaskellSource = String
 
 indent = ( \i -> replicate (2 * i) ' ' )
-  :: Int -> String
+  :: Int -> Haskell
 
 -- ParenthesisValue
 
@@ -60,14 +58,14 @@ parenthesis_value_g = ( ( \case
     mapM value_g vs >>= \vs_g ->
     return $ " " ++ init vs_g-->map (++ ", ")-->concat ++ vs_g-->last ++ " "
   ) >=> ("(" ++) .> (++ ")") .> return
-  ) :: ParenthesisValue -> IndentState HaskellSource
+  ) :: ParenthesisValue -> IndentState Haskell
 
 -- ParenLitOrName
 
 paren_lit_or_name_g = ( \case
   ParenthesisValue pv -> parenthesis_value_g pv
   LiteralOrValueName lovn -> return $ literal_or_value_name_g lovn
-  ) :: ParenLitOrName -> IndentState HaskellSource
+  ) :: ParenLitOrName -> IndentState Haskell
 
 -- OneArgFunctionApplications
 
@@ -85,28 +83,28 @@ one_arg_function_applications_g = ( \(OneArgFunctionApplications init_plon ad_pl
               return $ case ad of
                 LeftApplication -> sf ++ " " ++ plon_g
                 RightApplication -> plon_g ++ " " ++ sf
-              :: IndentState HaskellSource
+              :: IndentState Haskell
           in
           recursive_g combine_g rest
         [] -> generate_so_far
-        ) :: IndentState HaskellSource -> [ ( ApplicationDirection, ParenLitOrName) ] ->
-             IndentState HaskellSource
+        ) :: IndentState Haskell -> [ ( ApplicationDirection, ParenLitOrName) ] ->
+             IndentState Haskell
       in
       recursive_g (paren_lit_or_name_g init_plon) ad_plon_s
-  ) :: OneArgFunctionApplications -> IndentState HaskellSource
+  ) :: OneArgFunctionApplications -> IndentState Haskell
 
 -- MultiplicationFactor
 
 multiplication_factor_g = ( \case
   OneArgApplicationsMF oaas -> one_arg_function_applications_g oaas
   ParenLitOrNameMF plon -> paren_lit_or_name_g plon
-  ) :: MultiplicationFactor -> IndentState HaskellSource
+  ) :: MultiplicationFactor -> IndentState Haskell
 
 -- Multiplication
 
 multiplication_g = ( \(Multiplication mfs) -> 
   mapM multiplication_factor_g mfs >>= intercalate " * " .> return
-  ) :: Multiplication -> IndentState HaskellSource
+  ) :: Multiplication -> IndentState Haskell
 
 -- SubtractionFactor
 
@@ -114,7 +112,7 @@ subtraction_factor_g = ( \case
   MultiplicationSF m -> multiplication_g m
   OneArgApplicationsSF oaas -> one_arg_function_applications_g oaas
   ParenLitOrNameSF plon -> paren_lit_or_name_g plon
-  ) :: SubtractionFactor -> IndentState HaskellSource
+  ) :: SubtractionFactor -> IndentState Haskell
 
 -- Subtraction
 
@@ -122,7 +120,7 @@ subtraction_expression_g = ( \(Subtraction sf1 sf2) ->
   subtraction_factor_g sf1 >>= \sf1_g ->
   subtraction_factor_g sf2 >>= \sf2_g ->
   return $ sf1_g ++ " - " ++ sf2_g
-  ) :: Subtraction -> IndentState HaskellSource
+  ) :: Subtraction -> IndentState Haskell
 
 -- NoAbstractionsValue1
 
@@ -131,14 +129,14 @@ no_abstractions_value_1_g = ( \case
   Mul mul -> multiplication_g mul
   OneArgApps oaas -> one_arg_function_applications_g oaas
   PLON plon -> paren_lit_or_name_g plon
-  ) :: NoAbstractionsValue1 -> IndentState HaskellSource
+  ) :: NoAbstractionsValue1 -> IndentState Haskell
 
 -- ManyArgsAppArgValue
 
 many_args_app_arg_value_g = ( \(ManyArgsAppArgValue as nav1) -> 
   no_abstractions_value_1_g nav1 >>= \nav1_g ->
   return $ abstractions_g as ++ nav1_g
-  ) :: ManyArgsAppArgValue -> IndentState HaskellSource
+  ) :: ManyArgsAppArgValue -> IndentState Haskell
 
 -- ManyArgsApplication
 
@@ -148,11 +146,11 @@ many_args_application_g = ( \(ManyArgsApplication maaavs vn) ->
     (ManyArgsAppArgValue (Abstractions []) (PLON plon)) -> paren_lit_or_name_g plon
     maaav ->
       many_args_app_arg_value_g maaav >>= \maaav_g -> return $ "(" ++ maaav_g ++ ")"
-    :: ManyArgsAppArgValue -> IndentState HaskellSource
+    :: ManyArgsAppArgValue -> IndentState Haskell
   in
   mapM help_g maaavs >>= \maaavs_g ->
   return $ value_name_g vn ++ maaavs_g-->map (" " ++)-->concat
-  ) :: ManyArgsApplication -> IndentState HaskellSource
+  ) :: ManyArgsApplication -> IndentState Haskell
 
 -- SpecificCase
 
@@ -160,7 +158,7 @@ specific_case_g = ( \(SpecificCase lovn v) ->
   value_g v >>= \v_g ->
   get >>= \i ->
   return $ indent i ++ literal_or_value_name_g lovn ++ " -> " ++ v_g
-  ) :: SpecificCase -> IndentState HaskellSource
+  ) :: SpecificCase -> IndentState Haskell
 
 -- Cases
 
@@ -168,7 +166,7 @@ cases_g = ( \(Cases_ cs) ->
   get >>= \i ->
   put (i + 1) >> mapM specific_case_g cs >>= \cs_g ->
   put i >> ("\\case\n" ++ init cs_g-->map (++ "\n")-->(++ [last cs_g])-->concat)-->return
-  ) :: Cases -> IndentState HaskellSource
+  ) :: Cases -> IndentState Haskell
 
 -- NameTypeAndValue
 
@@ -180,12 +178,12 @@ name_type_and_value_g = ( \(NameTypeAndValue vn vt v) ->
     indent i  ++ value_name_g vn ++ " = " ++
     value_begin ++ v_g ++ value_end ++ "\n" ++
     indent (i + 1) ++ ":: " ++ value_type_g vt ++ "\n"
-    :: HaskellSource
+    :: Haskell
   in
   return $ case v of
     (Value (Abstractions []) nae) -> combine "" ""
     _ -> combine "( " " )"
-  ) :: NameTypeAndValue -> IndentState HaskellSource
+  ) :: NameTypeAndValue -> IndentState Haskell
 
 -- NameTypeAndValueLists
 
@@ -198,20 +196,20 @@ name_type_and_value_lists_g = ( \(NameTypeAndValueLists vns vts vs) ->
     ) :: ( [ ValueName ], [ ValueType ], [ Value ] ) -> [ NameTypeAndValue ]
   in
   zip3 ( vns, vts, vs )-->mapM name_type_and_value_g >>= concat .> return
-  ) :: NameTypeAndValueLists -> IndentState HaskellSource
+  ) :: NameTypeAndValueLists -> IndentState Haskell
 
 -- NTAVOrNTAVLists
 
 ntav_or_ntav_lists_g = ( \case 
   NTAV ntav -> name_type_and_value_g ntav
   NTAVLists ntav_lists -> name_type_and_value_lists_g ntav_lists
-  ) :: NTAVOrNTAVLists -> IndentState HaskellSource
+  ) :: NTAVOrNTAVLists -> IndentState Haskell
 
 -- NamesTypesAndValues
 
 names_types_and_values_g = ( \(NamesTypesAndValues ntavs) ->
   ntavs-->mapM ntav_or_ntav_lists_g >>= concat .> return
-  ) :: NamesTypesAndValues -> IndentState HaskellSource
+  ) :: NamesTypesAndValues -> IndentState Haskell
 
 -- IntermediatesOutput
 
@@ -224,10 +222,10 @@ intermediates_output_g = ( \(IntermediatesOutput_ ntavs v) ->
   hs_source =
     "\n" ++ indent (i + 1) ++ "let\n" ++ ntavs_g ++
     indent (i + 1) ++ "in\n" ++ indent (i + 1) ++ v_g
-    :: HaskellSource
+    :: Haskell
   in
   put i >> return hs_source
-  ) :: IntermediatesOutput -> IndentState HaskellSource
+  ) :: IntermediatesOutput -> IndentState Haskell
 
 -- NoAbstractionsValue
 
@@ -236,11 +234,11 @@ no_abstractions_value_g = ( \case
   NoAbstractionsValue1 nav1 -> no_abstractions_value_1_g nav1
   Cases cs -> cases_g cs
   IntermediatesOutput io -> intermediates_output_g io
-  ) :: NoAbstractionsValue -> IndentState HaskellSource
+  ) :: NoAbstractionsValue -> IndentState Haskell
 
 -- Value
 
 value_g = ( \(Value as nav) ->
   no_abstractions_value_g nav >>= \nav_g ->
   return $ abstractions_g as ++ nav_g
-  ) :: Value -> IndentState HaskellSource
+  ) :: Value -> IndentState Haskell

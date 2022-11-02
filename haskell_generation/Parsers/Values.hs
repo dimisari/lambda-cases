@@ -3,7 +3,7 @@
 module Parsers.Values where
 
 import Prelude
-  ( Eq, Show, (<$>), (<*), (*>), (++), ($), (>>=), (>>), (==), (&&), return, show
+  ( Show, (<$>), (<*), (*>), (++), ($), (>>=), (>>), (==), (&&), return, show
   , map, length, concat, error, fmap )
 import Text.Parsec
   ( (<|>), try, char, many, many1, string, eof, skipMany1, parserFail, optional )
@@ -12,12 +12,10 @@ import Text.Parsec.String ( Parser )
 import Helpers
   ( (-->), (.>), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded )
 import Parsers.LowLevel
-  ( ValueName, LiteralOrValueName, ApplicationDirection
-  , TupleMatching, Abstraction, Abstractions ( Abstractions )
-  , ValueType
-  , value_name_p, literal_or_value_name_p, application_direction_p
-  , tuple_matching_p, abstraction_p, abstractions_p
-  , value_type_p )
+  ( ValueName, LiteralOrValueName, ApplicationDirection, TupleMatching
+  , Abstraction, Abstractions ( Abstractions ), ValueType
+  , value_name_p, literal_or_value_name_p, application_direction_p, tuple_matching_p
+  , abstraction_p, abstractions_p , value_type_p )
 
 {- 
   All:
@@ -34,7 +32,6 @@ import Parsers.LowLevel
 -- ParenthesisValue
 
 data ParenthesisValue = Parenthesis Value | Tuple [ Value ]
-  deriving ( Eq )
 
 instance Show ParenthesisValue where
   show = \case
@@ -51,7 +48,6 @@ instance Show ParenthesisValue where
 
 data ParenLitOrName =
   ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName
-  deriving ( Eq )
 
 instance Show ParenLitOrName where
   show = \case
@@ -67,7 +63,6 @@ paren_lit_or_name_p =
 
 data OneArgFunctionApplications = 
   OneArgFunctionApplications ParenLitOrName [ ( ApplicationDirection, ParenLitOrName ) ]
-  deriving ( Eq )
 
 instance Show OneArgFunctionApplications where
   show = \(OneArgFunctionApplications plon ad_plon_s) -> case ad_plon_s of
@@ -92,7 +87,6 @@ ad_plon_p =
 
 data MultiplicationFactor =
   OneArgApplicationsMF OneArgFunctionApplications | ParenLitOrNameMF ParenLitOrName
-  deriving ( Eq )
 
 instance Show MultiplicationFactor where
   show = \case
@@ -107,7 +101,6 @@ multiplication_factor_p =
 -- Multiplication
 
 data Multiplication = Multiplication [ MultiplicationFactor ]
-  deriving ( Eq )
 
 instance Show Multiplication where
   show = \(Multiplication mfs) -> case mfs of
@@ -124,7 +117,6 @@ multiplication_p = Multiplication <$> seperated2 multiplication_factor_p " * "
 data SubtractionFactor =
   MultiplicationSF Multiplication | OneArgApplicationsSF OneArgFunctionApplications |
   ParenLitOrNameSF ParenLitOrName
-  deriving ( Eq )
 
 instance Show SubtractionFactor where
   show = \case
@@ -141,7 +133,6 @@ subtraction_factor_p =
 -- Subtraction
 
 data Subtraction = Subtraction SubtractionFactor SubtractionFactor 
-  deriving ( Eq )
 
 instance Show Subtraction where
   show = \(Subtraction sf1 sf2) -> "(" ++ show sf1 ++ " minus " ++ show sf2 ++ ")"
@@ -157,7 +148,6 @@ subtraction_p =
 data NoAbstractionsValue1 =
   Sub Subtraction | Mul Multiplication | OneArgApps OneArgFunctionApplications |
   PLON ParenLitOrName 
-  deriving ( Eq )
 
 instance Show NoAbstractionsValue1 where
   show = \case
@@ -174,7 +164,6 @@ no_abstractions_value_1_p =
 -- ManyArgsAppArgValue
 
 data ManyArgsAppArgValue = ManyArgsAppArgValue Abstractions NoAbstractionsValue1
-  deriving ( Eq )
 
 instance Show ManyArgsAppArgValue where
   show = \(ManyArgsAppArgValue as nav1) -> show as ++ show nav1
@@ -198,7 +187,7 @@ many_args_app_arg_value2_p =
 -- ManyArgsApplication
 
 data ManyArgsApplication = ManyArgsApplication [ ManyArgsAppArgValue ] ValueName
-  deriving ( Eq, Show )
+  deriving ( Show )
 
 many_args_application_p =
   comma_seperated2 many_args_app_arg_value_p >>= \maaavs ->
@@ -209,7 +198,6 @@ many_args_application_p =
 -- SpecificCase
 
 data SpecificCase = SpecificCase LiteralOrValueName Value 
-  deriving ( Eq )
  
 instance Show SpecificCase where
   show = \(SpecificCase lovn v) -> 
@@ -225,7 +213,6 @@ specific_case_p =
 -- Cases
 
 newtype Cases = Cases_ [ SpecificCase ]
-  deriving ( Eq )
 
 instance Show Cases where
   show = \(Cases_ scs) ->
@@ -237,7 +224,6 @@ cases_p = fmap Cases_ $ string "cases\n" *> many1 (specific_case_p <* char '\n')
 -- NameTypeAndValue
 
 data NameTypeAndValue = NameTypeAndValue ValueName ValueType Value
-  deriving ( Eq )
 
 instance Show NameTypeAndValue where
   show = \(NameTypeAndValue vn vt v) -> 
@@ -254,9 +240,7 @@ name_type_and_value_p =
 
 -- NameTypeAndValueLists
 
-data NameTypeAndValueLists =
-  NameTypeAndValueLists [ ValueName ] [ ValueType ] [ Value ]
-  deriving (Eq)
+data NameTypeAndValueLists = NameTypeAndValueLists [ ValueName ] [ ValueType ] [ Value ]
 
 instance Show NameTypeAndValueLists where
   show = \(NameTypeAndValueLists vns vts vs) -> 
@@ -276,7 +260,6 @@ name_type_and_value_lists_p =
 -- NTAVOrNTAVLists
 
 data NTAVOrNTAVLists = NTAV NameTypeAndValue | NTAVLists NameTypeAndValueLists
-  deriving (Eq)
 
 instance Show NTAVOrNTAVLists where
   show = \case
@@ -290,7 +273,6 @@ ntav_or_ntav_lists_p =
 -- NamesTypesAndValues
 
 newtype NamesTypesAndValues = NamesTypesAndValues [ NTAVOrNTAVLists ]
-  deriving ( Eq )
 
 instance Show NamesTypesAndValues where
   show = \(NamesTypesAndValues ns_ts_and_vs) ->
@@ -301,9 +283,7 @@ names_types_and_values_p = NamesTypesAndValues <$> try ntav_or_ntav_lists_p-->ma
 
 -- IntermediatesOutput
 
-data IntermediatesOutput =
-  IntermediatesOutput_ NamesTypesAndValues Value
-  deriving ( Eq )
+data IntermediatesOutput = IntermediatesOutput_ NamesTypesAndValues Value
 
 instance Show IntermediatesOutput where
   show = \(IntermediatesOutput_ ns_ts_and_vs v) -> 
@@ -322,7 +302,6 @@ intermediates_output_p =
 data NoAbstractionsValue =
   ManyArgsApp ManyArgsApplication | Cases Cases |
   IntermediatesOutput IntermediatesOutput | NoAbstractionsValue1 NoAbstractionsValue1
-  deriving ( Eq )
 
 instance Show NoAbstractionsValue where
   show = \case
@@ -340,7 +319,6 @@ no_abstraction_expression_p =
 -- Value
 
 data Value = Value Abstractions NoAbstractionsValue
-  deriving ( Eq )
 
 instance Show Value where
   show = \(Value as nav) -> show as ++ show nav

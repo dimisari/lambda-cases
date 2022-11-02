@@ -10,12 +10,9 @@ import Text.Parsec ( ParseError, eof, many, parse, char )
 import Text.Parsec.String ( Parser )
 import Control.Monad.State ( evalState )
 
-import Helpers ( (.>) )
-import Parsers.Values
-  ( NamesTypesAndValues, names_types_and_values_p )
-
-import CodeGenerators.Values
-  ( HaskellSource, names_types_and_values_g )
+import Helpers ( Haskell, (.>) )
+import Parsers.Values ( NamesTypesAndValues, names_types_and_values_p )
+import CodeGenerators.Values ( names_types_and_values_g )
 
 -- Constants
 
@@ -40,10 +37,10 @@ parse_string = parse_with program_p
 -- Generating haskell
 
 program_g = names_types_and_values_g .> flip evalState 0
-  :: Program -> HaskellSource
+  :: Program -> Haskell
 
 generate_code = parse_string >=> program_g .> return
-  :: String -> Either ParseError HaskellSource
+  :: String -> Either ParseError Haskell
 
 write_code = ( generate_code .> \case
   Left e -> print e

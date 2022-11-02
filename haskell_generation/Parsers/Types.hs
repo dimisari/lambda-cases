@@ -2,129 +2,68 @@
 
 module Parsers.Types where
 
-import Prelude ()
-import Text.Parsec ()
+import Prelude ( String, Either, Show, (>>=), (>>), (*>), (++), ($), show, return, flip )
+import Text.Parsec
+  ( ParseError, (<|>), parse, many, char, lower, upper, string, sepBy, eof )
 import Text.Parsec.String ( Parser )
 
-import Helpers ()
+import Helpers ( (-->) )
+import Parsers.LowLevel ( ValueName, ValueType, value_name_p, value_type_p )
 
 {-
   All:
+  TypeName, FieldAndType, TupleValue, TupleType
 -}
 
--- Keywords
+-- TypeName
 
-keywords =
-  [ "tuple_type", "value", "or_type", "values"
-  , "use_tuple_fields", "cases", "case_value", "intermediates", "output" 
-  , "type_predicate", "function", "functions", "type_theorem", "proof" ]
-  :: [ String ]
+newtype TypeName = TN String
 
--- Literal
+instance Show TypeName where show = \(TN n) -> "TypeName " ++ n
 
-data Literal = Constant0 | Constant1
-  deriving ( Eq, Show )
+type_name_p =
+  upper >>= \u ->
+  many (lower <|> upper) >>= \lu ->
+  return $ TN (u:lu)
+  :: Parser TypeName
 
-literal_p = char '0' *> return Constant0 <|> char '1' *> return Constant1
-  :: Parser Literal
+-- FieldAndType
 
--- ValueName
+data FieldAndType = FieldAndType_ ValueName ValueType
 
-newtype ValueName = VN String
-  deriving ( Eq )
-instance Show ValueName where show = \(VN n) -> "Name " ++ n
+instance Show FieldAndType where
+  show = \(FieldAndType_ vn vt) -> show vn ++ " Type " ++ show vt
 
-value_name_p =
-  many1 (lower <|> char '_') >>= \l_ -> elem l_ keywords --> \case
-    True -> parserFail "keyword"
-    _ -> return $ VN l_
-  :: Parser ValueName 
+field_and_type_p = 
+  value_name_p >>= \vn ->
+  string ": " >> value_type_p >>= \vt ->
+  return $ FieldAndType_ vn vt
+  :: Parser FieldAndType
+  
+-- TupleValue
 
--- LiteralOrValueName
+data TupleValue = FieldAndTypeList [ FieldAndType ]
+  deriving ( Show )
 
-data LiteralOrValueName = Literal Literal | ValueName ValueName
-  deriving ( Eq )
-instance Show LiteralOrValueName where
-  show = \case
-    Literal l -> show l
-    ValueName vn -> show vn
+tuple_value_p = 
+  string "( " >> (field_and_type_p-->sepBy $ string ", ") >>= \fatl ->
+  string " )" >> fatl-->FieldAndTypeList-->return
+  :: Parser TupleValue
 
-literal_or_value_name_p = Literal <$> literal_p <|> ValueName <$> value_name_p
-  :: Parser LiteralOrValueName
+-- TupleType
 
--- ApplicationDirection
+data TupleType = NameAndTuple TypeName TupleValue
+  deriving ( Show )
 
-data ApplicationDirection = LeftApplication | RightApplication 
-  deriving ( Eq, Show )
+tuple_type_p =
+  string "tuple_type " >> type_name_p  >>= \tn ->
+  string "\nvalue " >> tuple_value_p  >>= \tv ->
+  (char '\n' *> return () <|> eof) >> NameAndTuple tn tv-->return
+  :: Parser TupleType
 
-application_direction_p = 
-  string "<--" *> return LeftApplication <|> string "-->" *> return RightApplication
-  :: Parser ApplicationDirection
+-- Helpers
 
--- TupleMatching
+parse_with = flip parse "input"
+  :: Parser a -> String -> Either ParseError a
 
-newtype TupleMatching = FieldNames [ ValueName ]
-  deriving ( Eq, Show )
 
-tuple_matching_p = FieldNames <$> paren_comma_seperated2 value_name_p
-  :: Parser TupleMatching
-
--- Abstraction
-
-data Abstraction = ValueNameAb ValueName | TupleMatching TupleMatching
-  deriving ( Eq )
-
-instance Show Abstraction where
-  show = \case
-    ValueNameAb vn -> show vn
-    TupleMatching tm -> show tm
-
-abstraction_p = ValueNameAb <$> value_name_p <|> TupleMatching <$> tuple_matching_p
-  :: Parser Abstraction
-
--- Abstractions
-
-newtype Abstractions = Abstractions [ Abstraction ]
-  deriving ( Eq )
-
-instance Show Abstractions where
-  show = \(Abstractions as) -> as-->map (show .> (++ " abstraction "))-->concat
-
-abstractions_p = Abstractions <$> many (try $ abstraction_p <* string " -> ")
-  :: Parser Abstractions
-
--- TupleParenOrIntType
-
-data TupleParenOrIntType = TupleType [ ValueType ] | ParenthesisType ValueType | IntType
-  deriving ( Eq, Show )
-
-tuple_paren_or_int_type_p =
-  TupleType <$> try (paren_comma_seperated2 value_type_p) <|>
-  ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
-  string "Int" *> pure IntType
-  :: Parser TupleParenOrIntType
-
--- ValueType
-
-data ValueType =
-  AbstractionTypesAndResultType [ TupleParenOrIntType ] TupleParenOrIntType
-  deriving ( Eq )
-
-instance Show ValueType where
-  show = \(AbstractionTypesAndResultType tpoits tpoit) ->
-    tpoits-->map (show .> (++ " right_arrow "))-->concat ++ show tpoit
-
-value_type_p = try value_type_2_p <|> value_type_1_p
-  :: Parser ValueType
-
-value_type_1_p =
-  many (try $ tuple_paren_or_int_type_p <* string " -> ") >>= \tpoits ->
-  tuple_paren_or_int_type_p >>= \tpoit ->
-  return $ AbstractionTypesAndResultType tpoits tpoit
-  :: Parser ValueType
-
-value_type_2_p =
-  comma_seperated2 value_type_1_p >>= \tes ->
-  string " :> " >> value_type_1_p >>= \(AbstractionTypesAndResultType tpoits tpoit) ->
-  return $ AbstractionTypesAndResultType (map ParenthesisType tes ++ tpoits) tpoit
-  :: Parser ValueType
