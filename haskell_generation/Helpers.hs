@@ -1,7 +1,8 @@
 module Helpers where
 
 import Prelude
-  ( String, (>>=), (<*), (*>), (.), ($), (++), flip, return, init, last, concat, map )
+  ( String, Char, (>>=), (<*), (*>), (.), ($), (++), flip, return, init, last, concat
+  , map )
 import Text.Parsec ( (<|>), many, many1, string, char, try )
 import Text.Parsec.String ( Parser )
 
@@ -43,8 +44,8 @@ paren_comma_seperated2 = ( \p -> string "( " *> comma_seperated2 p <* string " )
 spaces_tabs = many $ char ' ' <|> char '\t'
   :: Parser String
 
-new_line_space_surrounded = spaces_tabs *> char '\n' *> spaces_tabs
-  :: Parser String
+new_line_space_surrounded = spaces_tabs *> char '\n' <* spaces_tabs
+  :: Parser Char
 
 -- Haskell generation 
 

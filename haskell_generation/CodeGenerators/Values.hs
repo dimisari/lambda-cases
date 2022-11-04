@@ -10,8 +10,9 @@ import Control.Monad.State ( (>=>), State, get, put )
 
 import Helpers ( Haskell, (-->), (.>) )
 import Parsers.LowLevel
-  ( ApplicationDirection( LeftApplication, RightApplication ), ValueName, ValueType
+  ( ApplicationDirection( LeftApplication, RightApplication ), ValueName
   , Abstractions( Abstractions ) )
+import Parsers.Types ( ValueType )
 import Parsers.Values
   ( ParenthesisValue( Parenthesis, Tuple )
   , ParenLitOrName( ParenthesisValue, LiteralOrValueName )

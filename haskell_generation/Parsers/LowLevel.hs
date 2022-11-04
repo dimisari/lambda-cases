@@ -86,37 +86,3 @@ instance Show Abstractions where
 abstractions_p = Abstractions <$> many (try $ abstraction_p <* string " -> ")
   :: Parser Abstractions
 
--- TupleParenOrIntType
-
-data TupleParenOrIntType = TupleType [ ValueType ] | ParenthesisType ValueType | IntType
-  deriving ( Show )
-
-tuple_paren_or_int_type_p =
-  TupleType <$> try (paren_comma_seperated2 value_type_p) <|>
-  ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
-  string "Int" *> pure IntType
-  :: Parser TupleParenOrIntType
-
--- ValueType
-
-data ValueType =
-  AbstractionTypesAndResultType [ TupleParenOrIntType ] TupleParenOrIntType
-
-instance Show ValueType where
-  show = \(AbstractionTypesAndResultType tpoits tpoit) ->
-    tpoits-->map (show .> (++ " right_arrow "))-->concat ++ show tpoit
-
-value_type_p = try value_type_2_p <|> value_type_1_p
-  :: Parser ValueType
-
-value_type_1_p =
-  many (try $ tuple_paren_or_int_type_p <* string " -> ") >>= \tpoits ->
-  tuple_paren_or_int_type_p >>= \tpoit ->
-  return $ AbstractionTypesAndResultType tpoits tpoit
-  :: Parser ValueType
-
-value_type_2_p =
-  comma_seperated2 value_type_1_p >>= \tes ->
-  string " :> " >> value_type_1_p >>= \(AbstractionTypesAndResultType tpoits tpoit) ->
-  return $ AbstractionTypesAndResultType (map ParenthesisType tes ++ tpoits) tpoit
-  :: Parser ValueType

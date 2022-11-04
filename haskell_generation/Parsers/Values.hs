@@ -13,9 +13,11 @@ import Helpers
   ( (-->), (.>), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded )
 import Parsers.LowLevel
   ( ValueName, LiteralOrValueName, ApplicationDirection, TupleMatching
-  , Abstraction, Abstractions ( Abstractions ), ValueType
+  , Abstraction, Abstractions ( Abstractions )
   , value_name_p, literal_or_value_name_p, application_direction_p, tuple_matching_p
-  , abstraction_p, abstractions_p , value_type_p )
+  , abstraction_p, abstractions_p )
+import Parsers.Types
+  ( ValueType, value_type_p )
 
 {- 
   All:
@@ -69,7 +71,8 @@ instance Show OneArgFunctionApplications where
     [] -> error "application expression should have at least one application direction"
     _ ->
       show plon ++
-      ad_plon_s-->map ( \( ad, plon ) -> show ad ++ " " ++ show plon ++ " " )-->concat
+      ad_plon_s
+        -->map ( \( ad, plon ) -> " " ++ show ad ++ " " ++ show plon ++ " " )-->concat
 
 one_arg_function_applications_p =
   paren_lit_or_name_p >>= \plon ->
@@ -206,7 +209,8 @@ instance Show SpecificCase where
 
 specific_case_p =
   spaces_tabs >> literal_or_value_name_p >>= \lovn ->
-  string " ->" >> (char ' ' <|> char '\n') >> value_expression_p >>= \v ->
+  string " ->" >> (try new_line_space_surrounded <|> (char ' ')) >>
+  value_expression_p >>= \v ->
   return $ SpecificCase lovn v
   :: Parser SpecificCase
 
