@@ -16,28 +16,38 @@ import Parsers.LowLevel ( ValueName, value_name_p )
 
 {-
   All:
-  BaseType, ValueType, TypeName, FieldAndType, TupleValue, TupleType
+  TypeName, BaseType, ValueType, FieldAndType, TupleValue, TupleType
 -}
+
+-- TypeName
+
+newtype TypeName = TN String
+
+instance Show TypeName where show = \(TN n) -> n
+
+type_name_p =
+  upper >>= \u ->
+  many (lower <|> upper) >>= \lu ->
+  return $ TN (u:lu)
+  :: Parser TypeName
 
 -- BaseType
 
 data BaseType =
-  TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName | IntType
+  TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
 
 instance Show BaseType where
   show = \case 
     TupleType vts -> "TupleType " ++ show vts
     ParenthesisType vt -> case vt of
-      (AbstractionTypesAndResultType [] IntType) -> show IntType
+      (AbstractionTypesAndResultType [] (TypeName (TN "Int"))) -> "Int"
       _ -> show vt
     TypeName tn -> show tn
-    IntType -> "Int"
 
 tuple_paren_or_int_type_p =
   TupleType <$> try (paren_comma_seperated2 value_type_p) <|>
   ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
-  TypeName <$> type_name_p <|>
-  string "Int" *> pure IntType
+  TypeName <$> type_name_p 
   :: Parser BaseType
 
 -- ValueType
@@ -62,18 +72,6 @@ value_type_2_p =
   string " :> " >> value_type_1_p >>= \(AbstractionTypesAndResultType tpoits tpoit) ->
   return $ AbstractionTypesAndResultType (map ParenthesisType tes ++ tpoits) tpoit
   :: Parser ValueType
-
--- TypeName
-
-newtype TypeName = TN String
-
-instance Show TypeName where show = \(TN n) -> "TypeName " ++ n
-
-type_name_p =
-  upper >>= \u ->
-  many (lower <|> upper) >>= \lu ->
-  return $ TN (u:lu)
-  :: Parser TypeName
 
 -- FieldAndType
 

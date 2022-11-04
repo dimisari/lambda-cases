@@ -16,7 +16,7 @@ ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int :> GcdAndCoeffs
     0 -> ( x, a_coeffs-->get_previous_previous, b_coeffs-->get_previous_previous )
     y -> 
       intermediates
-      compute_next: PreviousCoeffs -> PreviousCoeffs
-        = ( prev_prev, prev ) -> ( previous, previous_previous - x-->div<--y * previous )
+      compute_new: PreviousCoeffs -> PreviousCoeffs
+        = ( prev_prev, prev ) -> ( prev, prev_prev - x-->div<--y * prev )
       output
       a_coeffs-->compute_new, b_coeffs-->compute_new, y, x-->mod<--y :-> ee_recursion

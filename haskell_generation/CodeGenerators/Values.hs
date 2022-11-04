@@ -31,8 +31,10 @@ import Parsers.Values
   , NoAbstractionsValue ( ManyArgsApp, NoAbstractionsValue1, Cases, IntermediatesOutput )
   , Value( Value ) )
 import CodeGenerators.LowLevel
-  ( tuple_matching_g, value_name_g, value_type_g, literal_or_value_name_g
+  ( tuple_matching_g, value_name_g, literal_or_value_name_g
   , abstractions_g )
+import CodeGenerators.Types
+  ( value_type_g )
 
 {- 
   All:

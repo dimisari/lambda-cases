@@ -10,14 +10,10 @@ import Parsers.LowLevel
   , LiteralOrValueName( Literal, ValueName ), TupleMatching( FieldNames )
   , Abstraction( ValueNameAb, TupleMatching )
   , Abstractions( Abstractions ) )
-import Parsers.Types 
-  ( BaseType( TupleType, ParenthesisType, IntType )
-  , ValueType( AbstractionTypesAndResultType ) )
 
 {-
   All:
   Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions,
-  BaseType, ValueType
 -}
 
 -- Literal
@@ -59,20 +55,3 @@ abstraction_g = ( \case
 abstractions_g = ( \(Abstractions as) ->
   as-->map (\a -> "\\" ++ abstraction_g a ++ " -> ")-->concat
   ) :: Abstractions -> Haskell
-
--- BaseType
-
-tuple_paren_or_int_type_g = ( \case
-  TupleType vts -> parenthesis_comma_sep_g value_type_g vts
-  ParenthesisType vt -> case vt of
-    (AbstractionTypesAndResultType [] tpoit) -> tuple_paren_or_int_type_g tpoit
-    _ -> "(" ++ value_type_g vt ++ ")"
-  IntType -> "Int"
-  ) :: BaseType -> Haskell
-
--- ValueType
-
-value_type_g = ( \(AbstractionTypesAndResultType tpoits tpoit) -> 
-  tpoits-->map (tuple_paren_or_int_type_g .> (++ " -> "))-->concat
-  ++ tuple_paren_or_int_type_g tpoit
-  ) :: ValueType -> Haskell

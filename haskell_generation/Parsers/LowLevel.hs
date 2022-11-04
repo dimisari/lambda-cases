@@ -13,7 +13,7 @@ import Helpers ( (-->), (.>), keywords, comma_seperated2, paren_comma_seperated2
 {-
   All:
   Literal, ValueName, LiteralOrValueName, ApplicationDirection,
-  TupleMatching, Abstraction, Abstractions, TupleParenOrIntType, ValueType
+  TupleMatching, Abstraction, Abstractions
 -}
 
 -- Literal
