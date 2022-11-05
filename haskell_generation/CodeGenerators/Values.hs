@@ -3,38 +3,28 @@
 module CodeGenerators.Values where
 
 import Prelude
-  ( String, Int, Bool( True ), (>>=), (>>), (-), (+), (*), (++), ($), undefined, map
-  , concat, return, error, mapM, init, last )
+  ( Int, (>>=), (>>), (-), (+), (*), (++), ($), map, concat, return, error, mapM, init
+  , last )
 import Data.List ( intercalate, replicate )
 import Control.Monad.State ( (>=>), State, get, put )
 
 import Helpers ( Haskell, (-->), (.>) )
-import Parsers.LowLevel
-  ( ApplicationDirection( LeftApplication, RightApplication ), ValueName
-  , Abstractions( Abstractions ) )
-import Parsers.Types ( ValueType )
-import Parsers.Values
-  ( ParenthesisValue( Parenthesis, Tuple )
-  , ParenLitOrName( ParenthesisValue, LiteralOrValueName )
-  , OneArgFunctionApplications( OneArgFunctionApplications )
-  , MultiplicationFactor( OneArgApplicationsMF, ParenLitOrNameMF )
-  , Multiplication( Multiplication )
-  , SubtractionFactor( MultiplicationSF, OneArgApplicationsSF, ParenLitOrNameSF )
-  , Subtraction( Subtraction )
-  , SpecificCase( SpecificCase ), Cases( Cases_ )
-  , NameTypeAndValue( NameTypeAndValue ), NameTypeAndValueLists( NameTypeAndValueLists )
-  , NTAVOrNTAVLists( NTAV, NTAVLists ), NamesTypesAndValues( NamesTypesAndValues )
-  , IntermediatesOutput( IntermediatesOutput_ )
-  , NoAbstractionsValue1 ( Sub, Mul, OneArgApps , PLON )
-  , ManyArgsAppArgValue( ManyArgsAppArgValue )
-  , ManyArgsApplication( ManyArgsApplication )
-  , NoAbstractionsValue ( ManyArgsApp, NoAbstractionsValue1, Cases, IntermediatesOutput )
-  , Value( Value ) )
+
+import HaskellTypes.LowLevel ( ApplicationDirection(..), ValueName, Abstractions(..) )
 import CodeGenerators.LowLevel
-  ( tuple_matching_g, value_name_g, literal_or_value_name_g
-  , abstractions_g )
-import CodeGenerators.Types
-  ( value_type_g )
+  ( value_name_g, literal_or_value_name_g, abstractions_g )
+
+import HaskellTypes.Types ( TypeName, ValueType )
+import CodeGenerators.Types ( value_type_g )
+
+import HaskellTypes.Values
+  ( ParenthesisValue(..), ParenLitOrName(..), OneArgFunctionApplications(..)
+  , MultiplicationFactor(..), Multiplication(..), SubtractionFactor(..), Subtraction(..)
+  , NoAbstractionsValue1 (..), ManyArgsAppArgValue(..), ManyArgsApplication(..)
+  , SpecificCase(..), Cases(..)
+  , NameTypeAndValue(..), NameTypeAndValueLists(..)
+  , NTAVOrNTAVLists(..), NamesTypesAndValues(..), IntermediatesOutput(..)
+  , NoAbstractionsValue (..), Value(..) )
 
 {- 
   All:
@@ -43,10 +33,12 @@ import CodeGenerators.Types
   NoAbstractionsValue1, ManyArgsAppArgValue, ManyArgsApplication,
   SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
-  NTAVOrNTAVLists, NamesTypesAndValues,
-  IntermediatesOutput,
+  NTAVOrNTAVLists, NamesTypesAndValues, IntermediatesOutput,
   NoAbstractionsValue, Value
 -}
+
+data GState = IndentAndTypeNames Int [ TypeName ]
+type Staful = State GState
 
 type IndentState = State Int
 

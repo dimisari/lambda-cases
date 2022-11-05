@@ -11,15 +11,19 @@ import Text.Parsec.String ( Parser )
 import Control.Monad.State ( evalState )
 
 import Helpers ( Haskell, (.>) )
-import Parsers.Values ( NamesTypesAndValues, names_types_and_values_p )
-import Parsers.Types ( TupleType, tuple_type_p )
-import CodeGenerators.Values ( names_types_and_values_g )
+
+import HaskellTypes.Types ( TupleType )
+import Parsers.Types ( tuple_type_p )
 import CodeGenerators.Types ( tuple_type_g )
+
+import HaskellTypes.Values ( NamesTypesAndValues )
+import Parsers.Values ( names_types_and_values_p )
+import CodeGenerators.Values ( names_types_and_values_g )
 
 -- Constants
 
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example1", "IOfiles/", io_files ++ "haskell_code_header.hs"
+  [ "example", "IOfiles/", io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc", io_files ++ example_name ++ ".hs" ] 
   :: [ String ]
 

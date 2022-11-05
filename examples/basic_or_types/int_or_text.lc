@@ -1,6 +1,6 @@
 
 a, b: Int-->Or<--Text, Int-->Or<--Text
-  = FirstType 1, SecondType "One"
+  = FirstType.1, SecondType."One"
 
 print_int_or_string: Int-->Or<--Text -> Empty-->WithIOEffects
   = cases
