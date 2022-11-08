@@ -38,7 +38,7 @@ import HaskellTypes.Values
 -}
 
 data GState = IndentAndTypeNames Int [ TypeName ]
-type Staful = State GState
+type Stateful = State GState
 
 type IndentState = State Int
 
