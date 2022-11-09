@@ -14,16 +14,15 @@ import Text.Parsec.String ( Parser )
 -- Keywords
 
 keywords =
-  [ "tuple_type", "value", "or_type", "values"
-  , "use_tuple_fields", "cases", "case_value", "intermediates", "output" 
-  , "type_predicate", "function", "functions", "type_theorem", "proof" ]
+  [ "tuple_type", "value", "or_type", "values" , "use_tuple_fields", "cases"
+  , "case_value", "intermediates", "output", "type_predicate", "function", "functions"
+  , "type_theorem", "proof" ]
   :: [ String ]
 
 -- Function application/composition
 
 (-->) = flip ($)
   :: a -> (a -> b) -> b
-
 (.>) = flip (.)
   :: (a -> b) -> (b -> c) -> (a -> c)
 

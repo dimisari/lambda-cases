@@ -8,4 +8,4 @@ print_int_or_string: Int-->Or<--Text -> Empty-->WithIOEffects
     SecondType -> value-->( "Turns out it says: " + )-->print
 
 main: Empty-->WithIOEffects
-  = a-->print_int_or_string ;> b-->print_int_or_string
+  = a-->print_int_or_string ; b-->print_int_or_string

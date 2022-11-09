@@ -46,7 +46,7 @@ value_type_2_p =
 field_and_type_p = 
   value_name_p >>= \vn ->
   string ": " >> value_type_p >>= \vt ->
-  return $ FieldAndType_ vn vt
+  return $ FT vn vt
   :: Parser FieldAndType
   
 tuple_value_p = 

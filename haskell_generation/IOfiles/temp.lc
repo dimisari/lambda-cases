@@ -1,0 +1,6 @@
+
+tuple_type PreviousCoeffs
+value ( previous_previous: Int, previous: Int )
+
+initial_a_coeffs, initial_b_coeffs: PreviousCoeffs, PreviousCoeffs
+  = ( 1, 0 ), ( 0, 1 )

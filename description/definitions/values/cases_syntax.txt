@@ -24,6 +24,9 @@ tuple_type example:
       ( Type0Case1, Type1Case0 ) -> result expression of type Type3
       ( Type0Case1, Type1Case1 ) -> result expression of type Type3
       value_name_of_type_type2 -> default result expression of type Type1
+      
+   In the case of collision of field_names (ex. Type0 == Type1) we add numbers beginning
+   by 1 for the leftmost type
 
 default result:
 

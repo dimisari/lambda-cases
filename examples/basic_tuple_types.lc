@@ -24,5 +24,5 @@ b, c: ( Int, Text ), ( Int, Text )
   = a-->change_pair_first<--2, a-->change_pair_second<--"two"
 
 main: Empty-->WithIOEffects
-  = a-->print_int_string ;> i-->to_string-->print ;> s-->print ;>
-    b-->print_int_string ;> c-->print_int_string
+  = a-->print_int_string ; i-->to_string-->print ; s-->print ; b-->print_int_string ;
+    c-->print_int_string

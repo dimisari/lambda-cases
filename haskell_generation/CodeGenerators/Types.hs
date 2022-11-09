@@ -26,7 +26,7 @@ value_type_g = ( \(AbstractionTypesAndResultType bts bt) ->
   bts-->map (base_type_g .> (++ " -> "))-->concat ++ base_type_g bt
   ) :: ValueType -> Haskell
 
-field_and_type_g = ( \(FieldAndType_ vn vt) ->
+field_and_type_g = ( \(FT vn vt) ->
   "get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt
   ) :: FieldAndType -> Haskell
 

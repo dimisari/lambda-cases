@@ -1,10 +1,10 @@
 type_predicate T-->IsAFunctor
-function apply()internally: (A -> B) -> T<--A -> T<--B
+function apply()internally: (A -> B) -> T(A) -> T(B)
 
 apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = cases
     HeadAndTail -> HeadAndTail.( head-->f, tail-->apply(f)to_each )
-    Head -> Head.( head-->f )
+    EmptyList -> EmptyList
 
 type_theorem ListOf()s-->IsAFunctor
 proof apply()internally = apply()to_each
