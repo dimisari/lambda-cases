@@ -2,7 +2,7 @@
 
 module CodeGenerators.LowLevel where
 
-import Prelude ( (++), concat, map, error )
+import Prelude ( (++), concatMap, error )
 
 import Helpers ( Haskell, (-->), parenthesis_comma_sep_g )
 import HaskellTypes.LowLevel
@@ -34,5 +34,5 @@ abstraction_g = ( \case
   ) :: Abstraction -> Haskell
 
 abstractions_g = ( \(Abstractions as) ->
-  as-->map (\a -> "\\" ++ abstraction_g a ++ " -> ")-->concat
+  as-->concatMap (\a -> "\\" ++ abstraction_g a ++ " -> ")
   ) :: Abstractions -> Haskell

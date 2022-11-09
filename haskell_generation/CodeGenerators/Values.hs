@@ -3,7 +3,7 @@
 module CodeGenerators.Values where
 
 import Prelude
-  ( Int, (>>=), (>>), (-), (+), (*), (++), ($), map, concat, return, error, mapM, init
+  ( Int, (>>=), (>>), (+), (*), (++), ($), concat, concatMap, return, error, mapM, init
   , last )
 import Data.List ( intercalate, replicate )
 import Control.Monad.State ( (>=>), State, get, put )
@@ -20,11 +20,11 @@ import CodeGenerators.Types ( value_type_g )
 import HaskellTypes.Values
   ( ParenthesisValue(..), ParenLitOrName(..), OneArgFunctionApplications(..)
   , MultiplicationFactor(..), Multiplication(..), SubtractionFactor(..), Subtraction(..)
-  , NoAbstractionsValue1 (..), ManyArgsAppArgValue(..), ManyArgsApplication(..)
+  , NoAbstractionsValue1(..), ManyArgsAppArgValue(..), ManyArgsApplication(..)
   , SpecificCase(..), Cases(..)
   , NameTypeAndValue(..), NameTypeAndValueLists(..)
   , NTAVOrNTAVLists(..), NamesTypesAndValues(..), IntermediatesOutput(..)
-  , NoAbstractionsValue (..), Value(..) )
+  , NoAbstractionsValue(..), Value(..) )
 
 {- 
   All:
@@ -51,7 +51,7 @@ parenthesis_value_g = ( ( \case
   Parenthesis v -> value_g v
   Tuple vs -> 
     mapM value_g vs >>= \vs_g ->
-    return $ " " ++ init vs_g-->map (++ ", ")-->concat ++ vs_g-->last ++ " "
+    return $ " " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " "
   ) >=> ("(" ++) .> (++ ")") .> return
   ) :: ParenthesisValue -> IndentState Haskell
 
@@ -144,7 +144,7 @@ many_args_application_g = ( \(ManyArgsApplication maaavs vn) ->
     :: ManyArgsAppArgValue -> IndentState Haskell
   in
   mapM help_g maaavs >>= \maaavs_g ->
-  return $ value_name_g vn ++ maaavs_g-->map (" " ++)-->concat
+  return $ value_name_g vn ++ maaavs_g-->concatMap (" " ++)
   ) :: ManyArgsApplication -> IndentState Haskell
 
 -- SpecificCase
@@ -157,10 +157,10 @@ specific_case_g = ( \(SpecificCase lovn v) ->
 
 -- Cases
 
-cases_g = ( \(Cases_ cs) ->
+cases_g = ( \(Cs cs) ->
   get >>= \i ->
   put (i + 1) >> mapM specific_case_g cs >>= \cs_g ->
-  put i >> ("\\case\n" ++ init cs_g-->map (++ "\n")-->(++ [last cs_g])-->concat)-->return
+  put i >> ("\\case\n" ++ init cs_g-->concatMap (++ "\n") ++ last cs_g)-->return
   ) :: Cases -> IndentState Haskell
 
 -- NameTypeAndValue

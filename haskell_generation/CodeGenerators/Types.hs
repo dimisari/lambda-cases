@@ -2,7 +2,7 @@
 
 module CodeGenerators.Types where
 
-import Prelude ( (++), concat, map, show )
+import Prelude ( (++), concatMap, map, show )
 import Data.List ( intercalate )
 
 import Helpers ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
@@ -23,7 +23,7 @@ base_type_g = ( \case
   ) :: BaseType -> Haskell
 
 value_type_g = ( \(AbstractionTypesAndResultType bts bt) -> 
-  bts-->map (base_type_g .> (++ " -> "))-->concat ++ base_type_g bt
+  bts-->concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
 field_and_type_g = ( \(FT vn vt) ->

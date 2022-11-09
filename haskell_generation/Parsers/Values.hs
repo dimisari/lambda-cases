@@ -9,7 +9,7 @@ import Text.Parsec.String ( Parser )
 import Helpers
   ( (-->), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded )
 
-import HaskellTypes.LowLevel ( ApplicationDirection, Abstractions ( Abstractions ) )
+import HaskellTypes.LowLevel ( ApplicationDirection, Abstractions(..) )
 import Parsers.LowLevel
   ( value_name_p, literal_or_value_name_p, application_direction_p, abstraction_p
   , abstractions_p )
@@ -138,7 +138,7 @@ specific_case_p =
 
 -- Cases
 
-cases_p = fmap Cases_ $ string "cases\n" *> many1 (specific_case_p <* char '\n')
+cases_p = fmap Cs $ string "cases\n" *> many1 (specific_case_p <* char '\n')
   :: Parser Cases
 
 -- NameTypeAndValue

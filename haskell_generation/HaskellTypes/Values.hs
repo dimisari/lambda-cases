@@ -9,18 +9,6 @@ import HaskellTypes.LowLevel
   ( ValueName, LiteralOrValueName, ApplicationDirection, Abstractions )
 import HaskellTypes.Types ( ValueType )
 
-{- 
-  All:
-  ParenthesisValue, ParenLitOrName, OneArgFunctionApplications,
-  MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction,
-  NoAbstractionsValue1, ManyArgsAppArgValue, ManyArgsApplication,
-  SpecificCase, Cases,
-  NameTypeAndValue, NameTypeAndValueLists,
-  NTAVOrNTAVLists, NamesTypesAndValues,
-  IntermediatesOutput,
-  NoAbstractionsValue, Value
--}
-
 --types
 data ParenthesisValue = Parenthesis Value | Tuple [ Value ]
 
@@ -52,7 +40,7 @@ data ManyArgsApplication = ManyArgsApplication [ ManyArgsAppArgValue ] ValueName
 
 data SpecificCase = SpecificCase LiteralOrValueName Value 
 
-newtype Cases = Cases_ [ SpecificCase ]
+newtype Cases = Cs [ SpecificCase ]
 
 data NameTypeAndValue = NameTypeAndValue ValueName ValueType Value
 
@@ -126,7 +114,7 @@ instance Show SpecificCase where
     "result: " ++ show v ++ "\n"
 
 instance Show Cases where
-  show = \(Cases_ scs) -> "\ncase start\n\n" ++ scs-->concatMap (show .> (++ "\n"))
+  show = \(Cs scs) -> "\ncase start\n\n" ++ scs-->concatMap (show .> (++ "\n"))
 
 instance Show NameTypeAndValue where
   show = \(NameTypeAndValue vn vt v) -> 
