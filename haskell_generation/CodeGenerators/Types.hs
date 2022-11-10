@@ -27,7 +27,7 @@ value_type_g = ( \(AbstractionTypesAndResultType bts bt) ->
   ) :: ValueType -> Haskell
 
 field_and_type_g = ( \(FT vn vt) ->
-  "get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt
+  "get_" ++ value_name_g vt vn ++ " :: " ++ value_type_g vt
   ) :: FieldAndType -> Haskell
 
 tuple_value_g = ( \(FieldAndTypeList fatl) ->

@@ -1,10 +1,11 @@
 module Helpers where
 
 import Prelude
-  ( String, Char, (>>=), (<*), (*>), (.), ($), (++), flip, return, init, last, concat
-  , map )
+  ( Int, String, Char, (*), (>>=), (<*), (*>), (.), ($), (++), flip, return, init, last
+  , concat, map )
 import Text.Parsec ( (<|>), many, many1, string, char, try )
 import Text.Parsec.String ( Parser )
+import Data.List ( replicate )
 
 {-
   All:
@@ -12,22 +13,19 @@ import Text.Parsec.String ( Parser )
 -}
 
 -- Keywords
-
 keywords =
-  [ "tuple_type", "value", "or_type", "values" , "use_tuple_fields", "cases"
+  [ "tuple_type", "value", "or_type", "values" , "use_fields", "cases"
   , "case_value", "intermediates", "output", "type_predicate", "function", "functions"
   , "type_theorem", "proof" ]
   :: [ String ]
 
 -- Function application/composition
-
 (-->) = flip ($)
   :: a -> (a -> b) -> b
 (.>) = flip (.)
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-
 seperated2 = (\p -> \s ->
   p >>= \a ->
   try (string s *> p) --> many1 >>= \as ->
@@ -47,8 +45,10 @@ new_line_space_surrounded = spaces_tabs *> char '\n' <* spaces_tabs
   :: Parser Char
 
 -- Haskell generation 
+type Haskell = String
 
-type Haskell = String 
+indent = ( \i -> replicate (2 * i) ' ' )
+  :: Int -> Haskell
 
 parenthesis_comma_sep_g = ( \g -> \l ->
   "( " ++ init l-->map (g .> (++ ", "))-->concat ++ l-->last-->g ++ " )"

@@ -19,7 +19,7 @@ import HaskellTypes.Values
   ( ParenthesisValue(..), ParenLitOrName(..), OneArgFunctionApplications(..)
   , MultiplicationFactor(..), Multiplication(..), SubtractionFactor(..), Subtraction(..)
   , NoAbstractionsValue1(..), ManyArgsAppArgValue(..), ManyArgsApplication(..)
-  , SpecificCase(..), Cases(..)
+  , UseFields(..), SpecificCase(..), Cases(..)
   , NameTypeAndValue(..), NameTypeAndValueLists(..)
   , NTAVOrNTAVLists(..), NamesTypesAndValues(..)
   , IntermediatesOutput(..)
@@ -31,7 +31,7 @@ import HaskellTypes.Values
   ParenthesisValue, ParenLitOrName, OneArgFunctionApplications,
   MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction,
   NoAbstractionsValue1, ManyArgsAppArgValue, ManyArgsApplication,
-  SpecificCase, Cases,
+  UseFields, SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
   NTAVOrNTAVLists, NamesTypesAndValues, IntermediatesOutput,
   NoAbstractionsValue, Value
@@ -41,8 +41,8 @@ import HaskellTypes.Values
 
 [ parenthesis_value_p, tuple_internals_p, parenthesis_internals_p ] =
   [ char '(' *> (try tuple_internals_p <|> parenthesis_internals_p) <* char ')'
-  , fmap Tuple $ char ' ' *> comma_seperated2 value_expression_p <* char ' '
-  , Parenthesis <$> value_expression_p ]
+  , fmap Tuple $ char ' ' *> comma_seperated2 value_p <* char ' '
+  , Parenthesis <$> value_p ]
   :: [ Parser ParenthesisValue ]
 
 -- ParenLitOrName
@@ -127,12 +127,17 @@ many_args_application_p =
   return $ ManyArgsApplication maaavs vn
   :: Parser ManyArgsApplication
 
+-- UseFields
+
+use_fields_p = string "use_fields -> " *> (UF <$> value_p)
+  :: Parser UseFields
+
 -- SpecificCase
 
 specific_case_p =
   spaces_tabs >> literal_or_value_name_p >>= \lovn ->
   string " ->" >> (try new_line_space_surrounded <|> (char ' ')) >>
-  value_expression_p >>= \v ->
+  value_p >>= \v ->
   return $ SpecificCase lovn v
   :: Parser SpecificCase
 
@@ -146,7 +151,7 @@ cases_p = fmap Cs $ string "cases\n" *> many1 (specific_case_p <* char '\n')
 name_type_and_value_p =
   value_name_p >>= \vn ->
   string ": " >> value_type_p >>= \vt ->
-  new_line_space_surrounded >> string "= " >> value_expression_p >>= \v ->
+  new_line_space_surrounded >> string "= " >> value_p >>= \v ->
   (eof <|> skipMany1 new_line_space_surrounded) >> NameTypeAndValue vn vt v-->return
   :: Parser NameTypeAndValue
 
@@ -156,7 +161,7 @@ name_type_and_value_lists_p =
   spaces_tabs >> comma_seperated2 value_name_p >>= \vns ->
   string ": " >> comma_seperated2 value_type_p >>= \vts ->
   new_line_space_surrounded >>
-  string "= " >> comma_seperated2 value_expression_p >>= \vs ->
+  string "= " >> comma_seperated2 value_p >>= \vs ->
   (eof <|> skipMany1 new_line_space_surrounded) >>
   NameTypeAndValueLists vns vts vs-->return
   :: Parser NameTypeAndValueLists
@@ -178,7 +183,7 @@ intermediates_output_p =
   spaces_tabs >> string "intermediates" >> new_line_space_surrounded >>
   names_types_and_values_p >>= \ns_ts_and_vs ->
   spaces_tabs >> string "output" >> new_line_space_surrounded >>
-  value_expression_p >>= \v ->
+  value_p >>= \v ->
   return $ IntermediatesOutput_ ns_ts_and_vs v
   :: Parser IntermediatesOutput
 
@@ -187,22 +192,22 @@ intermediates_output_p =
 no_abstraction_expression_p =
   ManyArgsApp <$> try many_args_application_p <|> Cases <$> try cases_p <|>
   IntermediatesOutput <$> try intermediates_output_p <|>
-  NoAbstractionsValue1 <$> no_abstractions_value_1_p 
+  UseFields <$> try use_fields_p <|> NoAbstractionsValue1 <$> no_abstractions_value_1_p 
   :: Parser NoAbstractionsValue
 
 -- Value
 
-value_expression_p = try value_expression2_p <|> value_expression1_p
+value_p = try value2_p <|> value1_p
   :: Parser Value
 
-value_expression1_p =
+value1_p =
   abstractions_p >>= \as ->
   no_abstraction_expression_p >>= \nae ->
   return $ Value as nae
   :: Parser Value
 
-value_expression2_p =
+value2_p =
   comma_seperated2 abstraction_p >>= \as1 ->
-  string " :> " >> value_expression1_p >>= \(Value (Abstractions as2) nav) ->
+  string " :> " >> value1_p >>= \(Value (Abstractions as2) nav) ->
   return $ Value (Abstractions $ as1 ++ as2) nav
   :: Parser Value

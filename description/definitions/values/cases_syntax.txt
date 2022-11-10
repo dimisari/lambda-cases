@@ -1,7 +1,7 @@
 
 or_type example:
 
-  Type0 is an or_type. Here the field_names of each Case value can be used in the
+  Type0 is an or_type. Here the fields of each Case value can be used in the
   corresponding result expression. Therefore, we only match on the Case.
 
   function_name: Type0 -> Type1
@@ -14,7 +14,7 @@ tuple_type example:
 
   tuple_type Type2 value ( zero_val: Type0, one_val: Type1 )
 
-  Type0 and Type1 are or_types. Here the field_names of each Case input on both types
+  Type0 and Type1 are or_types. Here the fields of each Case input on both types
   can be used in the corresponding result expression.
 
   function_name: Type2 -> Type3
@@ -25,7 +25,7 @@ tuple_type example:
       ( Type0Case1, Type1Case1 ) -> result expression of type Type3
       value_name_of_type_type2 -> default result expression of type Type1
       
-   In the case of collision of field_names (ex. Type0 == Type1) we add numbers beginning
+   In the case of collision of fields (ex. Type0 == Type1) we add numbers beginning
    by 1 for the leftmost type
 
 default result:

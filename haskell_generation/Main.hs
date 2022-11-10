@@ -9,6 +9,7 @@ import Control.Monad ( (>=>) )
 import Text.Parsec ( ParseError, (<|>), eof, many, parse, char )
 import Text.Parsec.String ( Parser )
 import Control.Monad.State ( evalState )
+import qualified Data.Map as M ( empty )
 
 import Helpers ( Haskell, (.>) )
 
@@ -20,10 +21,12 @@ import HaskellTypes.Values ( NamesTypesAndValues )
 import Parsers.Values ( names_types_and_values_p )
 import CodeGenerators.Values ( names_types_and_values_g )
 
+import HaskellTypes.Generation ( GenState(..) )
+
 -- Constants
 
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example", "IOfiles/"
+  [ "example1", "IOfiles/"
   , io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc"
   , io_files ++ example_name ++ ".hs" ] 
@@ -53,7 +56,8 @@ parse_string = parse_with program_p
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
   TupleType tt -> return $ tuple_type_g tt
-  ) .> fmap concat .> flip evalState 0 :: Program -> Haskell
+  ) .> fmap concat .> flip evalState (IndentAndTupleTypes 0 M.empty)
+  :: Program -> Haskell
 
 generate_code = parse_string >=> program_g .> return
   :: String -> Either ParseError Haskell

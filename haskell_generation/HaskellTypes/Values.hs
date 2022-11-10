@@ -38,6 +38,9 @@ data ManyArgsAppArgValue = ManyArgsAppArgValue Abstractions NoAbstractionsValue1
 data ManyArgsApplication = ManyArgsApplication [ ManyArgsAppArgValue ] ValueName
   deriving Show
 
+newtype UseFields = UF Value 
+  deriving Show
+
 data SpecificCase = SpecificCase LiteralOrValueName Value 
 
 newtype Cases = Cs [ SpecificCase ]
@@ -53,7 +56,7 @@ newtype NamesTypesAndValues = NamesTypesAndValues [ NTAVOrNTAVLists ]
 data IntermediatesOutput = IntermediatesOutput_ NamesTypesAndValues Value
 
 data NoAbstractionsValue =
-  ManyArgsApp ManyArgsApplication | Cases Cases |
+  ManyArgsApp ManyArgsApplication | UseFields UseFields | Cases Cases |
   IntermediatesOutput IntermediatesOutput | NoAbstractionsValue1 NoAbstractionsValue1
 
 data Value = Value Abstractions NoAbstractionsValue
