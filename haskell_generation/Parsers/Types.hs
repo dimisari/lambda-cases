@@ -10,7 +10,7 @@ import Text.Parsec.String ( Parser )
 import Helpers
   ( (-->), new_line_space_surrounded, comma_seperated2, paren_comma_seperated2 )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleValue(..)
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
   , TupleType(..) )
 import Parsers.LowLevel ( value_name_p )
 
@@ -52,7 +52,7 @@ field_and_type_p =
 tuple_value_p = 
   string "( " >> (field_and_type_p-->sepBy $ string ", ") >>= \fatl ->
   string " )" >> fatl-->FieldAndTypeList-->return
-  :: Parser TupleValue
+  :: Parser TupleTypeValue
 
 tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->

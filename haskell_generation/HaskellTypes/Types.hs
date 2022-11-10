@@ -2,13 +2,14 @@
 
 module HaskellTypes.Types where
 
-import Prelude ( String, Show, (++), show, concatMap )
+import Prelude ( String, Show, Eq, Ord, (++), show, concatMap )
 
 import Helpers ( (-->), (.>)  )
 import HaskellTypes.LowLevel ( ValueName )
 
 -- types
 newtype TypeName = TN String
+  deriving ( Eq, Ord )
 
 data BaseType = TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
 
@@ -16,9 +17,9 @@ data ValueType = AbstractionTypesAndResultType [ BaseType ] BaseType
 
 data FieldAndType = FT ValueName ValueType
 
-newtype TupleValue = FieldAndTypeList [ FieldAndType ] deriving Show
+newtype TupleTypeValue = FieldAndTypeList [ FieldAndType ] deriving Show
 
-data TupleType = NameAndTuple TypeName TupleValue
+data TupleType = NameAndTuple TypeName TupleTypeValue
 
 -- Show instances
 instance Show TypeName where show = \(TN n) -> n

@@ -3,14 +3,16 @@
 module CodeGenerators.Values where
 
 import Prelude
-  ( Int, (>>=), (>>), (+), (*), (++), ($), concat, concatMap, return, error, mapM, init
-  , last, show, map, sequence, zip, drop, length, undefined )
+  ( Int, Maybe(..), (>>=), (>>), (+), (*), (++), ($), concat, concatMap, return, error
+  , mapM, init, last, show, map, sequence, zip, drop, length, undefined )
 import Data.List ( intercalate, splitAt )
+import qualified Data.Map as M ( lookup, insert )
 import Control.Monad.State ( (>=>) )
 
 import Helpers ( Haskell, (-->), (.>), indent )
 
-import HaskellTypes.LowLevel ( ApplicationDirection(..), ValueName, Abstractions(..) )
+import HaskellTypes.LowLevel
+  ( ApplicationDirection(..), ValueName(..), Abstractions(..) )
 import CodeGenerators.LowLevel
   ( value_name_g, literal_or_value_name_g, abstractions_g )
 
@@ -26,7 +28,8 @@ import HaskellTypes.Values
   , NTAVOrNTAVLists(..), NamesTypesAndValues(..), IntermediatesOutput(..)
   , NoAbstractionsValue(..), Value(..) )
 
-import HaskellTypes.Generation ( Stateful, get_indent_level, update_indent_level )
+import HaskellTypes.Generation
+  ( Stateful, get_indent_level, update_indent_level, get_tuple_type_map )
 
 {- 
   All:
@@ -165,10 +168,21 @@ use_fields_g = (
   \(AbstractionTypesAndResultType bts bt) ->
   \(UF v) ->
   case bts of 
-    [] -> error "case should have abstaction type"
-    b:bs ->
-      value_g (AbstractionTypesAndResultType bs bt) v >>= \v_g ->
-      return $ "\\(" ++ undefined b ++ ") -> " ++ v_g
+    [] -> error "use_fields should have abstaction type"
+    b:bs -> case b of 
+      TypeName tn ->
+        get_tuple_type_map >>= \ttm ->
+        get_indent_level >>= \il ->
+        case M.lookup tn ttm of 
+          Just vns ->
+            value_g (AbstractionTypesAndResultType bs bt) v >>= \v_g ->
+            return $
+              "(\\(" ++ tn-->(\(TN n) -> n) ++ "C" ++
+              concatMap (\(VN n) -> " " ++ n) vns ++ ") ->\n" ++
+              indent (il + 1) ++ v_g ++ " )"
+          Nothing -> 
+            error "tuple_type does not exist"
+      _ -> error "use_fields should have tuple_type type"
   ) :: ValueType -> UseFields -> Stateful Haskell
 
 -- SpecificCase

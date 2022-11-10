@@ -2,14 +2,20 @@
 
 module CodeGenerators.Types where
 
-import Prelude ( (++), concatMap, map, show )
+import Prelude ( Maybe(..), (++), ($), (>>), (>>=), concatMap, map, show, return, error )
 import Data.List ( intercalate )
+import qualified Data.Map as M ( insert, lookup )
 
 import Helpers ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
-import HaskellTypes.Types
-  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleValue(..)
-  , TupleType(..) )
+
+import HaskellTypes.LowLevel ( ValueName(..) )
 import CodeGenerators.LowLevel ( value_name_g )
+
+import HaskellTypes.Types
+  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
+  , TupleType(..) )
+import HaskellTypes.Generation
+  ( Stateful, TupleTypeMap, get_tuple_type_map, update_tuple_type_map )
 
 type_name_g = show
   :: TypeName -> Haskell
@@ -32,9 +38,24 @@ field_and_type_g = ( \(FT vn vt) ->
 
 tuple_value_g = ( \(FieldAndTypeList fatl) ->
   "C { " ++ fatl-->map field_and_type_g--> intercalate ", " ++ " }"
-  ) :: TupleValue -> Haskell
+  ) :: TupleTypeValue -> Haskell
 
-tuple_type_g = ( \(NameAndTuple tn tv) ->
-  let tn_g = type_name_g tn in
-  "data " ++ tn_g ++ " =\n  " ++ tn_g ++ tuple_value_g tv ++ "\n"
-  ) :: TupleType -> Haskell
+tuple_type_g = ( \(NameAndTuple tn ttv) ->
+  get_tuple_type_map >>= \ttm ->
+  ( case M.lookup tn ttm of 
+      Just _ -> error "tuple_type of the same name already defined"
+      Nothing ->
+        let
+        vns = ttv --> \(FieldAndTypeList fatl) -> fatl --> map (\(FT vn _) -> vn)
+          :: [ ValueName ]
+        new_map = M.insert tn vns ttm
+          :: TupleTypeMap
+        in 
+        update_tuple_type_map new_map ) >>
+  let
+  tn_g = type_name_g tn
+  deriving_show = "\n  deriving Show"
+  in
+  return $
+    "data " ++ tn_g ++ " =\n  " ++ tn_g ++ tuple_value_g ttv ++ deriving_show ++ "\n"
+  ) :: TupleType -> Stateful Haskell

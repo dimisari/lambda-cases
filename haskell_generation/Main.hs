@@ -55,7 +55,7 @@ parse_string = parse_with program_p
 
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  TupleType tt -> return $ tuple_type_g tt
+  TupleType tt -> tuple_type_g tt
   ) .> fmap concat .> flip evalState (IndentAndTupleTypes 0 M.empty)
   :: Program -> Haskell
 
