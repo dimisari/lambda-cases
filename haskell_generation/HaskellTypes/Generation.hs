@@ -11,10 +11,6 @@ import HaskellTypes.LowLevel ( ValueName )
 import HaskellTypes.Types ( TypeName )
 
 -- types
-type Haskell = String 
-
-type IndentState = State Int
-
 type TupleTypeMap = M.Map TypeName [ ValueName ] 
 
 data GenState =
