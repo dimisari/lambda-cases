@@ -17,6 +17,6 @@ ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int :> GcdAndCoeffs
     y -> 
       intermediates
       compute_next: PreviousCoeffs -> PreviousCoeffs
-        = use_tuple_fields -> ( previous, previous_previous - x-->div<--y * previous )
+        = use_fields -> ( previous, previous_previous - x-->div<--y * previous )
       output
-      a_coeffs-->compute_new, b_coeffs-->compute_new, y, x-->mod<--y :-> ee_recursion
+      a_coeffs-->compute_next, b_coeffs-->compute_next, y, x-->mod<--y :-> ee_recursion

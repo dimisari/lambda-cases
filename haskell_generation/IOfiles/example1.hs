@@ -18,9 +18,9 @@ ee_recursion = ( \a_coeffs -> \b_coeffs -> \x -> \case
   0 -> GcdAndCoeffsC (x) (get_previous_previous a_coeffs) (get_previous_previous b_coeffs)
   y -> 
     let
-    compute_new = (\(PreviousCoeffsC previous_previous previous) ->
+    compute_next = (\(PreviousCoeffsC previous_previous previous) ->
       PreviousCoeffsC (previous) (previous_previous - div x y * previous) )
       :: PreviousCoeffs -> PreviousCoeffs
     in
-    ee_recursion (compute_new a_coeffs) (compute_new b_coeffs) y (mod x y) )
+    ee_recursion (compute_next a_coeffs) (compute_next b_coeffs) y (mod x y) )
   :: PreviousCoeffs -> PreviousCoeffs -> Int -> Int -> GcdAndCoeffs
