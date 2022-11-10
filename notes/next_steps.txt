@@ -1,1 +1,4 @@
-- all MyType synyax + type checking + better error with Either
+- all MyType syntax
+- type checking
+- better error with Either
+- or_type
