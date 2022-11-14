@@ -42,6 +42,6 @@ abstraction_g = ( \bt -> \case
   TupleMatching tm -> tuple_matching_g bt tm
   ) :: BaseType -> Abstraction -> Haskell
 
-abstractions_g = ( \bts (Abstractions as) ->
+abstractions_g = ( \bts (As as) ->
   zip bts as-->concatMap ( \(bt, a) -> "\\" ++ abstraction_g bt a ++ " -> ")
   ) :: [ BaseType ] -> Abstractions -> Haskell

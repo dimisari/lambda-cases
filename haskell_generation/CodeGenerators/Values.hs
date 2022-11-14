@@ -70,8 +70,7 @@ paren_lit_or_name_g = ( \vt -> \case
 
 -- OneArgApplications
 
-one_arg_function_applications_g = (
-  \vt (OneArgFunctionApplications init_plon ad_plon_s) ->
+one_arg_function_applications_g = ( \vt (OAA init_plon ad_plon_s) ->
   case ad_plon_s of
     [] -> error "application expression should have at least one application direction"
     _ -> 
@@ -104,7 +103,7 @@ multiplication_factor_g = ( \vt -> \case
 
 -- Multiplication
 
-multiplication_g = ( \vt (Multiplication mfs) -> 
+multiplication_g = ( \vt (Mul mfs) -> 
   mapM (multiplication_factor_g vt) mfs >>= intercalate " * " .> return
   ) :: ValueType -> Multiplication -> Stateful Haskell
 
@@ -118,7 +117,7 @@ subtraction_factor_g = ( \vt -> \case
 
 -- Subtraction
 
-subtraction_g = ( \vt (Subtraction sf1 sf2) ->
+subtraction_g = ( \vt (Sub sf1 sf2) ->
   subtraction_factor_g vt sf1 >>= \sf1_g ->
   subtraction_factor_g vt sf2 >>= \sf2_g ->
   return $ sf1_g ++ " - " ++ sf2_g
@@ -162,7 +161,7 @@ many_args_application_g = ( \vt (MAA maaavs vn) ->
 
 -- UseFields
 
-use_fields_g = ( \(AbstractionTypesAndResultType bts bt) -> \(UF v) ->
+use_fields_g = ( \(AbstractionTypesAndResultType bts bt) (UF v) ->
   case bts of 
     [] -> error "use_fields should have abstaction type"
     b:bs -> case b of 
@@ -183,7 +182,7 @@ use_fields_g = ( \(AbstractionTypesAndResultType bts bt) -> \(UF v) ->
 
 -- SpecificCase
 
-specific_case_g = ( \(AbstractionTypesAndResultType bts bt) -> \(SC lovn v) ->
+specific_case_g = ( \(AbstractionTypesAndResultType bts bt) (SC lovn v) ->
   case bts of 
     [] -> error "case should have abstaction type"
     b:bs ->
@@ -196,7 +195,7 @@ specific_case_g = ( \(AbstractionTypesAndResultType bts bt) -> \(SC lovn v) ->
 
 -- Cases
 
-cases_g = ( \vt -> \(Cs cs) ->
+cases_g = ( \vt (Cs cs) ->
   get_indent_level >>= \i ->
   update_indent_level (i + 1) >> mapM (specific_case_g vt) cs >>= \cs_g ->
   update_indent_level i >>
@@ -248,7 +247,7 @@ names_types_and_values_g = ( \(NTAVs ntavs) ->
 
 -- IntermediatesOutput
 
-intermediates_output_g = ( \vt -> \(IntermediatesOutput_ ntavs v) ->
+intermediates_output_g = ( \vt (IntermediatesOutput_ ntavs v) ->
   get_indent_level >>= \i ->
   update_indent_level (i + 1) >> names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
@@ -273,7 +272,7 @@ no_abstractions_value_g = ( \vt -> \case
 
 -- Value
 
-value_g = ( \(AbstractionTypesAndResultType bts bt) -> \(Value (As as) nav) ->
+value_g = ( \(AbstractionTypesAndResultType bts bt) (Value (As as) nav) ->
   let
   ( ( bts1, bts2 ), vt ) =
     ( splitAt (length as) bts, AbstractionTypesAndResultType bts2 bt )
