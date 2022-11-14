@@ -26,7 +26,7 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-seperated2 = (\p -> \s ->
+seperated2 = (\p s ->
   p >>= \a ->
   try (string s *> p) --> many1 >>= \as ->
   return $ a:as

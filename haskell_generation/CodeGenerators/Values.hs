@@ -44,7 +44,7 @@ import HaskellTypes.Generation
 
 -- ParenthesisValue
 
-parenthesis_value_g = ( \vt ->  \case
+parenthesis_value_g = ( \vt -> \case
   Parenthesis v -> value_g vt v >>= \v_g -> return $ "(" ++ v_g ++ ")"
   Tuple vs -> 
     case vt of 
@@ -71,7 +71,7 @@ paren_lit_or_name_g = ( \vt -> \case
 -- OneArgFunctionApplications
 
 one_arg_function_applications_g = (
-  \vt -> \(OneArgFunctionApplications init_plon ad_plon_s) ->
+  \vt (OneArgFunctionApplications init_plon ad_plon_s) ->
   case ad_plon_s of
     [] -> error "application expression should have at least one application direction"
     _ -> 
@@ -104,7 +104,7 @@ multiplication_factor_g = ( \vt -> \case
 
 -- Multiplication
 
-multiplication_g = ( \vt -> \(Multiplication mfs) -> 
+multiplication_g = ( \vt (Multiplication mfs) -> 
   mapM (multiplication_factor_g vt) mfs >>= intercalate " * " .> return
   ) :: ValueType -> Multiplication -> Stateful Haskell
 
@@ -118,7 +118,7 @@ subtraction_factor_g = ( \vt -> \case
 
 -- Subtraction
 
-subtraction_g = ( \vt -> \(Subtraction sf1 sf2) ->
+subtraction_g = ( \vt (Subtraction sf1 sf2) ->
   subtraction_factor_g vt sf1 >>= \sf1_g ->
   subtraction_factor_g vt sf2 >>= \sf2_g ->
   return $ sf1_g ++ " - " ++ sf2_g
@@ -136,8 +136,7 @@ no_abstractions_value_1_g = ( \vt -> \case
 -- ManyArgsAppArgValue
 
 many_args_app_arg_value_g = (
-  \(AbstractionTypesAndResultType bts bt) ->
-  \(ManyArgsAppArgValue (Abstractions as) nav1) -> 
+  \(AbstractionTypesAndResultType bts bt) (ManyArgsAppArgValue (Abstractions as) nav1) -> 
   let
   ( bts1, bts2 ) = splitAt (length as) bts
   vt = AbstractionTypesAndResultType bts2 bt
@@ -148,9 +147,7 @@ many_args_app_arg_value_g = (
 
 -- ManyArgsApplication
 
-many_args_application_g = ( 
-  \vt ->
-  \(ManyArgsApplication maaavs vn) -> 
+many_args_application_g = ( \vt -> \(ManyArgsApplication maaavs vn) -> 
   let
   help_g = \case 
     (ManyArgsAppArgValue (Abstractions []) (PLON plon)) -> paren_lit_or_name_g vt plon
