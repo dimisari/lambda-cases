@@ -1,65 +1,76 @@
-{-# LANGUAGE LambdaCase #-}
+{-# language LambdaCase #-}
 
 module HaskellTypes.Values where
 
-import Prelude ( Show, (++), show, error, concatMap )
+import Prelude ( String, Show, (++), show, error, concatMap )
 
 import Helpers ( (-->), (.>) )
 import HaskellTypes.LowLevel
   ( ValueName, LiteralOrValueName, ApplicationDirection, Abstractions )
 import HaskellTypes.Types ( ValueType )
 
---types
-data ParenthesisValue = Parenthesis Value | Tuple [ Value ]
+-- Types
+data ParenthesisValue =
+  Parenthesis Value | Tuple [ Value ]
 
 data ParenLitOrName =
   ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName
 
-data OneArgFunctionApplications = 
-  OneArgFunctionApplications ParenLitOrName [ ( ApplicationDirection, ParenLitOrName ) ]
+data OneArgApplications = 
+  OAA ParenLitOrName [ ( ApplicationDirection, ParenLitOrName ) ]
 
 data MultiplicationFactor =
-  OneArgApplicationsMF OneArgFunctionApplications | ParenLitOrNameMF ParenLitOrName
+  OneArgAppMF OneArgApplications | ParenLitOrNameMF ParenLitOrName
 
-data Multiplication = Multiplication [ MultiplicationFactor ]
+data Multiplication =
+  Mul [ MultiplicationFactor ]
 
 data SubtractionFactor =
-  MultiplicationSF Multiplication | OneArgApplicationsSF OneArgFunctionApplications |
-  ParenLitOrNameSF ParenLitOrName
+  MulSF Multiplication | OAASF OneArgApplications | ParenLitOrNameSF ParenLitOrName
 
-data Subtraction = Subtraction SubtractionFactor SubtractionFactor 
+data Subtraction =
+  Sub SubtractionFactor SubtractionFactor 
 
 data NoAbstractionsValue1 =
-  Sub Subtraction | Mul Multiplication | OneArgApps OneArgFunctionApplications |
-  PLON ParenLitOrName 
+  Subtraction Subtraction | Multiplication Multiplication |
+  OneArgApps OneArgApplications | PLON ParenLitOrName 
 
-data ManyArgsAppArgValue = ManyArgsAppArgValue Abstractions NoAbstractionsValue1
+data ManyArgsArgValue =
+  MAAV Abstractions NoAbstractionsValue1
 
-data ManyArgsApplication = ManyArgsApplication [ ManyArgsAppArgValue ] ValueName
-  deriving Show
+data ManyArgsApplication =
+  MAA [ ManyArgsArgValue ] ValueName deriving Show
 
-newtype UseFields = UF Value 
-  deriving Show
+newtype UseFields =
+  UF Value deriving Show
 
-data SpecificCase = SpecificCase LiteralOrValueName Value 
+data SpecificCase =
+  SC LiteralOrValueName Value 
 
-newtype Cases = Cs [ SpecificCase ]
+newtype Cases =
+  Cs [ SpecificCase ]
 
-data NameTypeAndValue = NameTypeAndValue ValueName ValueType Value
+data NameTypeAndValue =
+  NTAV ValueName ValueType Value
 
-data NameTypeAndValueLists = NameTypeAndValueLists [ ValueName ] [ ValueType ] [ Value ]
+data NameTypeAndValueLists =
+  NTAVLists [ ValueName ] [ ValueType ] [ Value ]
 
-data NTAVOrNTAVLists = NTAV NameTypeAndValue | NTAVLists NameTypeAndValueLists
+data NTAVOrNTAVLists =
+  NameTypeAndValue NameTypeAndValue | NameTypeAndValueLists NameTypeAndValueLists
 
-newtype NamesTypesAndValues = NamesTypesAndValues [ NTAVOrNTAVLists ]
+newtype NamesTypesAndValues =
+  NTAVs [ NTAVOrNTAVLists ]
 
-data IntermediatesOutput = IntermediatesOutput_ NamesTypesAndValues Value
+data IntermediatesOutput =
+  IntermediatesOutput_ NamesTypesAndValues Value
 
 data NoAbstractionsValue =
-  ManyArgsApp ManyArgsApplication | UseFields UseFields | Cases Cases |
+  ManyArgsApplication ManyArgsApplication | UseFields UseFields | Cases Cases |
   IntermediatesOutput IntermediatesOutput | NoAbstractionsValue1 NoAbstractionsValue1
 
-data Value = Value Abstractions NoAbstractionsValue
+data Value =
+  Value Abstractions NoAbstractionsValue
 
 -- Show instances
 instance Show ParenthesisValue where
@@ -72,47 +83,50 @@ instance Show ParenLitOrName where
     ParenthesisValue pv -> show pv
     LiteralOrValueName lovn -> show lovn
 
-instance Show OneArgFunctionApplications where
-  show = \(OneArgFunctionApplications plon ad_plon_s) -> case ad_plon_s of
+instance Show OneArgApplications where
+  show = \(OAA plon ad_plon_s) -> case ad_plon_s of
     [] ->
       error "one arg function application should have at least one application direction"
     _ ->
-      let show_ad_plon = ( \( ad, plon ) -> " " ++ show ad ++ " " ++ show plon ++ " " )
-      in show plon ++ ad_plon_s-->concatMap show_ad_plon
+      let
+      show_ad_plon = ( \( ad, plon ) -> " " ++ show ad ++ " " ++ show plon ++ " " )
+        :: ( ApplicationDirection, ParenLitOrName ) -> String
+      in
+      show plon ++ ad_plon_s-->concatMap show_ad_plon
 
 instance Show MultiplicationFactor where
   show = \case
-    OneArgApplicationsMF oafas -> show oafas
+    OneArgAppMF oaa -> show oaa
     ParenLitOrNameMF plon -> show plon
 
 instance Show Multiplication where
-  show = \(Multiplication mfs) -> case mfs of
+  show = \(Mul mfs) -> case mfs of
       [] -> error "found less than 2 mfs in multiplication"
-      [ _ ] -> show (Multiplication [])
+      [ _ ] -> show (Mul [])
       [ mf1, mf2 ] -> "(" ++ show mf1 ++ " mul " ++ show mf2 ++ ")"
-      (mf:mfs) -> "(" ++ show mf ++ " mul " ++ show (Multiplication mfs) ++ ")"
+      (mf:mfs) -> "(" ++ show mf ++ " mul " ++ show (Mul mfs) ++ ")"
 
 instance Show SubtractionFactor where
   show = \case
-    MultiplicationSF m -> show m
-    OneArgApplicationsSF oafas -> show oafas
+    MulSF m -> show m
+    OAASF oaa -> show oaa
     ParenLitOrNameSF plon -> show plon
 
 instance Show Subtraction where
-  show = \(Subtraction sf1 sf2) -> "(" ++ show sf1 ++ " minus " ++ show sf2 ++ ")"
+  show = \(Sub sf1 sf2) -> "(" ++ show sf1 ++ " minus " ++ show sf2 ++ ")"
 
 instance Show NoAbstractionsValue1 where
   show = \case
-    Sub sub -> show sub
-    Mul mul -> show mul
-    OneArgApps oaas -> show oaas
+    Subtraction sub -> show sub
+    Multiplication mul -> show mul
+    OneArgApps oaa -> show oaa
     PLON plon -> show plon
 
-instance Show ManyArgsAppArgValue where
-  show = \(ManyArgsAppArgValue as nav1) -> show as ++ show nav1
+instance Show ManyArgsArgValue where
+  show = \(MAAV as nav1) -> show as ++ show nav1
 
 instance Show SpecificCase where
-  show = \(SpecificCase lovn v) -> 
+  show = \(SC lovn v) -> 
     "specific case: " ++ show lovn ++ "\n" ++
     "result: " ++ show v ++ "\n"
 
@@ -120,24 +134,24 @@ instance Show Cases where
   show = \(Cs scs) -> "\ncase start\n\n" ++ scs-->concatMap (show .> (++ "\n"))
 
 instance Show NameTypeAndValue where
-  show = \(NameTypeAndValue vn vt v) -> 
+  show = \(NTAV vn vt v) -> 
     "name: " ++ show vn ++ "\n" ++
     "type: " ++ show vt ++ "\n" ++
     "value: " ++ show v ++ "\n"
 
 instance Show NameTypeAndValueLists where
-  show = \(NameTypeAndValueLists vns vts vs) -> 
+  show = \(NTAVLists vns vts vs) -> 
     "names: " ++  vns --> concatMap (show .> (++ ", ")) ++ "\n" ++
     "types: " ++ vts --> concatMap (show .> (++ ", ")) ++ "\n" ++
     "values: " ++ vs --> concatMap (show .> (++ ", ")) ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case
-    NTAV ntav -> show ntav
-    NTAVLists ntavl -> show ntavl
+    NameTypeAndValue ntav -> show ntav
+    NameTypeAndValueLists ntavl -> show ntavl
 
 instance Show NamesTypesAndValues where
-  show = \(NamesTypesAndValues ns_ts_and_vs) ->
+  show = \(NTAVs ns_ts_and_vs) ->
     "\n" ++ ns_ts_and_vs-->concatMap (show .> (++ "\n"))
 
 instance Show IntermediatesOutput where
@@ -146,9 +160,9 @@ instance Show IntermediatesOutput where
 
 instance Show NoAbstractionsValue where
   show = \case
-    ManyArgsApp maa -> show maa
+    ManyArgsApplication maa -> show maa
     Cases cs -> show cs
-    IntermediatesOutput io -> show io
+    IntermediatesOutput inter_out -> show inter_out
     NoAbstractionsValue1 nav1 -> show nav1
 
 instance Show Value where

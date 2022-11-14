@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# language LambdaCase #-}
 
 module CodeGenerators.Types where
 
@@ -40,21 +40,21 @@ tuple_value_g = ( \(FieldAndTypeList fatl) ->
   "C { " ++ fatl-->map field_and_type_g--> intercalate ", " ++ " }"
   ) :: TupleTypeValue -> Haskell
 
-tuple_type_g = ( \(NameAndTuple tn ttv) ->
+tuple_type_g = ( \(NameAndTupleValue tn ttv) ->
   get_tuple_type_map >>= \ttm ->
   ( case M.lookup tn ttm of 
       Just _ -> error "tuple_type of the same name already defined"
       Nothing ->
         let
-        vns = ttv --> \(FieldAndTypeList fatl) -> fatl --> map (\(FT vn _) -> vn)
-          :: [ ValueName ]
-        new_map = M.insert tn vns ttm
-          :: TupleTypeMap
+        (vns, new_map) =
+          ( ttv --> \(FieldAndTypeList fatl) -> fatl --> map (\(FT vn _) -> vn)
+          , M.insert tn vns ttm )
+          :: ( [ ValueName ], TupleTypeMap )
         in 
         update_tuple_type_map new_map ) >>
   let
-  tn_g = type_name_g tn
-  deriving_show = "\n  deriving Show"
+  ( tn_g, deriving_show ) = ( type_name_g tn, "\n  deriving Show" )
+    :: ( Haskell, Haskell )
   in
   return $
     "data " ++ tn_g ++ " =\n  " ++ tn_g ++ tuple_value_g ttv ++ deriving_show ++ "\n"

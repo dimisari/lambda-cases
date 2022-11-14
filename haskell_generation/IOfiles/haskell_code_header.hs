@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# language LambdaCase #-}
 
 get_first = fst
 

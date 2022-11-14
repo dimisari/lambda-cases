@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Parsers.Types where
 
 import Prelude ( (<$>), (>>=), (>>), (<*), (*>), (++), ($), return, map )
@@ -20,26 +18,27 @@ type_name_p =
   return $ TN (u:lu)
   :: Parser TypeName
 
-tuple_paren_or_int_type_p =
+base_type_p =
   TupleType <$> try (paren_comma_seperated2 value_type_p) <|>
   ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
   TypeName <$> type_name_p 
   :: Parser BaseType
 
 -- ValueType
-value_type_p = try value_type_2_p <|> value_type_1_p
+value_type_p =
+  try value_type_2_p <|> value_type_1_p
   :: Parser ValueType
 
 value_type_1_p =
-  many (try $ tuple_paren_or_int_type_p <* string " -> ") >>= \tpoits ->
-  tuple_paren_or_int_type_p >>= \tpoit ->
-  return $ AbstractionTypesAndResultType tpoits tpoit
+  many (try $ base_type_p <* string " -> ") >>= \bts ->
+  base_type_p >>= \bt ->
+  return $ AbstractionTypesAndResultType bts bt
   :: Parser ValueType
 
 value_type_2_p =
-  comma_seperated2 value_type_1_p >>= \tes ->
-  string " :> " >> value_type_1_p >>= \(AbstractionTypesAndResultType tpoits tpoit) ->
-  return $ AbstractionTypesAndResultType (map ParenthesisType tes ++ tpoits) tpoit
+  comma_seperated2 value_type_1_p >>= \vt1s ->
+  string " :> " >> value_type_1_p >>= \(AbstractionTypesAndResultType bts bt) ->
+  return $ AbstractionTypesAndResultType (map ParenthesisType vt1s ++ bts) bt
   :: Parser ValueType
 -- ValueType end
 
@@ -57,5 +56,5 @@ tuple_value_p =
 tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
   string "\nvalue " >> tuple_value_p >>= \tv ->
-  (eof <|> skipMany1 new_line_space_surrounded) >> NameAndTuple tn tv-->return
+  (eof <|> skipMany1 new_line_space_surrounded) >> NameAndTupleValue tn tv-->return
   :: Parser TupleType
