@@ -15,9 +15,9 @@ literal_g = ( \_ -> \case
   Constant1 -> "1"
   ) :: ValueType -> Literal -> Haskell
 
-value_name_g = ( \_ -> \(VN vn) -> vn)
-  :: ValueType -> ValueName -> Haskell
-
+value_name_g = ( \_ (VN vn) -> vn
+  ) :: ValueType -> ValueName -> Haskell
+  
 literal_or_value_name_g = ( \vt -> \case
   Literal l -> literal_g vt l
   ValueName vn -> value_name_g vt vn
@@ -42,6 +42,6 @@ abstraction_g = ( \bt -> \case
   TupleMatching tm -> tuple_matching_g bt tm
   ) :: BaseType -> Abstraction -> Haskell
 
-abstractions_g = ( \bts -> \(As as) ->
+abstractions_g = ( \bts (Abstractions as) ->
   zip bts as-->concatMap ( \(bt, a) -> "\\" ++ abstraction_g bt a ++ " -> ")
   ) :: [ BaseType ] -> Abstractions -> Haskell
