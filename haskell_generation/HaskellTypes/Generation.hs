@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module HaskellTypes.Generation where
 
 import Prelude ( Int, String, (>>=), return )
@@ -10,14 +8,15 @@ import Helpers ( (.>) )
 import HaskellTypes.LowLevel ( ValueName )
 import HaskellTypes.Types ( TypeName )
 
--- types
+-- Types
 type TupleTypeMap =
   M.Map TypeName [ ValueName ] 
 
 data GenState =
-  IndentAndTupleTypes { indent_level :: Int, tuple_type_map :: TupleTypeMap }
+  GS { indent_level :: Int, tuple_type_map :: TupleTypeMap }
 
-type Stateful = State GenState
+type Stateful =
+  State GenState
 
 -- getting state fields
 get_indent_level =

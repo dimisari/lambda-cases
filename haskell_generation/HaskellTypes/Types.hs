@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# language LambdaCase #-}
 
 module HaskellTypes.Types where
 
@@ -7,22 +7,28 @@ import Prelude ( String, Show, Eq, Ord, (++), show, concatMap )
 import Helpers ( (-->), (.>)  )
 import HaskellTypes.LowLevel ( ValueName )
 
--- types
-newtype TypeName = TN String
-  deriving ( Eq, Ord )
+-- Types
+newtype TypeName =
+  TN String deriving ( Eq, Ord )
 
-data BaseType = TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
+data BaseType =
+  TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
 
-data ValueType = AbstractionTypesAndResultType [ BaseType ] BaseType
+data ValueType =
+  AbstractionTypesAndResultType [ BaseType ] BaseType
 
-data FieldAndType = FT ValueName ValueType
+data FieldAndType =
+  FT ValueName ValueType
 
-newtype TupleTypeValue = FieldAndTypeList [ FieldAndType ] deriving Show
+newtype TupleTypeValue =
+  FieldAndTypeList [ FieldAndType ] deriving Show
 
-data TupleType = NameAndTuple TypeName TupleTypeValue
+data TupleType =
+  NameAndTupleValue TypeName TupleTypeValue
 
 -- Show instances
-instance Show TypeName where show = \(TN n) -> n
+instance Show TypeName where
+  show = \(TN n) -> n
 
 instance Show BaseType where
   show = \case 
@@ -40,4 +46,5 @@ instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ " Type " ++ show vt
 
 instance Show TupleType where
-  show = \(NameAndTuple tn tv) -> "\nname:" ++ show tn ++ "\ntuple: " ++ show tv ++ "\n"
+  show = \(NameAndTupleValue tn tv) ->
+    "\nname:" ++ show tn ++ "\ntuple: " ++ show tv ++ "\n"

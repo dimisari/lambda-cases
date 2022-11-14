@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# language LambdaCase #-}
 
 module CodeGenerators.LowLevel where
 
@@ -17,7 +17,7 @@ literal_g = ( \_ -> \case
 
 value_name_g = ( \_ (VN vn) -> vn
   ) :: ValueType -> ValueName -> Haskell
-
+  
 literal_or_value_name_g = ( \vt -> \case
   Literal l -> literal_g vt l
   ValueName vn -> value_name_g vt vn

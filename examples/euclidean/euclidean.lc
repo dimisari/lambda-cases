@@ -11,9 +11,9 @@ to_sorted_asbolute_values: Int, Int :> SortedAbsoluteValues
     ( max(abs_x, abs_y), min(abs_x, abs_y) )
 
 gcd_help: SortedAbsoluteValues -> Int
-  = (min_abs == 0)-->cases
-    True -> max_abs
-    False -> ( min_abs, max_abs-->mod<--min_abs )-->gcd_help
+  = use_fields -> (min_abs == 0)-->cases
+      True -> max_abs
+      False -> ( min_abs, max_abs-->mod<--min_abs )-->gcd_help
 
 gcd: Int, Int :> Int
   = to_sorted_asbolute_values o> gcd_help

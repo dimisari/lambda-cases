@@ -1,1 +1,12 @@
-- all MyType synyax + type checking + better error with Either
+- all MyType syntax
+  - NTAV Lists parser 2
+- scoping + type checking
+  - create Map from ValueName to ValueType in State type
+  - create get and update functions
+- better error with Either
+  - transform the state with EitherT
+  - find error calls that are not bug errors but errors for the user and modify them 
+    appropriately
+- or_type
+  - create new haskell type
+- regular parenthesis function application

@@ -1,16 +1,22 @@
 
-initial_a_coeffs, initial_b_coeffs: ( Int, Int ), ( Int, Int )
+tuple_type PreviousCoeffs
+value ( previous_previous: Int, previous: Int )
+
+initial_a_coeffs, initial_b_coeffs: PreviousCoeffs, PreviousCoeffs
   = ( 1, 0 ), ( 0, 1 )
 
-extended_euclidean: Int, Int :> ( Int, Int, Int )
+tuple_type GcdAndCoeffs
+value ( gcd: Int, a: Int, b: Int )
+
+extended_euclidean: Int, Int :> GcdAndCoeffs
   = initial_a_coeffs, initial_b_coeffs :-> ee_recursion
 
-ee_recursion: ( Int, Int ), ( Int, Int ), Int, Int :> ( Int, Int, Int )
+ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int :> GcdAndCoeffs
   = a_coeffs, b_coeffs, x :> cases
-    0 -> ( x, a_coeffs-->get_first, b_coeffs-->get_first )
-    y ->
+    0 -> ( x, a_coeffs-->get_previous_previous, b_coeffs-->get_previous_previous )
+    y -> 
       intermediates
-      compute_new: ( Int, Int ) -> ( Int, Int )
-        = ( prev_prev, prev ) -> ( prev, prev_prev - x-->div<--y * prev )
+      compute_next: PreviousCoeffs -> PreviousCoeffs
+        = use_fields -> ( previous, previous_previous - x-->div<--y * previous )
       output
-      compute_new<--a_coeffs, compute_new<--b_coeffs, y, x-->mod<--y :-> ee_recursion
+      a_coeffs-->compute_next, b_coeffs-->compute_next, y, x-->mod<--y :-> ee_recursion

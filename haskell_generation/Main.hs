@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# language LambdaCase #-}
 
 module Main where
 
@@ -26,7 +26,7 @@ import HaskellTypes.Generation ( GenState(..) )
 -- Constants
 
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example1", "IOfiles/"
+  [ "temp", "IOfiles/"
   , io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc"
   , io_files ++ example_name ++ ".hs" ] 
@@ -56,7 +56,7 @@ parse_string = parse_with program_p
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
   TupleType tt -> tuple_type_g tt
-  ) .> fmap concat .> flip evalState (IndentAndTupleTypes 0 M.empty)
+  ) .> fmap concat .> flip evalState (GS 0 M.empty)
   :: Program -> Haskell
 
 generate_code = parse_string >=> program_g .> return
