@@ -147,7 +147,7 @@ many_args_app_arg_value_g = (
 
 -- ManyArgsApplication
 
-many_args_application_g = ( \vt -> \(ManyArgsApplication maaavs vn) -> 
+many_args_application_g = ( \vt(ManyArgsApplication maaavs vn) -> 
   let
   help_g = \case 
     (ManyArgsAppArgValue (Abstractions []) (PLON plon)) -> paren_lit_or_name_g vt plon

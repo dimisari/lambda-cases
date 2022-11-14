@@ -11,11 +11,8 @@ import HaskellTypes.LowLevel ( ValueName )
 import HaskellTypes.Types ( TypeName )
 
 -- types
-type Haskell = String 
-
-type IndentState = State Int
-
-type TupleTypeMap = M.Map TypeName [ ValueName ] 
+type TupleTypeMap =
+  M.Map TypeName [ ValueName ] 
 
 data GenState =
   IndentAndTupleTypes { indent_level :: Int, tuple_type_map :: TupleTypeMap }
