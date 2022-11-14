@@ -26,7 +26,7 @@ import HaskellTypes.Generation ( GenState(..) )
 -- Constants
 
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "temp", "IOfiles/"
+  [ "example", "IOfiles/"
   , io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc"
   , io_files ++ example_name ++ ".hs" ] 

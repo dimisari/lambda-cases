@@ -1,6 +1,7 @@
 module Parsers.Values where
 
-import Prelude ( (<$>), (<*), (*>), (++), ($), (>>=), (>>), return, fmap )
+import Prelude
+  ( (<$>), (<*), (*>), (++), ($), (>>=), (>>), return, fmap, replicate, length )
 import Text.Parsec ( (<|>), try, char, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 
@@ -11,6 +12,8 @@ import HaskellTypes.LowLevel ( ApplicationDirection, Abstractions(..) )
 import Parsers.LowLevel
   ( value_name_p, literal_or_value_name_p, application_direction_p, abstraction_p
   , abstractions_p )
+
+import HaskellTypes.Types ( ValueType )
 import Parsers.Types ( value_type_p )
 
 import HaskellTypes.Values
@@ -158,7 +161,13 @@ name_type_and_value_p =
 
 name_type_and_value_lists_p = 
   spaces_tabs >> comma_seperated2 value_name_p >>= \vns ->
-  string ": " >> comma_seperated2 value_type_p >>= \vts ->
+  let
+  value_types_p =
+    comma_seperated2 value_type_p <|>
+    (string "all " *> value_type_p >>= \vt -> return $ replicate (length vns) vt)
+    :: Parser [ ValueType ]
+  in
+  string ": " >> value_types_p >>= \vts ->
   new_line_space_surrounded >> string "= " >> comma_seperated2 value_p >>= \vs ->
   (eof <|> skipMany1 new_line_space_surrounded) >> NTAVLists vns vts vs-->return
   :: Parser NameTypeAndValueLists
