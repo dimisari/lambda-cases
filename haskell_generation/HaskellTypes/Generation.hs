@@ -46,3 +46,12 @@ value_map_lookup = ( \vn -> get_value_map >>= M.lookup vn .> return )
 value_map_insert = ( \( vn, vt ) ->
   get_value_map >>= M.insert vn vt .> update_value_map
   ) :: ( ValueName, ValueType ) -> Stateful ()
+
+-- tuple type map operations
+tuple_type_map_lookup = ( \vn ->
+  get_tuple_type_map >>= M.lookup vn .> return
+  ) :: TypeName -> Stateful (Maybe [ ValueName ])
+
+tuple_type_map_insert = ( \( vn, vt ) ->
+  get_tuple_type_map >>= M.insert vn vt .> update_tuple_type_map
+  ) :: ( TypeName, [ ValueName ] ) -> Stateful ()

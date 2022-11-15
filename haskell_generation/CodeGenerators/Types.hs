@@ -15,47 +15,51 @@ import HaskellTypes.Types
   ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
   , TupleType(..) )
 import HaskellTypes.Generation
-  ( Stateful, TupleTypeMap, get_tuple_type_map, update_tuple_type_map )
+  ( Stateful, TupleTypeMap, get_tuple_type_map, update_tuple_type_map
+  , tuple_type_map_lookup, tuple_type_map_insert )
 
+-- TypeName
 type_name_g = show
   :: TypeName -> Haskell
 
+-- BaseType
 base_type_g = ( \case
   TupleType vts -> parenthesis_comma_sep_g value_type_g vts
+
   ParenthesisType vt -> case vt of
     (AbstractionTypesAndResultType [] bt) -> base_type_g bt
     _ -> "(" ++ value_type_g vt ++ ")"
+
   TypeName tn -> type_name_g tn
   ) :: BaseType -> Haskell
 
+-- ValueType
 value_type_g = ( \(AbstractionTypesAndResultType bts bt) -> 
   bts-->concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
+-- FieldAndType
 field_and_type_g = ( \(FT vn vt) ->
   "get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt
   ) :: FieldAndType -> Haskell
 
+-- TupleTypeValue
 tuple_value_g = ( \(FieldAndTypeList fatl) ->
   "C { " ++ fatl-->map field_and_type_g--> intercalate ", " ++ " }"
   ) :: TupleTypeValue -> Haskell
 
+-- TupleType
 tuple_type_g = ( \(NameAndTupleValue tn ttv) ->
-  get_tuple_type_map >>= \ttm ->
-  ( case M.lookup tn ttm of 
-      Just _ -> error "tuple_type of the same name already defined"
-      Nothing ->
-        let
-        (vns, new_map) =
-          ( ttv --> \(FieldAndTypeList fatl) -> fatl --> map (\(FT vn _) -> vn)
-          , M.insert tn vns ttm )
-          :: ( [ ValueName ], TupleTypeMap )
-        in 
-        update_tuple_type_map new_map ) >>
   let
-  ( tn_g, deriving_show ) = ( type_name_g tn, "\n  deriving Show" )
-    :: ( Haskell, Haskell )
+  tuple_type_map_operations = ( tuple_type_map_lookup tn >>= \case
+    Just _ -> error "tuple_type of the same name already defined"
+    Nothing ->
+      tuple_type_map_insert
+      ( tn, ttv --> \(FieldAndTypeList fatl) -> fatl --> map (\(FT vn _) -> vn) )
+    ) :: Stateful ()
   in
-  return $
-    "data " ++ tn_g ++ " =\n  " ++ tn_g ++ tuple_value_g ttv ++ deriving_show ++ "\n"
+  tuple_type_map_operations >> return (
+    "data " ++ type_name_g tn ++ " =\n  " ++
+    type_name_g tn ++ tuple_value_g ttv ++ "\n  deriving Show\n"
+    )
   ) :: TupleType -> Stateful Haskell

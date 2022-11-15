@@ -3,8 +3,9 @@
 module CodeGenerators.Values where
 
 import Prelude
-  ( Int, String, Maybe(..), (>>=), (>>), (+), (*), (++), ($), concat, concatMap, return
-  , error, mapM, init, last, show, map, sequence, zip, drop, length, undefined )
+  ( Int, String, Maybe(..), Bool(..), (>>=), (>>), (==), (+), (*), (++), ($), concat
+  , concatMap, return, error, mapM, init, last, show, map, sequence, zip, drop, length
+  , undefined )
 import Data.List ( intercalate, splitAt )
 import qualified Data.Map as M ( lookup, insert )
 import Control.Monad.State ( (>=>) )
@@ -44,20 +45,31 @@ import HaskellTypes.Generation
 
 -- ParenthesisValue
 
+parenthesis_tuple_bt_g = ( \bt vs -> case bt of 
+  TupleType vts -> case length vs == length vts of
+    False -> error "length of tuple values and tuple types must be the same"
+    True -> 
+      zip vts vs-->map ( \( vt, v ) -> value_g vt v )-->sequence >>= \vs_g ->
+      return $ "( " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " )"
+
+  ParenthesisType vt -> parenthesis_value_g vt $ Tuple vs
+
+  TypeName (TN tn) -> 
+    -- obviously wrong: need to fix with state of user defined types
+    mapM (value_g (AbstractionTypesAndResultType [] bt)) vs >>= \vs_g -> 
+    return $ tn ++ "C (" ++ init vs_g-->concatMap (++ ") (") ++ vs_g-->last ++ ")"
+  ) :: BaseType -> [ Value ] -> Stateful Haskell
+
+parenthesis_tuple_g = ( \vt vs -> case vt of 
+  AbstractionTypesAndResultType (_:_) _ ->
+    error $ show (Tuple vs) ++ " has type: " ++ show vt
+
+  AbstractionTypesAndResultType [] bt -> parenthesis_tuple_bt_g bt vs
+  ) :: ValueType -> [ Value ] -> Stateful Haskell
+
 parenthesis_value_g = ( \vt -> \case
   Parenthesis v -> value_g vt v >>= \v_g -> return $ "(" ++ v_g ++ ")"
-  Tuple vs -> case vt of 
-    AbstractionTypesAndResultType [] bt -> case bt of 
-      TupleType vts ->
-        map value_g vts --> \value_g_fs ->
-        zip value_g_fs vs-->map ( \( f, v ) -> f v )-->sequence >>= \vs_g ->
-        return $ "( " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " )"
-      ParenthesisType vt -> parenthesis_value_g vt $ Tuple vs
-      TypeName (TN tn) -> 
-        -- obviously wrong: need to fix with state of user defined types
-        mapM (value_g vt) vs >>= \vs_g -> 
-        return $ tn ++ "C (" ++ init vs_g-->concatMap (++ ") (") ++ vs_g-->last ++ ")"
-    _ -> error $ show (Tuple vs) ++ " has type: " ++ show vt
+  Tuple vs -> parenthesis_tuple_g vt vs
   ) :: ValueType -> ParenthesisValue -> Stateful Haskell
 
 -- ParenLitOrName
