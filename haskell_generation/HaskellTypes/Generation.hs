@@ -1,38 +1,48 @@
 module HaskellTypes.Generation where
 
-import Prelude ( Int, String, (>>=), return )
+import Prelude ( Int, String, Maybe(..), (>>=), return )
 import Control.Monad.State ( State, get, modify )
-import qualified Data.Map as M ( Map )
+import Control.Monad.Trans.Except ( ExceptT )
+import qualified Data.Map as M ( Map, lookup, insert )
 
-import Helpers ( (.>) )
+import Helpers ( (.>), (-->) )
 import HaskellTypes.LowLevel ( ValueName )
-import HaskellTypes.Types ( TypeName )
+import HaskellTypes.Types ( TypeName, ValueType )
 
 -- Types
 type TupleTypeMap =
   M.Map TypeName [ ValueName ] 
 
-data GenState =
-  GS { indent_level :: Int, tuple_type_map :: TupleTypeMap }
+type ValueMap =
+  M.Map ValueName ValueType
 
-type Stateful =
-  State GenState
+data GenState =
+  GS { indent_level :: Int, tuple_type_map :: TupleTypeMap, value_map :: ValueMap  }
+
+-- type Stateful = ExceptT String (State GenState)
+
+type Stateful = State GenState
 
 -- getting state fields
-get_indent_level =
-  get >>= indent_level .> return
-  :: Stateful Int
+get_from_state = ( \f -> get >>= f .> return )
+  :: (GenState -> a) -> Stateful a
 
-get_tuple_type_map =
-  get >>= tuple_type_map .> return
-  :: Stateful TupleTypeMap
+( get_indent_level, get_tuple_type_map, get_value_map ) =
+  ( indent_level, tuple_type_map, value_map )-->( \(i,t,v) ->
+  ( get_from_state i, get_from_state t, get_from_state v ))
+  :: ( Stateful Int, Stateful TupleTypeMap, Stateful ValueMap )
 
 -- updating state fields
-update_indent_level = ( \il ->
-  modify ( \s -> s { indent_level = il } )
-  ) :: Int -> Stateful ()
+( update_indent_level, update_tuple_type_map, update_value_map ) =
+  ( \il -> modify ( \s -> s { indent_level = il } )
+  , \ttm -> modify ( \s -> s { tuple_type_map = ttm } )
+  , \vm -> modify ( \s -> s { value_map = vm } ) )
+  :: ( Int -> Stateful (), TupleTypeMap -> Stateful (), ValueMap -> Stateful () )
 
-update_tuple_type_map = ( \ttm ->
-  modify ( \s -> s { tuple_type_map = ttm } )
-  ) :: TupleTypeMap -> Stateful ()
+-- value map operations
+value_map_lookup = ( \vn -> get_value_map >>= M.lookup vn .> return )
+  :: ValueName -> Stateful (Maybe ValueType)
 
+value_map_insert = ( \( vn, vt ) ->
+  get_value_map >>= M.insert vn vt .> update_value_map
+  ) :: ( ValueName, ValueType ) -> Stateful ()

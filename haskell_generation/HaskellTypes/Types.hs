@@ -13,9 +13,10 @@ newtype TypeName =
 
 data BaseType =
   TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
+  deriving Eq
 
 data ValueType =
-  AbstractionTypesAndResultType [ BaseType ] BaseType
+  AbstractionTypesAndResultType [ BaseType ] BaseType deriving Eq
 
 data FieldAndType =
   FT ValueName ValueType

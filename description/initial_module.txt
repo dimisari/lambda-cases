@@ -6,10 +6,14 @@ tuple_types
 
   arrays: ex. 10 * Int
 
-  tuple_type Empty value ()
-  tuple_type ( A ) value ( value: A ) # needed??
-  tuple_type ( A, B ) value ( pair_first: A, pair_second: B )
-  tuple_type ( A, B, C ) value ( triple_first: A, triple_second: B, triple_third: C )
+  tuple_type Empty
+  value ()
+  tuple_type ( A )
+  value ( value: A ) # needed??
+  tuple_type ( A, B )
+  value ( pair_first: A, pair_second: B )
+  tuple_type ( A, B, C )
+  value ( triple_first: A, triple_second: B, triple_third: C )
   tuple_type ( A, B, C, D )
   value ( quad_first: A, quad_second: B, quad_third: C, quad_fourth: D )
 

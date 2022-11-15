@@ -1,7 +1,7 @@
 # +: A-->Has_Addition => A -> A -> A
 
 type_predicate A-->Has_Addition
-operator + : A -> A -> A
+operator + : A, A :> A
 
 type_theorem Int-->Has_Addition proof + = -->int_addition<--
 type_theorem Real-->Has_Addition proof + = -->real_addition<--

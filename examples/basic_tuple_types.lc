@@ -1,4 +1,5 @@
-tuple_type Empty value ()
+tuple_type Empty
+value ()
 
 tuple_type ( A, B )
 value ( pair_first: A, pair_second: B )
@@ -20,7 +21,7 @@ a: ( Int, Text )
 i, s: Int, Text
   = a-->get_pair_first, a-->get_pair_second
 
-b, c: ( Int, Text ), ( Int, Text )
+b, c: all ( Int, Text )
   = a-->change_pair_first<--2, a-->change_pair_second<--"two"
 
 main: Empty-->WithIOEffects

@@ -2,7 +2,7 @@
 
 module HaskellTypes.LowLevel where
 
-import Prelude ( String, Show, (++), show, concatMap )
+import Prelude ( String, Show, Eq, Ord, (++), show, concatMap )
 import Helpers ( (-->), (.>) )
 
 -- Types
@@ -10,7 +10,7 @@ data Literal =
   Constant0 | Constant1 deriving Show
 
 newtype ValueName =
-  VN String
+  VN String deriving ( Eq, Ord )
 
 data LiteralOrValueName =
   Literal Literal | ValueName ValueName

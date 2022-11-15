@@ -205,7 +205,8 @@ no_abstraction_expression_p =
 
 -- Value
 
-value_p = try value2_p <|> value1_p
+value_p =
+  try value2_p <|> value1_p
   :: Parser Value
 
 value1_p =

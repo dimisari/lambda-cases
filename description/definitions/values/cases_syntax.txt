@@ -12,7 +12,8 @@ or_type example:
 
 tuple_type example:
 
-  tuple_type Type2 value ( zero_val: Type0, one_val: Type1 )
+  tuple_type Type2
+  value ( zero_val: Type0, one_val: Type1 )
 
   Type0 and Type1 are or_types. Here the fields of each Case input on both types
   can be used in the corresponding result expression.

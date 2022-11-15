@@ -1,7 +1,8 @@
 
 Example:
 
-  tuple_type IntPair value ( first_int: Int, second_int: Int )
+  tuple_type IntPair
+  value ( first_int: Int, second_int: Int )
 
   add_int_pair: IntPair -> Int
     = use_tuple_fields -> first_int + second_int

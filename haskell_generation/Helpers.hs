@@ -2,7 +2,7 @@ module Helpers where
 
 import Prelude
   ( Int, String, Char, (*), (>>=), (<*), (*>), (.), ($), (++), flip, return, init, last
-  , concat, map )
+  , concatMap )
 import Text.Parsec ( (<|>), many, many1, string, char, try )
 import Text.Parsec.String ( Parser )
 import Data.List ( replicate )
@@ -35,8 +35,9 @@ seperated2 = (\p s ->
 comma_seperated2 = flip seperated2 ", "
   :: Parser a -> Parser [a]
 
-paren_comma_seperated2 = ( \p -> string "( " *> comma_seperated2 p <* string " )" )
-  :: Parser a -> Parser [a]
+paren_comma_seperated2 = ( \p ->
+  string "( " *> comma_seperated2 p <* string " )"
+  ) :: Parser a -> Parser [a]
 
 spaces_tabs = many $ char ' ' <|> char '\t'
   :: Parser String
@@ -51,5 +52,5 @@ indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
 
 parenthesis_comma_sep_g = ( \g -> \l ->
-  "( " ++ init l-->map (g .> (++ ", "))-->concat ++ l-->last-->g ++ " )"
+  "( " ++ init l-->concatMap (g .> (++ ", ")) ++ l-->last-->g ++ " )"
   ) :: (a -> Haskell) -> [ a ] -> Haskell

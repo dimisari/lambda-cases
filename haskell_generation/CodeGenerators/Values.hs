@@ -46,52 +46,51 @@ import HaskellTypes.Generation
 
 parenthesis_value_g = ( \vt -> \case
   Parenthesis v -> value_g vt v >>= \v_g -> return $ "(" ++ v_g ++ ")"
-  Tuple vs -> 
-    case vt of 
-      AbstractionTypesAndResultType [] bt -> case bt of 
-        TupleType vts ->
-          map value_g vts --> \value_g_fs ->
-          zip value_g_fs vs-->map ( \( f, v ) -> f v )-->sequence >>= \vs_g ->
-          return $ "( " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " )"
-        ParenthesisType vt -> parenthesis_value_g vt $ Tuple vs
-        TypeName (TN tn) -> 
-          -- obviously wrong: need to fix with state of user defined types
-          mapM (value_g vt) vs >>= \vs_g -> 
-          return $ tn ++ "C (" ++ init vs_g-->concatMap (++ ") (") ++ vs_g-->last ++ ")"
-      _ -> error $ show (Tuple vs) ++ " has type: " ++ show vt
+  Tuple vs -> case vt of 
+    AbstractionTypesAndResultType [] bt -> case bt of 
+      TupleType vts ->
+        map value_g vts --> \value_g_fs ->
+        zip value_g_fs vs-->map ( \( f, v ) -> f v )-->sequence >>= \vs_g ->
+        return $ "( " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " )"
+      ParenthesisType vt -> parenthesis_value_g vt $ Tuple vs
+      TypeName (TN tn) -> 
+        -- obviously wrong: need to fix with state of user defined types
+        mapM (value_g vt) vs >>= \vs_g -> 
+        return $ tn ++ "C (" ++ init vs_g-->concatMap (++ ") (") ++ vs_g-->last ++ ")"
+    _ -> error $ show (Tuple vs) ++ " has type: " ++ show vt
   ) :: ValueType -> ParenthesisValue -> Stateful Haskell
 
 -- ParenLitOrName
 
 paren_lit_or_name_g = ( \vt -> \case
   ParenthesisValue pv -> parenthesis_value_g vt pv
-  LiteralOrValueName lovn -> return $ literal_or_value_name_g vt lovn
+  LiteralOrValueName lovn -> literal_or_value_name_g vt lovn
   ) :: ValueType -> ParenLitOrName -> Stateful Haskell
 
 -- OneArgApplications
 
-one_arg_function_applications_g = ( \vt (OAA init_plon ad_plon_s) ->
-  case ad_plon_s of
-    [] -> error "application expression should have at least one application direction"
-    _ -> 
-      let
-      recursive_g = ( \generate_so_far -> \case 
-        ( ad, plon ):rest ->
-          generate_so_far >>= \sf ->
-          paren_lit_or_name_g vt plon >>= \plon_g ->
-          let
-            combine_g =
-              return $ case ad of
-                LeftApplication -> sf ++ " " ++ plon_g
-                RightApplication -> plon_g ++ " " ++ sf
-              :: Stateful Haskell
-          in
-          recursive_g combine_g rest
-        [] -> generate_so_far
-        ) :: Stateful Haskell -> [ ( ApplicationDirection, ParenLitOrName) ] ->
-             Stateful Haskell
-      in
-      recursive_g (paren_lit_or_name_g vt init_plon) ad_plon_s
+one_arg_function_applications_g = ( \vt (OAA init_plon ad_plon_s) -> case ad_plon_s of
+  [] -> error "application expression should have at least one application direction"
+  _ -> 
+    let
+    recursive_g = ( \vt generate_so_far -> \case 
+      ( ad, plon ):rest ->
+        generate_so_far >>= \sf ->
+        paren_lit_or_name_g vt plon >>= \plon_g ->
+        let
+        combine_g = return $ case ad of
+          LeftApplication -> sf ++ " " ++ plon_g
+          RightApplication -> plon_g ++ " " ++ sf
+          :: Stateful Haskell
+        in
+        recursive_g vt combine_g rest
+      [] -> generate_so_far
+      ) :: ValueType ->
+           Stateful Haskell ->
+           [ ( ApplicationDirection, ParenLitOrName) ] ->
+           Stateful Haskell
+    in
+    recursive_g vt (paren_lit_or_name_g vt init_plon) ad_plon_s
   ) :: ValueType -> OneArgApplications -> Stateful Haskell
 
 -- MultiplicationFactor
@@ -141,8 +140,9 @@ many_args_app_arg_value_g = (
     ( splitAt (length as) bts, AbstractionTypesAndResultType bts2 bt )
     :: ( ( [ BaseType ], [ BaseType ] ), ValueType )
   in
+  abstractions_g bts2 (As as) >>= \as_g ->
   no_abstractions_value_1_g vt nav1 >>= \nav1_g ->
-  return $ abstractions_g bts2 (As as) ++ nav1_g
+  return $ as_g ++ nav1_g
   ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
 
 -- ManyArgsApplication
@@ -156,7 +156,7 @@ many_args_application_g = ( \vt (MAA maaavs vn) ->
     :: ManyArgsArgValue -> Stateful Haskell
   in
   mapM help_g maaavs >>= \maaavs_g ->
-  return $ value_name_g vt vn ++ maaavs_g-->concatMap (" " ++)
+  return $ value_name_g vn ++ maaavs_g-->concatMap (" " ++)
   ) :: ValueType -> ManyArgsApplication -> Stateful Haskell
 
 -- UseFields
@@ -186,11 +186,10 @@ specific_case_g = ( \(AbstractionTypesAndResultType bts bt) (SC lovn v) ->
   case bts of 
     [] -> error "case should have abstaction type"
     b:bs ->
+      literal_or_value_name_g (AbstractionTypesAndResultType [] bt) lovn >>= \lovn_g ->
       value_g (AbstractionTypesAndResultType bs bt) v >>= \v_g ->
       get_indent_level >>= \i ->
-      return $
-        indent i ++ literal_or_value_name_g (AbstractionTypesAndResultType [] bt) lovn ++
-        " -> " ++ v_g
+      return $ indent i ++ lovn_g ++ " -> " ++ v_g
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 
 -- Cases
@@ -209,7 +208,7 @@ name_type_and_value_g = ( \(NTAV vn vt v) ->
   get_indent_level >>= \i ->
   let
   combine = ( \value_begin -> \value_end ->
-    indent i  ++ value_name_g vt vn ++ " = " ++
+    indent i  ++ value_name_g vn ++ " = " ++
     value_begin ++ v_g ++ value_end ++ "\n" ++
     indent (i + 1) ++ ":: " ++ value_type_g vt ++ "\n"
     ) :: String -> String -> Haskell
@@ -278,6 +277,7 @@ value_g = ( \(AbstractionTypesAndResultType bts bt) (Value (As as) nav) ->
     ( splitAt (length as) bts, AbstractionTypesAndResultType bts2 bt )
     :: ( ( [ BaseType ], [ BaseType ] ), ValueType )
   in
+  abstractions_g bts1 (As as) >>= \as_g ->
   no_abstractions_value_g vt nav >>= \nav_g ->
-  return $ abstractions_g bts1 (As as) ++ nav_g
+  return $ as_g ++ nav_g
   ) :: ValueType -> Value -> Stateful Haskell

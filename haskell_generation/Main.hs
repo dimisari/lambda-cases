@@ -26,26 +26,28 @@ import HaskellTypes.Generation ( GenState(..) )
 -- Constants
 
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example", "IOfiles/"
-  , io_files ++ "haskell_code_header.hs"
+  [ "example", "IOfiles/", io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc"
   , io_files ++ example_name ++ ".hs" ] 
   :: [ String ]
 
 -- Parsing 
 
-parse_with = flip parse $ example_name ++ ".lc"
+parse_with =
+  flip parse $ example_name ++ ".lc"
   :: Parser a -> String -> Either ParseError a
 
-data NTAVsOrTupleType = NTAVs NamesTypesAndValues | TupleType TupleType
-  deriving Show
+data NTAVsOrTupleType =
+  NTAVs NamesTypesAndValues | TupleType TupleType deriving Show
 
-ntavs_or_tt_p = NTAVs <$> names_types_and_values_p <|> TupleType <$> tuple_type_p
+ntavs_or_tt_p =
+  NTAVs <$> names_types_and_values_p <|> TupleType <$> tuple_type_p
   :: Parser NTAVsOrTupleType
 
 type Program = [ NTAVsOrTupleType ]
 
-program_p = many (char '\n') *> many ntavs_or_tt_p <* eof 
+program_p =
+  many (char '\n') *> many ntavs_or_tt_p <* eof 
   :: Parser Program
 
 parse_string = parse_with program_p
@@ -53,13 +55,17 @@ parse_string = parse_with program_p
 
 -- Generating haskell
 
+init_state = GS 0 M.empty M.empty
+  :: GenState
+
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
   TupleType tt -> tuple_type_g tt
-  ) .> fmap concat .> flip evalState (GS 0 M.empty)
+  ) .> fmap concat .> flip evalState init_state
   :: Program -> Haskell
 
-generate_code = parse_string >=> program_g .> return
+generate_code =
+  parse_string >=> program_g .> return
   :: String -> Either ParseError Haskell
 
 write_code = ( generate_code .> \case
