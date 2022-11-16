@@ -16,7 +16,7 @@ data BaseType =
   deriving Eq
 
 data ValueType =
-  AbstractionTypesAndResultType [ BaseType ] BaseType deriving Eq
+  AbsTypesAndResType [ BaseType ] BaseType deriving Eq
 
 data FieldAndType =
   FT ValueName ValueType
@@ -35,12 +35,12 @@ instance Show BaseType where
   show = \case 
     TupleType vts -> "TupleType " ++ show vts
     ParenthesisType vt -> case vt of
-      (AbstractionTypesAndResultType [] (TypeName (TN tn))) -> tn
+      (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
       _ -> show vt
     TypeName tn -> show tn
 
 instance Show ValueType where
-  show = \(AbstractionTypesAndResultType bts bt) ->
+  show = \(AbsTypesAndResType bts bt) ->
     bts-->concatMap (show .> (++ " right_arrow ")) ++ show bt
 
 instance Show FieldAndType where

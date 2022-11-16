@@ -1,10 +1,3 @@
-Syntactic Sugar
-
-  - Types:
-
-    arrays
-    7Num
-
 Tuple Application
 
   f : A -> B -> C

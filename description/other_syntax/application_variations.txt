@@ -19,7 +19,7 @@ type application:
 
   - combination of variations example:
 
-    F, G :-> TypeName(A, B)MoreTypeName(C)EvenMoreTypeName(D, E)
+    A, B :-> TypeName(C, D)MoreTypeName(E)EvenMoreTypeName(F, G)
 
 same for function application:
 

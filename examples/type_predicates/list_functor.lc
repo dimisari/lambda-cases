@@ -3,17 +3,17 @@ function apply()internally: (A -> B) -> T(A) -> T(B)
 
 apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = cases
-    HeadAndTail -> HeadAndTail.( head-->f, tail-->apply(f)to_each )
-    EmptyList -> EmptyList
+    head_and_tail -> head_and_tail-( head-->f, tail-->apply(f)to_each )
+    empty_list -> empty_list
 
 type_theorem ListOf()s-->IsAFunctor
 proof apply()internally = apply()to_each
 
-first_print: Empty-->WithIOEffects
+first_print: Empty-->WithIO
   [ 1, 2, 3, 4 ]-->apply(is_odd)to_each-->print
 
-second_print: Empty-->WithIOEffects
+second_print: Empty-->WithIO
   [ 1, 2, 3, 4 ]-->apply(is_odd)internally-->print
 
-main: Empty-->WithIOEffects
-  first_print ;> second_print
+main: Empty-->WithIO
+  first_print ; second_print

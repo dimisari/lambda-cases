@@ -13,12 +13,12 @@ type_theorem definition
 
   example:
 
-  type_theorem Predicate_About(Int, (Int, Int))_And<--Text
+  type_theorem Predicate_About(Int, Real)_And<--Text
   proof
     fun1 = specific_fun_1
     fun2 = specific_fun_2
 
   here specific_fun_1 and specific_fun_2 must be defined and have the types below:
 
-    specific_fun_1: Int -> (Int, Int) -> Text
-    specific_fun_2: (Text -> Int) -> (Int, Int) -> Int
+    specific_fun_1: Int -> Real -> Text
+    specific_fun_2: (Text -> Int) -> Real -> Int

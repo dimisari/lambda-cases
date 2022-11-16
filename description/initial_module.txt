@@ -1,10 +1,11 @@
 atomic types
 
   Int, Real, Text
+  arrays ?
 
 tuple_types 
 
-  arrays: ex. 10 * Int
+  array example: 10 * Int
 
   tuple_type Empty
   value ()

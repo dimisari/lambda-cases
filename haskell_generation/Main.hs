@@ -24,7 +24,6 @@ import CodeGenerators.Values ( names_types_and_values_g )
 import HaskellTypes.Generation ( GenState(..) )
 
 -- Constants
-
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
   [ "example", "IOfiles/", io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc"
@@ -32,7 +31,6 @@ import HaskellTypes.Generation ( GenState(..) )
   :: [ String ]
 
 -- Parsing 
-
 parse_with =
   flip parse $ example_name ++ ".lc"
   :: Parser a -> String -> Either ParseError a
@@ -54,7 +52,6 @@ parse_string = parse_with program_p
   :: String -> Either ParseError Program
 
 -- Generating haskell
-
 init_state = GS 0 M.empty M.empty
   :: GenState
 

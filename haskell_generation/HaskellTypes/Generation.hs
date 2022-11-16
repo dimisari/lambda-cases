@@ -7,11 +7,11 @@ import qualified Data.Map as M ( Map, lookup, insert )
 
 import Helpers ( (.>), (-->) )
 import HaskellTypes.LowLevel ( ValueName )
-import HaskellTypes.Types ( TypeName, ValueType )
+import HaskellTypes.Types ( TypeName, ValueType, FieldAndType )
 
 -- Types
 type TupleTypeMap =
-  M.Map TypeName [ ValueName ] 
+  M.Map TypeName [ FieldAndType ] 
 
 type ValueMap =
   M.Map ValueName ValueType
@@ -48,10 +48,10 @@ value_map_insert = ( \( vn, vt ) ->
   ) :: ( ValueName, ValueType ) -> Stateful ()
 
 -- tuple type map operations
-tuple_type_map_lookup = ( \vn ->
-  get_tuple_type_map >>= M.lookup vn .> return
-  ) :: TypeName -> Stateful (Maybe [ ValueName ])
+tuple_type_map_lookup = ( \tn ->
+  get_tuple_type_map >>= M.lookup tn .> return
+  ) :: TypeName -> Stateful (Maybe [ FieldAndType ])
 
-tuple_type_map_insert = ( \( vn, vt ) ->
-  get_tuple_type_map >>= M.insert vn vt .> update_tuple_type_map
-  ) :: ( TypeName, [ ValueName ] ) -> Stateful ()
+tuple_type_map_insert = ( \( tn, vt ) ->
+  get_tuple_type_map >>= M.insert tn vt .> update_tuple_type_map
+  ) :: ( TypeName, [ FieldAndType ] ) -> Stateful ()

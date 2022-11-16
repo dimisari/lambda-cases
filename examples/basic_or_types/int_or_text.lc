@@ -1,11 +1,11 @@
 
 a, b: Int-->Or<--Text, Int-->Or<--Text
-  = FirstType.1, SecondType."One"
+  = first_type-1, second_type-"One"
 
-print_int_or_string: Int-->Or<--Text -> Empty-->WithIOEffects
+print_int_or_string: Int-->Or<--Text -> Empty-->WithIO
   = cases
     FirstType -> value-->( + 1 )-->to_string-->( "Total after adding 1: " + )-->print
     SecondType -> value-->( "Turns out it says: " + )-->print
 
-main: Empty-->WithIOEffects
+main: Empty-->WithIO
   = a-->print_int_or_string ; b-->print_int_or_string

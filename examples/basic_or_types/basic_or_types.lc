@@ -1,9 +1,9 @@
 
 or_type A-->Or<--B
-values FirstType.A | SecondType.B
+values first_type-A | second_type-B
 
 or_type A-->OrNothing
-value Value.A | Nothing
+value value-A | nothing
 
 or_type ListOf(A)s
-values HeadAndTail.( head: A, tail: ListOf(A)s ) | EmptyList
+values head_and_tail-( head: A, tail: ListOf(A)s ) | empty_list

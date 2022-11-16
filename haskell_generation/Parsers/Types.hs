@@ -32,13 +32,13 @@ value_type_p =
 value_type_1_p =
   many (try $ base_type_p <* string " -> ") >>= \bts ->
   base_type_p >>= \bt ->
-  return $ AbstractionTypesAndResultType bts bt
+  return $ AbsTypesAndResType bts bt
   :: Parser ValueType
 
 value_type_2_p =
   comma_seperated2 value_type_1_p >>= \vt1s ->
-  string " :> " >> value_type_1_p >>= \(AbstractionTypesAndResultType bts bt) ->
-  return $ AbstractionTypesAndResultType (map ParenthesisType vt1s ++ bts) bt
+  string " :> " >> value_type_1_p >>= \(AbsTypesAndResType bts bt) ->
+  return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
   :: Parser ValueType
 -- ValueType end
 
@@ -47,7 +47,7 @@ field_and_type_p =
   string ": " >> value_type_p >>= \vt ->
   return $ FT vn vt
   :: Parser FieldAndType
-  
+
 tuple_value_p = 
   string "( " >> (field_and_type_p-->sepBy $ string ", ") >>= \fatl ->
   string " )" >> fatl-->FieldAndTypeList-->return

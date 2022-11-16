@@ -27,14 +27,14 @@ base_type_g = ( \case
   TupleType vts -> parenthesis_comma_sep_g value_type_g vts
 
   ParenthesisType vt -> case vt of
-    (AbstractionTypesAndResultType [] bt) -> base_type_g bt
+    (AbsTypesAndResType [] bt) -> base_type_g bt
     _ -> "(" ++ value_type_g vt ++ ")"
 
   TypeName tn -> type_name_g tn
   ) :: BaseType -> Haskell
 
 -- ValueType
-value_type_g = ( \(AbstractionTypesAndResultType bts bt) -> 
+value_type_g = ( \(AbsTypesAndResType bts bt) -> 
   bts-->concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
@@ -45,21 +45,16 @@ field_and_type_g = ( \(FT vn vt) ->
 
 -- TupleTypeValue
 tuple_value_g = ( \(FieldAndTypeList fatl) ->
-  "C { " ++ fatl-->map field_and_type_g--> intercalate ", " ++ " }"
+  "C { " ++ fatl-->map field_and_type_g-->intercalate ", " ++ " }"
   ) :: TupleTypeValue -> Haskell
 
 -- TupleType
-tuple_type_g = ( \(NameAndTupleValue tn ttv) ->
-  let
-  tuple_type_map_operations = ( tuple_type_map_lookup tn >>= \case
-    Just _ -> error "tuple_type of the same name already defined"
-    Nothing ->
-      tuple_type_map_insert
-      ( tn, ttv --> \(FieldAndTypeList fatl) -> fatl --> map (\(FT vn _) -> vn) )
-    ) :: Stateful ()
-  in
-  tuple_type_map_operations >> return (
-    "data " ++ type_name_g tn ++ " =\n  " ++
-    type_name_g tn ++ tuple_value_g ttv ++ "\n  deriving Show\n"
-    )
+tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \case
+  Just _ -> error "tuple_type of the same name already defined"
+
+  Nothing ->
+    tuple_type_map_insert ( tn, ttv --> \(FieldAndTypeList fatl) -> fatl ) >>
+    return
+      ( "data " ++ type_name_g tn ++ " =\n  " ++ type_name_g tn ++ tuple_value_g ttv ++
+      "\n  deriving Show\n" )
   ) :: TupleType -> Stateful Haskell

@@ -3,40 +3,40 @@ Example:
 
 or_type A, B :-> TypeName
 values
-  Case0.A | Case1.(b: B, int: Int) | Case2.( A, B ) | Case3.ListOf(A)s
+  case0-A | case1-(b: B, int: Int) | case2-( A, B ) | case3-ListOf(A)s
 
 Comments:
 
-  - default value_name for the value of all Cases: case_value
+  - default value_name for the value of all cases: case_value
     Examples:
 
     fun1: (A, B :-> TypeName) -> A-->OrNothing
       = cases
-        Case0 -> Value.case_value
-        ... -> Nothing
+        case0 -> value-case_value
+        ... -> nothing
     fun2: (A, B :-> TypeName) -> ( A, B )-->OrNothing
       = cases
-        Case2 -> Value.case_value
-        ... -> Nothing
+        case2 -> value-case_value
+        ... -> nothing
 
-  - anonymous tuple_types can be used for naming fields of a Case
+  - anonymous tuple_types can be used for naming fields of a case
     Example:
 
     fun: (A, B :-> TypeName) -> B-->OrNothing
       = cases
-        Case1 -> Value.b
-        ... -> Nothing
+        case1 -> value-b
+        ... -> nothing
 
-  - tuple_types can be used in a Case and there is field inheritance
+  - tuple_types can be used in a case and there is field inheritance
     Example:
 
     fun: (A, B :-> TypeName) -> A-->OrNothing
       = cases
-        Case2 -> Value.pair_first
-        ... -> Nothing
+        case2 -> value-pair_first
+        ... -> nothing
 
   - is functions should be generated automatically:
 
-    isCase0: (A, B :-> TypeName) -> Bool
-    isCase1: (A, B :-> TypeName) -> Bool
+    is_case0: (A, B :-> TypeName) -> Bool
+    is_case1: (A, B :-> TypeName) -> Bool
     ...
