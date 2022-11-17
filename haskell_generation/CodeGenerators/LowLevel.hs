@@ -3,8 +3,8 @@
 module CodeGenerators.LowLevel where
 
 import Prelude
-  ( Bool(..), Maybe(..), (>>=), (++), (==), ($), (>>), concatMap, error, zip, init, last
-  , map, length, show, return, undefined, concat, fmap, mapM, mapM_ )
+  ( Bool(..), Maybe(..), (>>=), (++), (==), ($), (>>), (<$>), concatMap, error, zip
+  , init, last, map, length, show, return, undefined, concat, fmap, mapM, mapM_ )
 import qualified Data.Map as M ( lookup )
 
 import Helpers ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
@@ -54,7 +54,7 @@ tuple_matching_g = ( \case
   TypeName tn -> error $ "tuple matching TypeName :" ++ show tn
 
   ParenthesisType vt -> vt --> \case
-    AbsTypesAndResType (at : ats) _ ->
+    AbsTypesAndResType (_:_) _ ->
       error $ "trying to match tuple but got type: " ++ show vt
 
     -- maybe throw some warning or error here ? when could it arise ?
@@ -93,12 +93,6 @@ abstractions_g = ( \bts (As as) -> case length bts == length as of
   True -> case as of
     [] -> return ""
     _ ->
-      let
-      map_abstraction_g_concat = 
-        zip bts as
-          -->mapM ( \( bt, a ) -> abstraction_g bt a >>= (++ " ") .> return)
-          -->fmap concat
-        :: Stateful Haskell
-      in
-      map_abstraction_g_concat >>= ("\\" ++) .> (++ "-> ") .> return
+      zip bts as-->mapM ( \( bt, a ) -> abstraction_g bt a >>= (++ " ") .> return )
+        -->fmap concat >>= ("\\" ++) .> (++ "-> ") .> return
   ) :: [ BaseType ] -> Abstractions -> Stateful Haskell

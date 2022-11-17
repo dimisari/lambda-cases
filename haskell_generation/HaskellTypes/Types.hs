@@ -19,7 +19,7 @@ data ValueType =
   AbsTypesAndResType [ BaseType ] BaseType deriving Eq
 
 data FieldAndType =
-  FT ValueName ValueType
+  FT { get_vn :: ValueName, get_vt :: ValueType }
 
 newtype TupleTypeValue =
   FieldAndTypeList [ FieldAndType ] deriving Show
