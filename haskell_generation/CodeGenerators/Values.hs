@@ -347,11 +347,10 @@ no_abstractions_value_g = ( \vt -> \case
 -- Value
 value_g = ( \(AbsTypesAndResType bts bt) (Value (As as) nav) ->
   let
-  ( ( bts1, bts2 ), vt ) =
-    ( splitAt (length as) bts, AbsTypesAndResType bts2 bt )
-    :: ( ( [ BaseType ], [ BaseType ] ), ValueType )
+  ( bts1, bts2 ) = splitAt (length as) bts
+    :: ( [ BaseType ], [ BaseType ] )
   in
   abstractions_g bts1 (As as) >>= \as_g ->
-  no_abstractions_value_g vt nav >>= \nav_g ->
+  no_abstractions_value_g ( AbsTypesAndResType bts2 bt ) nav >>= \nav_g ->
   return $ as_g ++ nav_g
   ) :: ValueType -> Value -> Stateful Haskell

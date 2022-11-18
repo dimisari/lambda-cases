@@ -9,11 +9,13 @@ import Control.Monad ( (>=>) )
 import Text.Parsec ( ParseError, (<|>), eof, many, parse, char )
 import Text.Parsec.String ( Parser )
 import Control.Monad.State ( evalState )
-import qualified Data.Map as M ( empty )
+import qualified Data.Map as M ( empty, fromList )
 
 import Helpers ( Haskell, (.>) )
 
-import HaskellTypes.Types ( TupleType )
+import HaskellTypes.LowLevel ( ValueName(..) )
+
+import HaskellTypes.Types ( TypeName(..), BaseType(..), ValueType(..), TupleType )
 import Parsers.Types ( tuple_type_p )
 import CodeGenerators.Types ( tuple_type_g )
 
@@ -36,10 +38,10 @@ parse_with =
   :: Parser a -> String -> Either ParseError a
 
 data NTAVsOrTupleType =
-  NTAVs NamesTypesAndValues | TupleType TupleType deriving Show
+  NTAVs NamesTypesAndValues | TupleType_ TupleType deriving Show
 
 ntavs_or_tt_p =
-  NTAVs <$> names_types_and_values_p <|> TupleType <$> tuple_type_p
+  NTAVs <$> names_types_and_values_p <|> TupleType_ <$> tuple_type_p
   :: Parser NTAVsOrTupleType
 
 type Program = [ NTAVsOrTupleType ]
@@ -52,12 +54,17 @@ parse_string = parse_with program_p
   :: String -> Either ParseError Program
 
 -- Generating haskell
-init_state = GS 0 M.empty M.empty
+int_bt = TypeName $ TN "Int"
+  :: BaseType
+
+init_state =
+  GS 0 M.empty $
+    M.fromList [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt) ]
   :: GenState
 
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  TupleType tt -> tuple_type_g tt
+  TupleType_ tt -> tuple_type_g tt
   ) .> fmap concat .> flip evalState init_state
   :: Program -> Haskell
 

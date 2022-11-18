@@ -2,7 +2,8 @@
 
 module CodeGenerators.Types where
 
-import Prelude ( Maybe(..), (++), ($), (>>), (>>=), concatMap, map, show, return, error )
+import Prelude
+  ( Maybe(..), (++), ($), (>>), (>>=), concatMap, map, show, return, error, mapM )
 import Data.List ( intercalate )
 import qualified Data.Map as M ( insert, lookup )
 
@@ -15,8 +16,8 @@ import HaskellTypes.Types
   ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
   , TupleType(..) )
 import HaskellTypes.Generation
-  ( Stateful, TupleTypeMap, get_tuple_type_map, update_tuple_type_map
-  , tuple_type_map_lookup, tuple_type_map_insert )
+  ( Stateful, TupleTypeMap, tuple_type_map_lookup, tuple_type_map_insert
+  , value_map_lookup, value_map_insert )
 
 -- TypeName
 type_name_g = show
@@ -38,23 +39,33 @@ value_type_g = ( \(AbsTypesAndResType bts bt) ->
   bts-->concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
--- FieldAndType
-field_and_type_g = ( \(FT vn vt) ->
-  "get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt
-  ) :: FieldAndType -> Haskell
-
--- TupleTypeValue
-tuple_value_g = ( \(FieldAndTypeList fatl) ->
-  "C { " ++ fatl-->map field_and_type_g-->intercalate ", " ++ " }"
-  ) :: TupleTypeValue -> Haskell
-
 -- TupleType
 tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \case
   Just _ -> error "tuple_type of the same name already defined"
 
   Nothing ->
-    tuple_type_map_insert ( tn, ttv --> \(FieldAndTypeList fatl) -> fatl ) >>
+    let
+    fatl = ttv --> \(FieldAndTypeList l) -> l
+      :: [ FieldAndType ]
+
+    additional_bt = TypeName tn
+      :: BaseType
+
+    field_and_type_g = ( \(FT vn vt@(AbsTypesAndResType bts bt) ) ->
+      value_map_insert
+        ( VN $ "get_" ++ value_name_g vn
+        , AbsTypesAndResType (additional_bt : bts) bt ) >>
+      return ("get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt)
+      ) :: FieldAndType -> Stateful Haskell
+
+    tuple_value_g =
+      fatl-->mapM field_and_type_g >>=
+      intercalate ", " .> ("C { " ++) .> (++ " }") .> return
+      :: Stateful Haskell
+    in
+    tuple_type_map_insert ( tn, fatl ) >>
+    tuple_value_g >>= \tv_g ->
     return
-      ( "data " ++ type_name_g tn ++ " =\n  " ++ type_name_g tn ++ tuple_value_g ttv ++
+      ( "data " ++ type_name_g tn ++ " =\n  " ++ type_name_g tn ++ tv_g ++
       "\n  deriving Show\n" )
   ) :: TupleType -> Stateful Haskell
