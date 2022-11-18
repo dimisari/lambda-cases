@@ -2,7 +2,7 @@
 
 module HaskellTypes.Types where
 
-import Prelude ( String, Show, Eq, Ord, (++), show, concatMap )
+import Prelude ( String, Bool(..), Show, Eq, Ord, (++), (==), show, concatMap )
 
 import Helpers ( (-->), (.>)  )
 import HaskellTypes.LowLevel ( ValueName )
@@ -49,3 +49,10 @@ instance Show FieldAndType where
 instance Show TupleType where
   show = \(NameAndTupleValue tn tv) ->
     "\nname:" ++ show tn ++ "\ntuple: " ++ show tv ++ "\n"
+
+-- helpers
+vt_bt_are_equivalent = ( \case
+  ( AbsTypesAndResType [] bt1, bt2) -> bt1 == bt2
+  ( vt1, ParenthesisType vt2 ) -> vt1 == vt2
+  _ -> False
+  ) :: ( ValueType, BaseType ) -> Bool

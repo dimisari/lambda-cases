@@ -43,7 +43,9 @@ literal_or_value_name_g = ( \vt -> \case
     Nothing -> error $ "Could not find value: " ++ value_name_g vn
 
     Just lookup_vt -> case lookup_vt == vt of 
-      False -> error $ "Value has type: " ++ show lookup_vt ++ "\nnot: " ++ show vt
+      False -> error $
+        "Value: " ++ show vn ++
+        "\nhas type: " ++ show lookup_vt ++ "\nnot: " ++ show vt
 
       True -> return $ value_name_g vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
