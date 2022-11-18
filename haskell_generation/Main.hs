@@ -4,7 +4,7 @@ module Main where
 
 import Prelude
   ( IO, String, Either(..), Show, ($), (<$>), (++), (<*), (*>), (>>=), print, writeFile
-  , readFile, flip, return, mapM, fmap, concat )
+  , readFile, flip, return, mapM, fmap, concat, replicate )
 import Control.Monad ( (>=>) )
 import Text.Parsec ( ParseError, (<|>), eof, many, parse, char )
 import Text.Parsec.String ( Parser )
@@ -57,9 +57,16 @@ parse_string = parse_with program_p
 int_bt = TypeName $ TN "Int"
   :: BaseType
 
+int_int_tuple_bt = TupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
+  :: BaseType
+
 init_state =
   GS 0 M.empty $
-    M.fromList [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt) ]
+    M.fromList
+      [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+      , ( VN "mod" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+      , ( VN "get_first" , AbsTypesAndResType [ int_int_tuple_bt ] int_bt)
+      ]
   :: GenState
 
 program_g = mapM ( \case 

@@ -11,7 +11,8 @@ import Helpers ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
   , Abstraction(..), Abstractions(..) )
-import HaskellTypes.Types ( BaseType(..), ValueType(..), TypeName(..) )
+import HaskellTypes.Types
+  ( BaseType(..), ValueType(..), TypeName(..), vt_shortest_equivalent )
 
 import HaskellTypes.Generation ( Stateful, value_map_lookup, value_map_insert )
 
@@ -26,7 +27,7 @@ lit_g = \case
   Constant1 -> "1"
   :: Literal -> Haskell
 
-literal_g = ( \case
+literal_g = ( vt_shortest_equivalent .> \case
   AbsTypesAndResType [] (TypeName (TN "Int")) -> lit_g
   vt -> error $ "Integer literal cannot have type: " ++ show vt
   ) :: ValueType -> Literal -> Haskell
@@ -44,8 +45,7 @@ literal_or_value_name_g = ( \vt -> \case
 
     Just lookup_vt -> case lookup_vt == vt of 
       False -> error $
-        "Value: " ++ show vn ++
-        "\nhas type: " ++ show lookup_vt ++ "\nnot: " ++ show vt
+        "Value: " ++ show vn ++ "\nhas type: " ++ show lookup_vt ++ "\nnot: " ++ show vt
 
       True -> return $ value_name_g vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell

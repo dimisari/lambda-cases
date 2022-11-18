@@ -18,7 +18,8 @@ import CodeGenerators.LowLevel
   ( lit_g, literal_g, value_name_g, literal_or_value_name_g, abstractions_g )
 
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), vt_bt_are_equivalent )
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), vt_bt_are_equivalent
+  , vt_shortest_equivalent )
 import CodeGenerators.Types ( value_type_g )
 
 import HaskellTypes.Values
@@ -65,7 +66,7 @@ bt_values_g = ( \case
 
 vt_values_g = ( \case
   vt@(AbsTypesAndResType (_:_) _) -> \vs ->
-    error $ show (Tuple vs) ++ " has type: " ++ show vt
+    error $ show (Tuple vs) ++ " can't have type: " ++ show vt
 
   AbsTypesAndResType [] bt -> bt_values_g bt
   ) :: ValueType -> [ Value ] -> Stateful Haskell
@@ -109,11 +110,12 @@ one_arg_application_g = ( \( vt_left, hs_left ) ( vt_right, hs_right ) ->
         "Type : " ++ show vt_left
 
     AbsTypesAndResType (abs_bt : abs_bts) bt -> 
-      vt_bt_are_equivalent ( vt_right, abs_bt ) --> \case
+      vt_bt_are_equivalent ( vt_shortest_equivalent vt_right, abs_bt ) --> \case
         False -> 
           error $
             "types don't match for one argument function application. " ++
-            "types involved:\n  " ++ show vt_right ++ "\n  " ++ show abs_bt 
+            "types involved:\n  " ++ show vt_right ++ "\n  " ++ show abs_bt ++
+            "\nhaskell:\n  " ++ hs_left ++ hs_right
         True -> ( AbsTypesAndResType abs_bts bt, hs_left ++ " " ++ hs_right )
   ) :: ( ValueType, Haskell ) -> ( ValueType, Haskell ) -> ( ValueType, Haskell )
 
@@ -193,44 +195,44 @@ many_args_arg_value_g = (
   ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
 
 -- ManyArgsApplication
-bts_maavs_vn_g = ( \bts maaavs vn ->
+bts_maavs_vn_g = ( \bts maavs vn ->
   let
-  bt_maav_g = ( \( bt, maaav ) ->
+  bt_maav_g = ( \( bt, maav ) ->
     let
     maav_vt = case bt of
       ParenthesisType vt -> vt
       _ -> (AbsTypesAndResType [] bt)
       :: ValueType
     in
-    case maaav of
+    case maav of
       MAAV (As []) (PLON plon) -> paren_lit_or_name_g maav_vt plon
 
       _ ->
-        many_args_arg_value_g maav_vt maaav >>= \maaav_g ->
-        return $ "(" ++ maaav_g ++ ")"
+        many_args_arg_value_g maav_vt maav >>= \maav_g ->
+        return $ "(" ++ maav_g ++ ")"
       ) :: ( BaseType, ManyArgsArgValue )-> Stateful Haskell
   in
-  zip bts maaavs-->mapM bt_maav_g >>= \maaavs_g ->
-  return $ value_name_g vn ++ maaavs_g-->concatMap (" " ++)
+  zip bts maavs-->mapM bt_maav_g >>= \maavs_g ->
+  return $ value_name_g vn ++ maavs_g-->concatMap (" " ++)
   ) :: [ BaseType ] -> [ ManyArgsArgValue ] -> ValueName -> Stateful Haskell
 
-many_args_application_g = ( \vt1 (MAA maaavs vn) -> 
+many_args_application_g = ( \vt (MAA maavs vn) -> 
   value_map_lookup vn >>= \case
     Nothing -> error $ "Could not find value: " ++ value_name_g vn 
 
-    Just (AbsTypesAndResType bts final_bt) ->
+    Just (AbsTypesAndResType abs_bts res_bt) ->
       let
-      ( bts1, bts2 ) = splitAt (length maaavs) bts
+      ( bts1, bts2 ) = splitAt (length maavs) abs_bts
         :: ( [ BaseType ], [ BaseType ] )
       in
-      case vt1 == AbsTypesAndResType bts2 final_bt of 
+      case vt == AbsTypesAndResType bts2 res_bt of 
         False -> 
           error $
             "types don't match for many arguments function application. " ++
-            "types involved:\n  " ++ show vt1 ++
-            "\n  " ++ show (AbsTypesAndResType bts2 final_bt)
+            "types involved:\n  " ++ show vt ++
+            "\n  " ++ show (AbsTypesAndResType bts2 res_bt)
 
-        True -> bts_maavs_vn_g bts2 maaavs vn
+        True -> bts_maavs_vn_g bts1 maavs vn
   ) :: ValueType -> ManyArgsApplication -> Stateful Haskell
 
 -- UseFields
@@ -263,14 +265,20 @@ use_fields_g = ( \(AbsTypesAndResType bts bt) (UF v) -> case bts of
 specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
   case bts of 
     [] -> error $ "case should have abstaction type" ++ show vt ++ show sc
-    b:bs -> case lovn of 
-      Literal l ->  return $ literal_g (AbsTypesAndResType [] b) l
-
-      ValueName vn ->
-        value_map_insert (vn, AbsTypesAndResType [] b) >>
+    b:bs ->
+      let
+      generate = ( \g ->
         value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
         get_indent_level >>= \i ->
-        return $ indent i ++ value_name_g vn ++ " -> " ++ v_g
+        return $ indent i ++ g ++ " -> " ++ v_g
+        ) :: Haskell -> Stateful Haskell
+      in
+      case lovn of 
+        Literal l -> literal_g (AbsTypesAndResType [] b) l --> generate 
+
+        ValueName vn ->
+          value_map_insert (vn, vt_shortest_equivalent $ AbsTypesAndResType [] b) >>
+          generate (value_name_g vn)
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 
 -- Cases

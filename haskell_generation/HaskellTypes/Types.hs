@@ -13,10 +13,10 @@ newtype TypeName =
 
 data BaseType =
   TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
-  deriving Eq
+  deriving ( Eq, Show )
 
 data ValueType =
-  AbsTypesAndResType [ BaseType ] BaseType deriving Eq
+  AbsTypesAndResType [ BaseType ] BaseType deriving ( Eq, Show )
 
 data FieldAndType =
   FT { get_vn :: ValueName, get_vt :: ValueType }
@@ -31,17 +31,17 @@ data TupleType =
 instance Show TypeName where
   show = \(TN n) -> n
 
-instance Show BaseType where
-  show = \case 
-    TupleType vts -> "TupleType " ++ show vts
-    ParenthesisType vt -> case vt of
-      (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
-      _ -> show vt
-    TypeName tn -> show tn
-
-instance Show ValueType where
-  show = \(AbsTypesAndResType bts bt) ->
-    bts-->concatMap (show .> (++ " right_arrow ")) ++ show bt
+-- instance Show BaseType where
+--   show = \case 
+--     TupleType vts -> "TupleType " ++ show vts
+--     ParenthesisType vt -> case vt of
+--       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
+--       _ -> show vt
+--     TypeName tn -> show tn
+-- 
+-- instance Show ValueType where
+--   show = \(AbsTypesAndResType bts bt) ->
+--     bts-->concatMap (show .> (++ " right_arrow ")) ++ show bt
 
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ " Type " ++ show vt
@@ -51,6 +51,11 @@ instance Show TupleType where
     "\nname:" ++ show tn ++ "\ntuple: " ++ show tv ++ "\n"
 
 -- helpers
+vt_shortest_equivalent = ( \case
+  AbsTypesAndResType [] (ParenthesisType vt) -> vt_shortest_equivalent vt
+  vt -> vt
+  ) :: ValueType -> ValueType
+
 vt_bt_are_equivalent = ( \case
   ( AbsTypesAndResType [] bt1, bt2) -> bt1 == bt2
   ( vt1, ParenthesisType vt2 ) -> vt1 == vt2
