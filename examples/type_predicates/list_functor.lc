@@ -3,7 +3,7 @@ function apply()internally: (A -> B) -> T(A) -> T(B)
 
 apply(f)to_each: (A -> B) -> ListOf(A)s -> ListOf(B)s
   = cases
-    head_and_tail -> head_and_tail-( head-->f, tail-->apply(f)to_each )
+    head_and_tail -> head_and_tail.( head-->f, tail-->apply(f)to_each )
     empty_list -> empty_list
 
 type_theorem ListOf()s-->IsAFunctor

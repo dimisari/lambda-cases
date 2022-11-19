@@ -6,7 +6,8 @@ import Text.Parsec ( (<|>), try, char, many1, string, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 
 import Helpers
-  ( (-->), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded )
+  ( (-->), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded
+  , space_or_newline)
 
 import HaskellTypes.LowLevel ( ApplicationDirection, Abstractions(..) )
 import Parsers.LowLevel
@@ -197,6 +198,6 @@ value1_p =
 
 value2_p =
   comma_seperated2 abstraction_p >>= \as1 ->
-  string " :> " >> value1_p >>= \(Value (As as2) nav) ->
+  string " :>" >> space_or_newline  >> value1_p >>= \(Value (As as2) nav) ->
   return $ Value (As $ as1 ++ as2) nav
   :: Parser Value

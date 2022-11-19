@@ -6,7 +6,7 @@ import Prelude
   ( IO, String, Either(..), Show, ($), (<$>), (++), (<*), (*>), (>>=), print, writeFile
   , readFile, flip, return, mapM, fmap, concat, replicate )
 import Control.Monad ( (>=>) )
-import Text.Parsec ( ParseError, (<|>), eof, many, parse, char )
+import Text.Parsec ( ParseError, (<|>), eof, many, parse, char, try )
 import Text.Parsec.String ( Parser )
 import Control.Monad.State ( evalState )
 import qualified Data.Map as M ( empty, fromList )
@@ -23,7 +23,7 @@ import HaskellTypes.Values ( NamesTypesAndValues )
 import Parsers.Values ( names_types_and_values_p )
 import CodeGenerators.Values ( names_types_and_values_g )
 
-import HaskellTypes.Generation ( GenState(..) )
+import HaskellTypes.Generation ( ValueMap, GenState(..) )
 
 -- Constants
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
@@ -41,7 +41,7 @@ data NTAVsOrTupleType =
   NTAVs NamesTypesAndValues | TupleType_ TupleType deriving Show
 
 ntavs_or_tt_p =
-  NTAVs <$> names_types_and_values_p <|> TupleType_ <$> tuple_type_p
+  TupleType_ <$> try tuple_type_p <|> NTAVs <$> names_types_and_values_p
   :: Parser NTAVsOrTupleType
 
 type Program = [ NTAVsOrTupleType ]
@@ -60,13 +60,18 @@ int_bt = TypeName $ TN "Int"
 int_int_tuple_bt = TupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
   :: BaseType
 
-init_state =
-  GS 0 M.empty $
-    M.fromList
-      [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-      , ( VN "mod" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-      , ( VN "get_first" , AbsTypesAndResType [ int_int_tuple_bt ] int_bt)
-      ]
+init_value_map = 
+  M.fromList
+    [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    , ( VN "mod" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    , ( VN "get_first" , AbsTypesAndResType [ int_int_tuple_bt ] int_bt)
+    , ( VN "abs" , AbsTypesAndResType [ int_bt ] int_bt)
+    , ( VN "max" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    , ( VN "min" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    ]
+  :: ValueMap
+
+init_state = GS 0 M.empty init_value_map
   :: GenState
 
 program_g = mapM ( \case 

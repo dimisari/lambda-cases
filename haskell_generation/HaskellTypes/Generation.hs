@@ -20,7 +20,6 @@ data GenState =
   GS { indent_level :: Int, tuple_type_map :: TupleTypeMap, value_map :: ValueMap  }
 
 -- type Stateful = ExceptT String (State GenState)
-
 type Stateful = State GenState
 
 -- getting state fields
@@ -41,7 +40,6 @@ get_from_state = ( \f -> get >>= f .> return )
 
 -- value map operations
 value_map_lookup = ( \vn -> get_value_map >>= M.lookup vn .> return )
-
   :: ValueName -> Stateful (Maybe ValueType)
 
 value_map_insert = ( \( vn, vt ) ->

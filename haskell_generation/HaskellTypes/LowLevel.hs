@@ -7,7 +7,7 @@ import Helpers ( (-->), (.>) )
 
 -- Types
 data Literal =
-  Constant0 | Constant1 deriving Show
+  Constant0 | Constant1  deriving Show
 
 newtype ValueName =
   VN String deriving ( Eq, Ord )

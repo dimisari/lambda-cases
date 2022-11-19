@@ -3,12 +3,13 @@ or_type example:
 
   Type0 is an or_type. Here the fields of each case value can be used in the
   corresponding result expression. Therefore, we only match on the case.
+  In "..." case we match with the keyword "case_name" (as in all the cases if needed).
 
   function_name: Type0 -> Type1
     = cases
       type0_case0 -> result expression of type Type1
       type0_case1 -> result expression of type Type1
-      value_name_of_type_type0 -> default result expression of type Type1
+      ... -> default result expression of type Type1
 
 tuple_type example:
 
@@ -24,17 +25,7 @@ tuple_type example:
       ( type0_case0, type1_case1 ) -> result expression of type Type3
       ( type0_case1, type1_case0 ) -> result expression of type Type3
       ( type0_case1, type1_case1 ) -> result expression of type Type3
-      value_name_of_type_type2 -> default result expression of type Type1
+      ... -> default result expression of type Type1
       
    In the case of collision of fields (ex. Type0 == Type1) we add numbers beginning
    by 1 for the leftmost type
-
-default result:
-
-  to ignore the input in the default result case, instead of:
-
-  value_name -> default result expression 
-
-  we have:
-
-  ... -> default result expression

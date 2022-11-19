@@ -45,6 +45,9 @@ spaces_tabs = many $ char ' ' <|> char '\t'
 new_line_space_surrounded = spaces_tabs *> char '\n' <* spaces_tabs
   :: Parser Char
 
+space_or_newline = try new_line_space_surrounded <|> char ' '
+  :: Parser Char
+
 -- Haskell generation 
 type Haskell = String
 

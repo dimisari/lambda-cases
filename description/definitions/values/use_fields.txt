@@ -5,10 +5,11 @@ Example:
   value ( first_int: Int, second_int: Int )
 
   add_int_pair: IntPair -> Int
-    = use_tuple_fields -> first_int + second_int
+    = use_fields -> first_int + second_int
 
 In general the field_names of a tuple_type can be used in the result expression by using
-the use_tuple_fields syntax:
+the use_fields syntax:
 
   function_name: TupleType -> OtherType
-    = use_tuple_fields -> result expression of type OtherType
+    = use_fields -> result expression of type OtherType
+

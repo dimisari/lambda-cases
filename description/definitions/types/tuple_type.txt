@@ -19,4 +19,4 @@ Comments:
       update_field2: (A, B :-> TypeName), A :> (A,B :-> TypeName)
       ...
 
-  - in use_tuple_fields syntax we can use each field by its field 
+  - in use_fields syntax we can use the fields by their name
