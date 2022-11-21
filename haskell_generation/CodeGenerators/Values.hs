@@ -5,9 +5,10 @@ module CodeGenerators.Values where
 import Prelude
   ( Int, String, Maybe(..), Bool(..), (>>=), (>>), (==), (+), (*), (>), (++), ($), concat
   , concatMap, return, error, mapM, init, last, show, map, sequence, zip, drop, length
-  , undefined, foldl )
+  , undefined )
 import Data.List ( intercalate, splitAt )
 import qualified Data.Map as M ( lookup, insert )
+import Control.Monad ( foldM )
 import Control.Monad.State ( (>=>) )
 
 import Helpers ( Haskell, (-->), (.>), indent )
@@ -23,8 +24,9 @@ import HaskellTypes.Types
 import CodeGenerators.Types ( value_type_g )
 
 import HaskellTypes.Values
-  ( ParenthesisValue(..), ParenLitOrName(..), OneArgApplications(..)
+  ( ParenthesisValue(..), BaseValue(..), OneArgApplications(..)
   , MultiplicationFactor(..), Multiplication(..), SubtractionFactor(..), Subtraction(..)
+  , EqualityFactor(..), Equality(..)
   , NoAbstractionsValue1(..), ManyArgsArgValue(..), ManyArgsApplication(..)
   , UseFields(..), SpecificCase(..), Cases(..)
   , NameTypeAndValue(..), NameTypeAndValueLists(..)
@@ -37,7 +39,7 @@ import HaskellTypes.Generation
 
 {- 
   All:
-  ParenthesisValue, ParenLitOrName, OneArgApplications,
+  ParenthesisValue, BaseValue, OneArgApplications,
   MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction,
   NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication,
   UseFields, SpecificCase, Cases,
@@ -47,22 +49,11 @@ import HaskellTypes.Generation
 -}
 
 -- ParenthesisValue
-bt_values_g = ( \case
-  TupleType vts -> \vs -> case length vts == length vs of
-    False -> error "length of tuple values and tuple types must be the same"
+parenthesis_value_g = ( \vt -> \case
+  Parenthesis v -> value_g vt v >>= \v_g -> return $ "(" ++ v_g ++ ")"
 
-    True -> 
-      zip vts vs-->map ( \( vt, v ) -> value_g vt v )-->sequence >>= \vs_g ->
-      return $ "( " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " )"
-
-  ParenthesisType vt -> vt_values_g vt
-
-  TypeName tn -> \vs -> tuple_type_map_lookup tn >>= \case
-    Nothing -> error $ "Did not find a definition for tuple_type: " ++ show tn
-    Just fatl ->
-      zip (map get_vt fatl) vs-->mapM (\( vt, v ) -> value_g vt v) >>= \vs_g -> 
-      return $ show tn ++ "C (" ++ init vs_g-->concatMap (++ ") (") ++ vs_g-->last ++ ")"
-  ) :: BaseType -> [ Value ] -> Stateful Haskell
+  Tuple vs -> vt_values_g vt vs
+  ) :: ValueType -> ParenthesisValue -> Stateful Haskell
 
 vt_values_g = ( \case
   vt@(AbsTypesAndResType (_:_) _) -> \vs ->
@@ -71,35 +62,78 @@ vt_values_g = ( \case
   AbsTypesAndResType [] bt -> bt_values_g bt
   ) :: ValueType -> [ Value ] -> Stateful Haskell
 
-parenthesis_value_g = ( \vt -> \case
-  Parenthesis v -> value_g vt v >>= \v_g -> return $ "(" ++ v_g ++ ")"
+bt_values_g = ( \case
+  TupleType vts -> vts_values_g vts
+  ParenthesisType vt -> vt_values_g vt
+  TypeName tn -> tn_values_g tn
+  ) :: BaseType -> [ Value ] -> Stateful Haskell
 
-  Tuple vs -> vt_values_g vt vs
-  ) :: ValueType -> ParenthesisValue -> Stateful Haskell
+vts_values_g = ( \vts vs -> case length vts == length vs of
+  False -> error "length of tuple values and tuple types must be the same"
 
--- ParenLitOrName
-paren_lit_or_name_g = ( \vt -> \case
+  True -> 
+    zip vts vs-->map ( \( vt, v ) -> value_g vt v )-->sequence >>= \vs_g ->
+    return $ "( " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " )"
+  ) :: [ ValueType ] -> [ Value ] -> Stateful Haskell
+
+tn_values_g = ( \tn vs -> tuple_type_map_lookup tn >>= \case
+  Nothing -> error $ "Did not find a definition for tuple_type: " ++ show tn
+
+  Just fatl -> case length vs == length fatl of 
+    False ->
+      error $
+        "length of tuple result must be the same as the number of fields of the "
+        ++
+        "corresponding tuple_type"
+
+    True -> correct_tn_values_g tn (map get_vt fatl) vs
+  ) :: TypeName -> [ Value ] -> Stateful Haskell
+
+correct_tn_values_g = ( \tn vts vs ->
+  zip vts vs-->mapM (\( vt, v ) -> value_g vt v) >>= \vs_g -> 
+  return $ show tn ++ "C (" ++ init vs_g-->concatMap (++ ") (") ++ vs_g-->last ++ ")"
+  ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
+
+-- BaseValue
+base_value_g = ( \vt -> \case
   ParenthesisValue pv -> parenthesis_value_g vt pv
 
   LiteralOrValueName lovn -> literal_or_value_name_g vt lovn
-  ) :: ValueType -> ParenLitOrName -> Stateful Haskell
+  ) :: ValueType -> BaseValue -> Stateful Haskell
 
 -- OneArgApplications
-plon_type_inference_g = ( \case
-  ParenthesisValue pv ->
-    error $
-      "Cannot infer types for values inside parenthesis in one argument application"
-      ++
-      ", please define the following as an intermediate value: " ++ show pv
+one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
+  [] -> error "application expression should have at least one application operator"
 
-  LiteralOrValueName lovn -> lovn --> \case
-    Literal l -> return $ ( AbsTypesAndResType [] (TypeName (TN "Int")), lit_g l)
+  ( init_bv, init_ad ):rest ->
 
-    ValueName vn -> value_map_lookup vn >>= \case
-      Nothing -> error $ "Could not find value: " ++ value_name_g vn 
+    bv_type_inference_g init_bv >>= \( bv_vt, bv_hs ) ->
+    foldM add_next_application_g ( bv_vt, bv_hs, init_ad ) rest >>=
+    \( final_vt, final_hs, final_ad ) -> 
+    bv_type_inference_g bv >>= \bv_g ->
+    ( case final_ad of
+      LeftApplication -> one_arg_application_g ( final_vt, final_hs ) bv_g
+      RightApplication -> one_arg_application_g bv_g ( final_vt, final_hs ) ) -->
+    \( inferred_vt, hs ) ->
+    case vt == inferred_vt of 
+      False -> 
+        error $ "type inference for one argument applications failed in: " ++ show oaa
+           
+      True -> return hs
 
-      Just vt -> return ( vt, value_name_g vn )
-  ) :: ParenLitOrName -> Stateful ( ValueType, Haskell )
+  ) :: ValueType -> OneArgApplications -> Stateful Haskell
+
+add_next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->
+  bv_type_inference_g next_bv >>= \bv_g ->
+  let 
+  ( next_vt, next_hs ) = case ad of
+    LeftApplication -> one_arg_application_g ( sf_vt, sf_hs ) bv_g
+    RightApplication -> one_arg_application_g bv_g ( sf_vt, sf_hs )
+  in
+  return ( next_vt, next_hs, next_ad )
+  ) :: ( ValueType, Haskell, ApplicationDirection ) ->
+       ( BaseValue, ApplicationDirection ) ->
+       Stateful ( ValueType, Haskell, ApplicationDirection )
 
 one_arg_application_g = ( \( vt_left, hs_left ) ( vt_right, hs_right ) ->
   case vt_left of 
@@ -116,35 +150,31 @@ one_arg_application_g = ( \( vt_left, hs_left ) ( vt_right, hs_right ) ->
             "types don't match for one argument function application. " ++
             "types involved:\n  " ++ show vt_right ++ "\n  " ++ show abs_bt ++
             "\nhaskell:\n  " ++ hs_left ++ hs_right
+
         True -> ( AbsTypesAndResType abs_bts bt, hs_left ++ " " ++ hs_right )
   ) :: ( ValueType, Haskell ) -> ( ValueType, Haskell ) -> ( ValueType, Haskell )
 
-add_next_application_g = ( \so_far_with_type ( ad, plon ) ->
-  so_far_with_type >>= \sfwt_g ->
-  plon_type_inference_g plon >>= \plon_g ->
-  return $ case ad of
-    LeftApplication -> one_arg_application_g sfwt_g plon_g
-    RightApplication -> one_arg_application_g plon_g sfwt_g
-  ) :: Stateful ( ValueType, Haskell ) -> ( ApplicationDirection, ParenLitOrName ) ->
-       Stateful ( ValueType, Haskell )
+bv_type_inference_g = ( \case
+  ParenthesisValue pv ->
+    error $
+      "Cannot infer types for values inside parenthesis in one argument application"
+      ++
+      ", please define the following as an intermediate value: " ++ show pv
 
-one_arg_applications_g = ( \vt oaa@(OAA init_plon ad_plon_s) -> case ad_plon_s of
-  [] -> error "application expression should have at least one application operator"
+  LiteralOrValueName lovn -> lovn --> \case
+    Literal l -> return $ ( AbsTypesAndResType [] (TypeName (TN "Int")), lit_g l)
 
-  _ ->
-    foldl add_next_application_g (plon_type_inference_g init_plon) ad_plon_s >>=
-    \( inferred_vt, hs ) -> case vt == inferred_vt of 
-      False -> 
-        error $ "type inference for one argument applications failed in: " ++ show oaa
-           
-      True -> return hs
-  ) :: ValueType -> OneArgApplications -> Stateful Haskell
+    ValueName vn -> value_map_lookup vn >>= \case
+      Nothing -> error $ "Could not find value: " ++ value_name_g vn 
+
+      Just vt -> return ( vt, value_name_g vn )
+  ) :: BaseValue -> Stateful ( ValueType, Haskell )
 
 -- MultiplicationFactor
 multiplication_factor_g = ( \vt -> \case
   OneArgAppMF oaas -> one_arg_applications_g vt oaas
 
-  ParenLitOrNameMF plon -> paren_lit_or_name_g vt plon
+  BaseValueMF bv -> base_value_g vt bv
   ) :: ValueType -> MultiplicationFactor -> Stateful Haskell
 
 -- Multiplication
@@ -155,8 +185,8 @@ multiplication_g = ( \vt (Mul mfs) ->
 -- SubtractionFactor
 subtraction_factor_g = ( \vt -> \case
   MulSF m -> multiplication_g vt m
-  OAASF oaas -> one_arg_applications_g vt oaas
-  ParenLitOrNameSF plon -> paren_lit_or_name_g vt plon
+  OneArgAppSF oaas -> one_arg_applications_g vt oaas
+  BaseValueSF bv -> base_value_g vt bv
   ) :: ValueType -> SubtractionFactor -> Stateful Haskell
 
 -- Subtraction
@@ -166,12 +196,28 @@ subtraction_g = ( \vt (Sub sf1 sf2) ->
   return $ sf1_g ++ " - " ++ sf2_g
   ) :: ValueType -> Subtraction -> Stateful Haskell
 
+-- EqualityFactor
+equality_factor_g = ( \vt -> \case
+  SubEF s -> subtraction_g vt s
+  MulEF m -> multiplication_g vt m
+  OAAEF oaas -> one_arg_applications_g vt oaas
+  BaseValueEF bv -> base_value_g vt bv
+  ) :: ValueType -> EqualityFactor -> Stateful Haskell
+
+-- Equality
+equality_g = ( \vt (Equ ef1 ef2) ->
+  equality_factor_g vt ef1 >>= \ef1_g ->
+  equality_factor_g vt ef2 >>= \ef2_g ->
+  return $ ef1_g ++ " == " ++ ef2_g
+  ) :: ValueType -> Equality -> Stateful Haskell
+
 -- NoAbstractionsValue1
 no_abstractions_value_1_g = ( \vt -> \case
+  Equality equ -> equality_g vt equ
   Subtraction sub -> subtraction_g vt sub
   Multiplication mul -> multiplication_g vt mul
   OneArgApps oaas -> one_arg_applications_g vt oaas
-  PLON plon -> paren_lit_or_name_g vt plon
+  BaseValue bv -> base_value_g vt bv
   ) :: ValueType -> NoAbstractionsValue1 -> Stateful Haskell
 
 -- ManyArgsArgValue
@@ -205,7 +251,7 @@ bts_maavs_vn_g = ( \bts maavs vn ->
       :: ValueType
     in
     case maav of
-      MAAV (As []) (PLON plon) -> paren_lit_or_name_g maav_vt plon
+      MAAV (As []) (BaseValue bv) -> base_value_g maav_vt bv
 
       _ ->
         many_args_arg_value_g maav_vt maav >>= \maav_g ->

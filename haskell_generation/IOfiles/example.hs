@@ -2,15 +2,18 @@
 
 get_first = fst
 
-data SortedAbsoluteValues =
-  SortedAbsoluteValuesC { get_max_abs :: Int, get_min_abs :: Int }
-  deriving Show
-to_sorted_asbolute_values = ( \x y -> 
-  let
-  abs_x = abs x
-    :: Int
-  abs_y = abs y
-    :: Int
-  in
-  SortedAbsoluteValuesC (max abs_x abs_y) (min abs_x abs_y) )
-  :: Int -> Int -> SortedAbsoluteValues
+ee_recursion = ( \a_coeffs b_coeffs x -> \case
+  0 -> ( x, get_first a_coeffs, get_first b_coeffs )
+  y -> 
+    let
+    compute_new = ( \( prev_prev, prev ) -> ( prev, prev_prev - div x y * prev ) )
+      :: ( Int, Int ) -> ( Int, Int )
+    in
+    ee_recursion (compute_new a_coeffs) (compute_new b_coeffs) y (mod x y) )
+  :: ( Int, Int ) -> ( Int, Int ) -> Int -> Int -> ( Int, Int, Int )
+initial_a_coeffs = ( 1, 0 )
+  :: ( Int, Int )
+initial_b_coeffs = ( 0, 1 )
+  :: ( Int, Int )
+extended_euclidean = ee_recursion initial_a_coeffs initial_b_coeffs
+  :: Int -> Int -> ( Int, Int, Int )

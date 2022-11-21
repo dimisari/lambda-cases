@@ -1,7 +1,10 @@
 atomic types
 
-  Int, Real, Text
-  arrays ?
+  Int, Real
+  Char
+  Text ?
+  Array ?
+  Pointer ?
 
 tuple_types 
 

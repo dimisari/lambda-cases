@@ -3,7 +3,7 @@ module Helpers where
 import Prelude
   ( Int, String, Char, (*), (>>=), (<*), (*>), (.), ($), (++), flip, return, init, last
   , concatMap )
-import Text.Parsec ( (<|>), many, many1, string, char, try )
+import Text.Parsec ( (<|>), many, many1, string, char, try, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 import Data.List ( replicate )
 
@@ -47,6 +47,12 @@ new_line_space_surrounded = spaces_tabs *> char '\n' <* spaces_tabs
 
 space_or_newline = try new_line_space_surrounded <|> char ' '
   :: Parser Char
+
+arrow_with_space_or_newline = string " ->" *> space_or_newline
+  :: Parser Char
+
+eof_or_new_lines = eof <|> skipMany1 new_line_space_surrounded
+  :: Parser ()
 
 -- Haskell generation 
 type Haskell = String

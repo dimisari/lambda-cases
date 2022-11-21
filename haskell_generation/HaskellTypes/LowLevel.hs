@@ -19,7 +19,7 @@ data ApplicationDirection =
   LeftApplication | RightApplication deriving Show
 
 newtype TupleMatching =
-  FieldNames [ ValueName ] deriving Show
+  TM [ ValueName ] deriving Show
 
 data Abstraction =
   ValueNameAb ValueName | TupleMatching TupleMatching

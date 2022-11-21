@@ -30,7 +30,7 @@ application_direction_p =
   :: Parser ApplicationDirection
 
 tuple_matching_p =
-  FieldNames <$> paren_comma_seperated2 value_name_p
+  TM <$> paren_comma_seperated2 value_name_p
   :: Parser TupleMatching
 
 abstraction_p =

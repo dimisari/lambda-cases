@@ -2,12 +2,12 @@ module Parsers.Values where
 
 import Prelude
   ( (<$>), (<*), (*>), (++), ($), (>>=), (>>), return, fmap, replicate, length )
-import Text.Parsec ( (<|>), try, char, many1, string, eof, skipMany1 )
+import Text.Parsec ( (<|>), try, char, many1, string )
 import Text.Parsec.String ( Parser )
 
 import Helpers
   ( (-->), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded
-  , space_or_newline)
+  , space_or_newline, eof_or_new_lines )
 
 import HaskellTypes.LowLevel ( ApplicationDirection, Abstractions(..) )
 import Parsers.LowLevel
@@ -18,8 +18,9 @@ import HaskellTypes.Types ( ValueType )
 import Parsers.Types ( value_type_p )
 
 import HaskellTypes.Values
-  ( ParenthesisValue(..), ParenLitOrName(..), OneArgApplications(..)
+  ( ParenthesisValue(..), BaseValue(..), OneArgApplications(..)
   , MultiplicationFactor(..), Multiplication(..), SubtractionFactor(..), Subtraction(..)
+  , EqualityFactor(..), Equality(..)
   , NoAbstractionsValue1(..), ManyArgsArgValue(..), ManyArgsApplication(..)
   , UseFields(..), SpecificCase(..), Cases(..)
   , NameTypeAndValue(..), NameTypeAndValueLists(..)
@@ -30,8 +31,8 @@ import HaskellTypes.Values
 
 {- 
   All:
-  ParenthesisValue, ParenLitOrName, OneArgApplications,
-  MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction,
+  ParenthesisValue, BaseValue, OneArgApplications,
+  MultiplicationFactor, xMultiplication, SubtractionFactor, Subtraction,
   NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication,
   UseFields, SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
@@ -46,28 +47,28 @@ import HaskellTypes.Values
   , Parenthesis <$> value_p ]
   :: [ Parser ParenthesisValue ]
 
--- ParenLitOrName
-paren_lit_or_name_p =
+-- BaseValue
+base_value_p =
   ParenthesisValue <$> parenthesis_value_p <|>
   LiteralOrValueName <$> literal_or_value_name_p
-  :: Parser ParenLitOrName
+  :: Parser BaseValue
 
 -- OneArgApplications
 one_arg_applications_p =
-  paren_lit_or_name_p >>= \plon ->
-  many1 ad_plon_p >>= \ad_plon_s -> 
-  return $ OAA plon ad_plon_s
+  many1 (try bv_ad_p) >>= \bv_ad_s -> 
+  base_value_p >>= \bv ->
+  return $ OAA bv_ad_s bv
   :: Parser OneArgApplications
 
-ad_plon_p = 
+bv_ad_p = 
+  base_value_p >>= \bv ->
   application_direction_p >>= \ad ->
-  paren_lit_or_name_p >>= \plon ->
-  return ( ad, plon )
-  :: Parser ( ApplicationDirection, ParenLitOrName )
+  return ( bv, ad )
+  :: Parser ( BaseValue, ApplicationDirection )
 
 -- MultiplicationFactor
 multiplication_factor_p =
-  OneArgAppMF <$> try one_arg_applications_p <|> ParenLitOrNameMF <$> paren_lit_or_name_p
+  OneArgAppMF <$> try one_arg_applications_p <|> BaseValueMF <$> base_value_p
   :: Parser MultiplicationFactor
 
 -- Multiplication
@@ -77,8 +78,8 @@ multiplication_p =
 
 -- SubtractionFactor
 subtraction_factor_p =
-  MulSF <$> try multiplication_p <|> OAASF <$> try one_arg_applications_p <|>
-  ParenLitOrNameSF <$> paren_lit_or_name_p 
+  MulSF <$> try multiplication_p <|> OneArgAppSF <$> try one_arg_applications_p <|>
+  BaseValueSF <$> base_value_p 
   :: Parser SubtractionFactor
 
 -- Subtraction
@@ -88,10 +89,25 @@ subtraction_p =
   return $ Sub sf1 sf2
   :: Parser Subtraction
 
+-- EqualityFactor
+equality_factor_p =
+  SubEF <$> try subtraction_p <|> MulEF <$> try multiplication_p <|>
+  OAAEF <$> try one_arg_applications_p <|> BaseValueEF <$> base_value_p 
+  :: Parser EqualityFactor
+
+-- Equality
+equality_p =
+  equality_factor_p >>= \ef1 ->
+  string " = " >> equality_factor_p >>= \ef2 ->
+  return $ Equ ef1 ef2
+  :: Parser Equality
+
 -- NoAbstractionsValue1
 no_abstractions_value_1_p =
-  Subtraction <$> try subtraction_p <|> Multiplication <$> try multiplication_p <|>
-  OneArgApps <$> try one_arg_applications_p <|> PLON <$> paren_lit_or_name_p
+  Equality <$> try equality_p <|>
+  Subtraction <$> try subtraction_p <|>
+  Multiplication <$> try multiplication_p <|>
+  OneArgApps <$> try one_arg_applications_p <|> BaseValue <$> base_value_p
   :: Parser NoAbstractionsValue1
 
 -- ManyArgsArgValue
@@ -107,8 +123,7 @@ many_args_arg_value1_p =
 
 many_args_arg_value2_p =
   comma_seperated2 abstraction_p >>= \as1 ->
-  string " :> " >>
-  many_args_arg_value1_p >>= \(MAAV (As as2) nav1) ->
+  string " :>" >> space_or_newline >> many_args_arg_value1_p >>= \(MAAV (As as2) nav1) ->
   return $ MAAV (As $ as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 
@@ -121,13 +136,13 @@ many_args_application_p =
 
 -- UseFields
 use_fields_p =
-  fmap UF $ string "use_fields -> " *> value_p
+  fmap UF $ string "use_fields ->" >> space_or_newline >> value_p
   :: Parser UseFields
 
 -- SpecificCase
 specific_case_p =
   spaces_tabs >> literal_or_value_name_p >>= \lovn ->
-  string " ->" >> (try new_line_space_surrounded <|> (char ' ')) >> value_p >>= \v ->
+  string " ->" >> space_or_newline >> value_p >>= \v ->
   return $ SC lovn v
   :: Parser SpecificCase
 
@@ -141,7 +156,7 @@ name_type_and_value_p =
   value_name_p >>= \vn ->
   string ": " >> value_type_p >>= \vt ->
   new_line_space_surrounded >> string "= " >> value_p >>= \v ->
-  (eof <|> skipMany1 new_line_space_surrounded) >> NTAV vn vt v-->return
+  eof_or_new_lines >> NTAV vn vt v-->return
   :: Parser NameTypeAndValue
 
 -- NameTypeAndValueLists
@@ -155,7 +170,7 @@ name_type_and_value_lists_p =
   in
   string ": " >> value_types_p >>= \vts ->
   new_line_space_surrounded >> string "= " >> comma_seperated2 value_p >>= \vs ->
-  (eof <|> skipMany1 new_line_space_surrounded) >> NTAVLists vns vts vs-->return
+  eof_or_new_lines >> NTAVLists vns vts vs-->return
   :: Parser NameTypeAndValueLists
   
 -- NTAVOrNTAVLists

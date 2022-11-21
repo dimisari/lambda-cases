@@ -2,11 +2,12 @@ module Parsers.Types where
 
 import Prelude ( (<$>), (>>=), (>>), (<*), (*>), (++), ($), return, map )
 import Text.Parsec
-  ( (<|>), many, char, lower, upper, string, sepBy, eof, skipMany1, try )
+  ( (<|>), many, char, lower, upper, string, sepBy, try )
 import Text.Parsec.String ( Parser )
 
 import Helpers
-  ( (-->), new_line_space_surrounded, comma_seperated2, paren_comma_seperated2 )
+  ( (-->), new_line_space_surrounded, comma_seperated2, paren_comma_seperated2
+  , eof_or_new_lines )
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
   , TupleType(..) )
@@ -56,5 +57,5 @@ tuple_value_p =
 tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
   string "\nvalue " >> tuple_value_p >>= \tv ->
-  (eof <|> skipMany1 new_line_space_surrounded) >> NameAndTupleValue tn tv-->return
+  eof_or_new_lines >> NameAndTupleValue tn tv-->return
   :: Parser TupleType

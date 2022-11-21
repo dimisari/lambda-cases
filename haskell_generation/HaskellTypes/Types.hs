@@ -13,10 +13,10 @@ newtype TypeName =
 
 data BaseType =
   TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
-  deriving ( Eq, Show )
+  deriving Eq
 
 data ValueType =
-  AbsTypesAndResType [ BaseType ] BaseType deriving ( Eq, Show )
+  AbsTypesAndResType [ BaseType ] BaseType deriving Eq
 
 data FieldAndType =
   FT { get_vn :: ValueName, get_vt :: ValueType }
@@ -31,17 +31,17 @@ data TupleType =
 instance Show TypeName where
   show = \(TN n) -> n
 
--- instance Show BaseType where
---   show = \case 
---     TupleType vts -> "TupleType " ++ show vts
---     ParenthesisType vt -> case vt of
---       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
---       _ -> show vt
---     TypeName tn -> show tn
--- 
--- instance Show ValueType where
---   show = \(AbsTypesAndResType bts bt) ->
---     bts-->concatMap (show .> (++ " right_arrow ")) ++ show bt
+instance Show BaseType where
+  show = \case 
+    TupleType vts -> "TupleType " ++ show vts
+    ParenthesisType vt -> case vt of
+      (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
+      _ -> show vt
+    TypeName tn -> show tn
+
+instance Show ValueType where
+  show = \(AbsTypesAndResType bts bt) ->
+    bts-->concatMap (show .> (++ " right_arrow ")) ++ show bt
 
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ " Type " ++ show vt

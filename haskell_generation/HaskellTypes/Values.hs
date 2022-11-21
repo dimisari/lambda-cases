@@ -13,27 +13,34 @@ import HaskellTypes.Types ( ValueType )
 data ParenthesisValue =
   Parenthesis Value | Tuple [ Value ]
 
-data ParenLitOrName =
+data BaseValue =
   ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName
 
 data OneArgApplications = 
-  OAA ParenLitOrName [ ( ApplicationDirection, ParenLitOrName ) ]
+  OAA [ ( BaseValue, ApplicationDirection ) ] BaseValue
 
 data MultiplicationFactor =
-  OneArgAppMF OneArgApplications | ParenLitOrNameMF ParenLitOrName
+  OneArgAppMF OneArgApplications | BaseValueMF BaseValue
 
 data Multiplication =
   Mul [ MultiplicationFactor ]
 
 data SubtractionFactor =
-  MulSF Multiplication | OAASF OneArgApplications | ParenLitOrNameSF ParenLitOrName
+  MulSF Multiplication | OneArgAppSF OneArgApplications | BaseValueSF BaseValue
 
 data Subtraction =
   Sub SubtractionFactor SubtractionFactor 
 
+data EqualityFactor =
+  SubEF Subtraction | MulEF Multiplication | OAAEF OneArgApplications |
+  BaseValueEF BaseValue
+
+data Equality =
+  Equ EqualityFactor EqualityFactor
+
 data NoAbstractionsValue1 =
-  Subtraction Subtraction | Multiplication Multiplication |
-  OneArgApps OneArgApplications | PLON ParenLitOrName 
+  Equality Equality | Subtraction Subtraction | Multiplication Multiplication |
+  OneArgApps OneArgApplications | BaseValue BaseValue 
 
 data ManyArgsArgValue =
   MAAV Abstractions NoAbstractionsValue1
@@ -78,26 +85,26 @@ instance Show ParenthesisValue where
     Parenthesis v -> "(" ++ show v ++ ")"
     Tuple vs -> "Tuple " ++ show vs
 
-instance Show ParenLitOrName where
+instance Show BaseValue where
   show = \case
     ParenthesisValue pv -> show pv
     LiteralOrValueName lovn -> show lovn
 
 instance Show OneArgApplications where
-  show = \(OAA plon ad_plon_s) -> case ad_plon_s of
+  show = \(OAA bv_ad_s v) -> case bv_ad_s of
     [] ->
       error "one arg function application should have at least one application direction"
     _ ->
       let
-      show_ad_plon = ( \( ad, plon ) -> " " ++ show ad ++ " " ++ show plon ++ " " )
-        :: ( ApplicationDirection, ParenLitOrName ) -> String
+      show_bv_ad = ( \( bv, ad ) -> " " ++ show bv ++ " " ++ show ad ++ " " )
+        :: ( BaseValue, ApplicationDirection ) -> String
       in
-      show plon ++ ad_plon_s-->concatMap show_ad_plon
+      bv_ad_s-->concatMap show_bv_ad ++ show v 
 
 instance Show MultiplicationFactor where
   show = \case
     OneArgAppMF oaa -> show oaa
-    ParenLitOrNameMF plon -> show plon
+    BaseValueMF bv -> show bv
 
 instance Show Multiplication where
   show = \(Mul mfs) -> case mfs of
@@ -109,18 +116,29 @@ instance Show Multiplication where
 instance Show SubtractionFactor where
   show = \case
     MulSF m -> show m
-    OAASF oaa -> show oaa
-    ParenLitOrNameSF plon -> show plon
+    OneArgAppSF oaa -> show oaa
+    BaseValueSF bv -> show bv
 
 instance Show Subtraction where
   show = \(Sub sf1 sf2) -> "(" ++ show sf1 ++ " minus " ++ show sf2 ++ ")"
 
+instance Show EqualityFactor where
+  show = \case
+    SubEF s -> show s
+    MulEF m -> show m
+    OAAEF oaa -> show oaa
+    BaseValueEF bv -> show bv
+
+instance Show Equality where
+  show = \(Equ ef1 ef2) -> "(" ++ show ef1 ++ " equals " ++ show ef2 ++ ")"
+
 instance Show NoAbstractionsValue1 where
   show = \case
+    Equality equ -> show equ
     Subtraction sub -> show sub
     Multiplication mul -> show mul
     OneArgApps oaa -> show oaa
-    PLON plon -> show plon
+    BaseValue bv -> show bv
 
 instance Show ManyArgsArgValue where
   show = \(MAAV as nav1) -> show as ++ show nav1
