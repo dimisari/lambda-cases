@@ -8,7 +8,7 @@ to_sorted_asbolute_values: Int, Int :> SortedAbsoluteValues
     abs_x, abs_y: all Int
       = x-->abs, y-->abs
     output
-    ( max(abs_x, abs_y), min(abs_x, abs_y) )
+    ( abs_x, abs_y :-> max, abs_x, abs_y :-> min )
 
 gcd_help: SortedAbsoluteValues -> Int
   = use_fields -> (min_abs == 0)-->cases
