@@ -1,9 +1,9 @@
 fix 
-- parenthesis in one argument applications
-- cases in one argument applications
-
-operators 
-- type class maybe? 
+- parenthesis in one argument applications:
+  - needs type inference??
+  - is type inference needed at all (shoud I delete what I did already)??
+- cases in one argument applications:
+  add one more optional application that must be right application to case??
 
 or_type
 - create new haskell type
@@ -16,6 +16,9 @@ literals
 - ints
 - reals
 - strings
+
+operators 
+- type class maybe? 
 
 cases
 - full pattern matching

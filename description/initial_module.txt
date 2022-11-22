@@ -13,7 +13,7 @@ tuple_types
   tuple_type Empty
   value ()
   tuple_type ( A )
-  value ( value: A ) # needed??
+  value ( unwrapped: A ) # needed??
   tuple_type ( A, B )
   value ( pair_first: A, pair_second: B )
   tuple_type ( A, B, C )

@@ -7,16 +7,16 @@ values
 
 Comments:
 
-  - default value_name for the value of all cases: value
+  - default value name for the value of all cases: value
     Examples:
 
     fun1: (A, B :==> TypeName) -> A==>OrNothing
       = cases
-        case0 -> value.value
+        case0 -> the_value.value
         ... -> nothing
     fun2: (A, B :==> TypeName) -> ( A, B )==>OrNothing
       = cases
-        case2 -> value.value
+        case2 -> the_value.value
         ... -> nothing
 
   - anonymous tuple_types can be used for naming fields of a case
@@ -24,11 +24,11 @@ Comments:
 
     fun: (A, B :==> TypeName) -> Int==>OrNothing
       = cases
-        case1 -> value.int
+        case1 -> the_value.int
         ... -> nothing
     fun: (A, B :==> TypeName) -> B==>OrNothing
       = cases
-        case1 -> value.b
+        case1 -> the_value.b
         ... -> nothing
 
   - tuple_types can be used in a case and there is field inheritance
@@ -36,7 +36,7 @@ Comments:
 
     fun: (A, B :==> TypeName) -> A==>OrNothing
       = cases
-        case2 -> value.pair_first
+        case2 -> the_value.pair_first
         ... -> nothing
 
   - is functions should be generated automatically:
