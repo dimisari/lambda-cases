@@ -2,11 +2,16 @@
 
 module Parsers.LowLevel where
 
-import Prelude ( Bool(..), (<$>), (<*), (*>), ($), (>>=), return, elem )
-import Text.Parsec ( (<|>), char, string, parserFail, many, many1, lower, try )
-import Text.Parsec.String ( Parser )
+import Prelude
+  ( Bool(..), (<$>), (<*), (*>), ($), (>>=), return, elem )
+import Text.Parsec
+  ( (<|>), char, string, parserFail, many, many1, lower, try )
+import Text.Parsec.String
+  ( Parser )
 
-import Helpers ( (-->), keywords, paren_comma_seperated2 )
+import Helpers
+  ( (-->), keywords, paren_comma_seperated2 )
+
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), ApplicationDirection(..)
   , TupleMatching(..), Abstraction(..), Abstractions(..) )

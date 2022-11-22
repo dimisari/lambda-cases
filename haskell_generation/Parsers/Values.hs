@@ -2,32 +2,26 @@ module Parsers.Values where
 
 import Prelude
   ( (<$>), (<*), (*>), (++), ($), (>>=), (>>), return, fmap, replicate, length )
-import Text.Parsec ( (<|>), try, char, many1, string )
-import Text.Parsec.String ( Parser )
+import Text.Parsec
+  ( (<|>), try, char, many1, string )
+import Text.Parsec.String
+  ( Parser )
 
 import Helpers
   ( (-->), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded
   , space_or_newline, eof_or_new_lines )
 
-import HaskellTypes.LowLevel ( ApplicationDirection, Abstractions(..) )
+import HaskellTypes.LowLevel
+  ( ApplicationDirection, Abstractions(..) )
+import HaskellTypes.Types
+  ( ValueType )
+import HaskellTypes.Values
+
 import Parsers.LowLevel
   ( value_name_p, literal_or_value_name_p, application_direction_p, abstraction_p
   , abstractions_p )
-
-import HaskellTypes.Types ( ValueType )
-import Parsers.Types ( value_type_p )
-
-import HaskellTypes.Values
-  ( ParenthesisValue(..), BaseValue(..), OneArgApplications(..)
-  , MultiplicationFactor(..), Multiplication(..), SubtractionFactor(..), Subtraction(..)
-  , EqualityFactor(..), Equality(..)
-  , NoAbstractionsValue1(..), ManyArgsArgValue(..), ManyArgsApplication(..)
-  , UseFields(..), SpecificCase(..), Cases(..)
-  , NameTypeAndValue(..), NameTypeAndValueLists(..)
-  , NTAVOrNTAVLists(..), NamesTypesAndValues(..)
-  , IntermediatesOutput(..)
-  , NoAbstractionsValue(..), Value(..)
-  )
+import Parsers.Types
+  ( value_type_p )
 
 {- 
   All:
@@ -73,12 +67,13 @@ multiplication_factor_p =
 
 -- Multiplication
 multiplication_p =
-  Mul <$> seperated2 multiplication_factor_p " * "
+  Mul <$> seperated2 " * " multiplication_factor_p
   :: Parser Multiplication
 
 -- SubtractionFactor
 subtraction_factor_p =
-  MulSF <$> try multiplication_p <|> OneArgAppSF <$> try one_arg_applications_p <|>
+  MulSF <$> try multiplication_p <|>
+  OneArgAppSF <$> try one_arg_applications_p <|>
   BaseValueSF <$> base_value_p 
   :: Parser SubtractionFactor
 
@@ -91,8 +86,10 @@ subtraction_p =
 
 -- EqualityFactor
 equality_factor_p =
-  SubEF <$> try subtraction_p <|> MulEF <$> try multiplication_p <|>
-  OAAEF <$> try one_arg_applications_p <|> BaseValueEF <$> base_value_p 
+  SubEF <$> try subtraction_p <|>
+  MulEF <$> try multiplication_p <|>
+  OAAEF <$> try one_arg_applications_p <|>
+  BaseValueEF <$> base_value_p 
   :: Parser EqualityFactor
 
 -- Equality
@@ -107,7 +104,8 @@ no_abstractions_value_1_p =
   Equality <$> try equality_p <|>
   Subtraction <$> try subtraction_p <|>
   Multiplication <$> try multiplication_p <|>
-  OneArgApps <$> try one_arg_applications_p <|> BaseValue <$> base_value_p
+  OneArgApps <$> try one_arg_applications_p <|>
+  BaseValue <$> base_value_p
   :: Parser NoAbstractionsValue1
 
 -- ManyArgsArgValue
@@ -136,19 +134,22 @@ many_args_application_p =
 
 -- UseFields
 use_fields_p =
-  fmap UF $ string "use_fields ->" >> space_or_newline >> value_p
+  string "use_fields ->" >> space_or_newline >> (UF <$> value_p)
   :: Parser UseFields
 
 -- SpecificCase
 specific_case_p =
-  spaces_tabs >> literal_or_value_name_p >>= \lovn ->
+  literal_or_value_name_p >>= \lovn ->
   string " ->" >> space_or_newline >> value_p >>= \v ->
   return $ SC lovn v
   :: Parser SpecificCase
 
 -- Cases
 cases_p =
-  fmap Cs $ string "cases\n" *> many1 (specific_case_p <* char '\n')
+  string "cases" >>
+  new_line_space_surrounded >> specific_case_p >>= \c ->
+  many1 (try $ new_line_space_surrounded >> specific_case_p) >>= \cs ->
+  return $ Cs (c : cs)
   :: Parser Cases
 
 -- NameTypeAndValue
@@ -195,9 +196,11 @@ intermediates_output_p =
 
 -- NoAbstractionsValue
 no_abstraction_expression_p =
-  ManyArgsApplication <$> try many_args_application_p <|> Cases <$> try cases_p <|>
+  ManyArgsApplication <$> try many_args_application_p <|>
+  Cases <$> try cases_p <|>
   IntermediatesOutput <$> try intermediates_output_p <|>
-  UseFields <$> try use_fields_p <|> NoAbstractionsValue1 <$> no_abstractions_value_1_p 
+  UseFields <$> try use_fields_p <|>
+  NoAbstractionsValue1 <$> no_abstractions_value_1_p 
   :: Parser NoAbstractionsValue
 
 -- Value

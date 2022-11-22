@@ -6,36 +6,33 @@ import Prelude
   ( Int, String, Maybe(..), Bool(..), (>>=), (>>), (==), (+), (*), (>), (++), ($), concat
   , concatMap, return, error, mapM, init, last, show, map, sequence, zip, drop, length
   , undefined )
-import Data.List ( intercalate, splitAt )
-import qualified Data.Map as M ( lookup, insert )
-import Control.Monad ( foldM )
-import Control.Monad.State ( (>=>) )
+import Data.List
+  ( intercalate, splitAt )
+import Control.Monad
+  ( foldM )
+import Control.Monad.State
+  ( (>=>) )
+import qualified Data.Map as M
+  ( lookup, insert )
 
-import Helpers ( Haskell, (-->), (.>), indent )
+import Helpers
+  ( Haskell, (-->), (.>), indent )
 
 import HaskellTypes.LowLevel
   ( LiteralOrValueName(..), ApplicationDirection(..), ValueName(..), Abstractions(..) )
-import CodeGenerators.LowLevel
-  ( lit_g, literal_g, value_name_g, literal_or_value_name_g, abstractions_g )
-
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), vt_bt_are_equivalent
   , vt_shortest_equivalent )
-import CodeGenerators.Types ( value_type_g )
-
 import HaskellTypes.Values
-  ( ParenthesisValue(..), BaseValue(..), OneArgApplications(..)
-  , MultiplicationFactor(..), Multiplication(..), SubtractionFactor(..), Subtraction(..)
-  , EqualityFactor(..), Equality(..)
-  , NoAbstractionsValue1(..), ManyArgsArgValue(..), ManyArgsApplication(..)
-  , UseFields(..), SpecificCase(..), Cases(..)
-  , NameTypeAndValue(..), NameTypeAndValueLists(..)
-  , NTAVOrNTAVLists(..), NamesTypesAndValues(..), IntermediatesOutput(..)
-  , NoAbstractionsValue(..), Value(..) )
-
 import HaskellTypes.Generation
   ( Stateful, get_indent_level, update_indent_level, tuple_type_map_lookup
   , value_map_insert, value_map_lookup )
+
+
+import CodeGenerators.LowLevel
+  ( lit_g, literal_g, value_name_g, literal_or_value_name_g, abstractions_g )
+import CodeGenerators.Types
+  ( value_type_g )
 
 {- 
   All:

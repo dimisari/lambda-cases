@@ -1,13 +1,20 @@
 module HaskellTypes.Generation where
 
-import Prelude ( Int, String, Maybe(..), (>>=), return )
-import Control.Monad.State ( State, get, modify )
-import Control.Monad.Trans.Except ( ExceptT )
-import qualified Data.Map as M ( Map, lookup, insert )
+import Prelude
+  ( Int, String, Maybe(..), (>>=), return )
+import Control.Monad.State
+  ( State, get, modify )
+--import Control.Monad.Trans.Except ( ExceptT )
+import qualified Data.Map as M
+  ( Map, lookup, insert )
 
-import Helpers ( (.>), (-->) )
-import HaskellTypes.LowLevel ( ValueName )
-import HaskellTypes.Types ( TypeName, ValueType, FieldAndType )
+import Helpers
+  ( (.>), (-->) )
+
+import HaskellTypes.LowLevel
+  ( ValueName )
+import HaskellTypes.Types
+  ( TypeName, ValueType, FieldAndType )
 
 -- Types
 type TupleTypeMap =
@@ -47,9 +54,8 @@ value_map_insert = ( \( vn, vt ) ->
   ) :: ( ValueName, ValueType ) -> Stateful ()
 
 -- tuple type map operations
-tuple_type_map_lookup = ( \tn ->
-  get_tuple_type_map >>= M.lookup tn .> return
-  ) :: TypeName -> Stateful (Maybe [ FieldAndType ])
+tuple_type_map_lookup = ( \tn -> get_tuple_type_map >>= M.lookup tn .> return)
+  :: TypeName -> Stateful (Maybe [ FieldAndType ])
 
 tuple_type_map_insert = ( \( tn, vt ) ->
   get_tuple_type_map >>= M.insert tn vt .> update_tuple_type_map

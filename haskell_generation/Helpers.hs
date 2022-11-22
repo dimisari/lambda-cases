@@ -26,13 +26,13 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-seperated2 = (\p s ->
+seperated2 = (\s p ->
   p >>= \a ->
   try (string s *> p) --> many1 >>= \as ->
   return $ a:as
-  ) :: Parser a -> String -> Parser [a]
+  ) :: String -> Parser a -> Parser [a]
 
-comma_seperated2 = flip seperated2 ", "
+comma_seperated2 = seperated2 ", "
   :: Parser a -> Parser [a]
 
 paren_comma_seperated2 = ( \p ->
@@ -46,9 +46,6 @@ new_line_space_surrounded = spaces_tabs *> char '\n' <* spaces_tabs
   :: Parser Char
 
 space_or_newline = try new_line_space_surrounded <|> char ' '
-  :: Parser Char
-
-arrow_with_space_or_newline = string " ->" *> space_or_newline
   :: Parser Char
 
 eof_or_new_lines = eof <|> skipMany1 new_line_space_surrounded

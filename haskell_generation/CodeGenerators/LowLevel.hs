@@ -5,18 +5,19 @@ module CodeGenerators.LowLevel where
 import Prelude
   ( Bool(..), Maybe(..), (>>=), (++), (==), ($), (>>), (<$>), concatMap, error, zip
   , init, last, map, length, show, return, undefined, concat, fmap, mapM, mapM_ )
-import qualified Data.Map as M ( lookup )
+import qualified Data.Map as M
+  ( lookup )
 
-import Helpers ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
+import Helpers
+  ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
   , Abstraction(..), Abstractions(..) )
-
 import HaskellTypes.Types
   ( BaseType(..), ValueType(..), TypeName(..), vt_shortest_equivalent )
-
-import HaskellTypes.Generation ( Stateful, value_map_lookup, value_map_insert )
+import HaskellTypes.Generation
+  ( Stateful, value_map_lookup, value_map_insert )
 
 {- 
   All:

@@ -2,10 +2,13 @@
 
 module HaskellTypes.Types where
 
-import Prelude ( String, Bool(..), Show, Eq, Ord, (++), (==), show, concatMap )
+import Prelude
+  ( String, Bool(..), Show, Eq, Ord, (++), (==), show, concatMap )
 
-import Helpers ( (-->), (.>)  )
-import HaskellTypes.LowLevel ( ValueName )
+import Helpers
+  ( (-->), (.>) )
+import HaskellTypes.LowLevel
+  ( ValueName )
 
 -- Types
 newtype TypeName =

@@ -1,17 +1,18 @@
 
-ee_recursion: ( Int, Int ), ( Int, Int ), Int, Int :> ( Int, Int, Int )
-  = a_coeffs, b_coeffs, x :> cases
-    0 -> ( x, a_coeffs-->get_first, b_coeffs-->get_first )
-    y ->
-      intermediates
-      compute_new: ( Int, Int ) -> ( Int, Int )
-        = ( prev_prev, prev ) -> ( prev, prev_prev - x-->div<--y * prev )
-      output
-      compute_new<--a_coeffs, compute_new<--b_coeffs, y, x-->mod<--y :-> ee_recursion
+tuple_type SortedAbsoluteValues
+value ( max_abs: Int, min_abs: Int )
 
-initial_a_coeffs, initial_b_coeffs: ( Int, Int ), ( Int, Int )
-  = ( 1, 0 ), ( 0, 1 )
-
-extended_euclidean: Int, Int :> ( Int, Int, Int )
-  = initial_a_coeffs, initial_b_coeffs :-> ee_recursion
+gcd_help: SortedAbsoluteValues -> Int
+  = use_fields -> 
+    intermediates
+    b: Int
+      = (min_abs = 0)
+    c: SortedAbsoluteValues
+      = ( min_abs, max_abs-->mod<--min_abs )
+    f: Int -> Int
+      = cases
+        1 -> max_abs
+        0 -> c-->gcd_help
+    output
+    b-->f 
 

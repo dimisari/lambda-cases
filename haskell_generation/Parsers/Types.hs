@@ -1,17 +1,22 @@
 module Parsers.Types where
 
-import Prelude ( (<$>), (>>=), (>>), (<*), (*>), (++), ($), return, map )
+import Prelude
+  ( (<$>), (>>=), (>>), (<*), (*>), (++), ($), return, map )
 import Text.Parsec
   ( (<|>), many, char, lower, upper, string, sepBy, try )
-import Text.Parsec.String ( Parser )
+import Text.Parsec.String
+  ( Parser )
 
 import Helpers
   ( (-->), new_line_space_surrounded, comma_seperated2, paren_comma_seperated2
   , eof_or_new_lines )
+
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
   , TupleType(..) )
-import Parsers.LowLevel ( value_name_p )
+
+import Parsers.LowLevel
+  ( value_name_p )
 
 type_name_p =
   upper >>= \u ->

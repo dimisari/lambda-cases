@@ -2,12 +2,16 @@
 
 module HaskellTypes.Values where
 
-import Prelude ( String, Show, (++), show, error, concatMap )
+import Prelude
+  ( String, Show, (++), show, error, concatMap )
 
-import Helpers ( (-->), (.>) )
+import Helpers
+  ( (-->), (.>) )
+
 import HaskellTypes.LowLevel
   ( ValueName, LiteralOrValueName, ApplicationDirection, Abstractions )
-import HaskellTypes.Types ( ValueType )
+import HaskellTypes.Types
+  ( ValueType )
 
 -- Types
 data ParenthesisValue =

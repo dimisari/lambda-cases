@@ -2,12 +2,15 @@
 
 module HaskellTypes.LowLevel where
 
-import Prelude ( String, Show, Eq, Ord, (++), show, concatMap )
-import Helpers ( (-->), (.>) )
+import Prelude
+  ( String, Show, Eq, Ord, (++), show, concatMap )
+
+import Helpers
+  ( (-->), (.>) )
 
 -- Types
 data Literal =
-  Constant0 | Constant1  deriving Show
+  Constant0 | Constant1 deriving Show
 
 newtype ValueName =
   VN String deriving ( Eq, Ord )
