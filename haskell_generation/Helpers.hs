@@ -1,8 +1,5 @@
 module Helpers where
 
-import Prelude
-  ( Int, String, Char, (*), (>>=), (<*), (*>), (.), ($), (++), flip, return, init, last
-  , concatMap )
 import Text.Parsec ( (<|>), many, many1, string, char, try, eof, skipMany1 )
 import Text.Parsec.String ( Parser )
 import Data.List ( replicate )
@@ -15,12 +12,12 @@ import Data.List ( replicate )
 -- Keywords
 keywords =
   [ "tuple_type", "value", "or_type", "values" , "use_fields", "cases"
-  , "case_value", "intermediates", "output", "type_predicate", "function", "functions"
+  , "value", "intermediates", "output", "type_predicate", "function", "functions"
   , "type_theorem", "proof" ]
   :: [ String ]
 
 -- Function application/composition
-(-->) = flip ($)
+(==>) = flip ($)
   :: a -> (a -> b) -> b
 (.>) = flip (.)
   :: (a -> b) -> (b -> c) -> (a -> c)
@@ -28,16 +25,9 @@ keywords =
 -- Parsing 
 seperated2 = (\s p ->
   p >>= \a ->
-  try (string s *> p) --> many1 >>= \as ->
+  try (string s *> p) ==> many1 >>= \as ->
   return $ a:as
   ) :: String -> Parser a -> Parser [a]
-
-comma_seperated2 = seperated2 ", "
-  :: Parser a -> Parser [a]
-
-paren_comma_seperated2 = ( \p ->
-  string "( " *> comma_seperated2 p <* string " )"
-  ) :: Parser a -> Parser [a]
 
 spaces_tabs = many $ char ' ' <|> char '\t'
   :: Parser String
@@ -58,5 +48,5 @@ indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
 
 parenthesis_comma_sep_g = ( \g -> \l ->
-  "( " ++ init l-->concatMap (g .> (++ ", ")) ++ l-->last-->g ++ " )"
+  "( " ++ init l==>concatMap (g .> (++ ", ")) ++ l==>last==>g ++ " )"
   ) :: (a -> Haskell) -> [ a ] -> Haskell

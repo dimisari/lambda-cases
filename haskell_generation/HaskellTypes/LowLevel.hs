@@ -2,11 +2,8 @@
 
 module HaskellTypes.LowLevel where
 
-import Prelude
-  ( String, Show, Eq, Ord, (++), show, concatMap )
-
 import Helpers
-  ( (-->), (.>) )
+  ( (==>), (.>) )
 
 -- Types
 data Literal =
@@ -45,4 +42,4 @@ instance Show Abstraction where
     TupleMatching tm -> show tm
 
 instance Show Abstractions where
-  show = \(As as) -> as-->concatMap (show .> (++ " abstraction "))
+  show = \(As as) -> as ==> concatMap (show .> (++ " abstraction "))

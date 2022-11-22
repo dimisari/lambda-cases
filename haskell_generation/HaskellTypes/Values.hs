@@ -2,11 +2,8 @@
 
 module HaskellTypes.Values where
 
-import Prelude
-  ( String, Show, (++), show, error, concatMap )
-
 import Helpers
-  ( (-->), (.>) )
+  ( (==>), (.>) )
 
 import HaskellTypes.LowLevel
   ( ValueName, LiteralOrValueName, ApplicationDirection, Abstractions )
@@ -103,7 +100,7 @@ instance Show OneArgApplications where
       show_bv_ad = ( \( bv, ad ) -> " " ++ show bv ++ " " ++ show ad ++ " " )
         :: ( BaseValue, ApplicationDirection ) -> String
       in
-      bv_ad_s-->concatMap show_bv_ad ++ show v 
+      bv_ad_s ==> concatMap show_bv_ad ++ show v 
 
 instance Show MultiplicationFactor where
   show = \case
@@ -153,7 +150,7 @@ instance Show SpecificCase where
     "result: " ++ show v ++ "\n"
 
 instance Show Cases where
-  show = \(Cs scs) -> "\ncase start\n\n" ++ scs-->concatMap (show .> (++ "\n"))
+  show = \(Cs scs) -> "\ncase start\n\n" ++ scs ==> concatMap (show .> (++ "\n"))
 
 instance Show NameTypeAndValue where
   show = \(NTAV vn vt v) -> 
@@ -163,9 +160,9 @@ instance Show NameTypeAndValue where
 
 instance Show NameTypeAndValueLists where
   show = \(NTAVLists vns vts vs) -> 
-    "names: " ++  vns --> concatMap (show .> (++ ", ")) ++ "\n" ++
-    "types: " ++ vts --> concatMap (show .> (++ ", ")) ++ "\n" ++
-    "values: " ++ vs --> concatMap (show .> (++ ", ")) ++ "\n"
+    "names: " ++  vns ==> concatMap (show .> (++ ", ")) ++ "\n" ++
+    "types: " ++ vts ==> concatMap (show .> (++ ", ")) ++ "\n" ++
+    "values: " ++ vs ==> concatMap (show .> (++ ", ")) ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case
@@ -174,7 +171,7 @@ instance Show NTAVOrNTAVLists where
 
 instance Show NamesTypesAndValues where
   show = \(NTAVs ns_ts_and_vs) ->
-    "\n" ++ ns_ts_and_vs-->concatMap (show .> (++ "\n"))
+    "\n" ++ ns_ts_and_vs ==> concatMap (show .> (++ "\n"))
 
 instance Show IntermediatesOutput where
   show = \(IntermediatesOutput_ ns_ts_and_vs v) -> 

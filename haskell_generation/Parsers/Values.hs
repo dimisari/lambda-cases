@@ -1,15 +1,13 @@
 module Parsers.Values where
 
-import Prelude
-  ( (<$>), (<*), (*>), (++), ($), (>>=), (>>), return, fmap, replicate, length )
 import Text.Parsec
   ( (<|>), try, char, many1, string )
 import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (-->), seperated2, comma_seperated2, spaces_tabs, new_line_space_surrounded
-  , space_or_newline, eof_or_new_lines )
+  ( (==>), seperated2, spaces_tabs, new_line_space_surrounded, space_or_newline
+  , eof_or_new_lines )
 
 import HaskellTypes.LowLevel
   ( ApplicationDirection, Abstractions(..) )
@@ -37,7 +35,7 @@ import Parsers.Types
 -- ParenthesisValue
 [ parenthesis_value_p, tuple_internals_p, parenthesis_internals_p ] =
   [ char '(' *> (try tuple_internals_p <|> parenthesis_internals_p) <* char ')'
-  , fmap Tuple $ char ' ' *> comma_seperated2 value_p <* char ' '
+  , fmap Tuple $ char ' ' *> seperated2 ", " value_p <* char ' '
   , Parenthesis <$> value_p ]
   :: [ Parser ParenthesisValue ]
 
@@ -110,25 +108,26 @@ no_abstractions_value_1_p =
 
 -- ManyArgsArgValue
 many_args_arg_value_p =
-  try many_args_arg_value2_p <|> many_args_arg_value1_p
+  try many_abstractions_arrow_maav_p <|> one_abstraction_arrow_maav_p
   :: Parser ManyArgsArgValue
 
-many_args_arg_value1_p =
+one_abstraction_arrow_maav_p =
   abstractions_p >>= \as ->
   no_abstractions_value_1_p >>= \nae1 ->
   return $ MAAV as nae1
   :: Parser ManyArgsArgValue
 
-many_args_arg_value2_p =
-  comma_seperated2 abstraction_p >>= \as1 ->
-  string " :>" >> space_or_newline >> many_args_arg_value1_p >>= \(MAAV (As as2) nav1) ->
+many_abstractions_arrow_maav_p =
+  seperated2 ", " abstraction_p >>= \as1 ->
+  string " :->" >> space_or_newline >>
+  one_abstraction_arrow_maav_p >>= \(MAAV (As as2) nav1) ->
   return $ MAAV (As $ as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 
 -- ManyArgsApplication
 many_args_application_p =
-  comma_seperated2 many_args_arg_value_p >>= \maavs ->
-  string " :-> " >> value_name_p >>= \vn ->
+  seperated2 ", " many_args_arg_value_p >>= \maavs ->
+  string " :==> " >> value_name_p >>= \vn ->
   return $ MAA maavs vn
   :: Parser ManyArgsApplication
 
@@ -157,21 +156,21 @@ name_type_and_value_p =
   value_name_p >>= \vn ->
   string ": " >> value_type_p >>= \vt ->
   new_line_space_surrounded >> string "= " >> value_p >>= \v ->
-  eof_or_new_lines >> NTAV vn vt v-->return
+  eof_or_new_lines >> NTAV vn vt v==>return
   :: Parser NameTypeAndValue
 
 -- NameTypeAndValueLists
 name_type_and_value_lists_p = 
-  spaces_tabs >> comma_seperated2 value_name_p >>= \vns ->
+  spaces_tabs >> seperated2 ", " value_name_p >>= \vns ->
   let
   value_types_p =
-    comma_seperated2 value_type_p <|>
+    seperated2 ", " value_type_p <|>
     (string "all " *> value_type_p >>= \vt -> return $ replicate (length vns) vt)
     :: Parser [ ValueType ]
   in
   string ": " >> value_types_p >>= \vts ->
-  new_line_space_surrounded >> string "= " >> comma_seperated2 value_p >>= \vs ->
-  eof_or_new_lines >> NTAVLists vns vts vs-->return
+  new_line_space_surrounded >> string "= " >> seperated2 ", " value_p >>= \vs ->
+  eof_or_new_lines >> NTAVLists vns vts vs==>return
   :: Parser NameTypeAndValueLists
   
 -- NTAVOrNTAVLists
@@ -182,7 +181,7 @@ ntav_or_ntav_lists_p =
 
 -- NamesTypesAndValues
 names_types_and_values_p =
-  NTAVs <$> try ntav_or_ntav_lists_p-->many1
+  NTAVs <$> try ntav_or_ntav_lists_p==>many1
   :: Parser NamesTypesAndValues
 
 -- IntermediatesOutput
@@ -205,17 +204,17 @@ no_abstraction_expression_p =
 
 -- Value
 value_p =
-  try value2_p <|> value1_p
+  try many_abstractions_arrow_value_p <|> one_abstraction_arrow_value_p
   :: Parser Value
 
-value1_p =
+one_abstraction_arrow_value_p =
   abstractions_p >>= \as ->
   no_abstraction_expression_p >>= \nae ->
   return $ Value as nae
   :: Parser Value
 
-value2_p =
-  comma_seperated2 abstraction_p >>= \as1 ->
-  string " :>" >> space_or_newline  >> value1_p >>= \(Value (As as2) nav) ->
-  return $ Value (As $ as1 ++ as2) nav
+many_abstractions_arrow_value_p =
+  seperated2 ", " abstraction_p >>= \as1 ->
+  string " :->" >> space_or_newline >> one_abstraction_arrow_value_p >>=
+  \(Value (As as2) nav) -> return $ Value (As $ as1 ++ as2) nav
   :: Parser Value

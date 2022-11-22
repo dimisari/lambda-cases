@@ -2,15 +2,13 @@
 
 module CodeGenerators.Types where
 
-import Prelude
-  ( Maybe(..), (++), ($), (>>), (>>=), concatMap, map, show, return, error, mapM )
 import Data.List
   ( intercalate )
 import qualified Data.Map as M
   ( insert, lookup )
 
 import Helpers
-  ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
+  ( Haskell, (==>), (.>), parenthesis_comma_sep_g )
 
 import HaskellTypes.LowLevel
   ( ValueName(..) )
@@ -41,7 +39,7 @@ base_type_g = ( \case
 
 -- ValueType
 value_type_g = ( \(AbsTypesAndResType bts bt) -> 
-  bts-->concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
+  bts ==> concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
 -- TupleType
@@ -50,7 +48,7 @@ tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \ca
 
   Nothing ->
     let
-    fatl = ttv --> \(FieldAndTypeList l) -> l
+    fatl = ttv ==> \(FieldAndTypeList l) -> l
       :: [ FieldAndType ]
 
     additional_bt = TypeName tn
@@ -64,7 +62,7 @@ tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \ca
       ) :: FieldAndType -> Stateful Haskell
 
     tuple_value_g =
-      fatl-->mapM field_and_type_g >>=
+      fatl ==> mapM field_and_type_g >>=
       intercalate ", " .> ((type_name_g tn ++ "C { ") ++) .> (++ " }") .> return
       :: Stateful Haskell
     in

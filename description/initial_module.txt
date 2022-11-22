@@ -31,19 +31,19 @@ tuple_types
 
 type_theorems needed for the polymorphic functions
 
-  ( A, B )-->Has_First<--A
-  ( A, B, C )-->Has_First<--A
-  ( A, B, C, D )-->Has_First<--A
+  ( A, B )==>Has_First<==A
+  ( A, B, C )==>Has_First<==A
+  ( A, B, C, D )==>Has_First<==A
 
-  ( A, B )-->Has_Second<--B
-  ( A, B, C )-->Has_Second<--B
-  ( A, B, C, D )-->Has_Second<--B
+  ( A, B )==>Has_Second<==B
+  ( A, B, C )==>Has_Second<==B
+  ( A, B, C, D )==>Has_Second<==B
 
-  ( A, B, C )-->Has_Third<--C
-  ( A, B, C, D )-->Has_Third<--C
+  ( A, B, C )==>Has_Third<==C
+  ( A, B, C, D )==>Has_Third<==C
 
 or_types
 
-  A-->OrNothing
-  A-->Or<--B
+  A==>OrNothing
+  A==>Or<==B
   ListOf(A)s

@@ -1,33 +1,33 @@
-# first: A-->Has_First<--B => A -> B
+# first: A==>Has_First<==B => A -> B
 
-type_predicate A-->Has_First<--B
+type_predicate A==>Has_First<==B
 function first: A -> B
 
-type_theorem ( A, B )-->Has_First<--A
+type_theorem ( A, B )==>Has_First<==A
 proof first = get_pair_first
-type_theorem ( A, B, C )-->Has_First<--A
+type_theorem ( A, B, C )==>Has_First<==A
 proof first = get_triple_first
-type_theorem ( A, B, C, D )-->Has_First<--A
+type_theorem ( A, B, C, D )==>Has_First<==A
 proof first = get_quad_first
-type_theorem ListOf(A)s-->Has_First<--(A-->OrNothing)
+type_theorem ListOf(A)s==>Has_First<==(A==>OrNothing)
 proof first = head
 
-# second: A-->Has_Second<--B => A -> B
+# second: A==>Has_Second<==B => A -> B
 
-type_predicate A-->Has_Second<--B function second: A -> B
+type_predicate A==>Has_Second<==B function second: A -> B
 
-type_theorem ( A, B )-->Has_Second<--B
+type_theorem ( A, B )==>Has_Second<==B
 proof second = get_pair_second
-type_theorem ( A, B, C )-->Has_Second<--B
+type_theorem ( A, B, C )==>Has_Second<==B
 proof second = get_triple_second
-type_theorem ( A, B, C, D )-->Has_Second<--B
+type_theorem ( A, B, C, D )==>Has_Second<==B
 proof second = get_quad_second
 
-# third: A-->Has_Third<--B => A -> B
+# third: A==>Has_Third<==B => A -> B
 
-type_predicate A-->Has_Third<--B function third: A -> B
+type_predicate A==>Has_Third<==B function third: A -> B
 
-type_theorem ( A, B, C )-->Has_Third<--C
+type_theorem ( A, B, C )==>Has_Third<==C
 proof third = get_triple_third
-type_theorem ( A, B, C, D )-->Has_Third<--C
+type_theorem ( A, B, C, D )==>Has_Third<==C
 proof first = get_quad_third

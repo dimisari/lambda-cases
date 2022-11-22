@@ -2,21 +2,15 @@
 
 module CodeGenerators.Values where
 
-import Prelude
-  ( Int, String, Maybe(..), Bool(..), (>>=), (>>), (==), (+), (*), (>), (++), ($), concat
-  , concatMap, return, error, mapM, init, last, show, map, sequence, zip, drop, length
-  , undefined )
 import Data.List
   ( intercalate, splitAt )
 import Control.Monad
   ( foldM )
 import Control.Monad.State
   ( (>=>) )
-import qualified Data.Map as M
-  ( lookup, insert )
 
 import Helpers
-  ( Haskell, (-->), (.>), indent )
+  ( Haskell, (==>), (.>), indent )
 
 import HaskellTypes.LowLevel
   ( LiteralOrValueName(..), ApplicationDirection(..), ValueName(..), Abstractions(..) )
@@ -69,8 +63,8 @@ vts_values_g = ( \vts vs -> case length vts == length vs of
   False -> error "length of tuple values and tuple types must be the same"
 
   True -> 
-    zip vts vs-->map ( \( vt, v ) -> value_g vt v )-->sequence >>= \vs_g ->
-    return $ "( " ++ init vs_g-->concatMap (++ ", ") ++ vs_g-->last ++ " )"
+    zip vts vs ==> map ( \( vt, v ) -> value_g vt v ) ==> sequence >>= \vs_g ->
+    return $ "( " ++ init vs_g ==> concatMap (++ ", ") ++ vs_g ==> last ++ " )"
   ) :: [ ValueType ] -> [ Value ] -> Stateful Haskell
 
 tn_values_g = ( \tn vs -> tuple_type_map_lookup tn >>= \case
@@ -87,8 +81,8 @@ tn_values_g = ( \tn vs -> tuple_type_map_lookup tn >>= \case
   ) :: TypeName -> [ Value ] -> Stateful Haskell
 
 correct_tn_values_g = ( \tn vts vs ->
-  zip vts vs-->mapM (\( vt, v ) -> value_g vt v) >>= \vs_g -> 
-  return $ show tn ++ "C (" ++ init vs_g-->concatMap (++ ") (") ++ vs_g-->last ++ ")"
+  zip vts vs ==> mapM (\( vt, v ) -> value_g vt v) >>= \vs_g -> 
+  return $ show tn ++ "C (" ++ init vs_g ==> concatMap (++ ") (") ++ vs_g ==> last ++ ")"
   ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
 
 -- BaseValue
@@ -110,7 +104,7 @@ one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
     bv_type_inference_g bv >>= \bv_g ->
     ( case final_ad of
       LeftApplication -> one_arg_application_g ( final_vt, final_hs ) bv_g
-      RightApplication -> one_arg_application_g bv_g ( final_vt, final_hs ) ) -->
+      RightApplication -> one_arg_application_g bv_g ( final_vt, final_hs ) ) ==>
     \( inferred_vt, hs ) ->
     case vt == inferred_vt of 
       False -> 
@@ -141,7 +135,7 @@ one_arg_application_g = ( \( vt_left, hs_left ) ( vt_right, hs_right ) ->
         "Type : " ++ show vt_left
 
     AbsTypesAndResType (abs_bt : abs_bts) bt -> 
-      vt_bt_are_equivalent ( vt_shortest_equivalent vt_right, abs_bt ) --> \case
+      vt_bt_are_equivalent ( vt_shortest_equivalent vt_right, abs_bt ) ==> \case
         False -> 
           error $
             "types don't match for one argument function application. " ++
@@ -158,7 +152,7 @@ bv_type_inference_g = ( \case
       ++
       ", please define the following as an intermediate value: " ++ show pv
 
-  LiteralOrValueName lovn -> lovn --> \case
+  LiteralOrValueName lovn -> lovn ==> \case
     Literal l -> return $ ( AbsTypesAndResType [] (TypeName (TN "Int")), lit_g l)
 
     ValueName vn -> value_map_lookup vn >>= \case
@@ -219,22 +213,21 @@ no_abstractions_value_1_g = ( \vt -> \case
 
 -- ManyArgsArgValue
 many_args_arg_value_g = (
-  \(AbsTypesAndResType bts bt) (MAAV (As as) nav1) -> 
-  case length as > length bts of 
-    True ->
-      error $
-        "More abstractions than abstraction types." ++
-        "\n  Abstractions:  " ++ show (As as) ++
-        "\n  Types:  " ++ show bts
+  \(AbsTypesAndResType bts bt) (MAAV (As as) nav1) -> case length as > length bts of 
+  True ->
+    error $
+      "More abstractions than abstraction types." ++
+      "\n  Abstractions:  " ++ show (As as) ++
+      "\n  Types:  " ++ show bts
 
-    False -> 
-      let
-      ( bts1, bts2 ) = splitAt (length as) bts
-        :: ( [ BaseType ], [ BaseType ] )
-      in
-      abstractions_g bts1 (As as) >>= \as_g ->
-      no_abstractions_value_1_g (AbsTypesAndResType bts2 bt) nav1 >>= \nav1_g ->
-      return $ as_g ++ nav1_g
+  False -> 
+    let
+    ( bts1, bts2 ) = splitAt (length as) bts
+      :: ( [ BaseType ], [ BaseType ] )
+    in
+    abstractions_g bts1 (As as) >>= \as_g ->
+    no_abstractions_value_1_g (AbsTypesAndResType bts2 bt) nav1 >>= \nav1_g ->
+    return $ as_g ++ nav1_g
   ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
 
 -- ManyArgsApplication
@@ -255,8 +248,8 @@ bts_maavs_vn_g = ( \bts maavs vn ->
         return $ "(" ++ maav_g ++ ")"
       ) :: ( BaseType, ManyArgsArgValue )-> Stateful Haskell
   in
-  zip bts maavs-->mapM bt_maav_g >>= \maavs_g ->
-  return $ value_name_g vn ++ maavs_g-->concatMap (" " ++)
+  zip bts maavs ==> mapM bt_maav_g >>= \maavs_g ->
+  return $ value_name_g vn ++ maavs_g ==> concatMap (" " ++)
   ) :: [ BaseType ] -> [ ManyArgsArgValue ] -> ValueName -> Stateful Haskell
 
 many_args_application_g = ( \vt (MAA maavs vn) -> 
@@ -305,23 +298,23 @@ use_fields_g = ( \(AbsTypesAndResType bts bt) (UF v) -> case bts of
   ) :: ValueType -> UseFields -> Stateful Haskell
 
 -- SpecificCase
-specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
-  case bts of 
-    [] -> error $ "case should have abstaction type" ++ show vt ++ show sc
-    b:bs ->
-      let
-      generate = ( \g ->
-        value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
-        get_indent_level >>= \i ->
-        return $ indent i ++ g ++ " -> " ++ v_g
-        ) :: Haskell -> Stateful Haskell
-      in
-      case lovn of 
-        Literal l -> literal_g (AbsTypesAndResType [] b) l --> generate 
+specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) -> case bts of 
+  [] -> error $ "case should have abstaction type" ++ show vt ++ show sc
 
-        ValueName vn ->
-          value_map_insert (vn, vt_shortest_equivalent $ AbsTypesAndResType [] b) >>
-          generate (value_name_g vn)
+  b:bs ->
+    let
+    generate = ( \g ->
+      value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
+      get_indent_level >>= \i ->
+      return $ indent i ++ g ++ " -> " ++ v_g
+      ) :: Haskell -> Stateful Haskell
+    in
+    case lovn of 
+      Literal l -> literal_g (AbsTypesAndResType [] b) l ==> generate 
+
+      ValueName vn ->
+        value_map_insert (vn, vt_shortest_equivalent $ AbsTypesAndResType [] b) >>
+        generate (value_name_g vn)
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 
 -- Cases
@@ -329,7 +322,7 @@ cases_g = ( \vt (Cs cs) ->
   get_indent_level >>= \i ->
   update_indent_level (i + 1) >> mapM (specific_case_g vt) cs >>= \cs_g ->
   update_indent_level i >>
-  ("\\case\n" ++ init cs_g-->concatMap (++ "\n") ++ last cs_g)-->return
+  ("\\case\n" ++ init cs_g ==> concatMap (++ "\n") ++ last cs_g) ==> return
   ) :: ValueType -> Cases -> Stateful Haskell
 
 -- NameTypeAndValue
@@ -358,7 +351,7 @@ name_type_and_value_lists_g = ( \(NTAVLists vns vts vs) ->
     _ -> error "name_type_and_value_lists_g: lists must have the same length"
     ) :: ( [ ValueName ], [ ValueType ], [ Value ] ) -> [ NameTypeAndValue ]
   in
-  zip3 ( vns, vts, vs )-->mapM name_type_and_value_g >>= concat .> return
+  zip3 ( vns, vts, vs ) ==> mapM name_type_and_value_g >>= concat .> return
   ) :: NameTypeAndValueLists -> Stateful Haskell
 
 -- NTAVOrNTAVLists
@@ -369,7 +362,7 @@ ntav_or_ntav_lists_g = ( \case
 
 -- NamesTypesAndValues
 names_types_and_values_g = ( \(NTAVs ntavs) ->
-  ntavs-->mapM ntav_or_ntav_lists_g >>= concat .> return
+  ntavs ==> mapM ntav_or_ntav_lists_g >>= concat .> return
   ) :: NamesTypesAndValues -> Stateful Haskell
 
 -- IntermediatesOutput

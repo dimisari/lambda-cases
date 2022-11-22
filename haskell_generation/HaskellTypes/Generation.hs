@@ -1,20 +1,18 @@
 module HaskellTypes.Generation where
 
-import Prelude
-  ( Int, String, Maybe(..), (>>=), return )
 import Control.Monad.State
   ( State, get, modify )
 --import Control.Monad.Trans.Except ( ExceptT )
 import qualified Data.Map as M
-  ( Map, lookup, insert )
+  ( Map, lookup, insert, empty, fromList )
 
 import Helpers
-  ( (.>), (-->) )
+  ( (.>), (==>) )
 
 import HaskellTypes.LowLevel
-  ( ValueName )
+  ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName, ValueType, FieldAndType )
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType )
 
 -- Types
 type TupleTypeMap =
@@ -34,7 +32,7 @@ get_from_state = ( \f -> get >>= f .> return )
   :: (GenState -> a) -> Stateful a
 
 ( get_indent_level, get_tuple_type_map, get_value_map ) =
-  ( indent_level, tuple_type_map, value_map )-->( \(i,t,v) ->
+  ( indent_level, tuple_type_map, value_map ) ==> ( \(i,t,v) ->
   ( get_from_state i, get_from_state t, get_from_state v ))
   :: ( Stateful Int, Stateful TupleTypeMap, Stateful ValueMap )
 
@@ -60,3 +58,25 @@ tuple_type_map_lookup = ( \tn -> get_tuple_type_map >>= M.lookup tn .> return)
 tuple_type_map_insert = ( \( tn, vt ) ->
   get_tuple_type_map >>= M.insert tn vt .> update_tuple_type_map
   ) :: ( TypeName, [ FieldAndType ] ) -> Stateful ()
+
+-- initial state
+int_bt = TypeName $ TN "Int"
+  :: BaseType
+
+int_int_tuple_bt = TupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
+  :: BaseType
+
+init_value_map = 
+  M.fromList
+    [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    , ( VN "mod" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    , ( VN "get_first" , AbsTypesAndResType [ int_int_tuple_bt ] int_bt)
+    , ( VN "abs" , AbsTypesAndResType [ int_bt ] int_bt)
+    , ( VN "max" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    , ( VN "min" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    ]
+  :: ValueMap
+
+init_state = GS 0 M.empty init_value_map
+  :: GenState
+

@@ -1,2 +1,2 @@
-type_predicate A-->HasTextRepresentation
+type_predicate A==>HasTextRepresentation
 function to_text: A -> Text

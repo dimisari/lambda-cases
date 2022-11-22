@@ -2,14 +2,11 @@
 
 module CodeGenerators.LowLevel where
 
-import Prelude
-  ( Bool(..), Maybe(..), (>>=), (++), (==), ($), (>>), (<$>), concatMap, error, zip
-  , init, last, map, length, show, return, undefined, concat, fmap, mapM, mapM_ )
 import qualified Data.Map as M
   ( lookup )
 
 import Helpers
-  ( Haskell, (-->), (.>), parenthesis_comma_sep_g )
+  ( Haskell, (==>), (.>), parenthesis_comma_sep_g )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
@@ -78,7 +75,7 @@ value_type_tuple_matching_g = ( \case
   AbsTypesAndResType [] bt -> tuple_matching_g bt
   ) :: ValueType -> TupleMatching -> Stateful Haskell
 
-value_types_tuple_matching_g = ( \vts (TM vns) -> vns --> \case
+value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
     [] -> error "should not have less than 2 in tuple"
 
     [ _ ] -> error "should not have less than 2 in tuple"
@@ -90,20 +87,20 @@ value_types_tuple_matching_g = ( \vts (TM vns) -> vns --> \case
   ) :: [ ValueType ] -> TupleMatching -> Stateful Haskell
 
 value_types_value_names_g = ( \vts vns -> 
-  zip vns vts-->mapM_ value_map_insert >>
-  parenthesis_comma_sep_g value_name_g vns --> return
+  zip vns vts ==> mapM_ value_map_insert >>
+  parenthesis_comma_sep_g value_name_g vns ==> return
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
 
 -- Abstraction
 abstraction_g = ( \bt -> \case
   ValueNameAb vn ->
     let
-    vt = ( bt --> \case
+    vt = ( bt ==> \case
       ParenthesisType vt -> vt
       _ -> AbsTypesAndResType [] bt
       ) :: ValueType 
     in
-    value_map_insert ( vn, vt ) >> value_name_g vn --> return
+    value_map_insert ( vn, vt ) >> value_name_g vn ==> return
 
   TupleMatching tm -> tuple_matching_g bt tm
   ) :: BaseType -> Abstraction -> Stateful Haskell
@@ -117,7 +114,7 @@ correct_abstractions_g = ( \bts -> \case
     bt_abstraction_g = ( \( bt, a ) -> abstraction_g bt a >>= (++ " ") .> return )
       :: ( BaseType, Abstraction ) -> Stateful Haskell
     in
-    zip bts as-->mapM bt_abstraction_g-->fmap concat >>=
+    zip bts as ==> mapM bt_abstraction_g ==> fmap concat >>=
       ("\\" ++) .> (++ "-> ") .> return
   ) :: [ BaseType ] -> [ Abstraction ] -> Stateful Haskell
 

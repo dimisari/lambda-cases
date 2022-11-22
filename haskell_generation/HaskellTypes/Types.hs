@@ -2,11 +2,8 @@
 
 module HaskellTypes.Types where
 
-import Prelude
-  ( String, Bool(..), Show, Eq, Ord, (++), (==), show, concatMap )
-
 import Helpers
-  ( (-->), (.>) )
+  ( (==>), (.>) )
 import HaskellTypes.LowLevel
   ( ValueName )
 
@@ -44,7 +41,7 @@ instance Show BaseType where
 
 instance Show ValueType where
   show = \(AbsTypesAndResType bts bt) ->
-    bts-->concatMap (show .> (++ " right_arrow ")) ++ show bt
+    bts ==> concatMap (show .> (++ " right_arrow ")) ++ show bt
 
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ " Type " ++ show vt

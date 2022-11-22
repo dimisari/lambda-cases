@@ -2,32 +2,43 @@
 
 module Main where
 
-import Prelude
-  ( IO, String, Either(..), Show, ($), (<$>), (++), (<*), (*>), (>>=), print, writeFile
-  , readFile, flip, return, mapM, fmap, concat, replicate )
-import Control.Monad ( (>=>) )
-import Text.Parsec ( ParseError, (<|>), eof, many, parse, char, try )
-import Text.Parsec.String ( Parser )
-import Control.Monad.State ( evalState )
-import qualified Data.Map as M ( empty, fromList )
+import Control.Monad
+  ( (>=>) )
+import Text.Parsec
+  ( ParseError, (<|>), eof, many, parse, char, try )
+import Text.Parsec.String
+  ( Parser )
+import Control.Monad.State
+  ( evalState )
+import qualified Data.Map as M
+  ( empty, fromList )
 
-import Helpers ( Haskell, (.>) )
+import Helpers
+  ( Haskell, (.>) )
 
-import HaskellTypes.LowLevel ( ValueName(..) )
+import HaskellTypes.LowLevel
+  ( ValueName(VN) )
+import HaskellTypes.Types
+  ( TypeName(TN), BaseType(..), ValueType(AbsTypesAndResType), TupleType )
+import HaskellTypes.Values
+  ( NamesTypesAndValues )
+import HaskellTypes.Generation
+  ( ValueMap, GenState(..), init_state )
 
-import HaskellTypes.Types ( TypeName(..), BaseType(..), ValueType(..), TupleType )
-import Parsers.Types ( tuple_type_p )
-import CodeGenerators.Types ( tuple_type_g )
+import Parsers.Types
+  ( tuple_type_p )
+import Parsers.Values
+  ( names_types_and_values_p )
 
-import HaskellTypes.Values ( NamesTypesAndValues )
-import Parsers.Values ( names_types_and_values_p )
-import CodeGenerators.Values ( names_types_and_values_g )
-
-import HaskellTypes.Generation ( ValueMap, GenState(..) )
+import CodeGenerators.Types
+  ( tuple_type_g )
+import CodeGenerators.Values
+  ( names_types_and_values_g )
 
 -- Constants
 [ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example", "IOfiles/", io_files ++ "haskell_code_header.hs"
+  [ "example", "IOfiles/"
+  , io_files ++ "haskell_code_header.hs"
   , io_files ++ example_name ++ ".lc"
   , io_files ++ example_name ++ ".hs" ] 
   :: [ String ]
@@ -38,7 +49,7 @@ parse_with =
   :: Parser a -> String -> Either ParseError a
 
 data NTAVsOrTupleType =
-  NTAVs NamesTypesAndValues | TupleType_ TupleType deriving Show
+  TupleType_ TupleType | NTAVs NamesTypesAndValues deriving Show
 
 ntavs_or_tt_p =
   TupleType_ <$> try tuple_type_p <|> NTAVs <$> names_types_and_values_p
@@ -54,26 +65,6 @@ parse_string = parse_with program_p
   :: String -> Either ParseError Program
 
 -- Generating haskell
-int_bt = TypeName $ TN "Int"
-  :: BaseType
-
-int_int_tuple_bt = TupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
-  :: BaseType
-
-init_value_map = 
-  M.fromList
-    [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    , ( VN "mod" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    , ( VN "get_first" , AbsTypesAndResType [ int_int_tuple_bt ] int_bt)
-    , ( VN "abs" , AbsTypesAndResType [ int_bt ] int_bt)
-    , ( VN "max" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    , ( VN "min" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    ]
-  :: ValueMap
-
-init_state = GS 0 M.empty init_value_map
-  :: GenState
-
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
   TupleType_ tt -> tuple_type_g tt

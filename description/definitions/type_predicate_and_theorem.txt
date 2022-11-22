@@ -4,7 +4,7 @@ type_predicate definition
 
   example:
 
-  type_predicate Predicate_About(A, B)_And<--C
+  type_predicate Predicate_About(A, B)_And<==C
   functions
     fun1: A -> B -> C 
     fun2: (C -> A) -> B -> A
@@ -13,7 +13,7 @@ type_theorem definition
 
   example:
 
-  type_theorem Predicate_About(Int, Real)_And<--Text
+  type_theorem Predicate_About(Int, Real)_And<==Text
   proof
     fun1 = specific_fun_1
     fun2 = specific_fun_2

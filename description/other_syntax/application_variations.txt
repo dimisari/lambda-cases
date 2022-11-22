@@ -1,10 +1,10 @@
 
 type application:
 
-  - (:->/--> and <--/parenthesis at the end) variations:
+  - (:==>/==> and <==/parenthesis at the end) variations:
 
-    A, B :-> TypeName
-    A-->TypeName<--B
+    A, B :==> TypeName
+    A==>TypeName<==B
     TypeName(A, B)
 
   - one parenthesis in the middle variation
@@ -19,14 +19,14 @@ type application:
 
   - combination of variations example:
 
-    A, B :-> TypeName(C, D)MoreTypeName(E)EvenMoreTypeName(F, G)
+    A, B :==> TypeName(C, D)MoreTypeName(E)EvenMoreTypeName(F, G)
 
 same for function application:
 
-  - (:->/--> and <--/parenthesis at the end) variations:
+  - (:==>/==> and <==/parenthesis at the end) variations:
 
-    a, b :-> f
-    a-->f<--b
+    a, b :==> f
+    a==>f<==b
     f(a, b)
 
   - one parenthesis in the middle variation
