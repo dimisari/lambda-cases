@@ -14,4 +14,3 @@ initial_a_coeffs, initial_b_coeffs: ( Int, Int ), ( Int, Int )
 
 extended_euclidean: Int, Int :-> ( Int, Int, Int )
   = initial_a_coeffs, initial_b_coeffs :==> ee_recursion
-

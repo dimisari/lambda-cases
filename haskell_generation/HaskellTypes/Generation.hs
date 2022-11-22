@@ -79,4 +79,3 @@ init_value_map =
 
 init_state = GS 0 M.empty init_value_map
   :: GenState
-

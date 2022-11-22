@@ -6,8 +6,7 @@ import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), seperated2, spaces_tabs, new_line_space_surrounded, space_or_newline
-  , eof_or_new_lines )
+  ( (==>), seperated2, new_line_space_surrounded, space_or_newline, eof_or_new_lines )
 
 import HaskellTypes.LowLevel
   ( ApplicationDirection, Abstractions(..) )
@@ -145,8 +144,7 @@ specific_case_p =
 
 -- Cases
 cases_p =
-  string "cases" >>
-  new_line_space_surrounded >> specific_case_p >>= \c ->
+  string "cases" >> new_line_space_surrounded >> specific_case_p >>= \c ->
   many1 (try $ new_line_space_surrounded >> specific_case_p) >>= \cs ->
   return $ Cs (c : cs)
   :: Parser Cases
@@ -161,7 +159,7 @@ name_type_and_value_p =
 
 -- NameTypeAndValueLists
 name_type_and_value_lists_p = 
-  spaces_tabs >> seperated2 ", " value_name_p >>= \vns ->
+  seperated2 ", " value_name_p >>= \vns ->
   let
   value_types_p =
     seperated2 ", " value_type_p <|>
@@ -186,10 +184,9 @@ names_types_and_values_p =
 
 -- IntermediatesOutput
 intermediates_output_p = 
-  spaces_tabs >> string "intermediates" >> new_line_space_surrounded >>
+  string "intermediates" >> new_line_space_surrounded >>
   names_types_and_values_p >>= \ns_ts_and_vs ->
-  spaces_tabs >> string "output" >> new_line_space_surrounded >>
-  value_p >>= \v ->
+  string "output" >> new_line_space_surrounded >> value_p >>= \v ->
   return $ IntermediatesOutput_ ns_ts_and_vs v
   :: Parser IntermediatesOutput
 
