@@ -5,12 +5,12 @@ function first: A -> B
 
 type_theorem ( A, B )==>Has_First<==A
 proof first = get_pair_first
+
 type_theorem ( A, B, C )==>Has_First<==A
 proof first = get_triple_first
+
 type_theorem ( A, B, C, D )==>Has_First<==A
 proof first = get_quad_first
-type_theorem ListOf(A)s==>Has_First<==(A==>OrNothing)
-proof first = head
 
 # second: A==>Has_Second<==B => A -> B
 
@@ -18,8 +18,10 @@ type_predicate A==>Has_Second<==B function second: A -> B
 
 type_theorem ( A, B )==>Has_Second<==B
 proof second = get_pair_second
+
 type_theorem ( A, B, C )==>Has_Second<==B
 proof second = get_triple_second
+
 type_theorem ( A, B, C, D )==>Has_Second<==B
 proof second = get_quad_second
 

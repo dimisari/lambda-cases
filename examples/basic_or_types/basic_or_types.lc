@@ -1,12 +1,12 @@
 
 or_type A==>Or<==B
-values first_type.A | second_type.B
+values left_type_value.A | right_type_value.B
 
 or_type A==>OrNothing
 value the_value.A | nothing
 
-tuple_type HeadAndTail(A)
+tuple_type HeadAndTail<==A
 value ( head: A, tail: ListOf(A)s )
 
 or_type ListOf(A)s
-values head_and_tail.HeadAndTail(A) | empty_list
+values head_and_tail.HeadAndTail<==A | empty_list

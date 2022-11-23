@@ -5,8 +5,10 @@ operator + : A, A :> A
 
 type_theorem Int==>Has_Addition
 proof + = ==>int_addition<==
+
 type_theorem Real==>Has_Addition
 proof + = ==>real_addition<==
+
 type_theorem Text==>Has_Addition
 proof + = ==>concat<==
 
@@ -17,6 +19,7 @@ operator + : A -> A -> A
 
 type_theorem Int==>Has_Multiplication
 proof * = ==>int_multiplication<==
+
 type_theorem Real==>Has_Multiplication
 proof * = ==>real_multiplication<==
 
