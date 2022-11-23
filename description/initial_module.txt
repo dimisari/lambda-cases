@@ -1,49 +1,43 @@
-atomic types
+atomic types:
+- Int, Real
+- Char, Text
+- Pointer ?
 
-  Int, Real
-  Char
-  Text ?
-  Array ?
-  Pointer ?
-
-tuple_types 
-
-  array example: 10 * Int
-
-  tuple_type Empty
+tuple_types:
+- tuple_type Empty
   value ()
-  tuple_type ( A )
-  value ( unwrapped: A ) # needed??
-  tuple_type ( A, B )
+- tuple_type ( A )
+  value ( inside_value: A ) # needed??
+- tuple_type ( A, B )
   value ( pair_first: A, pair_second: B )
-  tuple_type ( A, B, C )
+- tuple_type ( A, B, C )
   value ( triple_first: A, triple_second: B, triple_third: C )
-  tuple_type ( A, B, C, D )
+- tuple_type ( A, B, C, D )
   value ( quad_first: A, quad_second: B, quad_third: C, quad_fourth: D )
 
-  with polymorphic functions
+with polymorphic functions:
+- first, second, third
+- Comment:
+  Polymorphic fourth is not defined since we stop at quadruple.
+  Bigger tuples should probably be made as new tuple_types and named differently
+  according to the context.
 
-  first, second, third
+type_theorems needed for the polymorphic functions:
+- ( A, B )==>Has_First<==A
+- ( A, B, C )==>Has_First<==A
+- ( A, B, C, D )==>Has_First<==A
 
-  (polymorphic) fourth is not defined since we stop at quadruple
-  (bigger tuples should probably be made as new tuple_types and named differently
-  according to the context)
+- ( A, B )==>Has_Second<==B
+- ( A, B, C )==>Has_Second<==B
+- ( A, B, C, D )==>Has_Second<==B
 
-type_theorems needed for the polymorphic functions
+- ( A, B, C )==>Has_Third<==C
+- ( A, B, C, D )==>Has_Third<==C
+ 
+or_types:
+- A==>OrNothing
+- A==>Or<==B
+- ListOf(A)s
 
-  ( A, B )==>Has_First<==A
-  ( A, B, C )==>Has_First<==A
-  ( A, B, C, D )==>Has_First<==A
-
-  ( A, B )==>Has_Second<==B
-  ( A, B, C )==>Has_Second<==B
-  ( A, B, C, D )==>Has_Second<==B
-
-  ( A, B, C )==>Has_Third<==C
-  ( A, B, C, D )==>Has_Third<==C
-
-or_types
-
-  A==>OrNothing
-  A==>Or<==B
-  ListOf(A)s
+if arrays:
+- Array example: 10 * Int
