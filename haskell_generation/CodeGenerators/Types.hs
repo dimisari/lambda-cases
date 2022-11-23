@@ -39,7 +39,7 @@ base_type_g = ( \case
 
 -- ValueType
 value_type_g = ( \(AbsTypesAndResType bts bt) -> 
-  bts ==> concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
+  bts==>concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
 -- TupleType
@@ -62,11 +62,10 @@ tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \ca
       ) :: FieldAndType -> Stateful Haskell
 
     tuple_value_g =
-      fatl ==> mapM field_and_type_g >>=
-      intercalate ", " .> ((type_name_g tn ++ "C { ") ++) .> (++ " }") .> return
+      fatl==>mapM field_and_type_g >>= \fatl_g ->
+      return $ type_name_g tn ++ "C { " ++ intercalate ", " fatl_g ++ " }"
       :: Stateful Haskell
     in
-    tuple_type_map_insert ( tn, fatl ) >>
-    tuple_value_g >>= \tv_g ->
-    return ( "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n" )
+    tuple_type_map_insert ( tn, fatl ) >> tuple_value_g >>= \tv_g ->
+    return $ "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
   ) :: TupleType -> Stateful Haskell

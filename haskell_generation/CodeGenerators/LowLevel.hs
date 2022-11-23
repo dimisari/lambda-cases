@@ -59,7 +59,7 @@ type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of
 
 -- TupleMatching
 tuple_matching_g = ( \case
-    -- possibly later with symbol table ?
+  -- possibly later with symbol table ?
   TypeName tn -> error $ "tuple matching TypeName :" ++ show tn
 
   ParenthesisType vt -> value_type_tuple_matching_g vt
@@ -76,9 +76,9 @@ value_type_tuple_matching_g = ( \case
   ) :: ValueType -> TupleMatching -> Stateful Haskell
 
 value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
-    [] -> error "should not have less than 2 in tuple"
+    [] -> error "should not have less than 2 in tuple matching"
 
-    [ _ ] -> error "should not have less than 2 in tuple"
+    [ _ ] -> error "should not have less than 2 in tuple matching"
 
     _ -> case length vts == length vns of
       False -> error "tuple values and tuple types must be of the same length"
@@ -87,8 +87,8 @@ value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
   ) :: [ ValueType ] -> TupleMatching -> Stateful Haskell
 
 value_types_value_names_g = ( \vts vns -> 
-  zip vns vts ==> mapM_ value_map_insert >>
-  parenthesis_comma_sep_g value_name_g vns ==> return
+  zip vns vts==>mapM_ value_map_insert >>
+  parenthesis_comma_sep_g value_name_g vns==>return
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
 
 -- Abstraction
@@ -97,6 +97,7 @@ abstraction_g = ( \bt -> \case
     let
     vt = ( bt ==> \case
       ParenthesisType vt -> vt
+
       _ -> AbsTypesAndResType [] bt
       ) :: ValueType 
     in
@@ -106,6 +107,12 @@ abstraction_g = ( \bt -> \case
   ) :: BaseType -> Abstraction -> Stateful Haskell
 
 -- Abstractions
+abstractions_g = ( \bts (As as) -> case length bts == length as of
+  False -> error "abstractions and abstraction types must be of the same length"
+
+  True -> correct_abstractions_g bts as
+  ) :: [ BaseType ] -> Abstractions -> Stateful Haskell
+
 correct_abstractions_g = ( \bts -> \case
   [] -> return ""
 
@@ -114,12 +121,6 @@ correct_abstractions_g = ( \bts -> \case
     bt_abstraction_g = ( \( bt, a ) -> abstraction_g bt a >>= (++ " ") .> return )
       :: ( BaseType, Abstraction ) -> Stateful Haskell
     in
-    zip bts as ==> mapM bt_abstraction_g ==> fmap concat >>=
-      ("\\" ++) .> (++ "-> ") .> return
+    zip bts as==>mapM bt_abstraction_g==>fmap concat >>= \as_g ->
+    return $ "\\" ++ as_g ++ "-> "
   ) :: [ BaseType ] -> [ Abstraction ] -> Stateful Haskell
-
-abstractions_g = ( \bts (As as) -> case length bts == length as of
-  False -> error "abstractions and abstraction types must be of the same length"
-
-  True -> correct_abstractions_g bts as
-  ) :: [ BaseType ] -> Abstractions -> Stateful Haskell

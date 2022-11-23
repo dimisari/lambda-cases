@@ -95,6 +95,7 @@ instance Show OneArgApplications where
   show = \(OAA bv_ad_s v) -> case bv_ad_s of
     [] ->
       error "one arg function application should have at least one application direction"
+
     _ ->
       let
       show_bv_ad = ( \( bv, ad ) -> " " ++ show bv ++ " " ++ show ad ++ " " )
@@ -110,8 +111,11 @@ instance Show MultiplicationFactor where
 instance Show Multiplication where
   show = \(Mul mfs) -> case mfs of
       [] -> error "found less than 2 mfs in multiplication"
+
       [ _ ] -> show (Mul [])
+
       [ mf1, mf2 ] -> "(" ++ show mf1 ++ " mul " ++ show mf2 ++ ")"
+
       (mf:mfs) -> "(" ++ show mf ++ " mul " ++ show (Mul mfs) ++ ")"
 
 instance Show SubtractionFactor where
@@ -171,7 +175,7 @@ instance Show NTAVOrNTAVLists where
 
 instance Show NamesTypesAndValues where
   show = \(NTAVs ns_ts_and_vs) ->
-    "\n" ++ ns_ts_and_vs ==> concatMap (show .> (++ "\n"))
+    "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
 
 instance Show IntermediatesOutput where
   show = \(IntermediatesOutput_ ns_ts_and_vs v) -> 

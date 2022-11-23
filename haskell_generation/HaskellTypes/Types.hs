@@ -34,14 +34,16 @@ instance Show TypeName where
 instance Show BaseType where
   show = \case 
     TupleType vts -> "TupleType " ++ show vts
-    ParenthesisType vt -> case vt of
+
+    ParenthesisType vt -> vt==> \case
       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
       _ -> show vt
+
     TypeName tn -> show tn
 
 instance Show ValueType where
   show = \(AbsTypesAndResType bts bt) ->
-    bts ==> concatMap (show .> (++ " right_arrow ")) ++ show bt
+    bts==>concatMap (show .> (++ " right_arrow ")) ++ show bt
 
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ " Type " ++ show vt
@@ -58,6 +60,8 @@ vt_shortest_equivalent = ( \case
 
 vt_bt_are_equivalent = ( \case
   ( AbsTypesAndResType [] bt1, bt2) -> bt1 == bt2
+
   ( vt1, ParenthesisType vt2 ) -> vt1 == vt2
+
   _ -> False
   ) :: ( ValueType, BaseType ) -> Bool
