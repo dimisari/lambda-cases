@@ -21,6 +21,8 @@ import HaskellTypes.Generation
 
 import CodeGenerators.LowLevel
   ( value_name_g )
+import CodeGenerators.ErrorMessages
+  ( tuple_type_err_msg )
 
 -- TypeName
 type_name_g = show
@@ -44,7 +46,7 @@ value_type_g = ( \(AbsTypesAndResType bts bt) ->
 
 -- TupleType
 tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \case
-  Just _ -> error "tuple_type of the same name already defined"
+  Just _ -> error tuple_type_err_msg
 
   Nothing ->
     let
@@ -56,8 +58,7 @@ tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \ca
 
     field_and_type_g = ( \(FT vn vt@(AbsTypesAndResType bts bt) ) ->
       value_map_insert
-        ( VN $ "get_" ++ value_name_g vn
-        , AbsTypesAndResType (additional_bt : bts) bt ) >>
+        (VN $ "get_" ++ value_name_g vn) (AbsTypesAndResType (additional_bt : bts) bt) >>
       return ("get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt)
       ) :: FieldAndType -> Stateful Haskell
 
@@ -66,6 +67,6 @@ tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \ca
       return $ type_name_g tn ++ "C { " ++ intercalate ", " fatl_g ++ " }"
       :: Stateful Haskell
     in
-    tuple_type_map_insert ( tn, fatl ) >> tuple_value_g >>= \tv_g ->
+    tuple_type_map_insert tn fatl >> tuple_value_g >>= \tv_g ->
     return $ "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
   ) :: TupleType -> Stateful Haskell

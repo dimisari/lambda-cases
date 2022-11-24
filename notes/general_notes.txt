@@ -1,3 +1,6 @@
+Questions 
+- mutual recursion: need to load whole level?
+
 Tuple Application
 
   f : A -> B -> C

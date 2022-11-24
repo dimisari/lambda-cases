@@ -1,3 +1,5 @@
+{-# language LambdaCase #-}
+
 module HaskellTypes.Generation where
 
 import Control.Monad.State
@@ -44,20 +46,22 @@ get_from_state = ( \f -> get >>= f .> return )
   :: ( Int -> Stateful (), TupleTypeMap -> Stateful (), ValueMap -> Stateful () )
 
 -- value map operations
-value_map_lookup = ( \vn -> get_value_map >>= M.lookup vn .> return )
-  :: ValueName -> Stateful (Maybe ValueType)
+value_map_lookup = ( \vn@(VN s) -> get_value_map >>= M.lookup vn .> \case
+  Nothing -> error $ "No definition for value: " ++ s
+  Just vt -> return vt
+  ) :: ValueName -> Stateful ValueType
 
-value_map_insert = ( \( vn, vt ) ->
+value_map_insert = ( \vn vt ->
   get_value_map >>= M.insert vn vt .> update_value_map
-  ) :: ( ValueName, ValueType ) -> Stateful ()
+  ) :: ValueName -> ValueType -> Stateful ()
 
 -- tuple type map operations
 tuple_type_map_lookup = ( \tn -> get_tuple_type_map >>= M.lookup tn .> return)
   :: TypeName -> Stateful (Maybe [ FieldAndType ])
 
-tuple_type_map_insert = ( \( tn, vt ) ->
+tuple_type_map_insert = ( \tn vt->
   get_tuple_type_map >>= M.insert tn vt .> update_tuple_type_map
-  ) :: ( TypeName, [ FieldAndType ] ) -> Stateful ()
+  ) :: TypeName -> [ FieldAndType ] -> Stateful ()
 
 -- initial state
 int_bt = TypeName $ TN "Int"

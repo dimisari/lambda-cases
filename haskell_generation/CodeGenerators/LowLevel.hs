@@ -16,6 +16,12 @@ import HaskellTypes.Types
 import HaskellTypes.Generation
   ( Stateful, value_map_lookup, value_map_insert )
 
+import CodeGenerators.ErrorMessages
+  ( literal_err_msg, type_check_value_name_err_msg, tuple_matching_err_msg
+  , value_type_tuple_matching_err_msg
+  , value_types_tuple_matching_err_msg1, value_types_tuple_matching_err_msg2
+  , abstractions_err_msg )
+
 {- 
   All:
   Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
@@ -25,7 +31,7 @@ import HaskellTypes.Generation
 literal_g = ( vt_shortest_equivalent .> \case
   AbsTypesAndResType [] (TypeName (TN "Int")) -> lit_g
 
-  vt -> error $ "Integer literal cannot have type: " ++ show vt
+  vt -> error $ literal_err_msg vt
   ) :: ValueType -> Literal -> Haskell
 
 lit_g = \case
@@ -41,18 +47,12 @@ value_name_g = ( \(VN vn) -> vn)
 literal_or_value_name_g = ( \vt -> \case
   Literal l -> return $ literal_g vt l
 
-  ValueName vn -> lookup_value_name_g vt vn
+  ValueName vn ->
+    value_map_lookup vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
 
-lookup_value_name_g = ( \vt vn -> value_map_lookup vn >>= \case
-  Nothing -> error $ "Could not find value: " ++ value_name_g vn
-
-  Just lookup_vt -> type_check_value_name_g vt lookup_vt vn
-  ) :: ValueType -> ValueName -> Stateful Haskell
-
 type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of 
-  False -> error $
-    "Value: " ++ show vn ++ "\nhas type: " ++ show lookup_vt ++ "\nnot: " ++ show vt
+  False -> error $ type_check_value_name_err_msg vn lookup_vt vt 
 
   True -> return $ value_name_g vn
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
@@ -60,7 +60,7 @@ type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of
 -- TupleMatching
 tuple_matching_g = ( \case
   -- possibly later with symbol table ?
-  TypeName tn -> error $ "tuple matching TypeName :" ++ show tn
+  TypeName tn -> error $ tuple_matching_err_msg tn
 
   ParenthesisType vt -> value_type_tuple_matching_g vt
 
@@ -68,26 +68,25 @@ tuple_matching_g = ( \case
   ) :: BaseType -> TupleMatching -> Stateful Haskell
 
 value_type_tuple_matching_g = ( \case
-  vt@(AbsTypesAndResType (_:_) _) ->
-    error $ "trying to match tuple but got type: " ++ show vt
+  vt@(AbsTypesAndResType (_:_) _) -> error $ value_type_tuple_matching_err_msg vt
 
   -- maybe throw some warning or error here ? when could it arise ?
   AbsTypesAndResType [] bt -> tuple_matching_g bt
   ) :: ValueType -> TupleMatching -> Stateful Haskell
 
 value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
-    [] -> error "should not have less than 2 in tuple matching"
+    [] -> error value_types_tuple_matching_err_msg1
 
-    [ _ ] -> error "should not have less than 2 in tuple matching"
+    [ _ ] -> error value_types_tuple_matching_err_msg1
 
     _ -> case length vts == length vns of
-      False -> error "tuple values and tuple types must be of the same length"
+      False -> error value_types_tuple_matching_err_msg2
 
       True -> value_types_value_names_g vts vns
   ) :: [ ValueType ] -> TupleMatching -> Stateful Haskell
 
 value_types_value_names_g = ( \vts vns -> 
-  zip vns vts==>mapM_ value_map_insert >>
+  zipWith value_map_insert vns vts==>sequence_  >>
   parenthesis_comma_sep_g value_name_g vns==>return
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
 
@@ -101,14 +100,14 @@ abstraction_g = ( \bt -> \case
       _ -> AbsTypesAndResType [] bt
       ) :: ValueType 
     in
-    value_map_insert ( vn, vt ) >> value_name_g vn ==> return
+    value_map_insert vn vt >> value_name_g vn ==> return
 
   TupleMatching tm -> tuple_matching_g bt tm
   ) :: BaseType -> Abstraction -> Stateful Haskell
 
 -- Abstractions
 abstractions_g = ( \bts (As as) -> case length bts == length as of
-  False -> error "abstractions and abstraction types must be of the same length"
+  False -> error abstractions_err_msg
 
   True -> correct_abstractions_g bts as
   ) :: [ BaseType ] -> Abstractions -> Stateful Haskell
@@ -118,9 +117,9 @@ correct_abstractions_g = ( \bts -> \case
 
   as ->
     let
-    bt_abstraction_g = ( \( bt, a ) -> abstraction_g bt a >>= (++ " ") .> return )
-      :: ( BaseType, Abstraction ) -> Stateful Haskell
+    bt_abstraction_g = ( \bt a -> abstraction_g bt a >>= (++ " ") .> return )
+      :: BaseType -> Abstraction -> Stateful Haskell
     in
-    zip bts as==>mapM bt_abstraction_g==>fmap concat >>= \as_g ->
+    zipWith bt_abstraction_g bts as==>sequence==>fmap concat >>= \as_g ->
     return $ "\\" ++ as_g ++ "-> "
   ) :: [ BaseType ] -> [ Abstraction ] -> Stateful Haskell
