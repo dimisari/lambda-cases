@@ -36,11 +36,10 @@ import CodeGenerators.Values
   ( names_types_and_values_g )
 
 -- Constants
-[ example_name, io_files, haskell_header, example_lc, example_hs ] =
-  [ "example", "IOfiles/"
-  , io_files ++ "haskell_code_header.hs"
-  , io_files ++ example_name ++ ".lc"
-  , io_files ++ example_name ++ ".hs" ] 
+[ example_name, files, haskell_header, example_lc, example_hs ] =
+  [ "example", "files/", files ++ "haskell_code_header.hs"
+  , files ++ example_name ++ ".lc"
+  , files ++ example_name ++ ".hs" ] 
   :: [ String ]
 
 -- Parsing 
@@ -82,8 +81,8 @@ write_code = ( generate_code .> \case
     writeFile example_hs $ header ++ source
   ) :: String -> IO ()
 
-main =
+main = (
   readFile example_lc
   -- >>= parse_string .> print
   >>= write_code
-  :: IO ()
+  ) :: IO ()
