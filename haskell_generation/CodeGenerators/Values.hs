@@ -36,7 +36,7 @@ import CodeGenerators.ErrorMessages
   NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication,
   UseFields, SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
-  NTAVOrNTAVLists, NamesTypesAndValues, IntermediatesOutput,
+  NTAVOrNTAVLists, NamesTypesAndValues, LetOutput,
   NoAbstractionsValue, Value
 -}
 
@@ -155,8 +155,7 @@ multiplication_g = ( \vt (Mul mfs) ->
 -- SubtractionFactor
 subtraction_factor_g = ( \vt -> \case
   MulSF m -> multiplication_g vt m
-  OneArgAppSF oaas -> one_arg_applications_g vt oaas
-  BaseValueSF bv -> base_value_g vt bv
+  MFSF f -> multiplication_factor_g vt f
   ) :: ValueType -> SubtractionFactor -> Stateful Haskell
 
 -- Subtraction
@@ -169,9 +168,7 @@ subtraction_g = ( \vt (Sub sf1 sf2) ->
 -- EqualityFactor
 equality_factor_g = ( \vt -> \case
   SubEF s -> subtraction_g vt s
-  MulEF m -> multiplication_g vt m
-  OAAEF oaas -> one_arg_applications_g vt oaas
-  BaseValueEF bv -> base_value_g vt bv
+  SFEF f -> subtraction_factor_g vt f
   ) :: ValueType -> EqualityFactor -> Stateful Haskell
 
 -- Equality
@@ -184,10 +181,7 @@ equality_g = ( \vt (Equ ef1 ef2) ->
 -- NoAbstractionsValue1
 no_abstractions_value_1_g = ( \vt -> \case
   Equality equ -> equality_g vt equ
-  Subtraction sub -> subtraction_g vt sub
-  Multiplication mul -> multiplication_g vt mul
-  OneArgApps oaas -> one_arg_applications_g vt oaas
-  BaseValue bv -> base_value_g vt bv
+  EquF f -> equality_factor_g vt f
   ) :: ValueType -> NoAbstractionsValue1 -> Stateful Haskell
 
 -- ManyArgsArgValue
@@ -230,10 +224,11 @@ bt_maav_g = ( \bt maav ->
     _ -> (AbsTypesAndResType [] bt)
     :: ValueType
   in
-  case maav of
-    MAAV (As []) (BaseValue bv) -> base_value_g maav_vt bv
-
-    _ -> many_args_arg_value_g maav_vt maav >>= \maav_g -> return $ "(" ++ maav_g ++ ")"
+  many_args_arg_value_g maav_vt maav >>= \maav_g -> return $ "(" ++ maav_g ++ ")"
+-- case maav of
+--   MAAV (As []) (BaseValue bv) -> base_value_g maav_vt bv
+--
+--   _ -> many_args_arg_value_g maav_vt maav >>= \maav_g -> return $ "(" ++ maav_g ++ ")"
   ) :: BaseType -> ManyArgsArgValue -> Stateful Haskell
 
 -- UseFields
@@ -331,8 +326,8 @@ names_types_and_values_g = ( \(NTAVs ntavs) ->
   ntavs==>mapM ntav_or_ntav_lists_g >>= concat .> return
   ) :: NamesTypesAndValues -> Stateful Haskell
 
--- IntermediatesOutput
-let_output_g = ( \vt (IntermediatesOutput_ ntavs v) ->
+-- LetOutput
+let_output_g = ( \vt (LetOutput_ ntavs v) ->
   get_indent_level >>= \i ->
   update_indent_level (i + 1) >> names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
@@ -345,7 +340,7 @@ let_output_g = ( \vt (IntermediatesOutput_ ntavs v) ->
     :: Haskell
   in
   update_indent_level i >> return hs_source
-  ) :: ValueType -> IntermediatesOutput -> Stateful Haskell
+  ) :: ValueType -> LetOutput -> Stateful Haskell
 
 -- NoAbstractionsValue
 no_abstractions_value_g = ( \vt -> \case
@@ -353,7 +348,7 @@ no_abstractions_value_g = ( \vt -> \case
   UseFields uf -> use_fields_g vt uf
   NoAbstractionsValue1 nav1 -> no_abstractions_value_1_g vt nav1
   Cases cs -> cases_g vt cs
-  IntermediatesOutput io -> let_output_g vt io
+  LetOutput io -> let_output_g vt io
   ) :: ValueType -> NoAbstractionsValue -> Stateful Haskell
 
 -- Value

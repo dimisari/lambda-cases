@@ -12,19 +12,18 @@ import Helpers
 type Error = String
 
 -- LowLevel
-literal_err_msg = ( \vt -> "Integer literal cannot have type: " ++ show vt )
+literal_err_msg = ( "Integer literal cannot have type: " ++) . show
   :: ValueType -> Error
 
 type_check_value_name_err_msg = ( \vn lookup_vt vt -> 
   "Value: " ++ show vn ++ "\nhas type: " ++ show lookup_vt ++ "\nnot: " ++ show vt
   ) :: ValueName -> ValueType -> ValueType -> Error
 
-tuple_matching_err_msg = ( \tn -> "tuple matching TypeName :" ++ show tn )
+tuple_matching_err_msg = ("tuple matching TypeName :" ++) . show
   :: TypeName -> Error
 
-value_type_tuple_matching_err_msg = ( \vt ->
-  "trying to match tuple but got type: " ++ show vt
-  ) :: ValueType -> Error
+value_type_tuple_matching_err_msg = ("trying to match tuple but got type: " ++) . show
+  :: ValueType -> Error
 
 value_types_tuple_matching_err_msg1 = "should not have less than 2 in tuple matching"
   :: Error
@@ -47,7 +46,7 @@ vt_values_err_msg = ( \vs vt -> show (Tuple vs) ++ " can't have type: " ++ show 
 vts_values_err_msg = "length of values and types in tuple must be the same"
   :: Error
 
-type_not_found_err_msg = ( \tn -> "Did not find a definition for type: " ++ show tn )
+type_not_found_err_msg = ("Did not find a definition for type: " ++) . show
   :: TypeName -> Error
 
 tn_values_err_msg =
@@ -59,22 +58,22 @@ one_arg_applications_err_msg1 =
   "application expression should have at least one application operator"
   :: Error
 
-one_arg_applications_err_msg2 = ( \oaa -> 
-  "type inference for one argument applications failed in: " ++ show oaa
-  ) :: OneArgApplications -> Error
+one_arg_applications_err_msg2 = 
+  ("type inference for one argument applications failed in: " ++) . show
+  :: OneArgApplications -> Error
 
-bv_type_inference_err_msg = ( \pv -> 
-  "Cannot infer types for values inside parenthesis in one argument application" ++
-  ", please define the following as an intermediate value: " ++ show pv
-  ) :: ParenthesisValue -> Error
+bv_type_inference_err_msg =
+  (("Cannot infer types for values inside parenthesis in one argument application" ++
+    ", please define the following as an intermediate value: ") ++) . show
+  :: ParenthesisValue -> Error
 
-value_not_found_err_msg = ( \(VN vn) -> "Could not find value: " ++ vn )
+value_not_found_err_msg = ( "Could not find value: " ++) . show
   :: ValueName -> Error
 
-one_arg_application_err_msg_1 = ( \vt ->
-  "Cannot apply argument to something that does not have a function type. \nType : " ++
-  show vt
-  ) :: ValueType -> Error
+one_arg_application_err_msg_1 =  
+  ("Cannot apply argument to something that does not have a function type. \nType : "
+  ++) . show
+  :: ValueType -> Error
 
 one_arg_application_err_msg_2 = ( \vt_right abs_bt hs_left hs_right->
   "types don't match for one argument function application. types involved:\n  " ++

@@ -27,30 +27,28 @@ data Multiplication =
   Mul [ MultiplicationFactor ]
 
 data SubtractionFactor =
-  MulSF Multiplication | OneArgAppSF OneArgApplications | BaseValueSF BaseValue
+  MulSF Multiplication | MFSF MultiplicationFactor
 
 data Subtraction =
   Sub SubtractionFactor SubtractionFactor 
 
 data EqualityFactor =
-  SubEF Subtraction | MulEF Multiplication | OAAEF OneArgApplications |
-  BaseValueEF BaseValue
+  SubEF Subtraction | SFEF SubtractionFactor
 
 data Equality =
   Equ EqualityFactor EqualityFactor
 
 data NoAbstractionsValue1 =
-  Equality Equality | Subtraction Subtraction | Multiplication Multiplication |
-  OneArgApps OneArgApplications | BaseValue BaseValue 
+  Equality Equality | EquF EqualityFactor
 
 data ManyArgsArgValue =
   MAAV Abstractions NoAbstractionsValue1
 
 data ManyArgsApplication =
-  MAA [ ManyArgsArgValue ] ValueName deriving Show
+  MAA [ ManyArgsArgValue ] ValueName
 
 newtype UseFields =
-  UF Value deriving Show
+  UF Value
 
 data SpecificCase =
   SC LiteralOrValueName Value 
@@ -70,12 +68,12 @@ data NTAVOrNTAVLists =
 newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
 
-data IntermediatesOutput =
-  IntermediatesOutput_ NamesTypesAndValues Value
+data LetOutput =
+  LetOutput_ NamesTypesAndValues Value
 
 data NoAbstractionsValue =
   ManyArgsApplication ManyArgsApplication | UseFields UseFields | Cases Cases |
-  IntermediatesOutput IntermediatesOutput | NoAbstractionsValue1 NoAbstractionsValue1
+  LetOutput LetOutput | NoAbstractionsValue1 NoAbstractionsValue1
 
 data Value =
   Value Abstractions NoAbstractionsValue
@@ -113,8 +111,7 @@ instance Show Multiplication where
 instance Show SubtractionFactor where
   show = \case
     MulSF m -> show m
-    OneArgAppSF oaa -> show oaa
-    BaseValueSF bv -> show bv
+    MFSF f -> show f
 
 instance Show Subtraction where
   show = \(Sub sf1 sf2) -> show sf1 ++ " - " ++ show sf2
@@ -122,9 +119,7 @@ instance Show Subtraction where
 instance Show EqualityFactor where
   show = \case
     SubEF s -> show s
-    MulEF m -> show m
-    OAAEF oaa -> show oaa
-    BaseValueEF bv -> show bv
+    SFEF f -> show f
 
 instance Show Equality where
   show = \(Equ ef1 ef2) -> show ef1 ++ " = " ++ show ef2
@@ -132,19 +127,24 @@ instance Show Equality where
 instance Show NoAbstractionsValue1 where
   show = \case
     Equality equ -> show equ
-    Subtraction sub -> show sub
-    Multiplication mul -> show mul
-    OneArgApps oaa -> show oaa
-    BaseValue bv -> show bv
+    EquF f -> show f
 
 instance Show ManyArgsArgValue where
   show = \(MAAV as nav1) -> show as ++ show nav1
+
+instance Show ManyArgsApplication where
+  show = \(MAA maavs vn) ->
+    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++ " :==> " ++
+    show vn
+
+instance Show UseFields where
+  show = \(UF v) -> "use_fields ->\n" ++ show v
 
 instance Show SpecificCase where
   show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"
 
 instance Show Cases where
-  show = \(Cs scs) -> "\ncases\n\n" ++ scs ==> concatMap (show .> (++ "\n"))
+  show = \(Cs scs) -> "\ncases\n\n" ++ scs==>concatMap (show .> (++ "\n"))
 
 instance Show NameTypeAndValue where
   show = \(NTAV vn vt v) -> show vn ++ ": " ++ show vt ++ "\n  = " ++ show v ++ "\n"
@@ -161,18 +161,17 @@ instance Show NTAVOrNTAVLists where
     NameTypeAndValueLists ntavl -> show ntavl
 
 instance Show NamesTypesAndValues where
-  show = \(NTAVs ns_ts_and_vs) ->
-    "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
+  show = \(NTAVs ns_ts_and_vs) -> "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
 
-instance Show IntermediatesOutput where
-  show = \(IntermediatesOutput_ ns_ts_and_vs v) -> 
+instance Show LetOutput where
+  show = \(LetOutput_ ns_ts_and_vs v) -> 
     "let\n" ++ show ns_ts_and_vs ++ "output\n" ++ show v
 
 instance Show NoAbstractionsValue where
   show = \case
     ManyArgsApplication maa -> show maa
     Cases cs -> show cs
-    IntermediatesOutput inter_out -> show inter_out
+    LetOutput inter_out -> show inter_out
     NoAbstractionsValue1 nav1 -> show nav1
 
 instance Show Value where

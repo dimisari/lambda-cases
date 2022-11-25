@@ -6,7 +6,7 @@ import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), seperated2, eof_or_new_lines )
+  ( (==>), (.>), seperated2, eof_or_new_lines )
 
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
@@ -29,18 +29,18 @@ base_type_p =
 
 -- ValueType
 value_type_p =
-  try many_abstractions_arrow_value_type_p <|> one_abstraction_arrow_value_type_p
+  try many_abs_arrows_value_type_p <|> one_abs_arrow_value_type_p
   :: Parser ValueType
 
-one_abstraction_arrow_value_type_p =
+one_abs_arrow_value_type_p =
   many (try $ base_type_p <* string " -> ") >>= \bts ->
   base_type_p >>= \bt ->
   return $ AbsTypesAndResType bts bt
   :: Parser ValueType
 
-many_abstractions_arrow_value_type_p =
-  seperated2 ", " one_abstraction_arrow_value_type_p >>= \vt1s ->
-  string " :-> " >> one_abstraction_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
+many_abs_arrows_value_type_p =
+  seperated2 ", " one_abs_arrow_value_type_p >>= \vt1s ->
+  string " :-> " >> one_abs_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
   return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
   :: Parser ValueType
 -- ValueType end
@@ -52,8 +52,8 @@ field_and_type_p =
   :: Parser FieldAndType
 
 tuple_value_p = 
-  string "( " >> (field_and_type_p==>sepBy $ string ", ") >>= \fatl ->
-  string " )" >> fatl==>FieldAndTypeList==>return
+  string "( " *> (field_and_type_p==>sepBy $ string ", ") <* string " )" >>=
+  FieldAndTypeList .> return
   :: Parser TupleTypeValue
 
 tuple_type_p =

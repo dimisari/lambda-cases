@@ -27,7 +27,7 @@ import Parsers.Types
   NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication,
   UseFields, SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
-  NTAVOrNTAVLists, NamesTypesAndValues, IntermediatesOutput,
+  NTAVOrNTAVLists, NamesTypesAndValues, LetOutput,
   NoAbstractionsValue, Value
 -}
 
@@ -70,8 +70,7 @@ multiplication_p =
 -- SubtractionFactor
 subtraction_factor_p =
   MulSF <$> try multiplication_p <|>
-  OneArgAppSF <$> try one_arg_applications_p <|>
-  BaseValueSF <$> base_value_p 
+  MFSF <$> multiplication_factor_p
   :: Parser SubtractionFactor
 
 -- Subtraction
@@ -84,9 +83,7 @@ subtraction_p =
 -- EqualityFactor
 equality_factor_p =
   SubEF <$> try subtraction_p <|>
-  MulEF <$> try multiplication_p <|>
-  OAAEF <$> try one_arg_applications_p <|>
-  BaseValueEF <$> base_value_p 
+  SFEF <$> subtraction_factor_p
   :: Parser EqualityFactor
 
 -- Equality
@@ -99,27 +96,23 @@ equality_p =
 -- NoAbstractionsValue1
 no_abstractions_value_1_p =
   Equality <$> try equality_p <|>
-  Subtraction <$> try subtraction_p <|>
-  Multiplication <$> try multiplication_p <|>
-  OneArgApps <$> try one_arg_applications_p <|>
-  BaseValue <$> base_value_p
+  EquF <$> try equality_factor_p
   :: Parser NoAbstractionsValue1
 
 -- ManyArgsArgValue
 many_args_arg_value_p =
-  try many_abstractions_arrow_maav_p <|> one_abstraction_arrow_maav_p
+  try many_abs_arrow_maav_p <|> one_abs_arrow_maav_p
   :: Parser ManyArgsArgValue
 
-one_abstraction_arrow_maav_p =
+one_abs_arrow_maav_p =
   abstractions_p >>= \as ->
   no_abstractions_value_1_p >>= \nae1 ->
   return $ MAAV as nae1
   :: Parser ManyArgsArgValue
 
-many_abstractions_arrow_maav_p =
+many_abs_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
-  string " :->" >> space_or_newline >>
-  one_abstraction_arrow_maav_p >>= \(MAAV (As as2) nav1) ->
+  string " :->" >> space_or_newline >> one_abs_arrow_maav_p >>= \(MAAV (As as2) nav1) ->
   return $ MAAV (As $ as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 
@@ -182,19 +175,19 @@ names_types_and_values_p =
   NTAVs <$> try ntav_or_ntav_lists_p==>many1
   :: Parser NamesTypesAndValues
 
--- IntermediatesOutput
+-- LetOutput
 let_output_p = 
   string "let" >> new_line_space_surrounded >>
   names_types_and_values_p >>= \ns_ts_and_vs ->
   string "output" >> new_line_space_surrounded >> value_p >>= \v ->
-  return $ IntermediatesOutput_ ns_ts_and_vs v
-  :: Parser IntermediatesOutput
+  return $ LetOutput_ ns_ts_and_vs v
+  :: Parser LetOutput
 
 -- NoAbstractionsValue
 no_abstraction_expression_p =
   ManyArgsApplication <$> try many_args_application_p <|>
   Cases <$> try cases_p <|>
-  IntermediatesOutput <$> try let_output_p <|>
+  LetOutput <$> try let_output_p <|>
   UseFields <$> try use_fields_p <|>
   NoAbstractionsValue1 <$> no_abstractions_value_1_p 
   :: Parser NoAbstractionsValue
