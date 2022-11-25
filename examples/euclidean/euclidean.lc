@@ -4,7 +4,7 @@ value ( max_abs: Int, min_abs: Int )
 
 to_sorted_asbolute_values: Int, Int :-> SortedAbsoluteValues
   = x, y :-> 
-    intermediates
+    let
     abs_x, abs_y: all Int
       = x==>abs, y==>abs
     output

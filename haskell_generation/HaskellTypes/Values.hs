@@ -166,7 +166,7 @@ instance Show NamesTypesAndValues where
 
 instance Show IntermediatesOutput where
   show = \(IntermediatesOutput_ ns_ts_and_vs v) -> 
-    "intermediates\n" ++ show ns_ts_and_vs ++ "output\n" ++ show v
+    "let\n" ++ show ns_ts_and_vs ++ "output\n" ++ show v
 
 instance Show NoAbstractionsValue where
   show = \case

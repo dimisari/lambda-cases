@@ -1,8 +1,8 @@
 
-intermediates-output syntax defines a value that uses intermediate values. Example:
+let-output syntax defines a value that uses intermediate values. Example:
 - f: Type0 -> Type1
     = value_name0 -> 
-      intermediates
+      let
       value_name1: TypeExpression0
         = value expression 0
       value_name2, value_name3: TypeExpression1, TypeExpression2

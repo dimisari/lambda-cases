@@ -15,7 +15,7 @@ import Data.List
 -- Keywords
 keywords =
   [ "tuple_type", "value", "or_type", "values" , "use_fields", "cases"
-  , "value", "intermediates", "output", "type_predicate", "function", "functions"
+  , "value", "let", "output", "type_predicate", "function", "functions"
   , "type_theorem", "proof" ]
   :: [ String ]
 

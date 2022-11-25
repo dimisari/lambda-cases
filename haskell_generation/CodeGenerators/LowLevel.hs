@@ -88,7 +88,7 @@ value_types_value_names_g = ( \vts vns ->
 -- Abstraction
 abstraction_g = ( \bt -> \case
   ValueNameAb vn ->
-    intermediates
+    let
     vt = ( bt ==> \case
       ParenthesisType vt -> vt
 
@@ -111,7 +111,7 @@ correct_abstractions_g = ( \bts -> \case
   [] -> return ""
 
   as ->
-    intermediates
+    let
     bt_abstraction_g = ( \bt a -> abstraction_g bt a >>= (++ " ") .> return )
       :: BaseType -> Abstraction -> Stateful Haskell
     in

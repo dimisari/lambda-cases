@@ -160,7 +160,7 @@ name_type_and_value_p =
 -- NameTypeAndValueLists
 name_type_and_value_lists_p = 
   seperated2 ", " value_name_p >>= \vns ->
-  intermediates
+  let
   value_types_p =
     seperated2 ", " value_type_p <|>
     (string "all " *> value_type_p >>= \vt -> return $ replicate (length vns) vt)
@@ -183,8 +183,8 @@ names_types_and_values_p =
   :: Parser NamesTypesAndValues
 
 -- IntermediatesOutput
-intermediates_output_p = 
-  string "intermediates" >> new_line_space_surrounded >>
+let_output_p = 
+  string "let" >> new_line_space_surrounded >>
   names_types_and_values_p >>= \ns_ts_and_vs ->
   string "output" >> new_line_space_surrounded >> value_p >>= \v ->
   return $ IntermediatesOutput_ ns_ts_and_vs v
@@ -194,7 +194,7 @@ intermediates_output_p =
 no_abstraction_expression_p =
   ManyArgsApplication <$> try many_args_application_p <|>
   Cases <$> try cases_p <|>
-  IntermediatesOutput <$> try intermediates_output_p <|>
+  IntermediatesOutput <$> try let_output_p <|>
   UseFields <$> try use_fields_p <|>
   NoAbstractionsValue1 <$> no_abstractions_value_1_p 
   :: Parser NoAbstractionsValue
