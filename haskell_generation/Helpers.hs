@@ -1,8 +1,11 @@
 module Helpers where
 
-import Text.Parsec ( (<|>), many, many1, string, char, try, eof, skipMany1 )
-import Text.Parsec.String ( Parser )
-import Data.List ( replicate )
+import Text.Parsec
+  ( (<|>), many, many1, string, char, try, eof, skipMany1, digit )
+import Text.Parsec.String
+  ( Parser )
+import Data.List
+  ( replicate )
 
 {-
   All:
@@ -23,6 +26,9 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
+integer = (read :: String -> Integer) <$> many1 digit
+  :: Parser Integer
+
 seperated2 = (\s p ->
   p >>= \a ->
   try (string s *> p) ==> many1 >>= \as ->

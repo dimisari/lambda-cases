@@ -4,9 +4,9 @@ module HaskellTypes.Generation where
 
 import Control.Monad.State
   ( State, get, modify )
---import Control.Monad.Trans.Except ( ExceptT )
 import qualified Data.Map as M
   ( Map, lookup, insert, empty, fromList )
+--import Control.Monad.Trans.Except ( ExceptT )
 
 import Helpers
   ( (.>), (==>) )

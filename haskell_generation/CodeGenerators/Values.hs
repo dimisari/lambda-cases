@@ -22,7 +22,7 @@ import HaskellTypes.Generation
   , value_map_insert, value_map_lookup )
 
 import CodeGenerators.LowLevel
-  ( lit_g, literal_g, value_name_g, literal_or_value_name_g, abstractions_g )
+  ( literal_g, value_name_g, literal_or_value_name_g, abstractions_g )
 import CodeGenerators.Types
   ( value_type_g )
 
@@ -114,7 +114,7 @@ bv_type_inference_g = ( \case
   ParenthesisValue pv -> error $ bv_type_inference_err_msg pv
 
   LiteralOrValueName lovn -> lovn==> \case
-    Literal l -> return $ ( AbsTypesAndResType [] (TypeName (TN "Int")), lit_g l)
+    Literal l -> return $ ( AbsTypesAndResType [] (TypeName (TN "Int")), show l)
 
     ValueName vn -> value_map_lookup vn >>= \vt -> return ( vt, value_name_g vn )
   ) :: BaseValue -> Stateful ( ValueType, Haskell )

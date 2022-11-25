@@ -8,14 +8,14 @@ import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), keywords, seperated2 )
+  ( (==>), keywords, seperated2, integer )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), ApplicationDirection(..)
   , TupleMatching(..), Abstraction(..), Abstractions(..) )
 
 literal_p =
-  char '0' *> return Constant0 <|> char '1' *> return Constant1
+  integer
   :: Parser Literal
 
 value_name_p =

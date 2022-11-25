@@ -29,15 +29,10 @@ import CodeGenerators.ErrorMessages
 
 -- Literal 
 literal_g = ( vt_shortest_equivalent .> \case
-  AbsTypesAndResType [] (TypeName (TN "Int")) -> lit_g
+  AbsTypesAndResType [] (TypeName (TN "Int")) -> show
 
   vt -> error $ literal_err_msg vt
   ) :: ValueType -> Literal -> Haskell
-
-lit_g = \case
-  Constant0 -> "0"
-  Constant1 -> "1"
-  :: Literal -> Haskell
 
 -- ValueName
 value_name_g = ( \(VN vn) -> vn)

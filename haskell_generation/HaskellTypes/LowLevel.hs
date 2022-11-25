@@ -6,8 +6,7 @@ import Helpers
   ( (==>), (.>) )
 
 -- Types
-data Literal =
-  Constant0 | Constant1 deriving Show
+type Literal = Integer
 
 newtype ValueName =
   VN String deriving ( Eq, Ord )
@@ -29,7 +28,7 @@ newtype Abstractions =
 
 -- Show instances
 instance Show ValueName where
-  show = \(VN n) -> "Name " ++ n
+  show = \(VN n) -> n
 
 instance Show LiteralOrValueName where
   show = \case
@@ -42,4 +41,4 @@ instance Show Abstraction where
     TupleMatching tm -> show tm
 
 instance Show Abstractions where
-  show = \(As as) -> as ==> concatMap (show .> (++ " abstraction "))
+  show = \(As as) -> as==>concatMap (show .> (++ " -> "))

@@ -17,7 +17,7 @@ import HaskellTypes.Types
   , TupleType(..) )
 import HaskellTypes.Generation
   ( Stateful, TupleTypeMap, tuple_type_map_lookup, tuple_type_map_insert
-  , value_map_lookup, value_map_insert )
+  , value_map_insert )
 
 import CodeGenerators.LowLevel
   ( value_name_g )
