@@ -22,7 +22,7 @@ data FieldAndType =
   FT { get_vn :: ValueName, get_vt :: ValueType }
 
 newtype TupleTypeValue =
-  FieldAndTypeList [ FieldAndType ] deriving Show
+  FieldAndTypeList [ FieldAndType ] 
 
 data TupleType =
   NameAndTupleValue TypeName TupleTypeValue
@@ -33,7 +33,8 @@ instance Show TypeName where
 
 instance Show BaseType where
   show = \case 
-    TupleType vts -> "TupleType " ++ show vts
+    TupleType vts ->
+      "( " ++ concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++ ")"
 
     ParenthesisType vt -> vt==> \case
       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
@@ -43,14 +44,18 @@ instance Show BaseType where
 
 instance Show ValueType where
   show = \(AbsTypesAndResType bts bt) ->
-    bts==>concatMap (show .> (++ " right_arrow ")) ++ show bt
+    bts==>concatMap (show .> (++ " -> ")) ++ show bt
 
 instance Show FieldAndType where
-  show = \(FT vn vt) -> show vn ++ " Type " ++ show vt
+  show = \(FT vn vt) -> show vn ++ ": " ++ show vt
+
+instance Show TupleTypeValue where
+  show = \(FieldAndTypeList fatl) ->
+    "( " ++ concatMap (show .> (++ ", ")) (init fatl) ++ show (last fatl) ++ ")"
 
 instance Show TupleType where
-  show = \(NameAndTupleValue tn tv) ->
-    "\nname:" ++ show tn ++ "\ntuple: " ++ show tv ++ "\n"
+  show = \(NameAndTupleValue tn ttv) ->
+    "\ntuple_type" ++ show tn ++ "\nvalue " ++ show ttv ++ "\n"
 
 -- helpers
 vt_shortest_equivalent = ( \case

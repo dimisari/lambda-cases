@@ -84,7 +84,8 @@ data Value =
 instance Show ParenthesisValue where
   show = \case
     Parenthesis v -> "(" ++ show v ++ ")"
-    Tuple vs -> "Tuple " ++ show vs
+    Tuple vs ->
+      "( " ++ concatMap (show .> (++ ", ")) (init vs) ++ show (last vs) ++ " )"
 
 instance Show BaseValue where
   show = \case
@@ -92,16 +93,10 @@ instance Show BaseValue where
     LiteralOrValueName lovn -> show lovn
 
 instance Show OneArgApplications where
-  show = \(OAA bv_ad_s v) -> case bv_ad_s of
-    [] ->
-      error "one arg function application should have at least one application direction"
+  show = \(OAA bv_ad_s bv) -> case bv_ad_s of
+    [] -> error $ one_arg_app_err_msg
 
-    _ ->
-      let
-      show_bv_ad = ( \( bv, ad ) -> " " ++ show bv ++ " " ++ show ad ++ " " )
-        :: ( BaseValue, ApplicationDirection ) -> String
-      in
-      bv_ad_s ==> concatMap show_bv_ad ++ show v 
+    _ -> bv_ad_s==>concatMap ( \( bv, ad ) -> show bv ++ show ad ) ++ show bv
 
 instance Show MultiplicationFactor where
   show = \case
@@ -110,13 +105,10 @@ instance Show MultiplicationFactor where
 
 instance Show Multiplication where
   show = \(Mul mfs) -> case mfs of
-      [] -> error "found less than 2 mfs in multiplication"
-
-      [ _ ] -> show (Mul [])
-
-      [ mf1, mf2 ] -> "(" ++ show mf1 ++ " mul " ++ show mf2 ++ ")"
-
-      (mf:mfs) -> "(" ++ show mf ++ " mul " ++ show (Mul mfs) ++ ")"
+      [] -> error less_than_two_mul_err_msg
+      [ _ ] -> error less_than_two_mul_err_msg
+      [ mf1, mf2 ] ->  show mf1 ++ " * " ++ show mf2
+      (mf:mfs) -> show mf ++ " * " ++ show (Mul mfs)
 
 instance Show SubtractionFactor where
   show = \case
@@ -125,7 +117,7 @@ instance Show SubtractionFactor where
     BaseValueSF bv -> show bv
 
 instance Show Subtraction where
-  show = \(Sub sf1 sf2) -> "(" ++ show sf1 ++ " minus " ++ show sf2 ++ ")"
+  show = \(Sub sf1 sf2) -> show sf1 ++ " - " ++ show sf2
 
 instance Show EqualityFactor where
   show = \case
@@ -135,7 +127,7 @@ instance Show EqualityFactor where
     BaseValueEF bv -> show bv
 
 instance Show Equality where
-  show = \(Equ ef1 ef2) -> "(" ++ show ef1 ++ " equals " ++ show ef2 ++ ")"
+  show = \(Equ ef1 ef2) -> show ef1 ++ " = " ++ show ef2
 
 instance Show NoAbstractionsValue1 where
   show = \case
@@ -149,24 +141,19 @@ instance Show ManyArgsArgValue where
   show = \(MAAV as nav1) -> show as ++ show nav1
 
 instance Show SpecificCase where
-  show = \(SC lovn v) -> 
-    "specific case: " ++ show lovn ++ "\n" ++
-    "result: " ++ show v ++ "\n"
+  show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"
 
 instance Show Cases where
-  show = \(Cs scs) -> "\ncase start\n\n" ++ scs ==> concatMap (show .> (++ "\n"))
+  show = \(Cs scs) -> "\ncases\n\n" ++ scs ==> concatMap (show .> (++ "\n"))
 
 instance Show NameTypeAndValue where
-  show = \(NTAV vn vt v) -> 
-    "name: " ++ show vn ++ "\n" ++
-    "type: " ++ show vt ++ "\n" ++
-    "value: " ++ show v ++ "\n"
+  show = \(NTAV vn vt v) -> show vn ++ ": " ++ show vt ++ "\n  = " ++ show v ++ "\n"
 
 instance Show NameTypeAndValueLists where
   show = \(NTAVLists vns vts vs) -> 
-    "names: " ++  vns ==> concatMap (show .> (++ ", ")) ++ "\n" ++
-    "types: " ++ vts ==> concatMap (show .> (++ ", ")) ++ "\n" ++
-    "values: " ++ vs ==> concatMap (show .> (++ ", ")) ++ "\n"
+    concatMap (show .> (++ ", ")) (init vns) ++ show (last vns) ++ ": " ++
+    concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++ "\n  = " ++
+    concatMap (show .> (++ ", ")) (init vs) ++ show (last vs) ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case
@@ -190,3 +177,8 @@ instance Show NoAbstractionsValue where
 
 instance Show Value where
   show = \(Value as nav) -> show as ++ show nav
+
+-- error messages
+one_arg_app_err_msg =
+  "one arg function application should have at least one application direction"
+less_than_two_mul_err_msg = "found less than 2 mfs in multiplication"

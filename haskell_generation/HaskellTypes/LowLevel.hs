@@ -15,10 +15,10 @@ data LiteralOrValueName =
   Literal Literal | ValueName ValueName
 
 data ApplicationDirection =
-  LeftApplication | RightApplication deriving Show
+  LeftApplication | RightApplication
 
 newtype TupleMatching =
-  TM [ ValueName ] deriving Show
+  TM [ ValueName ]
 
 data Abstraction =
   ValueNameAb ValueName | TupleMatching TupleMatching
@@ -34,6 +34,15 @@ instance Show LiteralOrValueName where
   show = \case
     Literal l -> show l
     ValueName vn -> show vn
+
+instance Show ApplicationDirection where
+  show = \case
+    LeftApplication -> "==>"
+    RightApplication -> "<=="
+
+instance Show TupleMatching where
+  show = \(TM vns) ->
+    "(" ++ init vns==>concatMap (show .> (++ ", ")) ++ show (last vns) ++ ")"
 
 instance Show Abstraction where
   show = \case

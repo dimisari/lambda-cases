@@ -49,7 +49,7 @@ tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \ca
   Just _ -> error tuple_type_err_msg
 
   Nothing ->
-    let
+    intermediates
     fatl = ttv ==> \(FieldAndTypeList l) -> l
       :: [ FieldAndType ]
 

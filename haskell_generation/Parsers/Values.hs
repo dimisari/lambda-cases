@@ -160,7 +160,7 @@ name_type_and_value_p =
 -- NameTypeAndValueLists
 name_type_and_value_lists_p = 
   seperated2 ", " value_name_p >>= \vns ->
-  let
+  intermediates
   value_types_p =
     seperated2 ", " value_type_p <|>
     (string "all " *> value_type_p >>= \vt -> return $ replicate (length vns) vt)

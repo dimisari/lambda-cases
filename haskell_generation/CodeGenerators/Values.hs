@@ -121,7 +121,7 @@ bv_type_inference_g = ( \case
 
 add_next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->
   bv_type_inference_g next_bv >>= \bv_g ->
-  let 
+  intermediates 
   ( next_vt, next_hs ) = case ad of
     LeftApplication -> one_arg_application_g ( sf_vt, sf_hs ) bv_g
     RightApplication -> one_arg_application_g bv_g ( sf_vt, sf_hs )
@@ -196,7 +196,7 @@ many_args_arg_value_g = (
   True -> error $ many_args_arg_value_err_msg (As as) bts
 
   False -> 
-    let
+    intermediates
     ( bts1, bts2 ) = splitAt (length as) bts
       :: ( [ BaseType ], [ BaseType ] )
     in
@@ -208,7 +208,7 @@ many_args_arg_value_g = (
 -- ManyArgsApplication
 many_args_application_g = ( \vt (MAA maavs vn) -> value_map_lookup vn >>=
   \(AbsTypesAndResType abs_bts res_bt) ->
-  let
+  intermediates
   ( bts1, bts2 ) = splitAt (length maavs) abs_bts
     :: ( [ BaseType ], [ BaseType ] )
   in
@@ -224,7 +224,7 @@ bts_maavs_vn_g = ( \bts maavs vn ->
   ) :: [ BaseType ] -> [ ManyArgsArgValue ] -> ValueName -> Stateful Haskell
 
 bt_maav_g = ( \bt maav ->
-  let
+  intermediates
   maav_vt = case bt of
     ParenthesisType vt -> vt
     _ -> (AbsTypesAndResType [] bt)
@@ -269,7 +269,7 @@ specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) -> case bts o
   [] -> error $ specific_case_err_msg vt sc
 
   b:bs ->
-    let
+    intermediates
     generate = ( \g ->
       value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
       get_indent_level >>= \i ->
@@ -296,7 +296,7 @@ cases_g = ( \vt (Cs cs) ->
 name_type_and_value_g = ( \(NTAV vn vt v) -> 
   value_map_insert vn vt >> value_g vt v >>= \v_g ->
   get_indent_level >>= \i ->
-  let
+  intermediates
   combine = ( \value_begin -> \value_end ->
     indent i  ++ value_name_g vn ++ " = " ++
     value_begin ++ v_g ++ value_end ++ "\n" ++
@@ -310,7 +310,7 @@ name_type_and_value_g = ( \(NTAV vn vt v) ->
 
 -- NameTypeAndValueLists
 name_type_and_value_lists_g = ( \(NTAVLists vns vts vs) -> 
-  let
+  intermediates
   zip3 = ( \case
     ( vn : vns, vt : vts, v : vs ) -> NTAV vn vt v : zip3 ( vns, vts, vs )
     ( [], [], [] ) -> []
@@ -336,10 +336,10 @@ intermediates_output_g = ( \vt (IntermediatesOutput_ ntavs v) ->
   get_indent_level >>= \i ->
   update_indent_level (i + 1) >> names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
-  let
+  intermediates
   hs_source =
     "\n" ++
-    indent (i + 1) ++ "let\n" ++ ntavs_g ++
+    indent (i + 1) ++ "intermediates\n" ++ ntavs_g ++
     indent (i + 1) ++ "in\n" ++
     indent (i + 1) ++ v_g
     :: Haskell
@@ -358,7 +358,7 @@ no_abstractions_value_g = ( \vt -> \case
 
 -- Value
 value_g = ( \(AbsTypesAndResType bts bt) (Value (As as) nav) ->
-  let
+  intermediates
   ( bts1, bts2 ) = splitAt (length as) bts
     :: ( [ BaseType ], [ BaseType ] )
   in
