@@ -13,8 +13,7 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
-  , TupleType(..) )
+  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleType(..) )
 import HaskellTypes.Generation
   ( Stateful, TupleTypeMap, tuple_type_map_lookup, tuple_type_map_insert
   , value_map_insert )
@@ -47,14 +46,11 @@ value_type_g = ( \(AbsTypesAndResType bts bt) ->
   ) :: ValueType -> Haskell
 
 -- TupleType
-tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \case
+tuple_type_g = ( \(NameAndValue tn fatl) -> tuple_type_map_lookup tn >>= \case
   Just _ -> error tuple_type_err_msg
 
   Nothing ->
     let
-    fatl = ttv ==> \(FieldAndTypeList l) -> l
-      :: [ FieldAndType ]
-
     additional_bt = TypeName tn
       :: BaseType
 
@@ -72,3 +68,30 @@ tuple_type_g = ( \(NameAndTupleValue tn ttv) -> tuple_type_map_lookup tn >>= \ca
     tuple_type_map_insert tn fatl >> tuple_value_g >>= \tv_g ->
     return $ "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
   ) :: TupleType -> Stateful Haskell
+
+---- OrType
+-- or_type_g = ( \(NameAndValues tn otvs) -> or_type_map_lookup tn >>= \case
+--   Just _ -> error or_type_err_msg
+-- 
+--   Nothing ->
+--     let
+--     catl = otvs ==> \(CaseAndTypeList l) -> l
+--       :: [ CaseAndType ]
+-- 
+--     additional_bt = TypeName tn
+--       :: BaseType
+-- 
+--     case_and_type_g = ( \(FT vn vt@(AbsTypesAndResType bts bt) ) ->
+--       value_map_insert
+--         (VN $ "get_" ++ value_name_g vn) (AbsTypesAndResType (additional_bt : bts) bt) >>
+--       return ("get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt)
+--       ) :: CaseAndType -> Stateful Haskell
+-- 
+--     or_value_g =
+--       catl==>mapM case_and_type_g >>= \fatl_g ->
+--       return $ type_name_g tn ++ "C " ++ intercalate " |  " fatl_g ++ " }"
+--       :: Stateful Haskell
+--     in
+--     or_type_map_insert tn catl >> or_value_g >>= \tv_g ->
+--     return $ "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
+--   ) :: OrType -> Stateful Haskell)

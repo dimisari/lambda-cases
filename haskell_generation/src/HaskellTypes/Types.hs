@@ -23,20 +23,14 @@ data ValueType =
 data FieldAndType =
   FT { get_fn :: ValueName, get_ft :: ValueType }
 
-newtype TupleTypeValue =
-  FieldAndTypeList [ FieldAndType ] 
-
 data TupleType =
-  NameAndTupleValue TypeName TupleTypeValue
+  NameAndValue TypeName [ FieldAndType ]
 
 data CaseAndType =
   CT { get_cn :: ValueName, get_ct :: ValueType }
 
-newtype OrTypeValues =
-  CaseAndTypeList [ CaseAndType ] 
-
 data OrType =
-  NameAndValues TypeName OrTypeValues
+  NameAndValues TypeName [ CaseAndType ]
 
 -- Show instances
 instance Show TypeName where
@@ -60,24 +54,19 @@ instance Show ValueType where
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ ": " ++ show vt
 
-instance Show TupleTypeValue where
-  show = \(FieldAndTypeList fatl) ->
-    "( " ++ concatMap (show .> (++ ", ")) (init fatl) ++ show (last fatl) ++ ")"
-
 instance Show TupleType where
-  show = \(NameAndTupleValue tn ttv) ->
-    "\ntuple_type" ++ show tn ++ "\nvalue " ++ show ttv ++ "\n"
+  show = \(NameAndValue tn ttv) ->
+    "\ntuple_type " ++ show tn ++ "\nvalue " ++
+    "( " ++ concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++ ")" ++ "\n"
 
 instance Show CaseAndType where
   show = \(CT vn vt) -> show vn ++ "." ++ show vt
 
-instance Show OrTypeValues where
-  show = \(CaseAndTypeList catl) ->
-    concatMap (show .> (++ " | ")) (init catl) ++ show (last catl)
-
 instance Show OrType where
-  show = \(NameAndValues tn ttv) ->
-    "\nor_type" ++ show tn ++ "\nvalues " ++ show ttv ++ "\n"
+  show = \(NameAndValues tn otvs) ->
+    "\nor_type " ++ show tn ++ "\nvalues " ++ 
+    concatMap (show .> (++ " | ")) (init otvs) ++ show (last otvs)
+    ++ "\n"
 
 -- helpers
 vt_shortest_equivalent = ( \case

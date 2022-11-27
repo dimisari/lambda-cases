@@ -14,44 +14,52 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType )
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType, CaseAndType )
 
 {- 
   All:
-  Types, getting fields, updating fields, value map operations,
-  tuple type map operations, initial state
+  Types, get fields, update fields, value_map operations,
+  tuple_type_map operations, or_type_map operations,
+  initial state
 -}
 
 -- Types
-type TupleTypeMap =
-  M.Map TypeName [ FieldAndType ] 
-
 type ValueMap =
   M.Map ValueName ValueType
 
+type TupleTypeMap =
+  M.Map TypeName [ FieldAndType ] 
+
+type OrTypeMap =
+  M.Map TypeName [ CaseAndType ] 
+
 data GenState =
-  GS { indent_level :: Int, tuple_type_map :: TupleTypeMap, value_map :: ValueMap  }
+  GS
+  { indent_level :: Int, value_map :: ValueMap
+  , tuple_type_map :: TupleTypeMap, or_type_map :: OrTypeMap }
 
 -- type Stateful = ExceptT String (State GenState)
 type Stateful = State GenState
 
--- getting state fields
+-- get fields
 get_from_state = ( \f -> get >>= f .> return )
   :: (GenState -> a) -> Stateful a
 
-( get_indent_level, get_tuple_type_map, get_value_map ) =
-  ( indent_level, tuple_type_map, value_map ) ==> ( \(i,t,v) ->
-  ( get_from_state i, get_from_state t, get_from_state v ))
-  :: ( Stateful Int, Stateful TupleTypeMap, Stateful ValueMap )
+( get_indent_level, get_value_map, get_tuple_type_map, get_or_type_map ) =
+  ( indent_level, value_map, tuple_type_map, or_type_map )==> \( i, v, t, o ) ->
+  ( get_from_state i, get_from_state v, get_from_state t, get_from_state o )
+  :: ( Stateful Int, Stateful ValueMap, Stateful TupleTypeMap, Stateful OrTypeMap )
 
--- updating state fields
-( update_indent_level, update_tuple_type_map, update_value_map ) =
+-- update fields
+( update_indent_level, update_value_map, update_tuple_type_map, update_or_type_map ) =
   ( \il -> modify ( \s -> s { indent_level = il } )
+  , \vm -> modify ( \s -> s { value_map = vm } ) 
   , \ttm -> modify ( \s -> s { tuple_type_map = ttm } )
-  , \vm -> modify ( \s -> s { value_map = vm } ) )
-  :: ( Int -> Stateful (), TupleTypeMap -> Stateful (), ValueMap -> Stateful () )
+  , \otm -> modify ( \s -> s { or_type_map = otm } ) )
+  :: ( Int -> Stateful (), ValueMap -> Stateful (), TupleTypeMap -> Stateful ()
+     , OrTypeMap -> Stateful ())
 
--- value map operations
+-- value_map operations
 value_map_lookup = ( \vn@(VN s) -> get_value_map >>= M.lookup vn .> \case
   Nothing -> error $ "No definition for value: " ++ s
   Just vt -> return vt
@@ -61,13 +69,21 @@ value_map_insert = ( \vn vt ->
   get_value_map >>= M.insert vn vt .> update_value_map
   ) :: ValueName -> ValueType -> Stateful ()
 
--- tuple type map operations
+-- tuple_type_map operations
 tuple_type_map_lookup = ( \tn -> get_tuple_type_map >>= M.lookup tn .> return)
   :: TypeName -> Stateful (Maybe [ FieldAndType ])
 
-tuple_type_map_insert = ( \tn vt->
-  get_tuple_type_map >>= M.insert tn vt .> update_tuple_type_map
+tuple_type_map_insert = ( \tn fatl->
+  get_tuple_type_map >>= M.insert tn fatl .> update_tuple_type_map
   ) :: TypeName -> [ FieldAndType ] -> Stateful ()
+
+-- or type map operations
+or_type_map_lookup = ( \tn -> get_or_type_map >>= M.lookup tn .> return)
+  :: TypeName -> Stateful (Maybe [ CaseAndType ])
+
+or_type_map_insert = ( \tn catl->
+  get_or_type_map >>= M.insert tn catl .> update_or_type_map
+  ) :: TypeName -> [ CaseAndType ] -> Stateful ()
 
 -- initial state
 int_bt = TypeName $ TN "Int"
@@ -87,5 +103,5 @@ init_value_map =
     ]
   :: ValueMap
 
-init_state = GS 0 M.empty init_value_map
+init_state = GS 0 init_value_map M.empty M.empty
   :: GenState

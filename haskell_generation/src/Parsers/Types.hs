@@ -9,8 +9,8 @@ import Helpers
   ( (==>), (.>), seperated2, eof_or_new_lines )
 
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
-  , TupleType(..), CaseAndType(..), OrTypeValues(..), OrType(..) )
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
+  , TupleType(..), CaseAndType(..), OrType(..) )
 
 import Parsers.LowLevel
   ( value_name_p )
@@ -59,17 +59,12 @@ field_and_type_p =
   return $ FT vn vt
   :: Parser FieldAndType
 
--- TupleTypeValue
-tuple_value_p = 
-  string "( " *> (field_and_type_p==>sepBy $ string ", ") <* string " )" >>=
-  FieldAndTypeList .> return
-  :: Parser TupleTypeValue
-
 -- TupleType
 tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
-  string "\nvalue " >> tuple_value_p >>= \tv ->
-  eof_or_new_lines >> NameAndTupleValue tn tv==>return
+  string "\nvalue " >>
+  string "( " *> (field_and_type_p==>sepBy $ string ", ") <* string " )" >>= \ttv ->
+  eof_or_new_lines >> NameAndValue tn ttv==>return
   :: Parser TupleType
 
 -- CaseAndType
@@ -79,14 +74,9 @@ case_and_type_p =
   return $ CT vn vt
   :: Parser CaseAndType
 
--- OrTypeValues
-or_values_p = 
-  (case_and_type_p==>sepBy $ string " | ") >>= CaseAndTypeList .> return
-  :: Parser OrTypeValues
-
 -- OrType
 or_type_p =
   string "or_type " >> type_name_p >>= \tn ->
-  string "\nvalues " >> or_values_p >>= \tv ->
-  eof_or_new_lines >> NameAndValues tn tv==>return
+  string "\nvalues " >> (case_and_type_p==>sepBy $ string " | ") >>= \otvs ->
+  eof_or_new_lines >> NameAndValues tn otvs==>return
   :: Parser OrType
