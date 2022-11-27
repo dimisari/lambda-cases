@@ -68,6 +68,17 @@ instance Show TupleType where
   show = \(NameAndTupleValue tn ttv) ->
     "\ntuple_type" ++ show tn ++ "\nvalue " ++ show ttv ++ "\n"
 
+instance Show CaseAndType where
+  show = \(CT vn vt) -> show vn ++ "." ++ show vt
+
+instance Show OrTypeValues where
+  show = \(CaseAndTypeList catl) ->
+    concatMap (show .> (++ " | ")) (init catl) ++ show (last catl)
+
+instance Show OrType where
+  show = \(NameAndValues tn ttv) ->
+    "\nor_type" ++ show tn ++ "\nvalues " ++ show ttv ++ "\n"
+
 -- helpers
 vt_shortest_equivalent = ( \case
   AbsTypesAndResType [] (ParenthesisType vt) -> vt_shortest_equivalent vt
