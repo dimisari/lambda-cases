@@ -11,6 +11,8 @@ import Helpers
 
 type Error = String
 
+-- All: LowLevel, Types, Values
+
 -- LowLevel
 literal_err_msg = ( "Integer literal cannot have type: " ++) . show
   :: ValueType -> Error

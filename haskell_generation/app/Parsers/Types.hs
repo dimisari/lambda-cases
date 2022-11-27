@@ -10,7 +10,7 @@ import Helpers
 
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleTypeValue(..)
-  , TupleType(..) )
+  , TupleType(..), CaseAndType(..), OrTypeValues(..), OrType(..) )
 
 import Parsers.LowLevel
   ( value_name_p )
@@ -29,18 +29,18 @@ base_type_p =
 
 -- ValueType
 value_type_p =
-  try many_abs_arrows_value_type_p <|> one_abs_arrow_value_type_p
+  try many_ab_arrows_value_type_p <|> one_ab_arrow_value_type_p
   :: Parser ValueType
 
-one_abs_arrow_value_type_p =
+one_ab_arrow_value_type_p =
   many (try $ base_type_p <* string " -> ") >>= \bts ->
   base_type_p >>= \bt ->
   return $ AbsTypesAndResType bts bt
   :: Parser ValueType
 
-many_abs_arrows_value_type_p =
-  seperated2 ", " one_abs_arrow_value_type_p >>= \vt1s ->
-  string " :-> " >> one_abs_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
+many_ab_arrows_value_type_p =
+  seperated2 ", " one_ab_arrow_value_type_p >>= \vt1s ->
+  string " :-> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
   return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
   :: Parser ValueType
 -- ValueType end
@@ -61,3 +61,19 @@ tuple_type_p =
   string "\nvalue " >> tuple_value_p >>= \tv ->
   eof_or_new_lines >> NameAndTupleValue tn tv==>return
   :: Parser TupleType
+
+case_and_type_p = 
+  value_name_p >>= \vn ->
+  string "." >> value_type_p >>= \vt ->
+  return $ CT vn vt
+  :: Parser CaseAndType
+
+or_values_p = 
+  (case_and_type_p==>sepBy $ string " | ") >>= CaseAndTypeList .> return
+  :: Parser OrTypeValues
+
+or_type_p =
+  string "or_type " >> type_name_p >>= \tn ->
+  string "\nvalues " >> or_values_p >>= \tv ->
+  eof_or_new_lines >> NameAndValues tn tv==>return
+  :: Parser OrType

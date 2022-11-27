@@ -16,6 +16,12 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType )
 
+{- 
+  All:
+  Types, getting fields, updating fields, value map operations,
+  tuple type map operations, initial state
+-}
+
 -- Types
 type TupleTypeMap =
   M.Map TypeName [ FieldAndType ] 

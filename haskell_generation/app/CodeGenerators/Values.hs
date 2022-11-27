@@ -73,7 +73,7 @@ tn_values_g = ( \tn vs -> tuple_type_map_lookup tn >>= \case
   Just fatl -> case length vs == length fatl of 
     False -> error tn_values_err_msg
 
-    True -> correct_tn_values_g tn (map get_vt fatl) vs
+    True -> correct_tn_values_g tn (map get_ft fatl) vs
   ) :: TypeName -> [ Value ] -> Stateful Haskell
 
 correct_tn_values_g = ( \tn vts vs ->
@@ -131,14 +131,15 @@ add_next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->
        ( BaseValue, ApplicationDirection ) ->
        Stateful ( ValueType, Haskell, ApplicationDirection )
 
-one_arg_application_g = ( \( vt_left, hs_left ) ( vt_right, hs_right ) -> case vt_left of 
+one_arg_application_g = (
+  \( vt_left, hs_left ) ( vt_right, hs_right ) -> case vt_left of 
   AbsTypesAndResType [] _ -> error $ one_arg_application_err_msg_1 vt_left
 
   AbsTypesAndResType (abs_bt : abs_bts) bt -> 
     vt_bt_are_equivalent ( vt_shortest_equivalent vt_right, abs_bt )==> \case
-      False -> error $ one_arg_application_err_msg_2 vt_right abs_bt hs_left hs_right
+    False -> error $ one_arg_application_err_msg_2 vt_right abs_bt hs_left hs_right
 
-      True -> ( AbsTypesAndResType abs_bts bt, hs_left ++ " " ++ hs_right )
+    True -> ( AbsTypesAndResType abs_bts bt, hs_left ++ " " ++ hs_right )
   ) :: ( ValueType, Haskell ) -> ( ValueType, Haskell ) -> ( ValueType, Haskell )
 
 -- MultiplicationFactor

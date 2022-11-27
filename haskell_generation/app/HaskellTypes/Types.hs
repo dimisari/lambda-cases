@@ -7,6 +7,8 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName )
 
+-- All: Types, Show instances, helpers
+
 -- Types
 newtype TypeName =
   TN String deriving ( Eq, Ord )
@@ -19,13 +21,22 @@ data ValueType =
   AbsTypesAndResType [ BaseType ] BaseType deriving Eq
 
 data FieldAndType =
-  FT { get_vn :: ValueName, get_vt :: ValueType }
+  FT { get_fn :: ValueName, get_ft :: ValueType }
 
 newtype TupleTypeValue =
   FieldAndTypeList [ FieldAndType ] 
 
 data TupleType =
   NameAndTupleValue TypeName TupleTypeValue
+
+data CaseAndType =
+  CT { get_cn :: ValueName, get_ct :: ValueType }
+
+newtype OrTypeValues =
+  CaseAndTypeList [ CaseAndType ] 
+
+data OrType =
+  NameAndValues TypeName OrTypeValues
 
 -- Show instances
 instance Show TypeName where

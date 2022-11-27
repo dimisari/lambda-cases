@@ -5,6 +5,8 @@ module HaskellTypes.LowLevel where
 import Helpers
   ( (==>), (.>) )
 
+-- All: Types, Show instances
+
 -- Types
 type Literal = Integer
 

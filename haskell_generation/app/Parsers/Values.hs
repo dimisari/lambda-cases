@@ -101,18 +101,18 @@ no_abstractions_value_1_p =
 
 -- ManyArgsArgValue
 many_args_arg_value_p =
-  try many_abs_arrow_maav_p <|> one_abs_arrow_maav_p
+  try many_ab_arrow_maav_p <|> one_ab_arrow_maav_p
   :: Parser ManyArgsArgValue
 
-one_abs_arrow_maav_p =
+one_ab_arrow_maav_p =
   abstractions_p >>= \as ->
   no_abstractions_value_1_p >>= \nae1 ->
   return $ MAAV as nae1
   :: Parser ManyArgsArgValue
 
-many_abs_arrow_maav_p =
+many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
-  string " :->" >> space_or_newline >> one_abs_arrow_maav_p >>= \(MAAV (As as2) nav1) ->
+  string " :->" >> space_or_newline >> one_ab_arrow_maav_p >>= \(MAAV (As as2) nav1) ->
   return $ MAAV (As $ as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 

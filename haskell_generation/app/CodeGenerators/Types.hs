@@ -24,6 +24,8 @@ import CodeGenerators.LowLevel
 import CodeGenerators.ErrorMessages
   ( tuple_type_err_msg )
 
+-- All: TypeName, BaseType, ValueType, TupleType
+
 -- TypeName
 type_name_g = show
   :: TypeName -> Haskell

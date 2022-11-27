@@ -22,10 +22,7 @@ import CodeGenerators.ErrorMessages
   , value_types_tuple_matching_err_msg1, value_types_tuple_matching_err_msg2
   , abstractions_err_msg )
 
-{- 
-  All:
-  Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
--}
+-- All: Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
 
 -- Literal 
 literal_g = ( vt_shortest_equivalent .> \case

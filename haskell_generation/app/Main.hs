@@ -10,20 +10,16 @@ import Text.Parsec.String
   ( Parser )
 import Control.Monad.State
   ( evalState )
-import qualified Data.Map as M
-  ( empty, fromList )
 
 import Helpers
   ( Haskell, (.>) )
 
-import HaskellTypes.LowLevel
-  ( ValueName(VN) )
 import HaskellTypes.Types
-  ( TypeName(TN), BaseType(..), ValueType(AbsTypesAndResType), TupleType )
+  ( TupleType )
 import HaskellTypes.Values
   ( NamesTypesAndValues )
 import HaskellTypes.Generation
-  ( ValueMap, GenState(..), init_state )
+  ( init_state )
 
 import Parsers.Types
   ( tuple_type_p )
@@ -81,8 +77,8 @@ write_code = ( generate_code .> \case
     writeFile example_hs $ header ++ source
   ) :: String -> IO ()
 
-main = (
+main =
   readFile example_lc
   -- >>= parse_string .> print
   >>= write_code
-  ) :: IO ()
+  :: IO ()

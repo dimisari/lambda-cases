@@ -10,6 +10,8 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( ValueType )
 
+-- All: Types, Show instances, error messages
+
 -- Types
 data ParenthesisValue =
   Parenthesis Value | Tuple [ Value ]
