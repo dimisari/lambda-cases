@@ -11,11 +11,11 @@ import Helpers
   ( (==>), keywords, seperated2, integer )
 
 import HaskellTypes.LowLevel
-  ( Literal(..), ValueName(..), LiteralOrValueName(..), ApplicationDirection(..)
-  , TupleMatching(..), Abstraction(..), Abstractions(..) )
+  ( Literal(..), ValueName(..), LiteralOrValueName(..)
+  , ApplicationDirection(..), TupleMatching(..), Abstraction(..)
+  , Abstractions(..) )
 
-literal_p =
-  integer
+literal_p = integer
   :: Parser Literal
 
 value_name_p =
@@ -30,7 +30,8 @@ literal_or_value_name_p =
   :: Parser LiteralOrValueName
 
 application_direction_p = 
-  string "<==" *> return LeftApplication <|> string "==>" *> return RightApplication
+  string "<==" *> return LeftApplication <|>
+  string "==>" *> return RightApplication
   :: Parser ApplicationDirection
 
 tuple_matching_p =

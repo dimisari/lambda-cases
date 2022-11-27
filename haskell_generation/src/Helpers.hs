@@ -26,13 +26,12 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-integer = (read :: String -> Integer) <$> many1 digit
+integer =
+  let number = many1 digit in read <$> ((:) <$> char '-' <*> number <|> number)
   :: Parser Integer
 
 seperated2 = (\s p ->
-  p >>= \a ->
-  try (string s *> p) ==> many1 >>= \as ->
-  return $ a:as
+  p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as
   ) :: String -> Parser a -> Parser [a]
 
 spaces_tabs = many $ char ' ' <|> char '\t'
@@ -53,6 +52,6 @@ type Haskell = String
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
 
-parenthesis_comma_sep_g = ( \g -> \l ->
-  "( " ++ init l==>concatMap (g .> (++ ", ")) ++ l==>last==>g ++ " )"
-  ) :: (a -> Haskell) -> [ a ] -> Haskell
+parenthesis_comma_sep_g =
+  ( \g -> \l -> "( " ++ init l==>concatMap (g .> (++ ", ")) ++ l==>last==>g ++ " )" )
+  :: (a -> Haskell) -> [ a ] -> Haskell

@@ -22,7 +22,11 @@ import CodeGenerators.ErrorMessages
   , value_types_tuple_matching_err_msg1, value_types_tuple_matching_err_msg2
   , abstractions_err_msg )
 
--- All: Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
+{-
+  All:
+  Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction,
+  Abstractions
+-}
 
 -- Literal 
 literal_g = ( vt_shortest_equivalent .> \case
@@ -40,7 +44,8 @@ literal_or_value_name_g = ( \vt -> \case
   Literal l -> return $ literal_g vt l
 
   ValueName vn ->
-    value_map_lookup vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
+    value_map_lookup vn >>= \lookup_vt ->
+    type_check_value_name_g vt lookup_vt vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
 
 type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of 
@@ -53,22 +58,19 @@ type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of
 tuple_matching_g = ( \case
   -- possibly later with symbol table ?
   TypeName tn -> error $ tuple_matching_err_msg tn
-
   ParenthesisType vt -> value_type_tuple_matching_g vt
-
   TupleType vts -> value_types_tuple_matching_g vts 
   ) :: BaseType -> TupleMatching -> Stateful Haskell
 
 value_type_tuple_matching_g = ( \case
-  vt@(AbsTypesAndResType (_:_) _) -> error $ value_type_tuple_matching_err_msg vt
-
+  vt@(AbsTypesAndResType (_:_) _) -> error $
+    value_type_tuple_matching_err_msg vt
   -- maybe throw some warning or error here ? when could it arise ?
   AbsTypesAndResType [] bt -> tuple_matching_g bt
   ) :: ValueType -> TupleMatching -> Stateful Haskell
 
 value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
     [] -> error value_types_tuple_matching_err_msg1
-
     [ _ ] -> error value_types_tuple_matching_err_msg1
 
     _ -> case length vts == length vns of
@@ -78,7 +80,7 @@ value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
   ) :: [ ValueType ] -> TupleMatching -> Stateful Haskell
 
 value_types_value_names_g = ( \vts vns -> 
-  zipWith value_map_insert vns vts==>sequence_  >>
+  zipWith value_map_insert vns vts==>sequence_ >>
   parenthesis_comma_sep_g value_name_g vns==>return
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
 
@@ -88,7 +90,6 @@ abstraction_g = ( \bt -> \case
     let
     vt = ( bt ==> \case
       ParenthesisType vt -> vt
-
       _ -> AbsTypesAndResType [] bt
       ) :: ValueType 
     in

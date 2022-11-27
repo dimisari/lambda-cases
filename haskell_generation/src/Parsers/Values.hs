@@ -4,9 +4,12 @@ import Text.Parsec
   ( (<|>), try, char, many1, string )
 import Text.Parsec.String
   ( Parser )
+import Text.Parsec.Combinator
+  ( choice )
 
 import Helpers
-  ( (==>), seperated2, new_line_space_surrounded, space_or_newline, eof_or_new_lines )
+  ( (==>), seperated2, new_line_space_surrounded, space_or_newline
+  , eof_or_new_lines )
 
 import HaskellTypes.LowLevel
   ( ApplicationDirection, Abstractions(..) )
@@ -15,8 +18,8 @@ import HaskellTypes.Types
 import HaskellTypes.Values
 
 import Parsers.LowLevel
-  ( value_name_p, literal_or_value_name_p, application_direction_p, abstraction_p
-  , abstractions_p )
+  ( value_name_p, literal_or_value_name_p, application_direction_p
+  , abstraction_p, abstractions_p )
 import Parsers.Types
   ( value_type_p )
 
@@ -46,15 +49,12 @@ base_value_p =
 
 -- OneArgApplications
 one_arg_applications_p =
-  many1 (try bv_ad_p) >>= \bv_ad_s -> 
-  base_value_p >>= \bv ->
+  many1 (try bv_ad_p) >>= \bv_ad_s -> base_value_p >>= \bv ->
   return $ OAA bv_ad_s bv
   :: Parser OneArgApplications
 
 bv_ad_p = 
-  base_value_p >>= \bv ->
-  application_direction_p >>= \ad ->
-  return ( bv, ad )
+  base_value_p >>= \bv -> application_direction_p >>= \ad -> return ( bv, ad )
   :: Parser ( BaseValue, ApplicationDirection )
 
 -- MultiplicationFactor
@@ -69,8 +69,7 @@ multiplication_p =
 
 -- SubtractionFactor
 subtraction_factor_p =
-  MulSF <$> try multiplication_p <|>
-  MFSF <$> multiplication_factor_p
+  MulSF <$> try multiplication_p <|> MFSF <$> multiplication_factor_p
   :: Parser SubtractionFactor
 
 -- Subtraction
@@ -82,21 +81,18 @@ subtraction_p =
 
 -- EqualityFactor
 equality_factor_p =
-  SubEF <$> try subtraction_p <|>
-  SFEF <$> subtraction_factor_p
+  SubEF <$> try subtraction_p <|> SFEF <$> subtraction_factor_p
   :: Parser EqualityFactor
 
 -- Equality
 equality_p =
-  equality_factor_p >>= \ef1 ->
-  string " = " >> equality_factor_p >>= \ef2 ->
+  equality_factor_p >>= \ef1 -> string " = " >> equality_factor_p >>= \ef2 ->
   return $ Equ ef1 ef2
   :: Parser Equality
 
 -- NoAbstractionsValue1
 no_abstractions_value_1_p =
-  Equality <$> try equality_p <|>
-  EquF <$> try equality_factor_p
+  Equality <$> try equality_p <|> EquF <$> try equality_factor_p
   :: Parser NoAbstractionsValue1
 
 -- ManyArgsArgValue
@@ -105,15 +101,14 @@ many_args_arg_value_p =
   :: Parser ManyArgsArgValue
 
 one_ab_arrow_maav_p =
-  abstractions_p >>= \as ->
-  no_abstractions_value_1_p >>= \nae1 ->
+  abstractions_p >>= \as -> no_abstractions_value_1_p >>= \nae1 ->
   return $ MAAV as nae1
   :: Parser ManyArgsArgValue
 
 many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
-  string " :->" >> space_or_newline >> one_ab_arrow_maav_p >>= \(MAAV (As as2) nav1) ->
-  return $ MAAV (As $ as1 ++ as2) nav1
+  string " :->" >> space_or_newline >> one_ab_arrow_maav_p >>=
+  \(MAAV (As as2) nav1) -> return $ MAAV (As $ as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 
 -- ManyArgsApplication
@@ -156,11 +151,13 @@ name_type_and_value_lists_p =
   let
   value_types_p =
     seperated2 ", " value_type_p <|>
-    (string "all " *> value_type_p >>= \vt -> return $ replicate (length vns) vt)
+    (string "all " *> value_type_p >>= \vt ->
+    return $ replicate (length vns) vt)
     :: Parser [ ValueType ]
   in
   string ": " >> value_types_p >>= \vts ->
-  new_line_space_surrounded >> string "= " >> seperated2 ", " value_p >>= \vs ->
+  new_line_space_surrounded >> string "= " >>
+  seperated2 ", " value_p >>= \vs ->
   eof_or_new_lines >> NTAVLists vns vts vs==>return
   :: Parser NameTypeAndValueLists
   
@@ -184,12 +181,12 @@ let_output_p =
   :: Parser LetOutput
 
 -- NoAbstractionsValue
-no_abstraction_expression_p =
-  ManyArgsApplication <$> try many_args_application_p <|>
-  Cases <$> try cases_p <|>
-  LetOutput <$> try let_output_p <|>
-  UseFields <$> try use_fields_p <|>
-  NoAbstractionsValue1 <$> no_abstractions_value_1_p 
+no_abstraction_expression_p = choice $
+  [ ManyArgsApplication <$> try many_args_application_p
+  , Cases <$> try cases_p
+  , LetOutput <$> try let_output_p
+  , UseFields <$> try use_fields_p
+  , NoAbstractionsValue1 <$> no_abstractions_value_1_p ]
   :: Parser NoAbstractionsValue
 
 -- Value

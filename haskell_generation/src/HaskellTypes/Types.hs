@@ -39,7 +39,8 @@ instance Show TypeName where
 instance Show BaseType where
   show = \case 
     TupleType vts ->
-      "( " ++ concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++ ")"
+      "( " ++ concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++
+      ")"
 
     ParenthesisType vt -> vt==> \case
       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
@@ -57,7 +58,8 @@ instance Show FieldAndType where
 instance Show TupleType where
   show = \(NameAndValue tn ttv) ->
     "\ntuple_type " ++ show tn ++ "\nvalue " ++
-    "( " ++ concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++ ")" ++ "\n"
+    "( " ++ concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++
+    ")\n"
 
 instance Show CaseAndType where
   show = \(CT vn vt) -> show vn ++ "." ++ show vt

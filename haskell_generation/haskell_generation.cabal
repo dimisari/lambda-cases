@@ -2,7 +2,6 @@ cabal-version:      3.0
 name:               haskell-generation
 version:            0.1.0.0
 synopsis:           generating haskell code from lambda-cases code
--- A longer description of the package.
 -- description:
 license:            GPL-2.0-only
 license-file:       LICENSE
@@ -11,7 +10,8 @@ maintainer:         saridakisbitos@gmail.com
 category:           Language
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
--- Extra source files to be distributed with the package, such as examples, or a tutorial module.
+-- Extra source files to be distributed with the package, such as examples, or
+-- a tutorial module.
 -- extra-source-files:
 
 common warnings

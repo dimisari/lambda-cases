@@ -17,20 +17,19 @@ import Parsers.LowLevel
 
 {-
   All:
-  TypeName, BaseType, ValueType, FieldAndType, TupleTypeValue, TupleType, CaseAndType,
-  OrTypeValues, OrType
+  TypeName, BaseType, ValueType, FieldAndType, TupleTypeValue, TupleType,
+  CaseAndType, OrTypeValues, OrType
 -}
 
 -- TypeName
 type_name_p =
-  upper >>= \u ->
-  many (lower <|> upper) >>= \lu ->
-  return $ TN (u:lu)
+  upper >>= \u -> many (lower <|> upper) >>= \lu -> return $ TN (u:lu)
   :: Parser TypeName
 
 -- BaseType
 base_type_p =
-  TupleType <$> try (string "( " *> seperated2 ", " value_type_p <* string " )") <|>
+  TupleType <$>
+    try (string "( " *> seperated2 ", " value_type_p <* string " )") <|>
   ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
   TypeName <$> type_name_p 
   :: Parser BaseType
@@ -48,14 +47,14 @@ one_ab_arrow_value_type_p =
 
 many_ab_arrows_value_type_p =
   seperated2 ", " one_ab_arrow_value_type_p >>= \vt1s ->
-  string " :-> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
+  string " :-> " >> one_ab_arrow_value_type_p >>=
+  \(AbsTypesAndResType bts bt) ->
   return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
   :: Parser ValueType
 
 -- FieldAndType
 field_and_type_p = 
-  value_name_p >>= \vn ->
-  string ": " >> value_type_p >>= \vt ->
+  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt ->
   return $ FT vn vt
   :: Parser FieldAndType
 
@@ -63,14 +62,13 @@ field_and_type_p =
 tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
   string "\nvalue " >>
-  string "( " *> (field_and_type_p==>sepBy $ string ", ") <* string " )" >>= \ttv ->
-  eof_or_new_lines >> NameAndValue tn ttv==>return
+  string "( " *> (field_and_type_p==>sepBy $ string ", ") <* string " )" >>=
+  \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
   :: Parser TupleType
 
 -- CaseAndType
 case_and_type_p = 
-  value_name_p >>= \vn ->
-  string "." >> value_type_p >>= \vt ->
+  value_name_p >>= \vn -> string "." >> value_type_p >>= \vt ->
   return $ CT vn vt
   :: Parser CaseAndType
 

@@ -13,15 +13,18 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleType(..) )
+  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleType(..)
+  , OrType(..), CaseAndType(..) )
 import HaskellTypes.Generation
-  ( Stateful, TupleTypeMap, tuple_type_map_lookup, tuple_type_map_insert
+  ( Stateful, TupleTypeMap
+  , tuple_type_map_lookup, tuple_type_map_insert
+  , or_type_map_lookup, or_type_map_insert
   , value_map_insert )
 
 import CodeGenerators.LowLevel
   ( value_name_g )
 import CodeGenerators.ErrorMessages
-  ( tuple_type_err_msg )
+  ( tuple_type_err_msg, or_type_err_msg )
 
 -- All: TypeName, BaseType, ValueType, TupleType
 
@@ -46,7 +49,7 @@ value_type_g = ( \(AbsTypesAndResType bts bt) ->
   ) :: ValueType -> Haskell
 
 -- TupleType
-tuple_type_g = ( \(NameAndValue tn fatl) -> tuple_type_map_lookup tn >>= \case
+tuple_type_g = ( \(NameAndValue tn ttv) -> tuple_type_map_lookup tn >>= \case
   Just _ -> error tuple_type_err_msg
 
   Nothing ->
@@ -56,42 +59,43 @@ tuple_type_g = ( \(NameAndValue tn fatl) -> tuple_type_map_lookup tn >>= \case
 
     field_and_type_g = ( \(FT vn vt@(AbsTypesAndResType bts bt) ) ->
       value_map_insert
-        (VN $ "get_" ++ value_name_g vn) (AbsTypesAndResType (additional_bt : bts) bt) >>
+        (VN $ "get_" ++ value_name_g vn)
+        (AbsTypesAndResType (additional_bt : bts) bt) >>
       return ("get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt)
       ) :: FieldAndType -> Stateful Haskell
 
     tuple_value_g =
-      fatl==>mapM field_and_type_g >>= \fatl_g ->
-      return $ type_name_g tn ++ "C { " ++ intercalate ", " fatl_g ++ " }"
+      ttv==>mapM field_and_type_g >>= \ttv_g ->
+      return $ type_name_g tn ++ "C { " ++ intercalate ", " ttv_g ++ " }"
       :: Stateful Haskell
     in
-    tuple_type_map_insert tn fatl >> tuple_value_g >>= \tv_g ->
-    return $ "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
+    tuple_type_map_insert tn ttv >> tuple_value_g >>= \tv_g ->
+    return $
+      "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
   ) :: TupleType -> Stateful Haskell
 
----- OrType
--- or_type_g = ( \(NameAndValues tn otvs) -> or_type_map_lookup tn >>= \case
---   Just _ -> error or_type_err_msg
--- 
---   Nothing ->
---     let
---     catl = otvs ==> \(CaseAndTypeList l) -> l
---       :: [ CaseAndType ]
--- 
---     additional_bt = TypeName tn
---       :: BaseType
--- 
---     case_and_type_g = ( \(FT vn vt@(AbsTypesAndResType bts bt) ) ->
---       value_map_insert
---         (VN $ "get_" ++ value_name_g vn) (AbsTypesAndResType (additional_bt : bts) bt) >>
---       return ("get_" ++ value_name_g vn ++ " :: " ++ value_type_g vt)
---       ) :: CaseAndType -> Stateful Haskell
--- 
---     or_value_g =
---       catl==>mapM case_and_type_g >>= \fatl_g ->
---       return $ type_name_g tn ++ "C " ++ intercalate " |  " fatl_g ++ " }"
---       :: Stateful Haskell
---     in
---     or_type_map_insert tn catl >> or_value_g >>= \tv_g ->
---     return $ "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
---   ) :: OrType -> Stateful Haskell)
+-- OrType
+or_type_g = ( \(NameAndValues tn otvs) -> or_type_map_lookup tn >>= \case
+  Just _ -> error or_type_err_msg
+
+  Nothing ->
+    let
+    additional_bt = TypeName tn
+      :: BaseType
+
+    case_and_type_g = ( \(CT vn vt@(AbsTypesAndResType bts bt) ) ->
+      value_map_insert
+        (VN $ "is_" ++ value_name_g vn)
+        (AbsTypesAndResType (additional_bt : bts) bt) >>
+      return ("is_" ++ value_name_g vn ++ " :: " ++ value_type_g vt)
+      ) :: CaseAndType -> Stateful Haskell
+
+    or_value_g =
+      otvs==>mapM case_and_type_g >>= \otvs_g ->
+      return $ type_name_g tn ++ "C " ++ intercalate " |  " otvs_g ++ " }"
+      :: Stateful Haskell
+    in
+    or_type_map_insert tn otvs >> or_value_g >>= \tv_g ->
+    return $
+      "data " ++ type_name_g tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
+  ) :: OrType -> Stateful Haskell

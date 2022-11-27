@@ -46,12 +46,16 @@ get_from_state = ( \f -> get >>= f .> return )
   :: (GenState -> a) -> Stateful a
 
 ( get_indent_level, get_value_map, get_tuple_type_map, get_or_type_map ) =
-  ( indent_level, value_map, tuple_type_map, or_type_map )==> \( i, v, t, o ) ->
-  ( get_from_state i, get_from_state v, get_from_state t, get_from_state o )
-  :: ( Stateful Int, Stateful ValueMap, Stateful TupleTypeMap, Stateful OrTypeMap )
+  ( indent_level, value_map , tuple_type_map, or_type_map )==>
+  \( i, v, t, o ) ->
+  ( get_from_state i, get_from_state v , get_from_state t, get_from_state o )
+  ::
+  ( Stateful Int, Stateful ValueMap , Stateful TupleTypeMap
+  , Stateful OrTypeMap )
 
 -- update fields
-( update_indent_level, update_value_map, update_tuple_type_map, update_or_type_map ) =
+( update_indent_level, update_value_map, update_tuple_type_map,
+  update_or_type_map ) =
   ( \il -> modify ( \s -> s { indent_level = il } )
   , \vm -> modify ( \s -> s { value_map = vm } ) 
   , \ttm -> modify ( \s -> s { tuple_type_map = ttm } )

@@ -65,7 +65,8 @@ data NameTypeAndValueLists =
   NTAVLists [ ValueName ] [ ValueType ] [ Value ]
 
 data NTAVOrNTAVLists =
-  NameTypeAndValue NameTypeAndValue | NameTypeAndValueLists NameTypeAndValueLists
+  NameTypeAndValue NameTypeAndValue |
+  NameTypeAndValueLists NameTypeAndValueLists
 
 newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
@@ -136,8 +137,8 @@ instance Show ManyArgsArgValue where
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->
-    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++ " :==> " ++
-    show vn
+    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++
+    " :==> " ++ show vn
 
 instance Show UseFields where
   show = \(UF v) -> "use_fields ->\n" ++ show v
@@ -149,7 +150,8 @@ instance Show Cases where
   show = \(Cs scs) -> "\ncases\n\n" ++ scs==>concatMap (show .> (++ "\n"))
 
 instance Show NameTypeAndValue where
-  show = \(NTAV vn vt v) -> show vn ++ ": " ++ show vt ++ "\n  = " ++ show v ++ "\n"
+  show = \(NTAV vn vt v) ->
+    show vn ++ ": " ++ show vt ++ "\n  = " ++ show v ++ "\n"
 
 instance Show NameTypeAndValueLists where
   show = \(NTAVLists vns vts vs) -> 
@@ -163,7 +165,8 @@ instance Show NTAVOrNTAVLists where
     NameTypeAndValueLists ntavl -> show ntavl
 
 instance Show NamesTypesAndValues where
-  show = \(NTAVs ns_ts_and_vs) -> "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
+  show = \(NTAVs ns_ts_and_vs) ->
+    "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
 
 instance Show LetOutput where
   show = \(LetOutput_ ns_ts_and_vs v) -> 
@@ -181,5 +184,6 @@ instance Show Value where
 
 -- error messages
 one_arg_app_err_msg =
-  "one arg function application should have at least one application direction"
-less_than_two_mul_err_msg = "found less than 2 mfs in multiplication"
+  "One arg function application should have at least one application direction"
+less_than_two_mul_err_msg =
+  "Found less than 2 mfs in multiplication"
