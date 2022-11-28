@@ -114,7 +114,7 @@ many_ab_arrow_maav_p =
 -- ManyArgsApplication
 many_args_application_p =
   seperated2 ", " many_args_arg_value_p >>= \maavs ->
-  string " :==> " >> value_name_p >>= \vn ->
+  space_or_newline >> string ":==> " >> value_name_p >>= \vn ->
   return $ MAA maavs vn
   :: Parser ManyArgsApplication
 

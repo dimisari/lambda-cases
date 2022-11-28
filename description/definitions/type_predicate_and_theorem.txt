@@ -13,6 +13,7 @@ type_theorem definition example:
     fun2 = specific_fun_2
 
 Comments:
-- here specific_fun_1 and specific_fun_2 must be defined and have the types below:
+- here specific_fun_1 and specific_fun_2 must be defined and have the types
+  below:
   - specific_fun_1: Int -> Real -> Text
   - specific_fun_2: (Text -> Int) -> Real -> Int

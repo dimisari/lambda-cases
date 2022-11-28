@@ -52,6 +52,6 @@ type Haskell = String
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
 
-parenthesis_comma_sep_g =
-  ( \g -> \l -> "( " ++ init l==>concatMap (g .> (++ ", ")) ++ l==>last==>g ++ " )" )
-  :: (a -> Haskell) -> [ a ] -> Haskell
+parenthesis_comma_sep_g = ( \g l ->
+  "( " ++ init l==>concatMap (g .> (++ ", ")) ++ l==>last==>g ++ " )"
+  ) :: (a -> Haskell) -> [ a ] -> Haskell

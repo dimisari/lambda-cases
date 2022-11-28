@@ -2,7 +2,7 @@
 Example:
 
 tuple_type A, B :==> TypeName
-value ( field0: Int, field1: Text, field2: A, field3: ListOf(A)s, field4: ListOf(B)s )
+value ( field0: Int, field1: Text, field2: A, field3: ListOf(A)s )
 
 Comments:
 - get and update functions should be generated automatically:
@@ -15,5 +15,5 @@ Comments:
   - update_field2: (A, B :==> TypeName), A :> (A,B :==> TypeName)
     ...
 - In use_fields syntax and cases syntax we can use the fields by their name
-  (cases must be on an or_type that has a tuple_type in one of the cases and the fields
-  can be used in that particular case).
+  (cases must be on an or_type that has a tuple_type in one of the cases and
+   the fields can be used in that particular case).

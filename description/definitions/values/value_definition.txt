@@ -19,7 +19,8 @@ function definition (functions are values!):
       = result expression of type Type2
   - Comments: 
     - fname and more_fname must have at least one character.
-    - The following expressions are possible and they have the corresponding types:
+    - The following expressions are possible and they have the corresponding
+      types:
       - fname(some_type0_value,)more_fname: Type1 -> Type2
       - fname(,some_type1_value)more_fname: Type0 -> Type2
       - fname(,)more_fname: Type0 -> Type1 -> Type2
@@ -30,7 +31,8 @@ function definition (functions are values!):
       = result expression of type Type2
   - Comments: 
     - fname, more_fname and even_more_fname must have at least one character.
-    - The following expressions are possible and they have the corresponding types:
+    - The following expressions are possible and they have the corresponding
+      types:
       - fname(some_type0_value)more_fname()even_more_fname : Type1 -> Type2
       - fname()more_fname(some_type1_value)even_more_fname : Type0 -> Type2
       - fname()more_fname()even_more_fname : Type0 -> Type1 -> Type2

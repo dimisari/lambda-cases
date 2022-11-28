@@ -9,8 +9,8 @@ Tuple Application
 
 left-to-right function composition
 
-  not built-in, just love left-to-right function composition and "o>" looks like a good
-  operator name for it
+  not built-in, just love left-to-right function composition and "o>" looks
+  like a good operator name for it
 
   given
     function_name0: Type0 -> Type1 

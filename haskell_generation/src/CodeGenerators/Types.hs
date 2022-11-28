@@ -13,13 +13,11 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleType(..)
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleType(..)
   , OrType(..), CaseAndType(..) )
 import HaskellTypes.Generation
-  ( Stateful, TupleTypeMap
-  , tuple_type_map_lookup, tuple_type_map_insert
-  , or_type_map_lookup, or_type_map_insert
-  , value_map_insert )
+  ( Stateful, tuple_type_map_lookup, tuple_type_map_insert, or_type_map_lookup
+  , or_type_map_insert, value_map_insert )
 
 import CodeGenerators.LowLevel
   ( value_name_g )
@@ -80,14 +78,16 @@ or_type_g = ( \(NameAndValues tn otvs) -> or_type_map_lookup tn >>= \case
 
   Nothing ->
     let
-    additional_bt = TypeName tn
+    name_bt = TypeName tn
       :: BaseType
 
-    case_and_type_g = ( \(CT vn vt@(AbsTypesAndResType bts bt) ) ->
+    case_and_type_g = ( \(CT vn _ ) ->
       value_map_insert
         (VN $ "is_" ++ value_name_g vn)
-        (AbsTypesAndResType (additional_bt : bts) bt) >>
-      return ("is_" ++ value_name_g vn ++ " :: " ++ value_type_g vt)
+        (AbsTypesAndResType [ name_bt ] $ TypeName $ TN "Bool") >>
+      return
+        ("is_" ++ value_name_g vn ++ " = " ++ "insert function def " ++
+         "\n  :: " ++ "insert type -> Bool")
       ) :: CaseAndType -> Stateful Haskell
 
     or_value_g =

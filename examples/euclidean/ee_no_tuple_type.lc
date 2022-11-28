@@ -7,7 +7,8 @@ ee_recursion: ( Int, Int ), ( Int, Int ), Int, Int :-> ( Int, Int, Int )
       compute_new: ( Int, Int ) -> ( Int, Int )
         = ( prev_prev, prev ) -> ( prev, prev_prev - x==>div<==y * prev )
       output
-      compute_new<==a_coeffs, compute_new<==b_coeffs, y, x==>mod<==y :==> ee_recursion
+      compute_new<==a_coeffs, compute_new<==b_coeffs, y, x==>mod<==y
+        :==> ee_recursion
 
 initial_a_coeffs, initial_b_coeffs: ( Int, Int ), ( Int, Int )
   = ( 1, 0 ), ( 0, 1 )
