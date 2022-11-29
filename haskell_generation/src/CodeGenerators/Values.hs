@@ -16,11 +16,11 @@ import HaskellTypes.LowLevel
   ( LiteralOrValueName(..), ApplicationDirection(..), ValueName(..)
   , Abstractions(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), FieldsOrCases(..)
   , vt_bt_are_equivalent, vt_shortest_equivalent )
 import HaskellTypes.Generation
-  ( Stateful, get_indent_level, update_indent_level, tuple_type_map_lookup
-  , value_map_insert, value_map_lookup )
+  ( Stateful, get_indent_level, update_indent_level
+  , type_map_lookup, value_map_insert, value_map_lookup )
 
 import CodeGenerators.LowLevel
   ( literal_g, value_name_g, literal_or_value_name_g, abstractions_g )
@@ -65,12 +65,13 @@ vts_values_g = ( \vts vs -> case length vts == length vs of
     return $ "( " ++ init vs_g==>concatMap (++ ", ") ++ vs_g==>last ++ " )"
   ) :: [ ValueType ] -> [ Value ] -> Stateful Haskell
 
-tn_values_g = ( \tn vs -> tuple_type_map_lookup tn >>= \case
+tn_values_g = ( \tn vs -> type_map_lookup tn >>= \case
   Nothing -> error $ type_not_found_err_msg tn
-  Just fatl -> case length vs == length fatl of 
+  Just (FieldAndTypeList fatl) -> case length vs == length fatl of 
     False -> error tn_values_err_msg
 
     True -> correct_tn_values_g tn (map get_ft fatl) vs
+  Just (CaseAndTypeList fatl) -> undefined
   ) :: TypeName -> [ Value ] -> Stateful Haskell
 
 correct_tn_values_g = ( \tn vts vs ->
@@ -240,10 +241,13 @@ use_fields_g = ( \(AbsTypesAndResType bts bt) (UF v) -> case bts of
     TupleType _ -> error use_fields_err_msg2
     ParenthesisType _ -> error use_fields_err_msg2
 
-    TypeName tn -> tuple_type_map_lookup tn >>= \case 
+    TypeName tn -> type_map_lookup tn >>= \case 
       Nothing -> error $ type_not_found_err_msg tn
 
-      Just fatl -> correct_use_fields_g tn fatl (AbsTypesAndResType bs bt) v
+      Just (FieldAndTypeList fatl) ->
+        correct_use_fields_g tn fatl (AbsTypesAndResType bs bt) v
+
+      Just (CaseAndTypeList catl) -> undefined
 
   ) :: ValueType -> UseFields -> Stateful Haskell
 

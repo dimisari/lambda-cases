@@ -65,8 +65,7 @@ data NameTypeAndValueLists =
   NTAVLists [ ValueName ] [ ValueType ] [ Value ]
 
 data NTAVOrNTAVLists =
-  NameTypeAndValue NameTypeAndValue |
-  NameTypeAndValueLists NameTypeAndValueLists
+  NameTypeAndValue NameTypeAndValue | NameTypeAndValueLists NameTypeAndValueLists
 
 newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
@@ -137,8 +136,8 @@ instance Show ManyArgsArgValue where
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->
-    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++
-    " :==> " ++ show vn
+    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++ " :==> " ++
+    show vn
 
 instance Show UseFields where
   show = \(UF v) -> "use_fields ->\n" ++ show v

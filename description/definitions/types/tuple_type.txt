@@ -15,5 +15,3 @@ Comments:
   - update_field2: (A, B :==> TypeName), A :> (A,B :==> TypeName)
     ...
 - In use_fields syntax and cases syntax we can use the fields by their name
-  (cases must be on an or_type that has a tuple_type in one of the cases and
-   the fields can be used in that particular case).

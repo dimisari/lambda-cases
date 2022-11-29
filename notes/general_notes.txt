@@ -21,9 +21,12 @@ left-to-right function composition
 
 Compilation targets to consider:
   - Haskell Core
+  - LLVM IR
   - WebAssembly
   - BEAM (Erlang virtual machine)
   - RISC-V
+  - Java bytecode
+  - Pythin IR ?
 
 Other:
   - graph reduction

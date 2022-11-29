@@ -1,6 +1,8 @@
 fix 
 - parenthesis in one argument applications: type_inference
-- matching at the end of one argument applications
+- case/use_fields at the end of one argument applications
+- stack of types in value map for multituple-level definitions
+- let-output -> where
 
 or_type
 - generator
@@ -12,9 +14,6 @@ literals
 - reals
 - strings
 
-operators 
-- type class maybe? 
-
 cases
 - full pattern matching
 
@@ -24,14 +23,17 @@ tuple_type
 regular parenthesis function application
 - parser for already existing type?
 
+operators 
+- type class maybe? 
+
 parentheses in the middle 
 - function definition
 - type definition
 - function application
 
-better error with Either
-- transform the state with EitherT (or ExceptT for some reason)
-- find error calls that are not bug errors but errors for the user and modify
-  them appropriately
+better error 
+- transform the state with EitherT (or ExceptT)
+- find error calls that are errors for the user and modify them appropriately
+- add line/column numbers
 
 wrong examples for testing error messages

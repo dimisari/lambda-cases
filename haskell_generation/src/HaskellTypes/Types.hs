@@ -32,6 +32,10 @@ data CaseAndType =
 data OrType =
   NameAndValues TypeName [ CaseAndType ]
 
+data FieldsOrCases =
+  FieldAndTypeList [ FieldAndType ] | CaseAndTypeList [ CaseAndType ]
+
+
 -- Show instances
 instance Show TypeName where
   show = \(TN n) -> n
@@ -39,8 +43,7 @@ instance Show TypeName where
 instance Show BaseType where
   show = \case 
     TupleType vts ->
-      "( " ++ concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++
-      ")"
+      "( " ++ concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++ ")"
 
     ParenthesisType vt -> vt==> \case
       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
@@ -58,8 +61,7 @@ instance Show FieldAndType where
 instance Show TupleType where
   show = \(NameAndValue tn ttv) ->
     "\ntuple_type " ++ show tn ++ "\nvalue " ++
-    "( " ++ concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++
-    ")\n"
+    "( " ++ concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++ ")\n"
 
 instance Show CaseAndType where
   show = \(CT vn vt) -> show vn ++ "." ++ show vt
@@ -67,8 +69,7 @@ instance Show CaseAndType where
 instance Show OrType where
   show = \(NameAndValues tn otvs) ->
     "\nor_type " ++ show tn ++ "\nvalues " ++ 
-    concatMap (show .> (++ " | ")) (init otvs) ++ show (last otvs)
-    ++ "\n"
+    concatMap (show .> (++ " | ")) (init otvs) ++ show (last otvs) ++ "\n"
 
 -- helpers
 vt_shortest_equivalent = ( \case
@@ -78,8 +79,6 @@ vt_shortest_equivalent = ( \case
 
 vt_bt_are_equivalent = ( \case
   ( AbsTypesAndResType [] bt1, bt2) -> bt1 == bt2
-
   ( vt1, ParenthesisType vt2 ) -> vt1 == vt2
-
   _ -> False
   ) :: ( ValueType, BaseType ) -> Bool

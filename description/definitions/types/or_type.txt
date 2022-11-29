@@ -15,7 +15,8 @@ Comments:
         case2 -> the_value.value
         ... -> nothing
 
-- tuple_types can be used in a case and there is field inheritance. Example:
+- base_types or tuple_types are used in a case and there is field inheritance.
+  Example:
   fun: (A, B :==> TypeName) -> A==>OrNothing
     = cases
       case2 -> the_value.pair_first

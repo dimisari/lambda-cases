@@ -63,7 +63,7 @@ tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
   string "\nvalue " >>
   string "( " *> (field_and_type_p==>sepBy $ string ", ") <* string " )" >>=
-  \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
+    \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
   :: Parser TupleType
 
 -- CaseAndType
