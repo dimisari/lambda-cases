@@ -1,8 +1,9 @@
 fix 
 - parenthesis in one argument applications: type_inference
 - case/use_fields at the end of one argument applications
-- stack of types in value map for multituple-level definitions
-- let-output -> where
+- stack of types in value map for multiple-level definitions
+- let-output -> where (problem with where values and values outside of
+  function)
 
 or_type
 - generator

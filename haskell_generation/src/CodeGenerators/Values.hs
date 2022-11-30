@@ -37,7 +37,7 @@ import CodeGenerators.ErrorMessages
   NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication,
   UseFields, SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
-  NTAVOrNTAVLists, NamesTypesAndValues, LetOutput,
+  NTAVOrNTAVLists, NamesTypesAndValues, Where,
   NoAbstractionsValue, Value
 -}
 
@@ -75,9 +75,11 @@ tn_values_g = ( \tn vs -> type_map_lookup tn >>= \case
   ) :: TypeName -> [ Value ] -> Stateful Haskell
 
 correct_tn_values_g = ( \tn vts vs ->
+  get_indent_level >>= \il ->
   zipWith value_g vts vs==>sequence >>= \vs_g -> 
   return $
-    show tn ++ "C (" ++ init vs_g==>concatMap (++ ") (") ++ vs_g==>last ++ ")"
+    "\n" ++ indent (il + 1) ++ show tn ++ "C (" ++
+    init vs_g==>concatMap (++ ") (") ++ vs_g==>last ++ ")"
   ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
 
 -- BaseValue
@@ -257,7 +259,7 @@ correct_use_fields_g = ( \tn fatl vt v ->
   value_g vt v >>= \v_g ->
   return $
     "(\\(" ++ show tn ++ "C" ++ concatMap ( value_name_g .> (" " ++) ) vns ++
-    ") ->\n" ++ indent (il + 1) ++ v_g ++ " )"
+    ") ->" ++ v_g ++ " )"
   ) :: TypeName -> [ FieldAndType ] -> ValueType -> Value -> Stateful Haskell
 
 insert_to_value_map_ret_vn = ( \(FT vn vt) ->
@@ -274,7 +276,7 @@ specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
     generate = ( \g ->
       value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
       get_indent_level >>= \i ->
-      return $ indent i ++ g ++ " -> " ++ v_g
+      return $ indent i ++ g ++ " ->" ++ v_g
       ) :: Haskell -> Stateful Haskell
     in
     case lovn of 
@@ -301,13 +303,13 @@ name_type_and_value_g = ( \(NTAV vn vt v) ->
   let
   combine = ( \value_begin -> \value_end ->
     indent i  ++ value_name_g vn ++ " = " ++
-    value_begin ++ v_g ++ value_end ++ "\n" ++
-    indent (i + 1) ++ ":: " ++ value_type_g vt ++ "\n"
+    value_begin ++ v_g ++ value_end ++
+    ":: " ++ value_type_g vt ++ "\n"
     ) :: String -> String -> Haskell
   in
   return $ case v of
-    (Value (As []) _) -> combine "" ""
-    _ -> combine "( " " )"
+    (Value (As []) _) -> combine "" ( "\n" ++ indent (i + 1) )
+    _ -> combine "( " "  ) "
   ) :: NameTypeAndValue -> Stateful Haskell
 
 -- NameTypeAndValueLists
@@ -333,21 +335,19 @@ names_types_and_values_g = ( \(NTAVs ntavs) ->
   ntavs==>mapM ntav_or_ntav_lists_g >>= concat .> return
   ) :: NamesTypesAndValues -> Stateful Haskell
 
--- LetOutput
-let_output_g = ( \vt (LetOutput_ ntavs v) ->
-  get_indent_level >>= \i ->
-  update_indent_level (i + 1) >> names_types_and_values_g ntavs >>= \ntavs_g ->
+-- Where
+let_output_g = ( \vt (Where_ v ntavs) ->
+  get_indent_level >>= \i -> update_indent_level (i + 1) >>
+  names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
   let
   hs_source =
-    "\n" ++
-    indent (i + 1) ++ "let\n" ++ ntavs_g ++
-    indent (i + 1) ++ "in\n" ++
-    indent (i + 1) ++ v_g
+    "\n" ++ indent (i + 1) ++ v_g ++
+    "\n" ++ indent (i + 1) ++ "where\n" ++ ntavs_g
     :: Haskell
   in
   update_indent_level i >> return hs_source
-  ) :: ValueType -> LetOutput -> Stateful Haskell
+  ) :: ValueType -> Where -> Stateful Haskell
 
 -- NoAbstractionsValue
 no_abstractions_value_g = ( \vt -> \case
@@ -355,7 +355,7 @@ no_abstractions_value_g = ( \vt -> \case
   UseFields uf -> use_fields_g vt uf
   NoAbstractionsValue1 nav1 -> no_abstractions_value_1_g vt nav1
   Cases cs -> cases_g vt cs
-  LetOutput io -> let_output_g vt io
+  Where io -> let_output_g vt io
   ) :: ValueType -> NoAbstractionsValue -> Stateful Haskell
 
 -- Value

@@ -10,8 +10,5 @@ ee_recursion: ( Int, Int ), ( Int, Int ), Int, Int :-> ( Int, Int, Int )
       compute_new<==a_coeffs, compute_new<==b_coeffs, y, x==>mod<==y
         :==> ee_recursion
 
-initial_a_coeffs, initial_b_coeffs: ( Int, Int ), ( Int, Int )
-  = ( 1, 0 ), ( 0, 1 )
-
 extended_euclidean: Int, Int :-> ( Int, Int, Int )
-  = initial_a_coeffs, initial_b_coeffs :==> ee_recursion
+  = ( 1, 0 ), ( 0, 1 ) :==> ee_recursion

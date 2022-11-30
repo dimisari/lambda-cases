@@ -7,15 +7,12 @@ import Text.Parsec.String
 import Data.List
   ( replicate )
 
-{-
-  All:
-  Keywords, Function application/composition, Parsing, Haskell generation
--}
+-- All: Keywords, Function application/composition, Parsing, Haskell generation
 
 -- Keywords
 keywords =
   [ "tuple_type", "value", "or_type", "values" , "use_fields", "cases"
-  , "value", "let", "output", "type_predicate", "function", "functions"
+  , "value", "output", "where", "type_predicate", "function", "functions"
   , "type_theorem", "proof" ]
   :: [ String ]
 

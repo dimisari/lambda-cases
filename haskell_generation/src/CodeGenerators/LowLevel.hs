@@ -24,14 +24,12 @@ import CodeGenerators.ErrorMessages
 
 {-
   All:
-  Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction,
-  Abstractions
+  Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
 -}
 
 -- Literal 
 literal_g = ( vt_shortest_equivalent .> \case
   AbsTypesAndResType [] (TypeName (TN "Int")) -> show
-
   vt -> error $ literal_err_msg vt
   ) :: ValueType -> Literal -> Haskell
 
@@ -42,15 +40,12 @@ value_name_g = ( \(VN vn) -> vn)
 -- LiteralOrValueName
 literal_or_value_name_g = ( \vt -> \case
   Literal l -> return $ literal_g vt l
-
   ValueName vn ->
-    value_map_lookup vn >>= \lookup_vt ->
-    type_check_value_name_g vt lookup_vt vn
+    value_map_lookup vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
 
 type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of 
   False -> error $ type_check_value_name_err_msg vn lookup_vt vt 
-
   True -> return $ value_name_g vn
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
 
@@ -72,10 +67,8 @@ value_type_tuple_matching_g = ( \case
 value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
     [] -> error value_types_tuple_matching_err_msg1
     [ _ ] -> error value_types_tuple_matching_err_msg1
-
     _ -> case length vts == length vns of
       False -> error value_types_tuple_matching_err_msg2
-
       True -> value_types_value_names_g vts vns
   ) :: [ ValueType ] -> TupleMatching -> Stateful Haskell
 

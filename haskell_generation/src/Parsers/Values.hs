@@ -30,7 +30,7 @@ import Parsers.Types
   NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication,
   UseFields, SpecificCase, Cases,
   NameTypeAndValue, NameTypeAndValueLists,
-  NTAVOrNTAVLists, NamesTypesAndValues, LetOutput,
+  NTAVOrNTAVLists, NamesTypesAndValues, Where,
   NoAbstractionsValue, Value
 -}
 
@@ -74,8 +74,7 @@ subtraction_factor_p =
 
 -- Subtraction
 subtraction_p =
-  subtraction_factor_p >>= \sf1 ->
-  string " - " >> subtraction_factor_p >>= \sf2 ->
+  subtraction_factor_p >>= \sf1 -> string " - " >> subtraction_factor_p >>= \sf2 ->
   return $ Sub sf1 sf2
   :: Parser Subtraction
 
@@ -108,7 +107,7 @@ one_ab_arrow_maav_p =
 many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " :->" >> space_or_newline >> one_ab_arrow_maav_p >>=
-  \(MAAV (As as2) nav1) -> return $ MAAV (As $ as1 ++ as2) nav1
+    \(MAAV (As as2) nav1) -> return $ MAAV (As $ as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 
 -- ManyArgsApplication
@@ -142,7 +141,7 @@ name_type_and_value_p =
   value_name_p >>= \vn ->
   string ": " >> value_type_p >>= \vt ->
   new_line_space_surrounded >> string "= " >> value_p >>= \v ->
-  eof_or_new_lines >> NTAV vn vt v==>return
+  return $ NTAV vn vt v
   :: Parser NameTypeAndValue
 
 -- NameTypeAndValueLists
@@ -151,16 +150,14 @@ name_type_and_value_lists_p =
   let
   value_types_p =
     seperated2 ", " value_type_p <|>
-    (string "all " *> value_type_p >>= \vt ->
-    return $ replicate (length vns) vt)
+    (string "all " *> value_type_p >>= \vt -> return $ replicate (length vns) vt)
     :: Parser [ ValueType ]
   in
   string ": " >> value_types_p >>= \vts ->
-  new_line_space_surrounded >> string "= " >>
-  seperated2 ", " value_p >>= \vs ->
-  eof_or_new_lines >> NTAVLists vns vts vs==>return
+  new_line_space_surrounded >> string "= " >> seperated2 ", " value_p >>= \vs ->
+  return $ NTAVLists vns vts vs
   :: Parser NameTypeAndValueLists
-  
+
 -- NTAVOrNTAVLists
 ntav_or_ntav_lists_p = 
   NameTypeAndValueLists <$> try name_type_and_value_lists_p <|>
@@ -169,25 +166,26 @@ ntav_or_ntav_lists_p =
 
 -- NamesTypesAndValues
 names_types_and_values_p =
-  NTAVs <$> try ntav_or_ntav_lists_p==>many1
+  NTAVs <$> try (ntav_or_ntav_lists_p <* eof_or_new_lines)  ==>many1
   :: Parser NamesTypesAndValues
 
--- LetOutput
-let_output_p = 
+-- Where
+output_where_p = 
   string "let" >> new_line_space_surrounded >>
   names_types_and_values_p >>= \ns_ts_and_vs ->
-  string "output" >> new_line_space_surrounded >> value_p >>= \v ->
-  return $ LetOutput_ ns_ts_and_vs v
-  :: Parser LetOutput
+  string "output" >> new_line_space_surrounded >>
+  value_p >>= \v ->
+  return $ Where_ v ns_ts_and_vs
+  :: Parser Where
 
 -- NoAbstractionsValue
 no_abstraction_expression_p = choice $
   [ ManyArgsApplication <$> try many_args_application_p
   , Cases <$> try cases_p
-  , LetOutput <$> try let_output_p
+  , Where <$> try output_where_p
   , UseFields <$> try use_fields_p
-  , NoAbstractionsValue1 <$> no_abstractions_value_1_p ]
-  :: Parser NoAbstractionsValue
+  , NoAbstractionsValue1 <$> no_abstractions_value_1_p
+  ] :: Parser NoAbstractionsValue
 
 -- Value
 value_p =
@@ -195,13 +193,12 @@ value_p =
   :: Parser Value
 
 one_abstraction_arrow_value_p =
-  abstractions_p >>= \as ->
-  no_abstraction_expression_p >>= \nae ->
+  abstractions_p >>= \as -> no_abstraction_expression_p >>= \nae ->
   return $ Value as nae
   :: Parser Value
 
 many_abstractions_arrow_value_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " :->" >> space_or_newline >> one_abstraction_arrow_value_p >>=
-  \(Value (As as2) nav) -> return $ Value (As $ as1 ++ as2) nav
+    \(Value (As as2) nav) -> return $ Value (As $ as1 ++ as2) nav
   :: Parser Value

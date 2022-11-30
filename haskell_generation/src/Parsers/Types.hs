@@ -40,22 +40,19 @@ value_type_p =
   :: Parser ValueType
 
 one_ab_arrow_value_type_p =
-  many (try $ base_type_p <* string " -> ") >>= \bts ->
-  base_type_p >>= \bt ->
+  many (try $ base_type_p <* string " -> ") >>= \bts -> base_type_p >>= \bt ->
   return $ AbsTypesAndResType bts bt
   :: Parser ValueType
 
 many_ab_arrows_value_type_p =
   seperated2 ", " one_ab_arrow_value_type_p >>= \vt1s ->
-  string " :-> " >> one_ab_arrow_value_type_p >>=
-  \(AbsTypesAndResType bts bt) ->
+  string " :-> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
   return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
   :: Parser ValueType
 
 -- FieldAndType
 field_and_type_p = 
-  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt ->
-  return $ FT vn vt
+  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt -> return $ FT vn vt
   :: Parser FieldAndType
 
 -- TupleType
@@ -68,8 +65,7 @@ tuple_type_p =
 
 -- CaseAndType
 case_and_type_p = 
-  value_name_p >>= \vn -> string "." >> value_type_p >>= \vt ->
-  return $ CT vn vt
+  value_name_p >>= \vn -> string "." >> value_type_p >>= \vt -> return $ CT vn vt
   :: Parser CaseAndType
 
 -- OrType

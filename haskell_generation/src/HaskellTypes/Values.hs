@@ -70,12 +70,12 @@ data NTAVOrNTAVLists =
 newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
 
-data LetOutput =
-  LetOutput_ NamesTypesAndValues Value
+data Where =
+  Where_ Value NamesTypesAndValues
 
 data NoAbstractionsValue =
   ManyArgsApplication ManyArgsApplication | UseFields UseFields | Cases Cases |
-  LetOutput LetOutput | NoAbstractionsValue1 NoAbstractionsValue1
+  Where Where | NoAbstractionsValue1 NoAbstractionsValue1
 
 data Value =
   Value Abstractions NoAbstractionsValue
@@ -95,7 +95,6 @@ instance Show BaseValue where
 instance Show OneArgApplications where
   show = \(OAA bv_ad_s bv) -> case bv_ad_s of
     [] -> error $ one_arg_app_err_msg
-
     _ -> bv_ad_s==>concatMap ( \( bv, ad ) -> show bv ++ show ad ) ++ show bv
 
 instance Show MultiplicationFactor where
@@ -167,15 +166,15 @@ instance Show NamesTypesAndValues where
   show = \(NTAVs ns_ts_and_vs) ->
     "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
 
-instance Show LetOutput where
-  show = \(LetOutput_ ns_ts_and_vs v) -> 
-    "let\n" ++ show ns_ts_and_vs ++ "output\n" ++ show v
+instance Show Where where
+  show = \(Where_ v ns_ts_and_vs) -> 
+    "output\n" ++ show v ++ "where\n" ++ show ns_ts_and_vs 
 
 instance Show NoAbstractionsValue where
   show = \case
     ManyArgsApplication maa -> show maa
     Cases cs -> show cs
-    LetOutput inter_out -> show inter_out
+    Where inter_out -> show inter_out
     NoAbstractionsValue1 nav1 -> show nav1
 
 instance Show Value where

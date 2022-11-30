@@ -32,10 +32,10 @@ import CodeGenerators.Values
   ( names_types_and_values_g )
 
 -- Constants
-[ example_name, files, haskell_header, example_lc, example_hs ] =
+[ example_name, files, haskell_header,
+  example_lc, example_hs ] =
   [ "example", "files/", files ++ "haskell_code_header.hs"
-  , files ++ example_name ++ ".lc"
-  , files ++ example_name ++ ".hs" ] 
+  , files ++ example_name ++ ".lc", files ++ example_name ++ ".hs" ] 
   :: [ String ]
 
 -- Parsing 
