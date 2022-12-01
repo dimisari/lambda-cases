@@ -14,7 +14,7 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( BaseType(..), ValueType(..), TypeName(..), vt_shortest_equivalent )
 import HaskellTypes.Generation
-  ( Stateful, value_map_lookup, value_map_insert )
+  ( Stateful, value_map_get, value_map_insert )
 
 import CodeGenerators.ErrorMessages
   ( literal_err_msg, type_check_value_name_err_msg, tuple_matching_err_msg
@@ -41,7 +41,7 @@ value_name_g = ( \(VN vn) -> vn)
 literal_or_value_name_g = ( \vt -> \case
   Literal l -> return $ literal_g vt l
   ValueName vn ->
-    value_map_lookup vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
+    value_map_get vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
 
 type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of 
@@ -54,7 +54,7 @@ tuple_matching_g = ( \case
   -- possibly later with symbol table ?
   TypeName tn -> error $ tuple_matching_err_msg tn
   ParenthesisType vt -> value_type_tuple_matching_g vt
-  TupleType vts -> value_types_tuple_matching_g vts 
+  ParenTupleType vts -> value_types_tuple_matching_g vts 
   ) :: BaseType -> TupleMatching -> Stateful Haskell
 
 value_type_tuple_matching_g = ( \case

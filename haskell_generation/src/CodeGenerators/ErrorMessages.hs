@@ -1,7 +1,7 @@
 module CodeGenerators.ErrorMessages where
   
 import HaskellTypes.LowLevel
-  ( ValueName(VN), Abstractions )
+  ( ValueName, Abstractions )
 import HaskellTypes.Types
   ( TypeName, BaseType, ValueType )
 import HaskellTypes.Values
@@ -18,8 +18,7 @@ literal_err_msg = ( "Integer literal cannot have type: " ++) . show
   :: ValueType -> Error
 
 type_check_value_name_err_msg = ( \vn lookup_vt vt -> 
-  "Value: " ++ show vn ++ "\nhas type: " ++ show lookup_vt ++ "\nnot: " ++
-  show vt
+  "Value: " ++ show vn ++ "\nhas type: " ++ show lookup_vt ++ "\nnot: " ++ show vt
   ) :: ValueName -> ValueType -> ValueType -> Error
 
 tuple_matching_err_msg = ("Tuple matching TypeName :" ++) . show

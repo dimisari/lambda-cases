@@ -18,8 +18,8 @@ import HaskellTypes.Types
 import HaskellTypes.Values
 
 import Parsers.LowLevel
-  ( value_name_p, literal_or_value_name_p, application_direction_p
-  , abstraction_p, abstractions_p )
+  ( value_name_p, literal_or_value_name_p, application_direction_p, abstraction_p
+  , abstractions_p )
 import Parsers.Types
   ( value_type_p )
 
@@ -138,8 +138,7 @@ cases_p =
 
 -- NameTypeAndValue
 name_type_and_value_p =
-  value_name_p >>= \vn ->
-  string ": " >> value_type_p >>= \vt ->
+  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt ->
   new_line_space_surrounded >> string "= " >> value_p >>= \v ->
   return $ NTAV vn vt v
   :: Parser NameTypeAndValue
@@ -166,7 +165,7 @@ ntav_or_ntav_lists_p =
 
 -- NamesTypesAndValues
 names_types_and_values_p =
-  NTAVs <$> try (ntav_or_ntav_lists_p <* eof_or_new_lines)  ==>many1
+  NTAVs <$> try (ntav_or_ntav_lists_p <* eof_or_new_lines) ==>many1
   :: Parser NamesTypesAndValues
 
 -- Where

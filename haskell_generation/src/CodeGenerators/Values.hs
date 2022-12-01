@@ -20,7 +20,7 @@ import HaskellTypes.Types
   , vt_bt_are_equivalent, vt_shortest_equivalent )
 import HaskellTypes.Generation
   ( Stateful, get_indent_level, update_indent_level
-  , type_map_lookup, value_map_insert, value_map_lookup )
+  , type_map_lookup, value_map_insert, value_map_get )
 
 import CodeGenerators.LowLevel
   ( literal_g, value_name_g, literal_or_value_name_g, abstractions_g )
@@ -53,7 +53,7 @@ vt_values_g = ( \case
   ) :: ValueType -> [ Value ] -> Stateful Haskell
 
 bt_values_g = ( \case
-  TupleType vts -> vts_values_g vts
+  ParenTupleType vts -> vts_values_g vts
   ParenthesisType vt -> vt_values_g vt
   TypeName tn -> tn_values_g tn
   ) :: BaseType -> [ Value ] -> Stateful Haskell
@@ -71,7 +71,7 @@ tn_values_g = ( \tn vs -> type_map_lookup tn >>= \case
     False -> error tn_values_err_msg
 
     True -> correct_tn_values_g tn (map get_ft fatl) vs
-  Just (CaseAndTypeList fatl) -> undefined
+  Just (CaseAndMaybeTypeList fatl) -> undefined
   ) :: TypeName -> [ Value ] -> Stateful Haskell
 
 correct_tn_values_g = ( \tn vts vs ->
@@ -117,7 +117,7 @@ bv_type_inference_g = ( \case
     Literal l ->
       return $ ( AbsTypesAndResType [] (TypeName (TN "Int")), show l)
 
-    ValueName vn -> value_map_lookup vn >>= \vt ->
+    ValueName vn -> value_map_get vn >>= \vt ->
       return ( vt, value_name_g vn )
   ) :: BaseValue -> Stateful ( ValueType, Haskell )
 
@@ -205,7 +205,7 @@ many_args_arg_value_g = (
   ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
 
 -- ManyArgsApplication
-many_args_application_g = ( \vt (MAA maavs vn) -> value_map_lookup vn >>=
+many_args_application_g = ( \vt (MAA maavs vn) -> value_map_get vn >>=
   \(AbsTypesAndResType abs_bts res_bt) ->
   let
   ( bts1, bts2 ) = splitAt (length maavs) abs_bts
@@ -240,7 +240,7 @@ bt_maav_g = ( \bt maav ->
 use_fields_g = ( \(AbsTypesAndResType bts bt) (UF v) -> case bts of 
   [] -> error use_fields_err_msg1
   b:bs -> case b of
-    TupleType _ -> error use_fields_err_msg2
+    ParenTupleType _ -> error use_fields_err_msg2
     ParenthesisType _ -> error use_fields_err_msg2
 
     TypeName tn -> type_map_lookup tn >>= \case 
@@ -249,7 +249,7 @@ use_fields_g = ( \(AbsTypesAndResType bts bt) (UF v) -> case bts of
       Just (FieldAndTypeList fatl) ->
         correct_use_fields_g tn fatl (AbsTypesAndResType bs bt) v
 
-      Just (CaseAndTypeList catl) -> undefined
+      Just (CaseAndMaybeTypeList catl) -> undefined
 
   ) :: ValueType -> UseFields -> Stateful Haskell
 

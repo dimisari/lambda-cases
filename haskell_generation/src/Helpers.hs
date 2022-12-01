@@ -12,7 +12,7 @@ import Data.List
 -- Keywords
 keywords =
   [ "tuple_type", "value", "or_type", "values" , "use_fields", "cases"
-  , "value", "output", "where", "type_predicate", "function", "functions"
+  , "value", "let", "output", "type_predicate", "function", "functions"
   , "type_theorem", "proof" ]
   :: [ String ]
 
@@ -23,9 +23,9 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-integer =
-  let number = many1 digit in read <$> ((:) <$> char '-' <*> number <|> number)
-  :: Parser Integer
+integer :: Parser Integer
+integer = read <$> ((:) <$> char '-' <*> number <|> number) where
+  number = many1 digit :: Parser String
 
 seperated2 = (\s p ->
   p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as

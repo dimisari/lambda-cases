@@ -14,7 +14,7 @@ import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleType(..)
-  , OrType(..), CaseAndType(..), FieldsOrCases(..) )
+  , OrType(..), CaseAndMaybeType(..), FieldsOrCases(..), Type(..) )
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_lookup
   , type_map_insert )
@@ -32,7 +32,7 @@ type_name_g = show
 
 -- BaseType
 base_type_g = ( \case
-  TupleType vts -> parenthesis_comma_sep_g value_type_g vts
+  ParenTupleType vts -> parenthesis_comma_sep_g value_type_g vts
 
   ParenthesisType vt -> case vt of
     (AbsTypesAndResType [] bt) -> base_type_g bt
@@ -74,19 +74,30 @@ or_type_g = ( \(NameAndValues tn otvs) -> type_map_lookup tn >>= \case
 
   Nothing ->
     let
-    case_and_type_g = ( \(CT vn vt ) ->
+    case_and_type_g = ( \(CT vn mvt) ->
+      let
+      vt_g = case mvt of 
+        Nothing -> ""
+        Just vt  -> " " ++ show vt
+      in
       value_map_insert
         (VN $ "is_" ++ value_name_g vn)
         (AbsTypesAndResType [ TypeName tn ] $ TypeName $ TN "Bool") >>
-      return ( "C" ++ value_name_g vn ++ " " ++ show vt )
-      ) :: CaseAndType -> Stateful Haskell
+      return ( "C" ++ value_name_g vn ++ vt_g )
+      ) :: CaseAndMaybeType -> Stateful Haskell
 
     or_values_g =
       otvs==>mapM case_and_type_g >>= \otvs_g ->
       return $ intercalate " | " otvs_g 
       :: Stateful Haskell
     in
-    type_map_insert tn (CaseAndTypeList otvs) >> or_values_g >>= \otvs_g ->
+    type_map_insert tn (CaseAndMaybeTypeList otvs) >> or_values_g >>= \otvs_g ->
     return $
       "data " ++ type_name_g tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show\n"
   ) :: OrType -> Stateful Haskell
+
+-- Type
+type_g = ( \case
+  TupleType tt -> tuple_type_g tt
+  OrType ot -> or_type_g ot
+  ) :: Type -> Stateful Haskell

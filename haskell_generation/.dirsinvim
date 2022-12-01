@@ -1,0 +1,15 @@
+src/CodeGenerators/ErrorMessages.hs
+src/CodeGenerators/LowLevel.hs
+src/CodeGenerators/Types.hs
+src/CodeGenerators/Values.hs
+
+src/HaskellTypes/Generation.hs
+src/HaskellTypes/LowLevel.hs
+src/HaskellTypes/Types.hs
+src/HaskellTypes/Values.hs
+
+src/Helpers.hs
+src/Main.hs
+src/Parsers/LowLevel.hs
+src/Parsers/Types.hs
+src/Parsers/Values.hs

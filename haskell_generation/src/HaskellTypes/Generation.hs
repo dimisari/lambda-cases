@@ -14,13 +14,12 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType, CaseAndType
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType, CaseAndMaybeType
   , FieldsOrCases )
 
 {- 
   All:
-  Types, get fields, update fields,
-  value_map operations, type_map operations,
+  Types, get fields, update fields, value_map operations, type_map operations,
   initial state
 -}
 
@@ -54,26 +53,27 @@ get_from_state = ( \f -> get >>= f .> return )
   ) :: ( Int -> Stateful (), ValueMap -> Stateful (), TypeMap -> Stateful () )
 
 -- value_map operations
-value_map_lookup = ( \vn@(VN s) -> get_value_map >>= M.lookup vn .> \case
+value_map_get = ( \vn@(VN s) -> get_value_map >>= M.lookup vn .> \case
   Nothing -> error $ "No definition for value: " ++ s
   Just vt -> return vt
   ) :: ValueName -> Stateful ValueType
 
-value_map_insert = ( \vn vt -> get_value_map >>= M.insert vn vt .> update_value_map
+value_map_insert = ( \vn vt ->
+  get_value_map >>= M.insert vn vt .> update_value_map
   ) :: ValueName -> ValueType -> Stateful ()
 
 -- type_map operations
 type_map_lookup = ( \tn -> get_type_map >>= M.lookup tn .> return)
   :: TypeName -> Stateful (Maybe FieldsOrCases)
 
-type_map_insert = ( \tn foc-> get_type_map >>= M.insert tn foc .> update_type_map) 
+type_map_insert = ( \tn foc -> get_type_map >>= M.insert tn foc .> update_type_map) 
   :: TypeName -> FieldsOrCases -> Stateful ()
 
 -- initial state
 int_bt = TypeName $ TN "Int"
   :: BaseType
 
-int_int_tuple_bt = TupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
+int_int_tuple_bt = ParenTupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
   :: BaseType
 
 init_value_map = 

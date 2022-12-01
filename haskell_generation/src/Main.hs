@@ -15,42 +15,42 @@ import Helpers
   ( Haskell, (.>) )
 
 import HaskellTypes.Types
-  ( TupleType )
+  ( Type )
 import HaskellTypes.Values
   ( NamesTypesAndValues )
 import HaskellTypes.Generation
   ( init_state )
 
 import Parsers.Types
-  ( tuple_type_p )
+  ( type_p )
 import Parsers.Values
   ( names_types_and_values_p )
 
 import CodeGenerators.Types
-  ( tuple_type_g )
+  ( type_g )
 import CodeGenerators.Values
   ( names_types_and_values_g )
 
 -- Constants
 [ example_name, files, haskell_header,
   example_lc, example_hs ] =
-  [ "example", "files/", files ++ "haskell_code_header.hs"
-  , files ++ example_name ++ ".lc", files ++ example_name ++ ".hs" ] 
+  [ files ++ "example", "files/", files ++ "haskell_code_header.hs"
+  , example_name ++ ".lc", example_name ++ ".hs" ] 
   :: [ String ]
 
+-- Types
+data NTAVsOrType =
+  Type_ Type | NTAVs NamesTypesAndValues deriving Show
+
+type Program = [ NTAVsOrType ]
+
 -- Parsing 
-parse_with =
-  flip parse $ example_name ++ ".lc"
+parse_with = flip parse example_lc
   :: Parser a -> String -> Either ParseError a
 
-data NTAVsOrTupleType =
-  TupleType_ TupleType | NTAVs NamesTypesAndValues deriving Show
-
 ntavs_or_tt_p =
-  TupleType_ <$> try tuple_type_p <|> NTAVs <$> names_types_and_values_p
-  :: Parser NTAVsOrTupleType
-
-type Program = [ NTAVsOrTupleType ]
+  Type_ <$> try type_p <|> NTAVs <$> names_types_and_values_p
+  :: Parser NTAVsOrType
 
 program_p =
   many (char '\n') *> many ntavs_or_tt_p <* eof 
@@ -62,7 +62,7 @@ parse_string = parse_with program_p
 -- Generating haskell
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  TupleType_ tt -> tuple_type_g tt
+  Type_ t -> type_g t
   ) .> fmap concat .> flip evalState init_state
   :: Program -> Haskell
 
@@ -78,7 +78,7 @@ write_code = ( generate_code .> \case
   ) :: String -> IO ()
 
 main =
-  readFile example_lc
-  -- >>= parse_string .> print
-  >>= write_code
+  readFile example_lc >>=
+  write_code
+  -- parse_string .> print
   :: IO ()

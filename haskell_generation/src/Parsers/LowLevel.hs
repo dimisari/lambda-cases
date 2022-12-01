@@ -11,9 +11,8 @@ import Helpers
   ( (==>), keywords, seperated2, integer )
 
 import HaskellTypes.LowLevel
-  ( Literal(..), ValueName(..), LiteralOrValueName(..)
-  , ApplicationDirection(..), TupleMatching(..), Abstraction(..)
-  , Abstractions(..) )
+  ( Literal(..), ValueName(..), LiteralOrValueName(..), ApplicationDirection(..)
+  , TupleMatching(..), Abstraction(..), Abstractions(..) )
 
 literal_p = integer
   :: Parser Literal

@@ -31,5 +31,6 @@ type_predicate A==>Has_Third<==B function third: A -> B
 
 type_theorem ( A, B, C )==>Has_Third<==C
 proof third = get_triple_third
+
 type_theorem ( A, B, C, D )==>Has_Third<==C
-proof first = get_quad_third
+proof third = get_quad_third

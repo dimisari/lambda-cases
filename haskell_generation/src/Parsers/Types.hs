@@ -1,16 +1,16 @@
 module Parsers.Types where
 
 import Text.Parsec
-  ( (<|>), many, char, lower, upper, string, sepBy, try )
+  ( (<|>), many, char, lower, upper, string, sepBy, try, optionMaybe )
 import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), (.>), seperated2, eof_or_new_lines )
+  ( (==>), seperated2, eof_or_new_lines )
 
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
-  , TupleType(..), CaseAndType(..), OrType(..) )
+  , TupleType(..), CaseAndMaybeType(..), OrType(..), Type(..) )
 
 import Parsers.LowLevel
   ( value_name_p )
@@ -18,7 +18,7 @@ import Parsers.LowLevel
 {-
   All:
   TypeName, BaseType, ValueType, FieldAndType, TupleTypeValue, TupleType,
-  CaseAndType, OrTypeValues, OrType
+  CaseAndMaybeType, OrTypeValues, OrType, Type
 -}
 
 -- TypeName
@@ -28,7 +28,7 @@ type_name_p =
 
 -- BaseType
 base_type_p =
-  TupleType <$>
+  ParenTupleType <$>
     try (string "( " *> seperated2 ", " value_type_p <* string " )") <|>
   ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
   TypeName <$> type_name_p 
@@ -58,15 +58,15 @@ field_and_type_p =
 -- TupleType
 tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
-  string "\nvalue " >>
-  string "( " *> (field_and_type_p==>sepBy $ string ", ") <* string " )" >>=
-    \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
+  string "\nvalue ( " >> (field_and_type_p==>sepBy $ string ", ") <* string " )"
+    >>= \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
   :: Parser TupleType
 
--- CaseAndType
+-- CaseAndMaybeType
 case_and_type_p = 
-  value_name_p >>= \vn -> string "." >> value_type_p >>= \vt -> return $ CT vn vt
-  :: Parser CaseAndType
+  value_name_p >>= \vn -> optionMaybe (char '.' *> value_type_p) >>= \mvt ->
+  return $ CT vn mvt
+  :: Parser CaseAndMaybeType
 
 -- OrType
 or_type_p =
@@ -74,3 +74,8 @@ or_type_p =
   string "\nvalues " >> (case_and_type_p==>sepBy $ string " | ") >>= \otvs ->
   eof_or_new_lines >> NameAndValues tn otvs==>return
   :: Parser OrType
+
+-- Type
+type_p = 
+  TupleType <$> tuple_type_p <|> OrType <$> or_type_p
+  :: Parser Type

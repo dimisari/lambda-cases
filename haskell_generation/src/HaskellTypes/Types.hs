@@ -14,7 +14,7 @@ newtype TypeName =
   TN String deriving ( Eq, Ord )
 
 data BaseType =
-  TupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
+  ParenTupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
   deriving Eq
 
 data ValueType =
@@ -26,15 +26,18 @@ data FieldAndType =
 data TupleType =
   NameAndValue TypeName [ FieldAndType ]
 
-data CaseAndType =
-  CT { get_cn :: ValueName, get_ct :: ValueType }
+data CaseAndMaybeType =
+  CT { get_cn :: ValueName, get_ct :: Maybe ValueType }
 
 data OrType =
-  NameAndValues TypeName [ CaseAndType ]
+  NameAndValues TypeName [ CaseAndMaybeType ]
 
 data FieldsOrCases =
-  FieldAndTypeList [ FieldAndType ] | CaseAndTypeList [ CaseAndType ]
+  FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
+  deriving Show
 
+data Type =
+  TupleType TupleType | OrType OrType deriving Show
 
 -- Show instances
 instance Show TypeName where
@@ -42,7 +45,7 @@ instance Show TypeName where
 
 instance Show BaseType where
   show = \case 
-    TupleType vts ->
+    ParenTupleType vts ->
       "( " ++ concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++ ")"
 
     ParenthesisType vt -> vt==> \case
@@ -60,11 +63,13 @@ instance Show FieldAndType where
 
 instance Show TupleType where
   show = \(NameAndValue tn ttv) ->
-    "\ntuple_type " ++ show tn ++ "\nvalue " ++
-    "( " ++ concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++ ")\n"
+    "\ntuple_type " ++ show tn ++ "\nvalue ( " ++
+    concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++ " )\n"
 
-instance Show CaseAndType where
-  show = \(CT vn vt) -> show vn ++ "." ++ show vt
+instance Show CaseAndMaybeType where
+  show = \(CT vn mvt) -> show vn ++ case mvt of 
+    Just vt -> "." ++ show vt
+    Nothing -> ""
 
 instance Show OrType where
   show = \(NameAndValues tn otvs) ->
