@@ -63,6 +63,11 @@ value_map_insert = ( \vn vt ->
   ) :: ValueName -> ValueType -> Stateful ()
 
 -- type_map operations
+type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case
+  Just _ -> error $ "Type of the same name already defined: " ++ show tn
+  Nothing -> return ()
+  ) :: TypeName -> Stateful ()
+
 type_map_lookup = ( \tn -> get_type_map >>= M.lookup tn .> return)
   :: TypeName -> Stateful (Maybe FieldsOrCases)
 

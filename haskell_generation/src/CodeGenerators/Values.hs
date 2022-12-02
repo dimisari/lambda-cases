@@ -44,34 +44,33 @@ import CodeGenerators.ErrorMessages
 -- ParenthesisValue
 parenthesis_value_g = ( \vt -> \case
   Parenthesis v -> value_g vt v >>= \v_g -> return $ "(" ++ v_g ++ ")"
-  Tuple vs -> vt_values_g vt vs
+  Tuple vs -> vt_tuple_values_g vt vs
   ) :: ValueType -> ParenthesisValue -> Stateful Haskell
 
-vt_values_g = ( \case
-  vt@(AbsTypesAndResType (_:_) _) -> \vs -> error $ vt_values_err_msg vs vt
+vt_tuple_values_g = ( \case
+  vt@(AbsTypesAndResType (_:_) _) -> \vs -> error $ tuple_fun_type_err vs vt
   AbsTypesAndResType [] bt -> bt_values_g bt
   ) :: ValueType -> [ Value ] -> Stateful Haskell
 
 bt_values_g = ( \case
-  ParenTupleType vts -> vts_values_g vts
-  ParenthesisType vt -> vt_values_g vt
+  ParenTupleType vts -> vts_tuple_values_g vts
+  ParenthesisType vt -> vt_tuple_values_g vt
   TypeName tn -> tn_values_g tn
   ) :: BaseType -> [ Value ] -> Stateful Haskell
 
-vts_values_g = ( \vts vs -> case length vts == length vs of
-  False -> error vts_values_err_msg
+vts_tuple_values_g = ( \vts vs -> case length vts == length vs of
+  False -> error vts_tuple_values_err
   True -> 
     zipWith value_g vts vs==>sequence >>= \vs_g ->
     return $ "( " ++ init vs_g==>concatMap (++ ", ") ++ vs_g==>last ++ " )"
   ) :: [ ValueType ] -> [ Value ] -> Stateful Haskell
 
 tn_values_g = ( \tn vs -> type_map_lookup tn >>= \case
-  Nothing -> error $ type_not_found_err_msg tn
+  Nothing -> error $ type_not_found_err tn
   Just (FieldAndTypeList fatl) -> case length vs == length fatl of 
-    False -> error tn_values_err_msg
-
+    False -> error tn_values_err
     True -> correct_tn_values_g tn (map get_ft fatl) vs
-  Just (CaseAndMaybeTypeList fatl) -> undefined
+  Just (CaseAndMaybeTypeList camtl) -> undefined camtl
   ) :: TypeName -> [ Value ] -> Stateful Haskell
 
 correct_tn_values_g = ( \tn vts vs ->
@@ -90,7 +89,7 @@ base_value_g = ( \vt -> \case
 
 -- OneArgApplications
 one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
-  [] -> error one_arg_applications_err_msg1
+  [] -> error one_arg_applications_err1
 
   ( init_bv, init_ad ):bv_ad_s_tail ->
 
@@ -106,13 +105,13 @@ one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
       ==> \( inferred_vt, hs ) ->
 
     case vt == inferred_vt of 
-      False -> error $ one_arg_applications_err_msg2 oaa
+      False -> error $ one_arg_applications_err2 oaa
 
       True -> return hs
   ) :: ValueType -> OneArgApplications -> Stateful Haskell
 
 bv_type_inference_g = ( \case
-  ParenthesisValue pv -> error $ bv_type_inference_err_msg pv
+  ParenthesisValue pv -> error $ bv_type_inference_err pv
   LiteralOrValueName lovn -> lovn==> \case
     Literal l ->
       return $ ( AbsTypesAndResType [] (TypeName (TN "Int")), show l)
@@ -135,11 +134,11 @@ add_next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->
 
 one_arg_application_g = (
   \( vt_left, hs_left ) ( vt_right, hs_right ) -> case vt_left of 
-  AbsTypesAndResType [] _ -> error $ one_arg_application_err_msg_1 vt_left
+  AbsTypesAndResType [] _ -> error $ one_arg_application_err_1 vt_left
   AbsTypesAndResType (abs_bt : abs_bts) bt -> 
     vt_bt_are_equivalent ( vt_shortest_equivalent vt_right, abs_bt )==> \case
     False -> error $
-      one_arg_application_err_msg_2 vt_right abs_bt hs_left hs_right
+      one_arg_application_err_2 vt_right abs_bt hs_left hs_right
 
     True -> ( AbsTypesAndResType abs_bts bt, hs_left ++ " " ++ hs_right )
   ) :: ( ValueType, Haskell ) -> ( ValueType, Haskell ) ->
@@ -192,7 +191,7 @@ no_abstractions_value_1_g = ( \vt -> \case
 many_args_arg_value_g = (
   \(AbsTypesAndResType bts bt) (MAAV (As as) nav1) ->
   case length as > length bts of 
-  True -> error $ many_args_arg_value_err_msg (As as) bts
+  True -> error $ many_args_arg_value_err (As as) bts
 
   False -> 
     let
@@ -213,7 +212,7 @@ many_args_application_g = ( \vt (MAA maavs vn) -> value_map_get vn >>=
   in
   case vt == AbsTypesAndResType bts2 res_bt of 
     False -> error $
-      many_args_application_err_msg vt (AbsTypesAndResType bts2 res_bt)
+      many_args_application_err vt (AbsTypesAndResType bts2 res_bt)
 
     True -> bts_maavs_vn_g bts1 maavs vn
   ) :: ValueType -> ManyArgsApplication -> Stateful Haskell
@@ -238,13 +237,13 @@ bt_maav_g = ( \bt maav ->
 
 -- UseFields
 use_fields_g = ( \(AbsTypesAndResType bts bt) (UF v) -> case bts of 
-  [] -> error use_fields_err_msg1
+  [] -> error use_fields_err1
   b:bs -> case b of
-    ParenTupleType _ -> error use_fields_err_msg2
-    ParenthesisType _ -> error use_fields_err_msg2
+    ParenTupleType _ -> error use_fields_err2
+    ParenthesisType _ -> error use_fields_err2
 
     TypeName tn -> type_map_lookup tn >>= \case 
-      Nothing -> error $ type_not_found_err_msg tn
+      Nothing -> error $ type_not_found_err tn
 
       Just (FieldAndTypeList fatl) ->
         correct_use_fields_g tn fatl (AbsTypesAndResType bs bt) v
@@ -269,7 +268,7 @@ insert_to_value_map_ret_vn = ( \(FT vn vt) ->
 -- SpecificCase
 specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
   case bts of 
-  [] -> error $ specific_case_err_msg vt sc
+  [] -> error $ specific_case_err vt sc
 
   b:bs ->
     let
@@ -318,7 +317,7 @@ name_type_and_value_lists_g = ( \(NTAVLists vns vts vs) ->
   zip3 = ( \case
     ( vn : vns, vt : vts, v : vs ) -> NTAV vn vt v : zip3 ( vns, vts, vs )
     ( [], [], [] ) -> []
-    _ -> error name_type_and_value_lists_err_msg
+    _ -> error name_type_and_value_lists_err
     ) :: ( [ ValueName ], [ ValueType ], [ Value ] ) -> [ NameTypeAndValue ]
   in
   zip3 ( vns, vts, vs )==>mapM name_type_and_value_g >>= concat .> return

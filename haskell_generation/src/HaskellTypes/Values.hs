@@ -94,7 +94,7 @@ instance Show BaseValue where
 
 instance Show OneArgApplications where
   show = \(OAA bv_ad_s bv) -> case bv_ad_s of
-    [] -> error $ one_arg_app_err_msg
+    [] -> error $ one_arg_app_err
     _ -> bv_ad_s==>concatMap ( \( bv, ad ) -> show bv ++ show ad ) ++ show bv
 
 instance Show MultiplicationFactor where
@@ -104,8 +104,8 @@ instance Show MultiplicationFactor where
 
 instance Show Multiplication where
   show = \(Mul mfs) -> case mfs of
-      [] -> error less_than_two_mul_err_msg
-      [ _ ] -> error less_than_two_mul_err_msg
+      [] -> error less_than_two_mul_err
+      [ _ ] -> error less_than_two_mul_err
       [ mf1, mf2 ] ->  show mf1 ++ " * " ++ show mf2
       (mf:mfs) -> show mf ++ " * " ++ show (Mul mfs)
 
@@ -181,7 +181,7 @@ instance Show Value where
   show = \(Value as nav) -> show as ++ show nav
 
 -- error messages
-one_arg_app_err_msg =
+one_arg_app_err =
   "One arg function application should have at least one application direction"
-less_than_two_mul_err_msg =
+less_than_two_mul_err =
   "Found less than 2 mfs in multiplication"

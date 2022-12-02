@@ -29,7 +29,7 @@ type_name_p =
 -- BaseType
 base_type_p =
   ParenTupleType <$>
-    try (string "( " *> seperated2 ", " value_type_p <* string " )") <|>
+     try (string "( " *> seperated2 ", " value_type_p <* string " )") <|>
   ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
   TypeName <$> type_name_p 
   :: Parser BaseType
