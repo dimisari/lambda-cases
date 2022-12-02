@@ -135,7 +135,7 @@ instance Show ManyArgsArgValue where
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->
-    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++ " :==> " ++
+    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++ " *=> " ++
     show vn
 
 instance Show UseFields where

@@ -26,5 +26,4 @@ main: Empty==>WithIO
 
 print_int_text: ( Int, Text ) -> Empty==>WithIO
   = use_tuple_fields ->
-    ("First: " + pair_first==>to_text + ", Second: " + pair_second + "\n")
-      ==>print
+    ("First: " + pair_first==>to_text + ", Second: " + pair_second + "\n") ==>print

@@ -46,7 +46,7 @@ one_ab_arrow_value_type_p =
 
 many_ab_arrows_value_type_p =
   seperated2 ", " one_ab_arrow_value_type_p >>= \vt1s ->
-  string " :-> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
+  string " *> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
   return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
   :: Parser ValueType
 

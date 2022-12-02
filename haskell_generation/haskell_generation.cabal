@@ -14,24 +14,19 @@ extra-doc-files:    CHANGELOG.md
 -- a tutorial module.
 -- extra-source-files:
 
-common warnings
-    ghc-options: -Wall
-
 executable haskell_generation
-    import:           warnings
-
+    hs-source-dirs:   src
     main-is:          Main.hs
-
     other-modules:    Helpers, Parsers.LowLevel, Parsers.Types, Parsers.Values,
                       HaskellTypes.LowLevel, HaskellTypes.Types,
                       HaskellTypes.Values, HaskellTypes.Generation,
                       CodeGenerators.LowLevel, CodeGenerators.Types,
                       CodeGenerators.Values, CodeGenerators.ErrorMessages
 
-    other-extensions: LambdaCase
-
     build-depends:    base ^>=4.16.4.0, parsec, mtl, containers
-
-    hs-source-dirs:   src
-
     default-language: Haskell2010
+    other-extensions: LambdaCase
+    import:           warnings
+
+common warnings
+    ghc-options: -Wall

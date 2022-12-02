@@ -19,7 +19,7 @@ import HaskellTypes.Generation
 import CodeGenerators.ErrorMessages
   ( literal_not_int_err, type_check_err, tuple_matching_err
   , tuple_function_type_err, tuple_less_than_2_err
-  , tuple_value_type_lengths_dont_match_err
+  , tuple_values_types_lengths_dont_match_err
   , abstractions_types_lengths_dont_match_err )
 
 {-
@@ -67,7 +67,7 @@ value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
     [] -> error tuple_less_than_2_err
     [ _ ] -> error tuple_less_than_2_err
     _ -> case length vts == length vns of
-      False -> error tuple_value_type_lengths_dont_match_err
+      False -> error tuple_values_types_lengths_dont_match_err
       True -> correct_value_types_value_names_g vts vns
   ) :: [ ValueType ] -> TupleMatching -> Stateful Haskell
 
@@ -83,7 +83,6 @@ abstraction_g = ( \bt -> \case
       ParenthesisType vt -> vt
       _ -> AbsTypesAndResType [] bt
       ) :: ValueType 
-
   TupleMatching tm -> tuple_matching_g bt tm
   ) :: BaseType -> Abstraction -> Stateful Haskell
 
@@ -95,7 +94,6 @@ abstractions_g = ( \bts (As as) -> case length bts == length as of
 
 correct_abstractions_g = ( \bts -> \case
   [] -> return ""
-
   as ->
     zipWith bt_abstraction_g bts as==>sequence==>fmap concat >>= \as_g ->
     return $ "\\" ++ as_g ++ "-> "

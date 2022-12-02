@@ -10,8 +10,8 @@ function definition (functions are values!):
       = value_name0 -> value_name1 -> result expression of type Type2
   - Comments: 
     Syntactic sugar version example:
-    function_name: Type0, Type1 :-> Type2
-      = value_name0, value_name1 :-> result expression of type Type2
+    function_name: Type0, Type1 *> Type2
+      = value_name0, value_name1 *> result expression of type Type2
 
 - one prenthesis in the middle:
   - Example:

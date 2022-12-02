@@ -17,8 +17,7 @@ import HaskellTypes.Types
   , OrType(..), CaseAndMaybeType(..), FieldsOrCases(..), Type(..) )
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_lookup, type_map_insert
-  , type_map_exists_check
-  )
+  , type_map_exists_check )
 import CodeGenerators.LowLevel
   ( value_name_g )
 

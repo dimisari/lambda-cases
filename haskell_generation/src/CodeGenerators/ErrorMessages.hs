@@ -32,7 +32,7 @@ tuple_less_than_2_err =
   "Should not have less than 2 in tuple matching"
   :: Error
 
-tuple_value_type_lengths_dont_match_err =
+tuple_values_types_lengths_dont_match_err =
   "Tuple values and tuple types must be of the same length"
   :: Error
 
