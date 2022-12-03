@@ -2,6 +2,8 @@
 
 module HaskellTypes.Values where
 
+import Data.List
+  ( intercalate )
 import Helpers
   ( (==>), (.>) )
 
@@ -84,8 +86,7 @@ data Value =
 instance Show ParenthesisValue where
   show = \case
     Parenthesis v -> "(" ++ show v ++ ")"
-    Tuple vs ->
-      "( " ++ concatMap (show .> (++ ", ")) (init vs) ++ show (last vs) ++ " )"
+    Tuple vs -> "( " ++ intercalate ", " (map show vs) ++ " )"
 
 instance Show BaseValue where
   show = \case
@@ -135,8 +136,7 @@ instance Show ManyArgsArgValue where
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->
-    concatMap (show .> (++ ", ")) (init maavs) ++ show (last maavs) ++ " *=> " ++
-    show vn
+    intercalate ", " (map show maavs) ++ " *=> " ++ show vn
 
 instance Show UseFields where
   show = \(UF v) -> "use_fields ->\n" ++ show v
@@ -153,9 +153,9 @@ instance Show NameTypeAndValue where
 
 instance Show NameTypeAndValueLists where
   show = \(NTAVLists vns vts vs) -> 
-    concatMap (show .> (++ ", ")) (init vns) ++ show (last vns) ++ ": " ++
-    concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++ "\n  = " ++
-    concatMap (show .> (++ ", ")) (init vs) ++ show (last vs) ++ "\n"
+    intercalate ", " (map show vns) ++ ": " ++
+    intercalate ", " (map show vts) ++ "\n  = " ++
+    intercalate ", " (map show vs) ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case

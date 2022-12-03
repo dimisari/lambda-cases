@@ -8,7 +8,7 @@ import qualified Data.Map as M
   ( insert, lookup )
 
 import Helpers
-  ( Haskell, (==>), (.>), parenthesis_comma_sep_g )
+  ( Haskell, (==>), (.>), paren_comma_sep_g )
 
 import HaskellTypes.LowLevel
   ( ValueName(..) )
@@ -16,8 +16,7 @@ import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleType(..)
   , OrType(..), CaseAndMaybeType(..), FieldsOrCases(..), Type(..) )
 import HaskellTypes.Generation
-  ( Stateful, value_map_insert, type_map_lookup, type_map_insert
-  , type_map_exists_check )
+  ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 import CodeGenerators.LowLevel
   ( value_name_g )
 
@@ -29,7 +28,7 @@ type_name_g = show
 
 -- BaseType
 base_type_g = ( \case
-  ParenTupleType vts -> parenthesis_comma_sep_g value_type_g vts
+  ParenTupleType vts -> paren_comma_sep_g value_type_g vts
   ParenthesisType vt -> case vt of
     (AbsTypesAndResType [] bt) -> base_type_g bt
     _ -> "(" ++ value_type_g vt ++ ")"

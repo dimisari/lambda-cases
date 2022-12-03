@@ -53,14 +53,14 @@ get_from_state = ( \f -> get >>= f .> return )
   ) :: ( Int -> Stateful (), ValueMap -> Stateful (), TypeMap -> Stateful () )
 
 -- value_map operations
+value_map_insert = ( \vn vt ->
+  get_value_map >>= M.insert vn vt .> update_value_map
+  ) :: ValueName -> ValueType -> Stateful ()
+
 value_map_get = ( \vn@(VN s) -> get_value_map >>= M.lookup vn .> \case
   Nothing -> error $ "No definition for value: " ++ s
   Just vt -> return vt
   ) :: ValueName -> Stateful ValueType
-
-value_map_insert = ( \vn vt ->
-  get_value_map >>= M.insert vn vt .> update_value_map
-  ) :: ValueName -> ValueType -> Stateful ()
 
 -- type_map operations
 type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case
@@ -68,11 +68,13 @@ type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case
   Nothing -> return ()
   ) :: TypeName -> Stateful ()
 
-type_map_lookup = ( \tn -> get_type_map >>= M.lookup tn .> return)
-  :: TypeName -> Stateful (Maybe FieldsOrCases)
-
 type_map_insert = ( \tn foc -> get_type_map >>= M.insert tn foc .> update_type_map) 
   :: TypeName -> FieldsOrCases -> Stateful ()
+
+type_map_get = ( \tn@(TN s) -> get_type_map >>= M.lookup tn .> \case
+  Nothing -> error $ "No definition for type: " ++ s
+  Just foc -> return foc
+  ) :: TypeName -> Stateful FieldsOrCases
 
 -- initial state
 int_bt = TypeName $ TN "Int"

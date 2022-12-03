@@ -2,6 +2,9 @@
 
 module HaskellTypes.Types where
 
+import Data.List 
+  ( intercalate )
+
 import Helpers
   ( (==>), (.>) )
 import HaskellTypes.LowLevel
@@ -45,13 +48,10 @@ instance Show TypeName where
 
 instance Show BaseType where
   show = \case 
-    ParenTupleType vts ->
-      "( " ++ concatMap (show .> (++ ", ")) (init vts) ++ show (last vts) ++ ")"
-
+    ParenTupleType vts -> "( " ++ intercalate ", " (map show vts) ++ ")"
     ParenthesisType vt -> vt==> \case
       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
-      _ -> show vt
-
+      _ -> "(" ++ show vt ++ ")"
     TypeName tn -> show tn
 
 instance Show ValueType where
@@ -63,8 +63,8 @@ instance Show FieldAndType where
 
 instance Show TupleType where
   show = \(NameAndValue tn ttv) ->
-    "\ntuple_type " ++ show tn ++ "\nvalue ( " ++
-    concatMap (show .> (++ ", ")) (init ttv) ++ show (last ttv) ++ " )\n"
+    "\ntuple_type " ++ show tn ++
+    "\nvalue ( " ++ intercalate ", " (map show ttv) ++ " )\n"
 
 instance Show CaseAndMaybeType where
   show = \(CT vn mvt) -> show vn ++ case mvt of 
@@ -73,8 +73,8 @@ instance Show CaseAndMaybeType where
 
 instance Show OrType where
   show = \(NameAndValues tn otvs) ->
-    "\nor_type " ++ show tn ++ "\nvalues " ++ 
-    concatMap (show .> (++ " | ")) (init otvs) ++ show (last otvs) ++ "\n"
+    "\nor_type " ++ show tn ++
+    "\nvalues " ++ intercalate " | " (map show otvs) ++ "\n"
 
 -- helpers
 vt_shortest_equivalent = ( \case

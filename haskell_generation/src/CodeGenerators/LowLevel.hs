@@ -6,7 +6,7 @@ import qualified Data.Map as M
   ( lookup )
 
 import Helpers
-  ( Haskell, (==>), (.>), parenthesis_comma_sep_g )
+  ( Haskell, (==>), (.>), paren_comma_sep_g )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
@@ -73,7 +73,7 @@ value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
 
 correct_value_types_value_names_g = ( \vts vns -> 
   zipWith value_map_insert vns vts==>sequence_ >>
-  parenthesis_comma_sep_g value_name_g vns==>return
+  paren_comma_sep_g value_name_g vns==>return
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
 
 -- Abstraction

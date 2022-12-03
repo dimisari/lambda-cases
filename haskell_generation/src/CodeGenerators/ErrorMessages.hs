@@ -45,24 +45,19 @@ tuple_fun_type_err = ( \vs vt ->
   show (Tuple vs) ++ " can't have type: " ++ show vt
   ) :: [ Value ] -> ValueType -> Error
 
-vts_tuple_values_err = "Length of values and types in tuple must be the same"
+values_fields_lengths_dont_match_err =
+  "Length of tuple values and fields of the corresponding tuple_type must be " ++
+  "the same"
   :: Error
 
-type_not_found_err = ("Did not find a definition for type: " ++) . show
-  :: TypeName -> Error
-
-tn_values_err =
-  "Length of tuple result must be the same as the number of fields of the " ++
-  "corresponding tuple_type"
-  :: Error
-
-one_arg_applications_err1 =
+no_application_err =
   "Application expression should have at least one application operator"
   :: Error
 
-one_arg_applications_err2 = 
-  ("Type inference for one argument applications failed in: " ++) . show
-  :: OneArgApplications -> Error
+one_arg_applications_type_err = ( \oaa vt inferred_vt -> 
+  "Could't match type: " ++ show vt ++ "\nwith type:" ++ show inferred_vt ++
+  "In one argument applications expression: " ++ show oaa
+  ) :: OneArgApplications -> ValueType -> ValueType -> Error
 
 bv_type_inference_err =
   (("Cannot infer types for values inside parenthesis in one argument" ++
@@ -70,40 +65,40 @@ bv_type_inference_err =
   . show
   :: ParenthesisValue -> Error
 
-value_not_found_err = ( "Could not find value: " ++) . show
-  :: ValueName -> Error
+not_a_fun_err = ( \fun_vt val_vt ->
+  "This is not a function type: " ++ show fun_vt ++
+  "\nTrying to apply to argument of type: " ++ show val_vt
+  ) :: ValueType -> ValueType -> Error
 
-one_arg_application_err_1 =  
-  (("Cannot apply argument to something that does not have a function type." ++
-    " \nType : ") ++) . show
-  :: ValueType -> Error
+argument_types_dont_match_err = ( \vt_right abs_bt->
+  "Argument types don't match for one argument function application.\n" ++
+  "Types involved:\n\nFirst:\n  " ++ show vt_right ++ "Second:\n  " ++ show abs_bt
+  ) :: ValueType -> BaseType -> Error
 
-one_arg_application_err_2 = ( \vt_right abs_bt hs_left hs_right->
-  "Types don't match for one argument function application. types involved:" ++
-  "\n  " ++ show vt_right ++ "\n  " ++ show abs_bt ++ "\nhaskell:\n  " ++
-  hs_left ++ hs_right
-  ) :: ValueType -> BaseType -> Haskell -> Haskell -> Error
-
-many_args_arg_value_err = ( \as bts ->
+too_many_abstractions_err = ( \as bts ->
   "More abstractions than abstraction types.\n  Abstractions:  " ++ show as ++
   "\n  Types: " ++ show bts
   ) :: Abstractions -> [ BaseType ] -> Error
 
-many_args_application_err = ( \vt1 vt2 ->
-  "Types don't match for many arguments function application. types" ++
-  " involved:\n  " ++ show vt1  ++ "\n  " ++ show vt2
+many_args_types_dont_match_err = ( \vt1 vt2 ->
+  "Argument types don't match for many arguments function application.\n" ++
+  "Types involved:\n\nFirst:\n  " ++ show vt1 ++ "Second:\n  " ++ show vt2
   ) :: ValueType -> ValueType -> Error
 
-use_fields_err1 = "use_fields should have function type"
-  :: Error
+use_fields_not_fun_err = 
+  ("use_fields should have function type but has: " ++) . show
+  :: ValueType -> Error
 
-use_fields_err2 = "use_fields abstraction should have tuple_type type"
-  :: Error
+must_be_tuple_type_err =
+  ("use_fields abstraction should have tuple_type type but has:" ++) . show
+  :: BaseType -> Error
 
-specific_case_err = ( \vt sc ->
-  "case should have abstaction type" ++ show vt ++ show sc
+specific_case_not_abstraction_err = ( \vt sc ->
+  "Specific case: " ++ show sc ++ "\nShould have abstaction type but has: " ++
+  show vt
   ) :: ValueType -> SpecificCase -> Error
 
-name_type_and_value_lists_err =
-  "name_type_and_value lists must have the same length"
-  :: Error
+name_type_and_value_lists_err = ( \ntavls ->
+  "Name, type and value lists must have the same length but are:\n  " ++
+  show ntavls
+  ) :: NameTypeAndValueLists -> Error

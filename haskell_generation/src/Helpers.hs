@@ -5,7 +5,7 @@ import Text.Parsec
 import Text.Parsec.String
   ( Parser )
 import Data.List
-  ( replicate )
+  ( replicate, intercalate )
 
 -- All: Keywords, Function application/composition, Parsing, Haskell generation
 
@@ -23,9 +23,10 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-integer :: Parser Integer
-integer = read <$> ((:) <$> char '-' <*> number <|> number) where
-  number = many1 digit :: Parser String
+integer =
+  let number = many1 digit :: Parser String in
+  read <$> ((:) <$> char '-' <*> number <|> number)
+  :: Parser Integer
 
 seperated2 = (\s p ->
   p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as
@@ -49,6 +50,5 @@ type Haskell = String
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
 
-parenthesis_comma_sep_g = ( \g l ->
-  "( " ++ init l==>concatMap (g .> (++ ", ")) ++ l==>last==>g ++ " )"
-  ) :: (a -> Haskell) -> [ a ] -> Haskell
+paren_comma_sep_g = ( \g l -> "( " ++ intercalate ", " (map g l) ++ " )")
+  :: (a -> Haskell) -> [ a ] -> Haskell

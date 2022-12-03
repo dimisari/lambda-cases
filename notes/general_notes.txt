@@ -1,11 +1,12 @@
 Questions 
 - mutual recursion: need to load whole level?
+- String = ListOf(Char)s ??
 
 Tuple Application
 
-  f : A -> B -> C
-  pair : ( A, B )
-  f<--pair : C
+  f: A, B *> C
+  pair: ( A, B )
+  pair==>f: C
 
 left-to-right function composition
 
@@ -26,7 +27,7 @@ Compilation targets to consider:
   - BEAM (Erlang virtual machine)
   - RISC-V
   - Java bytecode
-  - Pythin IR ?
+  - Python IR ?
 
 Other:
   - graph reduction

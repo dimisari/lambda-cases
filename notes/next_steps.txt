@@ -1,8 +1,4 @@
 type_inference
-- new dir
-- one by one 
-- probably can use some type checking along the way for speed
-  (if mutually recursive, they must be in the same file...)
  
 type abstractions
 - ==>, <==, *=>, paren at the end (classic notation)
@@ -11,8 +7,8 @@ fix
 - parenthesis in one argument applications: type_inference
 - case/use_fields at the end of one argument applications
 - stack of types in value map for multiple-level definitions
-- let-output -> where (problem with values in and outside of function)
-- type_map_lookup
+- let-output -> where 
+  - problem with values in and outside of function: add intentation levels
 
 cases
 - check for each specific case if case of or_type or literal
@@ -22,16 +18,13 @@ use_fields
 - "value" default name for the whole tuple_type value
 
 literals
-- reals
-- strings
+- reals + strings
 
 autgenerated functions
 - update_field: TupleType, FieldType *> TupleType
-  - put in map
-  - generate definition
+  - put in map + generate definition
 - is_case: OrType -> Bool
-  - put in map
-  - generate definition
+  - put in map + generate definition
 
 regular parenthesis function application
 - parser for already existing type?

@@ -2,6 +2,8 @@
 
 module HaskellTypes.LowLevel where
 
+import Data.List
+  ( intercalate )
 import Helpers
   ( (==>), (.>) )
 
@@ -43,8 +45,7 @@ instance Show ApplicationDirection where
     RightApplication -> "<=="
 
 instance Show TupleMatching where
-  show = \(TM vns) ->
-    "(" ++ init vns==>concatMap (show .> (++ ", ")) ++ show (last vns) ++ ")"
+  show = \(TM vns) -> "( " ++ vns==> map show==> intercalate ", " ++ ")"
 
 instance Show Abstraction where
   show = \case
