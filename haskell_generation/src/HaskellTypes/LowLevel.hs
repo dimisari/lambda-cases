@@ -9,7 +9,9 @@ import Helpers
 
 -- All: Types, Show instances
 
--- Types
+-- Types:
+-- Literal, ValueName, LiteralOrValueName, ApplicationDirection, TupleMatching
+-- Abstraction, Abstractions
 type Literal = Integer
 
 newtype ValueName =
@@ -30,7 +32,9 @@ data Abstraction =
 newtype Abstractions =
   As [ Abstraction ]
 
--- Show instances
+-- Show instances:
+-- ValueName, LiteralOrValueName, ApplicationDirection, TupleMatching
+-- Abstraction, Abstractions
 instance Show ValueName where
   show = \(VN n) -> n
 
@@ -45,7 +49,7 @@ instance Show ApplicationDirection where
     RightApplication -> "<=="
 
 instance Show TupleMatching where
-  show = \(TM vns) -> "( " ++ vns==> map show==> intercalate ", " ++ ")"
+  show = \(TM vns) -> "( " ++ map show vns==>intercalate ", " ++ ")"
 
 instance Show Abstraction where
   show = \case

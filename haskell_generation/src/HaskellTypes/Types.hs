@@ -12,7 +12,9 @@ import HaskellTypes.LowLevel
 
 -- All: Types, Show instances, helpers
 
--- Types
+-- Types:
+-- TypeName, BaseType, ValueType, FieldAndType, TupleType
+-- CaseAndMaybeType, OrType, FieldsOrCases, Type
 newtype TypeName =
   TN String deriving ( Eq, Ord )
 
@@ -42,13 +44,14 @@ data FieldsOrCases =
 data Type =
   TupleType TupleType | OrType OrType deriving Show
 
--- Show instances
+-- Show instances:
+-- TypeName, BaseType, ValueType, FieldAndType, TupleType, CaseAndMaybeType, OrType
 instance Show TypeName where
   show = \(TN n) -> n
 
 instance Show BaseType where
   show = \case 
-    ParenTupleType vts -> "( " ++ intercalate ", " (map show vts) ++ ")"
+    ParenTupleType vts -> "( " ++ vts==>map show==>intercalate ", " ++ ")"
     ParenthesisType vt -> vt==> \case
       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
       _ -> "(" ++ show vt ++ ")"
@@ -62,9 +65,9 @@ instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ ": " ++ show vt
 
 instance Show TupleType where
-  show = \(NameAndValue tn ttv) ->
+  show = \(NameAndValue tn ttfs) ->
     "\ntuple_type " ++ show tn ++
-    "\nvalue ( " ++ intercalate ", " (map show ttv) ++ " )\n"
+    "\nvalue ( " ++ ttfs==>map show==>intercalate ", "  ++ " )\n"
 
 instance Show CaseAndMaybeType where
   show = \(CT vn mvt) -> show vn ++ case mvt of 
@@ -74,9 +77,9 @@ instance Show CaseAndMaybeType where
 instance Show OrType where
   show = \(NameAndValues tn otvs) ->
     "\nor_type " ++ show tn ++
-    "\nvalues " ++ intercalate " | " (map show otvs) ++ "\n"
+    "\nvalues " ++ otvs==>map show==>intercalate " | " ++ "\n"
 
--- helpers
+-- helpers: vt_shortest_equivalent, vt_bt_are_equivalent
 vt_shortest_equivalent = ( \case
   AbsTypesAndResType [] (ParenthesisType vt) -> vt_shortest_equivalent vt
   vt -> vt

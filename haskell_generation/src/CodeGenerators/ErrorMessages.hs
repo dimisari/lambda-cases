@@ -11,9 +11,14 @@ import Helpers
 
 type Error = String
 
--- All: LowLevel, Types, Values
+-- All: LowLevel, Values
 
--- LowLevel
+-- LowLevel:
+-- literal_not_int_err, type_check_err, tuple_matching_err,
+-- tuple_function_type_err, tuple_less_than_2_err,
+-- tuple_values_types_lengths_dont_match_err,
+-- abstractions_types_lengths_dont_match_err
+
 literal_not_int_err = ( "Integer literal cannot have type: " ++) . show
   :: ValueType -> Error
 
@@ -40,7 +45,13 @@ abstractions_types_lengths_dont_match_err =
   "Abstractions and abstraction types must be of the same length"
   :: Error
 
--- Values
+-- Values:
+-- tuple_fun_type_err, values_fields_lengths_dont_match_err, no_application_err
+-- one_arg_applications_type_err, bv_type_inference_err, not_a_fun_err
+-- argument_types_dont_match_err, too_many_abstractions_err,
+-- many_args_types_dont_match_err, use_fields_not_fun_err, must_be_tuple_type_err,
+-- specific_case_not_abstraction_err, name_type_and_value_lists_err 
+
 tuple_fun_type_err = ( \vs vt ->
   show (Tuple vs) ++ " can't have type: " ++ show vt
   ) :: [ Value ] -> ValueType -> Error

@@ -5,7 +5,7 @@ import Text.Parsec
 import Text.Parsec.String
   ( Parser )
 import Data.List
-  ( replicate, intercalate )
+  ( intercalate )
 
 -- All: Keywords, Function application/composition, Parsing, Haskell generation
 

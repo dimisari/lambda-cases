@@ -14,7 +14,16 @@ import HaskellTypes.Types
 
 -- All: Types, Show instances, error messages
 
--- Types
+-- Types:
+-- ParenthesisValue, BaseValue, OneArgApplications,
+-- MultiplicationFactor, Multiplication
+-- SubtractionFactor, Subtraction
+-- EqualityFactor, Equality
+-- NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication
+-- UseFields, SpecificCase, Cases
+-- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- Where, NoAbstractionsValue, Value
+
 data ParenthesisValue =
   Parenthesis Value | Tuple [ Value ]
 
@@ -82,11 +91,20 @@ data NoAbstractionsValue =
 data Value =
   Value Abstractions NoAbstractionsValue
 
--- Show instances
+-- Show instances:
+-- ParenthesisValue, BaseValue, OneArgApplications,
+-- MultiplicationFactor, Multiplication
+-- SubtractionFactor, Subtraction
+-- EqualityFactor, Equality
+-- NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication
+-- UseFields, SpecificCase, Cases
+-- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- Where, NoAbstractionsValue, Value
+
 instance Show ParenthesisValue where
   show = \case
     Parenthesis v -> "(" ++ show v ++ ")"
-    Tuple vs -> "( " ++ intercalate ", " (map show vs) ++ " )"
+    Tuple vs -> "( " ++ vs==>map show==>intercalate ", " ++ " )"
 
 instance Show BaseValue where
   show = \case
@@ -136,7 +154,7 @@ instance Show ManyArgsArgValue where
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->
-    intercalate ", " (map show maavs) ++ " *=> " ++ show vn
+    maavs==>map show==>intercalate ", " ++ " *=> " ++ show vn
 
 instance Show UseFields where
   show = \(UF v) -> "use_fields ->\n" ++ show v
@@ -153,9 +171,9 @@ instance Show NameTypeAndValue where
 
 instance Show NameTypeAndValueLists where
   show = \(NTAVLists vns vts vs) -> 
-    intercalate ", " (map show vns) ++ ": " ++
-    intercalate ", " (map show vts) ++ "\n  = " ++
-    intercalate ", " (map show vs) ++ "\n"
+    vns==>map show==>intercalate ", " ++ ": " ++
+    vts==>map show==>intercalate ", " ++ "\n  = " ++
+    vs==>map show==>intercalate ", " ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case
@@ -180,7 +198,7 @@ instance Show NoAbstractionsValue where
 instance Show Value where
   show = \(Value as nav) -> show as ++ show nav
 
--- error messages
+-- error messages: one_arg_app_err, less_than_two_mul_err
 one_arg_app_err =
   "One arg function application should have at least one application direction"
 less_than_two_mul_err =

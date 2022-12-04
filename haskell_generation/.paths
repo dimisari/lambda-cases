@@ -1,7 +1,7 @@
-src/HaskellTypes/Generation.hs
 src/HaskellTypes/LowLevel.hs
 src/HaskellTypes/Types.hs
 src/HaskellTypes/Values.hs
+src/HaskellTypes/Generation.hs
 
 src/Parsers/LowLevel.hs
 src/Parsers/Types.hs

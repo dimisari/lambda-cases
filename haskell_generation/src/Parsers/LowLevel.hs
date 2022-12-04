@@ -14,13 +14,15 @@ import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), ApplicationDirection(..)
   , TupleMatching(..), Abstraction(..), Abstractions(..) )
 
+-- All:
+-- literal_p, value_name_p, literal_or_value_name_p, application_direction_p,
+-- tuple_matching_p, abstraction_p, abstractions_p
 literal_p = integer
   :: Parser Literal
 
 value_name_p =
   many1 (lower <|> char '_') >>= \l_ -> elem l_ keywords ==> \case
     True -> parserFail "keyword"
-
     _ -> return $ VN l_
   :: Parser ValueName 
 

@@ -22,22 +22,22 @@ import CodeGenerators.ErrorMessages
   , tuple_values_types_lengths_dont_match_err
   , abstractions_types_lengths_dont_match_err )
 
-{-
-  All:
-  Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
--}
+-- All:
+-- Literal, LiteralOrValueName, TupleMatching, abstraction_g, Abstractions
 
--- Literal 
+-- Literal: literal_g, literal_type_inference_g
 literal_g = ( vt_shortest_equivalent .> \case
   AbsTypesAndResType [] (TypeName (TN "Int")) -> show
   vt -> error $ literal_not_int_err vt
   ) :: ValueType -> Literal -> Haskell
 
--- ValueName
-value_name_g = ( \(VN vn) -> vn)
-  :: ValueName -> Haskell
-  
--- LiteralOrValueName
+literal_type_inference_g = ( \l -> 
+  (AbsTypesAndResType [] (TypeName (TN "Int")), show l)
+  ) :: Literal -> (ValueType, Haskell)
+
+-- LiteralOrValueName:
+-- literal_or_value_name_g, type_check_value_name_g,
+-- literal_or_value_name_type_inference_g
 literal_or_value_name_g = ( \vt -> \case
   Literal l -> return $ literal_g vt l
   ValueName vn ->
@@ -46,10 +46,17 @@ literal_or_value_name_g = ( \vt -> \case
 
 type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of 
   False -> error $ type_check_err vn lookup_vt vt 
-  True -> return $ value_name_g vn
+  True -> return $ show vn
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
 
--- TupleMatching
+literal_or_value_name_type_inference_g = ( \case
+  Literal l -> return $ literal_type_inference_g l
+  ValueName vn -> value_map_get vn >>= \vt -> return ( vt, show vn )
+  ) :: LiteralOrValueName -> Stateful ( ValueType, Haskell )
+
+-- TupleMatching:
+-- tuple_matching_g, value_type_tuple_matching_g, value_types_tuple_matching_g,
+-- correct_value_types_value_names_g
 tuple_matching_g = ( \case
   -- possibly later with symbol table ?
   TypeName tn -> error $ tuple_matching_err tn
@@ -73,12 +80,12 @@ value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
 
 correct_value_types_value_names_g = ( \vts vns -> 
   zipWith value_map_insert vns vts==>sequence_ >>
-  paren_comma_sep_g value_name_g vns==>return
+  paren_comma_sep_g show vns==>return
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
+-- TupleMatching end
 
--- Abstraction
 abstraction_g = ( \bt -> \case
-  ValueNameAb vn -> value_map_insert vn vt >> value_name_g vn ==> return where
+  ValueNameAb vn -> value_map_insert vn vt >> show vn ==> return where
     vt = ( bt ==> \case
       ParenthesisType vt -> vt
       _ -> AbsTypesAndResType [] bt
@@ -86,7 +93,7 @@ abstraction_g = ( \bt -> \case
   TupleMatching tm -> tuple_matching_g bt tm
   ) :: BaseType -> Abstraction -> Stateful Haskell
 
--- Abstractions
+-- Abstractions: abstractions_g, correct_abstractions_g
 abstractions_g = ( \bts (As as) -> case length bts == length as of
   False -> error abstractions_types_lengths_dont_match_err
   True -> correct_abstractions_g bts as

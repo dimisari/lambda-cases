@@ -1,4 +1,5 @@
 type_inference
+- start by creating a seperate function in each type 
  
 type abstractions
 - ==>, <==, *=>, paren at the end (classic notation)
