@@ -101,14 +101,14 @@ one_ab_arrow_maav_p =
 
 many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
-  string " *>" >> space_or_newline >> one_ab_arrow_maav_p >>=
+  string " *->" >> space_or_newline >> one_ab_arrow_maav_p >>=
     \(MAAV (As as2) nav1) -> return $ MAAV (As $ as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 -- ManyArgsArgValue end
 
 many_args_application_p =
   seperated2 ", " many_args_arg_value_p >>= \maavs ->
-  space_or_newline >> string "*=> " >> value_name_p >>= \vn ->
+  space_or_newline >> string "*==> " >> value_name_p >>= \vn ->
   return $ MAA maavs vn
   :: Parser ManyArgsApplication
 
@@ -184,6 +184,6 @@ one_abstraction_arrow_value_p =
 
 many_abstractions_arrow_value_p =
   seperated2 ", " abstraction_p >>= \as1 ->
-  string " *>" >> space_or_newline >> one_abstraction_arrow_value_p >>=
+  string " *->" >> space_or_newline >> one_abstraction_arrow_value_p >>=
     \(Value (As as2) nav) -> return $ Value (As $ as1 ++ as2) nav
   :: Parser Value

@@ -230,8 +230,7 @@ correct_use_fields_g = ( \tn fatl vt v ->
   mapM insert_to_value_map_ret_vn fatl >>= \vns ->
   value_g vt v >>= \v_g ->
   return $
-    "( \\(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns
-    ++ ") ->" ++ v_g ++ " )"
+  "\\(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns ++ ") ->" ++ v_g
   ) :: TypeName -> [ FieldAndType ] -> ValueType -> Value -> Stateful Haskell
 
 insert_to_value_map_ret_vn = ( \(FT vn vt) -> value_map_insert vn vt >> return vn )
@@ -268,16 +267,9 @@ cases_g = ( \vt (Cs cs) ->
 name_type_and_value_g = ( \(NTAV vn vt v) -> 
   value_map_insert vn vt >> value_g vt v >>= \v_g ->
   get_indent_level >>= \i ->
-  let
-  combine = ( \value_begin -> \value_end ->
-    indent i  ++ show vn ++ " = " ++
-    value_begin ++ v_g ++ value_end ++
-    ":: " ++ value_type_g vt ++ "\n"
-    ) :: String -> String -> Haskell
-  in
-  return $ case v of
-    (Value (As []) _) -> combine "" ( "\n" ++ indent (i + 1) )
-    _ -> combine "( " "  ) "
+  return $
+  "\n" ++ indent i  ++ show vn ++ " :: " ++ value_type_g vt ++ "\n" ++
+  indent i  ++ show vn ++ " = " ++ v_g ++ "\n"
   ) :: NameTypeAndValue -> Stateful Haskell
 
 name_type_and_value_lists_g = ( \ntavls@(NTAVLists vns vts vs) -> 
@@ -304,13 +296,8 @@ let_output_g = ( \vt (Where_ v ntavs) ->
   get_indent_level >>= \i -> update_indent_level (i + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
-  let
-  hs_source =
-    "\n" ++ indent (i + 1) ++ v_g ++
-    "\n" ++ indent (i + 1) ++ "where\n" ++ ntavs_g
-    :: Haskell
-  in
-  update_indent_level i >> return hs_source
+  update_indent_level i >>
+  return ("\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g)
   ) :: ValueType -> Where -> Stateful Haskell
 
 no_abstractions_value_g = ( \vt -> \case

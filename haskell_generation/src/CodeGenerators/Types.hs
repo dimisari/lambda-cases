@@ -51,7 +51,7 @@ tuple_type_g = ( \(NameAndValue tn ttv) ->
   in
   type_map_exists_check tn >>
   type_map_insert tn (FieldAndTypeList ttv) >> tuple_value_g >>= \tv_g ->
-  return $ "data " ++ show tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
+  return $ "\ndata " ++ show tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
   ) :: TupleType -> Stateful Haskell
 
 -- OrType
@@ -70,7 +70,7 @@ or_type_g = ( \(NameAndValues tn otvs) ->
   in
   type_map_exists_check tn >>
   type_map_insert tn (CaseAndMaybeTypeList otvs) >> or_values_g >>= \otvs_g ->
-  return $ "data " ++ show tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show\n"
+  return $ "\n\ndata " ++ show tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show"
   ) :: OrType -> Stateful Haskell
 
 -- Type
