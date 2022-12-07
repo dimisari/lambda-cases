@@ -5,18 +5,18 @@ value ( previous_previous: Int, previous: Int )
 tuple_type GcdAndCoeffs
 value ( gcd: Int, a: Int, b: Int )
 
-extended_euclidean: Int, Int *> GcdAndCoeffs
-  = initial_a_coeffs, initial_b_coeffs *=> ee_recursion
+extended_euclidean: Int, Int *-> GcdAndCoeffs
+  = initial_a_coeffs, initial_b_coeffs *==> ee_recursion
 
 initial_a_coeffs, initial_b_coeffs: all PreviousCoeffs
   = ( 1, 0 ), ( 0, 1 )
 
-ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int *> GcdAndCoeffs
-  = a_coeffs, b_coeffs, x *> cases
+ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int *-> GcdAndCoeffs
+  = a_coeffs, b_coeffs, x *-> cases
     0 -> ( x, a_coeffs==>get_previous_previous, b_coeffs==>get_previous_previous )
     y -> 
       let
       next: PreviousCoeffs -> PreviousCoeffs
         = use_fields -> ( previous, previous_previous - x==>div<==y * previous )
       output
-      a_coeffs==>next, b_coeffs==>next, y, x==>mod<==y *=> ee_recursion
+      a_coeffs==>next, b_coeffs==>next, y, x==>mod<==y *==> ee_recursion

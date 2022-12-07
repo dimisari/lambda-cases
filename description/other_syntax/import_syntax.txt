@@ -1,6 +1,4 @@
-
 import 
-  f1, f2, f3
-    from l1
-  f4, f5, f6
-    from l2
+  f1, f2, f3 from l1
+  f4, f5, f6 from l2
+  f7, f8, f9 from l3

@@ -2,7 +2,7 @@
 Example:
 
 or_type A, B *=> TypeName
-values case0.A | case1.B | case2.( A, B ) | case3.ListOf(A)s | case4.ListOf(A)s
+values case0.A | case1.B | case2.( A, B ) | case3.ListOf(A)s | case4.ListOf(B)s
 
 Comments:
 - Default keyword for the value of all cases: "value". Examples:

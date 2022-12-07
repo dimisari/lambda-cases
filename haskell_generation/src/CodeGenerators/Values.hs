@@ -80,8 +80,12 @@ correct_type_name_tuple_values_g = ( \tn vts vs ->
   get_indent_level >>= \il ->
   zipWith value_g vts vs==>sequence >>= \vs_g -> 
   return $
-    "\n" ++ indent (il + 1) ++
-    show tn ++ "C (" ++ intercalate ") (" vs_g ++ ")"
+  "\n" ++ indent (il + 1) ++ show tn ++ "C" ++
+  let
+  argument_start = "\n" ++ indent (il + 2) ++ "("
+    :: Haskell
+  in
+  argument_start ++ intercalate (")" ++ argument_start) vs_g ++ ")"
   ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
 
 -- BaseValue: base_value_g, base_value_type_inference_g

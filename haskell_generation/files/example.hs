@@ -13,21 +13,30 @@ data GcdAndCoeffs =
 ee_recursion :: PreviousCoeffs -> PreviousCoeffs -> Int -> Int -> GcdAndCoeffs
 ee_recursion = \a_coeffs b_coeffs x -> \case
   0 ->
-    GcdAndCoeffsC (x) (get_previous_previous a_coeffs) (get_previous_previous b_coeffs)
+    GcdAndCoeffsC
+      (x)
+      (get_previous_previous a_coeffs)
+      (get_previous_previous b_coeffs)
   y ->
     ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y) where
     next :: PreviousCoeffs -> PreviousCoeffs
     next = \(PreviousCoeffsC previous_previous previous) ->
-      PreviousCoeffsC (previous) (previous_previous - div x y * previous)
+      PreviousCoeffsC
+        (previous)
+        (previous_previous - div x y * previous)
 
 
 initial_a_coeffs :: PreviousCoeffs
 initial_a_coeffs = 
-  PreviousCoeffsC (1) (0)
+  PreviousCoeffsC
+    (1)
+    (0)
 
 initial_b_coeffs :: PreviousCoeffs
 initial_b_coeffs = 
-  PreviousCoeffsC (0) (1)
+  PreviousCoeffsC
+    (0)
+    (1)
 
 extended_euclidean :: Int -> Int -> GcdAndCoeffs
 extended_euclidean = ee_recursion (initial_a_coeffs) (initial_b_coeffs)

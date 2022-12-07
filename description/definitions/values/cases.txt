@@ -9,8 +9,7 @@ or_type example:
 Comments:
 - Type0 is an or_type. Here the fields of the value in each case can be used in
   the corresponding result expression. Therefore, we only match on the case.
-  In "..." case we match with the keyword "value" (as in all the cases if
-  needed).
+  In "..." case we match with the keyword "value" (as in all the cases if needed).
 
 tuple_type example:
 - tuple_type Type2

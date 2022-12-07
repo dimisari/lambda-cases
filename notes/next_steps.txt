@@ -1,8 +1,8 @@
 type_inference
 - start by creating a seperate function in each type 
- 
+
 type abstractions
-- ==>, <==, *=>, paren at the end (classic notation)
+- ==>, <==, *==>, paren at the end (classic notation)
 
 fix 
 - parenthesis in one argument applications: type_inference
