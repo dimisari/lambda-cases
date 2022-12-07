@@ -1,18 +1,18 @@
 module Helpers where
 
-import Text.Parsec ( (<|>), many, many1, string, char, try, eof, skipMany1 )
-import Text.Parsec.String ( Parser )
-import Data.List ( replicate )
+import Text.Parsec
+  ( (<|>), many, many1, string, char, try, eof, skipMany1, digit )
+import Text.Parsec.String
+  ( Parser )
+import Data.List
+  ( intercalate )
 
-{-
-  All:
-  Keywords, Function application/composition, Parsing, Haskell generation
--}
+-- All: Keywords, Function application/composition, Parsing, Haskell generation
 
 -- Keywords
 keywords =
   [ "tuple_type", "value", "or_type", "values" , "use_fields", "cases"
-  , "value", "intermediates", "output", "type_predicate", "function", "functions"
+  , "value", "let", "output", "type_predicate", "function", "functions"
   , "type_theorem", "proof" ]
   :: [ String ]
 
@@ -23,10 +23,13 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
+integer =
+  let number = many1 digit :: Parser String in
+  read <$> ((:) <$> char '-' <*> number <|> number)
+  :: Parser Integer
+
 seperated2 = (\s p ->
-  p >>= \a ->
-  try (string s *> p) ==> many1 >>= \as ->
-  return $ a:as
+  p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as
   ) :: String -> Parser a -> Parser [a]
 
 spaces_tabs = many $ char ' ' <|> char '\t'
@@ -47,6 +50,5 @@ type Haskell = String
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
 
-parenthesis_comma_sep_g = ( \g -> \l ->
-  "( " ++ init l==>concatMap (g .> (++ ", ")) ++ l==>last==>g ++ " )"
-  ) :: (a -> Haskell) -> [ a ] -> Haskell
+paren_comma_sep_g = ( \g l -> "( " ++ intercalate ", " (map g l) ++ " )")
+  :: (a -> Haskell) -> [ a ] -> Haskell

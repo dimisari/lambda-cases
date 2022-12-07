@@ -2,6 +2,8 @@
 
 module HaskellTypes.Values where
 
+import Data.List
+  ( intercalate )
 import Helpers
   ( (==>), (.>) )
 
@@ -10,7 +12,18 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( ValueType )
 
--- Types
+-- All: Types, Show instances, error messages
+
+-- Types:
+-- ParenthesisValue, BaseValue, OneArgApplications,
+-- MultiplicationFactor, Multiplication
+-- SubtractionFactor, Subtraction
+-- EqualityFactor, Equality
+-- NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication
+-- UseFields, SpecificCase, Cases
+-- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- Where, NoAbstractionsValue, Value
+
 data ParenthesisValue =
   Parenthesis Value | Tuple [ Value ]
 
@@ -27,30 +40,28 @@ data Multiplication =
   Mul [ MultiplicationFactor ]
 
 data SubtractionFactor =
-  MulSF Multiplication | OneArgAppSF OneArgApplications | BaseValueSF BaseValue
+  MulSF Multiplication | MFSF MultiplicationFactor
 
 data Subtraction =
   Sub SubtractionFactor SubtractionFactor 
 
 data EqualityFactor =
-  SubEF Subtraction | MulEF Multiplication | OAAEF OneArgApplications |
-  BaseValueEF BaseValue
+  SubEF Subtraction | SFEF SubtractionFactor
 
 data Equality =
   Equ EqualityFactor EqualityFactor
 
 data NoAbstractionsValue1 =
-  Equality Equality | Subtraction Subtraction | Multiplication Multiplication |
-  OneArgApps OneArgApplications | BaseValue BaseValue 
+  Equality Equality | EquF EqualityFactor
 
 data ManyArgsArgValue =
   MAAV Abstractions NoAbstractionsValue1
 
 data ManyArgsApplication =
-  MAA [ ManyArgsArgValue ] ValueName deriving Show
+  MAA [ ManyArgsArgValue ] ValueName
 
 newtype UseFields =
-  UF Value deriving Show
+  UF Value
 
 data SpecificCase =
   SC LiteralOrValueName Value 
@@ -70,21 +81,30 @@ data NTAVOrNTAVLists =
 newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
 
-data IntermediatesOutput =
-  IntermediatesOutput_ NamesTypesAndValues Value
+data Where =
+  Where_ Value NamesTypesAndValues
 
 data NoAbstractionsValue =
   ManyArgsApplication ManyArgsApplication | UseFields UseFields | Cases Cases |
-  IntermediatesOutput IntermediatesOutput | NoAbstractionsValue1 NoAbstractionsValue1
+  Where Where | NoAbstractionsValue1 NoAbstractionsValue1
 
 data Value =
   Value Abstractions NoAbstractionsValue
 
--- Show instances
+-- Show instances:
+-- ParenthesisValue, BaseValue, OneArgApplications,
+-- MultiplicationFactor, Multiplication
+-- SubtractionFactor, Subtraction
+-- EqualityFactor, Equality
+-- NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication
+-- UseFields, SpecificCase, Cases
+-- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- Where, NoAbstractionsValue, Value
+
 instance Show ParenthesisValue where
   show = \case
     Parenthesis v -> "(" ++ show v ++ ")"
-    Tuple vs -> "Tuple " ++ show vs
+    Tuple vs -> "( " ++ vs==>map show==>intercalate ", " ++ " )"
 
 instance Show BaseValue where
   show = \case
@@ -92,16 +112,9 @@ instance Show BaseValue where
     LiteralOrValueName lovn -> show lovn
 
 instance Show OneArgApplications where
-  show = \(OAA bv_ad_s v) -> case bv_ad_s of
-    [] ->
-      error "one arg function application should have at least one application direction"
-
-    _ ->
-      let
-      show_bv_ad = ( \( bv, ad ) -> " " ++ show bv ++ " " ++ show ad ++ " " )
-        :: ( BaseValue, ApplicationDirection ) -> String
-      in
-      bv_ad_s ==> concatMap show_bv_ad ++ show v 
+  show = \(OAA bv_ad_s bv) -> case bv_ad_s of
+    [] -> error $ one_arg_app_err
+    _ -> bv_ad_s==>concatMap ( \( bv, ad ) -> show bv ++ show ad ) ++ show bv
 
 instance Show MultiplicationFactor where
   show = \case
@@ -110,63 +123,57 @@ instance Show MultiplicationFactor where
 
 instance Show Multiplication where
   show = \(Mul mfs) -> case mfs of
-      [] -> error "found less than 2 mfs in multiplication"
-
-      [ _ ] -> show (Mul [])
-
-      [ mf1, mf2 ] -> "(" ++ show mf1 ++ " mul " ++ show mf2 ++ ")"
-
-      (mf:mfs) -> "(" ++ show mf ++ " mul " ++ show (Mul mfs) ++ ")"
+      [] -> error less_than_two_mul_err
+      [ _ ] -> error less_than_two_mul_err
+      [ mf1, mf2 ] ->  show mf1 ++ " * " ++ show mf2
+      (mf:mfs) -> show mf ++ " * " ++ show (Mul mfs)
 
 instance Show SubtractionFactor where
   show = \case
     MulSF m -> show m
-    OneArgAppSF oaa -> show oaa
-    BaseValueSF bv -> show bv
+    MFSF f -> show f
 
 instance Show Subtraction where
-  show = \(Sub sf1 sf2) -> "(" ++ show sf1 ++ " minus " ++ show sf2 ++ ")"
+  show = \(Sub sf1 sf2) -> show sf1 ++ " - " ++ show sf2
 
 instance Show EqualityFactor where
   show = \case
     SubEF s -> show s
-    MulEF m -> show m
-    OAAEF oaa -> show oaa
-    BaseValueEF bv -> show bv
+    SFEF f -> show f
 
 instance Show Equality where
-  show = \(Equ ef1 ef2) -> "(" ++ show ef1 ++ " equals " ++ show ef2 ++ ")"
+  show = \(Equ ef1 ef2) -> show ef1 ++ " = " ++ show ef2
 
 instance Show NoAbstractionsValue1 where
   show = \case
     Equality equ -> show equ
-    Subtraction sub -> show sub
-    Multiplication mul -> show mul
-    OneArgApps oaa -> show oaa
-    BaseValue bv -> show bv
+    EquF f -> show f
 
 instance Show ManyArgsArgValue where
   show = \(MAAV as nav1) -> show as ++ show nav1
 
+instance Show ManyArgsApplication where
+  show = \(MAA maavs vn) ->
+    maavs==>map show==>intercalate ", " ++ " *=> " ++ show vn
+
+instance Show UseFields where
+  show = \(UF v) -> "use_fields ->\n" ++ show v
+
 instance Show SpecificCase where
-  show = \(SC lovn v) -> 
-    "specific case: " ++ show lovn ++ "\n" ++
-    "result: " ++ show v ++ "\n"
+  show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"
 
 instance Show Cases where
-  show = \(Cs scs) -> "\ncase start\n\n" ++ scs ==> concatMap (show .> (++ "\n"))
+  show = \(Cs scs) -> "\ncases\n\n" ++ scs==>concatMap (show .> (++ "\n"))
 
 instance Show NameTypeAndValue where
-  show = \(NTAV vn vt v) -> 
-    "name: " ++ show vn ++ "\n" ++
-    "type: " ++ show vt ++ "\n" ++
-    "value: " ++ show v ++ "\n"
+  show = \(NTAV vn vt v) ->
+    show vn ++ ": " ++ show vt ++ "\n  = " ++ show v ++ "\n"
 
 instance Show NameTypeAndValueLists where
   show = \(NTAVLists vns vts vs) -> 
-    "names: " ++  vns ==> concatMap (show .> (++ ", ")) ++ "\n" ++
-    "types: " ++ vts ==> concatMap (show .> (++ ", ")) ++ "\n" ++
-    "values: " ++ vs ==> concatMap (show .> (++ ", ")) ++ "\n"
+    vns==>map show==>intercalate ", " ++ ": " ++
+    vts==>map show==>intercalate ", " ++ "\n  = " ++
+    vs==>map show==>intercalate ", " ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case
@@ -177,16 +184,22 @@ instance Show NamesTypesAndValues where
   show = \(NTAVs ns_ts_and_vs) ->
     "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
 
-instance Show IntermediatesOutput where
-  show = \(IntermediatesOutput_ ns_ts_and_vs v) -> 
-    "intermediates\n" ++ show ns_ts_and_vs ++ "output\n" ++ show v
+instance Show Where where
+  show = \(Where_ v ns_ts_and_vs) -> 
+    "output\n" ++ show v ++ "where\n" ++ show ns_ts_and_vs 
 
 instance Show NoAbstractionsValue where
   show = \case
     ManyArgsApplication maa -> show maa
     Cases cs -> show cs
-    IntermediatesOutput inter_out -> show inter_out
+    Where inter_out -> show inter_out
     NoAbstractionsValue1 nav1 -> show nav1
 
 instance Show Value where
   show = \(Value as nav) -> show as ++ show nav
+
+-- error messages: one_arg_app_err, less_than_two_mul_err
+one_arg_app_err =
+  "One arg function application should have at least one application direction"
+less_than_two_mul_err =
+  "Found less than 2 mfs in multiplication"

@@ -1,7 +1,8 @@
 atomic types:
-- Int, Real
-- Char, Text
-- Pointer ?
+- Int, Real, Char
+- Text?
+- Pointer?
+- Array?
 
 tuple_types:
 - tuple_type Empty
@@ -19,8 +20,8 @@ with polymorphic functions:
 - first, second, third
 - Comment:
   Polymorphic fourth is not defined since we stop at quadruple.
-  Bigger tuples should probably be made as new tuple_types and named differently
-  according to the context.
+  Bigger tuples should probably be made as new tuple_types and named
+  differently according to the context.
 
 type_theorems needed for the polymorphic functions:
 - ( A, B )==>Has_First<==A

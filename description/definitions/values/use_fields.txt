@@ -6,7 +6,7 @@ Example:
   add_int_pair: IntPair -> Int
     = use_fields -> first_int + second_int
 
-In general the field_names of a tuple_type can be used in the result expression by using
-the use_fields syntax:
+In general the field_names of a tuple_type can be used in the result expression
+by using the use_fields syntax:
 - function_name: TupleType -> OtherType
     = use_fields -> result expression of type OtherType

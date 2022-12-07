@@ -12,10 +12,6 @@ value ( quad_first: A, quad_second: B, quad_third: C, quad_fourth: D )
 
 # example
 
-print_int_string: ( Int, Text ) -> Empty==>WithIO
-  = use_tuple_fields ->
-    ("First: " + pair_first==>to_string + ", Second: " + pair_second + "\n")==>print
-
 a: ( Int, Text )
   = ( 1, "one" )
 i, s: Int, Text
@@ -25,5 +21,9 @@ b, c: all ( Int, Text )
   = a==>change_pair_first<==2, a==>change_pair_second<=="two"
 
 main: Empty==>WithIO
-  = a==>print_int_string ; i==>to_string==>print ; s==>print ; b==>print_int_string ;
-    c==>print_int_string
+  = a==>print_int_text ; i==>to_text==>print ; s==>print ; b==>print_int_text ;
+    c==>print_int_text
+
+print_int_text: ( Int, Text ) -> Empty==>WithIO
+  = use_tuple_fields ->
+    ("First: " + pair_first==>to_text + ", Second: " + pair_second + "\n")==>print
