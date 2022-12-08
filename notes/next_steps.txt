@@ -5,8 +5,7 @@ type abstractions
 - ==>, <==, *==>, paren at the end (classic notation)
 
 fix 
-- parenthesis in one argument applications: type_inference
-- case/use_fields at the end of one argument applications
+- cases/use_fields at the end of one argument applications
 - stack of types in value map for multiple-level definitions
 - let-output -> where 
   - problem with values in and outside of function: add intentation levels

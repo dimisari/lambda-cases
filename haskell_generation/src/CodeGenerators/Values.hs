@@ -16,8 +16,8 @@ import HaskellTypes.LowLevel
   ( LiteralOrValueName(..), ApplicationDirection(..), ValueName(..)
   , Abstractions(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), FieldsOrCases(..)
-  , vt_bt_are_equivalent, vt_shortest_equivalent )
+  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
+  , FieldsOrCases(..), vt_bt_are_equivalent, vt_shortest_equivalent )
 import HaskellTypes.Generation
   ( Stateful, get_indent_level, update_indent_level, type_map_get
   , value_map_get, value_map_insert )
@@ -57,10 +57,14 @@ value_type_tuple_values_g = ( \case
   ) :: ValueType -> [ Value ] -> Stateful Haskell
 
 base_type_tuple_values_g = ( \case
-  ParenTupleType vts -> value_types_tuple_values_g vts
-  ParenthesisType vt -> value_type_tuple_values_g vt
+  ParenType pt -> paren_type_tuple_values_g pt
   TypeName tn -> type_name_tuple_values_g tn
   ) :: BaseType -> [ Value ] -> Stateful Haskell
+
+paren_type_tuple_values_g = ( \case
+  TupleType vts -> value_types_tuple_values_g vts
+  ParenVT vt -> value_type_tuple_values_g vt
+  ) :: ParenType -> [ Value ] -> Stateful Haskell
 
 value_types_tuple_values_g = ( \vts vs -> case length vts == length vs of
   False -> error tuple_values_types_lengths_dont_match_err
@@ -81,12 +85,17 @@ correct_type_name_tuple_values_g = ( \tn vts vs ->
   zipWith value_g vts vs==>sequence >>= \vs_g -> 
   return $
   "\n" ++ indent (il + 1) ++ show tn ++ "C" ++
-  let
-  argument_start = "\n" ++ indent (il + 2) ++ "("
-    :: Haskell
-  in
-  argument_start ++ intercalate (")" ++ argument_start) vs_g ++ ")"
+  concatMap (\v_g -> "\n" ++ indent (il + 2) ++ "(" ++ v_g ++ ")") vs_g
   ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
+
+parenthesis_value_type_inference_g = ( \case
+  Parenthesis v ->
+    value_type_inference_g v >>= \( vt, hs ) -> return ( vt, "(" ++ hs ++ ")" )
+  Tuple vs -> tuple_values_type_inference_g vs
+  ) :: ParenthesisValue -> Stateful ( ValueType, Haskell )
+
+tuple_values_type_inference_g = ( \vs -> undefined
+  ) :: [ Value ] -> Stateful ( ValueType, Haskell )
 
 -- BaseValue: base_value_g, base_value_type_inference_g
 base_value_g = ( \vt -> \case
@@ -95,7 +104,7 @@ base_value_g = ( \vt -> \case
   ) :: ValueType -> BaseValue -> Stateful Haskell
 
 base_value_type_inference_g = ( \case
-  ParenthesisValue pv -> error $ bv_type_inference_err pv
+  ParenthesisValue pv -> parenthesis_value_type_inference_g pv
   LiteralOrValueName lovn -> literal_or_value_name_type_inference_g lovn
   ) :: BaseValue -> Stateful ( ValueType, Haskell )
 
@@ -210,7 +219,7 @@ bts_maavs_vn_g = ( \bts maavs vn ->
 bt_maav_g = ( \bt maav ->
   let
   maav_vt = case bt of
-    ParenthesisType vt -> vt
+    ParenType(ParenVT vt) -> vt
     _ -> (AbsTypesAndResType [] bt)
     :: ValueType
   in
@@ -221,8 +230,7 @@ bt_maav_g = ( \bt maav ->
 use_fields_g = ( \vt@(AbsTypesAndResType bts bt) (UF v) -> case bts of 
   [] -> error $ use_fields_not_fun_err vt
   b:bs -> case b of
-    ParenTupleType _ -> error $ must_be_tuple_type_err b -- maybe something here?
-    ParenthesisType _ -> error $ must_be_tuple_type_err b
+    ParenType _ -> error $ must_be_tuple_type_err b -- maybe something here?
     TypeName tn -> type_map_get tn >>= \case
       FieldAndTypeList fatl ->
         correct_use_fields_g tn fatl (AbsTypesAndResType bs bt) v
@@ -321,3 +329,8 @@ value_g = ( \(AbsTypesAndResType bts bt) (Value (As as) nav) ->
   no_abstractions_value_g ( AbsTypesAndResType bts2 bt ) nav >>= \nav_g ->
   return $ as_g ++ nav_g
   ) :: ValueType -> Value -> Stateful Haskell
+
+value_type_inference_g = ( \v ->
+  undefined
+  ) :: Value -> Stateful ( ValueType, Haskell )
+

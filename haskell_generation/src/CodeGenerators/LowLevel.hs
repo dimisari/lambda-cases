@@ -12,7 +12,8 @@ import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
   , Abstraction(..), Abstractions(..) )
 import HaskellTypes.Types
-  ( BaseType(..), ValueType(..), TypeName(..), vt_shortest_equivalent )
+  ( ParenType(..), BaseType(..), ValueType(..), TypeName(..)
+  , vt_shortest_equivalent )
 import HaskellTypes.Generation
   ( Stateful, value_map_get, value_map_insert )
 
@@ -33,7 +34,7 @@ literal_g = ( vt_shortest_equivalent .> \case
 
 literal_type_inference_g = ( \l -> 
   (AbsTypesAndResType [] (TypeName (TN "Int")), show l)
-  ) :: Literal -> (ValueType, Haskell)
+  ) :: Literal -> ( ValueType, Haskell )
 
 -- LiteralOrValueName:
 -- literal_or_value_name_g, type_check_value_name_g,
@@ -59,10 +60,15 @@ literal_or_value_name_type_inference_g = ( \case
 -- correct_value_types_value_names_g
 tuple_matching_g = ( \case
   -- possibly later with symbol table ?
-  TypeName tn -> error $ tuple_matching_err tn
-  ParenthesisType vt -> value_type_tuple_matching_g vt
-  ParenTupleType vts -> value_types_tuple_matching_g vts 
+  ParenType pt -> paren_tuple_matching_g pt
+  TypeName tn -> undefined
   ) :: BaseType -> TupleMatching -> Stateful Haskell
+
+paren_tuple_matching_g = ( \case
+  -- possibly later with symbol table ?
+  ParenVT vt -> value_type_tuple_matching_g vt
+  TupleType vts -> value_types_tuple_matching_g vts 
+  ) :: ParenType -> TupleMatching -> Stateful Haskell
 
 value_type_tuple_matching_g = ( \case
   vt@(AbsTypesAndResType (_:_) _) -> error $ tuple_function_type_err vt
@@ -87,7 +93,7 @@ correct_value_types_value_names_g = ( \vts vns ->
 abstraction_g = ( \bt -> \case
   ValueNameAb vn -> value_map_insert vn vt >> show vn ==> return where
     vt = ( bt ==> \case
-      ParenthesisType vt -> vt
+      ParenType(ParenVT vt) -> vt
       _ -> AbsTypesAndResType [] bt
       ) :: ValueType 
   TupleMatching tm -> tuple_matching_g bt tm

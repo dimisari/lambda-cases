@@ -14,8 +14,8 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType, CaseAndMaybeType
-  , FieldsOrCases )
+  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType
+  , CaseAndMaybeType, FieldsOrCases )
 
 -- All:
 -- Types, get fields, update fields, value_map operations, type_map operations,
@@ -78,7 +78,8 @@ type_map_get = ( \tn@(TN s) -> get_type_map >>= M.lookup tn .> \case
 int_bt = TypeName $ TN "Int"
   :: BaseType
 
-int_int_tuple_bt = ParenTupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
+int_int_tuple_bt =
+  ParenType $ TupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
   :: BaseType
 
 init_value_map = 

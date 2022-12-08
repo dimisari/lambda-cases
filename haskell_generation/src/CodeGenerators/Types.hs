@@ -13,19 +13,25 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), TupleType(..)
-  , OrType(..), CaseAndMaybeType(..), FieldsOrCases(..), Type(..) )
+  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
+  , TupleTypeDef(..), OrTypeDef(..), CaseAndMaybeType(..), FieldsOrCases(..)
+  , TypeDef(..) )
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 
--- All: BaseType, ValueType, TupleType
+-- All: ParenType, ValueType, TupleTypeDef
 
--- BaseType
-base_type_g = ( \case
-  ParenTupleType vts -> paren_comma_sep_g value_type_g vts
-  ParenthesisType vt -> case vt of
+-- ParenType
+paren_type_g = ( \case
+  TupleType vts -> paren_comma_sep_g value_type_g vts
+  ParenVT vt -> case vt of
     (AbsTypesAndResType [] bt) -> base_type_g bt
     _ -> "(" ++ value_type_g vt ++ ")"
+  ) :: ParenType -> Haskell
+
+-- ParenType
+base_type_g = ( \case
+  ParenType pt -> paren_type_g pt
   TypeName tn -> show tn
   ) :: BaseType -> Haskell
 
@@ -34,7 +40,7 @@ value_type_g = ( \(AbsTypesAndResType bts bt) ->
   bts==>concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
--- TupleType
+-- TupleTypeDef
 tuple_type_g = ( \(NameAndValue tn ttv) ->
   let
   tuple_value_g =
@@ -52,9 +58,9 @@ tuple_type_g = ( \(NameAndValue tn ttv) ->
   type_map_exists_check tn >>
   type_map_insert tn (FieldAndTypeList ttv) >> tuple_value_g >>= \tv_g ->
   return $ "\ndata " ++ show tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
-  ) :: TupleType -> Stateful Haskell
+  ) :: TupleTypeDef -> Stateful Haskell
 
--- OrType
+-- OrTypeDef
 or_type_g = ( \(NameAndValues tn otvs) -> 
   let
   or_values_g =
@@ -71,10 +77,10 @@ or_type_g = ( \(NameAndValues tn otvs) ->
   type_map_exists_check tn >>
   type_map_insert tn (CaseAndMaybeTypeList otvs) >> or_values_g >>= \otvs_g ->
   return $ "\n\ndata " ++ show tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show"
-  ) :: OrType -> Stateful Haskell
+  ) :: OrTypeDef -> Stateful Haskell
 
 -- Type
 type_g = ( \case
-  TupleType tt -> tuple_type_g tt
-  OrType ot -> or_type_g ot
-  ) :: Type -> Stateful Haskell
+  TupleTypeDef tt -> tuple_type_g tt
+  OrTypeDef ot -> or_type_g ot
+  ) :: TypeDef -> Stateful Haskell

@@ -1,3 +1,5 @@
+{-# language LambdaCase #-}
+
 module Parsers.Types where
 
 import Text.Parsec
@@ -9,25 +11,29 @@ import Helpers
   ( (==>), seperated2, eof_or_new_lines )
 
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
-  , TupleType(..), CaseAndMaybeType(..), OrType(..), Type(..) )
+  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
+  , TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..), TypeDef(..) )
 
 import Parsers.LowLevel
   ( value_name_p )
 
 -- All:
--- type_name_p, base_type_p, ValueType, field_and_type_p, tuple_type_p,
--- case_and_type_p, or_type_p, type_p
+-- type_name_p, paren_type_p, base_type_p, ValueType, field_and_type_p,
+-- tuple_type_p, case_and_type_p, or_type_p, type_p
 
 type_name_p =
   upper >>= \u -> many (lower <|> upper) >>= \lu -> return $ TN (u:lu)
   :: Parser TypeName
 
+paren_type_p =
+  char '(' *> (
+  TupleType <$> (char ' ' *> seperated2 ", " value_type_p <* char ' ') <|>
+  ParenVT <$> value_type_p
+  ) <* char ')'
+  :: Parser ParenType
+
 base_type_p =
-  ParenTupleType <$>
-     try (string "( " *> seperated2 ", " value_type_p <* string " )") <|>
-  ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
-  TypeName <$> type_name_p 
+  ParenType <$> paren_type_p <|> TypeName <$> type_name_p 
   :: Parser BaseType
 
 -- ValueType: value_type_p, one_ab_arrow_value_type_p, many_ab_arrows_value_type_p
@@ -43,7 +49,13 @@ one_ab_arrow_value_type_p =
 many_ab_arrows_value_type_p =
   seperated2 ", " one_ab_arrow_value_type_p >>= \vt1s ->
   string " *-> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
-  return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
+  let
+  vt_to_bt = \case
+    AbsTypesAndResType [] bt -> bt
+    vt -> ParenType $ ParenVT vt
+    :: ValueType -> BaseType
+  in
+  return $ AbsTypesAndResType (map vt_to_bt vt1s ++ bts) bt
   :: Parser ValueType
 
 field_and_type_p = 
@@ -54,7 +66,7 @@ tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
   string "\nvalue ( " >> (field_and_type_p==>sepBy $ string ", ") <* string " )"
     >>= \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
-  :: Parser TupleType
+  :: Parser TupleTypeDef
 
 case_and_type_p = 
   value_name_p >>= \vn -> optionMaybe (char '.' *> value_type_p) >>= \mvt ->
@@ -65,8 +77,8 @@ or_type_p =
   string "or_type " >> type_name_p >>= \tn ->
   string "\nvalues " >> (case_and_type_p==>sepBy $ string " | ") >>= \otvs ->
   eof_or_new_lines >> NameAndValues tn otvs==>return
-  :: Parser OrType
+  :: Parser OrTypeDef
 
 type_p = 
-  TupleType <$> tuple_type_p <|> OrType <$> or_type_p
-  :: Parser Type
+  TupleTypeDef <$> tuple_type_p <|> OrTypeDef <$> or_type_p
+  :: Parser TypeDef

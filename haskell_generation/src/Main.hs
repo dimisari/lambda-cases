@@ -15,7 +15,7 @@ import Helpers
   ( Haskell, (.>) )
 
 import HaskellTypes.Types
-  ( Type )
+  ( TypeDef )
 import HaskellTypes.Values
   ( NamesTypesAndValues )
 import HaskellTypes.Generation
@@ -40,7 +40,7 @@ import CodeGenerators.Values
 
 -- Types
 data NTAVsOrType =
-  Type_ Type | NTAVs NamesTypesAndValues deriving Show
+  TypeDef TypeDef | NTAVs NamesTypesAndValues deriving Show
 
 type Program = [ NTAVsOrType ]
 
@@ -49,7 +49,7 @@ parse_with = flip parse example_lc
   :: Parser a -> String -> Either ParseError a
 
 ntavs_or_tt_p =
-  Type_ <$> try type_p <|> NTAVs <$> names_types_and_values_p
+  TypeDef <$> try type_p <|> NTAVs <$> names_types_and_values_p
   :: Parser NTAVsOrType
 
 program_p =
@@ -62,7 +62,7 @@ parse_string = parse_with program_p
 -- Generating haskell
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  Type_ t -> type_g t
+  TypeDef t -> type_g t
   ) .> fmap concat .> flip evalState init_state
   :: Program -> Haskell
 
