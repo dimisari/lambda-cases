@@ -31,6 +31,8 @@ import CodeGenerators.Types
 import CodeGenerators.Values
   ( names_types_and_values_g )
 
+-- All: Constants, Types, Parsing, Generating Haskell, main
+
 -- Constants
 [ example_name, files, haskell_header,
   example_lc, example_hs ] =
@@ -59,7 +61,7 @@ program_p =
 parse_string = parse_with program_p
   :: String -> Either ParseError Program
 
--- Generating haskell
+-- Generating Haskell
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
   TypeDef t -> type_g t
@@ -77,6 +79,7 @@ write_code = ( generate_code .> \case
     writeFile example_hs $ header ++ source
   ) :: String -> IO ()
 
+-- main
 main =
   readFile example_lc >>=
   write_code
