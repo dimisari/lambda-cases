@@ -23,7 +23,7 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-integer =
+integer_p =
   let number = many1 digit :: Parser String in
   read <$> ((:) <$> char '-' <*> number <|> number)
   :: Parser Integer

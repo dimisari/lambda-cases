@@ -19,10 +19,10 @@ import HaskellTypes.Types
 -- MultiplicationFactor, Multiplication
 -- SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication
+-- OperatorValue, ManyArgsArgValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, NoAbstractionsValue, Value
+-- Where, OutputValue, Value
 
 data ParenthesisValue =
   Parenthesis Value | Tuple [ Value ]
@@ -51,11 +51,11 @@ data EqualityFactor =
 data Equality =
   Equ EqualityFactor EqualityFactor
 
-data NoAbstractionsValue1 =
+data OperatorValue =
   Equality Equality | EquF EqualityFactor
 
 data ManyArgsArgValue =
-  MAAV Abstractions NoAbstractionsValue1
+  MAAV Abstractions OperatorValue
 
 data ManyArgsApplication =
   MAA [ ManyArgsArgValue ] ValueName
@@ -84,22 +84,22 @@ newtype NamesTypesAndValues =
 data Where =
   Where_ Value NamesTypesAndValues
 
-data NoAbstractionsValue =
+data OutputValue =
   ManyArgsApplication ManyArgsApplication | UseFields UseFields | Cases Cases |
-  Where Where | NoAbstractionsValue1 NoAbstractionsValue1
+  Where Where | OperatorValue OperatorValue
 
 data Value =
-  Value Abstractions NoAbstractionsValue
+  Value Abstractions OutputValue
 
 -- Show instances:
 -- ParenthesisValue, BaseValue, OneArgApplications,
 -- MultiplicationFactor, Multiplication
 -- SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- NoAbstractionsValue1, ManyArgsArgValue, ManyArgsApplication
+-- OperatorValue, ManyArgsArgValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, NoAbstractionsValue, Value
+-- Where, OutputValue, Value
 
 instance Show ParenthesisValue where
   show = \case
@@ -125,8 +125,7 @@ instance Show Multiplication where
   show = \(Mul mfs) -> case mfs of
       [] -> error less_than_two_mul_err
       [ _ ] -> error less_than_two_mul_err
-      [ mf1, mf2 ] ->  show mf1 ++ " * " ++ show mf2
-      (mf:mfs) -> show mf ++ " * " ++ show (Mul mfs)
+      mfs -> mfs==>map show==>intercalate " * "
 
 instance Show SubtractionFactor where
   show = \case
@@ -144,7 +143,7 @@ instance Show EqualityFactor where
 instance Show Equality where
   show = \(Equ ef1 ef2) -> show ef1 ++ " = " ++ show ef2
 
-instance Show NoAbstractionsValue1 where
+instance Show OperatorValue where
   show = \case
     Equality equ -> show equ
     EquF f -> show f
@@ -163,7 +162,7 @@ instance Show SpecificCase where
   show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"
 
 instance Show Cases where
-  show = \(Cs scs) -> "\ncases\n\n" ++ scs==>concatMap (show .> (++ "\n"))
+  show = \(Cs scs) -> "\ncases\n\n" ++ scs==>concatMap show
 
 instance Show NameTypeAndValue where
   show = \(NTAV vn vt v) ->
@@ -188,12 +187,12 @@ instance Show Where where
   show = \(Where_ v ns_ts_and_vs) -> 
     "output\n" ++ show v ++ "where\n" ++ show ns_ts_and_vs 
 
-instance Show NoAbstractionsValue where
+instance Show OutputValue where
   show = \case
     ManyArgsApplication maa -> show maa
     Cases cs -> show cs
     Where inter_out -> show inter_out
-    NoAbstractionsValue1 nav1 -> show nav1
+    OperatorValue nav1 -> show nav1
 
 instance Show Value where
   show = \(Value as nav) -> show as ++ show nav

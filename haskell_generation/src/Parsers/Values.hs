@@ -27,7 +27,7 @@ import Parsers.Types
 -- ParenthesisValue, base_value_p, OneArgApplications,
 -- multiplication_factor_p, multiplication_p, subtraction_factor_p, subtraction_p,
 -- equality_factor_p, equality_p
--- no_abstractions_value_1_p, ManyArgsArgValue, many_args_application_p,
+-- no_abstractions_value_p, ManyArgsArgValue, many_args_application_p,
 -- use_fields_p, specific_case_p, cases_p,
 -- name_type_and_value_p, name_type_and_value_lists_p,
 -- ntav_or_ntav_lists_p, names_types_and_values_p, output_where_p,
@@ -84,9 +84,9 @@ equality_p =
   return $ Equ ef1 ef2
   :: Parser Equality
 
-no_abstractions_value_1_p =
-  Equality <$> try equality_p <|> EquF <$> try equality_factor_p
-  :: Parser NoAbstractionsValue1
+no_abstractions_value_p =
+  Equality <$> try equality_p <|> EquF <$> equality_factor_p
+  :: Parser OperatorValue
 
 -- ManyArgsArgValue:
 -- many_args_arg_value_p, one_ab_arrow_maav_p, many_ab_arrow_maav_p
@@ -94,15 +94,15 @@ many_args_arg_value_p =
   try many_ab_arrow_maav_p <|> one_ab_arrow_maav_p
   :: Parser ManyArgsArgValue
 
-one_ab_arrow_maav_p =
-  abstractions_p >>= \as -> no_abstractions_value_1_p >>= \nae1 ->
-  return $ MAAV as nae1
-  :: Parser ManyArgsArgValue
-
 many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_ab_arrow_maav_p >>=
     \(MAAV (As as2) nav1) -> return $ MAAV (As $ as1 ++ as2) nav1
+  :: Parser ManyArgsArgValue
+
+one_ab_arrow_maav_p =
+  abstractions_p >>= \as -> no_abstractions_value_p >>= \nae1 ->
+  return $ MAAV as nae1
   :: Parser ManyArgsArgValue
 -- ManyArgsArgValue end
 
@@ -169,8 +169,8 @@ no_abstraction_expression_p = choice $
   , Cases <$> try cases_p
   , Where <$> try output_where_p
   , UseFields <$> try use_fields_p
-  , NoAbstractionsValue1 <$> no_abstractions_value_1_p
-  ] :: Parser NoAbstractionsValue
+  , OperatorValue <$> no_abstractions_value_p
+  ] :: Parser OutputValue
 
 -- Value: value_p, one_abstraction_arrow_value_p, many_abstractions_arrow_value_p
 value_p =

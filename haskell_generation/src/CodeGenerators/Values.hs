@@ -182,7 +182,7 @@ equality_g = ( \vt (Equ ef1 ef2) ->
 no_abstractions_value_1_g = ( \vt -> \case
   Equality equ -> equality_g vt equ
   EquF f -> equality_factor_g vt f
-  ) :: ValueType -> NoAbstractionsValue1 -> Stateful Haskell
+  ) :: ValueType -> OperatorValue -> Stateful Haskell
 
 many_args_arg_value_g = (
   \(AbsTypesAndResType bts bt) (MAAV (As as) nav1) ->
@@ -315,10 +315,10 @@ let_output_g = ( \vt (Where_ v ntavs) ->
 no_abstractions_value_g = ( \vt -> \case
   ManyArgsApplication maa -> many_args_application_g vt maa
   UseFields uf -> use_fields_g vt uf
-  NoAbstractionsValue1 nav1 -> no_abstractions_value_1_g vt nav1
+  OperatorValue nav1 -> no_abstractions_value_1_g vt nav1
   Cases cs -> cases_g vt cs
   Where io -> let_output_g vt io
-  ) :: ValueType -> NoAbstractionsValue -> Stateful Haskell
+  ) :: ValueType -> OutputValue -> Stateful Haskell
 
 value_g = ( \(AbsTypesAndResType bts bt) (Value (As as) nav) ->
   let

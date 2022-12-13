@@ -19,12 +19,10 @@ newtype TypeName =
   TN String deriving ( Eq, Ord )
 
 data ParenType =
-  TupleType [ ValueType ] | ParenVT ValueType
-  deriving Eq
+  TupleType [ ValueType ] | ParenVT ValueType deriving Eq
 
 data BaseType =
-  ParenType ParenType | TypeName TypeName
-  deriving Eq
+  TypeName TypeName | ParenType ParenType deriving Eq
 
 data ValueType =
   AbsTypesAndResType [ BaseType ] BaseType deriving Eq
@@ -36,20 +34,20 @@ data TupleTypeDef =
   NameAndValue TypeName [ FieldAndType ]
 
 data CaseAndMaybeType =
-  CT { get_cn :: ValueName, get_ct :: Maybe ValueType }
+  CT ValueName (Maybe ValueType)
 
 data OrTypeDef =
   NameAndValues TypeName [ CaseAndMaybeType ]
 
-data FieldsOrCases =
-  FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
-  deriving Show
-
 data TypeDef =
   TupleTypeDef TupleTypeDef | OrTypeDef OrTypeDef
 
+data FieldsOrCases =
+  FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
+
 -- Show instances:
--- TypeName, ParenType, ValueType, FieldAndType, TupleType, CaseAndMaybeType, OrTypeDef
+-- TypeName, ParenType, BaseType, ValueType, FieldAndType, TupleTypeDef,
+-- CaseAndMaybeType, OrTypeDef, TypeDef
 instance Show TypeName where
   show = \(TN n) -> n
 

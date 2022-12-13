@@ -8,7 +8,7 @@ import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), keywords, seperated2, integer )
+  ( (==>), keywords, seperated2, integer_p )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), ApplicationDirection(..)
@@ -17,7 +17,7 @@ import HaskellTypes.LowLevel
 -- All:
 -- literal_p, value_name_p, literal_or_value_name_p, application_direction_p,
 -- tuple_matching_p, abstraction_p, abstractions_p
-literal_p = integer
+literal_p = integer_p
   :: Parser Literal
 
 value_name_p =

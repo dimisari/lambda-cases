@@ -36,14 +36,9 @@ base_type_p =
   ParenType <$> paren_type_p <|> TypeName <$> type_name_p 
   :: Parser BaseType
 
--- ValueType: value_type_p, one_ab_arrow_value_type_p, many_ab_arrows_value_type_p
+-- ValueType: value_type_p, many_ab_arrows_value_type_p, one_ab_arrow_value_type_p
 value_type_p =
   try many_ab_arrows_value_type_p <|> one_ab_arrow_value_type_p
-  :: Parser ValueType
-
-one_ab_arrow_value_type_p =
-  many (try $ base_type_p <* string " -> ") >>= \bts -> base_type_p >>= \bt ->
-  return $ AbsTypesAndResType bts bt
   :: Parser ValueType
 
 many_ab_arrows_value_type_p =
@@ -58,14 +53,22 @@ many_ab_arrows_value_type_p =
   return $ AbsTypesAndResType (map vt_to_bt vt1s ++ bts) bt
   :: Parser ValueType
 
+one_ab_arrow_value_type_p =
+  many (try $ base_type_p <* string " -> ") >>= \bts -> base_type_p >>= \bt ->
+  return $ AbsTypesAndResType bts bt
+  :: Parser ValueType
+-- ValueType end
+
 field_and_type_p = 
-  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt -> return $ FT vn vt
+  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt ->
+  return $ FT vn vt
   :: Parser FieldAndType
 
 tuple_type_p =
   string "tuple_type " >> type_name_p >>= \tn ->
   string "\nvalue ( " >> (field_and_type_p==>sepBy $ string ", ") <* string " )"
-    >>= \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
+    >>= \ttv ->
+  eof_or_new_lines >> NameAndValue tn ttv==>return
   :: Parser TupleTypeDef
 
 case_and_type_p = 
