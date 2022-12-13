@@ -1,7 +1,7 @@
 
 type application:
-- (*=>/==> and <==/parenthesis at the end) variations:
-  - A, B *=> TypeName
+- (*==>/==> and <==/parenthesis at the end) variations:
+  - A, B *==> TypeName
   - A==>TypeName<==B
   - TypeName(A, B)
 - one parenthesis in the middle variation:
@@ -13,11 +13,11 @@ type application:
   - Comment:
     type must be defined with the characters [ '(', ')' ]
 - combination of variations example:
-  A, B *=> TypeName(C, D)MoreTypeName(E)EvenMoreTypeName(F, G)
+  A, B *==> TypeName(C, D)MoreTypeName(E)EvenMoreTypeName(F, G)
 
 same for function application:
-- (*=>/==> and <==/parenthesis at the end) variations:
-  - a, b *=> f
+- (*==>/==> and <==/parenthesis at the end) variations:
+  - a, b *==> f
   - a==>f<==b
   - f(a, b)
 - one parenthesis in the middle variation:

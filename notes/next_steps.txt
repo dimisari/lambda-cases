@@ -2,16 +2,15 @@ type_inference
 - start by creating a seperate function in each type 
 - specific expressions:
   - value:
-    type infer 
-  - one argument applications:
-    infer the funcion type and then type check the argument against the first
-    argument type?
+    if no abstraction => infer no abstractions expression type
+    if abstractions => cannot infer error
 
 type abstractions
 - ==>, <==, *==>, paren at the end (classic notation)
 
 fix 
-- cases/use_fields at the end of one argument applications
+- cases/use_fields at the end of one argument applications:
+  optionMaybe!
 - stack of types in value map for multiple-level definitions
 - let-output -> where 
   - problem with values in and outside of function:

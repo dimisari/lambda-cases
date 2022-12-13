@@ -27,11 +27,11 @@ import Parsers.Types
 -- ParenthesisValue, base_value_p, OneArgApplications,
 -- multiplication_factor_p, multiplication_p, subtraction_factor_p, subtraction_p,
 -- equality_factor_p, equality_p
--- no_abstractions_value_p, ManyArgsArgValue, many_args_application_p,
+-- operator_value_p, ManyArgsArgValue, many_args_application_p,
 -- use_fields_p, specific_case_p, cases_p,
 -- name_type_and_value_p, name_type_and_value_lists_p,
--- ntav_or_ntav_lists_p, names_types_and_values_p, output_where_p,
--- no_abstraction_expression_p, Value
+-- ntav_or_ntav_lists_p, names_types_and_values_p, where_p,
+-- output_value_p, Value
 
 -- ParenthesisValue:
 -- parenthesis_value_p, tuple_internals_p, parenthesis_internals_p
@@ -84,7 +84,7 @@ equality_p =
   return $ Equ ef1 ef2
   :: Parser Equality
 
-no_abstractions_value_p =
+operator_value_p =
   Equality <$> try equality_p <|> EquF <$> equality_factor_p
   :: Parser OperatorValue
 
@@ -101,7 +101,7 @@ many_ab_arrow_maav_p =
   :: Parser ManyArgsArgValue
 
 one_ab_arrow_maav_p =
-  abstractions_p >>= \as -> no_abstractions_value_p >>= \nae1 ->
+  abstractions_p >>= \as -> operator_value_p >>= \nae1 ->
   return $ MAAV as nae1
   :: Parser ManyArgsArgValue
 -- ManyArgsArgValue end
@@ -156,7 +156,7 @@ names_types_and_values_p =
   NTAVs <$> try (ntav_or_ntav_lists_p <* eof_or_new_lines) ==>many1
   :: Parser NamesTypesAndValues
 
-output_where_p = 
+where_p = 
   string "let" >> new_line_space_surrounded >>
   names_types_and_values_p >>= \ns_ts_and_vs ->
   string "output" >> new_line_space_surrounded >>
@@ -164,12 +164,12 @@ output_where_p =
   return $ Where_ v ns_ts_and_vs
   :: Parser Where
 
-no_abstraction_expression_p = choice $
+output_value_p = choice $
   [ ManyArgsApplication <$> try many_args_application_p
   , Cases <$> try cases_p
-  , Where <$> try output_where_p
+  , Where <$> try where_p
   , UseFields <$> try use_fields_p
-  , OperatorValue <$> no_abstractions_value_p
+  , OperatorValue <$> operator_value_p
   ] :: Parser OutputValue
 
 -- Value: value_p, one_abstraction_arrow_value_p, many_abstractions_arrow_value_p
@@ -178,7 +178,7 @@ value_p =
   :: Parser Value
 
 one_abstraction_arrow_value_p =
-  abstractions_p >>= \as -> no_abstraction_expression_p >>= \nae ->
+  abstractions_p >>= \as -> output_value_p >>= \nae ->
   return $ Value as nae
   :: Parser Value
 

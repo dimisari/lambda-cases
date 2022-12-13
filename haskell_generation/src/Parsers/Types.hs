@@ -19,7 +19,7 @@ import Parsers.LowLevel
 
 -- All:
 -- type_name_p, paren_type_p, base_type_p, ValueType, field_and_type_p,
--- tuple_type_p, case_and_type_p, or_type_p, type_p
+-- tuple_type_def_p, case_and_maybe_type_p, or_type_def_p, type_def_p
 
 type_name_p =
   upper >>= \u -> many (lower <|> upper) >>= \lu -> return $ TN (u:lu)
@@ -64,24 +64,24 @@ field_and_type_p =
   return $ FT vn vt
   :: Parser FieldAndType
 
-tuple_type_p =
+tuple_type_def_p =
   string "tuple_type " >> type_name_p >>= \tn ->
   string "\nvalue ( " >> (field_and_type_p==>sepBy $ string ", ") <* string " )"
     >>= \ttv ->
   eof_or_new_lines >> NameAndValue tn ttv==>return
   :: Parser TupleTypeDef
 
-case_and_type_p = 
+case_and_maybe_type_p = 
   value_name_p >>= \vn -> optionMaybe (char '.' *> value_type_p) >>= \mvt ->
   return $ CT vn mvt
   :: Parser CaseAndMaybeType
 
-or_type_p =
+or_type_def_p =
   string "or_type " >> type_name_p >>= \tn ->
-  string "\nvalues " >> (case_and_type_p==>sepBy $ string " | ") >>= \otvs ->
+  string "\nvalues " >> (case_and_maybe_type_p==>sepBy $ string " | ") >>= \otvs ->
   eof_or_new_lines >> NameAndValues tn otvs==>return
   :: Parser OrTypeDef
 
-type_p = 
-  TupleTypeDef <$> tuple_type_p <|> OrTypeDef <$> or_type_p
+type_def_p = 
+  TupleTypeDef <$> tuple_type_def_p <|> OrTypeDef <$> or_type_def_p
   :: Parser TypeDef

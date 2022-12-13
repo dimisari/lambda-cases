@@ -1,6 +1,6 @@
 
 or_type A==>Or<==B
-values left_type_value.A | right_type_value.B
+values left_type.A | right_type.B
 
 or_type A==>OrNothing
 value the_value.A | nothing

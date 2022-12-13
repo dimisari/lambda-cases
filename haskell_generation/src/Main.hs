@@ -22,7 +22,7 @@ import HaskellTypes.Generation
   ( init_state )
 
 import Parsers.Types
-  ( type_p )
+  ( type_def_p )
 import Parsers.Values
   ( names_types_and_values_p )
 
@@ -51,7 +51,7 @@ parse_with = flip parse example_lc
   :: Parser a -> String -> Either ParseError a
 
 ntavs_or_tt_p =
-  TypeDef <$> try type_p <|> NTAVs <$> names_types_and_values_p
+  TypeDef <$> try type_def_p <|> NTAVs <$> names_types_and_values_p
   :: Parser NTAVsOrType
 
 program_p =

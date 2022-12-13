@@ -36,11 +36,11 @@ import CodeGenerators.ErrorMessages
 -- ParenthesisValue, BaseValue, OneArgApplications,
 -- multiplication_factor_g, multiplication_g, subtraction_factor_g, subtraction_g,
 -- equality_factor_g, equality_g
--- no_abstractions_value_1_g, many_args_arg_value_g, ManyArgsApplication,
+-- operator_value_g, many_args_arg_value_g, ManyArgsApplication,
 -- UseFields, specific_case_g, cases_g,
 -- name_type_and_value_g, name_type_and_value_lists_g,
 -- ntav_or_ntav_lists_g, names_types_and_values_g, let_output_g,
--- no_abstractions_value_g, value_g
+-- OutputValue, Value
 
 -- ParenthesisValue:
 -- parenthesis_value_g, value_type_tuple_values_g, base_type_tuple_values_g, 
@@ -179,7 +179,7 @@ equality_g = ( \vt (Equ ef1 ef2) ->
   return $ ef1_g ++ " == " ++ ef2_g
   ) :: ValueType -> Equality -> Stateful Haskell
 
-no_abstractions_value_1_g = ( \vt -> \case
+operator_value_g = ( \vt -> \case
   Equality equ -> equality_g vt equ
   EquF f -> equality_factor_g vt f
   ) :: ValueType -> OperatorValue -> Stateful Haskell
@@ -194,7 +194,7 @@ many_args_arg_value_g = (
       :: ( [ BaseType ], [ BaseType ] )
     in
     abstractions_g bts1 (As as) >>= \as_g ->
-    no_abstractions_value_1_g (AbsTypesAndResType bts2 bt) nav1 >>= \nav1_g ->
+    operator_value_g (AbsTypesAndResType bts2 bt) nav1 >>= \nav1_g ->
     return $ as_g ++ nav1_g
   ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
 
@@ -312,25 +312,36 @@ let_output_g = ( \vt (Where_ v ntavs) ->
   return ("\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g)
   ) :: ValueType -> Where -> Stateful Haskell
 
-no_abstractions_value_g = ( \vt -> \case
+-- OutputValue: output_value_g, output_value_type_inference_g
+output_value_g = ( \vt -> \case
   ManyArgsApplication maa -> many_args_application_g vt maa
   UseFields uf -> use_fields_g vt uf
-  OperatorValue nav1 -> no_abstractions_value_1_g vt nav1
+  OperatorValue nav1 -> operator_value_g vt nav1
   Cases cs -> cases_g vt cs
   Where io -> let_output_g vt io
   ) :: ValueType -> OutputValue -> Stateful Haskell
 
+output_value_type_inference_g = ( \case
+  ManyArgsApplication maa -> undefined
+  UseFields uf -> undefined
+  OperatorValue nav1 -> undefined
+  Cases cs -> undefined
+  Where io -> undefined
+  ) :: OutputValue -> Stateful ( ValueType, Haskell )
+
+-- Value: value_g, value_type_inference_g
 value_g = ( \(AbsTypesAndResType bts bt) (Value (As as) nav) ->
   let
   ( bts1, bts2 ) = splitAt (length as) bts
     :: ( [ BaseType ], [ BaseType ] )
   in
   abstractions_g bts1 (As as) >>= \as_g ->
-  no_abstractions_value_g ( AbsTypesAndResType bts2 bt ) nav >>= \nav_g ->
+  output_value_g ( AbsTypesAndResType bts2 bt ) nav >>= \nav_g ->
   return $ as_g ++ nav_g
   ) :: ValueType -> Value -> Stateful Haskell
 
-value_type_inference_g = ( \v ->
-  undefined
+value_type_inference_g = ( \case
+  (Value (As []) nav) -> output_value_type_inference_g nav
+  _ -> undefined
   ) :: Value -> Stateful ( ValueType, Haskell )
 
