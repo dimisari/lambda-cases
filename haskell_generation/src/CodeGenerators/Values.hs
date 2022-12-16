@@ -112,6 +112,7 @@ base_value_type_inference_g = ( \case
 -- one_arg_applications_g, next_application_g, one_arg_application_g
 one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
   [] -> error no_application_err
+
   ( init_bv, init_ad ):bv_ad_s_tail ->
     base_value_type_inference_g init_bv
       >>= \( bv_vt, bv_hs ) ->
@@ -119,10 +120,11 @@ one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
       >>= \( final_vt, final_hs, final_ad ) -> 
     base_value_type_inference_g bv
       >>= \bv_g ->
-    ( case final_ad of
-      LeftApplication -> one_arg_application_g ( final_vt, final_hs ) bv_g
-      RightApplication -> one_arg_application_g bv_g ( final_vt, final_hs ) )
+    one_arg_application_g (case final_ad of
+      LeftApplication -> ( ( final_vt, final_hs ), bv_g )
+      RightApplication -> ( bv_g, ( final_vt, final_hs ) ) )
       ==> \( inferred_vt, hs ) ->
+
     case vt == inferred_vt of 
       False -> error $ one_arg_applications_type_err oaa vt inferred_vt
       True -> return hs
@@ -132,21 +134,22 @@ next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->
   base_value_type_inference_g next_bv >>= \bv_g ->
   let 
   ( next_vt, next_hs ) = case ad of
-    LeftApplication -> one_arg_application_g ( sf_vt, sf_hs ) bv_g
-    RightApplication -> one_arg_application_g bv_g ( sf_vt, sf_hs )
+    LeftApplication -> one_arg_application_g ( ( sf_vt, sf_hs ), bv_g )
+    RightApplication -> one_arg_application_g ( bv_g, ( sf_vt, sf_hs ) )
   in
   return ( next_vt, next_hs, next_ad )
   ) :: ( ValueType, Haskell, ApplicationDirection ) ->
        ( BaseValue, ApplicationDirection ) ->
        Stateful ( ValueType, Haskell, ApplicationDirection )
 
-one_arg_application_g = ( \( fun_vt, fun_hs ) ( val_vt, val_hs ) -> case fun_vt of 
+one_arg_application_g = ( \( ( fun_vt, fun_hs ), ( val_vt, val_hs ) ) ->
+  case fun_vt of 
   AbsTypesAndResType [] _ -> error $ not_a_fun_err fun_vt val_vt
   AbsTypesAndResType (abs_bt : abs_bts) bt -> 
     vt_bt_are_equivalent ( vt_shortest_equivalent val_vt, abs_bt )==> \case
     False -> error $ argument_types_dont_match_err val_vt abs_bt
     True -> ( AbsTypesAndResType abs_bts bt, fun_hs ++ " " ++ val_hs )
-  ) :: ( ValueType, Haskell ) -> ( ValueType, Haskell ) -> ( ValueType, Haskell )
+  ) :: ( ( ValueType, Haskell ), ( ValueType, Haskell ) ) -> ( ValueType, Haskell )
 -- OneArgApplications end
 
 multiplication_factor_g = ( \vt -> \case
@@ -186,30 +189,26 @@ operator_value_g = ( \vt -> \case
   ) :: ValueType -> OperatorValue -> Stateful Haskell
 
 operator_value_type_inference_g = ( \case
-  Equality equ ->
-    equality_g t equ >>= \hs ->
-    return ( t, hs ) where
-      t = (AbsTypesAndResType [] (TypeName (TN "Bool")))
+  Equality equ -> equality_g vt equ >>= \hs -> return ( vt, hs ) where
+    vt = (AbsTypesAndResType [] (TypeName (TN "Bool")))
+      :: ValueType
 
-  EquF f ->
-    equality_factor_g t f >>= \hs ->
-    return ( t, hs ) where
-      t = (AbsTypesAndResType [] (TypeName (TN "Int")))
+  EquF f -> equality_factor_g vt f >>= \hs -> return ( vt, hs ) where
+    vt = (AbsTypesAndResType [] (TypeName (TN "Int")))
+      :: ValueType
   ) :: OperatorValue -> Stateful ( ValueType, Haskell )
 -- OperatorValue end
 
-many_args_arg_value_g = (
-  \(AbsTypesAndResType bts bt) (MAAV (As as) opval) ->
+many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (MAAV (As as) opval) ->
   case length as > length bts of 
   True -> error $ too_many_abstractions_err (As as) bts
   False -> 
-    let
-    ( bts1, bts2 ) = splitAt (length as) bts
-      :: ( [ BaseType ], [ BaseType ] )
-    in
     abstractions_g bts1 (As as) >>= \as_g ->
     operator_value_g (AbsTypesAndResType bts2 bt) opval >>= \nav1_g ->
     return $ as_g ++ nav1_g
+    where
+    ( bts1, bts2 ) = splitAt (length as) bts
+      :: ( [ BaseType ], [ BaseType ] )
   ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
 
 -- ManyArgsApplication: many_args_application_g, bts_maavs_vn_g, bt_maav_g

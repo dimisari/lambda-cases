@@ -14,9 +14,13 @@ fix:
 - let-output -> where 
   - problem with values in and outside of function:
     add intentation levels in parsing
+- one argument application:
+  - change type to binary tree of base values?
 
 cases:
-- "value" default name for tuple_type value of each case
+- "value" default name for tuple_type value of each case:
+  - name default case value in Haskell
+  - use haskell @ operator everywhere
 - add "..." case functionality:
   - create new type LOVNOrDefault
   - LOVN LiterOrValueName | Default
