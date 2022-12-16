@@ -1,14 +1,13 @@
-type_inference
-- start by creating a seperate function in each type 
-- specific expressions:
-  - value:
-    if no abstraction => infer no abstractions expression type
-    if abstractions => cannot infer error
+type_inference:
+- cases:
+  - type infer first
+  - type check the rest with the same type
+  - if type check correct => case has the same type
 
-type abstractions
-- ==>, <==, *==>, paren at the end (classic notation)
+type abstractions:
+- ==>, <==, *==>, paren at the end (mathematical notation)
 
-fix 
+fix:
 - cases/use_fields at the end of one argument applications:
   optionMaybe!
 - stack of types in value map for multiple-level definitions
@@ -16,36 +15,41 @@ fix
   - problem with values in and outside of function:
     add intentation levels in parsing
 
-cases
-- check for each specific case if case of or_type or literal
+cases:
 - "value" default name for tuple_type value of each case
+- add "..." case functionality:
+  - create new type LOVNOrDefault
+  - LOVN LiterOrValueName | Default
+  - parse "..." to Default:
+    optionMaybe?
 
-use_fields
+
+use_fields:
 - "value" default name for the whole tuple_type value
 
-literals
+literals:
 - reals + strings
 
-autgenerated functions
-- update_field: TupleType, FieldType *> TupleType
+autgenerated functions:
+- update_field: TupleType, FieldType *-> TupleType
   - put in map + generate definition
 - is_case: OrType -> Bool
   - put in map + generate definition
 
-regular parenthesis function application
+regular parenthesis function application:
 - parser for already existing type?
 
-operators 
+operators:
 - type class maybe? 
 
-parentheses in the middle 
+parentheses in the middle:
 - function definition
-- type definition
 - function application
 
-better error 
+better error:
 - transform the state with EitherT (or ExceptT)
 - find error calls that are errors for the user and modify them appropriately
 - add line/column numbers
 
-wrong examples for testing error messages
+testing:
+- wrong examples 

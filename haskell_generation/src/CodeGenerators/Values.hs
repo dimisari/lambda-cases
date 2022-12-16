@@ -39,7 +39,7 @@ import CodeGenerators.ErrorMessages
 -- operator_value_g, many_args_arg_value_g, ManyArgsApplication,
 -- UseFields, specific_case_g, cases_g,
 -- name_type_and_value_g, name_type_and_value_lists_g,
--- ntav_or_ntav_lists_g, names_types_and_values_g, let_output_g,
+-- ntav_or_ntav_lists_g, names_types_and_values_g, Where,
 -- OutputValue, Value
 
 -- ParenthesisValue:
@@ -179,13 +179,27 @@ equality_g = ( \vt (Equ ef1 ef2) ->
   return $ ef1_g ++ " == " ++ ef2_g
   ) :: ValueType -> Equality -> Stateful Haskell
 
+-- OperatorValue: operator_value_g, operator_value_type_inference_g
 operator_value_g = ( \vt -> \case
   Equality equ -> equality_g vt equ
   EquF f -> equality_factor_g vt f
   ) :: ValueType -> OperatorValue -> Stateful Haskell
 
+operator_value_type_inference_g = ( \case
+  Equality equ ->
+    equality_g t equ >>= \hs ->
+    return ( t, hs ) where
+      t = (AbsTypesAndResType [] (TypeName (TN "Bool")))
+
+  EquF f ->
+    equality_factor_g t f >>= \hs ->
+    return ( t, hs ) where
+      t = (AbsTypesAndResType [] (TypeName (TN "Int")))
+  ) :: OperatorValue -> Stateful ( ValueType, Haskell )
+-- OperatorValue end
+
 many_args_arg_value_g = (
-  \(AbsTypesAndResType bts bt) (MAAV (As as) nav1) ->
+  \(AbsTypesAndResType bts bt) (MAAV (As as) opval) ->
   case length as > length bts of 
   True -> error $ too_many_abstractions_err (As as) bts
   False -> 
@@ -194,7 +208,7 @@ many_args_arg_value_g = (
       :: ( [ BaseType ], [ BaseType ] )
     in
     abstractions_g bts1 (As as) >>= \as_g ->
-    operator_value_g (AbsTypesAndResType bts2 bt) nav1 >>= \nav1_g ->
+    operator_value_g (AbsTypesAndResType bts2 bt) opval >>= \nav1_g ->
     return $ as_g ++ nav1_g
   ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
 
@@ -304,7 +318,8 @@ names_types_and_values_g = ( \(NTAVs ntavs) ->
   ntavs==>mapM ntav_or_ntav_lists_g >>= concat .> return
   ) :: NamesTypesAndValues -> Stateful Haskell
 
-let_output_g = ( \vt (Where_ v ntavs) ->
+-- Where: where_g, where_type_inference_g 
+where_g = ( \vt (Where_ v ntavs) ->
   get_indent_level >>= \i -> update_indent_level (i + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
@@ -312,21 +327,35 @@ let_output_g = ( \vt (Where_ v ntavs) ->
   return ("\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g)
   ) :: ValueType -> Where -> Stateful Haskell
 
+where_type_inference_g = ( \(Where_ v ntavs) ->
+  get_indent_level >>= \i -> update_indent_level (i + 1) >>
+  names_types_and_values_g ntavs >>= \ntavs_g ->
+  value_type_inference_g v >>= \( vt, v_g ) ->
+  update_indent_level i >>
+  return ( vt, "\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g )
+  ) :: Where -> Stateful ( ValueType, Haskell )
+
 -- OutputValue: output_value_g, output_value_type_inference_g
 output_value_g = ( \vt -> \case
   ManyArgsApplication maa -> many_args_application_g vt maa
   UseFields uf -> use_fields_g vt uf
-  OperatorValue nav1 -> operator_value_g vt nav1
+  OperatorValue opval -> operator_value_g vt opval
   Cases cs -> cases_g vt cs
-  Where io -> let_output_g vt io
+  Where w -> where_g vt w
   ) :: ValueType -> OutputValue -> Stateful Haskell
 
 output_value_type_inference_g = ( \case
   ManyArgsApplication maa -> undefined
+
+  -- cannot infer unless we try to lookup potential fields in the output value 
+  -- and infer backwards
   UseFields uf -> undefined
-  OperatorValue nav1 -> undefined
+
+  OperatorValue opval -> operator_value_type_inference_g opval
+
+  -- could infer by looking up cases that are not "..." (need new map?)
   Cases cs -> undefined
-  Where io -> undefined
+  Where w -> where_type_inference_g w 
   ) :: OutputValue -> Stateful ( ValueType, Haskell )
 
 -- Value: value_g, value_type_inference_g
