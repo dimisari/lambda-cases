@@ -1,4 +1,4 @@
-# Basic case\_types
+# Basic or\_types
 ## ValueOrNothing, LeftOrRight, ListOf()s
 # Basic tuple\_types
 ## Empty, Pair, Triple, Quad
