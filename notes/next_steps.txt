@@ -23,7 +23,6 @@ cases:
   - parse "..." to Default:
     optionMaybe?
 
-
 use_fields:
 - "value" default name for the whole tuple_type value
 
