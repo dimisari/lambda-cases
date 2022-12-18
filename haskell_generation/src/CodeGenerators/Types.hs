@@ -69,9 +69,12 @@ or_type_g = ( \(NameAndValues tn otvs) ->
     :: Stateful Haskell
 
   case_and_maybe_type_g = ( \(CT vn mvt) ->
-    return $ "C" ++ show vn ++ case mvt of 
+    ( case mvt of
+      Nothing -> value_map_insert vn $ AbsTypesAndResType [] $ TypeName $ tn
+      _ -> return () ) >>
+    return ("C" ++ show vn ++ case mvt of 
       Nothing -> ""
-      Just vt  -> " " ++ show vt
+      Just vt  -> " " ++ show vt)
     ) :: CaseAndMaybeType -> Stateful Haskell
   in
   type_map_exists_check tn >>

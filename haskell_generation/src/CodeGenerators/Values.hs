@@ -37,7 +37,7 @@ import CodeGenerators.ErrorMessages
 -- multiplication_factor_g, multiplication_g, subtraction_factor_g, subtraction_g,
 -- equality_factor_g, equality_g
 -- operator_value_g, many_args_arg_value_g, ManyArgsApplication,
--- UseFields, specific_case_g, cases_g,
+-- UseFields, specific_case_g, Cases,
 -- name_type_and_value_g, name_type_and_value_lists_g,
 -- ntav_or_ntav_lists_g, names_types_and_values_g, Where,
 -- OutputValue, Value
@@ -84,8 +84,8 @@ correct_type_name_tuple_values_g = ( \tn vts vs ->
   get_indent_level >>= \il ->
   zipWith value_g vts vs==>sequence >>= \vs_g -> 
   return $
-  "\n" ++ indent (il + 1) ++ show tn ++ "C" ++
-  concatMap (\v_g -> "\n" ++ indent (il + 2) ++ "(" ++ v_g ++ ")") vs_g
+  show tn ++ "C" ++
+  concatMap (\v_g -> "\n" ++ indent (il + 1) ++ "(" ++ v_g ++ ")") vs_g
   ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
 
 parenthesis_value_type_inference_g = ( \case
@@ -94,7 +94,11 @@ parenthesis_value_type_inference_g = ( \case
   Tuple vs -> tuple_values_type_inference_g vs
   ) :: ParenthesisValue -> Stateful ( ValueType, Haskell )
 
-tuple_values_type_inference_g = ( \vs -> undefined
+tuple_values_type_inference_g = ( \vs ->
+  mapM value_type_inference_g vs >>= unzip .> \( vts, vs_g ) ->
+  return
+  ( AbsTypesAndResType [] $ ParenType $ TupleType vts
+  , "( " ++ intercalate ", " vs_g ++ " )" )
   ) :: [ Value ] -> Stateful ( ValueType, Haskell )
 
 -- BaseValue: base_value_g, base_value_type_inference_g
@@ -177,9 +181,13 @@ equality_factor_g = ( \vt -> \case
   SFEF f -> subtraction_factor_g vt f
   ) :: ValueType -> EqualityFactor -> Stateful Haskell
 
-equality_g = ( \vt (Equ ef1 ef2) ->
-  equality_factor_g vt ef1 >>= \ef1_g -> equality_factor_g vt ef2 >>= \ef2_g ->
-  return $ ef1_g ++ " == " ++ ef2_g
+equality_g = ( \case 
+  (AbsTypesAndResType [] (TypeName (TN "Bool"))) -> \(Equ ef1 ef2) ->
+    let int_vt = (AbsTypesAndResType [] (TypeName (TN "Int"))) in
+    equality_factor_g int_vt ef1 >>= \ef1_g ->
+    equality_factor_g int_vt ef2 >>= \ef2_g ->
+    return $ ef1_g ++ " == " ++ ef2_g
+  _ -> undefined
   ) :: ValueType -> Equality -> Stateful Haskell
 
 -- OperatorValue: operator_value_g, operator_value_type_inference_g
@@ -282,12 +290,34 @@ specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
         generate (show vn)
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 
+specific_case_type_inference_g = ( \sc@(SC lovn v) ->
+  literal_or_value_name_type_inference_g lovn >>= \( lovn_vt, lovn_g ) ->
+  value_type_inference_g v >>= \( AbsTypesAndResType abs res, v_g ) ->
+  let
+  lovn_bt = case lovn_vt of 
+    AbsTypesAndResType [] bt -> bt
+    _ -> ParenType $ ParenVT $ lovn_vt
+  in
+  return ( AbsTypesAndResType (lovn_bt : abs) res, undefined )
+  ) :: SpecificCase -> Stateful ( ValueType, Haskell )
+
+-- Cases: cases_g, 
 cases_g = ( \vt (Cs cs) ->
   get_indent_level >>= \i ->
   update_indent_level (i + 1) >> mapM (specific_case_g vt) cs >>= \cs_g ->
-  update_indent_level i >>
-  ("\\case\n" ++ init cs_g==>concatMap (++ "\n") ++ last cs_g)==>return
+  update_indent_level i >> return ("\\case\n" ++ intercalate "\n" cs_g)
   ) :: ValueType -> Cases -> Stateful Haskell
+
+cases_type_inference_g = ( \(Cs cs) -> case cs of
+  [] -> undefined
+  sc:scs ->
+    get_indent_level >>= \i -> update_indent_level (i + 1) >>
+    specific_case_type_inference_g sc >>= \( vt, sc_g ) ->
+    mapM (specific_case_g vt) scs >>= \scs_g ->
+    update_indent_level i >>
+    return ( vt, "\\case\n" ++ sc_g ++ "\n" ++ intercalate "\n" scs_g)
+  ) :: Cases -> Stateful ( ValueType, Haskell )
+-- Cases end
 
 name_type_and_value_g = ( \(NTAV vn vt v) -> 
   value_map_insert vn vt >> value_g vt v >>= \v_g ->
@@ -323,7 +353,12 @@ where_g = ( \vt (Where_ v ntavs) ->
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
   update_indent_level i >>
-  return ("\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g)
+  return (
+  "\n" ++ indent (i + 1) ++ "let" ++
+  "\n" ++ indent (i + 1) ++ ntavs_g ++
+  "\n" ++ indent (i + 1) ++ "in" ++
+  "\n" ++ indent (i + 1) ++ v_g
+  )
   ) :: ValueType -> Where -> Stateful Haskell
 
 where_type_inference_g = ( \(Where_ v ntavs) ->
@@ -353,7 +388,7 @@ output_value_type_inference_g = ( \case
   OperatorValue opval -> operator_value_type_inference_g opval
 
   -- could infer by looking up cases that are not "..." (need new map?)
-  Cases cs -> undefined
+  Cases cs -> cases_type_inference_g cs
   Where w -> where_type_inference_g w 
   ) :: OutputValue -> Stateful ( ValueType, Haskell )
 

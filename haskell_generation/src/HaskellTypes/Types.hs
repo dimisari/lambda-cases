@@ -22,10 +22,10 @@ data ParenType =
   TupleType [ ValueType ] | ParenVT ValueType deriving Eq
 
 data BaseType =
-  TypeName TypeName | ParenType ParenType deriving Eq
+  TypeName TypeName | ParenType ParenType deriving ( Eq, Show )
 
 data ValueType =
-  AbsTypesAndResType [ BaseType ] BaseType deriving Eq
+  AbsTypesAndResType [ BaseType ] BaseType deriving ( Eq, Show )
 
 data FieldAndType =
   FT { get_fn :: ValueName, get_ft :: ValueType }
@@ -58,14 +58,14 @@ instance Show ParenType where
       (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
       _ -> "(" ++ show vt ++ ")"
 
-instance Show BaseType where
-  show = \case 
-    ParenType pt -> show pt
-    TypeName tn -> show tn
+-- instance Show BaseType where
+--   show = \case 
+--     ParenType pt -> show pt
+--     TypeName tn -> show tn
 
-instance Show ValueType where
-  show = \(AbsTypesAndResType bts bt) ->
-    bts==>concatMap (show .> (++ " -> ")) ++ show bt
+-- instance Show ValueType where
+--   show = \(AbsTypesAndResType bts bt) ->
+--     bts==>concatMap (show .> (++ " -> ")) ++ show bt
 
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ ": " ++ show vt
