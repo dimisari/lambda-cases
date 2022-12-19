@@ -20,9 +20,6 @@ newtype ValueName =
 data LiteralOrValueName =
   Literal Literal | ValueName ValueName
 
-data ApplicationDirection =
-  LeftApplication | RightApplication
-
 newtype TupleMatching =
   TM [ ValueName ]
 
@@ -42,11 +39,6 @@ instance Show LiteralOrValueName where
   show = \case
     Literal l -> show l
     ValueName vn -> show vn
-
-instance Show ApplicationDirection where
-  show = \case
-    LeftApplication -> "==>"
-    RightApplication -> "<=="
 
 instance Show TupleMatching where
   show = \(TM vns) -> "( " ++ map show vns==>intercalate ", " ++ ")"

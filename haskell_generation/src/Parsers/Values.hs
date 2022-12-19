@@ -12,14 +12,13 @@ import Helpers
   , eof_or_new_lines )
 
 import HaskellTypes.LowLevel
-  ( ApplicationDirection, Abstractions(..) )
+  ( Abstractions(..) )
 import HaskellTypes.Types
   ( ValueType )
 import HaskellTypes.Values
 
 import Parsers.LowLevel
-  ( value_name_p, literal_or_value_name_p, application_direction_p, abstraction_p
-  , abstractions_p )
+  ( value_name_p, literal_or_value_name_p, abstraction_p, abstractions_p )
 import Parsers.Types
   ( value_type_p )
 
@@ -49,13 +48,18 @@ base_value_p =
 
 -- OneArgApplications: one_arg_applications_p, bv_ad_p
 one_arg_applications_p =
-  many1 (try bv_ad_p) >>= \bv_ad_s -> base_value_p >>= \bv ->
-  return $ OAA bv_ad_s bv
+  many1 (try bv_ad_p) >>= \(bv_ad : bv_ad_s) -> base_value_p >>= \bv ->
+  return $ OAA bv_ad bv_ad_s bv
   :: Parser OneArgApplications
 
 bv_ad_p = 
   base_value_p >>= \bv -> application_direction_p >>= \ad -> return ( bv, ad )
   :: Parser ( BaseValue, ApplicationDirection )
+
+application_direction_p = 
+  string "<==" *> return LeftApplication <|>
+  string "==>" *> return RightApplication
+  :: Parser ApplicationDirection
 -- OneArgApplications end
 
 multiplication_factor_p =

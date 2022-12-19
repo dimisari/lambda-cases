@@ -13,8 +13,7 @@ import Helpers
   ( Haskell, (==>), (.>), indent )
 
 import HaskellTypes.LowLevel
-  ( LiteralOrValueName(..), ApplicationDirection(..), ValueName(..)
-  , Abstractions(..) )
+  ( LiteralOrValueName(..), ValueName(..), Abstractions(..) )
 import HaskellTypes.Types
   ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
   , FieldsOrCases(..), vt_bt_are_equivalent, vt_shortest_equivalent )
@@ -114,24 +113,21 @@ base_value_type_inference_g = ( \case
 
 -- OneArgApplications:
 -- one_arg_applications_g, next_application_g, one_arg_application_g
-one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
-  [] -> error no_application_err
+one_arg_applications_g = ( \vt oaa@(OAA ( init_bv, init_ad ) bv_ad_s bv) ->
+  base_value_type_inference_g init_bv
+    >>= \( bv_vt, bv_hs ) ->
+  foldM next_application_g ( bv_vt, bv_hs, init_ad ) bv_ad_s
+    >>= \( final_vt, final_hs, final_ad ) -> 
+  base_value_type_inference_g bv
+    >>= \bv_g ->
+  one_arg_application_g (case final_ad of
+    LeftApplication -> ( ( final_vt, final_hs ), bv_g )
+    RightApplication -> ( bv_g, ( final_vt, final_hs ) ) )
+    ==> \( inferred_vt, hs ) ->
 
-  ( init_bv, init_ad ):bv_ad_s_tail ->
-    base_value_type_inference_g init_bv
-      >>= \( bv_vt, bv_hs ) ->
-    foldM next_application_g ( bv_vt, bv_hs, init_ad ) bv_ad_s_tail
-      >>= \( final_vt, final_hs, final_ad ) -> 
-    base_value_type_inference_g bv
-      >>= \bv_g ->
-    one_arg_application_g (case final_ad of
-      LeftApplication -> ( ( final_vt, final_hs ), bv_g )
-      RightApplication -> ( bv_g, ( final_vt, final_hs ) ) )
-      ==> \( inferred_vt, hs ) ->
-
-    case vt == inferred_vt of 
-      False -> error $ one_arg_applications_type_err oaa vt inferred_vt
-      True -> return hs
+  case vt == inferred_vt of 
+    False -> error $ one_arg_applications_type_err oaa vt inferred_vt
+    True -> return hs
   ) :: ValueType -> OneArgApplications -> Stateful Haskell
 
 next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->

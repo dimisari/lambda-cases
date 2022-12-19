@@ -11,8 +11,8 @@ import Helpers
   ( (==>), keywords, seperated2, integer_p )
 
 import HaskellTypes.LowLevel
-  ( Literal(..), ValueName(..), LiteralOrValueName(..), ApplicationDirection(..)
-  , TupleMatching(..), Abstraction(..), Abstractions(..) )
+  ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
+  , Abstraction(..), Abstractions(..) )
 
 -- All:
 -- literal_p, value_name_p, literal_or_value_name_p, application_direction_p,
@@ -29,11 +29,6 @@ value_name_p =
 literal_or_value_name_p =
   Literal <$> literal_p <|> ValueName <$> value_name_p
   :: Parser LiteralOrValueName
-
-application_direction_p = 
-  string "<==" *> return LeftApplication <|>
-  string "==>" *> return RightApplication
-  :: Parser ApplicationDirection
 
 tuple_matching_p =
   fmap TM $ string "( " *> seperated2 ", " value_name_p <* string " )"

@@ -8,7 +8,7 @@ import Helpers
   ( (==>), (.>) )
 
 import HaskellTypes.LowLevel
-  ( ValueName, LiteralOrValueName, ApplicationDirection, Abstractions )
+  ( ValueName, LiteralOrValueName, Abstractions )
 import HaskellTypes.Types
   ( ValueType )
 
@@ -30,8 +30,13 @@ data ParenthesisValue =
 data BaseValue =
   ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName
 
-data OneArgApplications = 
-  OAA [ ( BaseValue, ApplicationDirection ) ] BaseValue
+data ApplicationDirection =
+  LeftApplication | RightApplication
+
+data OneArgApplications = OAA
+  ( BaseValue, ApplicationDirection )
+  [ ( BaseValue, ApplicationDirection ) ]
+  BaseValue
 
 data MultiplicationFactor =
   OneArgAppMF OneArgApplications | BaseValueMF BaseValue
@@ -111,10 +116,17 @@ instance Show BaseValue where
     ParenthesisValue pv -> show pv
     LiteralOrValueName lovn -> show lovn
 
+instance Show ApplicationDirection where
+  show = \case
+    LeftApplication -> "==>"
+    RightApplication -> "<=="
+
 instance Show OneArgApplications where
-  show = \(OAA bv_ad_s bv) -> case bv_ad_s of
+  show = \(OAA bv_ad bv_ad_s bv) -> case bv_ad_s of
     [] -> error $ one_arg_app_err
-    _ -> bv_ad_s==>concatMap ( \( bv, ad ) -> show bv ++ show ad ) ++ show bv
+    _ ->
+      (bv_ad : bv_ad_s)==>concatMap ( \( bv, ad ) -> show bv ++ show ad ) ++
+      show bv
 
 instance Show MultiplicationFactor where
   show = \case

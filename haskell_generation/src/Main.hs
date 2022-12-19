@@ -20,6 +20,7 @@ import HaskellTypes.Values
   ( NamesTypesAndValues )
 import HaskellTypes.Generation
   ( init_state )
+import HaskellTypes.AfterParsing
 
 import Parsers.Types
   ( type_def_p )
