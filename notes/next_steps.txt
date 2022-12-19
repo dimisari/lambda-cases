@@ -1,8 +1,6 @@
 type_inference:
-- cases:
-  - type infer first
-  - type check the rest with the same type
-  - if type check correct => case has the same type
+- fix type equality/equivalence:
+  - tuple_type name = tuple with same types
 
 type abstractions:
 - ==>, <==, *==>, paren at the end (mathematical notation)

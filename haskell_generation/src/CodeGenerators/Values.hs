@@ -37,7 +37,7 @@ import CodeGenerators.ErrorMessages
 -- multiplication_factor_g, multiplication_g, subtraction_factor_g, subtraction_g,
 -- equality_factor_g, equality_g
 -- operator_value_g, many_args_arg_value_g, ManyArgsApplication,
--- UseFields, specific_case_g, Cases,
+-- UseFields, SpecificCase, Cases,
 -- name_type_and_value_g, name_type_and_value_lists_g,
 -- ntav_or_ntav_lists_g, names_types_and_values_g, Where,
 -- OutputValue, Value
@@ -268,8 +268,8 @@ correct_use_fields_g = ( \tn fatl vt v ->
 
 insert_to_value_map_ret_vn = ( \(FT vn vt) -> value_map_insert vn vt >> return vn )
   :: FieldAndType -> Stateful ValueName
--- UseFields end
 
+-- SpecificCase: specific_case_g, specific_case_type_inference_g
 specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
   case bts of 
   [] -> error $ specific_case_not_abstraction_err vt sc
