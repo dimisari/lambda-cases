@@ -31,7 +31,10 @@ literal_or_value_name_p =
   :: Parser LiteralOrValueName
 
 tuple_matching_p =
-  fmap TM $ string "( " *> seperated2 ", " value_name_p <* string " )"
+  string "( " >> value_name_p >>= \vn1 ->
+  string ", " >> value_name_p >>= \vn2 ->
+  many (string ", " *> value_name_p) >>= \vns ->
+  string " )" >> return (TM vn1 vn2 vns)
   :: Parser TupleMatching
 
 abstraction_p =

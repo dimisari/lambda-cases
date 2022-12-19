@@ -77,8 +77,10 @@ case_and_maybe_type_p =
   :: Parser CaseAndMaybeType
 
 or_type_def_p =
-  string "or_type " >> type_name_p >>= \tn ->
-  string "\nvalues " >> (case_and_maybe_type_p==>sepBy $ string " | ") >>= \otvs ->
+  string "or_type " >> type_name_p >>=
+    \tn ->
+  string "\nvalues " >> (case_and_maybe_type_p==>sepBy $ try $ string " | ") >>=
+    \otvs ->
   eof_or_new_lines >> NameAndValues tn otvs==>return
   :: Parser OrTypeDef
 

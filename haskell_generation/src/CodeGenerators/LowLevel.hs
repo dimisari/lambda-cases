@@ -76,12 +76,10 @@ value_type_tuple_matching_g = ( \case
   AbsTypesAndResType [] bt -> tuple_matching_g bt
   ) :: ValueType -> TupleMatching -> Stateful Haskell
 
-value_types_tuple_matching_g = ( \vts (TM vns) -> vns ==> \case
-    [] -> error tuple_less_than_2_err
-    [ _ ] -> error tuple_less_than_2_err
-    _ -> case length vts == length vns of
-      False -> error tuple_values_types_lengths_dont_match_err
-      True -> correct_value_types_value_names_g vts vns
+value_types_tuple_matching_g = ( \vts (TM vn1 vn2 vns) ->
+  case length vts == length vns + 2 of
+    False -> error tuple_values_types_lengths_dont_match_err
+    True -> correct_value_types_value_names_g vts (vn1 : vn2 : vns)
   ) :: [ ValueType ] -> TupleMatching -> Stateful Haskell
 
 correct_value_types_value_names_g = ( \vts vns -> 

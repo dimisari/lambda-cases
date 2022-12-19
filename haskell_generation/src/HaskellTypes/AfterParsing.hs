@@ -36,3 +36,7 @@ combine_with_direction = ( \at1 ad at2 -> case ad of
 application_tree_g = (
   undefined
   ) :: ValueType -> ApplicationTree -> Stateful Haskell
+
+application_tree_type_inference_g = (
+  undefined
+  ) :: ApplicationTree -> Stateful ( ValueType, Haskell )

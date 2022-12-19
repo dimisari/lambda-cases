@@ -20,8 +20,8 @@ newtype ValueName =
 data LiteralOrValueName =
   Literal Literal | ValueName ValueName
 
-newtype TupleMatching =
-  TM [ ValueName ]
+data TupleMatching =
+  TM ValueName ValueName [ ValueName ]
 
 data Abstraction =
   ValueNameAb ValueName | TupleMatching TupleMatching
@@ -41,7 +41,8 @@ instance Show LiteralOrValueName where
     ValueName vn -> show vn
 
 instance Show TupleMatching where
-  show = \(TM vns) -> "( " ++ map show vns==>intercalate ", " ++ ")"
+  show = \(TM vn1 vn2 vns) ->
+    "( " ++ map show (vn1 : vn2 : vns)==>intercalate ", " ++ ")"
 
 instance Show Abstraction where
   show = \case

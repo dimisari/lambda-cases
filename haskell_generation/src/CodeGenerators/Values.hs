@@ -122,7 +122,7 @@ one_arg_applications_g = ( \vt oaa@(OAA ( init_bv, init_ad ) bv_ad_s bv) ->
     >>= \bv_g ->
   one_arg_application_g (case final_ad of
     LeftApplication -> ( ( final_vt, final_hs ), bv_g )
-    RightApplication -> ( bv_g, ( final_vt, final_hs ) ) )
+    RightApplication -> ( bv_g, ( final_vt, final_hs ) ))
     ==> \( inferred_vt, hs ) ->
 
   case vt == inferred_vt of 
