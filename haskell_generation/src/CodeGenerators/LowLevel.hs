@@ -10,7 +10,7 @@ import Helpers
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
-  , Abstraction(..), Abstractions(..) )
+  , Abstraction(..) )
 import HaskellTypes.Types
   ( ParenType(..), BaseType(..), ValueType(..), TypeName(..)
   , vt_shortest_equivalent )
@@ -98,10 +98,10 @@ abstraction_g = ( \bt -> \case
   ) :: BaseType -> Abstraction -> Stateful Haskell
 
 -- Abstractions: abstractions_g, correct_abstractions_g
-abstractions_g = ( \bts (As as) -> case length bts == length as of
+abstractions_g = ( \bts as -> case length bts == length as of
   False -> error abstractions_types_lengths_dont_match_err
   True -> correct_abstractions_g bts as
-  ) :: [ BaseType ] -> Abstractions -> Stateful Haskell
+  ) :: [ BaseType ] -> [ Abstraction ] -> Stateful Haskell
 
 correct_abstractions_g = ( \bts -> \case
   [] -> return ""

@@ -8,7 +8,7 @@ import Helpers
   ( (==>), (.>) )
 
 import HaskellTypes.LowLevel
-  ( ValueName, LiteralOrValueName, Abstractions )
+  ( ValueName, LiteralOrValueName, Abstraction )
 import HaskellTypes.Types
   ( ValueType )
 
@@ -60,7 +60,7 @@ data OperatorValue =
   Equality Equality | EquF EqualityFactor
 
 data ManyArgsArgValue =
-  MAAV Abstractions OperatorValue
+  MAAV [ Abstraction ] OperatorValue
 
 data ManyArgsApplication =
   MAA [ ManyArgsArgValue ] ValueName
@@ -94,7 +94,7 @@ data OutputValue =
   Where Where | OperatorValue OperatorValue
 
 data Value =
-  Value Abstractions OutputValue
+  Value [ Abstraction ] OutputValue
 
 -- Show instances:
 -- ParenthesisValue, BaseValue, OneArgApplications,
@@ -207,7 +207,7 @@ instance Show OutputValue where
     OperatorValue nav1 -> show nav1
 
 instance Show Value where
-  show = \(Value as nav) -> show as ++ show nav
+  show = \(Value as nav) -> as==>concatMap (show .> (++ " -> ")) ++ show nav
 
 -- error messages: one_arg_app_err, less_than_two_mul_err
 one_arg_app_err =

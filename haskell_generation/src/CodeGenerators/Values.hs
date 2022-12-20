@@ -13,7 +13,7 @@ import Helpers
   ( Haskell, (==>), (.>), indent )
 
 import HaskellTypes.LowLevel
-  ( LiteralOrValueName(..), ValueName(..), Abstractions(..) )
+  ( LiteralOrValueName(..), ValueName(..), Abstraction(..) )
 import HaskellTypes.Types
   ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
   , FieldsOrCases(..), vt_bt_are_equivalent, vt_shortest_equivalent )
@@ -203,11 +203,11 @@ operator_value_type_inference_g = ( \case
   ) :: OperatorValue -> Stateful ( ValueType, Haskell )
 -- OperatorValue end
 
-many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (MAAV (As as) opval) ->
+many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (MAAV as opval) ->
   case length as > length bts of 
-  True -> error $ too_many_abstractions_err (As as) bts
+  True -> error $ too_many_abstractions_err as bts
   False -> 
-    abstractions_g bts1 (As as) >>= \as_g ->
+    abstractions_g bts1 as >>= \as_g ->
     operator_value_g (AbsTypesAndResType bts2 bt) opval >>= \nav1_g ->
     return $ as_g ++ nav1_g
     where
@@ -389,18 +389,18 @@ output_value_type_inference_g = ( \case
   ) :: OutputValue -> Stateful ( ValueType, Haskell )
 
 -- Value: value_g, value_type_inference_g
-value_g = ( \(AbsTypesAndResType bts bt) (Value (As as) nav) ->
+value_g = ( \(AbsTypesAndResType bts bt) (Value as nav) ->
   let
   ( bts1, bts2 ) = splitAt (length as) bts
     :: ( [ BaseType ], [ BaseType ] )
   in
-  abstractions_g bts1 (As as) >>= \as_g ->
+  abstractions_g bts1 as >>= \as_g ->
   output_value_g ( AbsTypesAndResType bts2 bt ) nav >>= \nav_g ->
   return $ as_g ++ nav_g
   ) :: ValueType -> Value -> Stateful Haskell
 
 value_type_inference_g = ( \case
-  (Value (As []) nav) -> output_value_type_inference_g nav
+  (Value [] nav) -> output_value_type_inference_g nav
   _ -> undefined
   ) :: Value -> Stateful ( ValueType, Haskell )
 

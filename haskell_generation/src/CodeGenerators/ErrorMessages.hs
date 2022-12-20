@@ -1,7 +1,7 @@
 module CodeGenerators.ErrorMessages where
   
 import HaskellTypes.LowLevel
-  ( ValueName, Abstractions )
+  ( ValueName, Abstraction )
 import HaskellTypes.Types
   ( TypeName, BaseType, ValueType )
 import HaskellTypes.Values
@@ -92,7 +92,7 @@ argument_types_dont_match_err = ( \vt_right abs_bt->
 too_many_abstractions_err = ( \as bts ->
   "\nMore abstractions than abstraction types.\n  Abstractions:  " ++ show as ++
   "\n  Types: " ++ show bts ++ "\n"
-  ) :: Abstractions -> [ BaseType ] -> Error
+  ) :: [ Abstraction ] -> [ BaseType ] -> Error
 
 many_args_types_dont_match_err = ( \vt1 vt2 ->
   "\nArgument types don't match for many arguments function application.\n" ++

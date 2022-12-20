@@ -12,7 +12,7 @@ import Helpers
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
-  , Abstraction(..), Abstractions(..) )
+  , Abstraction(..) )
 
 -- All:
 -- literal_p, value_name_p, literal_or_value_name_p, application_direction_p,
@@ -42,5 +42,5 @@ abstraction_p =
   :: Parser Abstraction
 
 abstractions_p =
-  As <$> many (try $ abstraction_p <* string " -> ")
-  :: Parser Abstractions
+  many (try $ abstraction_p <* string " -> ")
+  :: Parser [ Abstraction ]

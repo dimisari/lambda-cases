@@ -10,7 +10,7 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName )
 
--- All: Types, Show instances, helpers
+-- All: Types, Show instances, Eq instances, helpers
 
 -- Types:
 -- TypeName, ParenType, BaseType, ValueType, FieldAndType, TupleTypeDef
@@ -25,7 +25,7 @@ data BaseType =
   TypeName TypeName | ParenType ParenType deriving Eq
 
 data ValueType =
-  AbsTypesAndResType [ BaseType ] BaseType deriving Eq
+  AbsTypesAndResType [ BaseType ] BaseType
 
 data FieldAndType =
   FT { get_fn :: ValueName, get_ft :: ValueType }
@@ -89,6 +89,12 @@ instance Show TypeDef where
   show = \case
     TupleTypeDef ttd -> show ttd
     OrTypeDef otd -> show otd
+
+-- Eq instances:
+instance Eq ValueType where
+  (AbsTypesAndResType [] (ParenType (ParenVT vt1))) == vt2 = vt1 == vt2
+  (AbsTypesAndResType abs_ts1 bt1) == (AbsTypesAndResType abs_ts2 bt2) =
+    abs_ts1 == abs_ts2 && bt1 == bt2
 
 -- helpers: vt_shortest_equivalent, vt_bt_are_equivalent
 vt_shortest_equivalent = ( \case

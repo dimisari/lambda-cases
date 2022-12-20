@@ -65,7 +65,8 @@ field_and_type_p =
   :: Parser FieldAndType
 
 tuple_type_def_p =
-  string "tuple_type " >> type_name_p >>= \tn ->
+  string "tuple_type " >> type_name_p
+    >>= \tn ->
   string "\nvalue ( " >> (field_and_type_p==>sepBy $ string ", ") <* string " )"
     >>= \ttv ->
   eof_or_new_lines >> NameAndValue tn ttv==>return
@@ -77,10 +78,10 @@ case_and_maybe_type_p =
   :: Parser CaseAndMaybeType
 
 or_type_def_p =
-  string "or_type " >> type_name_p >>=
-    \tn ->
-  string "\nvalues " >> (case_and_maybe_type_p==>sepBy $ try $ string " | ") >>=
-    \otvs ->
+  string "or_type " >> type_name_p
+    >>= \tn ->
+  string "\nvalues " >> (case_and_maybe_type_p==>sepBy $ try $ string " | ")
+    >>= \otvs ->
   eof_or_new_lines >> NameAndValues tn otvs==>return
   :: Parser OrTypeDef
 

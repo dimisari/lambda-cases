@@ -11,8 +11,6 @@ import Helpers
   ( (==>), seperated2, new_line_space_surrounded, space_or_newline
   , eof_or_new_lines )
 
-import HaskellTypes.LowLevel
-  ( Abstractions(..) )
 import HaskellTypes.Types
   ( ValueType )
 import HaskellTypes.Values
@@ -101,7 +99,7 @@ many_args_arg_value_p =
 many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_ab_arrow_maav_p >>=
-    \(MAAV (As as2) nav1) -> return $ MAAV (As $ as1 ++ as2) nav1
+    \(MAAV as2 nav1) -> return $ MAAV (as1 ++ as2) nav1
   :: Parser ManyArgsArgValue
 
 one_ab_arrow_maav_p =
@@ -189,5 +187,5 @@ one_abstraction_arrow_value_p =
 many_abstractions_arrow_value_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_abstraction_arrow_value_p >>=
-    \(Value (As as2) nav) -> return $ Value (As $ as1 ++ as2) nav
+    \(Value as2 nav) -> return $ Value (as1 ++ as2) nav
   :: Parser Value

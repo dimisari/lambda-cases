@@ -26,9 +26,6 @@ data TupleMatching =
 data Abstraction =
   ValueNameAb ValueName | TupleMatching TupleMatching
 
-newtype Abstractions =
-  As [ Abstraction ]
-
 -- Show instances:
 -- ValueName, LiteralOrValueName, ApplicationDirection, TupleMatching
 -- Abstraction, Abstractions
@@ -49,5 +46,5 @@ instance Show Abstraction where
     ValueNameAb vn -> show vn
     TupleMatching tm -> show tm
 
-instance Show Abstractions where
-  show = \(As as) -> as==>concatMap (show .> (++ " -> "))
+-- instance Show Abstractions where
+--   show = \(As as) -> 
