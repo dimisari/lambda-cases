@@ -43,34 +43,14 @@ application_tree_g = ( \vt at ->
     False -> undefined
   ) :: ValueType -> ApplicationTree -> Stateful Haskell
 
-application_tree_type_inference_g = (
-  \(Application at1 at2) -> case ( at1, at2 ) of
-    ( BaseValueLeaf bv1, BaseValueLeaf bv2 ) -> bv_bv_type_inference_g bv1 bv2
-    ( app@(Application _ _), BaseValueLeaf bv ) -> app_bv_type_inference_g app bv
-    ( BaseValueLeaf bv, app@(Application _ _ ) ) -> bv_app_type_inference_g bv app
-    _ -> app_app_type_inference_g at1 at2
+application_tree_type_inference_g = ( \case 
+  Application at1 at2 -> 
+    application_tree_type_inference_g at1 >>= \( vt1, hs1 ) ->
+    application_tree_type_inference_g at2 >>= \( vt2, hs2 ) ->
+    return_type vt1 vt2 >>= \ret_vt ->
+    return ( ret_vt, "(" ++ hs1 ++ " " ++ hs2 ++ ")" ) 
+  BaseValueLeaf bv -> base_value_type_inference_g bv
   ) :: ApplicationTree -> Stateful ( ValueType, Haskell )
 
-bv_bv_type_inference_g = ( \bv1 bv2 -> 
-  base_value_type_inference_g bv1 >>= \( vt1, hs1 ) ->
-  base_value_type_inference_g bv2 >>= \( vt2, hs2 ) ->
-  return ( undefined, "(" ++ hs1 ++ " " ++ hs2 ++ ")" ) 
-  ) :: BaseValue -> BaseValue -> Stateful ( ValueType, Haskell )
-
-app_bv_type_inference_g = ( \at bv ->
-  application_tree_type_inference_g at >>= \( at_vt, at_hs ) ->
-  base_value_type_inference_g bv >>= \( bv_vt, bv_hs ) ->
-  return ( undefined, "(" ++ at_hs ++ " " ++ bv_hs ++ ")" ) 
-  ) :: ApplicationTree -> BaseValue -> Stateful ( ValueType, Haskell )
-
-bv_app_type_inference_g = ( \bv at ->
-  base_value_type_inference_g bv >>= \( bv_vt, bv_hs ) ->
-  application_tree_type_inference_g at >>= \( at_vt, at_hs ) ->
-  return ( undefined, "(" ++ bv_hs ++ " " ++ at_hs ++ ")" ) 
-  ) :: BaseValue -> ApplicationTree -> Stateful ( ValueType, Haskell )
-
-app_app_type_inference_g = ( \at1 at2 ->
-  application_tree_type_inference_g at1 >>= \( vt1, hs1 ) ->
-  application_tree_type_inference_g at2 >>= \( vt2, hs2 ) ->
-  return ( undefined, "(" ++ hs1 ++ " " ++ hs2 ++ ")" ) 
-  ) :: ApplicationTree -> ApplicationTree -> Stateful ( ValueType, Haskell )
+return_type = ( \vt1 vt2 -> undefined
+  ) :: ValueType -> ValueType -> Stateful ValueType

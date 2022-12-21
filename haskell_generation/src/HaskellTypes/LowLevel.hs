@@ -45,6 +45,3 @@ instance Show Abstraction where
   show = \case
     ValueNameAb vn -> show vn
     TupleMatching tm -> show tm
-
--- instance Show Abstractions where
---   show = \(As as) -> 

@@ -259,7 +259,7 @@ correct_use_fields_g = ( \tn fatl vt v ->
   mapM insert_to_value_map_ret_vn fatl >>= \vns ->
   value_g vt v >>= \v_g ->
   return $
-  "\\(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns ++ ") ->" ++ v_g
+  "\\(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns ++ ") -> " ++ v_g
   ) :: TypeName -> [ FieldAndType ] -> ValueType -> Value -> Stateful Haskell
 
 insert_to_value_map_ret_vn = ( \(FT vn vt) -> value_map_insert vn vt >> return vn )

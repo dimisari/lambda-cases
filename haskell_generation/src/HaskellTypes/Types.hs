@@ -19,10 +19,10 @@ newtype TypeName =
   TN String deriving ( Eq, Ord )
 
 data ParenType =
-  TupleType [ ValueType ] | ParenVT ValueType deriving Eq
+  TupleType [ ValueType ] | ParenVT ValueType
 
 data BaseType =
-  TypeName TypeName | ParenType ParenType deriving Eq
+  TypeName TypeName | ParenType ParenType 
 
 data ValueType =
   AbsTypesAndResType [ BaseType ] BaseType
@@ -92,9 +92,23 @@ instance Show TypeDef where
 
 -- Eq instances:
 instance Eq ValueType where
-  (AbsTypesAndResType [] (ParenType (ParenVT vt1))) == vt2 = vt1 == vt2
-  (AbsTypesAndResType abs_ts1 bt1) == (AbsTypesAndResType abs_ts2 bt2) =
+  AbsTypesAndResType [] (ParenType (ParenVT vt1)) == vt2 = vt1 == vt2
+  AbsTypesAndResType abs_ts1 bt1 == AbsTypesAndResType abs_ts2 bt2 =
     abs_ts1 == abs_ts2 && bt1 == bt2
+
+instance Eq BaseType where
+  ParenType (ParenVT (AbsTypesAndResType [] bt1)) == bt2 = bt1 == bt2
+  ParenType pt1 == ParenType pt2 = pt1 == pt2
+  TypeName tn1 == TypeName tn2 = tn1 == tn2
+  ParenType pt == TypeName tn = False
+  TypeName tn == ParenType pt = False
+
+instance Eq ParenType where
+  ParenVT (AbsTypesAndResType [] (ParenType pt1)) == pt2 = pt1 == pt2
+  ParenVT vt1 == ParenVT vt2 = vt1 == vt2
+  TupleType tt1 == TupleType tt2 = tt1 == tt2
+  ParenVT vt == TupleType tt = False
+  TupleType tt == ParenVT vt = False
 
 -- helpers: vt_shortest_equivalent, vt_bt_are_equivalent
 vt_shortest_equivalent = ( \case
