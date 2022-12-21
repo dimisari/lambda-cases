@@ -16,11 +16,15 @@ import HaskellTypes.LowLevel
   ( LiteralOrValueName(..), ValueName(..), Abstraction(..) )
 import HaskellTypes.Types
   ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
-  , FieldsOrCases(..), vt_bt_are_equivalent, vt_shortest_equivalent )
+  , FieldsOrCases(..), bt_to_vt, vt_to_bt )
+import HaskellTypes.Values
+import HaskellTypes.AfterParsing
+  ( ApplicationTree(..), to_application_tree )
 import HaskellTypes.Generation
   ( Stateful, get_indent_level, update_indent_level, type_map_get
   , value_map_get, value_map_insert )
 
+import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel
   ( literal_g, literal_type_inference_g
   , literal_or_value_name_g, literal_or_value_name_type_inference_g
@@ -28,8 +32,6 @@ import CodeGenerators.LowLevel
 import CodeGenerators.Types
   ( value_type_g )
 
-import HaskellTypes.Values
-import CodeGenerators.ErrorMessages
 
 -- All:
 -- ParenthesisValue, BaseValue, OneArgApplications,
@@ -113,43 +115,30 @@ base_value_type_inference_g = ( \case
 
 -- OneArgApplications:
 -- one_arg_applications_g, next_application_g, one_arg_application_g
-one_arg_applications_g = ( \vt oaa@(OAA ( init_bv, init_ad ) bv_ad_s bv) ->
-  base_value_type_inference_g init_bv
-    >>= \( bv_vt, bv_hs ) ->
-  foldM next_application_g ( bv_vt, bv_hs, init_ad ) bv_ad_s
-    >>= \( final_vt, final_hs, final_ad ) -> 
-  base_value_type_inference_g bv
-    >>= \bv_g ->
-  one_arg_application_g (case final_ad of
-    LeftApplication -> ( ( final_vt, final_hs ), bv_g )
-    RightApplication -> ( bv_g, ( final_vt, final_hs ) ))
-    ==> \( inferred_vt, hs ) ->
-
-  case vt == inferred_vt of 
-    False -> error $ one_arg_applications_type_err oaa vt inferred_vt
-    True -> return hs
+one_arg_applications_g = ( \vt ->
+  to_application_tree .> application_tree_g vt
   ) :: ValueType -> OneArgApplications -> Stateful Haskell
 
-next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->
-  base_value_type_inference_g next_bv >>= \bv_g ->
-  let 
-  ( next_vt, next_hs ) = case ad of
-    LeftApplication -> one_arg_application_g ( ( sf_vt, sf_hs ), bv_g )
-    RightApplication -> one_arg_application_g ( bv_g, ( sf_vt, sf_hs ) )
-  in
-  return ( next_vt, next_hs, next_ad )
-  ) :: ( ValueType, Haskell, ApplicationDirection ) ->
-       ( BaseValue, ApplicationDirection ) ->
-       Stateful ( ValueType, Haskell, ApplicationDirection )
+application_tree_g = ( \vt@(AbsTypesAndResType abs_ts res_t) -> \case 
+  Application at1 at2 -> 
+    application_tree_type_inference_g at2 >>=
+      \( vt2, hs2 ) ->
+    application_tree_g (AbsTypesAndResType (vt_to_bt vt2 : abs_ts) res_t) at1 >>=
+      \hs1 ->
+    return $ "(" ++ hs1 ++ " " ++ hs2 ++ ")"
+  BaseValueLeaf bv -> base_value_g vt bv
+  ) :: ValueType -> ApplicationTree -> Stateful Haskell
 
-one_arg_application_g = ( \( ( fun_vt, fun_hs ), ( val_vt, val_hs ) ) ->
-  case fun_vt of 
-  AbsTypesAndResType [] _ -> error $ not_a_fun_err fun_vt val_vt
-  AbsTypesAndResType (abs_bt : abs_bts) bt -> 
-    vt_bt_are_equivalent ( vt_shortest_equivalent val_vt, abs_bt )==> \case
-    False -> error $ argument_types_dont_match_err val_vt abs_bt
-    True -> ( AbsTypesAndResType abs_bts bt, fun_hs ++ " " ++ val_hs )
-  ) :: ( ( ValueType, Haskell ), ( ValueType, Haskell ) ) -> ( ValueType, Haskell )
+application_tree_type_inference_g = ( \case 
+  Application at1 at2 -> 
+    application_tree_type_inference_g at1 >>=
+      \( vt1@(AbsTypesAndResType abs_ts res_t), hs1 ) -> case abs_ts of 
+    [] -> undefined
+    abs_t:rest -> 
+      application_tree_g (bt_to_vt abs_t) at2 >>= \hs2 ->
+      return ( AbsTypesAndResType rest res_t, "(" ++ hs1 ++ " " ++ hs2 ++ ")" ) 
+  BaseValueLeaf bv -> base_value_type_inference_g bv
+  ) :: ApplicationTree -> Stateful ( ValueType, Haskell )
 -- OneArgApplications end
 
 multiplication_factor_g = ( \vt -> \case
@@ -269,21 +258,15 @@ insert_to_value_map_ret_vn = ( \(FT vn vt) -> value_map_insert vn vt >> return v
 specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
   case bts of 
   [] -> error $ specific_case_not_abstraction_err vt sc
-  b:bs ->
-    let
-    generate = ( \g ->
+  b:bs -> case lovn of 
+    Literal l -> literal_g (AbsTypesAndResType [] b) l==>add_value_g 
+    ValueName vn -> value_map_insert vn (bt_to_vt b) >> add_value_g (show vn)
+    where
+    add_value_g = ( \g ->
       value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
       get_indent_level >>= \i ->
       return $ indent i ++ g ++ " ->" ++ v_g
       ) :: Haskell -> Stateful Haskell
-    in
-    case lovn of 
-      Literal l -> literal_g (AbsTypesAndResType [] b) l==>generate 
-
-      ValueName vn ->
-        value_map_insert vn (vt_shortest_equivalent $ AbsTypesAndResType [] b)
-        >>
-        generate (show vn)
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 
 specific_case_type_inference_g = ( \sc@(SC lovn v) ->

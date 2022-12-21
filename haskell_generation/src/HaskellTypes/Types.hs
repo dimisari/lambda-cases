@@ -110,15 +110,13 @@ instance Eq ParenType where
   ParenVT vt == TupleType tt = False
   TupleType tt == ParenVT vt = False
 
--- helpers: vt_shortest_equivalent, vt_bt_are_equivalent
-vt_shortest_equivalent = ( \case
-  AbsTypesAndResType [] (ParenType (ParenVT vt)) ->
-    vt_shortest_equivalent vt
-  vt -> vt
-  ) :: ValueType -> ValueType
+-- helpers: vt_to_bt, bt_to_vt
+vt_to_bt = \case 
+  AbsTypesAndResType [] bt -> bt
+  vt -> ParenType $ ParenVT vt
+  :: ValueType -> BaseType
 
-vt_bt_are_equivalent = ( \case
-  ( AbsTypesAndResType [] bt1, bt2) -> bt1 == bt2
-  ( vt1, ParenType (ParenVT vt2) ) -> vt1 == vt2
-  _ -> False
-  ) :: ( ValueType, BaseType ) -> Bool
+bt_to_vt = \case
+  ParenType (ParenVT vt) -> vt
+  bt -> AbsTypesAndResType [] bt
+  :: BaseType -> ValueType
