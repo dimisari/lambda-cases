@@ -15,9 +15,11 @@ import CodeGenerators.Values
 import Helpers
   ( Haskell )
 
+-- Types 
 data ApplicationTree = 
   Application ApplicationTree ApplicationTree | BaseValueLeaf BaseValue
 
+-- Functions
 to_application_tree = ( \(OAA (bv_first, ad_first) bv_ads bv_last) ->
   case bv_ads of
     [] ->
@@ -36,6 +38,7 @@ combine_with_direction = ( \at1 ad at2 -> case ad of
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
 
+-- Generators
 application_tree_g = ( \vt@(AbsTypesAndResType abs_ts res_t) -> \case 
   Application at1 at2 -> 
     application_tree_type_inference_g at2 >>=
@@ -59,9 +62,3 @@ application_tree_type_inference_g = ( \case
       return ( (AbsTypesAndResType rest res_t), "(" ++ hs1 ++ " " ++ hs2 ++ ")" ) 
   BaseValueLeaf bv -> base_value_type_inference_g bv
   ) :: ApplicationTree -> Stateful ( ValueType, Haskell )
-
-valid_types = ( \vt1 vt2 res_vt -> undefined
-  ) :: ValueType -> ValueType -> ValueType -> Stateful Bool
-
-infer_valid_return_type = ( \vt1 vt2 -> undefined
-  ) :: ValueType -> ValueType -> Stateful ValueType
