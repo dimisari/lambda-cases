@@ -78,8 +78,11 @@ type_map_get = ( \tn@(TN s) -> get_type_map >>= M.lookup tn .> \case
 int_bt = TypeName $ TN "Int"
   :: BaseType
 
+int_vt = AbsTypesAndResType [] int_bt
+  :: ValueType
+
 int_int_tuple_bt =
-  ParenType $ TupleType $ replicate 2 (AbsTypesAndResType [] int_bt)
+  ParenType $ TupleType int_vt int_vt []
   :: BaseType
 
 init_value_map = 

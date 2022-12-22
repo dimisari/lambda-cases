@@ -26,10 +26,14 @@ type_name_p =
   :: Parser TypeName
 
 paren_type_p =
-  char '(' *> (
-  TupleType <$> (char ' ' *> seperated2 ", " value_type_p <* char ' ') <|>
-  ParenVT <$> value_type_p
-  ) <* char ')'
+  char '(' *> (tuple_type_p <|> ParenVT <$> value_type_p) <* char ')'
+  :: Parser ParenType
+
+tuple_type_p =
+  char ' ' >> value_type_p >>= \vt1 ->
+  string ", " >> value_type_p >>= \vt2 ->
+  sepBy value_type_p (string ", ") >>= \vts ->
+  char ' ' >> return (TupleType vt1 vt2 vts)
   :: Parser ParenType
 
 base_type_p =

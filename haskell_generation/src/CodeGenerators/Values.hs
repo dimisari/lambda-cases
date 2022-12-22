@@ -63,7 +63,7 @@ base_type_tuple_values_g = ( \case
   ) :: BaseType -> [ Value ] -> Stateful Haskell
 
 paren_type_tuple_values_g = ( \case
-  TupleType vts -> value_types_tuple_values_g vts
+  TupleType vt1 vt2 vts -> value_types_tuple_values_g $ vt1 : vt2 : vts
   ParenVT vt -> value_type_tuple_values_g vt
   ) :: ParenType -> [ Value ] -> Stateful Haskell
 
@@ -92,14 +92,17 @@ correct_type_name_tuple_values_g = ( \tn vts vs ->
 parenthesis_value_type_inference_g = ( \case
   Parenthesis v ->
     value_type_inference_g v >>= \( vt, hs ) -> return ( vt, "(" ++ hs ++ ")" )
-  Tuple vs -> tuple_values_type_inference_g vs
+  Tuple vs ->
+    tuple_values_type_inference_g vs
   ) :: ParenthesisValue -> Stateful ( ValueType, Haskell )
 
 tuple_values_type_inference_g = ( \vs ->
-  mapM value_type_inference_g vs >>= unzip .> \( vts, vs_g ) ->
-  return
-  ( AbsTypesAndResType [] $ ParenType $ TupleType vts
-  , "( " ++ intercalate ", " vs_g ++ " )" )
+  mapM value_type_inference_g vs >>= unzip .> \( vts, vs_g ) -> case vts of
+    vt1 : vt2 : vts ->
+      return
+      ( AbsTypesAndResType [] $ ParenType $ TupleType vt1 vt2 vts
+      , "( " ++ intercalate ", " vs_g ++ " )" )
+    _ -> undefined
   ) :: [ Value ] -> Stateful ( ValueType, Haskell )
 
 -- BaseValue: base_value_g, base_value_type_inference_g

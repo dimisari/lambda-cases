@@ -23,7 +23,7 @@ import HaskellTypes.Generation
 
 -- ParenType
 paren_type_g = ( \case
-  TupleType vts -> paren_comma_sep_g value_type_g vts
+  TupleType vt1 vt2 vts -> paren_comma_sep_g value_type_g $ vt1 : vt2 : vts
   ParenVT vt -> case vt of
     (AbsTypesAndResType [] bt) -> base_type_g bt
     _ -> "(" ++ value_type_g vt ++ ")"

@@ -49,6 +49,47 @@ type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of
   True -> return $ show vn
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
 
+vts_are_equivalent = (
+  \vt1@(AbsTypesAndResType abs_ts1 bt1) vt2@(AbsTypesAndResType abs_ts2 bt2) ->
+  case ( abs_ts1, bt1 ) of
+    ( [], ParenType (ParenVT vt1_) ) -> vts_are_equivalent vt1_ vt2
+    _ -> case ( abs_ts2, bt2 ) of
+      ( [], ParenType (ParenVT vt2_) ) -> vts_are_equivalent vt1 vt2_
+      _ -> case ( abs_ts1, abs_ts2 ) of
+        ([], []) -> bts_are_equivalent bt1 bt2 
+        (_, []) -> return False
+        ([], _) -> return False
+        (abs_t1 : rest1, abs_t2 : rest2) ->
+          bts_are_equivalent abs_t1 abs_t2 >>= \bts_equiv ->
+          vts_are_equivalent
+            (AbsTypesAndResType rest1 bt1) (AbsTypesAndResType rest2 bt2)
+            >>= \vts_equiv ->
+          return $ bts_equiv && vts_equiv
+  ) :: ValueType -> ValueType -> Stateful Bool
+
+bts_are_equivalent = ( \bt1 bt2 -> case ( bt1, bt2 ) of
+  ( TypeName tn1, TypeName tn2 ) -> tns_are_equivalent tn1 tn2
+  ( TypeName tn, ParenType pt ) -> tn_pt_are_equivalent tn pt
+  ( ParenType pt, TypeName tn ) -> tn_pt_are_equivalent tn pt
+  ( ParenType pt1, ParenType pt2 ) -> pts_are_equivalent pt1 pt2
+  ) :: BaseType -> BaseType -> Stateful Bool
+
+tns_are_equivalent = ( \tn1 tn2 -> case tn1 == tn2 of 
+  True -> return True
+  False -> tn_to_pt tn1 >>= tn_pt_are_equivalent tn2
+  ) :: TypeName -> TypeName -> Stateful Bool
+
+tn_pt_are_equivalent = ( \tn pt -> tn_to_pt tn >>= pts_are_equivalent pt
+  ) :: TypeName -> ParenType -> Stateful Bool
+
+pts_are_equivalent = ( \pt1 pt2 -> case pt1 == pt2 of 
+  True -> return True
+  False -> undefined
+  ) :: ParenType -> ParenType -> Stateful Bool
+
+tn_to_pt = undefined
+  :: TypeName -> Stateful ParenType
+
 literal_or_value_name_type_inference_g = ( \case
   Literal l -> return $ literal_type_inference_g l
   ValueName vn -> value_map_get vn >>= \vt -> return ( vt, show vn )
@@ -65,7 +106,7 @@ tuple_matching_g = ( \case
 
 paren_tuple_matching_g = ( \case
   ParenVT vt -> value_type_tuple_matching_g vt
-  TupleType vts -> value_types_tuple_matching_g vts 
+  TupleType vt1 vt2 vts -> value_types_tuple_matching_g $ vt1 : vt2 : vts 
   ) :: ParenType -> TupleMatching -> Stateful Haskell
 
 value_type_tuple_matching_g = ( \case
