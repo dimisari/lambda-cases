@@ -68,6 +68,10 @@ vts_are_equivalent = (
   ) :: ValueType -> ValueType -> Stateful Bool
 
 bts_are_equivalent = ( \bt1 bt2 -> case ( bt1, bt2 ) of
+  ( ParenType (ParenVT (AbsTypesAndResType [] bt1_)), _ ) ->
+    bts_are_equivalent bt1_ bt2
+  ( _, ParenType (ParenVT (AbsTypesAndResType [] bt2_)) ) ->
+    bts_are_equivalent bt1 bt2_
   ( TypeName tn1, TypeName tn2 ) -> tns_are_equivalent tn1 tn2
   ( TypeName tn, ParenType pt ) -> tn_pt_are_equivalent tn pt
   ( ParenType pt, TypeName tn ) -> tn_pt_are_equivalent tn pt
