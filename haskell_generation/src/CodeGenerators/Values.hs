@@ -85,8 +85,8 @@ correct_type_name_tuple_values_g = ( \tn vts vs ->
   get_indent_level >>= \il ->
   zipWith value_g vts vs==>sequence >>= \vs_g -> 
   return $
-  show tn ++ "C" ++
-  concatMap (\v_g -> "\n" ++ indent (il + 1) ++ "(" ++ v_g ++ ")") vs_g
+  "(" ++ show tn ++ "C" ++
+  concatMap (\v_g -> "\n" ++ indent (il + 1) ++ "(" ++ v_g ++ ")") vs_g ++ ")"
   ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
 
 parenthesis_value_type_inference_g = ( \case
@@ -123,13 +123,12 @@ one_arg_applications_g = ( \vt ->
   ) :: ValueType -> OneArgApplications -> Stateful Haskell
 
 application_tree_g = ( \vt@(AbsTypesAndResType abs_ts res_t) -> \case 
-  Application at1 at2 -> 
-    application_tree_type_inference_g at2 >>=
-      \( vt2, hs2 ) ->
-    application_tree_g (AbsTypesAndResType (vt_to_bt vt2 : abs_ts) res_t) at1 >>=
-      \hs1 ->
-    return $ "(" ++ hs1 ++ " " ++ hs2 ++ ")"
   BaseValueLeaf bv -> base_value_g vt bv
+  at ->
+    application_tree_type_inference_g at >>= \( at_vt, at_hs ) ->
+    vts_are_equivalent vt at_vt >>= \case 
+      True -> return at_hs
+      False -> undefined
   ) :: ValueType -> ApplicationTree -> Stateful Haskell
 
 application_tree_type_inference_g = ( \case 

@@ -17,11 +17,13 @@ to_sorted_asbolute_values = \x y ->
   abs_y = (abs y)
 
   in
-  SortedAbsoluteValuesC
+  (SortedAbsoluteValuesC
     (max (abs_x) (abs_y))
-    (min (abs_x) (abs_y))
+    (min (abs_x) (abs_y)))
 
 gcd_help :: SortedAbsoluteValues -> Int
 gcd_help = \(SortedAbsoluteValuesC max_abs min_abs) -> ((\case
   True -> max_abs
-  False -> (gcd_help ( min_abs, ((mod max_abs) min_abs) ))) (min_abs == 0))
+  False -> (gcd_help (SortedAbsoluteValuesC
+    (min_abs)
+    (((mod max_abs) min_abs))))) (min_abs == 0))

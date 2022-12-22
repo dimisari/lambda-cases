@@ -49,9 +49,12 @@ literal_or_value_name_g = ( \vt -> \case
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
 
 type_check_value_name_g = ( \vt lookup_vt vn ->
-   vts_are_equivalent vt lookup_vt >>= \case
+  vts_are_equivalent vt lookup_vt >>= \case
     False -> error $ type_check_err vn lookup_vt vt 
-    True -> return $ show vn
+    True -> case vn of
+      VN "true" -> return "True"
+      VN "false" -> return "False"
+      _ -> return $ show vn
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
 
 vts_are_equivalent = (
@@ -114,7 +117,14 @@ tn_to_pt = ( type_map_get >=> \case
 
 literal_or_value_name_type_inference_g = ( \case
   Literal l -> literal_type_inference_g l
-  ValueName vn -> value_map_get vn >>= \vt -> return ( vt, show vn )
+  ValueName vn -> value_map_get vn >>= \vt ->
+    let
+    hs = case vn of
+      VN "true" -> "True"
+      VN "false" -> "False"
+      _ -> show vn
+    in
+    return ( vt, hs )
   ) :: LiteralOrValueName -> Stateful ( ValueType, Haskell )
 
 -- TupleMatching:
