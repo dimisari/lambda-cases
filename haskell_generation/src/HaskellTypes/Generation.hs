@@ -85,6 +85,9 @@ int_int_tuple_bt =
   ParenType $ TupleType int_vt int_vt []
   :: BaseType
 
+bool_bt = TypeName $ TN "Bool"
+  :: BaseType
+
 init_value_map = 
   M.fromList
     [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
@@ -93,6 +96,7 @@ init_value_map =
     , ( VN "abs" , AbsTypesAndResType [ int_bt ] int_bt)
     , ( VN "max" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
     , ( VN "min" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
+    , ( VN "true" , AbsTypesAndResType [ ] bool_bt)
     ]
   :: ValueMap
 

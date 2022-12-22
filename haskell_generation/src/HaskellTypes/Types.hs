@@ -10,7 +10,7 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName )
 
--- All: Types, Show instances, Eq instances, helpers
+-- All: Types, Show instances, helpers
 
 -- Types:
 -- TypeName, ParenType, BaseType, ValueType, FieldAndType, TupleTypeDef
@@ -90,33 +90,6 @@ instance Show TypeDef where
   show = \case
     TupleTypeDef ttd -> show ttd
     OrTypeDef otd -> show otd
-
--- Eq instances:
-instance Eq ValueType where
-  vt1 == vt2 = case ( vt1, vt2 ) of
-    ( AbsTypesAndResType [] (ParenType (ParenVT vt1)), _) -> vt1 == vt2
-    ( _, AbsTypesAndResType [] (ParenType (ParenVT vt2)) ) -> vt1 == vt2
-    ( AbsTypesAndResType abs_ts1 bt1, AbsTypesAndResType abs_ts2 bt2 ) ->
-      abs_ts1 == abs_ts2 && bt1 == bt2
-
-instance Eq BaseType where
-  bt1 == bt2 = case ( bt1, bt2 ) of 
-    ( ParenType (ParenVT (AbsTypesAndResType [] bt1)), bt2 ) -> bt1 == bt2
-    ( bt1, ParenType (ParenVT (AbsTypesAndResType [] bt2)) ) -> bt1 == bt2
-    ( ParenType pt1, ParenType pt2 ) -> pt1 == pt2
-    ( TypeName tn1, TypeName tn2 ) -> tn1 == tn2
-    ( ParenType pt, TypeName tn ) -> False
-    ( TypeName tn, ParenType pt ) -> False
-
-instance Eq ParenType where
-  pt1 == pt2 = case ( pt1, pt2 ) of 
-    ( ParenVT (AbsTypesAndResType [] (ParenType pt1)), pt2 ) -> pt1 == pt2
-    ( pt1, ParenVT (AbsTypesAndResType [] (ParenType pt2)) ) -> pt1 == pt2
-    ( ParenVT vt1, ParenVT vt2 ) -> vt1 == vt2
-    ( TupleType vt1 vt2 vts, TupleType vt1_ vt2_ vts_ ) ->
-      vt1 == vt1_ && vt2 == vt2_ && vts == vts_
-    ( ParenVT _, TupleType _ _ _ ) -> False
-    ( TupleType _ _ _, ParenVT _ ) -> False
 
 -- helpers: vt_to_bt, bt_to_vt
 vt_to_bt = \case 

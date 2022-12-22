@@ -1,7 +1,4 @@
 
-or_type Bool
-values true | false
-
 tuple_type SortedAbsoluteValues
 value ( max_abs: Int, min_abs: Int )
 

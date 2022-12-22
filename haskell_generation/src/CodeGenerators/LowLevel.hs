@@ -29,27 +29,29 @@ import CodeGenerators.ErrorMessages
 -- Literal, LiteralOrValueName, TupleMatching, abstraction_g, Abstractions
 
 -- Literal: literal_g, literal_type_inference_g
-literal_g = ( \vt l -> case (vt == AbsTypesAndResType [] (TypeName (TN "Int"))) of
-  True -> show l
-  False -> error $ literal_not_int_err vt
-  ) :: ValueType -> Literal -> Haskell
+literal_g = ( \vt l -> 
+  vts_are_equivalent vt (AbsTypesAndResType [] (TypeName (TN "Int"))) >>= \case
+    True -> return $ show l
+    False -> error $ literal_not_int_err vt
+  ) :: ValueType -> Literal -> Stateful Haskell
 
 literal_type_inference_g = ( \l -> 
-  (AbsTypesAndResType [] (TypeName (TN "Int")), show l)
-  ) :: Literal -> ( ValueType, Haskell )
+  return (AbsTypesAndResType [] (TypeName (TN "Int")), show l)
+  ) :: Literal -> Stateful ( ValueType, Haskell )
 
 -- LiteralOrValueName:
 -- literal_or_value_name_g, type_check_value_name_g,
 -- literal_or_value_name_type_inference_g
 literal_or_value_name_g = ( \vt -> \case
-  Literal l -> return $ literal_g vt l
+  Literal l -> literal_g vt l
   ValueName vn ->
     value_map_get vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
 
-type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of 
-  False -> error $ type_check_err vn lookup_vt vt 
-  True -> return $ show vn
+type_check_value_name_g = ( \vt lookup_vt vn ->
+   vts_are_equivalent vt lookup_vt >>= \case
+    False -> error $ type_check_err vn lookup_vt vt 
+    True -> return $ show vn
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
 
 vts_are_equivalent = (
@@ -111,7 +113,7 @@ tn_to_pt = ( type_map_get >=> \case
   ) :: TypeName -> Stateful ParenType
 
 literal_or_value_name_type_inference_g = ( \case
-  Literal l -> return $ literal_type_inference_g l
+  Literal l -> literal_type_inference_g l
   ValueName vn -> value_map_get vn >>= \vt -> return ( vt, show vn )
   ) :: LiteralOrValueName -> Stateful ( ValueType, Haskell )
 

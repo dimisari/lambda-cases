@@ -13,7 +13,6 @@ src/CodeGenerators/ErrorMessages.hs
 src/CodeGenerators/LowLevel.hs
 src/CodeGenerators/Types.hs
 src/CodeGenerators/Values.hs
-src/CodeGenerators/AfterParsing.hs
 
 src/Helpers.hs
 src/Main.hs

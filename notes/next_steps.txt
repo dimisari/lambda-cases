@@ -1,11 +1,8 @@
-type_inference:
-- fix type equality/equivalence:
-  - tuple_type name = tuple with same types
-
 type abstractions:
 - ==>, <==, *==>, paren at the end (mathematical notation)
 
 fix:
+- generate constructors for tuple_type tuple values 
 - cases/use_fields at the end of one argument applications:
   optionMaybe!
 - stack of types in value map for multiple-level definitions

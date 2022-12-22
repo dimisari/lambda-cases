@@ -28,7 +28,7 @@ import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel
   ( literal_g, literal_type_inference_g
   , literal_or_value_name_g, literal_or_value_name_type_inference_g
-  , abstractions_g )
+  , abstractions_g, vts_are_equivalent )
 import CodeGenerators.Types
   ( value_type_g )
 
@@ -214,7 +214,7 @@ many_args_application_g = ( \vt (MAA maavs vn) -> value_map_get vn >>=
   ( bts1, bts2 ) = splitAt (length maavs) abs_bts
     :: ( [ BaseType ], [ BaseType ] )
   in
-  case vt == AbsTypesAndResType bts2 res_bt of 
+  vts_are_equivalent vt (AbsTypesAndResType bts2 res_bt) >>= \case
     False -> error $
       many_args_types_dont_match_err vt (AbsTypesAndResType bts2 res_bt)
     True -> bts_maavs_vn_g bts1 maavs vn
@@ -258,29 +258,38 @@ insert_to_value_map_ret_vn = ( \(FT vn vt) -> value_map_insert vn vt >> return v
   :: FieldAndType -> Stateful ValueName
 
 -- SpecificCase: specific_case_g, specific_case_type_inference_g
-specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
-  case bts of 
+specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) -> case bts of 
   [] -> error $ specific_case_not_abstraction_err vt sc
   b:bs -> case lovn of 
-    Literal l -> literal_g (AbsTypesAndResType [] b) l==>add_value_g 
-    ValueName vn -> value_map_insert vn (bt_to_vt b) >> add_value_g (show vn)
+    Literal l -> literal_g bt_vt l >>= add_value_g 
+    ValueName vn -> value_map_insert vn bt_vt >> add_value_g (show vn)
     where
+    bt_vt = bt_to_vt b
+      :: ValueType
     add_value_g = ( \g ->
       value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
       get_indent_level >>= \i ->
-      return $ indent i ++ g ++ " ->" ++ v_g
+      return $ indent i ++ abs_g g ++ " -> " ++ v_g
       ) :: Haskell -> Stateful Haskell
+    abs_g = \case 
+      "true" -> "True"
+      "false" -> "False"
+      g -> "C" ++ g
+      :: Haskell -> Haskell
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 
 specific_case_type_inference_g = ( \sc@(SC lovn v) ->
   literal_or_value_name_type_inference_g lovn >>= \( lovn_vt, lovn_g ) ->
   value_type_inference_g v >>= \( AbsTypesAndResType abs res, v_g ) ->
+  get_indent_level >>= \i ->
   let
   lovn_bt = case lovn_vt of 
     AbsTypesAndResType [] bt -> bt
     _ -> ParenType $ ParenVT $ lovn_vt
   in
-  return ( AbsTypesAndResType (lovn_bt : abs) res, undefined )
+  return
+  ( AbsTypesAndResType (lovn_bt : abs) res
+  , indent i ++ lovn_g ++ " -> " ++ v_g )
   ) :: SpecificCase -> Stateful ( ValueType, Haskell )
 
 -- Cases: cases_g, 
