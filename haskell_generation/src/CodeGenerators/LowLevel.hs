@@ -4,6 +4,8 @@ module CodeGenerators.LowLevel where
 
 import qualified Data.Map as M
   ( lookup )
+import Control.Monad
+  ( (>=>) )
 
 import Helpers
   ( Haskell, (==>), (.>), paren_comma_sep_g )
@@ -12,9 +14,10 @@ import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
   , Abstraction(..) )
 import HaskellTypes.Types
-  ( ParenType(..), BaseType(..), ValueType(..), TypeName(..) )
+  ( ParenType(..), BaseType(..), ValueType(..), TypeName(..), FieldsOrCases(..)
+  , FieldAndType(..) )
 import HaskellTypes.Generation
-  ( Stateful, value_map_get, value_map_insert )
+  ( Stateful, value_map_get, value_map_insert, type_map_get )
 
 import CodeGenerators.ErrorMessages
   ( literal_not_int_err, type_check_err, tuple_matching_err
@@ -51,20 +54,19 @@ type_check_value_name_g = ( \vt lookup_vt vn -> case vt == lookup_vt of
 
 vts_are_equivalent = (
   \vt1@(AbsTypesAndResType abs_ts1 bt1) vt2@(AbsTypesAndResType abs_ts2 bt2) ->
-  case ( abs_ts1, bt1 ) of
-    ( [], ParenType (ParenVT vt1_) ) -> vts_are_equivalent vt1_ vt2
-    _ -> case ( abs_ts2, bt2 ) of
-      ( [], ParenType (ParenVT vt2_) ) -> vts_are_equivalent vt1 vt2_
-      _ -> case ( abs_ts1, abs_ts2 ) of
-        ([], []) -> bts_are_equivalent bt1 bt2 
-        (_, []) -> return False
-        ([], _) -> return False
-        (abs_t1 : rest1, abs_t2 : rest2) ->
-          bts_are_equivalent abs_t1 abs_t2 >>= \bts_equiv ->
-          vts_are_equivalent
-            (AbsTypesAndResType rest1 bt1) (AbsTypesAndResType rest2 bt2)
-            >>= \vts_equiv ->
-          return $ bts_equiv && vts_equiv
+  case ( abs_ts1, bt1, abs_ts2, bt2 ) of
+    ( [], ParenType (ParenVT vt1_), _, _ ) -> vts_are_equivalent vt1_ vt2
+    ( _, _, [], ParenType (ParenVT vt2_) ) -> vts_are_equivalent vt1 vt2_
+    _ -> case ( abs_ts1, abs_ts2 ) of
+      ([], []) -> bts_are_equivalent bt1 bt2 
+      (_, []) -> return False
+      ([], _) -> return False
+      (abs_t1 : rest1, abs_t2 : rest2) ->
+        bts_are_equivalent abs_t1 abs_t2 >>= \bts_equiv ->
+        vts_are_equivalent
+          (AbsTypesAndResType rest1 bt1) (AbsTypesAndResType rest2 bt2)
+          >>= \vts_equiv ->
+        return $ bts_equiv && vts_equiv
   ) :: ValueType -> ValueType -> Stateful Bool
 
 bts_are_equivalent = ( \bt1 bt2 -> case ( bt1, bt2 ) of
@@ -86,13 +88,27 @@ tns_are_equivalent = ( \tn1 tn2 -> case tn1 == tn2 of
 tn_pt_are_equivalent = ( \tn pt -> tn_to_pt tn >>= pts_are_equivalent pt
   ) :: TypeName -> ParenType -> Stateful Bool
 
-pts_are_equivalent = ( \pt1 pt2 -> case pt1 == pt2 of 
-  True -> return True
-  False -> undefined
+pts_are_equivalent = ( \pt1 pt2 -> case ( pt1, pt2 ) of 
+  ( ParenVT (AbsTypesAndResType [] (ParenType pt1_)), _ ) ->
+    pts_are_equivalent pt1_ pt2
+  ( _, ParenVT (AbsTypesAndResType [] (ParenType pt2_)) ) ->
+    pts_are_equivalent pt1 pt2_
+  ( TupleType vt1 vt2 rest, TupleType vt1_ vt2_ rest_ ) ->
+    zipWith vts_are_equivalent (vt1:vt2:rest) (vt1_:vt2_:rest_)
+      ==> sequence ==> fmap and
+  ( TupleType _ _ _, ParenVT _ ) -> return False
+  ( ParenVT _, TupleType _ _ _ ) -> return False
+  ( ParenVT vt1, ParenVT vt2 ) -> vts_are_equivalent vt1 vt2
   ) :: ParenType -> ParenType -> Stateful Bool
 
-tn_to_pt = undefined
-  :: TypeName -> Stateful ParenType
+tn_to_pt = ( type_map_get >=> \case
+  FieldAndTypeList fatl -> case fatl of
+    [] -> undefined
+    [ fat ] -> return $ ParenVT $ get_ft fat
+    fat1 : fat2 : rest ->
+      return $ TupleType (get_ft fat1) (get_ft fat2) (map get_ft rest)
+  CaseAndMaybeTypeList _ -> undefined
+  ) :: TypeName -> Stateful ParenType
 
 literal_or_value_name_type_inference_g = ( \case
   Literal l -> return $ literal_type_inference_g l
