@@ -18,13 +18,14 @@ import Parsers.LowLevel
   ( value_name_p )
 
 -- All:
--- type_name_p, paren_type_p, base_type_p, ValueType, field_and_type_p,
+-- type_name_p, ParenType, base_type_p, ValueType, field_and_type_p,
 -- tuple_type_def_p, case_and_maybe_type_p, or_type_def_p, type_def_p
 
 type_name_p =
   upper >>= \u -> many (lower <|> upper) >>= \lu -> return $ TN (u:lu)
   :: Parser TypeName
 
+-- ParenType: paren_type_p, tuple_type_p
 paren_type_p =
   char '(' *> (tuple_type_p <|> ParenVT <$> value_type_p) <* char ')'
   :: Parser ParenType
@@ -35,19 +36,20 @@ tuple_type_p =
   many (string ", " >> value_type_p) >>= \vts ->
   char ' ' >> return (TupleType vt1 vt2 vts)
   :: Parser ParenType
+-- ParenType end
 
 base_type_p =
   ParenType <$> paren_type_p <|> TypeName <$> type_name_p 
   :: Parser BaseType
 
--- ValueType: value_type_p, many_ab_arrows_value_type_p, one_ab_arrow_value_type_p
+-- ValueType: value_type_p, many_abstractions_arrow_p, one_abstraction_arrow_p
 value_type_p =
-  try many_ab_arrows_value_type_p <|> one_ab_arrow_value_type_p
+  try many_abstractions_arrow_p <|> one_abstraction_arrow_p
   :: Parser ValueType
 
-many_ab_arrows_value_type_p =
-  seperated2 ", " one_ab_arrow_value_type_p >>= \vt1s ->
-  string " *-> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
+many_abstractions_arrow_p =
+  seperated2 ", " one_abstraction_arrow_p >>= \vt1s ->
+  string " *-> " >> one_abstraction_arrow_p >>= \(AbsTypesAndResType bts bt) ->
   let
   vt_to_bt = \case
     AbsTypesAndResType [] bt -> bt
@@ -57,7 +59,7 @@ many_ab_arrows_value_type_p =
   return $ AbsTypesAndResType (map vt_to_bt vt1s ++ bts) bt
   :: Parser ValueType
 
-one_ab_arrow_value_type_p =
+one_abstraction_arrow_p =
   many (try $ base_type_p <* string " -> ") >>= \bts -> base_type_p >>= \bt ->
   return $ AbsTypesAndResType bts bt
   :: Parser ValueType

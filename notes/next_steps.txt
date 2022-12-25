@@ -9,6 +9,8 @@ scope:
 - remove head when leaving scope
 
 fix:
+- make tuple lambda operator value
+- many abstractions in tuple
 - cases/use_fields at the end of one argument applications:
   optionMaybe or change the last type??
 - let-output -> where:

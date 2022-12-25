@@ -26,7 +26,7 @@ import Parsers.Types
 -- ParenthesisValue, base_value_p, OneArgApplications,
 -- multiplication_factor_p, multiplication_p, subtraction_factor_p, subtraction_p,
 -- equality_factor_p, equality_p
--- operator_value_p, OperatorLambdaValue, many_args_application_p,
+-- operator_value_p, LambdaOperatorValue, many_args_application_p,
 -- use_fields_p, specific_case_p, cases_p,
 -- name_type_and_value_p, name_type_and_value_lists_p,
 -- ntav_or_ntav_lists_p, names_types_and_values_p, where_p,
@@ -92,17 +92,17 @@ operator_value_p =
   Equality <$> try equality_p <|> EquF <$> equality_factor_p
   :: Parser OperatorValue
 
--- OperatorLambdaValue:
--- many_args_arg_value_p, one_ab_arrow_maav_p, many_ab_arrow_maav_p
-many_args_arg_value_p =
+-- LambdaOperatorValue:
+-- lambda_operator_value_p, one_ab_arrow_maav_p, many_ab_arrow_maav_p
+lambda_operator_value_p =
   try many_ab_arrow_maav_p <|> one_ab_arrow_maav_p
-  :: Parser OperatorLambdaValue
+  :: Parser LambdaOperatorValue
 
 many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_ab_arrow_maav_p >>=
-    \(OLV as2 nav1) -> return $ OLV (as1 ++ as2) nav1
-  :: Parser OperatorLambdaValue
+    \(LOV as2 nav1) -> return $ LOV (as1 ++ as2) nav1
+  :: Parser LambdaOperatorValue
 
 abstractions_p =
   many (try $ abstraction_p <* string " -> ")
@@ -110,12 +110,12 @@ abstractions_p =
 
 one_ab_arrow_maav_p =
   abstractions_p >>= \as -> operator_value_p >>= \nae1 ->
-  return $ OLV as nae1
-  :: Parser OperatorLambdaValue
--- OperatorLambdaValue end
+  return $ LOV as nae1
+  :: Parser LambdaOperatorValue
+-- LambdaOperatorValue end
 
 many_args_application_p =
-  seperated2 ", " many_args_arg_value_p >>= \maavs ->
+  seperated2 ", " lambda_operator_value_p >>= \maavs ->
   space_or_newline >> string "*==> " >> value_name_p >>= \vn ->
   return $ MAA maavs vn
   :: Parser ManyArgsApplication

@@ -18,7 +18,7 @@ import HaskellTypes.Types
 -- ParenthesisValue, BaseValue, ApplicationDirection, OneArgApplications,
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorValue, OperatorLambdaValue, ManyArgsApplication
+-- OperatorValue, LambdaOperatorValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, OutputValue, LambdaValue
@@ -58,11 +58,11 @@ data Equality =
 data OperatorValue =
   Equality Equality | EquF EqualityFactor
 
-data OperatorLambdaValue =
-  OLV [ Abstraction ] OperatorValue
+data LambdaOperatorValue =
+  LOV [ Abstraction ] OperatorValue
 
 data ManyArgsApplication =
-  MAA [ OperatorLambdaValue ] ValueName
+  MAA [ LambdaOperatorValue ] ValueName
 
 newtype UseFields =
   UF LambdaValue
@@ -99,7 +99,7 @@ data LambdaValue =
 -- ParenthesisValue, BaseValue, ApplicationDirection, OneArgApplications,
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorValue, OperatorLambdaValue, ManyArgsApplication
+-- OperatorValue, LambdaOperatorValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, OutputValue, LambdaValue
@@ -158,8 +158,8 @@ instance Show OperatorValue where
     Equality equ -> show equ
     EquF f -> show f
 
-instance Show OperatorLambdaValue where
-  show = \(OLV as nav1) -> show as ++ show nav1
+instance Show LambdaOperatorValue where
+  show = \(LOV as nav1) -> show as ++ show nav1
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->

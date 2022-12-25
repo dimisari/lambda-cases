@@ -198,7 +198,7 @@ operator_value_type_inference_g = ( \case
   ) :: OperatorValue -> Stateful ( ValueType, Haskell )
 -- OperatorValue end
 
-many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (OLV as opval) ->
+many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (LOV as opval) ->
   case length as > length bts of 
   True -> error $ too_many_abstractions_err as bts
   False -> 
@@ -208,7 +208,7 @@ many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (OLV as opval) ->
     where
     ( bts1, bts2 ) = splitAt (length as) bts
       :: ( [ BaseType ], [ BaseType ] )
-  ) :: ValueType -> OperatorLambdaValue -> Stateful Haskell
+  ) :: ValueType -> LambdaOperatorValue -> Stateful Haskell
 
 -- ManyArgsApplication: many_args_application_g, bts_maavs_vn_g, bt_maav_g
 many_args_application_g = ( \vt (MAA maavs vn) -> value_map_get vn >>=
@@ -226,7 +226,7 @@ many_args_application_g = ( \vt (MAA maavs vn) -> value_map_get vn >>=
 bts_maavs_vn_g = ( \bts maavs vn ->
   zipWith bt_maav_g bts maavs==>sequence >>= \maavs_g ->
   return $ show vn ++ concatMap (" " ++) maavs_g
-  ) :: [ BaseType ] -> [ OperatorLambdaValue ] -> ValueName -> Stateful Haskell
+  ) :: [ BaseType ] -> [ LambdaOperatorValue ] -> ValueName -> Stateful Haskell
 
 bt_maav_g = ( \bt maav ->
   let
@@ -236,7 +236,7 @@ bt_maav_g = ( \bt maav ->
     :: ValueType
   in
   many_args_arg_value_g maav_vt maav >>= \maav_g -> return $ "(" ++ maav_g ++ ")"
-  ) :: BaseType -> OperatorLambdaValue -> Stateful Haskell
+  ) :: BaseType -> LambdaOperatorValue -> Stateful Haskell
 
 -- UseFields: use_fields_g, correct_use_fields_g, insert_to_value_map_ret_vn
 use_fields_g = ( \vt@(AbsTypesAndResType bts bt) (UF v) -> case bts of 
