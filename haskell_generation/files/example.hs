@@ -20,7 +20,7 @@ ee_recursion = \a_coeffs b_coeffs x -> \case
     let
     
     next :: PreviousCoeffs -> PreviousCoeffs
-    next = \(PreviousCoeffsC previous_previous previous) -> (PreviousCoeffsC
+    next = \value@(PreviousCoeffsC previous_previous previous) -> (PreviousCoeffsC
       (previous)
       (previous_previous - div x y * previous))
 

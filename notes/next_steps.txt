@@ -1,29 +1,27 @@
+math function application:
+- parser for already existing type
+
 type abstractions:
 - ==>, <==, *==>, paren at the end (mathematical notation)
 
-regular parenthesis function application:
-- parser for already existing type?
+scope:
+- stack of types in value map for multiple-level definitions
+- remove head when leaving scope
 
 fix:
 - cases/use_fields at the end of one argument applications:
-  optionMaybe!
-- stack of types in value map for multiple-level definitions
-- let-output -> where 
-  - problem with values in and outside of function:
-    add intentation levels in parsing
+  optionMaybe or change the last type??
+- let-output -> where:
+  - problem with values in and outside of function
+  - add intentation levels in parsing
 
 cases:
-- "value" default name for tuple_type value of each case:
-  - use "value@"
+- "value" default name for tuple_type value of each case: use "value@"
 - add "..." case functionality:
   - create new type LOVNOrDefault
   - LOVN LiterOrValueName | Default
   - parse "..." to Default:
     optionMaybe?
-
-use_fields:
-- "value" default name for the whole tuple_type value
-  use "value@"
 
 literals:
 - reals + strings
