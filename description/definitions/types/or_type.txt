@@ -15,7 +15,7 @@ Comments:
         case2 -> the_value.value
         ... -> nothing
 
-- base_types or tuple_types are used in a case and there is field inheritance.
+- if tuple_types are used in a case and there is field inheritance.
   Example:
   fun: (A, B *==> TypeName) -> A==>OrNothing
     = cases

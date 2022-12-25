@@ -1,16 +1,22 @@
 
-tuple_type SortedAbsoluteValues
-value ( max_abs: Int, min_abs: Int )
+tuple_type PreviousCoeffs
+value ( previous_previous: Int, previous: Int )
 
-to_sorted_asbolute_values: Int, Int *-> SortedAbsoluteValues
-  = x, y *-> 
-    let
-    abs_x, abs_y: all Int
-      = x==>abs, y==>abs
-    output
-    ( abs_x, abs_y *==> max, abs_x, abs_y *==> min )
+tuple_type GcdAndCoeffs
+value ( gcd: Int, a: Int, b: Int )
 
-gcd_help: SortedAbsoluteValues -> Int
-  = use_fields -> (min_abs = 0)==>(cases
-    true -> max_abs
-    false -> ( min_abs, max_abs==>mod<==min_abs )==>gcd_help)
+ee_recursion: PreviousCoeffs, PreviousCoeffs, Int, Int *-> GcdAndCoeffs
+  = a_coeffs, b_coeffs, x *-> cases
+    0 -> ( x, a_coeffs==>get_previous_previous, b_coeffs==>get_previous_previous )
+    y -> 
+      let
+      next: PreviousCoeffs -> PreviousCoeffs
+        = use_fields -> ( previous, previous_previous - x==>div<==y * previous )
+      output
+      a_coeffs==>next, b_coeffs==>next, y, x==>mod<==y *==> ee_recursion
+
+initial_a_coeffs, initial_b_coeffs: all PreviousCoeffs
+  = ( 1, 0 ), ( 0, 1 )
+
+extended_euclidean: Int, Int *-> GcdAndCoeffs
+  = initial_a_coeffs, initial_b_coeffs *==> ee_recursion

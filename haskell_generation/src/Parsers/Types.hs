@@ -32,7 +32,7 @@ paren_type_p =
 tuple_type_p =
   char ' ' >> value_type_p >>= \vt1 ->
   string ", " >> value_type_p >>= \vt2 ->
-  sepBy value_type_p (string ", ") >>= \vts ->
+  many (string ", " >> value_type_p) >>= \vts ->
   char ' ' >> return (TupleType vt1 vt2 vts)
   :: Parser ParenType
 

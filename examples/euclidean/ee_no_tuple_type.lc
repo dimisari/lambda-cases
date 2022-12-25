@@ -11,4 +11,3 @@ ee_recursion: ( Int, Int ), ( Int, Int ), Int, Int *-> ( Int, Int, Int )
         = ( prev_prev, prev ) -> ( prev, prev_prev - x==>div<==y * prev )
       output
       next<==a_coeffs, next<==b_coeffs, y, x==>mod<==y *==> ee_recursion
-

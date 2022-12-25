@@ -19,7 +19,7 @@ import HaskellTypes.Types
   , FieldsOrCases(..), bt_to_vt, vt_to_bt )
 import HaskellTypes.Values
 import HaskellTypes.AfterParsing
-  ( ApplicationTree(..), to_application_tree )
+  ( ApplicationTree(..), to_application_tree, to_application_tree )
 import HaskellTypes.Generation
   ( Stateful, get_indent_level, update_indent_level, type_map_get
   , value_map_get, value_map_insert )
@@ -128,17 +128,23 @@ application_tree_g = ( \vt@(AbsTypesAndResType abs_ts res_t) -> \case
     application_tree_type_inference_g at >>= \( at_vt, at_hs ) ->
     vts_are_equivalent vt at_vt >>= \case 
       True -> return at_hs
-      False -> undefined
+      False -> error $ "\n" ++ show vt ++ "\n" ++ show at_vt ++ "\n" ++ show at
   ) :: ValueType -> ApplicationTree -> Stateful Haskell
 
 application_tree_type_inference_g = ( \case 
   Application at1 at2 -> 
     application_tree_type_inference_g at1 >>=
       \( vt1@(AbsTypesAndResType abs_ts res_t), hs1 ) -> case abs_ts of 
-    [] -> undefined
+    [] ->
+      error $ "\n" ++ show at1 ++ "\n" ++ show at2 ++ "\n" ++ show vt1 ++ "\n"
     abs_t:rest -> 
       application_tree_g (bt_to_vt abs_t) at2 >>= \hs2 ->
-      return ( AbsTypesAndResType rest res_t, "(" ++ hs1 ++ " " ++ hs2 ++ ")" ) 
+      let 
+      hs2_ = case at2 of 
+        Application _ _ -> "(" ++ hs2 ++ ")"
+        _ -> hs2
+      in
+      return ( AbsTypesAndResType rest res_t, hs1 ++ " " ++ hs2_ ) 
   BaseValueLeaf bv -> base_value_type_inference_g bv
   ) :: ApplicationTree -> Stateful ( ValueType, Haskell )
 -- OneArgApplications end
@@ -273,7 +279,7 @@ specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) -> case bts o
     abs_g = \case 
       "true" -> "True"
       "false" -> "False"
-      g -> "C" ++ g
+      g -> g
       :: Haskell -> Haskell
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 

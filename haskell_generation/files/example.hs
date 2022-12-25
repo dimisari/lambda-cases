@@ -2,28 +2,40 @@
 
 get_first = fst
 
-data SortedAbsoluteValues =
-  SortedAbsoluteValuesC { get_max_abs :: Int, get_min_abs :: Int }
+data PreviousCoeffs =
+  PreviousCoeffsC { get_previous_previous :: Int, get_previous :: Int }
   deriving Show
 
-to_sorted_asbolute_values :: Int -> Int -> SortedAbsoluteValues
-to_sorted_asbolute_values = \x y -> 
-  let
-  
-  abs_x :: Int
-  abs_x = (abs x)
+data GcdAndCoeffs =
+  GcdAndCoeffsC { get_gcd :: Int, get_a :: Int, get_b :: Int }
+  deriving Show
 
-  abs_y :: Int
-  abs_y = (abs y)
+ee_recursion :: PreviousCoeffs -> PreviousCoeffs -> Int -> Int -> GcdAndCoeffs
+ee_recursion = \a_coeffs b_coeffs x -> \case
+  0 -> (GcdAndCoeffsC
+    (x)
+    (get_previous_previous a_coeffs)
+    (get_previous_previous b_coeffs))
+  y -> 
+    let
+    
+    next :: PreviousCoeffs -> PreviousCoeffs
+    next = \(PreviousCoeffsC previous_previous previous) -> (PreviousCoeffsC
+      (previous)
+      (previous_previous - div x y * previous))
 
-  in
-  (SortedAbsoluteValuesC
-    (max (abs_x) (abs_y))
-    (min (abs_x) (abs_y)))
+    in
+    ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y)
 
-gcd_help :: SortedAbsoluteValues -> Int
-gcd_help = \(SortedAbsoluteValuesC max_abs min_abs) -> ((\case
-  True -> max_abs
-  False -> (gcd_help (SortedAbsoluteValuesC
-    (min_abs)
-    (((mod max_abs) min_abs))))) (min_abs == 0))
+initial_a_coeffs :: PreviousCoeffs
+initial_a_coeffs = (PreviousCoeffsC
+  (1)
+  (0))
+
+initial_b_coeffs :: PreviousCoeffs
+initial_b_coeffs = (PreviousCoeffsC
+  (0)
+  (1))
+
+extended_euclidean :: Int -> Int -> GcdAndCoeffs
+extended_euclidean = ee_recursion (initial_a_coeffs) (initial_b_coeffs)
