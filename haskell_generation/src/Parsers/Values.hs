@@ -1,7 +1,7 @@
 module Parsers.Values where
 
 import Text.Parsec
-  ( (<|>), try, char, many1, string )
+  ( (<|>), try, char, many, many1, string )
 import Text.Parsec.String
   ( Parser )
 import Text.Parsec.Combinator
@@ -11,12 +11,14 @@ import Helpers
   ( (==>), seperated2, new_line_space_surrounded, space_or_newline
   , eof_or_new_lines )
 
+import HaskellTypes.LowLevel
+  ( Abstraction )
 import HaskellTypes.Types
   ( ValueType )
 import HaskellTypes.Values
 
 import Parsers.LowLevel
-  ( value_name_p, literal_or_value_name_p, abstraction_p, abstractions_p )
+  ( value_name_p, literal_or_value_name_p, abstraction_p )
 import Parsers.Types
   ( value_type_p )
 
@@ -24,11 +26,11 @@ import Parsers.Types
 -- ParenthesisValue, base_value_p, OneArgApplications,
 -- multiplication_factor_p, multiplication_p, subtraction_factor_p, subtraction_p,
 -- equality_factor_p, equality_p
--- operator_value_p, ManyArgsArgValue, many_args_application_p,
+-- operator_value_p, OperatorLambdaValue, many_args_application_p,
 -- use_fields_p, specific_case_p, cases_p,
 -- name_type_and_value_p, name_type_and_value_lists_p,
 -- ntav_or_ntav_lists_p, names_types_and_values_p, where_p,
--- output_value_p, Value
+-- output_value_p, LambdaValue
 
 -- ParenthesisValue:
 -- parenthesis_value_p, tuple_internals_p, parenthesis_internals_p
@@ -90,23 +92,27 @@ operator_value_p =
   Equality <$> try equality_p <|> EquF <$> equality_factor_p
   :: Parser OperatorValue
 
--- ManyArgsArgValue:
+-- OperatorLambdaValue:
 -- many_args_arg_value_p, one_ab_arrow_maav_p, many_ab_arrow_maav_p
 many_args_arg_value_p =
   try many_ab_arrow_maav_p <|> one_ab_arrow_maav_p
-  :: Parser ManyArgsArgValue
+  :: Parser OperatorLambdaValue
 
 many_ab_arrow_maav_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_ab_arrow_maav_p >>=
-    \(MAAV as2 nav1) -> return $ MAAV (as1 ++ as2) nav1
-  :: Parser ManyArgsArgValue
+    \(OLV as2 nav1) -> return $ OLV (as1 ++ as2) nav1
+  :: Parser OperatorLambdaValue
+
+abstractions_p =
+  many (try $ abstraction_p <* string " -> ")
+  :: Parser [ Abstraction ]
 
 one_ab_arrow_maav_p =
   abstractions_p >>= \as -> operator_value_p >>= \nae1 ->
-  return $ MAAV as nae1
-  :: Parser ManyArgsArgValue
--- ManyArgsArgValue end
+  return $ OLV as nae1
+  :: Parser OperatorLambdaValue
+-- OperatorLambdaValue end
 
 many_args_application_p =
   seperated2 ", " many_args_arg_value_p >>= \maavs ->
@@ -174,18 +180,19 @@ output_value_p = choice $
   , OperatorValue <$> operator_value_p
   ] :: Parser OutputValue
 
--- Value: value_p, one_abstraction_arrow_value_p, many_abstractions_arrow_value_p
+-- LambdaValue:
+-- value_p, one_abstraction_arrow_value_p, many_abstractions_arrow_value_p
 value_p =
   try many_abstractions_arrow_value_p <|> one_abstraction_arrow_value_p
-  :: Parser Value
+  :: Parser LambdaValue
 
 one_abstraction_arrow_value_p =
   abstractions_p >>= \as -> output_value_p >>= \nae ->
-  return $ Value as nae
-  :: Parser Value
+  return $ LV as nae
+  :: Parser LambdaValue
 
 many_abstractions_arrow_value_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_abstraction_arrow_value_p >>=
-    \(Value as2 nav) -> return $ Value (as1 ++ as2) nav
-  :: Parser Value
+    \(LV as2 nav) -> return $ LV (as1 ++ as2) nav
+  :: Parser LambdaValue

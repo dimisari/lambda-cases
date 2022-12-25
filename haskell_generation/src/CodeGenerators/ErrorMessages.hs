@@ -56,7 +56,7 @@ abstractions_types_lengths_dont_match_err =
 
 tuple_fun_type_err = ( \vs vt ->
   show (Tuple vs) ++ " can't have type: " ++ show vt ++ "\n"
-  ) :: [ Value ] -> ValueType -> Error
+  ) :: [ LambdaValue ] -> ValueType -> Error
 
 values_fields_lengths_dont_match_err =
   "\nLength of tuple values and fields of the corresponding tuple_type must be " ++

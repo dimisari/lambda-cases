@@ -14,7 +14,7 @@ import HaskellTypes.LowLevel
 
 -- Types:
 -- TypeName, ParenType, BaseType, ValueType, FieldAndType, TupleTypeDef
--- CaseAndMaybeType, OrTypeDef, FieldsOrCases, TypeDef
+-- CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
 newtype TypeName =
   TN String deriving ( Eq, Ord )
 

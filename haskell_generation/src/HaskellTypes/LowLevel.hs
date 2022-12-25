@@ -10,8 +10,7 @@ import Helpers
 -- All: Types, Show instances
 
 -- Types:
--- Literal, ValueName, LiteralOrValueName, ApplicationDirection, TupleMatching
--- Abstraction, Abstractions
+-- Literal, ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
 type Literal = Integer
 
 newtype ValueName =
@@ -27,8 +26,7 @@ data Abstraction =
   ValueNameAb ValueName | TupleMatching TupleMatching
 
 -- Show instances:
--- ValueName, LiteralOrValueName, ApplicationDirection, TupleMatching
--- Abstraction, Abstractions
+-- ValueName, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
 instance Show ValueName where
   show = \(VN n) -> n
 

@@ -15,17 +15,16 @@ import HaskellTypes.Types
 -- All: Types, Show instances, error messages
 
 -- Types:
--- ParenthesisValue, BaseValue, OneArgApplications,
--- MultiplicationFactor, Multiplication
--- SubtractionFactor, Subtraction
+-- ParenthesisValue, BaseValue, ApplicationDirection, OneArgApplications,
+-- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorValue, ManyArgsArgValue, ManyArgsApplication
+-- OperatorValue, OperatorLambdaValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, OutputValue, Value
+-- Where, OutputValue, LambdaValue
 
 data ParenthesisValue =
-  Parenthesis Value | Tuple [ Value ]
+  Parenthesis LambdaValue | Tuple [ LambdaValue ]
 
 data BaseValue =
   ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName
@@ -59,26 +58,26 @@ data Equality =
 data OperatorValue =
   Equality Equality | EquF EqualityFactor
 
-data ManyArgsArgValue =
-  MAAV [ Abstraction ] OperatorValue
+data OperatorLambdaValue =
+  OLV [ Abstraction ] OperatorValue
 
 data ManyArgsApplication =
-  MAA [ ManyArgsArgValue ] ValueName
+  MAA [ OperatorLambdaValue ] ValueName
 
 newtype UseFields =
-  UF Value
+  UF LambdaValue
 
 data SpecificCase =
-  SC LiteralOrValueName Value 
+  SC LiteralOrValueName LambdaValue 
 
 newtype Cases =
   Cs [ SpecificCase ]
 
 data NameTypeAndValue =
-  NTAV ValueName ValueType Value
+  NTAV ValueName ValueType LambdaValue
 
 data NameTypeAndValueLists =
-  NTAVLists [ ValueName ] [ ValueType ] [ Value ]
+  NTAVLists [ ValueName ] [ ValueType ] [ LambdaValue ]
 
 data NTAVOrNTAVLists =
   NameTypeAndValue NameTypeAndValue | NameTypeAndValueLists NameTypeAndValueLists
@@ -87,24 +86,23 @@ newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
 
 data Where =
-  Where_ Value NamesTypesAndValues
+  Where_ LambdaValue NamesTypesAndValues
 
 data OutputValue =
   ManyArgsApplication ManyArgsApplication | UseFields UseFields | Cases Cases |
   Where Where | OperatorValue OperatorValue
 
-data Value =
-  Value [ Abstraction ] OutputValue
+data LambdaValue =
+  LV [ Abstraction ] OutputValue
 
 -- Show instances:
--- ParenthesisValue, BaseValue, OneArgApplications,
--- MultiplicationFactor, Multiplication
--- SubtractionFactor, Subtraction
+-- ParenthesisValue, BaseValue, ApplicationDirection, OneArgApplications,
+-- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorValue, ManyArgsArgValue, ManyArgsApplication
+-- OperatorValue, OperatorLambdaValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, OutputValue, Value
+-- Where, OutputValue, LambdaValue
 
 instance Show ParenthesisValue where
   show = \case
@@ -160,8 +158,8 @@ instance Show OperatorValue where
     Equality equ -> show equ
     EquF f -> show f
 
-instance Show ManyArgsArgValue where
-  show = \(MAAV as nav1) -> show as ++ show nav1
+instance Show OperatorLambdaValue where
+  show = \(OLV as nav1) -> show as ++ show nav1
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->
@@ -206,8 +204,8 @@ instance Show OutputValue where
     Where inter_out -> show inter_out
     OperatorValue nav1 -> show nav1
 
-instance Show Value where
-  show = \(Value as nav) -> as==>concatMap (show .> (++ " -> ")) ++ show nav
+instance Show LambdaValue where
+  show = \(LV as nav) -> as==>concatMap (show .> (++ " -> ")) ++ show nav
 
 -- error messages: one_arg_app_err, less_than_two_mul_err
 one_arg_app_err =

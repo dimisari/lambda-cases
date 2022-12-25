@@ -11,6 +11,8 @@ import Text.Parsec.String
 import Control.Monad.State
   ( evalState )
 
+import InitialState
+  ( init_state )
 import Helpers
   ( Haskell, (.>) )
 
@@ -18,8 +20,6 @@ import HaskellTypes.Types
   ( TypeDef )
 import HaskellTypes.Values
   ( NamesTypesAndValues )
-import HaskellTypes.Generation
-  ( init_state )
 import HaskellTypes.AfterParsing
 
 import Parsers.Types
