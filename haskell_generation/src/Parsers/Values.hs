@@ -23,7 +23,7 @@ import Parsers.Types
   ( value_type_p )
 
 -- All:
--- ParenthesisValue, base_value_p, OneArgApplications,
+-- ParenthesisValue, base_value_p, math_application_p, OneArgApplications,
 -- multiplication_factor_p, multiplication_p, subtraction_factor_p, subtraction_p,
 -- equality_factor_p, equality_p
 -- operator_value_p, LambdaOperatorValue, many_args_application_p,
@@ -36,7 +36,7 @@ import Parsers.Types
 -- parenthesis_value_p, tuple_internals_p, parenthesis_internals_p
 [ parenthesis_value_p, tuple_internals_p, parenthesis_internals_p ] =
   [ char '(' *> (try tuple_internals_p <|> parenthesis_internals_p) <* char ')'
-  , fmap Tuple $ char ' ' *> seperated2 ", " value_p <* char ' '
+  , fmap Tuple $ char ' ' *> seperated2 ", " lambda_operator_value_p <* char ' '
   , Parenthesis <$> value_p ]
   :: [ Parser ParenthesisValue ]
 -- ParenthesisValue end
@@ -45,6 +45,13 @@ base_value_p =
   ParenthesisValue <$> parenthesis_value_p <|>
   LiteralOrValueName <$> literal_or_value_name_p
   :: Parser BaseValue
+
+math_application_p =  
+  value_name_p >>= \vn ->
+  string "( " >> lambda_operator_value_p >>= \lov ->
+  many (try $ string ", " >> lambda_operator_value_p) >>= \lovs ->
+  string " )" >> MathApp vn lov lovs==>return
+  :: Parser MathApplication
 
 -- OneArgApplications: one_arg_applications_p, bv_ad_p
 one_arg_applications_p =

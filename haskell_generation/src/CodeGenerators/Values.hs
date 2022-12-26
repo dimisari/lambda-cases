@@ -36,7 +36,7 @@ import CodeGenerators.Types
 -- ParenthesisValue, BaseValue, OneArgApplications,
 -- multiplication_factor_g, multiplication_g, subtraction_factor_g, subtraction_g,
 -- equality_factor_g, equality_g
--- operator_value_g, many_args_arg_value_g, ManyArgsApplication,
+-- operator_value_g, lambda_operator_value_g, ManyArgsApplication,
 -- UseFields, SpecificCase, Cases,
 -- name_type_and_value_g, name_type_and_value_lists_g,
 -- ntav_or_ntav_lists_g, names_types_and_values_g, Where,
@@ -54,39 +54,39 @@ parenthesis_value_g = ( \vt -> \case
 value_type_tuple_values_g = ( \case
   vt@(AbsTypesAndResType (_:_) _) -> \vs -> error $ tuple_fun_type_err vs vt
   AbsTypesAndResType [] bt -> base_type_tuple_values_g bt
-  ) :: ValueType -> [ LambdaValue ] -> Stateful Haskell
+  ) :: ValueType -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 base_type_tuple_values_g = ( \case
   ParenType pt -> paren_type_tuple_values_g pt
   TypeName tn -> type_name_tuple_values_g tn
-  ) :: BaseType -> [ LambdaValue ] -> Stateful Haskell
+  ) :: BaseType -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 paren_type_tuple_values_g = ( \case
   TupleType vt1 vt2 vts -> value_types_tuple_values_g $ vt1 : vt2 : vts
   ParenVT vt -> value_type_tuple_values_g vt
-  ) :: ParenType -> [ LambdaValue ] -> Stateful Haskell
+  ) :: ParenType -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 value_types_tuple_values_g = ( \vts vs -> case length vts == length vs of
   False -> error tuple_values_types_lengths_dont_match_err
   True -> 
-    zipWith value_g vts vs==>sequence >>= \vs_g ->
+    zipWith lambda_operator_value_g vts vs==>sequence >>= \vs_g ->
     return $ "( " ++ intercalate ", " vs_g ++ " )"
-  ) :: [ ValueType ] -> [ LambdaValue ] -> Stateful Haskell
+  ) :: [ ValueType ] -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 type_name_tuple_values_g = ( \tn vs -> type_map_get tn >>= \case
   FieldAndTypeList fatl -> case length vs == length fatl of 
     False -> error values_fields_lengths_dont_match_err
     True -> correct_type_name_tuple_values_g tn (map get_ft fatl) vs
   CaseAndMaybeTypeList camtl -> undefined camtl
-  ) :: TypeName -> [ LambdaValue ] -> Stateful Haskell
+  ) :: TypeName -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 correct_type_name_tuple_values_g = ( \tn vts vs ->
   get_indent_level >>= \il ->
-  zipWith value_g vts vs==>sequence >>= \vs_g -> 
+  zipWith lambda_operator_value_g vts vs==>sequence >>= \vs_g -> 
   return $
   show tn ++ "C" ++
   concatMap (\v_g -> "\n" ++ indent (il + 1) ++ "(" ++ v_g ++ ")") vs_g
-  ) :: TypeName -> [ ValueType ] -> [ LambdaValue ] -> Stateful Haskell
+  ) :: TypeName -> [ ValueType ] -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 parenthesis_value_type_inference_g = ( \case
   Parenthesis v ->
@@ -96,13 +96,13 @@ parenthesis_value_type_inference_g = ( \case
   ) :: ParenthesisValue -> Stateful ( ValueType, Haskell )
 
 tuple_values_type_inference_g = ( \vs ->
-  mapM value_type_inference_g vs >>= unzip .> \( vts, vs_g ) -> case vts of
+  mapM undefined vs >>= unzip .> \( vts, vs_g ) -> case vts of
     vt1 : vt2 : vts ->
       return
       ( AbsTypesAndResType [] $ ParenType $ TupleType vt1 vt2 vts
       , "( " ++ intercalate ", " vs_g ++ " )" )
     _ -> undefined
-  ) :: [ LambdaValue ] -> Stateful ( ValueType, Haskell )
+  ) :: [ LambdaOperatorValue ] -> Stateful ( ValueType, Haskell )
 
 -- BaseValue: base_value_g, base_value_type_inference_g
 base_value_g = ( \vt -> \case
@@ -198,8 +198,8 @@ operator_value_type_inference_g = ( \case
   ) :: OperatorValue -> Stateful ( ValueType, Haskell )
 -- OperatorValue end
 
-many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (LOV as opval) ->
-  case length as > length bts of 
+lambda_operator_value_g = (
+  \(AbsTypesAndResType bts bt) (LOV as opval) -> case length as > length bts of 
   True -> error $ too_many_abstractions_err as bts
   False -> 
     abstractions_g bts1 as >>= \as_g ->
@@ -211,31 +211,26 @@ many_args_arg_value_g = ( \(AbsTypesAndResType bts bt) (LOV as opval) ->
   ) :: ValueType -> LambdaOperatorValue -> Stateful Haskell
 
 -- ManyArgsApplication: many_args_application_g, bts_maavs_vn_g, bt_maav_g
-many_args_application_g = ( \vt (MAA maavs vn) -> value_map_get vn >>=
+many_args_application_g = ( \vt (MAA lovs vn) -> value_map_get vn >>=
   \(AbsTypesAndResType abs_bts res_bt) ->
   let
-  ( bts1, bts2 ) = splitAt (length maavs) abs_bts
+  ( bts1, bts2 ) = splitAt (length lovs) abs_bts
     :: ( [ BaseType ], [ BaseType ] )
   in
   vts_are_equivalent vt (AbsTypesAndResType bts2 res_bt) >>= \case
     False -> error $
       many_args_types_dont_match_err vt (AbsTypesAndResType bts2 res_bt)
-    True -> bts_maavs_vn_g bts1 maavs vn
+    True -> bts_maavs_vn_g bts1 lovs vn
   ) :: ValueType -> ManyArgsApplication -> Stateful Haskell
 
-bts_maavs_vn_g = ( \bts maavs vn ->
-  zipWith bt_maav_g bts maavs==>sequence >>= \maavs_g ->
+bts_maavs_vn_g = ( \bts lovs vn ->
+  zipWith bt_maav_g bts lovs==>sequence >>= \maavs_g ->
   return $ show vn ++ concatMap (" " ++) maavs_g
   ) :: [ BaseType ] -> [ LambdaOperatorValue ] -> ValueName -> Stateful Haskell
 
-bt_maav_g = ( \bt maav ->
-  let
-  maav_vt = case bt of
-    ParenType(ParenVT vt) -> vt
-    _ -> (AbsTypesAndResType [] bt)
-    :: ValueType
-  in
-  many_args_arg_value_g maav_vt maav >>= \maav_g -> return $ "(" ++ maav_g ++ ")"
+bt_maav_g = ( \bt lov ->
+  lambda_operator_value_g (bt_to_vt bt) lov >>= \maav_g ->
+  return $ "(" ++ maav_g ++ ")"
   ) :: BaseType -> LambdaOperatorValue -> Stateful Haskell
 
 -- UseFields: use_fields_g, correct_use_fields_g, insert_to_value_map_ret_vn

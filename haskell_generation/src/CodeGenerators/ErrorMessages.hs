@@ -54,9 +54,9 @@ abstractions_types_lengths_dont_match_err =
 -- many_args_types_dont_match_err, use_fields_not_fun_err, must_be_tuple_type_err,
 -- specific_case_not_abstraction_err, name_type_and_value_lists_err 
 
-tuple_fun_type_err = ( \vs vt ->
-  show (Tuple vs) ++ " can't have type: " ++ show vt ++ "\n"
-  ) :: [ LambdaValue ] -> ValueType -> Error
+tuple_fun_type_err = ( \lovs vt ->
+  show (Tuple lovs) ++ " can't have type: " ++ show vt ++ "\n"
+  ) :: [ LambdaOperatorValue ] -> ValueType -> Error
 
 values_fields_lengths_dont_match_err =
   "\nLength of tuple values and fields of the corresponding tuple_type must be " ++

@@ -24,7 +24,10 @@ import HaskellTypes.Types
 -- Where, OutputValue, LambdaValue
 
 data ParenthesisValue =
-  Parenthesis LambdaValue | Tuple [ LambdaValue ]
+  Parenthesis LambdaValue | Tuple [ LambdaOperatorValue ]
+
+data MathApplication =
+  MathApp ValueName LambdaOperatorValue [ LambdaOperatorValue ]
 
 data BaseValue =
   ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName

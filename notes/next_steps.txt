@@ -49,7 +49,9 @@ better error:
 
 type predicates
 type theorems
+my default show
 comments
+undefined keyword
 
 testing:
 - wrong examples 
