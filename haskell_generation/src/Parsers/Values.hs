@@ -23,7 +23,7 @@ import Parsers.Types
   ( value_type_p )
 
 -- All:
--- ParenthesisValue, base_value_p, math_application_p, OneArgApplications,
+-- ParenthesisValue, base_value_p, OneArgApplications,
 -- multiplication_factor_p, multiplication_p, subtraction_factor_p, subtraction_p,
 -- equality_factor_p, equality_p
 -- operator_value_p, LambdaOperatorValue, many_args_application_p,
