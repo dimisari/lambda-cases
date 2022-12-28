@@ -112,7 +112,8 @@ math_application_g = ( \vt (MathApp vn lov1 lovs) ->
   ) :: ValueType -> MathApplication -> Stateful Haskell
 
 math_application_type_inference_g = ( \(MathApp vn lov1 lovs) ->
-  undefined
+  many_args_application_type_inference_g (MAA (lov1 : lovs) vn) >>= \( vt, hs ) ->
+  return ( vt, "(" ++ hs ++ ")" )
   ) :: MathApplication -> Stateful ( ValueType, Haskell )
 
 -- BaseValue: base_value_g, base_value_type_inference_g
@@ -228,7 +229,9 @@ lambda_operator_value_type_inference_g = ( \(LOV as opval) ->
   undefined
   ) :: LambdaOperatorValue -> Stateful ( ValueType, Haskell )
 
--- ManyArgsApplication: many_args_application_g, bts_maavs_vn_g, bt_maav_g
+-- ManyArgsApplication:
+-- many_args_application_g, bts_maavs_vn_g, bt_maav_g,
+-- many_args_application_type_inference_g
 many_args_application_g = ( \vt (MAA lovs vn) -> value_map_get vn >>=
   \(AbsTypesAndResType abs_bts res_bt) ->
   let
@@ -250,6 +253,9 @@ bt_maav_g = ( \bt lov ->
   lambda_operator_value_g (bt_to_vt bt) lov >>= \maav_g ->
   return $ "(" ++ maav_g ++ ")"
   ) :: BaseType -> LambdaOperatorValue -> Stateful Haskell
+
+many_args_application_type_inference_g = ( undefined
+  ) :: ManyArgsApplication -> Stateful ( ValueType, Haskell )
 
 -- UseFields: use_fields_g, correct_use_fields_g, insert_to_value_map_ret_vn
 use_fields_g = ( \vt@(AbsTypesAndResType bts bt) (UF v) -> case bts of 
@@ -363,10 +369,8 @@ where_g = ( \vt (Where_ v ntavs) ->
   value_g vt v >>= \v_g ->
   update_indent_level i >>
   return (
-  "\n" ++ indent (i + 1) ++ "let" ++
-  "\n" ++ indent (i + 1) ++ ntavs_g ++
-  "\n" ++ indent (i + 1) ++ "in" ++
-  "\n" ++ indent (i + 1) ++ v_g
+  "\n" ++ indent (i + 1) ++ "let\n" ++ indent (i + 1) ++ ntavs_g ++
+  "\n" ++ indent (i + 1) ++ "in\n" ++ indent (i + 1) ++ v_g
   )
   ) :: ValueType -> Where -> Stateful Haskell
 
@@ -388,7 +392,7 @@ output_value_g = ( \vt -> \case
   ) :: ValueType -> OutputValue -> Stateful Haskell
 
 output_value_type_inference_g = ( \case
-  ManyArgsApplication maa -> undefined
+  ManyArgsApplication maa -> many_args_application_type_inference_g maa
 
   -- cannot infer unless we try to lookup potential fields in the output value 
   -- and infer backwards
