@@ -30,10 +30,14 @@ data MathApplication =
   MathApp ValueName LambdaOperatorValue [ LambdaOperatorValue ]
 
 data BaseValue =
-  ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName
+  ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName |
+  MathApplication MathApplication
 
 data ApplicationDirection =
   LeftApplication | RightApplication
+
+-- data LastValue = 
+--   BaseValue | Cases
 
 data OneArgApplications = OAA
   ( BaseValue, ApplicationDirection )
@@ -44,7 +48,7 @@ data MultiplicationFactor =
   OneArgAppMF OneArgApplications | BaseValueMF BaseValue
 
 data Multiplication =
-  Mul [ MultiplicationFactor ]
+  Mul MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
 
 data SubtractionFactor =
   MulSF Multiplication | MFSF MultiplicationFactor
@@ -112,10 +116,15 @@ instance Show ParenthesisValue where
     Parenthesis v -> "(" ++ show v ++ ")"
     Tuple vs -> "( " ++ vs==>map show==>intercalate ", " ++ " )"
 
+instance Show MathApplication where
+  show = \(MathApp vn lov1 lovs) ->
+    show vn ++ "( " ++ (lov1 : lovs)==>map show==>intercalate ", " ++ " )"
+
 instance Show BaseValue where
   show = \case
     ParenthesisValue pv -> show pv
     LiteralOrValueName lovn -> show lovn
+    MathApplication ma -> show ma
 
 instance Show ApplicationDirection where
   show = \case
@@ -135,10 +144,7 @@ instance Show MultiplicationFactor where
     BaseValueMF bv -> show bv
 
 instance Show Multiplication where
-  show = \(Mul mfs) -> case mfs of
-      [] -> error less_than_two_mul_err
-      [ _ ] -> error less_than_two_mul_err
-      mfs -> mfs==>map show==>intercalate " * "
+  show = \(Mul mf1 mf2 mfs) -> (mf1 : mf2 : mfs)==>map show==>intercalate " * "
 
 instance Show SubtractionFactor where
   show = \case

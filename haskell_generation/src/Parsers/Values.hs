@@ -41,17 +41,18 @@ import Parsers.Types
   :: [ Parser ParenthesisValue ]
 -- ParenthesisValue end
 
-base_value_p =
-  ParenthesisValue <$> parenthesis_value_p <|>
-  LiteralOrValueName <$> literal_or_value_name_p
-  :: Parser BaseValue
-
 math_application_p =  
   value_name_p >>= \vn ->
   string "( " >> lambda_operator_value_p >>= \lov ->
   many (try $ string ", " >> lambda_operator_value_p) >>= \lovs ->
   string " )" >> MathApp vn lov lovs==>return
   :: Parser MathApplication
+
+base_value_p =
+  ParenthesisValue <$> parenthesis_value_p <|>
+  MathApplication <$> try math_application_p <|>
+  LiteralOrValueName <$> literal_or_value_name_p
+  :: Parser BaseValue
 
 -- OneArgApplications: one_arg_applications_p, bv_ad_p
 one_arg_applications_p =
@@ -74,7 +75,10 @@ multiplication_factor_p =
   :: Parser MultiplicationFactor
 
 multiplication_p =
-  Mul <$> seperated2 " * " multiplication_factor_p
+  multiplication_factor_p >>= \mf1 ->
+  string " * " >> multiplication_factor_p >>= \mf2 ->
+  many (try $ string " * " >> multiplication_factor_p) >>= \mfs ->
+  return $ Mul mf1 mf2 mfs
   :: Parser Multiplication
 
 subtraction_factor_p =

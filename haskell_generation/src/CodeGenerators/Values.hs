@@ -33,7 +33,7 @@ import CodeGenerators.Types
 
 
 -- All:
--- ParenthesisValue, BaseValue, OneArgApplications,
+-- ParenthesisValue, MathApplication, BaseValue, OneArgApplications,
 -- multiplication_factor_g, multiplication_g, subtraction_factor_g, subtraction_g,
 -- equality_factor_g, equality_g
 -- operator_value_g, lambda_operator_value_g, ManyArgsApplication,
@@ -96,7 +96,8 @@ parenthesis_value_type_inference_g = ( \case
   ) :: ParenthesisValue -> Stateful ( ValueType, Haskell )
 
 tuple_values_type_inference_g = ( \vs ->
-  mapM undefined vs >>= unzip .> \( vts, vs_g ) -> case vts of
+  mapM lambda_operator_value_type_inference_g vs >>=
+  unzip .> \( vts, vs_g ) -> case vts of
     vt1 : vt2 : vts ->
       return
       ( AbsTypesAndResType [] $ ParenType $ TupleType vt1 vt2 vts
@@ -104,15 +105,27 @@ tuple_values_type_inference_g = ( \vs ->
     _ -> undefined
   ) :: [ LambdaOperatorValue ] -> Stateful ( ValueType, Haskell )
 
+-- MathApplication: math_application_g, math_application_type_inference_g
+math_application_g = ( \vt (MathApp vn lov1 lovs) ->
+  many_args_application_g vt (MAA (lov1 : lovs) vn) >>= \hs ->
+  return $ "(" ++ hs ++ ")"
+  ) :: ValueType -> MathApplication -> Stateful Haskell
+
+math_application_type_inference_g = ( \(MathApp vn lov1 lovs) ->
+  undefined
+  ) :: MathApplication -> Stateful ( ValueType, Haskell )
+
 -- BaseValue: base_value_g, base_value_type_inference_g
 base_value_g = ( \vt -> \case
   ParenthesisValue pv -> parenthesis_value_g vt pv
   LiteralOrValueName lovn -> literal_or_value_name_g vt lovn
+  MathApplication ma -> math_application_g vt ma
   ) :: ValueType -> BaseValue -> Stateful Haskell
 
 base_value_type_inference_g = ( \case
   ParenthesisValue pv -> parenthesis_value_type_inference_g pv
   LiteralOrValueName lovn -> literal_or_value_name_type_inference_g lovn
+  MathApplication ma -> math_application_type_inference_g ma
   ) :: BaseValue -> Stateful ( ValueType, Haskell )
 
 -- OneArgApplications:
@@ -152,8 +165,9 @@ multiplication_factor_g = ( \vt -> \case
   BaseValueMF bv -> base_value_g vt bv
   ) :: ValueType -> MultiplicationFactor -> Stateful Haskell
 
-multiplication_g = ( \vt (Mul mfs) -> 
-  mapM (multiplication_factor_g vt) mfs >>= intercalate " * " .> return
+multiplication_g = ( \vt (Mul mf1 mf2 mfs) -> 
+  mapM (multiplication_factor_g vt) (mf1 : mf2 : mfs) >>=
+  intercalate " * " .> return
   ) :: ValueType -> Multiplication -> Stateful Haskell
 
 subtraction_factor_g = ( \vt -> \case
@@ -210,6 +224,10 @@ lambda_operator_value_g = (
       :: ( [ BaseType ], [ BaseType ] )
   ) :: ValueType -> LambdaOperatorValue -> Stateful Haskell
 
+lambda_operator_value_type_inference_g = ( \(LOV as opval) ->
+  undefined
+  ) :: LambdaOperatorValue -> Stateful ( ValueType, Haskell )
+
 -- ManyArgsApplication: many_args_application_g, bts_maavs_vn_g, bt_maav_g
 many_args_application_g = ( \vt (MAA lovs vn) -> value_map_get vn >>=
   \(AbsTypesAndResType abs_bts res_bt) ->
@@ -236,21 +254,22 @@ bt_maav_g = ( \bt lov ->
 -- UseFields: use_fields_g, correct_use_fields_g, insert_to_value_map_ret_vn
 use_fields_g = ( \vt@(AbsTypesAndResType bts bt) (UF v) -> case bts of 
   [] -> error $ use_fields_not_fun_err vt
-  b:bs -> case b of
-    ParenType _ -> error $ must_be_tuple_type_err b -- maybe something here?
+  bt1:bts_tail -> case bt1 of
+    ParenType _ -> error $ must_be_tuple_type_err bt1 -- maybe something here?
     TypeName tn -> type_map_get tn >>= \case
       FieldAndTypeList fatl ->
-        correct_use_fields_g tn fatl (AbsTypesAndResType bs bt) v
+        correct_use_fields_g tn fatl (AbsTypesAndResType bts_tail bt) v
       CaseAndMaybeTypeList catl -> undefined
   ) :: ValueType -> UseFields -> Stateful Haskell
 
 correct_use_fields_g = ( \tn fatl vt v ->
   get_indent_level >>= \il ->
+  value_map_insert (VN "value") (AbsTypesAndResType [] (TypeName tn)) >>
   mapM insert_to_value_map_ret_vn fatl >>= \vns ->
   value_g vt v >>= \v_g ->
   return $
-  "\\value@(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns ++ ") -> "
-  ++ v_g
+  "\\value@(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns ++ ") -> " ++
+  v_g
   ) :: TypeName -> [ FieldAndType ] -> ValueType -> LambdaValue -> Stateful Haskell
 
 insert_to_value_map_ret_vn = ( \(FT vn vt) -> value_map_insert vn vt >> return vn )
