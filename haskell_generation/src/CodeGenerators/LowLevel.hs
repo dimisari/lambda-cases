@@ -67,7 +67,8 @@ vts_are_equivalent = (
       (_, []) -> return False
       ([], _) -> return False
       (abs_t1 : rest1, abs_t2 : rest2) ->
-        bts_are_equivalent abs_t1 abs_t2 >>= \bts_equiv ->
+        bts_are_equivalent abs_t1 abs_t2
+          >>= \bts_equiv ->
         vts_are_equivalent
           (AbsTypesAndResType rest1 bt1) (AbsTypesAndResType rest2 bt2)
           >>= \vts_equiv ->

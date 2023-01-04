@@ -78,7 +78,7 @@ tuple_type_def_p =
 
 case_and_maybe_type_p = 
   value_name_p >>= \vn -> optionMaybe (char '.' *> value_type_p) >>= \mvt ->
-  return $ CT vn mvt
+  return $ CMT vn mvt
   :: Parser CaseAndMaybeType
 
 or_type_def_p =

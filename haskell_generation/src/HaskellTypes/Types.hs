@@ -34,7 +34,7 @@ data TupleTypeDef =
   NameAndValue TypeName [ FieldAndType ]
 
 data CaseAndMaybeType =
-  CT ValueName (Maybe ValueType)
+  CMT ValueName (Maybe ValueType)
 
 data OrTypeDef =
   NameAndValues TypeName [ CaseAndMaybeType ]
@@ -44,6 +44,12 @@ data TypeDef =
 
 data FieldsOrCases =
   FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
+
+newtype ArgName = 
+  AN Char
+
+data TypeConstructorExpr =
+  ArgnamesAndName [ ArgName ] TypeName
 
 -- Show instances:
 -- TypeName, ParenType, BaseType, ValueType, FieldAndType, TupleTypeDef,
@@ -77,7 +83,7 @@ instance Show TupleTypeDef where
     "\nvalue ( " ++ ttfs==>map show==>intercalate ", "  ++ " )\n"
 
 instance Show CaseAndMaybeType where
-  show = \(CT vn mvt) -> show vn ++ case mvt of 
+  show = \(CMT vn mvt) -> show vn ++ case mvt of 
     Just vt -> "." ++ show vt
     Nothing -> ""
 

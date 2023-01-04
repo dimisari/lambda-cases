@@ -68,7 +68,7 @@ or_type_g = ( \(NameAndValues tn otvs) ->
     return $ intercalate " | " otvs_g 
     :: Stateful Haskell
 
-  case_and_maybe_type_g = ( \(CT vn mvt) ->
+  case_and_maybe_type_g = ( \(CMT vn mvt) ->
     ( case mvt of
       Nothing -> value_map_insert vn $ AbsTypesAndResType [] $ TypeName $ tn
       _ -> return () ) >>
