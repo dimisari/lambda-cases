@@ -367,19 +367,16 @@ where_g = ( \vt (Where_ v ntavs) ->
   get_indent_level >>= \i -> update_indent_level (i + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
-  update_indent_level i >>
-  return (
-  "\n" ++ indent (i + 1) ++ "let\n" ++ indent (i + 1) ++ ntavs_g ++
-  "\n" ++ indent (i + 1) ++ "in\n" ++ indent (i + 1) ++ v_g
-  )
+  return ("\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g)
+  <* update_indent_level i
   ) :: ValueType -> Where -> Stateful Haskell
 
 where_type_inference_g = ( \(Where_ v ntavs) ->
   get_indent_level >>= \i -> update_indent_level (i + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_type_inference_g v >>= \( vt, v_g ) ->
-  update_indent_level i >>
   return ( vt, "\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g )
+  <* update_indent_level i
   ) :: Where -> Stateful ( ValueType, Haskell )
 
 -- OutputValue: output_value_g, output_value_type_inference_g

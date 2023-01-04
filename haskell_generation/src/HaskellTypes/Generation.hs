@@ -5,7 +5,7 @@ module HaskellTypes.Generation where
 import Control.Monad.State
   ( State, get, modify )
 import qualified Data.Map as M
-  ( Map, lookup, insert, empty, fromList )
+  ( Map, lookup, insert, insertWith, empty, fromList )
 --import Control.Monad.Trans.Except ( ExceptT )
 
 import Helpers
@@ -22,7 +22,7 @@ import HaskellTypes.Types
 
 -- Types: ValueMap, TypeMap, GenState, Stateful
 type ValueMap =
-  M.Map ValueName ValueType
+  M.Map ValueName [ ValueType ]
 
 type TypeMap =
   M.Map TypeName FieldsOrCases
@@ -50,13 +50,23 @@ get_from_state = ( \f -> get >>= f .> return )
 
 -- value_map operations: value_map_insert, value_map_get
 value_map_insert =
-  ( \vn vt -> get_value_map >>= M.insert vn vt .> update_value_map )
+  ( \vn vt -> get_value_map >>= M.insertWith (++) vn [vt] .> update_value_map )
   :: ValueName -> ValueType -> Stateful ()
 
-value_map_get = ( \vn@(VN s) -> get_value_map >>= M.lookup vn .> \case
-  Nothing -> error $ "No definition for value: " ++ s
-  Just vt -> return vt
+value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
+  Nothing -> error $ "No definition for value: " ++ show vn
+  Just vts -> case vts of
+    [] -> undefined
+    vt:_ -> return vt
   ) :: ValueName -> Stateful ValueType
+
+value_map_pop = ( \vn -> get_value_map >>= \vm -> M.lookup vn vm ==> \case
+  Nothing -> error $ "Should not happen: popped on non-existing value" ++ show vn
+  Just vts -> case vts of
+    [] -> error $
+      "Should not happen: popped on empty stack of type for value" ++ show vn
+    vt:vts -> update_value_map $ M.insert vn vts vm
+  ) :: ValueName -> Stateful ()
 
 -- type_map operations: type_map_exists_check, type_map_insert, type_map_get
 type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case

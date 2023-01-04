@@ -16,7 +16,7 @@ keywords =
   , "type_theorem", "proof" ]
   :: [ String ]
 
--- Function application/composition
+-- Flipped function application/composition
 (==>) = flip ($)
   :: a -> (a -> b) -> b
 (.>) = flip (.)

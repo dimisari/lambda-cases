@@ -1,5 +1,0 @@
-- Integer literal
-- ValueName
-- LiteralOrValueName
-- TupleMatching
-- Abstraction

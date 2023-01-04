@@ -24,15 +24,18 @@ int_int_tuple_bt =
 bool_bt = TypeName $ TN "Bool"
   :: BaseType
 
+int_int_int_only = [ AbsTypesAndResType [ int_bt, int_bt ] int_bt ]
+  :: [ ValueType ]
+
 init_value_map = 
   M.fromList
-    [ ( VN "div" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    , ( VN "mod" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    , ( VN "get_first" , AbsTypesAndResType [ int_int_tuple_bt ] int_bt)
-    , ( VN "abs" , AbsTypesAndResType [ int_bt ] int_bt)
-    , ( VN "max" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    , ( VN "min" , AbsTypesAndResType [ int_bt, int_bt ] int_bt)
-    , ( VN "true" , AbsTypesAndResType [ ] bool_bt)
+    [ ( VN "div" , int_int_int_only )
+    , ( VN "mod" , int_int_int_only )
+    , ( VN "get_first" , [ AbsTypesAndResType [ int_int_tuple_bt ] int_bt ] )
+    , ( VN "abs" , [ AbsTypesAndResType [ int_bt ] int_bt ] )
+    , ( VN "max" , int_int_int_only )
+    , ( VN "min" , int_int_int_only )
+    , ( VN "true" , [ AbsTypesAndResType [ ] bool_bt ] )
     ]
   :: ValueMap
 
