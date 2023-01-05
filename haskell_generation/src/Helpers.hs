@@ -23,11 +23,6 @@ keywords =
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-integer_p =
-  let number = many1 digit :: Parser String in
-  read <$> ((:) <$> char '-' <*> number <|> number)
-  :: Parser Integer
-
 seperated2 = (\s p ->
   p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as
   ) :: String -> Parser a -> Parser [a]

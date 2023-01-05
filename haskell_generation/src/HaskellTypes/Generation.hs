@@ -14,8 +14,8 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType
-  , CaseAndMaybeType, FieldsOrCases )
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType, CaseAndMaybeType
+  , FieldsOrCases )
 
 -- All:
 -- Types, get fields, update fields, value_map operations, type_map operations

@@ -3,13 +3,10 @@ scope:
 
 type abstractions:
 - ==>, <==, *==>, parenthesis at the end (mathematical notation):
-  - it's just application for types:
-    - althought need to interpret it as abstractions in one case
-    - and as application in the other
-  - many different parsers for type inputs/lambda abstractions
-  - Single Capital Letter:
-    - maybe need to prevent using that as an actual type
   - Create new source type for type constructors
+  - type abstractions:
+    - many different parsers for type inputs/lambda abstractions
+  - type application
 
 fix:
 - cases at the end of one argument applications:
@@ -73,4 +70,4 @@ testing:
 - wrong examples 
 
 change?:
-- A, A *-> A ====> A x A -> A
+- A, A *-> A ===> A x A -> A

@@ -15,8 +15,8 @@ import Helpers
 import HaskellTypes.LowLevel
   ( LiteralOrValueName(..), ValueName(..), Abstraction(..) )
 import HaskellTypes.Types
-  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
-  , FieldsOrCases(..), bt_to_vt, vt_to_bt )
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), FieldsOrCases(..)
+  , bt_to_vt, vt_to_bt )
 import HaskellTypes.Values
 import HaskellTypes.AfterParsing
   ( ApplicationTree(..), to_application_tree, to_application_tree )
@@ -57,14 +57,10 @@ value_type_tuple_values_g = ( \case
   ) :: ValueType -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 base_type_tuple_values_g = ( \case
-  ParenType pt -> paren_type_tuple_values_g pt
   TypeName tn -> type_name_tuple_values_g tn
-  ) :: BaseType -> [ LambdaOperatorValue ] -> Stateful Haskell
-
-paren_type_tuple_values_g = ( \case
+  ParenType vt -> value_type_tuple_values_g vt
   TupleType vt1 vt2 vts -> value_types_tuple_values_g $ vt1 : vt2 : vts
-  ParenVT vt -> value_type_tuple_values_g vt
-  ) :: ParenType -> [ LambdaOperatorValue ] -> Stateful Haskell
+  ) :: BaseType -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 value_types_tuple_values_g = ( \vts vs -> case length vts == length vs of
   False -> error tuple_values_types_lengths_dont_match_err
@@ -100,7 +96,7 @@ tuple_values_type_inference_g = ( \vs ->
   unzip .> \( vts, vs_g ) -> case vts of
     vt1 : vt2 : vts ->
       return
-      ( AbsTypesAndResType [] $ ParenType $ TupleType vt1 vt2 vts
+      ( AbsTypesAndResType [] $ TupleType vt1 vt2 vts
       , "( " ++ intercalate ", " vs_g ++ " )" )
     _ -> undefined
   ) :: [ LambdaOperatorValue ] -> Stateful ( ValueType, Haskell )
@@ -316,7 +312,7 @@ specific_case_type_inference_g = ( \sc@(SC lovn v) ->
   let
   lovn_bt = case lovn_vt of 
     AbsTypesAndResType [] bt -> bt
-    _ -> ParenType $ ParenVT $ lovn_vt
+    _ -> ParenType lovn_vt
   in
   return
   ( AbsTypesAndResType (lovn_bt : abs) res

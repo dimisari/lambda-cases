@@ -13,7 +13,7 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
   , TupleTypeDef(..), OrTypeDef(..), CaseAndMaybeType(..), FieldsOrCases(..)
   , TypeDef(..) )
 import HaskellTypes.Generation
@@ -21,18 +21,13 @@ import HaskellTypes.Generation
 
 -- All: ParenType, ValueType, TupleTypeDef
 
--- ParenType
-paren_type_g = ( \case
+-- BaseType
+base_type_g = ( \case
+  TypeName tn -> show tn
   TupleType vt1 vt2 vts -> paren_comma_sep_g value_type_g $ vt1 : vt2 : vts
-  ParenVT vt -> case vt of
+  ParenType vt -> case vt of
     (AbsTypesAndResType [] bt) -> base_type_g bt
     _ -> "(" ++ value_type_g vt ++ ")"
-  ) :: ParenType -> Haskell
-
--- ParenType
-base_type_g = ( \case
-  ParenType pt -> paren_type_g pt
-  TypeName tn -> show tn
   ) :: BaseType -> Haskell
 
 -- ValueType

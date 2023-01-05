@@ -3,20 +3,25 @@
 module Parsers.LowLevel where
 
 import Text.Parsec
-  ( (<|>), char, string, parserFail, many, many1, lower, try )
+  ( (<|>), char, string, parserFail, many, many1, lower, try, digit )
 import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), keywords, seperated2, integer_p )
+  ( (==>), keywords, seperated2 )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
   , Abstraction(..) )
 
 -- All:
--- literal_p, value_name_p, literal_or_value_name_p, tuple_matching_p
+-- integer_p, literal_p, value_name_p, literal_or_value_name_p, tuple_matching_p
 -- abstraction_p
+integer_p =
+  let number = many1 digit :: Parser String in
+  read <$> ((:) <$> char '-' <*> number <|> number)
+  :: Parser Integer
+
 literal_p = integer_p
   :: Parser Literal
 

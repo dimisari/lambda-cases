@@ -11,7 +11,7 @@ import Helpers
   ( (==>), seperated2, eof_or_new_lines )
 
 import HaskellTypes.Types
-  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..), FieldAndType(..)
+  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
   , TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..), TypeDef(..) )
 
 import Parsers.LowLevel
@@ -25,21 +25,16 @@ type_name_p =
   upper >>= \u -> many (lower <|> upper) >>= \lu -> return $ TN (u:lu)
   :: Parser TypeName
 
--- ParenType: paren_type_p, tuple_type_p
-paren_type_p =
-  char '(' *> (tuple_type_p <|> ParenVT <$> value_type_p) <* char ')'
-  :: Parser ParenType
-
 tuple_type_p =
   char ' ' >> value_type_p >>= \vt1 ->
   string ", " >> value_type_p >>= \vt2 ->
   many (string ", " >> value_type_p) >>= \vts ->
   char ' ' >> return (TupleType vt1 vt2 vts)
-  :: Parser ParenType
--- ParenType end
+  :: Parser BaseType
 
 base_type_p =
-  ParenType <$> paren_type_p <|> TypeName <$> type_name_p 
+  TypeName <$> type_name_p <|> 
+  char '(' *> (tuple_type_p <|> ParenType <$> value_type_p) <* char ')'
   :: Parser BaseType
 
 -- ValueType: value_type_p, many_abstractions_arrow_p, one_abstraction_arrow_p
@@ -53,7 +48,7 @@ many_abstractions_arrow_p =
   let
   vt_to_bt = \case
     AbsTypesAndResType [] bt -> bt
-    vt -> ParenType $ ParenVT vt
+    vt -> ParenType vt
     :: ValueType -> BaseType
   in
   return $ AbsTypesAndResType (map vt_to_bt vt1s ++ bts) bt

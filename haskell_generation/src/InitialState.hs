@@ -4,7 +4,7 @@ import qualified Data.Map as M
   ( empty, fromList )
 
 import HaskellTypes.Types
-  ( TypeName(..), ParenType(..), BaseType(..), ValueType(..) )
+  ( TypeName(..), BaseType(..), ValueType(..) )
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Generation
@@ -18,7 +18,7 @@ int_vt = AbsTypesAndResType [] int_bt
   :: ValueType
 
 int_int_tuple_bt =
-  ParenType $ TupleType int_vt int_vt []
+  TupleType int_vt int_vt []
   :: BaseType
 
 bool_bt = TypeName $ TN "Bool"

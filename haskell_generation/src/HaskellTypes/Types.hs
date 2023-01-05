@@ -18,14 +18,16 @@ import HaskellTypes.LowLevel
 newtype TypeName =
   TN String deriving ( Eq, Ord )
 
-data ParenType =
-  TupleType ValueType ValueType [ ValueType ] | ParenVT ValueType
-
 data BaseType =
-  TypeName TypeName | ParenType ParenType 
+  TypeName TypeName | ParenType ValueType | 
+  TupleType ValueType ValueType [ ValueType ]
 
 data ValueType =
   AbsTypesAndResType [ BaseType ] BaseType
+
+data NewValueType =
+  FunctionType BaseType NewValueType | NamedConstantType TypeName |
+  TupleConstantType NewValueType NewValueType [ NewValueType ]
 
 data FieldAndType =
   FT { get_fn :: ValueName, get_ft :: ValueType }
@@ -52,23 +54,19 @@ data TypeConstructorExpr =
   ArgnamesAndName [ ArgName ] TypeName
 
 -- Show instances:
--- TypeName, ParenType, BaseType, ValueType, FieldAndType, TupleTypeDef,
+-- TypeName, BaseType, ValueType, FieldAndType, TupleTypeDef,
 -- CaseAndMaybeType, OrTypeDef, TypeDef
 instance Show TypeName where
   show = \(TN n) -> n
 
-instance Show ParenType where
-  show = \case 
-    TupleType vt1 vt2 vts ->
-      "( " ++ (vt1:vt2:vts)==>map show==>intercalate ", " ++ " )"
-    ParenVT vt -> vt==> \case
-      (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
-      _ -> "(" ++ show vt ++ ")"
-
 instance Show BaseType where
   show = \case 
-    ParenType pt -> show pt
     TypeName tn -> show tn
+    ParenType vt -> vt==> \case
+      (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
+      _ -> "(" ++ show vt ++ ")"
+    TupleType vt1 vt2 vts ->
+      "( " ++ (vt1:vt2:vts)==>map show==>intercalate ", " ++ " )"
 
 instance Show ValueType where
   show = \(AbsTypesAndResType bts bt) ->
@@ -100,10 +98,10 @@ instance Show TypeDef where
 -- helpers: vt_to_bt, bt_to_vt
 vt_to_bt = \case 
   AbsTypesAndResType [] bt -> bt
-  vt -> ParenType $ ParenVT vt
+  vt -> ParenType vt
   :: ValueType -> BaseType
 
 bt_to_vt = \case
-  ParenType (ParenVT vt) -> vt
+  ParenType vt -> vt
   bt -> AbsTypesAndResType [] bt
   :: BaseType -> ValueType
