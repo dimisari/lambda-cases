@@ -1,9 +1,9 @@
 
 tuple_type PreviousCoeffs
-value ( previous_previous: Int, previous: Int )
+value (previous_previous: Int, previous: Int)
 
 tuple_type GcdAndCoeffs
-value ( gcd: Int, a: Int, b: Int )
+value (gcd: Int, a: Int, b: Int)
 
 extended_euclidean: Int, Int *-> GcdAndCoeffs
   = initial_a_coeffs, initial_b_coeffs *==> ee_recursion

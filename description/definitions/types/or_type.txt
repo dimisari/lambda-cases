@@ -2,26 +2,25 @@
 Example:
 
 or_type A, B *==> TypeName
-values case0.A | case1.B | case2.( A, B ) | case3.ListOf(A)s | case4.ListOf(B)s
+values
+  case0(value: A) | case1(value: B) | case2(value: ( A, B )) |
+  case3(value: ListOf(A)s) | case4(value: ListOf(B)s)
 
 Comments:
-- Default keyword for the value of all cases: "value". Examples:
-  - fun1: (A, B *==> TypeName) -> A==>OrNothing
-      = cases
-        case0 -> the_value.value
-        ... -> nothing
-  - fun2: (A, B *==> TypeName) -> ( A, B )==>OrNothing
-      = cases
-        case2 -> the_value.value
-        ... -> nothing
-
-- if tuple_types are used in a case and there is field inheritance.
-  Example:
+- If the type of the value is a tuple_type there is field inheritance. Example:
   fun: (A, B *==> TypeName) -> A==>OrNothing
     = cases
-      case2 -> the_value.pair_first
-      ... -> nothing
-
+      case2 -> is_value(value = pair_first)
+      ... -> is_nothing
+- "value" is the value of teh case. Examples:
+  - fun1: (A, B *==> TypeName) -> A==>OrNothing
+      = cases
+        case0 -> is_value(value = value)
+        ... -> is_nothing
+  - fun2: (A, B *==> TypeName) -> ( A, B )==>OrNothing
+      = cases
+        case2 -> is_value(value = value)
+        ... -> is_nothing
 - is functions should be generated automatically:
   - is_case0: (A, B *==> TypeName) -> Bool
   - is_case1: (A, B *==> TypeName) -> Bool

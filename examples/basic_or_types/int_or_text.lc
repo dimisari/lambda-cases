@@ -1,6 +1,6 @@
 
 a, b: all Int==>Or<==Text
-  = left_type.1, right_type."One"
+  = left_type<==1, right_type<=="Hi!"
 
 print_int_or_text: Int==>Or<==Text -> Empty==>WithIO
   = cases

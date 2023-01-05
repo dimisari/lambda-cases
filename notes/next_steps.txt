@@ -2,7 +2,7 @@ scope:
 - remove head when leaving scope: where?
 
 type abstractions:
-- ==>, <==, *==>, paren at the end (mathematical notation):
+- ==>, <==, *==>, parenthesis at the end (mathematical notation):
   - it's just application for types:
     - althought need to interpret it as abstractions in one case
     - and as application in the other
@@ -21,6 +21,8 @@ fix:
   - add intentation levels in parsing
 - many abstractions in tuple ? I meant arguments ?
 - split value type into function and constant types ?
+- load "get_first" only when needed
+- change types to recursive instead of lists ?
 
 cases:
 - "value" default for the value of each case that has a value:
@@ -69,3 +71,6 @@ undefined
 testing:
 - more right examples
 - wrong examples 
+
+change?:
+- A, A *-> A ====> A x A -> A

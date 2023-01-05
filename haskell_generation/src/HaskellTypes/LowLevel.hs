@@ -5,7 +5,7 @@ module HaskellTypes.LowLevel where
 import Data.List
   ( intercalate )
 import Helpers
-  ( (==>), (.>) )
+  ( (==>) )
 
 -- All: Types, Show instances
 
