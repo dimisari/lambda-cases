@@ -12,7 +12,7 @@ import Helpers
 
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
-  , TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..), TypeDef(..) )
+  , TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..), TypeDef(..), vt_to_bt )
 
 import Parsers.LowLevel
   ( value_name_p )
@@ -22,19 +22,19 @@ import Parsers.LowLevel
 -- tuple_type_def_p, case_and_maybe_type_p, or_type_def_p, type_def_p
 
 type_name_p =
-  upper >>= \u -> many (lower <|> upper) >>= \lu -> return $ TN (u:lu)
+  upper >>= \initial_upper -> many (lower <|> upper) >>= \lowers_uppers ->
+  return $ TN (initial_upper : lowers_uppers)
   :: Parser TypeName
 
 tuple_type_p =
-  char ' ' >> value_type_p >>= \vt1 ->
-  string ", " >> value_type_p >>= \vt2 ->
+  value_type_p >>= \vt1 -> string ", " >> value_type_p >>= \vt2 ->
   many (string ", " >> value_type_p) >>= \vts ->
-  char ' ' >> return (TupleType vt1 vt2 vts)
+  return (TupleType vt1 vt2 vts)
   :: Parser BaseType
 
 base_type_p =
   TypeName <$> type_name_p <|> 
-  char '(' *> (tuple_type_p <|> ParenType <$> value_type_p) <* char ')'
+  char '(' *> (try tuple_type_p <|> ParenType <$> value_type_p) <* char ')'
   :: Parser BaseType
 
 -- ValueType: value_type_p, many_abstractions_arrow_p, one_abstraction_arrow_p
@@ -45,12 +45,6 @@ value_type_p =
 many_abstractions_arrow_p =
   seperated2 ", " one_abstraction_arrow_p >>= \vt1s ->
   string " *-> " >> one_abstraction_arrow_p >>= \(AbsTypesAndResType bts bt) ->
-  let
-  vt_to_bt = \case
-    AbsTypesAndResType [] bt -> bt
-    vt -> ParenType vt
-    :: ValueType -> BaseType
-  in
   return $ AbsTypesAndResType (map vt_to_bt vt1s ++ bts) bt
   :: Parser ValueType
 
@@ -67,8 +61,8 @@ field_and_type_p =
 
 tuple_type_def_p =
   string "tuple_type " >> type_name_p >>= \tn ->
-  string "\nvalue ( " >> (field_and_type_p==>sepBy $ string ", ") >>= \ttv ->
-  string " )" >> eof_or_new_lines >> NameAndValue tn ttv==>return
+  string "\nvalue (" >> (field_and_type_p==>sepBy $ string ", ") >>= \ttv ->
+  string ")" >> eof_or_new_lines >> NameAndValue tn ttv==>return
   :: Parser TupleTypeDef
 
 case_and_maybe_type_p = 

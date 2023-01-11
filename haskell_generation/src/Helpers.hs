@@ -44,6 +44,3 @@ type Haskell = String
 
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
-
-paren_comma_sep_g = ( \g l -> "( " ++ intercalate ", " (map g l) ++ " )")
-  :: (a -> Haskell) -> [ a ] -> Haskell

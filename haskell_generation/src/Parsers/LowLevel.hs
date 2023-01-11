@@ -18,17 +18,18 @@ import HaskellTypes.LowLevel
 -- integer_p, literal_p, value_name_p, literal_or_value_name_p, tuple_matching_p
 -- abstraction_p
 integer_p =
-  let number = many1 digit :: Parser String in
-  read <$> ((:) <$> char '-' <*> number <|> number)
+  let natural_number_string = many1 digit :: Parser String in
+  read <$> ((:) <$> char '-' <*> natural_number_string <|> natural_number_string)
   :: Parser Integer
 
 literal_p = integer_p
   :: Parser Literal
 
 value_name_p =
-  many1 (lower <|> char '_') >>= \l_ -> elem l_ keywords ==> \case
+  many1 (lower <|> char '_') >>= \lowers_underscores ->
+  elem lowers_underscores keywords ==> \case
     True -> parserFail "keyword"
-    _ -> return $ VN l_
+    _ -> return $ VN lowers_underscores
   :: Parser ValueName 
 
 literal_or_value_name_p =
@@ -36,10 +37,10 @@ literal_or_value_name_p =
   :: Parser LiteralOrValueName
 
 tuple_matching_p =
-  string "( " >> value_name_p >>= \vn1 ->
+  string "(" >> value_name_p >>= \vn1 ->
   string ", " >> value_name_p >>= \vn2 ->
   many (try $ string ", " *> value_name_p) >>= \vns ->
-  string " )" >> return (TM vn1 vn2 vns)
+  string ")" >> return (TM vn1 vn2 vns)
   :: Parser TupleMatching
 
 abstraction_p =

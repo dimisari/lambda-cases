@@ -8,7 +8,7 @@ import qualified Data.Map as M
   ( insert, lookup )
 
 import Helpers
-  ( Haskell, (==>), (.>), paren_comma_sep_g )
+  ( Haskell, (==>), (.>) )
 
 import HaskellTypes.LowLevel
   ( ValueName(..) )
@@ -24,7 +24,8 @@ import HaskellTypes.Generation
 -- BaseType
 base_type_g = ( \case
   TypeName tn -> show tn
-  TupleType vt1 vt2 vts -> paren_comma_sep_g value_type_g $ vt1 : vt2 : vts
+  TupleType vt1 vt2 vts ->
+    "(" ++ intercalate ", " (map value_type_g (vt1 : vt2 : vts)) ++ ")" 
   ParenType vt -> case vt of
     (AbsTypesAndResType [] bt) -> base_type_g bt
     _ -> "(" ++ value_type_g vt ++ ")"

@@ -12,19 +12,20 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( ValueType )
 
--- All: Types, Show instances, error messages
+-- All: Types, Show instances
 
 -- Types:
--- ParenthesisValue, BaseValue, ApplicationDirection, OneArgApplications,
+-- ParenthesisValue, MathApplication,  BaseValue
+-- ApplicationDirection, OneArgApplications
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
 -- OperatorValue, LambdaOperatorValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, OutputValue, LambdaValue
+-- Where, OutputValue, LambdaOutputValue
 
 data ParenthesisValue =
-  Parenthesis LambdaValue | Tuple [ LambdaOperatorValue ]
+  Parenthesis LambdaOutputValue | Tuple [ LambdaOperatorValue ]
 
 data MathApplication =
   MathApp ValueName LambdaOperatorValue [ LambdaOperatorValue ]
@@ -40,9 +41,7 @@ data ApplicationDirection =
 --   BaseValue | Cases
 
 data OneArgApplications = OAA
-  ( BaseValue, ApplicationDirection )
-  [ ( BaseValue, ApplicationDirection ) ]
-  BaseValue
+  (BaseValue, ApplicationDirection) [ (BaseValue, ApplicationDirection) ] BaseValue
 
 data MultiplicationFactor =
   OneArgAppMF OneArgApplications | BaseValueMF BaseValue
@@ -68,23 +67,23 @@ data OperatorValue =
 data LambdaOperatorValue =
   LOV [ Abstraction ] OperatorValue
 
+newtype UseFields =
+  UF LambdaOutputValue
+
 data ManyArgsApplication =
   MAA [ LambdaOperatorValue ] ValueName
 
-newtype UseFields =
-  UF LambdaValue
-
 data SpecificCase =
-  SC LiteralOrValueName LambdaValue 
+  SC LiteralOrValueName LambdaOutputValue 
 
 newtype Cases =
   Cs [ SpecificCase ]
 
 data NameTypeAndValue =
-  NTAV ValueName ValueType LambdaValue
+  NTAV ValueName ValueType LambdaOutputValue
 
 data NameTypeAndValueLists =
-  NTAVLists [ ValueName ] [ ValueType ] [ LambdaValue ]
+  NTAVLists [ ValueName ] [ ValueType ] [ LambdaOutputValue ]
 
 data NTAVOrNTAVLists =
   NameTypeAndValue NameTypeAndValue | NameTypeAndValueLists NameTypeAndValueLists
@@ -93,32 +92,33 @@ newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
 
 data Where =
-  Where_ LambdaValue NamesTypesAndValues
+  Where_ LambdaOutputValue NamesTypesAndValues
 
 data OutputValue =
-  ManyArgsApplication ManyArgsApplication | UseFields UseFields | Cases Cases |
+  UseFields UseFields | ManyArgsApplication ManyArgsApplication | Cases Cases |
   Where Where | OperatorValue OperatorValue
 
-data LambdaValue =
+data LambdaOutputValue =
   LV [ Abstraction ] OutputValue
 
 -- Show instances:
--- ParenthesisValue, BaseValue, ApplicationDirection, OneArgApplications,
+-- ParenthesisValue, MathApplication, BaseValue
+-- ApplicationDirection, OneArgApplications
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
 -- OperatorValue, LambdaOperatorValue, ManyArgsApplication
 -- UseFields, SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, OutputValue, LambdaValue
+-- Where, OutputValue, LambdaOutputValue
 
 instance Show ParenthesisValue where
   show = \case
     Parenthesis v -> "(" ++ show v ++ ")"
-    Tuple vs -> "( " ++ vs==>map show==>intercalate ", " ++ " )"
+    Tuple vs -> "(" ++ vs==>map show==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
   show = \(MathApp vn lov1 lovs) ->
-    show vn ++ "( " ++ (lov1 : lovs)==>map show==>intercalate ", " ++ " )"
+    show vn ++ "(" ++ (lov1 : lovs)==>map show==>intercalate ", " ++ ")"
 
 instance Show BaseValue where
   show = \case
@@ -132,11 +132,8 @@ instance Show ApplicationDirection where
     RightApplication -> "<=="
 
 instance Show OneArgApplications where
-  show = \(OAA bv_ad bv_ad_s bv) -> case bv_ad_s of
-    [] -> error $ one_arg_app_err
-    _ ->
-      (bv_ad : bv_ad_s)==>concatMap ( \( bv, ad ) -> show bv ++ show ad ) ++
-      show bv
+  show = \(OAA bv_ad bv_ad_s bv) ->
+    (bv_ad : bv_ad_s)==>concatMap (\(bv, ad) -> show bv ++ show ad) ++ show bv
 
 instance Show MultiplicationFactor where
   show = \case
@@ -168,11 +165,11 @@ instance Show OperatorValue where
     EquF f -> show f
 
 instance Show LambdaOperatorValue where
-  show = \(LOV as nav1) -> show as ++ show nav1
+  show = \(LOV as ov) -> show as ++ show ov
 
 instance Show ManyArgsApplication where
   show = \(MAA maavs vn) ->
-    maavs==>map show==>intercalate ", " ++ " *=> " ++ show vn
+    maavs==>map show==>intercalate ", " ++ " *==> " ++ show vn
 
 instance Show UseFields where
   show = \(UF v) -> "use_fields ->\n" ++ show v
@@ -210,14 +207,8 @@ instance Show OutputValue where
   show = \case
     ManyArgsApplication maa -> show maa
     Cases cs -> show cs
-    Where inter_out -> show inter_out
-    OperatorValue nav1 -> show nav1
+    Where where_ -> show where_
+    OperatorValue ov -> show ov
 
-instance Show LambdaValue where
-  show = \(LV as nav) -> as==>concatMap (show .> (++ " -> ")) ++ show nav
-
--- error messages: one_arg_app_err, less_than_two_mul_err
-one_arg_app_err =
-  "One arg function application should have at least one application direction"
-less_than_two_mul_err =
-  "Found less than 2 mfs in multiplication"
+instance Show LambdaOutputValue where
+  show = \(LV as outval) -> as==>concatMap (show .> (++ " -> ")) ++ show outval

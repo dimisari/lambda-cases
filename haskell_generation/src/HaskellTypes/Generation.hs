@@ -5,7 +5,7 @@ module HaskellTypes.Generation where
 import Control.Monad.State
   ( State, get, modify )
 import qualified Data.Map as M
-  ( Map, lookup, insert, insertWith, empty, fromList )
+  ( Map, lookup, insert, insertWith )
 --import Control.Monad.Trans.Except ( ExceptT )
 
 import Helpers
@@ -50,7 +50,7 @@ get_from_state = ( \f -> get >>= f .> return )
 
 -- value_map operations: value_map_insert, value_map_get
 value_map_insert =
-  ( \vn vt -> get_value_map >>= M.insertWith (++) vn [vt] .> update_value_map )
+  (\vn vt -> get_value_map >>= M.insertWith (++) vn [vt] .> update_value_map)
   :: ValueName -> ValueType -> Stateful ()
 
 value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
@@ -65,7 +65,7 @@ value_map_pop = ( \vn -> get_value_map >>= \vm -> M.lookup vn vm ==> \case
   Just vts -> case vts of
     [] -> error $
       "Should not happen: popped on empty stack of type for value" ++ show vn
-    vt:vts -> update_value_map $ M.insert vn vts vm
+    vt : vts -> update_value_map $ M.insert vn vts vm
   ) :: ValueName -> Stateful ()
 
 -- type_map operations: type_map_exists_check, type_map_insert, type_map_get
@@ -75,7 +75,7 @@ type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case
   ) :: TypeName -> Stateful ()
 
 type_map_insert =
-  ( \tn foc -> get_type_map >>= M.insert tn foc .> update_type_map )
+  (\tn foc -> get_type_map >>= M.insert tn foc .> update_type_map)
   :: TypeName -> FieldsOrCases -> Stateful ()
 
 type_map_get = ( \tn@(TN s) -> get_type_map >>= M.lookup tn .> \case

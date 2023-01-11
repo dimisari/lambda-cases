@@ -30,22 +30,22 @@ import Parsers.Types
 -- use_fields_p, specific_case_p, cases_p,
 -- name_type_and_value_p, name_type_and_value_lists_p,
 -- ntav_or_ntav_lists_p, names_types_and_values_p, where_p,
--- output_value_p, LambdaValue
+-- output_value_p, LambdaOutputValue
 
 -- ParenthesisValue:
 -- parenthesis_value_p, tuple_internals_p, parenthesis_internals_p
 [ parenthesis_value_p, tuple_internals_p, parenthesis_internals_p ] =
   [ char '(' *> (try tuple_internals_p <|> parenthesis_internals_p) <* char ')'
-  , fmap Tuple $ char ' ' *> seperated2 ", " lambda_operator_value_p <* char ' '
+  , fmap Tuple $ seperated2 ", " lambda_operator_value_p
   , Parenthesis <$> value_p ]
   :: [ Parser ParenthesisValue ]
 -- ParenthesisValue end
 
 math_application_p =  
   value_name_p >>= \vn ->
-  string "( " >> lambda_operator_value_p >>= \lov ->
+  string "(" >> lambda_operator_value_p >>= \lov ->
   many (try $ string ", " >> lambda_operator_value_p) >>= \lovs ->
-  string " )" >> MathApp vn lov lovs==>return
+  string ")" >> MathApp vn lov lovs==>return
   :: Parser MathApplication
 
 base_value_p =
@@ -191,19 +191,19 @@ output_value_p = choice $
   , OperatorValue <$> operator_value_p
   ] :: Parser OutputValue
 
--- LambdaValue:
+-- LambdaOutputValue:
 -- value_p, one_abstraction_arrow_value_p, many_abstractions_arrow_value_p
 value_p =
   try many_abstractions_arrow_value_p <|> one_abstraction_arrow_value_p
-  :: Parser LambdaValue
+  :: Parser LambdaOutputValue
 
 one_abstraction_arrow_value_p =
   abstractions_p >>= \as -> output_value_p >>= \nae ->
   return $ LV as nae
-  :: Parser LambdaValue
+  :: Parser LambdaOutputValue
 
 many_abstractions_arrow_value_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_abstraction_arrow_value_p >>=
     \(LV as2 nav) -> return $ LV (as1 ++ as2) nav
-  :: Parser LambdaValue
+  :: Parser LambdaOutputValue

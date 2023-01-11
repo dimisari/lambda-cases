@@ -24,3 +24,4 @@ combine_with_reverse_direction = ( \at1 ad at2 -> case ad of
   RightApplication -> Application at1 at2
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
+

@@ -13,7 +13,7 @@ import HaskellTypes.LowLevel
 -- All: Types, Show instances, helpers
 
 -- Types:
--- TypeName, ParenType, BaseType, ValueType, FieldAndType, TupleTypeDef
+-- TypeName, BaseType, ValueType, FieldAndType, TupleTypeDef
 -- CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
 newtype TypeName =
   TN String deriving ( Eq, Ord )
@@ -25,12 +25,20 @@ data BaseType =
 data ValueType =
   AbsTypesAndResType [ BaseType ] BaseType
 
-data NewValueType =
-  FunctionType BaseType NewValueType | NamedConstantType TypeName |
-  TupleConstantType NewValueType NewValueType [ NewValueType ]
+--
+data ValType =
+  FunctionType ValType ValType | NamedType TypeName |
+  TupleValType ValType ValType [ ValType ]
+ 
+base_type_to_val_type = undefined
+  :: BaseType -> ValType
+
+value_type_to_val_type = undefined
+  :: ValueType -> ValType
+--
 
 data FieldAndType =
-  FT { get_fn :: ValueName, get_ft :: ValueType }
+  FT { get_field_name :: ValueName, get_field_type :: ValueType }
 
 data TupleTypeDef =
   NameAndValue TypeName [ FieldAndType ]
@@ -47,11 +55,11 @@ data TypeDef =
 data FieldsOrCases =
   FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
 
-newtype ArgName = 
-  AN Char
-
-data TypeConstructorExpr =
-  ArgnamesAndName [ ArgName ] TypeName
+-- newtype ArgName = 
+--   AN Char
+-- 
+-- data TypeConstructorExpr =
+--   ArgnamesAndName [ ArgName ] TypeName
 
 -- Show instances:
 -- TypeName, BaseType, ValueType, FieldAndType, TupleTypeDef,
@@ -62,11 +70,11 @@ instance Show TypeName where
 instance Show BaseType where
   show = \case 
     TypeName tn -> show tn
-    ParenType vt -> vt==> \case
-      (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
+    ParenType vt -> vt ==> \case
+      (AbsTypesAndResType [] bt) -> show bt
       _ -> "(" ++ show vt ++ ")"
     TupleType vt1 vt2 vts ->
-      "( " ++ (vt1:vt2:vts)==>map show==>intercalate ", " ++ " )"
+      "( " ++ (vt1 : vt2 : vts)==>map show==>intercalate ", " ++ " )"
 
 instance Show ValueType where
   show = \(AbsTypesAndResType bts bt) ->
@@ -78,11 +86,11 @@ instance Show FieldAndType where
 instance Show TupleTypeDef where
   show = \(NameAndValue tn ttfs) ->
     "\ntuple_type " ++ show tn ++
-    "\nvalue ( " ++ ttfs==>map show==>intercalate ", "  ++ " )\n"
+    "\nvalue (" ++ ttfs==>map show==>intercalate ", "  ++ ")\n"
 
 instance Show CaseAndMaybeType where
   show = \(CMT vn mvt) -> show vn ++ case mvt of 
-    Just vt -> "." ++ show vt
+    Just vt -> "<==(value: " ++ show vt ++ ")"
     Nothing -> ""
 
 instance Show OrTypeDef where

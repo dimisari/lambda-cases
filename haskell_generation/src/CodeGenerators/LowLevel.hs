@@ -2,13 +2,15 @@
 
 module CodeGenerators.LowLevel where
 
+import Data.List
+  ( intercalate )
 import qualified Data.Map as M
   ( lookup )
 import Control.Monad
   ( (>=>) )
 
 import Helpers
-  ( Haskell, (==>), (.>), paren_comma_sep_g )
+  ( Haskell, (==>), (.>) )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), LiteralOrValueName(..), TupleMatching(..)
@@ -107,9 +109,10 @@ tn_bt_are_equivalent = ( \tn bt -> tn_to_bt tn >>= bts_are_equivalent bt
 tn_to_bt = ( type_map_get >=> \case
   FieldAndTypeList fatl -> case fatl of
     [] -> undefined
-    [ fat ] -> return $ ParenType $ get_ft fat
+    [ fat ] -> return $ ParenType $ get_field_type fat
     fat1 : fat2 : rest ->
-      return $ TupleType (get_ft fat1) (get_ft fat2) (map get_ft rest)
+      return $ TupleType
+        (get_field_type fat1) (get_field_type fat2) (map get_field_type rest)
   CaseAndMaybeTypeList _ -> undefined
   ) :: TypeName -> Stateful BaseType
 
@@ -148,7 +151,7 @@ value_types_tuple_matching_g = ( \vts (TM vn1 vn2 vns) ->
 
 correct_value_types_value_names_g = ( \vts vns -> 
   zipWith value_map_insert vns vts==>sequence_ >>
-  paren_comma_sep_g show vns==>return
+  return ("(" ++ intercalate ", " (map show vns) ++ ")")
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
 -- TupleMatching end
 
