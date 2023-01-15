@@ -18,8 +18,10 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( BaseType(..), ValueType(..), TypeName(..), FieldsOrCases(..)
   , FieldAndType(..) )
+import HaskellTypes.AfterParsing
+  ( ValType(..) )
 import HaskellTypes.Generation
-  ( Stateful, value_map_get, value_map_insert, type_map_get )
+  ( Stateful, val_map_get, value_map_get, value_map_insert, type_map_get )
 
 import CodeGenerators.ErrorMessages
   ( literal_not_int_err, type_check_err, tuple_matching_err
@@ -37,9 +39,18 @@ literal_g = ( \vt l ->
     False -> error $ literal_not_int_err vt
   ) :: ValueType -> Literal -> Stateful Haskell
 
+val_literal_g = ( \vt l -> 
+  (vt == NamedType (TN "Int")) ==> \case
+    True -> return $ show l
+    False -> undefined
+  ) :: ValType -> Literal -> Stateful Haskell
+
 literal_type_inference_g = ( \l -> 
   return (AbsTypesAndResType [] (TypeName (TN "Int")), show l)
   ) :: Literal -> Stateful ( ValueType, Haskell )
+
+val_literal_type_inference_g = ( \l -> return (NamedType $ TN "Int", show l) )
+  :: Literal -> Stateful ( ValType, Haskell )
 
 -- LiteralOrValueName:
 -- literal_or_value_name_g, type_check_value_name_g,
@@ -50,6 +61,12 @@ literal_or_value_name_g = ( \vt -> \case
     value_map_get vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
   ) :: ValueType -> LiteralOrValueName -> Stateful Haskell
 
+val_literal_or_value_name_g = ( \vt -> \case
+  Literal l -> val_literal_g vt l
+  ValueName vn ->
+    val_map_get vn >>= \lookup_vt -> val_type_check_value_name_g vt lookup_vt vn
+  ) :: ValType -> LiteralOrValueName -> Stateful Haskell
+
 type_check_value_name_g = ( \vt lookup_vt vn ->
   vts_are_equivalent vt lookup_vt >>= \case
     False -> error $ type_check_err vn lookup_vt vt 
@@ -58,6 +75,15 @@ type_check_value_name_g = ( \vt lookup_vt vn ->
       VN "false" -> return "False"
       _ -> return $ show vn
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
+
+val_type_check_value_name_g = ( \vt lookup_vt vn ->
+  val_vts_are_equivalent vt lookup_vt >>= \case
+    False -> undefined
+    True -> case vn of
+      VN "true" -> return "True"
+      VN "false" -> return "False"
+      _ -> return $ show vn
+  ) :: ValType -> ValType -> ValueName -> Stateful Haskell
 
 vts_are_equivalent = (
   \vt1@(AbsTypesAndResType abs_ts1 bt1) vt2@(AbsTypesAndResType abs_ts2 bt2) ->
@@ -77,24 +103,41 @@ vts_are_equivalent = (
         return $ bts_equiv && vts_equiv
   ) :: ValueType -> ValueType -> Stateful Bool
 
-bts_are_equivalent = ( \bt1 bt2 -> case ( bt1, bt2 ) of
-  (ParenType (AbsTypesAndResType [] bt1_), _ ) -> bts_are_equivalent bt1_ bt2
-  (_, ParenType (AbsTypesAndResType [] bt2_) ) -> bts_are_equivalent bt1 bt2_
+-- FunctionType in_vt out_vt
+-- NamedType tn 
+-- TupleValType vt vt2 vts
+val_vts_are_equivalent = ( \vt1 vt2 -> case (vt1, vt2) of
+  (FunctionType in_vt1 out_vt1, FunctionType in_vt2 out_vt2) ->
+    val_vts_are_equivalent in_vt1 in_vt2 >>= \in_equiv ->
+    val_vts_are_equivalent out_vt1 out_vt2 >>= \out_equiv -> 
+    return $ in_equiv && out_equiv
+  (NamedType tn1, NamedType tn2) -> nts_are_equivalent tn1 tn2
+  (TupleValType vt1 vt2 vts, TupleValType vt1_ vt2_ vts_) ->
+    zipWith val_vts_are_equivalent (vt1:vt2:vts) (vt1_:vt2_:vts_)
+      ==> sequence ==> fmap and
+  ) :: ValType -> ValType -> Stateful Bool
 
-  (TypeName tn1, TypeName tn2 ) -> tns_are_equivalent tn1 tn2
-  (ParenType vt1, ParenType vt2 ) -> vts_are_equivalent vt1 vt2
-  (TupleType vt1 vt2 rest, TupleType vt1_ vt2_ rest_ ) ->
+nts_are_equivalent = ( \tn1 tn2 -> undefined
+  ) :: TypeName -> TypeName -> Stateful Bool
+
+bts_are_equivalent = ( \bt1 bt2 -> case ( bt1, bt2 ) of
+  (ParenType (AbsTypesAndResType [] bt1_), _) -> bts_are_equivalent bt1_ bt2
+  (_, ParenType (AbsTypesAndResType [] bt2_)) -> bts_are_equivalent bt1 bt2_
+
+  (TypeName tn1, TypeName tn2) -> tns_are_equivalent tn1 tn2
+  (ParenType vt1, ParenType vt2) -> vts_are_equivalent vt1 vt2
+  (TupleType vt1 vt2 rest, TupleType vt1_ vt2_ rest_) ->
    zipWith vts_are_equivalent (vt1:vt2:rest) (vt1_:vt2_:rest_)
      ==> sequence ==> fmap and
 
   (TypeName _, ParenType _) -> return False
   (ParenType _, TypeName _) -> return False
 
-  (TypeName tn, TupleType _ _ _ ) -> tn_bt_are_equivalent tn bt2
-  (TupleType _ _ _, TypeName tn ) -> tn_bt_are_equivalent tn bt1
+  (TypeName tn, TupleType _ _ _) -> tn_bt_are_equivalent tn bt2
+  (TupleType _ _ _, TypeName tn) -> tn_bt_are_equivalent tn bt1
 
-  (TupleType _ _ _, ParenType _ ) -> return False
-  (ParenType _, TupleType _ _ _ ) -> return False
+  (TupleType _ _ _, ParenType _) -> return False
+  (ParenType _, TupleType _ _ _) -> return False
 
   ) :: BaseType -> BaseType -> Stateful Bool
 

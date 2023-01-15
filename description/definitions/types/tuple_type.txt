@@ -2,7 +2,7 @@
 Example:
 
 tuple_type A, B *==> TypeName
-value ( field0: Int, field1: Text, field2: A, field3: ListOf(A)s )
+value (field0: Int, field1: Text, field2: A, field3: ListOf(A)s)
 
 Comments:
 - get and update functions should be generated automatically:

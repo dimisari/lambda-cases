@@ -16,10 +16,12 @@ import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
   , TupleTypeDef(..), OrTypeDef(..), CaseAndMaybeType(..), FieldsOrCases(..)
   , TypeDef(..) )
+import HaskellTypes.AfterParsing
+  ( ValType(..) )
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 
--- All: ParenType, ValueType, TupleTypeDef
+-- All: BaseType, ValueType, TupleTypeDef, OrTypeDef, TypeDef
 
 -- BaseType
 base_type_g = ( \case
@@ -36,8 +38,16 @@ value_type_g = ( \(AbsTypesAndResType bts bt) ->
   bts==>concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
   ) :: ValueType -> Haskell
 
+-- ValType
+val_type_g = ( \case
+  FunctionType t_in t_out -> val_type_g t_in ++ " -> " ++ val_type_g t_out
+  NamedType tn -> show tn
+  TupleValType t1 t2 ts -> 
+    "(" ++ map val_type_g (t1 : t2 : ts)==>intercalate ", " ++ ")" 
+  ) :: ValType -> Haskell
+
 -- TupleTypeDef
-tuple_type_g = ( \(NameAndValue tn ttv) ->
+tuple_type_def_g = ( \(NameAndValue tn ttv) ->
   let
   tuple_value_g =
     ttv==>mapM field_and_type_g >>= \ttv_g ->
@@ -57,7 +67,7 @@ tuple_type_g = ( \(NameAndValue tn ttv) ->
   ) :: TupleTypeDef -> Stateful Haskell
 
 -- OrTypeDef
-or_type_g = ( \(NameAndValues tn otvs) -> 
+or_type_def_g = ( \(NameAndValues tn otvs) -> 
   let
   or_values_g =
     otvs==>mapM case_and_maybe_type_g >>= \otvs_g ->
@@ -78,8 +88,8 @@ or_type_g = ( \(NameAndValues tn otvs) ->
   return $ "\n\ndata " ++ show tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show"
   ) :: OrTypeDef -> Stateful Haskell
 
--- Type
-type_g = ( \case
-  TupleTypeDef tt -> tuple_type_g tt
-  OrTypeDef ot -> or_type_g ot
+-- TypeDef
+type_def_g = ( \case
+  TupleTypeDef tt -> tuple_type_def_g tt
+  OrTypeDef ot -> or_type_def_g ot
   ) :: TypeDef -> Stateful Haskell

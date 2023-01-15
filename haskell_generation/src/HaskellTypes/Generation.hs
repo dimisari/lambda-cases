@@ -16,6 +16,8 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType, CaseAndMaybeType
   , FieldsOrCases )
+import HaskellTypes.AfterParsing
+  ( ValType(..) )
 
 -- All:
 -- Types, get fields, update fields, value_map operations, type_map operations
@@ -24,11 +26,15 @@ import HaskellTypes.Types
 type ValueMap =
   M.Map ValueName [ ValueType ]
 
+type ValMap =
+  M.Map ValueName [ ValType ]
+
 type TypeMap =
   M.Map TypeName FieldsOrCases
 
-data GenState =
-  GS { indent_level :: Int, value_map :: ValueMap, type_map :: TypeMap }
+data GenState = GS
+  { indent_level :: Int, val_map :: ValMap, value_map :: ValueMap
+  , type_map :: TypeMap }
 
 type Stateful = State GenState
 
@@ -36,19 +42,33 @@ type Stateful = State GenState
 get_from_state = ( \f -> get >>= f .> return )
   :: (GenState -> a) -> Stateful a
 
-( get_indent_level, get_value_map, get_type_map ) =
-  ( indent_level, value_map, type_map )==> \( i, v, t ) ->
-  ( get_from_state i, get_from_state v, get_from_state t )
-  :: ( Stateful Int, Stateful ValueMap, Stateful TypeMap )
+( get_indent_level, get_val_map, get_value_map, get_type_map ) =
+  ( indent_level, val_map, value_map, type_map )==> \( i, vm, v, t ) ->
+  ( get_from_state i, get_from_state vm, get_from_state v, get_from_state t )
+  :: ( Stateful Int, Stateful ValMap, Stateful ValueMap, Stateful TypeMap )
 
 -- update fields: update_indent_level, update_value_map, update_type_map
-( update_indent_level, update_value_map, update_type_map ) =
+( update_indent_level, update_val_map, update_value_map, update_type_map ) =
   ( \il -> modify ( \s -> s { indent_level = il } )
+  , \vm -> modify ( \s -> s { val_map = vm } ) 
   , \vm -> modify ( \s -> s { value_map = vm } ) 
   , \tm -> modify ( \s -> s { type_map = tm } )
-  ) :: ( Int -> Stateful (), ValueMap -> Stateful (), TypeMap -> Stateful () )
+  ) :: ( Int -> Stateful (), ValMap -> Stateful (), ValueMap -> Stateful ()
+       , TypeMap -> Stateful () )
 
--- value_map operations: value_map_insert, value_map_get
+-- val_map operations: val_map_insert, value_map_get
+val_map_insert =
+  (\vn vt -> get_val_map >>= M.insertWith (++) vn [vt] .> update_val_map)
+  :: ValueName -> ValType -> Stateful ()
+
+val_map_get = ( \vn -> get_val_map >>= M.lookup vn .> \case
+  Nothing -> error $ "No definition for value: " ++ show vn
+  Just vts -> case vts of
+    [] -> undefined
+    vt:_ -> return vt
+  ) :: ValueName -> Stateful ValType
+
+-- value_map operations: value_map_insert, value_map_get, value_map_pop
 value_map_insert =
   (\vn vt -> get_value_map >>= M.insertWith (++) vn [vt] .> update_value_map)
   :: ValueName -> ValueType -> Stateful ()

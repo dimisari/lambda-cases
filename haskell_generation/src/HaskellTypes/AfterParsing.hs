@@ -2,6 +2,8 @@
 
 module HaskellTypes.AfterParsing where
 
+import HaskellTypes.Types
+  ( TypeName, BaseType(..), ValueType(..) )
 import HaskellTypes.Values
   ( BaseValue(..), ApplicationDirection(..), OneArgApplications(..) )
 
@@ -25,3 +27,24 @@ combine_with_reverse_direction = ( \at1 ad at2 -> case ad of
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
 
+data ValType =
+  FunctionType ValType ValType | NamedType TypeName |
+  TupleValType ValType ValType [ ValType ]
+  deriving Eq
+
+base_type_to_val_type = ( \case
+  TypeName tn -> NamedType tn
+  ParenType vt -> value_type_to_val_type vt
+  TupleType vt1 vt2 vts -> TupleValType t1 t2 ts where
+    t1 : t2 : ts = map value_type_to_val_type (vt1 : vt2 : vts)
+      :: [ ValType ]
+  ) :: BaseType -> ValType
+
+value_type_to_val_type = ( \(AbsTypesAndResType bts bt) -> case bts of
+  bt1:other_bts -> FunctionType t1 t2 where
+    t1 = base_type_to_val_type bt1
+      :: ValType
+    t2 = value_type_to_val_type $ AbsTypesAndResType other_bts bt
+      :: ValType
+  [] -> base_type_to_val_type bt
+  ) :: ValueType -> ValType

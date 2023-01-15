@@ -13,7 +13,7 @@ type application:
   - Comment:
     type must be defined with the characters [ '(', ')' ]
 - combination of variations example:
-  A, B *==> TypeName(C, D)MoreTypeName(E)EvenMoreTypeName(F, G)
+  H, I *==> F==>TypeName(A, B)MoreTypeName(C)EvenMoreTypeName(D, E)<==G
 
 same for function application:
 - (*==>/==> and <==/parenthesis at the end) variations:

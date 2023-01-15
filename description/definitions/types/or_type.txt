@@ -10,16 +10,16 @@ Comments:
 - If the type of the value is a tuple_type there is field inheritance. Example:
   fun: (A, B *==> TypeName) -> A==>OrNothing
     = cases
-      case2 -> a_value<==pair_first
+      case2 -> from_type<==pair_first
       ... -> nothing
 - "value" is the value inside each case. Examples:
   - fun1: (A, B *==> TypeName) -> A==>OrNothing
       = cases
-        case0 -> a_value<==value
+        case0 -> from_type<==value
         ... -> nothing
   - fun2: (A, B *==> TypeName) -> ( A, B )==>OrNothing
       = cases
-        case2 -> a_value<==value
+        case2 -> from_type<==value
         ... -> nothing
 - is functions should be generated automatically:
   - is_case0: (A, B *==> TypeName) -> Bool

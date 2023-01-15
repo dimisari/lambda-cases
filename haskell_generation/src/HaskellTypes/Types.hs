@@ -25,18 +25,6 @@ data BaseType =
 data ValueType =
   AbsTypesAndResType [ BaseType ] BaseType
 
---
-data ValType =
-  FunctionType ValType ValType | NamedType TypeName |
-  TupleValType ValType ValType [ ValType ]
- 
-base_type_to_val_type = undefined
-  :: BaseType -> ValType
-
-value_type_to_val_type = undefined
-  :: ValueType -> ValType
---
-
 data FieldAndType =
   FT { get_field_name :: ValueName, get_field_type :: ValueType }
 
