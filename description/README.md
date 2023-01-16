@@ -10,9 +10,9 @@ For both values and types the expressions below are equivalent:
 - x, y *==> f
 - x==>f<==y
 - f(x,y)
-- T1, T2 *==> Or
-- T1==>Or<==T2
-- Or(T1, T2)
+  - T1, T2 *==> Or
+  - T1==>Or<==T2
+  - Or(T1, T2)
 Can also omit arguments:
 - x==>f
 - f<==x
