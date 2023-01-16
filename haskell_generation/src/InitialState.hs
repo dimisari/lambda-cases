@@ -67,5 +67,5 @@ init_val_map =
     ]
   :: ValMap
 
-init_state = GS 0 init_val_map init_value_map M.empty
+init_state = GS 0 init_val_map M.empty init_value_map M.empty
   :: GenState

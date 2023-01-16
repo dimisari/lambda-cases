@@ -2,6 +2,8 @@
 
 module HaskellTypes.AfterParsing where
 
+import HaskellTypes.LowLevel
+  ( ValueName )
 import HaskellTypes.Types
   ( TypeName, BaseType(..), ValueType(..) )
 import HaskellTypes.Values
@@ -30,7 +32,7 @@ combine_with_reverse_direction = ( \at1 ad at2 -> case ad of
 data ValType =
   FunctionType ValType ValType | NamedType TypeName |
   TupleValType ValType ValType [ ValType ]
-  deriving Eq
+  deriving (Eq, Show)
 
 base_type_to_val_type = ( \case
   TypeName tn -> NamedType tn
@@ -48,3 +50,22 @@ value_type_to_val_type = ( \(AbsTypesAndResType bts bt) -> case bts of
       :: ValType
   [] -> base_type_to_val_type bt
   ) :: ValueType -> ValType
+
+data FieldAndValType =
+  FVT { get_f_name :: ValueName, get_f_valtype :: ValType }
+
+data TupleValTypeDef =
+  NameAndFields TypeName [ FieldAndValType ]
+
+data CaseAndMaybeValType =
+  CMVT ValueName (Maybe ValType)
+
+data ValOrTypeDef =
+  ValNameAndValues TypeName [ CaseAndMaybeValType ]
+
+data ValFieldsOrCases =
+  FieldAndValTypeList [ FieldAndValType ] |
+  CaseAndMaybeValTypeList [ CaseAndMaybeValType ]
+
+data ValTypeDef =
+  TupleValTypeDef TupleValTypeDef | ValOrTypeDef ValOrTypeDef

@@ -3,7 +3,7 @@ Example:
 
 or_type A, B *==> TypeName
 values
-  case0<==(value: A) | case1<==(value: B) | case2<==(value: ( A, B )) |
+  case0<==(value: A) | case1<==(value: B) | case2<==(value: (A, B)) |
   case3<==(value: ListOf(A)s) | case4<==(value: ListOf(B)s)
 
 Comments:

@@ -19,9 +19,10 @@ import HaskellTypes.Types
   ( BaseType(..), ValueType(..), TypeName(..), FieldsOrCases(..)
   , FieldAndType(..) )
 import HaskellTypes.AfterParsing
-  ( ValType(..) )
+  ( ValType(..), ValFieldsOrCases(..), FieldAndValType(..) )
 import HaskellTypes.Generation
-  ( Stateful, val_map_get, value_map_get, value_map_insert, type_map_get )
+  ( Stateful, val_map_get, val_map_insert, val_type_map_get
+  , value_map_get, value_map_insert, type_map_get )
 
 import CodeGenerators.ErrorMessages
   ( literal_not_int_err, type_check_err, tuple_matching_err
@@ -77,13 +78,50 @@ type_check_value_name_g = ( \vt lookup_vt vn ->
   ) :: ValueType -> ValueType -> ValueName -> Stateful Haskell
 
 val_type_check_value_name_g = ( \vt lookup_vt vn ->
-  val_vts_are_equivalent vt lookup_vt >>= \case
+  val_ts_are_equivalent vt lookup_vt >>= \case
     False -> undefined
     True -> case vn of
       VN "true" -> return "True"
       VN "false" -> return "False"
       _ -> return $ show vn
   ) :: ValType -> ValType -> ValueName -> Stateful Haskell
+
+val_ts_are_equivalent = ( \vt1 vt2 -> case (vt1, vt2) of
+  (FunctionType in_vt1 out_vt1, FunctionType in_vt2 out_vt2) ->
+    val_ts_are_equivalent in_vt1 in_vt2 >>= \in_equiv ->
+    val_ts_are_equivalent out_vt1 out_vt2 >>= \out_equiv -> 
+    return $ in_equiv && out_equiv
+  (NamedType tn1, NamedType tn2) -> val_tns_are_equivalent tn1 tn2
+  (TupleValType vt1_1 vt1_2 vts1, TupleValType vt2_1 vt2_2 vts2) ->
+    zipWith val_ts_are_equivalent (vt1_1 : vt1_2 : vts1) (vt2_1 : vt2_2 : vts2)
+      ==> sequence ==> fmap and
+
+  (FunctionType _ _ ,NamedType _) -> return False
+  (NamedType _, FunctionType _ _) -> return False
+
+  (FunctionType _ _ ,TupleValType _ _ _) -> return False
+  (TupleValType _ _ _, FunctionType _ _) -> return False
+
+  (NamedType tn, TupleValType _ _ _) -> tn_val_t_are_equivalent tn vt2
+  (TupleValType _ _ _, NamedType tn) -> tn_val_t_are_equivalent tn vt1
+  ) :: ValType -> ValType -> Stateful Bool
+
+val_tns_are_equivalent = ( \tn1 tn2 -> case tn1 == tn2 of
+  True -> return True
+  False -> tn_to_val_t tn1 >>= tn_val_t_are_equivalent tn2
+  ) :: TypeName -> TypeName -> Stateful Bool
+
+tn_val_t_are_equivalent = ( \tn vt -> tn_to_val_t tn >>= val_ts_are_equivalent vt
+  ) :: TypeName -> ValType -> Stateful Bool
+
+tn_to_val_t = ( val_type_map_get >=> \case
+  FieldAndValTypeList favtl -> case favtl of
+    [] -> undefined
+    [ favt ] -> return $ get_f_valtype favt
+    favt1 : favt2 : rest -> return $ TupleValType
+      (get_f_valtype favt1) (get_f_valtype favt2) (map get_f_valtype rest)
+  _ -> undefined
+  ) :: TypeName -> Stateful ValType
 
 vts_are_equivalent = (
   \vt1@(AbsTypesAndResType abs_ts1 bt1) vt2@(AbsTypesAndResType abs_ts2 bt2) ->
@@ -102,23 +140,6 @@ vts_are_equivalent = (
           >>= \vts_equiv ->
         return $ bts_equiv && vts_equiv
   ) :: ValueType -> ValueType -> Stateful Bool
-
--- FunctionType in_vt out_vt
--- NamedType tn 
--- TupleValType vt vt2 vts
-val_vts_are_equivalent = ( \vt1 vt2 -> case (vt1, vt2) of
-  (FunctionType in_vt1 out_vt1, FunctionType in_vt2 out_vt2) ->
-    val_vts_are_equivalent in_vt1 in_vt2 >>= \in_equiv ->
-    val_vts_are_equivalent out_vt1 out_vt2 >>= \out_equiv -> 
-    return $ in_equiv && out_equiv
-  (NamedType tn1, NamedType tn2) -> nts_are_equivalent tn1 tn2
-  (TupleValType vt1 vt2 vts, TupleValType vt1_ vt2_ vts_) ->
-    zipWith val_vts_are_equivalent (vt1:vt2:vts) (vt1_:vt2_:vts_)
-      ==> sequence ==> fmap and
-  ) :: ValType -> ValType -> Stateful Bool
-
-nts_are_equivalent = ( \tn1 tn2 -> undefined
-  ) :: TypeName -> TypeName -> Stateful Bool
 
 bts_are_equivalent = ( \bt1 bt2 -> case ( bt1, bt2 ) of
   (ParenType (AbsTypesAndResType [] bt1_), _) -> bts_are_equivalent bt1_ bt2
@@ -171,6 +192,18 @@ literal_or_value_name_type_inference_g = ( \case
     return ( vt, hs )
   ) :: LiteralOrValueName -> Stateful ( ValueType, Haskell )
 
+val_literal_or_value_name_type_inference_g = ( \case
+  Literal l -> val_literal_type_inference_g l
+  ValueName vn -> val_map_get vn >>= \vt ->
+    let
+    hs = case vn of
+      VN "true" -> "True"
+      VN "false" -> "False"
+      _ -> show vn
+    in
+    return ( vt, hs )
+  ) :: LiteralOrValueName -> Stateful ( ValType, Haskell )
+
 -- TupleMatching:
 -- tuple_matching_g, value_type_tuple_matching_g, value_types_tuple_matching_g,
 -- correct_value_types_value_names_g
@@ -196,6 +229,17 @@ correct_value_types_value_names_g = ( \vts vns ->
   zipWith value_map_insert vns vts==>sequence_ >>
   return ("(" ++ intercalate ", " (map show vns) ++ ")")
   ) :: [ ValueType ] -> [ ValueName ] -> Stateful Haskell
+
+val_tuple_matching_g = ( \case
+  -- possibly later with symbol table ?
+  NamedType tn -> undefined
+  FunctionType _ _ -> undefined
+  TupleValType vt1 vt2 vts -> \(TM vn1 vn2 vns) -> case length vts == length vns of
+    False -> undefined
+    True -> 
+      zipWith val_map_insert (vn1 : vn2 : vns) (vt1 : vt2 : vts)==>sequence_ >>
+      return ("(" ++ map show vns==>intercalate ", " ++ ")")
+  ) :: ValType -> TupleMatching -> Stateful Haskell
 -- TupleMatching end
 
 abstraction_g = ( \bt -> \case
@@ -207,11 +251,21 @@ abstraction_g = ( \bt -> \case
   TupleMatching tm -> tuple_matching_g bt tm
   ) :: BaseType -> Abstraction -> Stateful Haskell
 
+val_abstraction_g = ( \vt -> \case
+  ValueNameAb vn -> val_map_insert vn vt >> show vn ==> return where
+  TupleMatching tm -> val_tuple_matching_g vt tm
+  ) :: ValType -> Abstraction -> Stateful Haskell
+
 -- Abstractions: abstractions_g, correct_abstractions_g
 abstractions_g = ( \bts as -> case length bts == length as of
   False -> error abstractions_types_lengths_dont_match_err
   True -> correct_abstractions_g bts as
   ) :: [ BaseType ] -> [ Abstraction ] -> Stateful Haskell
+
+val_abstractions_g = ( \vts as -> case length vts == length as of
+  False -> error abstractions_types_lengths_dont_match_err
+  True -> val_correct_abstractions_g vts as
+  ) :: [ ValType ] -> [ Abstraction ] -> Stateful Haskell
 
 correct_abstractions_g = ( \bts -> \case
   [] -> return ""
@@ -222,3 +276,11 @@ correct_abstractions_g = ( \bts -> \case
     bt_abstraction_g = ( \bt a -> abstraction_g bt a >>= (++ " ") .> return )
       :: BaseType -> Abstraction -> Stateful Haskell
   ) :: [ BaseType ] -> [ Abstraction ] -> Stateful Haskell
+
+val_correct_abstractions_g = ( \vts -> \case
+  [] -> return ""
+  as -> as_g >>= \as_h -> return $ "\\" ++ as_h ++ "-> " where
+    as_g =
+      zipWith val_abstraction_g vts as==>sequence==>fmap (concatMap (++ " "))
+      :: Stateful Haskell
+  ) :: [ ValType ] -> [ Abstraction ] -> Stateful Haskell
