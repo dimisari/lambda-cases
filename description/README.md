@@ -13,4 +13,11 @@ For both values and types the expressions below are equivalent:
 - T1, T2 *==> Or
 - T1==>Or<==T2
 - Or(T1, T2)
+Can also omit arguments:
+- x==>f
+- f<==x
+- f(x,)
+- T1==>Or
+- Or<==T1
+- Or(T1,)
 # Initial Module
