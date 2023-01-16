@@ -1,6 +1,6 @@
 
-or_type LeftType==>Or<==RightType
-values from_left<==(value: LeftType) | from_right<==(value: RightType)
+or_type LeftT==>Or<==RightT
+values from_left<==(value: LeftT) | from_right<==(value: RightT)
 
 or_type T==>OrNothing
 values from_type<==(value: T) | nothing
