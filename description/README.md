@@ -7,10 +7,10 @@ when the value is equal to another value or literal
 # Other Syntax
 ## application variations, import
 For both values and types the expressions below are equivalent:
-x, y *==> f
-x==>f<==y
-f(x,y)
-T1, T2 *==> Or
-T1==>Or<==T2
-Or(T1, T2)
+- x, y *==> f
+- x==>f<==y
+- f(x,y)
+- T1, T2 *==> Or
+- T1==>Or<==T2
+- Or(T1, T2)
 # Initial Module
