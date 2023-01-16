@@ -7,17 +7,21 @@ when the value is equal to another value or literal
 # Other Syntax
 ## application variations, import
 For both values and types the expressions below are equivalent:
-- x, y *==> f
-- x==>f<==y
-- f(x,y)
+- Values:
+  - x, y *==> f
+  - x==>f<==y
+  - f(x,y)
+- Types:
   - T1, T2 *==> Or
   - T1==>Or<==T2
   - Or(T1, T2)
 Can also omit arguments:
-- x==>f
-- f<==x
-- f(x,)
-- T1==>Or
-- Or<==T1
-- Or(T1,)
+- Values:
+  - x==>f
+  - f<==x
+  - f(x,)
+- Types:
+  - T1==>Or
+  - Or<==T1
+  - Or(T1,)
 # Initial Module
