@@ -15,7 +15,7 @@ For both values and types the expressions below are equivalent:
   - T1, T2 *==> Or
   - T1==>Or<==T2
   - Or(T1, T2)
-Can also omit arguments:
+- Can also omit arguments:
 - Values:
   - x==>f
   - f<==x
