@@ -8,8 +8,8 @@ the list type is an or\_type. It's either empty or non-empty.
 (aka tuples)
 # Values
 ## cases syntax, use\_fields syntax, let-output syntax, lambda values
--"cases" syntax let's you pattern match with literals or different or\_type
+- "cases" syntax let's you pattern match with literals or different or\_type
 values.  (Should be extended recursively for tuple\_types in the future)
--"use\_fields" syntax let's you refer to sub-values of a tuple\_type value with
+- "use\_fields" syntax let's you refer to sub-values of a tuple\_type value with
 the names given in the tuple\_type defintion.
 # type\_predicates and type\_theorems
