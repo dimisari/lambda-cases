@@ -16,12 +16,12 @@ For both values and types the expressions below are equivalent:
   - T1==>Or<==T2
   - Or(T1, T2)
 - Can also omit arguments:
-- Values:
-  - x==>f
-  - f<==x
-  - f(x,)
-- Types:
-  - T1==>Or
-  - Or<==T1
-  - Or(T1,)
+  - Values:
+    - x==>f
+    - f<==x
+    - f(x,)
+  - Types:
+    - T1==>Or
+    - Or<==T1
+    - Or(T1,)
 # Initial Module
