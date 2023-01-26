@@ -33,23 +33,28 @@ import Parsers.Types
 -- output_value_p, LambdaOutputValue
 
 -- ParenthesisValue:
--- parenthesis_value_p, tuple_internals_p, parenthesis_internals_p
-[ parenthesis_value_p, tuple_internals_p, parenthesis_internals_p ] =
-  [ char '(' *> (try tuple_internals_p <|> parenthesis_internals_p) <* char ')'
-  , fmap Tuple $ seperated2 ", " lambda_operator_value_p
-  , Parenthesis <$> value_p ]
-  :: [ Parser ParenthesisValue ]
+-- parenthesis_value_p, tuple_p
+parenthesis_value_p =
+  try tuple_p <|> char '(' *> (Parenthesis <$> value_p) <* char ')'
+  :: Parser ParenthesisValue
+
+tuple_p =
+  char '(' >> lambda_operator_value_p >>= \lov1 ->
+  string ", " >> lambda_operator_value_p >>= \lov2 ->
+  many (try $ string ", " >> lambda_operator_value_p) >>= \lovs ->
+  char ')' >> return (Tuple $ lov1 : lov2 : lovs)
+  :: Parser ParenthesisValue
 -- ParenthesisValue end
 
 math_application_p =  
   value_name_p >>= \vn ->
-  string "(" >> lambda_operator_value_p >>= \lov ->
+  char '(' >> lambda_operator_value_p >>= \lov ->
   many (try $ string ", " >> lambda_operator_value_p) >>= \lovs ->
-  string ")" >> MathApp vn lov lovs==>return
+  char ')' >> MathApp vn lov lovs==>return
   :: Parser MathApplication
 
 base_value_p =
-  ParenthesisValue <$> parenthesis_value_p <|>
+  ParenthesisValue <$> try parenthesis_value_p <|>
   MathApplication <$> try math_application_p <|>
   LiteralOrValueName <$> literal_or_value_name_p
   :: Parser BaseValue

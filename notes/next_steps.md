@@ -9,6 +9,8 @@ type abstractions:
   - type application
 
 fix:
+- *==> in parenthesis (x, y *==> gcd_help) problem with tuple:
+  - eliminate parenthesis??
 - cases at the end of one argument applications:
   optionMaybe or change the last type??
 - "use_fields" in parenthesis and tuples:
