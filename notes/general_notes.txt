@@ -1,6 +1,6 @@
 parsec:
 - <?> for better parsing error messages!
-- string literal: char '"' *> many (noneOf ['"']) <* char '"'
+- string literal: char '"' \*> many (noneOf ['"']) <\* char '"'
 
 Questions:
 - mutual recursion: need to load whole level?
