@@ -1,8 +1,6 @@
 atomic types:
 - Int, Real, Char
-- Text?
-- Pointer?
-- Array?
+- Text?, Array?
 
 tuple_types:
 - tuple_type Empty

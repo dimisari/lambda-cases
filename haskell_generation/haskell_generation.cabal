@@ -17,9 +17,11 @@ extra-doc-files:    CHANGELOG.md
 executable haskell_generation
     hs-source-dirs:   src
     main-is:          Main.hs
-    other-modules:    Helpers, Parsers.LowLevel, Parsers.Types, Parsers.Values,
+    other-modules:    Helpers, InitialState,
+                      Parsers.LowLevel, Parsers.Types, Parsers.Values,
                       HaskellTypes.LowLevel, HaskellTypes.Types,
-                      HaskellTypes.Values, HaskellTypes.Generation,
+                      HaskellTypes.Values, HaskellTypes.AfterParsing,
+                      HaskellTypes.Generation,
                       CodeGenerators.LowLevel, CodeGenerators.Types,
                       CodeGenerators.Values, CodeGenerators.ErrorMessages
 

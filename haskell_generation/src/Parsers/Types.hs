@@ -1,3 +1,5 @@
+{-# language LambdaCase #-}
+
 module Parsers.Types where
 
 import Text.Parsec
@@ -10,63 +12,71 @@ import Helpers
 
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
-  , TupleType(..), CaseAndMaybeType(..), OrType(..), Type(..) )
+  , TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..), TypeDef(..), vt_to_bt )
 
 import Parsers.LowLevel
   ( value_name_p )
 
 -- All:
--- type_name_p, base_type_p, ValueType, field_and_type_p, tuple_type_p,
--- case_and_type_p, or_type_p, type_p
+-- type_name_p, ParenType, base_type_p, ValueType, field_and_type_p,
+-- tuple_type_def_p, case_and_maybe_type_p, or_type_def_p, type_def_p
 
 type_name_p =
-  upper >>= \u -> many (lower <|> upper) >>= \lu -> return $ TN (u:lu)
+  upper >>= \initial_upper -> many (lower <|> upper) >>= \lowers_uppers ->
+  return $ TN (initial_upper : lowers_uppers)
   :: Parser TypeName
 
-base_type_p =
-  ParenTupleType <$>
-     try (string "( " *> seperated2 ", " value_type_p <* string " )") <|>
-  ParenthesisType <$> (char '(' *> value_type_p <* char ')') <|>
-  TypeName <$> type_name_p 
+tuple_type_p =
+  value_type_p >>= \vt1 -> string ", " >> value_type_p >>= \vt2 ->
+  many (string ", " >> value_type_p) >>= \vts ->
+  return (TupleType vt1 vt2 vts)
   :: Parser BaseType
 
--- ValueType: value_type_p, one_ab_arrow_value_type_p, many_ab_arrows_value_type_p
+base_type_p =
+  TypeName <$> type_name_p <|> 
+  char '(' *> (try tuple_type_p <|> ParenType <$> value_type_p) <* char ')'
+  :: Parser BaseType
+
+-- ValueType: value_type_p, many_abstractions_arrow_p, one_abstraction_arrow_p
 value_type_p =
-  try many_ab_arrows_value_type_p <|> one_ab_arrow_value_type_p
+  try many_abstractions_arrow_p <|> one_abstraction_arrow_p
   :: Parser ValueType
 
-one_ab_arrow_value_type_p =
+many_abstractions_arrow_p =
+  seperated2 ", " one_abstraction_arrow_p >>= \vt1s ->
+  string " *-> " >> one_abstraction_arrow_p >>= \(AbsTypesAndResType bts bt) ->
+  return $ AbsTypesAndResType (map vt_to_bt vt1s ++ bts) bt
+  :: Parser ValueType
+
+one_abstraction_arrow_p =
   many (try $ base_type_p <* string " -> ") >>= \bts -> base_type_p >>= \bt ->
   return $ AbsTypesAndResType bts bt
   :: Parser ValueType
-
-many_ab_arrows_value_type_p =
-  seperated2 ", " one_ab_arrow_value_type_p >>= \vt1s ->
-  string " *-> " >> one_ab_arrow_value_type_p >>= \(AbsTypesAndResType bts bt) ->
-  return $ AbsTypesAndResType (map ParenthesisType vt1s ++ bts) bt
-  :: Parser ValueType
+-- ValueType end
 
 field_and_type_p = 
-  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt -> return $ FT vn vt
+  value_name_p >>= \vn -> string ": " >> value_type_p >>= \vt ->
+  return $ FT vn vt
   :: Parser FieldAndType
 
-tuple_type_p =
+tuple_type_def_p =
   string "tuple_type " >> type_name_p >>= \tn ->
-  string "\nvalue ( " >> (field_and_type_p==>sepBy $ string ", ") <* string " )"
-    >>= \ttv -> eof_or_new_lines >> NameAndValue tn ttv==>return
-  :: Parser TupleType
+  string "\nvalue (" >> (field_and_type_p==>sepBy $ string ", ") >>= \ttv ->
+  string ")" >> eof_or_new_lines >> NameAndValue tn ttv==>return
+  :: Parser TupleTypeDef
 
-case_and_type_p = 
+case_and_maybe_type_p = 
   value_name_p >>= \vn -> optionMaybe (char '.' *> value_type_p) >>= \mvt ->
-  return $ CT vn mvt
+  return $ CMT vn mvt
   :: Parser CaseAndMaybeType
 
-or_type_p =
+or_type_def_p =
   string "or_type " >> type_name_p >>= \tn ->
-  string "\nvalues " >> (case_and_type_p==>sepBy $ string " | ") >>= \otvs ->
+  string "\nvalues " >>
+  (case_and_maybe_type_p==>sepBy $ try $ string " | ") >>= \otvs ->
   eof_or_new_lines >> NameAndValues tn otvs==>return
-  :: Parser OrType
+  :: Parser OrTypeDef
 
-type_p = 
-  TupleType <$> tuple_type_p <|> OrType <$> or_type_p
-  :: Parser Type
+type_def_p = 
+  TupleTypeDef <$> tuple_type_def_p <|> OrTypeDef <$> or_type_def_p
+  :: Parser TypeDef

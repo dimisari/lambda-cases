@@ -13,34 +13,34 @@ import Helpers
   ( Haskell, (==>), (.>), indent )
 
 import HaskellTypes.LowLevel
-  ( LiteralOrValueName(..), ApplicationDirection(..), ValueName(..)
-  , Abstractions(..) )
+  ( LiteralOrValueName(..), ValueName(..), Abstraction(..) )
 import HaskellTypes.Types
   ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..), FieldsOrCases(..)
-  , vt_bt_are_equivalent, vt_shortest_equivalent )
+  , bt_to_vt, vt_to_bt )
+import HaskellTypes.Values
+import HaskellTypes.AfterParsing
+  ( ApplicationTree(..), to_application_tree, to_application_tree )
 import HaskellTypes.Generation
-  ( Stateful, get_indent_level, update_indent_level, type_map_get
-  , value_map_get, value_map_insert )
+  ( Stateful, get_indent_level, update_indent_level, type_map_get, value_map_get
+  , value_map_insert )
 
+import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel
-  ( literal_g, literal_type_inference_g
-  , literal_or_value_name_g, literal_or_value_name_type_inference_g
-  , abstractions_g )
+  ( literal_g, literal_type_inference_g, literal_or_value_name_g
+  , literal_or_value_name_type_inference_g, abstractions_g, vts_are_equivalent )
 import CodeGenerators.Types
   ( value_type_g )
 
-import HaskellTypes.Values
-import CodeGenerators.ErrorMessages
 
 -- All:
--- ParenthesisValue, BaseValue, OneArgApplications,
+-- ParenthesisValue, MathApplication, BaseValue, OneArgApplications,
 -- multiplication_factor_g, multiplication_g, subtraction_factor_g, subtraction_g,
 -- equality_factor_g, equality_g
--- no_abstractions_value_1_g, many_args_arg_value_g, ManyArgsApplication,
--- UseFields, specific_case_g, cases_g,
+-- operator_value_g, lambda_operator_value_g, ManyArgsApplication,
+-- UseFields, SpecificCase, Cases,
 -- name_type_and_value_g, name_type_and_value_lists_g,
--- ntav_or_ntav_lists_g, names_types_and_values_g, let_output_g,
--- no_abstractions_value_g, value_g
+-- ntav_or_ntav_lists_g, names_types_and_values_g, Where,
+-- OutputValue, LambdaOutputValue
 
 -- ParenthesisValue:
 -- parenthesis_value_g, value_type_tuple_values_g, base_type_tuple_values_g, 
@@ -54,90 +54,107 @@ parenthesis_value_g = ( \vt -> \case
 value_type_tuple_values_g = ( \case
   vt@(AbsTypesAndResType (_:_) _) -> \vs -> error $ tuple_fun_type_err vs vt
   AbsTypesAndResType [] bt -> base_type_tuple_values_g bt
-  ) :: ValueType -> [ Value ] -> Stateful Haskell
+  ) :: ValueType -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 base_type_tuple_values_g = ( \case
-  ParenTupleType vts -> value_types_tuple_values_g vts
-  ParenthesisType vt -> value_type_tuple_values_g vt
   TypeName tn -> type_name_tuple_values_g tn
-  ) :: BaseType -> [ Value ] -> Stateful Haskell
+  ParenType vt -> value_type_tuple_values_g vt
+  TupleType vt1 vt2 vts -> value_types_tuple_values_g $ vt1 : vt2 : vts
+  ) :: BaseType -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 value_types_tuple_values_g = ( \vts vs -> case length vts == length vs of
   False -> error tuple_values_types_lengths_dont_match_err
   True -> 
-    zipWith value_g vts vs==>sequence >>= \vs_g ->
-    return $ "( " ++ intercalate ", " vs_g ++ " )"
-  ) :: [ ValueType ] -> [ Value ] -> Stateful Haskell
+    zipWith lambda_operator_value_g vts vs==>sequence >>= \vs_g ->
+    return $ "(" ++ intercalate ", " vs_g ++ ")"
+  ) :: [ ValueType ] -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 type_name_tuple_values_g = ( \tn vs -> type_map_get tn >>= \case
   FieldAndTypeList fatl -> case length vs == length fatl of 
     False -> error values_fields_lengths_dont_match_err
-    True -> correct_type_name_tuple_values_g tn (map get_ft fatl) vs
+    True -> correct_type_name_tuple_values_g tn (map get_field_type fatl) vs
   CaseAndMaybeTypeList camtl -> undefined camtl
-  ) :: TypeName -> [ Value ] -> Stateful Haskell
+  ) :: TypeName -> [ LambdaOperatorValue ] -> Stateful Haskell
 
 correct_type_name_tuple_values_g = ( \tn vts vs ->
   get_indent_level >>= \il ->
-  zipWith value_g vts vs==>sequence >>= \vs_g -> 
+  zipWith lambda_operator_value_g vts vs==>sequence >>= \vs_g -> 
   return $
-  "\n" ++ indent (il + 1) ++ show tn ++ "C" ++
-  let
-  argument_start = "\n" ++ indent (il + 2) ++ "("
-    :: Haskell
-  in
-  argument_start ++ intercalate (")" ++ argument_start) vs_g ++ ")"
-  ) :: TypeName -> [ ValueType ] -> [ Value ] -> Stateful Haskell
+    "\n" ++ indent (il + 1) ++ show tn ++ "C" ++
+    concatMap (\v_g ->  " (" ++ v_g ++ ")") vs_g
+  ) :: TypeName -> [ ValueType ] -> [ LambdaOperatorValue ] -> Stateful Haskell
+
+parenthesis_value_type_inference_g = ( \case
+  Parenthesis v ->
+    value_type_inference_g v >>= \( vt, hs ) -> return ( vt, "(" ++ hs ++ ")" )
+  Tuple vs ->
+    tuple_values_type_inference_g vs
+  ) :: ParenthesisValue -> Stateful ( ValueType, Haskell )
+
+tuple_values_type_inference_g = ( \vs ->
+  mapM lambda_operator_value_type_inference_g vs >>=
+  unzip .> \( vts, vs_g ) -> case vts of
+    vt1 : vt2 : vts ->
+      return
+      ( AbsTypesAndResType [] $ TupleType vt1 vt2 vts
+      , "(" ++ intercalate ", " vs_g ++ ")" )
+    _ -> undefined
+  ) :: [ LambdaOperatorValue ] -> Stateful ( ValueType, Haskell )
+
+-- MathApplication: math_application_g, math_application_type_inference_g
+math_application_g = ( \vt (MathApp vn lov1 lovs) ->
+  many_args_application_g vt (MAA (lov1 : lovs) vn) >>= \hs ->
+  return $ "(" ++ hs ++ ")"
+  ) :: ValueType -> MathApplication -> Stateful Haskell
+
+math_application_type_inference_g = ( \(MathApp vn lov1 lovs) ->
+  many_args_application_type_inference_g (MAA (lov1 : lovs) vn) >>= \( vt, hs ) ->
+  return ( vt, "(" ++ hs ++ ")" )
+  ) :: MathApplication -> Stateful ( ValueType, Haskell )
 
 -- BaseValue: base_value_g, base_value_type_inference_g
 base_value_g = ( \vt -> \case
   ParenthesisValue pv -> parenthesis_value_g vt pv
   LiteralOrValueName lovn -> literal_or_value_name_g vt lovn
+  MathApplication ma -> math_application_g vt ma
   ) :: ValueType -> BaseValue -> Stateful Haskell
 
 base_value_type_inference_g = ( \case
-  ParenthesisValue pv -> error $ bv_type_inference_err pv
+  ParenthesisValue pv -> parenthesis_value_type_inference_g pv
   LiteralOrValueName lovn -> literal_or_value_name_type_inference_g lovn
+  MathApplication ma -> math_application_type_inference_g ma
   ) :: BaseValue -> Stateful ( ValueType, Haskell )
 
 -- OneArgApplications:
 -- one_arg_applications_g, next_application_g, one_arg_application_g
-one_arg_applications_g = ( \vt oaa@(OAA bv_ad_s bv) -> case bv_ad_s of
-  [] -> error no_application_err
-  ( init_bv, init_ad ):bv_ad_s_tail ->
-    base_value_type_inference_g init_bv
-      >>= \( bv_vt, bv_hs ) ->
-    foldM next_application_g ( bv_vt, bv_hs, init_ad ) bv_ad_s_tail
-      >>= \( final_vt, final_hs, final_ad ) -> 
-    base_value_type_inference_g bv
-      >>= \bv_g ->
-    ( case final_ad of
-      LeftApplication -> one_arg_application_g ( final_vt, final_hs ) bv_g
-      RightApplication -> one_arg_application_g bv_g ( final_vt, final_hs ) )
-      ==> \( inferred_vt, hs ) ->
-    case vt == inferred_vt of 
-      False -> error $ one_arg_applications_type_err oaa vt inferred_vt
-      True -> return hs
+one_arg_applications_g = ( \vt ->
+  to_application_tree .> application_tree_g vt
   ) :: ValueType -> OneArgApplications -> Stateful Haskell
 
-next_application_g = ( \( sf_vt, sf_hs, ad ) ( next_bv, next_ad ) ->
-  base_value_type_inference_g next_bv >>= \bv_g ->
-  let 
-  ( next_vt, next_hs ) = case ad of
-    LeftApplication -> one_arg_application_g ( sf_vt, sf_hs ) bv_g
-    RightApplication -> one_arg_application_g bv_g ( sf_vt, sf_hs )
-  in
-  return ( next_vt, next_hs, next_ad )
-  ) :: ( ValueType, Haskell, ApplicationDirection ) ->
-       ( BaseValue, ApplicationDirection ) ->
-       Stateful ( ValueType, Haskell, ApplicationDirection )
+application_tree_g = ( \vt@(AbsTypesAndResType abs_ts res_t) -> \case 
+  BaseValueLeaf bv -> base_value_g vt bv
+  at ->
+    application_tree_type_inference_g at >>= \( at_vt, at_hs ) ->
+    vts_are_equivalent vt at_vt >>= \case 
+      True -> return at_hs
+      False -> error $ "\n" ++ show vt ++ "\n" ++ show at_vt ++ "\n" ++ show at
+  ) :: ValueType -> ApplicationTree -> Stateful Haskell
 
-one_arg_application_g = ( \( fun_vt, fun_hs ) ( val_vt, val_hs ) -> case fun_vt of 
-  AbsTypesAndResType [] _ -> error $ not_a_fun_err fun_vt val_vt
-  AbsTypesAndResType (abs_bt : abs_bts) bt -> 
-    vt_bt_are_equivalent ( vt_shortest_equivalent val_vt, abs_bt )==> \case
-    False -> error $ argument_types_dont_match_err val_vt abs_bt
-    True -> ( AbsTypesAndResType abs_bts bt, fun_hs ++ " " ++ val_hs )
-  ) :: ( ValueType, Haskell ) -> ( ValueType, Haskell ) -> ( ValueType, Haskell )
+application_tree_type_inference_g = ( \case 
+  Application at1 at2 -> application_tree_type_inference_g at1 >>=
+    \( vt1@(AbsTypesAndResType abs_ts res_t), hs1 ) -> case abs_ts of 
+      [] ->
+        error $ "\n" ++ show at1 ++ "\n" ++ show at2 ++ "\n" ++ show vt1 ++ "\n"
+      abs_t:rest -> 
+        application_tree_g (bt_to_vt abs_t) at2 >>= \hs2 ->
+        let 
+        hs2_ = case at2 of 
+          Application _ _ -> "(" ++ hs2 ++ ")"
+          _ -> hs2
+        in
+        return ( AbsTypesAndResType rest res_t, hs1 ++ " " ++ hs2_ ) 
+  BaseValueLeaf bv -> base_value_type_inference_g bv
+  ) :: ApplicationTree -> Stateful ( ValueType, Haskell )
 -- OneArgApplications end
 
 multiplication_factor_g = ( \vt -> \case
@@ -145,8 +162,9 @@ multiplication_factor_g = ( \vt -> \case
   BaseValueMF bv -> base_value_g vt bv
   ) :: ValueType -> MultiplicationFactor -> Stateful Haskell
 
-multiplication_g = ( \vt (Mul mfs) -> 
-  mapM (multiplication_factor_g vt) mfs >>= intercalate " * " .> return
+multiplication_g = ( \vt (Mul mf1 mf2 mfs) -> 
+  mapM (multiplication_factor_g vt) (mf1 : mf2 : mfs) >>=
+  intercalate " * " .> return
   ) :: ValueType -> Multiplication -> Stateful Haskell
 
 subtraction_factor_g = ( \vt -> \case
@@ -165,108 +183,167 @@ equality_factor_g = ( \vt -> \case
   SFEF f -> subtraction_factor_g vt f
   ) :: ValueType -> EqualityFactor -> Stateful Haskell
 
-equality_g = ( \vt (Equ ef1 ef2) ->
-  equality_factor_g vt ef1 >>= \ef1_g -> equality_factor_g vt ef2 >>= \ef2_g ->
-  return $ ef1_g ++ " == " ++ ef2_g
+equality_g = ( \case 
+  (AbsTypesAndResType [] (TypeName (TN "Bool"))) -> \(Equ ef1 ef2) ->
+    let int_vt = (AbsTypesAndResType [] (TypeName (TN "Int"))) in
+    equality_factor_g int_vt ef1 >>= \ef1_g ->
+    equality_factor_g int_vt ef2 >>= \ef2_g ->
+    return $ ef1_g ++ " == " ++ ef2_g
+  _ -> undefined
   ) :: ValueType -> Equality -> Stateful Haskell
 
-no_abstractions_value_1_g = ( \vt -> \case
+-- OperatorValue: operator_value_g, operator_value_type_inference_g
+operator_value_g = ( \vt -> \case
   Equality equ -> equality_g vt equ
   EquF f -> equality_factor_g vt f
-  ) :: ValueType -> NoAbstractionsValue1 -> Stateful Haskell
+  ) :: ValueType -> OperatorValue -> Stateful Haskell
 
-many_args_arg_value_g = (
-  \(AbsTypesAndResType bts bt) (MAAV (As as) nav1) ->
-  case length as > length bts of 
-  True -> error $ too_many_abstractions_err (As as) bts
+operator_value_type_inference_g = ( \case
+  Equality equ -> equality_g vt equ >>= \hs -> return ( vt, hs ) where
+    vt = (AbsTypesAndResType [] (TypeName (TN "Bool")))
+      :: ValueType
+
+  EquF f -> equality_factor_g vt f >>= \hs -> return ( vt, hs ) where
+    vt = (AbsTypesAndResType [] (TypeName (TN "Int")))
+      :: ValueType
+  ) :: OperatorValue -> Stateful ( ValueType, Haskell )
+-- OperatorValue end
+
+lambda_operator_value_g = (
+  \(AbsTypesAndResType bts bt) (LOV as opval) -> case length as > length bts of 
+  True -> error $ too_many_abstractions_err as bts
   False -> 
-    let
+    abstractions_g bts1 as >>= \as_g ->
+    operator_value_g (AbsTypesAndResType bts2 bt) opval >>= \nav1_g ->
+    return $ as_g ++ nav1_g
+    where
     ( bts1, bts2 ) = splitAt (length as) bts
       :: ( [ BaseType ], [ BaseType ] )
-    in
-    abstractions_g bts1 (As as) >>= \as_g ->
-    no_abstractions_value_1_g (AbsTypesAndResType bts2 bt) nav1 >>= \nav1_g ->
-    return $ as_g ++ nav1_g
-  ) :: ValueType -> ManyArgsArgValue -> Stateful Haskell
+  ) :: ValueType -> LambdaOperatorValue -> Stateful Haskell
 
--- ManyArgsApplication: many_args_application_g, bts_maavs_vn_g, bt_maav_g
-many_args_application_g = ( \vt (MAA maavs vn) -> value_map_get vn >>=
+lambda_operator_value_type_inference_g = ( \(LOV as opval) ->
+  undefined
+  ) :: LambdaOperatorValue -> Stateful ( ValueType, Haskell )
+
+-- ManyArgsApplication:
+-- many_args_application_g, bts_lovs_vn_g, bt_lov_g,
+-- many_args_application_type_inference_g
+many_args_application_g = ( \vt (MAA lovs vn) -> value_map_get vn >>=
   \(AbsTypesAndResType abs_bts res_bt) ->
   let
-  ( bts1, bts2 ) = splitAt (length maavs) abs_bts
+  ( bts1, bts2 ) = splitAt (length lovs) abs_bts
     :: ( [ BaseType ], [ BaseType ] )
   in
-  case vt == AbsTypesAndResType bts2 res_bt of 
+  vts_are_equivalent vt (AbsTypesAndResType bts2 res_bt) >>= \case
     False -> error $
       many_args_types_dont_match_err vt (AbsTypesAndResType bts2 res_bt)
-    True -> bts_maavs_vn_g bts1 maavs vn
+    True -> bts_lovs_vn_g bts1 lovs vn
   ) :: ValueType -> ManyArgsApplication -> Stateful Haskell
 
-bts_maavs_vn_g = ( \bts maavs vn ->
-  zipWith bt_maav_g bts maavs==>sequence >>= \maavs_g ->
+bts_lovs_vn_g = ( \bts lovs vn ->
+  zipWith bt_lov_g bts lovs==>sequence >>= \maavs_g ->
   return $ show vn ++ concatMap (" " ++) maavs_g
-  ) :: [ BaseType ] -> [ ManyArgsArgValue ] -> ValueName -> Stateful Haskell
+  ) :: [ BaseType ] -> [ LambdaOperatorValue ] -> ValueName -> Stateful Haskell
 
-bt_maav_g = ( \bt maav ->
+bt_lov_g = ( \bt lov@(LOV as opval) -> case (as, opval) of
+  ([], EquF(SFEF(MFSF(BaseValueMF bv)))) ->
+    base_value_g (bt==>bt_to_vt) bv
+  (_, _) -> 
+    lambda_operator_value_g (bt==>bt_to_vt) lov >>= \maav_g ->
+    return $ "(" ++ maav_g ++ ")"
+  ) :: BaseType -> LambdaOperatorValue -> Stateful Haskell
+
+-- bt_lov_g = ( \bt lov ->
+--   lambda_operator_value_g (bt==>bt_to_vt) lov >>= \maav_g ->
+--   return $ "(" ++ maav_g ++ ")"
+--   ) :: BaseType -> LambdaOperatorValue -> Stateful Haskell
+
+many_args_application_type_inference_g = ( \(MAA lovs vn) ->
+  value_map_get vn >>= \(AbsTypesAndResType abs_bts res_bt) ->
   let
-  maav_vt = case bt of
-    ParenthesisType vt -> vt
-    _ -> (AbsTypesAndResType [] bt)
-    :: ValueType
+  ( bts1, bts2 ) = splitAt (length lovs) abs_bts
+    :: ( [ BaseType ], [ BaseType ] )
   in
-  many_args_arg_value_g maav_vt maav >>= \maav_g -> return $ "(" ++ maav_g ++ ")"
-  ) :: BaseType -> ManyArgsArgValue -> Stateful Haskell
+  bts_lovs_vn_g bts1 lovs vn >>= \hs ->
+  return ( AbsTypesAndResType bts2 res_bt, hs )
+  ) :: ManyArgsApplication -> Stateful ( ValueType, Haskell )
 
 -- UseFields: use_fields_g, correct_use_fields_g, insert_to_value_map_ret_vn
 use_fields_g = ( \vt@(AbsTypesAndResType bts bt) (UF v) -> case bts of 
   [] -> error $ use_fields_not_fun_err vt
-  b:bs -> case b of
-    ParenTupleType _ -> error $ must_be_tuple_type_err b -- maybe something here?
-    ParenthesisType _ -> error $ must_be_tuple_type_err b
+  bt1:bts_tail -> case bt1 of
+    ParenType _ -> error $ must_be_tuple_type_err bt1 -- maybe something here?
     TypeName tn -> type_map_get tn >>= \case
       FieldAndTypeList fatl ->
-        correct_use_fields_g tn fatl (AbsTypesAndResType bs bt) v
+        correct_use_fields_g tn fatl (AbsTypesAndResType bts_tail bt) v
       CaseAndMaybeTypeList catl -> undefined
   ) :: ValueType -> UseFields -> Stateful Haskell
 
 correct_use_fields_g = ( \tn fatl vt v ->
   get_indent_level >>= \il ->
+  value_map_insert (VN "value") (AbsTypesAndResType [] (TypeName tn)) >>
   mapM insert_to_value_map_ret_vn fatl >>= \vns ->
   value_g vt v >>= \v_g ->
   return $
-  "\\(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns ++ ") ->" ++ v_g
-  ) :: TypeName -> [ FieldAndType ] -> ValueType -> Value -> Stateful Haskell
+  "\\value@(" ++ show tn ++ "C" ++ concatMap ( show .> (" " ++) ) vns ++ ") -> " ++
+  v_g
+  ) :: TypeName -> [ FieldAndType ] -> ValueType -> LambdaOutputValue -> Stateful Haskell
 
 insert_to_value_map_ret_vn = ( \(FT vn vt) -> value_map_insert vn vt >> return vn )
   :: FieldAndType -> Stateful ValueName
--- UseFields end
 
-specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) ->
-  case bts of 
+-- SpecificCase: specific_case_g, specific_case_type_inference_g
+specific_case_g = ( \vt@(AbsTypesAndResType bts bt) sc@(SC lovn v) -> case bts of 
   [] -> error $ specific_case_not_abstraction_err vt sc
-  b:bs ->
-    let
-    generate = ( \g ->
+  b:bs -> case lovn of 
+    Literal l -> literal_g bt_vt l >>= add_value_g 
+    ValueName vn -> value_map_insert vn bt_vt >> add_value_g (show vn)
+    where
+    bt_vt = bt_to_vt b
+      :: ValueType
+    add_value_g = ( \g ->
       value_g (AbsTypesAndResType bs bt) v >>= \v_g ->
       get_indent_level >>= \i ->
-      return $ indent i ++ g ++ " ->" ++ v_g
+      return $ indent i ++ abs_g g ++ " -> " ++ v_g
       ) :: Haskell -> Stateful Haskell
-    in
-    case lovn of 
-      Literal l -> literal_g (AbsTypesAndResType [] b) l==>generate 
-
-      ValueName vn ->
-        value_map_insert vn (vt_shortest_equivalent $ AbsTypesAndResType [] b)
-        >>
-        generate (show vn)
+    abs_g = \case 
+      "true" -> "True"
+      "false" -> "False"
+      g -> g
+      :: Haskell -> Haskell
   ) :: ValueType -> SpecificCase -> Stateful Haskell
 
+specific_case_type_inference_g = ( \sc@(SC lovn v) ->
+  literal_or_value_name_type_inference_g lovn >>= \( lovn_vt, lovn_g ) ->
+  value_type_inference_g v >>= \( AbsTypesAndResType abs res, v_g ) ->
+  get_indent_level >>= \i ->
+  let
+  lovn_bt = case lovn_vt of 
+    AbsTypesAndResType [] bt -> bt
+    _ -> ParenType lovn_vt
+  in
+  return
+  ( AbsTypesAndResType (lovn_bt : abs) res
+  , indent i ++ lovn_g ++ " -> " ++ v_g )
+  ) :: SpecificCase -> Stateful ( ValueType, Haskell )
+
+-- Cases: cases_g, 
 cases_g = ( \vt (Cs cs) ->
   get_indent_level >>= \i ->
   update_indent_level (i + 1) >> mapM (specific_case_g vt) cs >>= \cs_g ->
-  update_indent_level i >>
-  ("\\case\n" ++ init cs_g==>concatMap (++ "\n") ++ last cs_g)==>return
+  update_indent_level i >> return ("\\case\n" ++ intercalate "\n" cs_g)
   ) :: ValueType -> Cases -> Stateful Haskell
+
+cases_type_inference_g = ( \(Cs cs) -> case cs of
+  [] -> undefined
+  sc:scs ->
+    get_indent_level >>= \i -> update_indent_level (i + 1) >>
+    specific_case_type_inference_g sc >>= \( vt, sc_g ) ->
+    mapM (specific_case_g vt) scs >>= \scs_g ->
+    update_indent_level i >>
+    return ( vt, "\\case\n" ++ sc_g ++ "\n" ++ intercalate "\n" scs_g)
+  ) :: Cases -> Stateful ( ValueType, Haskell )
+-- Cases end
 
 name_type_and_value_g = ( \(NTAV vn vt v) -> 
   value_map_insert vn vt >> value_g vt v >>= \v_g ->
@@ -282,7 +359,7 @@ name_type_and_value_lists_g = ( \ntavls@(NTAVLists vns vts vs) ->
     ( vn : vns, vt : vts, v : vs ) -> NTAV vn vt v : zip3 ( vns, vts, vs )
     ( [], [], [] ) -> []
     _ -> error $ name_type_and_value_lists_err ntavls
-    ) :: ( [ ValueName ], [ ValueType ], [ Value ] ) -> [ NameTypeAndValue ]
+    ) :: ( [ ValueName ], [ ValueType ], [ LambdaOutputValue ] ) -> [ NameTypeAndValue ]
   in
   zip3 ( vns, vts, vs )==>mapM name_type_and_value_g >>= concat .> return
   ) :: NameTypeAndValueLists -> Stateful Haskell
@@ -296,28 +373,59 @@ names_types_and_values_g = ( \(NTAVs ntavs) ->
   ntavs==>mapM ntav_or_ntav_lists_g >>= concat .> return
   ) :: NamesTypesAndValues -> Stateful Haskell
 
-let_output_g = ( \vt (Where_ v ntavs) ->
+-- Where: where_g, where_type_inference_g 
+where_g = ( \vt (Where_ v ntavs) ->
   get_indent_level >>= \i -> update_indent_level (i + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_g vt v >>= \v_g ->
-  update_indent_level i >>
   return ("\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g)
+  <* update_indent_level i
   ) :: ValueType -> Where -> Stateful Haskell
 
-no_abstractions_value_g = ( \vt -> \case
+where_type_inference_g = ( \(Where_ v ntavs) ->
+  get_indent_level >>= \i -> update_indent_level (i + 1) >>
+  names_types_and_values_g ntavs >>= \ntavs_g ->
+  value_type_inference_g v >>= \( vt, v_g ) ->
+  return ( vt, "\n" ++ indent (i + 1) ++ v_g ++ " where" ++ ntavs_g )
+  <* update_indent_level i
+  ) :: Where -> Stateful ( ValueType, Haskell )
+
+-- OutputValue: output_value_g, output_value_type_inference_g
+output_value_g = ( \vt -> \case
   ManyArgsApplication maa -> many_args_application_g vt maa
   UseFields uf -> use_fields_g vt uf
-  NoAbstractionsValue1 nav1 -> no_abstractions_value_1_g vt nav1
+  OperatorValue opval -> operator_value_g vt opval
   Cases cs -> cases_g vt cs
-  Where io -> let_output_g vt io
-  ) :: ValueType -> NoAbstractionsValue -> Stateful Haskell
+  Where w -> where_g vt w
+  ) :: ValueType -> OutputValue -> Stateful Haskell
 
-value_g = ( \(AbsTypesAndResType bts bt) (Value (As as) nav) ->
+output_value_type_inference_g = ( \case
+  ManyArgsApplication maa -> many_args_application_type_inference_g maa
+
+  -- cannot infer unless we try to lookup potential fields in the output value 
+  -- and infer backwards
+  UseFields uf -> undefined
+
+  OperatorValue opval -> operator_value_type_inference_g opval
+
+  -- could infer by looking up cases that are not "..." (need new map?)
+  Cases cs -> cases_type_inference_g cs
+  Where w -> where_type_inference_g w 
+  ) :: OutputValue -> Stateful ( ValueType, Haskell )
+
+-- LambdaOutputValue: value_g, value_type_inference_g
+value_g = ( \(AbsTypesAndResType bts bt) (LV as nav) ->
   let
   ( bts1, bts2 ) = splitAt (length as) bts
     :: ( [ BaseType ], [ BaseType ] )
   in
-  abstractions_g bts1 (As as) >>= \as_g ->
-  no_abstractions_value_g ( AbsTypesAndResType bts2 bt ) nav >>= \nav_g ->
+  abstractions_g bts1 as >>= \as_g ->
+  output_value_g ( AbsTypesAndResType bts2 bt ) nav >>= \nav_g ->
   return $ as_g ++ nav_g
-  ) :: ValueType -> Value -> Stateful Haskell
+  ) :: ValueType -> LambdaOutputValue -> Stateful Haskell
+
+value_type_inference_g = ( \case
+  (LV [] nav) -> output_value_type_inference_g nav
+  _ -> undefined
+  ) :: LambdaOutputValue -> Stateful ( ValueType, Haskell )
+

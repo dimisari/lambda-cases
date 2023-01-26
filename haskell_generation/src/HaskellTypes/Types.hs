@@ -13,49 +13,56 @@ import HaskellTypes.LowLevel
 -- All: Types, Show instances, helpers
 
 -- Types:
--- TypeName, BaseType, ValueType, FieldAndType, TupleType
--- CaseAndMaybeType, OrType, FieldsOrCases, Type
+-- TypeName, BaseType, ValueType, FieldAndType, TupleTypeDef
+-- CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
 newtype TypeName =
   TN String deriving ( Eq, Ord )
 
 data BaseType =
-  ParenTupleType [ ValueType ] | ParenthesisType ValueType | TypeName TypeName
-  deriving Eq
+  TypeName TypeName | ParenType ValueType | 
+  TupleType ValueType ValueType [ ValueType ]
 
 data ValueType =
-  AbsTypesAndResType [ BaseType ] BaseType deriving Eq
+  AbsTypesAndResType [ BaseType ] BaseType
 
 data FieldAndType =
-  FT { get_fn :: ValueName, get_ft :: ValueType }
+  FT { get_field_name :: ValueName, get_field_type :: ValueType }
 
-data TupleType =
+data TupleTypeDef =
   NameAndValue TypeName [ FieldAndType ]
 
 data CaseAndMaybeType =
-  CT { get_cn :: ValueName, get_ct :: Maybe ValueType }
+  CMT ValueName (Maybe ValueType)
 
-data OrType =
+data OrTypeDef =
   NameAndValues TypeName [ CaseAndMaybeType ]
+
+data TypeDef =
+  TupleTypeDef TupleTypeDef | OrTypeDef OrTypeDef
 
 data FieldsOrCases =
   FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
-  deriving Show
 
-data Type =
-  TupleType TupleType | OrType OrType deriving Show
+-- newtype ArgName = 
+--   AN Char
+-- 
+-- data TypeConstructorExpr =
+--   ArgnamesAndName [ ArgName ] TypeName
 
 -- Show instances:
--- TypeName, BaseType, ValueType, FieldAndType, TupleType, CaseAndMaybeType, OrType
+-- TypeName, BaseType, ValueType, FieldAndType, TupleTypeDef,
+-- CaseAndMaybeType, OrTypeDef, TypeDef
 instance Show TypeName where
   show = \(TN n) -> n
 
 instance Show BaseType where
   show = \case 
-    ParenTupleType vts -> "( " ++ vts==>map show==>intercalate ", " ++ ")"
-    ParenthesisType vt -> vt==> \case
-      (AbsTypesAndResType [] (TypeName (TN tn))) -> tn
-      _ -> "(" ++ show vt ++ ")"
     TypeName tn -> show tn
+    ParenType vt -> vt ==> \case
+      (AbsTypesAndResType [] bt) -> show bt
+      _ -> "(" ++ show vt ++ ")"
+    TupleType vt1 vt2 vts ->
+      "( " ++ (vt1 : vt2 : vts)==>map show==>intercalate ", " ++ " )"
 
 instance Show ValueType where
   show = \(AbsTypesAndResType bts bt) ->
@@ -64,29 +71,33 @@ instance Show ValueType where
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ ": " ++ show vt
 
-instance Show TupleType where
+instance Show TupleTypeDef where
   show = \(NameAndValue tn ttfs) ->
     "\ntuple_type " ++ show tn ++
-    "\nvalue ( " ++ ttfs==>map show==>intercalate ", "  ++ " )\n"
+    "\nvalue (" ++ ttfs==>map show==>intercalate ", "  ++ ")\n"
 
 instance Show CaseAndMaybeType where
-  show = \(CT vn mvt) -> show vn ++ case mvt of 
-    Just vt -> "." ++ show vt
+  show = \(CMT vn mvt) -> show vn ++ case mvt of 
+    Just vt -> "<==(value: " ++ show vt ++ ")"
     Nothing -> ""
 
-instance Show OrType where
+instance Show OrTypeDef where
   show = \(NameAndValues tn otvs) ->
     "\nor_type " ++ show tn ++
     "\nvalues " ++ otvs==>map show==>intercalate " | " ++ "\n"
 
--- helpers: vt_shortest_equivalent, vt_bt_are_equivalent
-vt_shortest_equivalent = ( \case
-  AbsTypesAndResType [] (ParenthesisType vt) -> vt_shortest_equivalent vt
-  vt -> vt
-  ) :: ValueType -> ValueType
+instance Show TypeDef where
+  show = \case
+    TupleTypeDef ttd -> show ttd
+    OrTypeDef otd -> show otd
 
-vt_bt_are_equivalent = ( \case
-  ( AbsTypesAndResType [] bt1, bt2) -> bt1 == bt2
-  ( vt1, ParenthesisType vt2 ) -> vt1 == vt2
-  _ -> False
-  ) :: ( ValueType, BaseType ) -> Bool
+-- helpers: vt_to_bt, bt_to_vt
+vt_to_bt = \case 
+  AbsTypesAndResType [] bt -> bt
+  vt -> ParenType vt
+  :: ValueType -> BaseType
+
+bt_to_vt = \case
+  ParenType vt -> vt
+  bt -> AbsTypesAndResType [] bt
+  :: BaseType -> ValueType

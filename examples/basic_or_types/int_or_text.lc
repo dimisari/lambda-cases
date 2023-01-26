@@ -1,12 +1,11 @@
 
-a, b: Int==>Or<==Text, Int==>Or<==Text
-  = left_type_value.1, right_type_value."One"
+a, b: all Int==>Or<==Text
+  = from_left<==1, from_right<=="Hi!"
 
-print_int_or_string: Int==>Or<==Text -> Empty==>WithIO
+print_int_or_text: Int==>Or<==Text -> Empty==>WithIO
   = cases
-    left_type_value ->
-      value==>(+ 1)==>to_string==>("Total after adding 1: " +)==>print
-    right_type_value -> value==>("Turns out it says: " +)==>print
+    from_left -> value==>(+ 1)==>to_string==>("Total after adding 1: " +)==>print
+    from_right -> value==>("Turns out it says: " +)==>print
 
 main: Empty==>WithIO
-  = a==>print_int_or_string ; b==>print_int_or_string
+  = a==>print_int_or_text; b==>print_int_or_text

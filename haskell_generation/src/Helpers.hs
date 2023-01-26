@@ -11,25 +11,20 @@ import Data.List
 
 -- Keywords
 keywords =
-  [ "tuple_type", "value", "or_type", "values" , "use_fields", "cases"
-  , "value", "let", "output", "type_predicate", "function", "functions"
+  [ "tuple_type", "or_type", "values" , "use_fields", "cases"
+  , "let", "output", "type_predicate", "function", "functions"
   , "type_theorem", "proof" ]
   :: [ String ]
 
--- Function application/composition
+-- Flipped function application/composition
 (==>) = flip ($)
   :: a -> (a -> b) -> b
 (.>) = flip (.)
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
-integer =
-  let number = many1 digit :: Parser String in
-  read <$> ((:) <$> char '-' <*> number <|> number)
-  :: Parser Integer
-
 seperated2 = (\s p ->
-  p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as
+  try p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as
   ) :: String -> Parser a -> Parser [a]
 
 spaces_tabs = many $ char ' ' <|> char '\t'
@@ -49,6 +44,3 @@ type Haskell = String
 
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
-
-paren_comma_sep_g = ( \g l -> "( " ++ intercalate ", " (map g l) ++ " )")
-  :: (a -> Haskell) -> [ a ] -> Haskell

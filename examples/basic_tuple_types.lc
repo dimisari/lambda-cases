@@ -1,29 +1,30 @@
 tuple_type Empty
 value ()
 
-tuple_type ( A, B )
-value ( pair_first: A, pair_second: B )
+tuple_type (First, Second)
+value (pair_first: First, pair_second: Second)
 
-tuple_type ( A, B, C )
-value ( triple_first: A, triple_second: B, triple_third: C )
+tuple_type (First, Second, Third)
+value (triple_first: First, triple_second: Second, triple_third: Third)
 
-tuple_type ( A, B, C, D )
-value ( quad_first: A, quad_second: B, quad_third: C, quad_fourth: D )
+tuple_type ( First, Second, Third, Fourth )
+value
+  (quad_first: First, quad_second: Second, quad_third: Third, quad_fourth: Fourth)
 
 # example
 
-a: ( Int, Text )
-  = ( 1, "one" )
-i, s: Int, Text
+a: (Int, Text)
+  = (1, "one")
+i, t: Int, Text
   = a==>get_pair_first, a==>get_pair_second
 
-b, c: all ( Int, Text )
+b, c: all (Int, Text)
   = a==>change_pair_first<==2, a==>change_pair_second<=="two"
 
-main: Empty==>WithIO
-  = a==>print_int_text ; i==>to_text==>print ; s==>print ; b==>print_int_text ;
-    c==>print_int_text
-
-print_int_text: ( Int, Text ) -> Empty==>WithIO
-  = use_tuple_fields ->
+print_int_text: (Int, Text) -> Empty==>WithIO
+  = use_fields ->
     ("First: " + pair_first==>to_text + ", Second: " + pair_second + "\n")==>print
+
+main: Empty==>WithIO
+  = a==>print_int_text; i==>to_text==>print; t==>print; b==>print_int_text;
+    c==>print_int_text
