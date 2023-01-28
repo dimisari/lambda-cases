@@ -17,7 +17,7 @@ Comments:
       = cases
         case0 -> from_type<==value
         ... -> nothing
-  - fun2: (A, B *==> TypeName) -> ( A, B )==>OrNothing
+  - fun2: (A, B *==> TypeName) -> (A, B)==>OrNothing
       = cases
         case2 -> from_type<==value
         ... -> nothing

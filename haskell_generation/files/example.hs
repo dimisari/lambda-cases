@@ -1,13 +1,15 @@
 {-# language LambdaCase #-}
 
 get_first = fst
-(==>) = flip ($)
-(<==) = ($)
 
-gcd_help :: Int -> Int -> Int
-gcd_help = \x y -> (\case
-  True -> x
-  False -> gcd_help y (mod x y)) (y == 0)
+ee_recursion :: (Int, Int) -> (Int, Int) -> Int -> Int -> (Int, Int, Int)
+ee_recursion = \a_coeffs b_coeffs x -> \case
+  0 -> (x, get_first a_coeffs, get_first b_coeffs)
+  y -> 
+    ee_recursion (next a_coeffs) (next b_coeffs) y (mod x y) where
+    next :: (Int, Int) -> (Int, Int)
+    next = \(prev_prev, prev) -> (prev, prev_prev - div x y * prev)
 
-my_gcd :: Int -> Int -> Int
-my_gcd = \x y -> abs (gcd_help x y)
+
+extended_euclidean :: Int -> Int -> (Int, Int, Int)
+extended_euclidean = ee_recursion (1, 0) (0, 1)
