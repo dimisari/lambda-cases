@@ -238,7 +238,7 @@ val_tuple_matching_g = ( \case
     False -> undefined
     True -> 
       zipWith val_map_insert (vn1 : vn2 : vns) (vt1 : vt2 : vts)==>sequence_ >>
-      return ("(" ++ map show vns==>intercalate ", " ++ ")")
+      return ("(" ++ map show (vn1 : vn2 : vns)==>intercalate ", " ++ ")")
   ) :: ValType -> TupleMatching -> Stateful Haskell
 -- TupleMatching end
 

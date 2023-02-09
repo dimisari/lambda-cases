@@ -16,11 +16,12 @@ import InitialState
 import Helpers
   ( Haskell, (.>) )
 
-import HaskellTypes.Types
-  ( TypeDef )
+-- import HaskellTypes.Types
+--   ( TypeDef )
+import HaskellTypes.AfterParsing
+  ( ValTypeDef, td_to_vtd )
 import HaskellTypes.Values
   ( NamesTypesAndValues )
-import HaskellTypes.AfterParsing
 
 import Parsers.Types
   ( type_def_p )
@@ -28,9 +29,9 @@ import Parsers.Values
   ( names_types_and_values_p )
 
 import CodeGenerators.Types
-  ( type_def_g )
+  ( val_type_def_g )
 import CodeGenerators.Values
-  ( names_types_and_values_g )
+  ( val_names_types_and_values_g )
 
 -- All: Constants, Types, Parsing, Generating Haskell, main
 
@@ -43,7 +44,7 @@ import CodeGenerators.Values
 
 -- Types
 data NTAVsOrType =
-  TypeDef TypeDef | NTAVs NamesTypesAndValues deriving Show
+  TypeDef ValTypeDef | NTAVs NamesTypesAndValues deriving Show
 
 type Program = [ NTAVsOrType ]
 
@@ -52,7 +53,7 @@ parse_with = flip parse example_lc
   :: Parser a -> String -> Either ParseError a
 
 ntavs_or_tt_p =
-  TypeDef <$> try type_def_p <|> NTAVs <$> names_types_and_values_p
+  TypeDef <$> td_to_vtd <$> try type_def_p <|> NTAVs <$> names_types_and_values_p
   :: Parser NTAVsOrType
 
 program_p =
@@ -64,8 +65,8 @@ parse_string = parse_with program_p
 
 -- Generating Haskell
 program_g = mapM ( \case 
-  NTAVs ntavs -> names_types_and_values_g ntavs
-  TypeDef t -> type_def_g t
+  NTAVs ntavs -> val_names_types_and_values_g ntavs
+  TypeDef t -> val_type_def_g t
   ) .> fmap concat .> flip evalState init_state
   :: Program -> Haskell
 

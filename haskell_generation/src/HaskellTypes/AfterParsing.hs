@@ -5,7 +5,8 @@ module HaskellTypes.AfterParsing where
 import HaskellTypes.LowLevel
   ( ValueName )
 import HaskellTypes.Types
-  ( TypeName, BaseType(..), ValueType(..) )
+  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleTypeDef(..)
+  , CaseAndMaybeType(..), OrTypeDef(..), TypeDef(..), FieldsOrCases(..) )
 import HaskellTypes.Values
   ( BaseValue(..), ApplicationDirection(..), OneArgApplications(..) )
 
@@ -53,19 +54,46 @@ value_type_to_val_type = ( \(AbsTypesAndResType bts bt) -> case bts of
 
 data FieldAndValType =
   FVT { get_f_name :: ValueName, get_f_valtype :: ValType }
+  deriving Show
+
+ft_to_fvt = ( \(FT vn vt) -> FVT vn (value_type_to_val_type vt) )
+  :: FieldAndType -> FieldAndValType
 
 data TupleValTypeDef =
   NameAndFields TypeName [ FieldAndValType ]
+  deriving Show
+
+ttd_to_tvtd = ( \(NameAndValue tn fts) -> NameAndFields tn (map ft_to_fvt fts) )
+  :: TupleTypeDef -> TupleValTypeDef
 
 data CaseAndMaybeValType =
   CMVT ValueName (Maybe ValType)
+  deriving Show
+
+camt_to_camvt = ( \(CMT vn mvt) -> CMVT vn (value_type_to_val_type <$> mvt) )
+  :: CaseAndMaybeType -> CaseAndMaybeValType
 
 data ValOrTypeDef =
   ValNameAndValues TypeName [ CaseAndMaybeValType ]
+  deriving Show
+
+otd_to_votd = ( \(NameAndValues tn camts) ->
+  ValNameAndValues tn (map camt_to_camvt camts)
+  ) :: OrTypeDef -> ValOrTypeDef
+
+data ValTypeDef =
+  TupleValTypeDef TupleValTypeDef | ValOrTypeDef ValOrTypeDef
+  deriving Show
+
+td_to_vtd = \case
+  TupleTypeDef ttd -> TupleValTypeDef $ ttd_to_tvtd ttd
+  OrTypeDef otd -> ValOrTypeDef $ otd_to_votd otd
+  :: TypeDef -> ValTypeDef
 
 data ValFieldsOrCases =
   FieldAndValTypeList [ FieldAndValType ] |
   CaseAndMaybeValTypeList [ CaseAndMaybeValType ]
+  deriving Show
 
-data ValTypeDef =
-  TupleValTypeDef TupleValTypeDef | ValOrTypeDef ValOrTypeDef
+foc_to_vfoc = undefined
+  :: FieldsOrCases -> ValFieldsOrCases
