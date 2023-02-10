@@ -8,7 +8,7 @@ Questions:
 
 Tuple Application:
 - f: A, B *> C
-  pair: ( A, B )
+  pair: (A, B)
   pair==>f: C
 
 Function composition:
@@ -31,3 +31,7 @@ Compilation targets to consider:
 
 Other:
 - graph reduction
+
+or_type A, B *==> TypeName
+values A | B | (A, B) | ListOf(A)s | ListOf(B)s
+- Possible?
