@@ -31,7 +31,7 @@ import Parsers.Values
 import CodeGenerators.Types
   ( val_type_def_g )
 import CodeGenerators.Values
-  ( val_names_types_and_values_g )
+  ( names_types_and_values_g )
 
 -- All: Constants, Types, Parsing, Generating Haskell, main
 
@@ -65,7 +65,7 @@ parse_string = parse_with program_p
 
 -- Generating Haskell
 program_g = mapM ( \case 
-  NTAVs ntavs -> val_names_types_and_values_g ntavs
+  NTAVs ntavs -> names_types_and_values_g ntavs
   TypeDef t -> val_type_def_g t
   ) .> fmap concat .> flip evalState init_state
   :: Program -> Haskell

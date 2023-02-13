@@ -25,7 +25,8 @@ import HaskellTypes.Types
 -- Where, OutputValue, LambdaOutputValue
 
 data ParenthesisValue =
-  Parenthesis LambdaOutputValue | Tuple [ LambdaOperatorValue ]
+  Parenthesis LambdaOutputValue |
+  Tuple LambdaOperatorValue LambdaOperatorValue [ LambdaOperatorValue ]
 
 data MathApplication =
   MathApp ValueName LambdaOperatorValue [ LambdaOperatorValue ]
@@ -38,7 +39,7 @@ data ApplicationDirection =
   LeftApplication | RightApplication
 
 -- data LastValue = 
---   BaseValue | Cases
+--   BVLV BaseValue | CLV Cases
 
 data OneArgApplications = OAA
   (BaseValue, ApplicationDirection) [ (BaseValue, ApplicationDirection) ] BaseValue
@@ -71,13 +72,13 @@ newtype UseFields =
   UF LambdaOutputValue
 
 data ManyArgsApplication =
-  MAA [ LambdaOperatorValue ] ValueName
+  MAA LambdaOperatorValue LambdaOperatorValue [ LambdaOperatorValue ] ValueName
 
 data SpecificCase =
   SC LiteralOrValueName LambdaOutputValue 
 
-newtype Cases =
-  Cs [ SpecificCase ]
+data Cases =
+  Cs SpecificCase SpecificCase [ SpecificCase ]
 
 data NameTypeAndValue =
   NTAV ValueName ValueType LambdaOutputValue
@@ -114,7 +115,7 @@ data LambdaOutputValue =
 instance Show ParenthesisValue where
   show = \case
     Parenthesis v -> "(" ++ show v ++ ")"
-    Tuple vs -> "(" ++ vs==>map show==>intercalate ", " ++ ")"
+    Tuple v1 v2 vs -> "(" ++ map show (v1 : v2 : vs)==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
   show = \(MathApp vn lov1 lovs) ->
@@ -168,8 +169,8 @@ instance Show LambdaOperatorValue where
   show = \(LOV as ov) -> show as ++ show ov
 
 instance Show ManyArgsApplication where
-  show = \(MAA maavs vn) ->
-    maavs==>map show==>intercalate ", " ++ " *==> " ++ show vn
+  show = \(MAA lov1 lov2 lovs vn) ->
+    map show (lov1 : lov2 : lovs)==>intercalate ", " ++ " *==> " ++ show vn
 
 instance Show UseFields where
   show = \(UF v) -> "use_fields ->\n" ++ show v
@@ -178,7 +179,7 @@ instance Show SpecificCase where
   show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"
 
 instance Show Cases where
-  show = \(Cs scs) -> "\ncases\n\n" ++ scs==>concatMap show
+  show = \(Cs sc1 sc2 scs) -> "\ncases\n\n" ++ (sc1 : sc2 : scs)==>concatMap show
 
 instance Show NameTypeAndValue where
   show = \(NTAV vn vt v) ->

@@ -14,7 +14,7 @@ import Helpers
 type Literal = Integer
 
 newtype ValueName =
-  VN String deriving ( Eq, Ord )
+  VN String deriving (Eq, Ord)
 
 data LiteralOrValueName =
   Literal Literal | ValueName ValueName

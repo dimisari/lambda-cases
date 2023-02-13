@@ -42,7 +42,7 @@ tuple_p =
   char '(' >> lambda_operator_value_p >>= \lov1 ->
   string ", " >> lambda_operator_value_p >>= \lov2 ->
   many (try $ string ", " >> lambda_operator_value_p) >>= \lovs ->
-  char ')' >> return (Tuple $ lov1 : lov2 : lovs)
+  char ')' >> return (Tuple lov1 lov2 lovs)
   :: Parser ParenthesisValue
 -- ParenthesisValue end
 
@@ -66,8 +66,8 @@ one_arg_applications_p =
   :: Parser OneArgApplications
 
 bv_ad_p = 
-  base_value_p >>= \bv -> application_direction_p >>= \ad -> return ( bv, ad )
-  :: Parser ( BaseValue, ApplicationDirection )
+  base_value_p >>= \bv -> application_direction_p >>= \ad -> return (bv, ad)
+  :: Parser (BaseValue, ApplicationDirection)
 
 application_direction_p = 
   string "<==" *> return LeftApplication <|>
@@ -109,31 +109,32 @@ operator_value_p =
   :: Parser OperatorValue
 
 -- LambdaOperatorValue:
--- lambda_operator_value_p, one_ab_arrow_maav_p, many_ab_arrow_maav_p
+-- lambda_operator_value_p, one_ab_arrow_lov_p, many_ab_arrow_lov_p
 lambda_operator_value_p =
-  try many_ab_arrow_maav_p <|> one_ab_arrow_maav_p
+  try many_ab_arrow_lov_p <|> one_ab_arrow_lov_p
   :: Parser LambdaOperatorValue
 
-many_ab_arrow_maav_p =
+many_ab_arrow_lov_p =
   seperated2 ", " abstraction_p >>= \as1 ->
-  string " *->" >> space_or_newline >> one_ab_arrow_maav_p >>=
-    \(LOV as2 nav1) -> return $ LOV (as1 ++ as2) nav1
+  string " *->" >> space_or_newline >> one_ab_arrow_lov_p >>= \(LOV as2 nav1) ->
+  return $ LOV (as1 ++ as2) nav1
+  :: Parser LambdaOperatorValue
+
+one_ab_arrow_lov_p =
+  abstractions_p >>= \as -> operator_value_p >>= \nae1 -> return $ LOV as nae1
   :: Parser LambdaOperatorValue
 
 abstractions_p =
   many (try $ abstraction_p <* string " -> ")
   :: Parser [ Abstraction ]
-
-one_ab_arrow_maav_p =
-  abstractions_p >>= \as -> operator_value_p >>= \nae1 ->
-  return $ LOV as nae1
-  :: Parser LambdaOperatorValue
 -- LambdaOperatorValue end
 
 many_args_application_p =
-  seperated2 ", " lambda_operator_value_p >>= \maavs ->
+  lambda_operator_value_p >>= \lov1 ->
+  string ", " >>  lambda_operator_value_p >>= \lov2 ->
+  many (try $ string ", " >> lambda_operator_value_p) >>= \lovs ->
   space_or_newline >> string "*==> " >> value_name_p >>= \vn ->
-  return $ MAA maavs vn
+  return $ MAA lov1 lov2 lovs vn
   :: Parser ManyArgsApplication
 
 use_fields_p =
@@ -147,9 +148,11 @@ specific_case_p =
   :: Parser SpecificCase
 
 cases_p =
-  string "cases" >> new_line_space_surrounded >> specific_case_p >>= \c ->
-  many1 (try $ new_line_space_surrounded >> specific_case_p) >>= \cs ->
-  return $ Cs (c : cs)
+  string "cases" >>
+  new_line_space_surrounded >> specific_case_p >>= \c1 ->
+  new_line_space_surrounded >> specific_case_p >>= \c2 ->
+  many (try $ new_line_space_surrounded >> specific_case_p) >>= \cs ->
+  return $ Cs c1 c2 cs
   :: Parser Cases
 
 name_type_and_value_p =

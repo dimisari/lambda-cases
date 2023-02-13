@@ -55,7 +55,7 @@ abstractions_types_lengths_dont_match_err =
 -- specific_case_not_abstraction_err, name_type_and_value_lists_err 
 
 tuple_fun_type_err = ( \lovs vt ->
-  show (Tuple lovs) ++ " can't have type: " ++ show vt ++ "\n"
+  show lovs ++ " can't have type: " ++ show vt ++ "\n"
   ) :: [ LambdaOperatorValue ] -> ValueType -> Error
 
 values_fields_lengths_dont_match_err =
