@@ -137,9 +137,9 @@ many_args_application_p =
   return $ MAA lov1 lov2 lovs vn
   :: Parser ManyArgsApplication
 
-use_fields_p =
-  string "use_fields ->" >> space_or_newline >> (UF <$> value_p)
-  :: Parser UseFields
+-- use_fields_p =
+--   string "use_fields ->" >> space_or_newline >> (UF <$> value_p)
+--   :: Parser UseFields
 
 specific_case_p =
   literal_or_value_name_p >>= \lovn ->
@@ -195,7 +195,7 @@ output_value_p = choice $
   [ ManyArgsApplication <$> try many_args_application_p
   , Cases <$> try cases_p
   , Where <$> try where_p
-  , UseFields <$> try use_fields_p
+  --, UseFields <$> try use_fields_p
   , OperatorValue <$> operator_value_p
   ] :: Parser OutputValue
 

@@ -38,7 +38,7 @@ import CodeGenerators.Types
 -- multiplication_factor_g, multiplication_g, subtraction_factor_g, subtraction_g,
 -- equality_factor_g, equality_g
 -- operator_value_g, lambda_operator_value_g, ManyArgsApplication,
--- UseFields, SpecificCase, Cases,
+-- SpecificCase, Cases,
 -- name_type_and_value_g, name_type_and_value_lists_g,
 -- ntav_or_ntav_lists_g, names_types_and_values_g, Where,
 -- OutputValue, LambdaOutputValue
@@ -253,31 +253,6 @@ n_in_types_plus_out_type = ( \case
     _ -> undefined
   ) :: Int -> ValType -> ([ ValType ], ValType)
 
--- UseFields:
--- use_fields_g, correct_use_fields_g, insert_to_map_ret_vn
-use_fields_g = ( \case
-  FunctionType in_vt out_vt -> case in_vt of
-    NamedType tn -> \(UF v) -> val_type_map_get tn >>= \case
-      FieldAndValTypeList fatl -> correct_use_fields_g tn fatl out_vt v
-      _ -> undefined
-    _ -> undefined
-  _ -> undefined
-  ) :: ValType -> UseFields -> Stateful Haskell
-
-correct_use_fields_g = ( \tn fatl vt v ->
-  get_indent_level >>= \il ->
-  val_map_insert (VN "value") (NamedType tn) >>
-  mapM insert_to_map_ret_vn fatl >>= \vns ->
-  value_g vt v >>= \v_g ->
-  return $
-  "\\value@(" ++ show tn ++ "C" ++ concatMap (show .> (" " ++)) vns ++ ") -> " ++
-  v_g
-  ) :: TypeName -> [ FieldAndValType ] -> ValType -> LambdaOutputValue ->
-       Stateful Haskell
-
-insert_to_map_ret_vn = ( \(FVT vn vt) -> val_map_insert vn vt >> return vn )
-  :: FieldAndValType -> Stateful ValueName
-
 -- SpecificCase: specific_case_g, specific_case_type_inference_g
 specific_case_g = ( \vt sc@(SC lovn v) -> case vt of 
   FunctionType in_vt out_vt -> case lovn of 
@@ -373,7 +348,6 @@ where_type_inference_g = ( \(Where_ v ntavs) ->
 -- OutputValue: output_value_g, output_value_type_inference_g
 output_value_g = ( \vt -> \case
   ManyArgsApplication maa -> many_args_application_g vt maa
-  UseFields uf -> use_fields_g vt uf
   OperatorValue opval -> operator_value_g vt opval
   Cases cs -> cases_g vt cs
   Where w -> where_g vt w
@@ -381,7 +355,6 @@ output_value_g = ( \vt -> \case
 
 output_value_type_inference_g = ( \case
   ManyArgsApplication maa -> many_args_application_type_inference_g maa
-  UseFields uf -> undefined
   OperatorValue opval -> operator_value_type_inference_g opval
   Cases cs -> cases_type_inference_g cs
   Where w -> where_type_inference_g w 

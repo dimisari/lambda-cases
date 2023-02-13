@@ -23,7 +23,7 @@ data TupleMatching =
   TM ValueName ValueName [ ValueName ]
 
 data Abstraction =
-  ValueNameAb ValueName | TupleMatching TupleMatching
+  ValueNameAb ValueName | TupleMatching TupleMatching | UseFields
 
 -- Show instances:
 -- ValueName, LiteralOrValueName, TupleMatching, Abstraction
@@ -43,3 +43,4 @@ instance Show Abstraction where
   show = \case
     ValueNameAb vn -> show vn
     TupleMatching tm -> show tm
+    UseFields -> "use_fields"

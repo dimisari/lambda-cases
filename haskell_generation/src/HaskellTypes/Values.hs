@@ -20,7 +20,7 @@ import HaskellTypes.Types
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
 -- OperatorValue, LambdaOperatorValue, ManyArgsApplication
--- UseFields, SpecificCase, Cases
+-- SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, OutputValue, LambdaOutputValue
 
@@ -68,9 +68,6 @@ data OperatorValue =
 data LambdaOperatorValue =
   LOV [ Abstraction ] OperatorValue
 
-newtype UseFields =
-  UF LambdaOutputValue
-
 data ManyArgsApplication =
   MAA LambdaOperatorValue LambdaOperatorValue [ LambdaOperatorValue ] ValueName
 
@@ -96,7 +93,7 @@ data Where =
   Where_ LambdaOutputValue NamesTypesAndValues
 
 data OutputValue =
-  UseFields UseFields | ManyArgsApplication ManyArgsApplication | Cases Cases |
+  ManyArgsApplication ManyArgsApplication | Cases Cases |
   Where Where | OperatorValue OperatorValue
 
 data LambdaOutputValue =
@@ -108,7 +105,7 @@ data LambdaOutputValue =
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
 -- OperatorValue, LambdaOperatorValue, ManyArgsApplication
--- UseFields, SpecificCase, Cases
+-- SpecificCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, OutputValue, LambdaOutputValue
 
@@ -171,9 +168,6 @@ instance Show LambdaOperatorValue where
 instance Show ManyArgsApplication where
   show = \(MAA lov1 lov2 lovs vn) ->
     map show (lov1 : lov2 : lovs)==>intercalate ", " ++ " *==> " ++ show vn
-
-instance Show UseFields where
-  show = \(UF v) -> "use_fields ->\n" ++ show v
 
 instance Show SpecificCase where
   show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"

@@ -32,7 +32,7 @@ import CodeGenerators.ErrorMessages
 -- All:
 -- Literal, LiteralOrValueName, TupleMatching, Abstraction, Abstractions
 
--- (ValType) Literal: literal_g, literal_type_inference_g
+-- Literal: literal_g, literal_type_inference_g
 literal_g = ( \vt l -> 
   (vt == NamedType (TN "Int")) ==> \case
     True -> return $ show l
@@ -42,7 +42,7 @@ literal_g = ( \vt l ->
 literal_type_inference_g = ( \l -> return (NamedType $ TN "Int", show l) )
   :: Literal -> Stateful ( ValType, Haskell )
 
--- (ValType) LiteralOrValueName:
+-- LiteralOrValueName:
 -- literal_or_value_name_g, type_check_value_name_g, ts_are_equivalent,
 -- tns_are_equivalent, tn_t_are_equivalent, tn_to_t
 -- literal_or_value_name_type_inference_g
@@ -111,7 +111,7 @@ literal_or_value_name_type_inference_g = ( \case
     in
     return ( vt, hs )
   ) :: LiteralOrValueName -> Stateful ( ValType, Haskell )
--- (ValType) TupleMatching:
+-- TupleMatching:
 -- tuple_matching_g
 tuple_matching_g = ( \case
   -- possibly later with symbol table ?
@@ -124,13 +124,25 @@ tuple_matching_g = ( \case
       return ("(" ++ map show (vn1 : vn2 : vns)==>intercalate ", " ++ ")")
   ) :: ValType -> TupleMatching -> Stateful Haskell
 
--- (ValType) Abstraction: abstraction_g
+-- Abstraction: abstraction_g, use_fields_g
 abstraction_g = ( \vt -> \case
-  ValueNameAb vn -> val_map_insert vn vt >> show vn ==> return where
+  UseFields -> use_fields_g vt
+  ValueNameAb vn -> val_map_insert vn vt >> show vn ==> return
   TupleMatching tm -> tuple_matching_g vt tm
   ) :: ValType -> Abstraction -> Stateful Haskell
 
--- (ValType) Abstractions: abstractions_g, correct_abstractions_g
+use_fields_g = ( \vt -> case vt of
+  NamedType tn -> val_type_map_get tn >>= \case
+    FieldAndValTypeList fatl -> 
+      val_map_insert (VN "value") vt >>
+      mapM ( \(FVT vn vt) -> val_map_insert vn vt >> return vn ) fatl >>= \vns ->
+      return $
+        "value@(" ++ show tn ++ "C" ++ concatMap (show .> (" " ++)) vns ++ ")"
+    _ -> undefined
+  _ -> undefined 
+  ) :: ValType -> Stateful Haskell
+
+-- Abstractions: abstractions_g, correct_abstractions_g
 abstractions_g = ( \vts as -> case length vts == length as of
   False -> error abstractions_types_lengths_dont_match_err
   True -> correct_abstractions_g vts as

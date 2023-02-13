@@ -44,5 +44,6 @@ tuple_matching_p =
   :: Parser TupleMatching
 
 abstraction_p =
-  ValueNameAb <$> value_name_p <|> TupleMatching <$> tuple_matching_p
+  string "use_fields" *> return UseFields <|> ValueNameAb <$> value_name_p <|>
+  TupleMatching <$> tuple_matching_p
   :: Parser Abstraction
