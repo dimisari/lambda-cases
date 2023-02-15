@@ -93,8 +93,8 @@ data Where =
   Where_ LambdaOutputValue NamesTypesAndValues
 
 data OutputValue =
-  ManyArgsApplication ManyArgsApplication | Cases Cases |
-  Where Where | OperatorValue OperatorValue
+  ManyArgsApplication ManyArgsApplication | Cases Cases | Where Where |
+  OperatorValue OperatorValue
 
 data LambdaOutputValue =
   LV [ Abstraction ] OutputValue

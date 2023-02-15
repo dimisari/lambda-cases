@@ -21,7 +21,7 @@ import HaskellTypes.AfterParsing
   , CaseAndMaybeValType(..), ValOrTypeDef(..), ValFieldsOrCases(..)
   , ValTypeDef(..) )
 import HaskellTypes.Generation
-  ( Stateful, val_map_insert, val_type_map_insert, val_type_map_exists_check )
+  ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 
 -- All: BaseType, ValueType, TupleTypeDef, OrTypeDef, TypeDef
 
@@ -57,12 +57,12 @@ tuple_val_type_def_g = ( \(NameAndFields tn fs) ->
     :: Stateful Haskell
 
   field_and_val_type_g = ( \(FVT vn vt) ->
-    val_map_insert (VN $ "get_" ++ show vn) (FunctionType (NamedType tn) vt) >>
+    value_map_insert (VN $ "get_" ++ show vn) (FunctionType (NamedType tn) vt) >>
     return ("get_" ++ show vn ++ " :: " ++ val_type_g vt)
     ) :: FieldAndValType -> Stateful Haskell
   in
-  val_type_map_exists_check tn >>
-  val_type_map_insert tn (FieldAndValTypeList fs) >> tuple_value_g >>= \tv_g ->
+  type_map_exists_check tn >>
+  type_map_insert tn (FieldAndValTypeList fs) >> tuple_value_g >>= \tv_g ->
   return $ "\ndata " ++ show tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
   ) :: TupleValTypeDef -> Stateful Haskell
 
@@ -76,15 +76,15 @@ val_or_type_def_g = ( \(ValNameAndValues tn otvs) ->
 
   case_and_maybe_val_type_g = ( \(CMVT vn mvt) ->
     ( case mvt of
-      Nothing -> val_map_insert vn $ NamedType tn
+      Nothing -> value_map_insert vn $ NamedType tn
       _ -> return () ) >>
     return ("C" ++ show vn ++ case mvt of 
       Nothing -> ""
       Just vt  -> " " ++ show vt)
     ) :: CaseAndMaybeValType -> Stateful Haskell
   in
-  val_type_map_exists_check tn >>
-  val_type_map_insert tn (CaseAndMaybeValTypeList otvs) >> or_values_g >>=
+  type_map_exists_check tn >>
+  type_map_insert tn (CaseAndMaybeValTypeList otvs) >> or_values_g >>=
     \otvs_g ->
   return $ "\n\ndata " ++ show tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show"
   ) :: ValOrTypeDef -> Stateful Haskell

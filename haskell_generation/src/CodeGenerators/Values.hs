@@ -22,8 +22,8 @@ import HaskellTypes.AfterParsing
   ( ValType(..), ApplicationTree(..), to_application_tree, to_application_tree
   , ValFieldsOrCases(..), FieldAndValType(..), value_type_to_val_type )
 import HaskellTypes.Generation
-  ( Stateful, get_indent_level, update_indent_level, val_type_map_get
-  , val_map_get, val_map_insert )
+  ( Stateful, get_indent_level, update_indent_level, type_map_get
+  , value_map_get, value_map_insert )
 
 import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel
@@ -66,7 +66,7 @@ value_types_tuple_values_g = ( \vts vs -> case length vts == length vs of
     return $ "(" ++ intercalate ", " vs_g ++ ")"
   ) :: [ ValType ] -> [ LambdaOperatorValue ] -> Stateful Haskell
 
-type_name_tuple_values_g = ( \tn vs -> val_type_map_get tn >>= \case
+type_name_tuple_values_g = ( \tn vs -> type_map_get tn >>= \case
   FieldAndValTypeList fatl -> case length vs == length fatl of 
     False -> error values_fields_lengths_dont_match_err
     True -> correct_type_name_tuple_values_g tn (map get_f_valtype fatl) vs
@@ -237,7 +237,7 @@ many_args_application_g = ( \vt maa ->
   ) :: ValType -> ManyArgsApplication -> Stateful Haskell
 
 many_args_application_type_inference_g = ( \(MAA lov1 lov2 lovs vn) ->
-  val_map_get vn >>= \vt -> 
+  value_map_get vn >>= \vt -> 
   n_in_types_plus_out_type (length lovs + 2) vt ==> \(in_types, out_type) ->
   zipWith lambda_operator_value_g in_types (lov1 : lov2 : lovs) ==> sequence
     >>= \lovs_g ->
@@ -257,7 +257,7 @@ n_in_types_plus_out_type = ( \case
 specific_case_g = ( \vt sc@(SC lovn v) -> case vt of 
   FunctionType in_vt out_vt -> case lovn of 
     Literal l -> literal_g in_vt l >>= add_value_g 
-    ValueName vn -> val_map_insert vn in_vt >> add_value_g (show vn)
+    ValueName vn -> value_map_insert vn in_vt >> add_value_g (show vn)
     where
     add_value_g = ( \g ->
       value_g out_vt v >>= \v_g ->
@@ -300,7 +300,7 @@ cases_type_inference_g = ( \(Cs c1 c2 cs) ->
 
 name_type_and_value_g = ( \(NTAV vn vt v) -> 
   let val_t = value_type_to_val_type vt in
-  val_map_insert vn val_t >> value_g val_t v >>= \v_g ->
+  value_map_insert vn val_t >> value_g val_t v >>= \v_g ->
   get_indent_level >>= \i ->
   return $
   "\n" ++ indent i  ++ show vn ++ " :: " ++ value_type_g vt ++ "\n" ++

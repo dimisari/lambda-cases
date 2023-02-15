@@ -21,7 +21,7 @@ import HaskellTypes.Types
 import HaskellTypes.AfterParsing
   ( ValType(..), ValFieldsOrCases(..), FieldAndValType(..) )
 import HaskellTypes.Generation
-  ( Stateful, val_map_get, val_map_insert, val_type_map_get )
+  ( Stateful, value_map_get, value_map_insert, type_map_get )
 
 import CodeGenerators.ErrorMessages
   ( literal_not_int_err, type_check_err, tuple_matching_err
@@ -49,7 +49,7 @@ literal_type_inference_g = ( \l -> return (NamedType $ TN "Int", show l) )
 literal_or_value_name_g = ( \vt -> \case
   Literal l -> literal_g vt l
   ValueName vn ->
-    val_map_get vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
+    value_map_get vn >>= \lookup_vt -> type_check_value_name_g vt lookup_vt vn
   ) :: ValType -> LiteralOrValueName -> Stateful Haskell
 
 type_check_value_name_g = ( \vt lookup_vt vn ->
@@ -91,7 +91,7 @@ tns_are_equivalent = ( \tn1 tn2 -> case tn1 == tn2 of
 tn_t_are_equivalent = ( \tn vt -> tn_to_t tn >>= ts_are_equivalent vt
   ) :: TypeName -> ValType -> Stateful Bool
 
-tn_to_t = ( val_type_map_get >=> \case
+tn_to_t = ( type_map_get >=> \case
   FieldAndValTypeList favtl -> case favtl of
     [] -> undefined
     [ favt ] -> return $ get_f_valtype favt
@@ -102,7 +102,7 @@ tn_to_t = ( val_type_map_get >=> \case
 
 literal_or_value_name_type_inference_g = ( \case
   Literal l -> literal_type_inference_g l
-  ValueName vn -> val_map_get vn >>= \vt ->
+  ValueName vn -> value_map_get vn >>= \vt ->
     let
     hs = case vn of
       VN "true" -> "True"
@@ -120,22 +120,22 @@ tuple_matching_g = ( \case
   TupleValType vt1 vt2 vts -> \(TM vn1 vn2 vns) -> case length vts == length vns of
     False -> undefined
     True -> 
-      zipWith val_map_insert (vn1 : vn2 : vns) (vt1 : vt2 : vts)==>sequence_ >>
+      zipWith value_map_insert (vn1 : vn2 : vns) (vt1 : vt2 : vts)==>sequence_ >>
       return ("(" ++ map show (vn1 : vn2 : vns)==>intercalate ", " ++ ")")
   ) :: ValType -> TupleMatching -> Stateful Haskell
 
 -- Abstraction: abstraction_g, use_fields_g
 abstraction_g = ( \vt -> \case
   UseFields -> use_fields_g vt
-  ValueNameAb vn -> val_map_insert vn vt >> show vn ==> return
+  ValueNameAb vn -> value_map_insert vn vt >> show vn ==> return
   TupleMatching tm -> tuple_matching_g vt tm
   ) :: ValType -> Abstraction -> Stateful Haskell
 
 use_fields_g = ( \vt -> case vt of
-  NamedType tn -> val_type_map_get tn >>= \case
+  NamedType tn -> type_map_get tn >>= \case
     FieldAndValTypeList fatl -> 
-      val_map_insert (VN "value") vt >>
-      mapM ( \(FVT vn vt) -> val_map_insert vn vt >> return vn ) fatl >>= \vns ->
+      value_map_insert (VN "value") vt >>
+      mapM ( \(FVT vn vt) -> value_map_insert vn vt >> return vn ) fatl >>= \vns ->
       return $
         "value@(" ++ show tn ++ "C" ++ concatMap (show .> (" " ++)) vns ++ ")"
     _ -> undefined

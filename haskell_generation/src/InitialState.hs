@@ -10,7 +10,7 @@ import HaskellTypes.LowLevel
 import HaskellTypes.AfterParsing
   ( ValType(..) )
 import HaskellTypes.Generation
-  ( ValMap, GenState(..) )
+  ( ValueMap, GenState(..) )
 
 -- initial state: int_bt, int_int_tuple_bt, init_value_map, init_state
 int_val_t = NamedType $ TN "Int"
@@ -27,7 +27,7 @@ int_int_int_val_t_only =
   [ FunctionType int_val_t $ FunctionType int_val_t int_val_t ]
   :: [ ValType ]
 
-init_val_map = 
+init_value_map = 
   M.fromList
     [ ( VN "div" , int_int_int_val_t_only )
     , ( VN "mod" , int_int_int_val_t_only )
@@ -37,7 +37,7 @@ init_val_map =
     , ( VN "min" , int_int_int_val_t_only )
     , ( VN "true" , [ bool_val_t ] )
     ]
-  :: ValMap
+  :: ValueMap
 
-init_state = GS 0 init_val_map M.empty
+init_state = GS 0 init_value_map M.empty
   :: GenState
