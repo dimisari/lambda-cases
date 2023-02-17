@@ -3,6 +3,3 @@ gcd_help: (Int, Int) -> Int
   = x -> cases
     0 -> x
     1 -> (value, x==>mod<==value)==>gcd_help
-
-my_gcd: (Int, Int) -> Int
-  = (x, y) -> (x, y)==>gcd_help==>abs
