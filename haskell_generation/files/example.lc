@@ -1,8 +1,8 @@
 
-gcd_help: Int, Int *-> Int
-  = x, y *-> (y = 0)==>(cases
-    true -> x
-    false -> y, x==>mod<==y *==> gcd_help)
+gcd_help: (Int, Int) -> Int
+  = x -> cases
+    0 -> x
+    1 -> (value, x==>mod<==value)==>gcd_help
 
-my_gcd: Int, Int *-> Int
-  = x, y *-> (x, y *==> gcd_help)==>abs
+my_gcd: (Int, Int) -> Int
+  = (x, y) -> (x, y)==>gcd_help==>abs

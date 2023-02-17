@@ -1,10 +1,10 @@
 type_predicate T==>IsAFunctor
-function apply()internally: A -> B, T(A) *-> T(B)
+function apply()internally: (A -> B, T(A)) -> T(B)
 
 type_theorem ListOf()s==>IsAFunctor
 proof
   apply(f)internally = cases
-    non_empty -> non_empty<==( f(head), apply(f)internally(tail) )
+    non_empty -> (f(head), apply(f)internally(tail))==>non_empty
     empty -> empty
 
 main: Empty==>WithIO

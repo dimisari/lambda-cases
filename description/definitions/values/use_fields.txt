@@ -12,7 +12,7 @@ by using the use_fields syntax:
     = use_fields -> result expression of type OtherType
 
 use_fields + value example:
-- add_int_pair: IntPair -> ( IntPair, Int )
-    = use_fields -> ( value, first_int + second_int )
+- add_int_pair: IntPair -> (IntPair, Int)
+    = use_fields -> (value, first_int + second_int)
 
 If general the "value" keyword can be used if the whole tuple_type value is needed

@@ -3,8 +3,8 @@
 type_predicate definition example:
 - type_predicate Predicate_About(A, B)_And<==C
   functions
-    fun1: A, B *-> C 
-    fun2: C -> A, B *-> A
+    fun1: (A, B) -> C 
+    fun2: (C -> A, B) -> A
 
 type_theorem definition example:
 - type_theorem Predicate_About(Int, Real)_And<==Text
@@ -15,5 +15,5 @@ type_theorem definition example:
 Comments:
 - here specific_fun_1 and specific_fun_2 must be defined and have the types
   below:
-  - specific_fun_1: Int, Real *-> Text
-  - specific_fun_2: Text -> Int, Real *-> Int
+  - specific_fun_1: (Int, Real) -> Text
+  - specific_fun_2: (Text -> Int, Real) -> Int

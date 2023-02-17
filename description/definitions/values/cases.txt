@@ -2,32 +2,30 @@
 or_type example:
 - function_name: OrType -> ResultType
     = cases
-      or_type_case0 -> result expression of type ResultType
-      or_type_case1 -> result expression of type ResultType
-      ... -> default result expression of type ResultType
+      or_type_case0 -> expression of type ResultType
+      or_type_case1 -> expression of type ResultType
+      ... -> default expression of type ResultType
 
 Comments:
-- OrType is an or_type.
-  For the cases where we have a tuple_type value, the fields of the value can be
-  used in the corresponding result expression.
-  Therefore, we only match on the case.
-  In the "..." case we match with the keyword "value"
-  (as in all the cases if the whole value is needed).
+- OrType is an or_type.  For the cases where we have a tuple_type value, the
+  fields of the value can be used in the corresponding expression.  Therefore,
+  we only match on the case.  In the "..." case we match with the keyword
+  "value" (as in all the cases if the whole value is needed).
 
 tuple_type example:
 - tuple_type TupleType
-  value ( zero_val: OrType0, one_val: OrType1 )
+  value (zero_val: OrType0, one_val: OrType1)
 
   function_name: TupleType -> ResultType
     = cases
-      ( or_type0_case0, or_type1_case0 ) -> result expression of type ResultType
-      ( or_type0_case0, or_type1_case1 ) -> result expression of type ResultType
-      ( or_type0_case1, or_type1_case0 ) -> result expression of type ResultType
-      ( or_type0_case1, or_type1_case1 ) -> result expression of type ResultType
-      ... -> default result expression of type Type1
+      (or_type0_case0, or_type1_case0) -> expression of type ResultType
+      (or_type0_case0, or_type1_case1) -> expression of type ResultType
+      (or_type0_case1, or_type1_case0) -> expression of type ResultType
+      (or_type0_case1, or_type1_case1) -> expression of type ResultType
+      ... -> default expression of type ResultType
 
 Comments: 
 - OrType0 and OrType1 are or_types.
   Here the fields of each case (if it has a tuple_type value) on both
-  types can be used in the corresponding result expression.
+  types can be used in the corresponding expression.
 - In the case of collision of fields (ex. OrType0 == OrType1) we add numbers
