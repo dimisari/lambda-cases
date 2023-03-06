@@ -11,6 +11,7 @@ src/Parsers/Values.hs
 
 src/CodeGenerators/ErrorMessages.hs
 src/CodeGenerators/LowLevel.hs
+src/CodeGenerators/TypeChecking.hs
 src/CodeGenerators/Types.hs
 src/CodeGenerators/Values.hs
 

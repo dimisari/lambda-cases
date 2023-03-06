@@ -13,32 +13,36 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType(..)
-  , TupleTypeDef(..), OrTypeDef(..), CaseAndMaybeType(..), FieldsOrCases(..)
-  , TypeDef(..) )
+  ( TypeName(..), ValueType(..) )
 import HaskellTypes.AfterParsing
   ( ValType(..), FieldAndValType(..), TupleValTypeDef(..)
   , CaseAndMaybeValType(..), ValOrTypeDef(..), ValFieldsOrCases(..)
-  , ValTypeDef(..) )
+  , ValTypeDef(..), value_type_to_val_type )
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 
 -- All: BaseType, ValueType, TupleTypeDef, OrTypeDef, TypeDef
 
 -- BaseType
-base_type_g = ( \case
-  TypeName tn -> show tn
-  TupleType vt1 vt2 vts ->
-    "(" ++ intercalate ", " (map value_type_g (vt1 : vt2 : vts)) ++ ")" 
-  ParenType vt -> case vt of
-    (AbsTypesAndResType [] bt) -> base_type_g bt
-    _ -> "(" ++ value_type_g vt ++ ")"
-  ) :: BaseType -> Haskell
+-- base_type_g = ( \case
+--   TypeName tn -> show tn
+--   TupleType vt1 vt2 vts ->
+--     "(" ++ intercalate ", " (map value_type_g (vt1 : vt2 : vts)) ++ ")" 
+--   ParenType vt -> case vt of
+--     (AbsTypesAndResType [] bt) -> base_type_g bt
+--     _ -> "(" ++ value_type_g vt ++ ")"
+--   ) :: BaseType -> Haskell
+
+-- base_type_g = ( base_type_to_val_type .> show )
+--   :: BaseType -> Haskell
 
 -- ValueType
-value_type_g = ( \(AbsTypesAndResType bts bt) -> 
-  bts==>concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
-  ) :: ValueType -> Haskell
+-- value_type_g = ( \(AbsTypesAndResType bts bt) -> 
+--   bts==>concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
+--   ) :: ValueType -> Haskell
+
+value_type_g = ( value_type_to_val_type .> show )
+  :: ValueType -> Haskell
 
 -- ValType
 val_type_g = ( \case

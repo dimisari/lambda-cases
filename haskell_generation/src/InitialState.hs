@@ -4,13 +4,13 @@ import qualified Data.Map as M
   ( empty, fromList )
 
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..) )
+  ( TypeName(..), ValueType(..) )
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.AfterParsing
-  ( ValType(..) )
+  ( ValType(..), ValFieldsOrCases(..) )
 import HaskellTypes.Generation
-  ( ValueMap, GenState(..) )
+  ( ValueMap, TypeMap, GenState(..) )
 
 -- initial state: int_bt, int_int_tuple_bt, init_value_map, init_state
 int_val_t = NamedType $ TN "Int"

@@ -1,14 +1,21 @@
+- automatic type classes! for all tuple_types! for the functions:
+  - first: T==>Has_First<==A => T -> A
+  - second: T==>Has_Second<==A => T -> A
+  - third: T==>Has_Third<==A => T -> A
+  - fourth: T==>Has_Fourth<==A => T -> A
+  - fifth: T==>Has_Fifth<==A => T -> A
+
 parsec:
 - <?> for better parsing error messages!
-- string literal: char '"' \*> many (noneOf ['"']) <\* char '"'
+- string literal: char '"' *> many (noneOf ['"']) <* char '"'
 
 Questions:
 - mutual recursion: need to load whole level?
 - String = ListOf(Char)s ??
 
 Tuple Application:
-- f: A, B *> C
-  pair: (A, B)
+- f: (A, B) -> C
+  pair: (A, B)==>Pair
   pair==>f: C
 
 Function composition:
@@ -32,6 +39,6 @@ Compilation targets to consider:
 Other:
 - graph reduction
 
-or_type A, B *==> TypeName
+or_type (A, B)==>TypeName
 values A | B | (A, B) | ListOf(A)s | ListOf(B)s
-- Possible?
+- Possible? no. need names if same type 

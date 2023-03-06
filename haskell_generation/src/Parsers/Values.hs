@@ -1,7 +1,7 @@
 module Parsers.Values where
 
 import Text.Parsec
-  ( (<|>), try, char, many, many1, string )
+  ( (<|>), try, char, many, many1, string, optionMaybe )
 import Text.Parsec.String
   ( Parser )
 import Text.Parsec.Combinator
@@ -23,14 +23,14 @@ import Parsers.Types
   ( value_type_p )
 
 -- All:
--- ParenthesisValue, base_value_p, OneArgApplications,
+-- ParenthesisValue, base_value_p, FunctionApplicationChain,
 -- multiplication_factor_p, multiplication_p, subtraction_factor_p, subtraction_p,
 -- equality_factor_p, equality_p
--- operator_value_p, LambdaOperatorValue, many_args_application_p,
+-- operator_value_p, AbstractionOperatorExpression, many_args_application_p,
 -- use_fields_p, specific_case_p, cases_p,
 -- name_type_and_value_p, name_type_and_value_lists_p,
 -- ntav_or_ntav_lists_p, names_types_and_values_p, where_p,
--- output_value_p, LambdaOutputValue
+-- output_value_p, ValueExpression
 
 -- ParenthesisValue:
 -- parenthesis_value_p, tuple_p
@@ -59,11 +59,11 @@ base_value_p =
   LiteralOrValueName <$> literal_or_value_name_p
   :: Parser BaseValue
 
--- OneArgApplications: one_arg_applications_p, bv_ad_p
+-- FunctionApplicationChain: one_arg_applications_p, bv_ad_p
 one_arg_applications_p =
   many1 (try bv_ad_p) >>= \(bv_ad : bv_ad_s) -> base_value_p >>= \bv ->
-  return $ OAA bv_ad bv_ad_s bv
-  :: Parser OneArgApplications
+  return $ ValuesAndDirections bv_ad bv_ad_s bv
+  :: Parser FunctionApplicationChain
 
 bv_ad_p = 
   base_value_p >>= \bv -> application_direction_p >>= \ad -> return (bv, ad)
@@ -73,7 +73,7 @@ application_direction_p =
   string "<==" *> return LeftApplication <|>
   string "==>" *> return RightApplication
   :: Parser ApplicationDirection
--- OneArgApplications end
+-- FunctionApplicationChain end
 
 multiplication_factor_p =
   OneArgAppMF <$> try one_arg_applications_p <|> BaseValueMF <$> base_value_p
@@ -106,28 +106,28 @@ equality_p =
 
 operator_value_p =
   Equality <$> try equality_p <|> EquF <$> equality_factor_p
-  :: Parser OperatorValue
+  :: Parser OperatorExpression
 
--- LambdaOperatorValue:
+-- AbstractionOperatorExpression:
 -- lambda_operator_value_p, one_ab_arrow_lov_p, many_ab_arrow_lov_p
 lambda_operator_value_p =
   try many_ab_arrow_lov_p <|> one_ab_arrow_lov_p
-  :: Parser LambdaOperatorValue
+  :: Parser AbstractionOperatorExpression
 
 many_ab_arrow_lov_p =
   seperated2 ", " abstraction_p >>= \as1 ->
-  string " *->" >> space_or_newline >> one_ab_arrow_lov_p >>= \(LOV as2 nav1) ->
-  return $ LOV (as1 ++ as2) nav1
-  :: Parser LambdaOperatorValue
+  string " *->" >> space_or_newline >> one_ab_arrow_lov_p >>= \(AbstractionAndResult as2 nav1) ->
+  return $ AbstractionAndResult (as1 ++ as2) nav1
+  :: Parser AbstractionOperatorExpression
 
 one_ab_arrow_lov_p =
-  abstractions_p >>= \as -> operator_value_p >>= \nae1 -> return $ LOV as nae1
-  :: Parser LambdaOperatorValue
+  abstractions_p >>= \as -> operator_value_p >>= \nae1 -> return $ AbstractionAndResult as nae1
+  :: Parser AbstractionOperatorExpression
 
 abstractions_p =
   many (try $ abstraction_p <* string " -> ")
   :: Parser [ Abstraction ]
--- LambdaOperatorValue end
+-- AbstractionOperatorExpression end
 
 many_args_application_p =
   lambda_operator_value_p >>= \lov1 ->
@@ -147,12 +147,26 @@ specific_case_p =
   return $ SC lovn v
   :: Parser SpecificCase
 
+default_case_p =
+  string "... ->" >> space_or_newline >> value_p >>= \v -> return $ DC v
+  :: Parser DefaultCase
+
 cases_p =
-  string "cases" >>
-  new_line_space_surrounded >> specific_case_p >>= \c1 ->
-  new_line_space_surrounded >> specific_case_p >>= \c2 ->
-  many (try $ new_line_space_surrounded >> specific_case_p) >>= \cs ->
-  return $ Cs c1 c2 cs
+  string "cases" >> (try one_and_default_cases_p <|> many_cases_p)
+  :: Parser Cases
+
+one_and_default_cases_p =
+  new_line_space_surrounded >> specific_case_p >>= \sc ->
+  new_line_space_surrounded >> default_case_p >>= \dc ->
+  return $ OneAndDefault sc dc
+  :: Parser Cases
+
+many_cases_p =
+  new_line_space_surrounded >> specific_case_p >>= \sc1 ->
+  new_line_space_surrounded >> specific_case_p >>= \sc2 ->
+  many (try $ new_line_space_surrounded >> specific_case_p) >>= \scs ->
+  optionMaybe (try $ new_line_space_surrounded >> default_case_p) >>= \mdc ->
+  return $ Many sc1 sc2 scs mdc
   :: Parser Cases
 
 name_type_and_value_p =
@@ -196,22 +210,22 @@ output_value_p = choice $
   , Cases <$> try cases_p
   , Where <$> try where_p
   --, UseFields <$> try use_fields_p
-  , OperatorValue <$> operator_value_p
-  ] :: Parser OutputValue
+  , OperatorExpression <$> operator_value_p
+  ] :: Parser CasesOrWhere
 
--- LambdaOutputValue:
+-- ValueExpression:
 -- value_p, one_abstraction_arrow_value_p, many_abstractions_arrow_value_p
 value_p =
   try many_abstractions_arrow_value_p <|> one_abstraction_arrow_value_p
-  :: Parser LambdaOutputValue
+  :: Parser ValueExpression
 
 one_abstraction_arrow_value_p =
   abstractions_p >>= \as -> output_value_p >>= \nae ->
-  return $ LV as nae
-  :: Parser LambdaOutputValue
+  return $ AbstractionAndCasesOrWhere as nae
+  :: Parser ValueExpression
 
 many_abstractions_arrow_value_p =
   seperated2 ", " abstraction_p >>= \as1 ->
   string " *->" >> space_or_newline >> one_abstraction_arrow_value_p >>=
-    \(LV as2 nav) -> return $ LV (as1 ++ as2) nav
-  :: Parser LambdaOutputValue
+    \(AbstractionAndCasesOrWhere as2 nav) -> return $ AbstractionAndCasesOrWhere (as1 ++ as2) nav
+  :: Parser ValueExpression

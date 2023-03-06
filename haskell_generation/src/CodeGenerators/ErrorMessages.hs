@@ -3,7 +3,7 @@ module CodeGenerators.ErrorMessages where
 import HaskellTypes.LowLevel
   ( ValueName, Abstraction )
 import HaskellTypes.Types
-  ( TypeName, BaseType, ValueType )
+  ( TypeName, ValueType )
 import HaskellTypes.Values
 
 import Helpers
@@ -14,7 +14,7 @@ type Error = String
 -- All: LowLevel, Values
 
 -- LowLevel:
--- literal_not_int_err, type_check_err, tuple_matching_err,
+-- literal_not_int_err, type_check_err, tuple_abstraction_err,
 -- tuple_function_type_err, tuple_less_than_2_err,
 -- tuple_values_types_lengths_dont_match_err,
 -- abstractions_types_lengths_dont_match_err
@@ -28,7 +28,7 @@ type_check_err = ( \vn lookup_vt vt ->
   show vt ++ "\n"
   ) :: ValueName -> ValueType -> ValueType -> Error
 
-tuple_matching_err = ( \tn -> "\nTuple matching TypeName: " ++ show tn ++ "\n" )
+tuple_abstraction_err = ( \tn -> "\nTuple matching TypeName: " ++ show tn ++ "\n" )
   :: TypeName -> Error
 
 tuple_function_type_err = ( \vt ->
@@ -56,7 +56,7 @@ abstractions_types_lengths_dont_match_err =
 
 tuple_fun_type_err = ( \lovs vt ->
   show lovs ++ " can't have type: " ++ show vt ++ "\n"
-  ) :: [ LambdaOperatorValue ] -> ValueType -> Error
+  ) :: [ AbstractionOperatorExpression ] -> ValueType -> Error
 
 values_fields_lengths_dont_match_err =
   "\nLength of tuple values and fields of the corresponding tuple_type must be " ++
@@ -70,7 +70,7 @@ no_application_err =
 one_arg_applications_type_err = ( \oaa vt inferred_vt -> 
   "\nCould't match type: " ++ show vt ++ "\nwith type:" ++ show inferred_vt ++
   "In one argument applications expression: " ++ show oaa ++ "\n"
-  ) :: OneArgApplications -> ValueType -> ValueType -> Error
+  ) :: FunctionApplicationChain -> ValueType -> ValueType -> Error
 
 bv_type_inference_err = ( \pv ->
   "\nCannot infer types for values inside parenthesis in one argument" ++
@@ -83,16 +83,16 @@ not_a_fun_err = ( \fun_vt val_vt ->
   "\nTrying to apply to argument of type: " ++ show val_vt ++ "\n"
   ) :: ValueType -> ValueType -> Error
 
-argument_types_dont_match_err = ( \vt_right abs_bt->
-  "\nArgument types don't match for one argument function application.\n" ++
-  "Types involved:\n\nFirst:\n  " ++ show vt_right ++ "\nSecond:\n  " ++
-  show abs_bt ++ "\n" ++ "\n"
-  ) :: ValueType -> BaseType -> Error
+-- argument_types_dont_match_err = ( \vt_right abs_bt->
+--   "\nArgument types don't match for one argument function application.\n" ++
+--   "Types involved:\n\nFirst:\n  " ++ show vt_right ++ "\nSecond:\n  " ++
+--   show abs_bt ++ "\n" ++ "\n"
+--   ) :: ValueType -> BaseType -> Error
 
-too_many_abstractions_err = ( \as bts ->
-  "\nMore abstractions than abstraction types.\n  Abstractions:  " ++ show as ++
-  "\n  Types: " ++ show bts ++ "\n"
-  ) :: [ Abstraction ] -> [ BaseType ] -> Error
+-- too_many_abstractions_err = ( \as bts ->
+--   "\nMore abstractions than abstraction types.\n  Abstractions:  " ++ show as ++
+--   "\n  Types: " ++ show bts ++ "\n"
+--   ) :: [ Abstraction ] -> [ BaseType ] -> Error
 
 many_args_types_dont_match_err = ( \vt1 vt2 ->
   "\nArgument types don't match for many arguments function application.\n" ++
@@ -104,10 +104,10 @@ use_fields_not_fun_err = ( \vt ->
   "\nuse_fields should have function type but has: " ++ show vt ++ "\n"
   ) :: ValueType -> Error
 
-must_be_tuple_type_err = ( \bt ->
-  "\nuse_fields abstraction should have tuple_type type but has:" ++ show bt ++
-  "\n"
-  ) :: BaseType -> Error
+-- must_be_tuple_type_err = ( \bt ->
+--   "\nuse_fields abstraction should have tuple_type type but has:" ++ show bt ++
+--   "\n"
+--   ) :: BaseType -> Error
 
 specific_case_not_abstraction_err = ( \vt sc ->
   "\nSpecific case: " ++ show sc ++ "\nShould have abstaction type but has: " ++

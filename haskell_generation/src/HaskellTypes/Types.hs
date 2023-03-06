@@ -10,20 +10,32 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName )
 
--- All: Types, Show instances, helpers
+-- All: Types, Show instances
 
 -- Types:
--- TypeName, BaseType, ValueType, FieldAndType, TupleTypeDef
--- CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
-newtype TypeName =
-  TN String deriving ( Eq, Ord )
+-- TypeName, CartesianProduct, Output, MultipleInputs, Input, FuncType, ValueType,
+-- FieldAndType, TupleTypeDef, CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
 
-data BaseType =
-  TypeName TypeName | ParenType ValueType | 
-  TupleType ValueType ValueType [ ValueType ]
+newtype TypeName =
+  TN String deriving (Eq, Ord)
+
+data CartesianProduct =
+  Types ValueType ValueType [ ValueType ]
+
+data Output =
+  OutputTypeName TypeName | OutputCartesianProduct CartesianProduct
+
+data MultipleInputs =
+  InputTypes ValueType ValueType [ ValueType ]
+
+data Input =
+  OneInput ValueType | MultipleInputs MultipleInputs
+
+data FuncType =
+  InputAndOutput Input Output
 
 data ValueType =
-  AbsTypesAndResType [ BaseType ] BaseType
+  FuncType FuncType | CartesianProduct CartesianProduct | TypeName TypeName
 
 data FieldAndType =
   FT { get_field_name :: ValueName, get_field_type :: ValueType }
@@ -43,30 +55,39 @@ data TypeDef =
 data FieldsOrCases =
   FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
 
--- newtype ArgName = 
---   AN Char
--- 
--- data TypeConstructorExpr =
---   ArgnamesAndName [ ArgName ] TypeName
-
 -- Show instances:
--- TypeName, BaseType, ValueType, FieldAndType, TupleTypeDef,
--- CaseAndMaybeType, OrTypeDef, TypeDef
+-- TypeName, CartesianProduct, Output, MultipleInputs, Input, FuncType, ValueType,
+-- FieldAndType, TupleTypeDef CaseAndMaybeType, OrTypeDef, TypeDef
+ 
 instance Show TypeName where
   show = \(TN n) -> n
 
-instance Show BaseType where
-  show = \case 
-    TypeName tn -> show tn
-    ParenType vt -> vt ==> \case
-      (AbsTypesAndResType [] bt) -> show bt
-      _ -> "(" ++ show vt ++ ")"
-    TupleType vt1 vt2 vts ->
-      "( " ++ (vt1 : vt2 : vts)==>map show==>intercalate ", " ++ " )"
+instance Show CartesianProduct where
+  show = \(Types name1 name2 names) ->
+    map show (name1 : name2 : names)==>intercalate " x "
+
+instance Show Output where
+  show = \case
+    OutputTypeName name -> show name
+    OutputCartesianProduct cartesian_product -> show cartesian_product
+
+instance Show MultipleInputs where
+  show = \(InputTypes input1 input2 inputs) ->
+    "(" ++ map show (input1 : input2 : inputs)==>intercalate ", " ++ ")"
+
+instance Show Input where
+  show = \case
+    OneInput input -> show input
+    MultipleInputs multiple_inputs -> show multiple_inputs
+
+instance Show FuncType where
+  show = \(InputAndOutput input output) -> show input ++ " -> " ++ show output
 
 instance Show ValueType where
-  show = \(AbsTypesAndResType bts bt) ->
-    bts==>concatMap (show .> (++ " -> ")) ++ show bt
+  show = \case
+    FuncType func_type -> show func_type
+    TypeName name -> show name
+    CartesianProduct cartesian_product -> show cartesian_product
 
 instance Show FieldAndType where
   show = \(FT vn vt) -> show vn ++ ": " ++ show vt
@@ -91,13 +112,9 @@ instance Show TypeDef where
     TupleTypeDef ttd -> show ttd
     OrTypeDef otd -> show otd
 
--- helpers: vt_to_bt, bt_to_vt
-vt_to_bt = \case 
-  AbsTypesAndResType [] bt -> bt
-  vt -> ParenType vt
-  :: ValueType -> BaseType
-
-bt_to_vt = \case
-  ParenType vt -> vt
-  bt -> AbsTypesAndResType [] bt
-  :: BaseType -> ValueType
+-- Commented out:
+-- newtype ArgName = 
+--   AN Char
+-- 
+-- data TypeConstructorExpr =
+--   ArgnamesAndName [ ArgName ] TypeName

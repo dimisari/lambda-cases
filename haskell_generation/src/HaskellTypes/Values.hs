@@ -8,44 +8,52 @@ import Helpers
   ( (==>), (.>) )
 
 import HaskellTypes.LowLevel
-  ( ValueName, LiteralOrValueName, Abstraction )
+  ( Literal, ValueName, Abstraction )
 import HaskellTypes.Types
   ( ValueType )
 
 -- All: Types, Show instances
 
 -- Types:
--- ParenthesisValue, MathApplication,  BaseValue
--- ApplicationDirection, OneArgApplications
+-- ParenthesisValue, TupleValue, MathApplication, BaseValue
+-- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorValue, LambdaOperatorValue, ManyArgsApplication
--- SpecificCase, Cases
+-- OperatorExpression, AbstractionOperatorExpression
+-- SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, OutputValue, LambdaOutputValue
+-- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
 
-data ParenthesisValue =
-  Parenthesis LambdaOutputValue |
-  Tuple LambdaOperatorValue LambdaOperatorValue [ LambdaOperatorValue ]
+newtype ParenthesisValue =
+  Parenthesis AbstractionOperatorExpression 
+
+data TupleValue =
+  Values
+    AbstractionOperatorExpression
+    AbstractionOperatorExpression
+    [ AbstractionOperatorExpression ]
 
 data MathApplication =
-  MathApp ValueName LambdaOperatorValue [ LambdaOperatorValue ]
+  MathApp ValueName AbstractionOperatorExpression [ AbstractionOperatorExpression ]
 
 data BaseValue =
-  ParenthesisValue ParenthesisValue | LiteralOrValueName LiteralOrValueName |
+  ParenthesisValue ParenthesisValue |
+  TupleValue TupleValue |
+  Literal Literal |
+  ValueName ValueName |
   MathApplication MathApplication
 
 data ApplicationDirection =
   LeftApplication | RightApplication
 
--- data LastValue = 
---   BVLV BaseValue | CLV Cases
-
-data OneArgApplications = OAA
-  (BaseValue, ApplicationDirection) [ (BaseValue, ApplicationDirection) ] BaseValue
+data FunctionApplicationChain =
+  ValuesAndDirections
+    (BaseValue, ApplicationDirection)
+    [ (BaseValue, ApplicationDirection) ]
+    BaseValue
 
 data MultiplicationFactor =
-  OneArgAppMF OneArgApplications | BaseValueMF BaseValue
+  OneArgAppMF FunctionApplicationChain | BaseValueMF BaseValue
 
 data Multiplication =
   Mul MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
@@ -62,26 +70,30 @@ data EqualityFactor =
 data Equality =
   Equ EqualityFactor EqualityFactor
 
-data OperatorValue =
+data OperatorExpression =
   Equality Equality | EquF EqualityFactor
 
-data LambdaOperatorValue =
-  LOV [ Abstraction ] OperatorValue
+data AbstractionOperatorExpression =
+  AbstractionAndOpResult Abstraction OperatorExpression
 
-data ManyArgsApplication =
-  MAA LambdaOperatorValue LambdaOperatorValue [ LambdaOperatorValue ] ValueName
+data LiteralOrValueName = 
+  Lit Literal | ValName ValueName
 
 data SpecificCase =
-  SC LiteralOrValueName LambdaOutputValue 
+  SC LiteralOrValueName ValueExpression 
+
+data DefaultCase = 
+  DC ValueExpression
 
 data Cases =
-  Cs SpecificCase SpecificCase [ SpecificCase ]
+  OneAndDefault SpecificCase DefaultCase |
+  Many SpecificCase SpecificCase [ SpecificCase ] (Maybe DefaultCase)
 
 data NameTypeAndValue =
-  NTAV ValueName ValueType LambdaOutputValue
+  NTAV ValueName ValueType ValueExpression
 
 data NameTypeAndValueLists =
-  NTAVLists [ ValueName ] [ ValueType ] [ LambdaOutputValue ]
+  NTAVLists [ ValueName ] [ ValueType ] [ ValueExpression ]
 
 data NTAVOrNTAVLists =
   NameTypeAndValue NameTypeAndValue | NameTypeAndValueLists NameTypeAndValueLists
@@ -90,29 +102,34 @@ newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
 
 data Where =
-  Where_ LambdaOutputValue NamesTypesAndValues
+  Where_ ValueExpression NamesTypesAndValues
 
-data OutputValue =
-  ManyArgsApplication ManyArgsApplication | Cases Cases | Where Where |
-  OperatorValue OperatorValue
+data CasesOrWhere =
+  Cases Cases | Where Where
 
-data LambdaOutputValue =
-  LV [ Abstraction ] OutputValue
+data AbstractionCasesOrWhere =
+  AbstractionAndCOWResult Abstraction CasesOrWhere
+
+data ValueExpression =
+  AbstractionCasesOrWhere AbstractionCasesOrWhere |
+  OperatorExpression OperatorExpression
 
 -- Show instances:
--- ParenthesisValue, MathApplication, BaseValue
--- ApplicationDirection, OneArgApplications
+-- ParenthesisValue, TupleValue, MathApplication, BaseValue
+-- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorValue, LambdaOperatorValue, ManyArgsApplication
--- SpecificCase, Cases
+-- OperatorExpression, AbstractionOperatorExpression
+-- SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, OutputValue, LambdaOutputValue
+-- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
 
 instance Show ParenthesisValue where
-  show = \case
-    Parenthesis v -> "(" ++ show v ++ ")"
-    Tuple v1 v2 vs -> "(" ++ map show (v1 : v2 : vs)==>intercalate ", " ++ ")"
+  show = \(Parenthesis v) -> "(" ++ show v ++ ")"
+
+instance Show TupleValue where
+  show = \(Values value1 value2 values) ->
+    "(" ++ map show (value1 : value2 : values)==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
   show = \(MathApp vn lov1 lovs) ->
@@ -120,17 +137,19 @@ instance Show MathApplication where
 
 instance Show BaseValue where
   show = \case
-    ParenthesisValue pv -> show pv
-    LiteralOrValueName lovn -> show lovn
-    MathApplication ma -> show ma
+    ParenthesisValue parenthesis_value -> show parenthesis_value
+    TupleValue tuple_value -> show tuple_value
+    Literal literal -> show literal
+    ValueName value_name -> show value_name
+    MathApplication math_application -> show math_application
 
 instance Show ApplicationDirection where
   show = \case
-    LeftApplication -> "==>"
-    RightApplication -> "<=="
+    LeftApplication -> "<=="
+    RightApplication -> "==>"
 
-instance Show OneArgApplications where
-  show = \(OAA bv_ad bv_ad_s bv) ->
+instance Show FunctionApplicationChain where
+  show = \(ValuesAndDirections bv_ad bv_ad_s bv) ->
     (bv_ad : bv_ad_s)==>concatMap (\(bv, ad) -> show bv ++ show ad) ++ show bv
 
 instance Show MultiplicationFactor where
@@ -157,23 +176,32 @@ instance Show EqualityFactor where
 instance Show Equality where
   show = \(Equ ef1 ef2) -> show ef1 ++ " = " ++ show ef2
 
-instance Show OperatorValue where
+instance Show OperatorExpression where
   show = \case
     Equality equ -> show equ
     EquF f -> show f
 
-instance Show LambdaOperatorValue where
-  show = \(LOV as ov) -> show as ++ show ov
-
-instance Show ManyArgsApplication where
-  show = \(MAA lov1 lov2 lovs vn) ->
-    map show (lov1 : lov2 : lovs)==>intercalate ", " ++ " *==> " ++ show vn
+instance Show AbstractionOperatorExpression where
+  show = \(AbstractionAndOpResult as ov) -> show as ++ show ov
 
 instance Show SpecificCase where
   show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"
 
+instance Show DefaultCase where
+  show = \(DC v) -> "... ->\n" ++ show v ++ "\n"
+
+instance Show LiteralOrValueName where 
+  show = \case
+    Lit literal -> show literal
+    ValName value_name -> show value_name
+
 instance Show Cases where
-  show = \(Cs sc1 sc2 scs) -> "\ncases\n\n" ++ (sc1 : sc2 : scs)==>concatMap show
+  show = \case
+    OneAndDefault sc dc -> "\ncases\n\n" ++ show sc ++ show dc
+    Many sc1 sc2 scs mdc ->
+      "\ncases\n\n" ++ (sc1 : sc2 : scs)==>concatMap show ++ case mdc of
+        Just dc -> show dc
+        Nothing -> ""
 
 instance Show NameTypeAndValue where
   show = \(NTAV vn vt v) ->
@@ -198,12 +226,21 @@ instance Show Where where
   show = \(Where_ v ns_ts_and_vs) -> 
     "output\n" ++ show v ++ "where\n" ++ show ns_ts_and_vs 
 
-instance Show OutputValue where
+instance Show CasesOrWhere where
   show = \case
-    ManyArgsApplication maa -> show maa
     Cases cs -> show cs
     Where where_ -> show where_
-    OperatorValue ov -> show ov
 
-instance Show LambdaOutputValue where
-  show = \(LV as outval) -> as==>concatMap (show .> (++ " -> ")) ++ show outval
+instance Show AbstractionCasesOrWhere where
+  show = \(AbstractionAndCOWResult abstraction cases_or_where) ->
+    show abstraction ++ " -> " ++ show cases_or_where
+
+instance Show ValueExpression where
+  show = \case
+    AbstractionCasesOrWhere abstraction_cases_or_where ->
+      show abstraction_cases_or_where
+    OperatorExpression operator_expression ->
+      show operator_expression
+
+-- data BaseValueOrCases = 
+--   BaseValue BaseValue | Cases Cases

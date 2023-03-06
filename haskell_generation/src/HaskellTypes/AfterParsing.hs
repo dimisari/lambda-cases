@@ -2,21 +2,28 @@
 
 module HaskellTypes.AfterParsing where
 
+import Data.List
+  ( intercalate )
+
 import HaskellTypes.LowLevel
   ( ValueName )
 import HaskellTypes.Types
-  ( TypeName, BaseType(..), ValueType(..), FieldAndType(..), TupleTypeDef(..)
-  , CaseAndMaybeType(..), OrTypeDef(..), TypeDef(..), FieldsOrCases(..) )
+  ( TypeName, CartesianProduct(..), Output(..), MultipleInputs(..), Input(..)
+  , FuncType(..), ValueType(..)
+  , FieldAndType(..), TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..)
+  , TypeDef(..), FieldsOrCases(..) )
 import HaskellTypes.Values
-  ( BaseValue(..), ApplicationDirection(..), OneArgApplications(..) )
+  ( BaseValue(..), ApplicationDirection(..), FunctionApplicationChain(..) )
+import Helpers
+  ( (==>) )
 
 data ApplicationTree = 
   Application ApplicationTree ApplicationTree | BaseValueLeaf BaseValue
   deriving Show
 
-to_application_tree = ( \(OAA bv_ad bv_ads bv_last) ->
+to_application_tree = ( \(ValuesAndDirections bv_ad bv_ads bv_last) ->
   to_application_tree_help bv_last (reverse $ bv_ad : bv_ads )
-  ) :: OneArgApplications -> ApplicationTree 
+  ) :: FunctionApplicationChain -> ApplicationTree 
 
 to_application_tree_help = ( \prev_bv -> \case
   [] -> BaseValueLeaf prev_bv
@@ -33,24 +40,62 @@ combine_with_reverse_direction = ( \at1 ad at2 -> case ad of
 data ValType =
   FunctionType ValType ValType | NamedType TypeName |
   TupleValType ValType ValType [ ValType ]
-  deriving (Eq, Show)
+  deriving Eq
 
-base_type_to_val_type = ( \case
-  TypeName tn -> NamedType tn
-  ParenType vt -> value_type_to_val_type vt
-  TupleType vt1 vt2 vts -> TupleValType t1 t2 ts where
-    t1 : t2 : ts = map value_type_to_val_type (vt1 : vt2 : vts)
-      :: [ ValType ]
-  ) :: BaseType -> ValType
+instance Show ValType where
+  show = \case
+    FunctionType in_vt out_vt -> (case in_vt of
+      FunctionType _ _ ->
+        "(" ++ show in_vt ++ ")"
+      _ -> show in_vt) ++ " -> " ++ show out_vt
+    NamedType tn -> show tn
+    TupleValType vt1 vt2 vts ->
+      "(" ++ map show (vt1 : vt2 : vts) ==> intercalate ", " ++ ")"
 
-value_type_to_val_type = ( \(AbsTypesAndResType bts bt) -> case bts of
-  bt1:other_bts -> FunctionType t1 t2 where
-    t1 = base_type_to_val_type bt1
-      :: ValType
-    t2 = value_type_to_val_type $ AbsTypesAndResType other_bts bt
-      :: ValType
-  [] -> base_type_to_val_type bt
+value_type_to_val_type = ( \case
+  FuncType func_type -> func_type_to_val_type func_type
+  CartesianProduct cartesian_product -> cp_to_val_type cartesian_product
+  TypeName name -> NamedType name
   ) :: ValueType -> ValType
+
+func_type_to_val_type = ( \(InputAndOutput input output) -> case input of 
+  OneInput input ->
+    one_input_to_val_type input output
+  MultipleInputs multiple_inputs ->
+    multiple_inputs_to_val_type multiple_inputs output
+  ) :: FuncType -> ValType
+
+one_input_to_val_type = ( \input output -> 
+  let
+  input_type = value_type_to_val_type input
+    :: ValType
+  output_type = nocp_to_val_type output
+    :: ValType
+  in
+  FunctionType input_type output_type
+  ) :: ValueType -> Output -> ValType
+
+multiple_inputs_to_val_type = (
+  \(InputTypes value_type1 value_type2 value_types) output -> 
+  let
+  input_type = value_type_to_val_type value_type1
+    :: ValType
+  output_type = undefined
+  in
+  FunctionType input_type output_type
+  ) :: MultipleInputs -> Output -> ValType
+
+nocp_to_val_type = ( \case
+  OutputTypeName name -> NamedType name
+  OutputCartesianProduct cartesian_product -> cp_to_val_type cartesian_product
+  ) :: Output -> ValType
+
+cp_to_val_type = ( \(Types value_type1 value_type2 other_value_types) ->
+  TupleValType
+    (value_type_to_val_type value_type1)
+    (value_type_to_val_type value_type2)
+    (map value_type_to_val_type other_value_types)
+  ) :: CartesianProduct -> ValType
 
 data FieldAndValType =
   FVT { get_f_name :: ValueName, get_f_valtype :: ValType }
@@ -97,3 +142,13 @@ data ValFieldsOrCases =
 
 foc_to_vfoc = undefined
   :: FieldsOrCases -> ValFieldsOrCases
+
+-- Commented out:
+
+-- data TupleType =
+--   TT ValType ValType [ ValType ]
+--   deriving (Eq, Show)
+
+-- data ValType =
+--   FunctionType ValType TupleType | NamedType TypeName
+--   deriving (Eq, Show)

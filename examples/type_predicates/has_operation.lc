@@ -1,4 +1,4 @@
-# +: A==>Has_Addition => A, A *-> A
+# + : A==>Has_Addition => (A, A) -> A
 
 type_predicate A==>Has_Addition
 operator + : (A, A) -> A
@@ -12,7 +12,7 @@ proof + = ==>real_addition<==
 type_theorem Text==>Has_Addition
 proof + = ==>concat<==
 
-# +: A==>Has_Multiplication => A, A *-> A
+# +: A==>Has_Multiplication => (A, A) -> A
 
 type_predicate A==>Has_Multiplication
 operator * : (A, A) -> A

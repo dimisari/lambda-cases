@@ -14,7 +14,7 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), BaseType(..), ValueType(..), FieldAndType, CaseAndMaybeType
+  ( TypeName(..), ValueType(..), FieldAndType, CaseAndMaybeType
   , FieldsOrCases )
 import HaskellTypes.AfterParsing
   ( ValType(..), ValFieldsOrCases(..) )
