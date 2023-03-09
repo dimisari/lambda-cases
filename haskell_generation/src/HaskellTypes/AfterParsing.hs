@@ -5,6 +5,9 @@ module HaskellTypes.AfterParsing where
 import Data.List
   ( intercalate )
 
+import Helpers
+  ( (==>) )
+
 import HaskellTypes.LowLevel
   ( ValueName )
 import HaskellTypes.Types
@@ -13,29 +16,49 @@ import HaskellTypes.Types
   , FieldAndType(..), TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..)
   , TypeDef(..), FieldsOrCases(..) )
 import HaskellTypes.Values
-  ( BaseValue(..), ApplicationDirection(..), FunctionApplicationChain(..) )
-import Helpers
-  ( (==>) )
+  ( BaseValue(..), ApplicationDirection(..), FunctionApplicationChain(..)
+  , MathApplication(..), AbsOpExprOrOpExpr(..), OperatorExpression(..)
+  , EqualityFactor(..), SubtractionFactor(..), MultiplicationFactor(..)
+  , ParenthesisValue(..) )
 
 data ApplicationTree = 
   Application ApplicationTree ApplicationTree | BaseValueLeaf BaseValue
   deriving Show
 
-to_application_tree = ( \(ValuesAndDirections bv_ad bv_ads bv_last) ->
-  to_application_tree_help bv_last (reverse $ bv_ad : bv_ads )
+-- fac_to_app_tree
+
+fac_to_app_tree = ( \(ValuesAndDirections bv_ad bv_ads bv_last) ->
+  fac_to_app_tree_help bv_last (reverse $ bv_ad : bv_ads)
   ) :: FunctionApplicationChain -> ApplicationTree 
 
-to_application_tree_help = ( \prev_bv -> \case
+fac_to_app_tree_help = ( \prev_bv -> \case
   [] -> BaseValueLeaf prev_bv
-  ( bv, ad ) : bv_ads -> combine_with_reverse_direction
-    (BaseValueLeaf prev_bv) ad (to_application_tree_help bv bv_ads)
-  ) :: BaseValue -> [ ( BaseValue, ApplicationDirection ) ] -> ApplicationTree 
+  (bv, ad) : bv_ads -> combine_with_reverse_direction
+    (BaseValueLeaf prev_bv) ad (fac_to_app_tree_help bv bv_ads)
+  ) :: BaseValue -> [ (BaseValue, ApplicationDirection) ] -> ApplicationTree 
 
 combine_with_reverse_direction = ( \at1 ad at2 -> case ad of 
   LeftApplication -> Application at2 at1
   RightApplication -> Application at1 at2
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
+
+-- math_app_to_app_tree
+
+math_app_to_app_tree = ( \(MathApp value_name expr1 exprs) ->
+  bvs_to_app_tree $ ValueName value_name : map expr_to_base_value (expr1 : exprs) 
+  ) :: MathApplication -> ApplicationTree 
+
+expr_to_base_value = ( \expr -> case expr of
+  OperatorExpression (EquF (SFEF (MFSF (BaseValueMF bv)))) -> bv
+  _ -> ParenthesisValue $ Parenthesis $ expr
+  ) :: AbsOpExprOrOpExpr -> BaseValue
+
+bvs_to_app_tree = ( \case
+  [] -> error "empty list in bvs_to_app_tree"
+  [ bv ] -> BaseValueLeaf bv
+  bv : bvs -> Application (BaseValueLeaf bv) $ bvs_to_app_tree bvs
+  ) :: [ BaseValue ] -> ApplicationTree
 
 data ValType =
   FunctionType ValType ValType | NamedType TypeName |

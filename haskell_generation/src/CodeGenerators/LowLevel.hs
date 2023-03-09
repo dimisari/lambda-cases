@@ -18,6 +18,7 @@ import HaskellTypes.Types
   ( TypeName(..) )
 import HaskellTypes.AfterParsing
   ( ValType(..), ValFieldsOrCases(..), FieldAndValType(..) )
+
 import HaskellTypes.Generation
   ( Stateful, value_map_get, value_map_insert, type_map_get )
 
@@ -26,9 +27,11 @@ import CodeGenerators.ErrorMessages
   , tuple_function_type_err, tuple_less_than_2_err
   , tuple_values_types_lengths_dont_match_err
   , abstractions_types_lengths_dont_match_err )
+import CodeGenerators.TypeChecking
+  ( type_check_value_name_g )
 
 -- All:
--- Literal, LiteralOrValueName, ManyAbstractions, Abstraction, Abstractions
+-- Literal, ValueName, ManyAbstractions, Abstraction
 
 -- Literal: literal_g, literal_type_inference_g
 literal_g = ( \vt l -> 
@@ -39,6 +42,19 @@ literal_g = ( \vt l ->
 
 literal_type_inference_g = ( \l -> return (NamedType $ TN "Int", show l) )
   :: Literal -> Stateful ( ValType, Haskell )
+
+-- Literal, ValueName, ManyAbstractions, Abstraction
+
+-- ValueName: value_name_g, value_name_type_inference_g
+value_name_g = ( \vt value_name -> 
+  value_map_get value_name >>= \value_type ->
+  type_check_value_name_g vt value_type value_name
+  ) :: ValType -> ValueName -> Stateful Haskell
+
+value_name_type_inference_g = ( \value_name ->
+  value_map_get value_name >>= \value_type ->
+  return (value_type, show value_name)
+  ) :: ValueName -> Stateful (ValType, Haskell)
 
 -- ManyAbstractions:
 -- many_abstractions_g

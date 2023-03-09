@@ -19,22 +19,19 @@ import HaskellTypes.Types
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOperatorExpression
--- SpecificCase, DefaultCase, Cases
+-- OperatorExpression, AbstractionOperatorExpression, AbsOpExprOrOpExpr
+-- LiteralOrValueName, SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
 
 newtype ParenthesisValue =
-  Parenthesis AbstractionOperatorExpression 
+  Parenthesis AbsOpExprOrOpExpr 
 
 data TupleValue =
-  Values
-    AbstractionOperatorExpression
-    AbstractionOperatorExpression
-    [ AbstractionOperatorExpression ]
+  Values AbsOpExprOrOpExpr AbsOpExprOrOpExpr [ AbsOpExprOrOpExpr ]
 
 data MathApplication =
-  MathApp ValueName AbstractionOperatorExpression [ AbstractionOperatorExpression ]
+  MathApp ValueName AbsOpExprOrOpExpr [ AbsOpExprOrOpExpr ]
 
 data BaseValue =
   ParenthesisValue ParenthesisValue |
@@ -74,7 +71,11 @@ data OperatorExpression =
   Equality Equality | EquF EqualityFactor
 
 data AbstractionOperatorExpression =
-  AbstractionAndOpResult Abstraction OperatorExpression
+  AbstractionAndOpResult Abstraction OperatorExpression 
+
+data AbsOpExprOrOpExpr =
+  AbstractionOperatorExpr AbstractionOperatorExpression |
+  OperatorExpression OperatorExpression
 
 data LiteralOrValueName = 
   Lit Literal | ValName ValueName
@@ -112,28 +113,29 @@ data AbstractionCasesOrWhere =
 
 data ValueExpression =
   AbstractionCasesOrWhere AbstractionCasesOrWhere |
-  OperatorExpression OperatorExpression
+  CasesOrWhere CasesOrWhere |
+  AbsOpExprOrOpExpr AbsOpExprOrOpExpr
 
 -- Show instances:
 -- ParenthesisValue, TupleValue, MathApplication, BaseValue
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOperatorExpression
--- SpecificCase, DefaultCase, Cases
+-- OperatorExpression, AbstractionOperatorExpression, AbsOpExprOrOpExpr
+-- LiteralOrValueName, SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
 
 instance Show ParenthesisValue where
-  show = \(Parenthesis v) -> "(" ++ show v ++ ")"
+  show = \(Parenthesis value) -> "(" ++ show value ++ ")"
 
 instance Show TupleValue where
   show = \(Values value1 value2 values) ->
     "(" ++ map show (value1 : value2 : values)==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
-  show = \(MathApp vn lov1 lovs) ->
-    show vn ++ "(" ++ (lov1 : lovs)==>map show==>intercalate ", " ++ ")"
+  show = \(MathApp value_name lov1 lovs) ->
+    show value_name ++ "(" ++ (lov1 : lovs)==>map show==>intercalate ", " ++ ")"
 
 instance Show BaseValue where
   show = \case
@@ -184,16 +186,21 @@ instance Show OperatorExpression where
 instance Show AbstractionOperatorExpression where
   show = \(AbstractionAndOpResult as ov) -> show as ++ show ov
 
-instance Show SpecificCase where
-  show = \(SC lovn v) -> show lovn ++ " ->\n" ++ show v ++ "\n"
-
-instance Show DefaultCase where
-  show = \(DC v) -> "... ->\n" ++ show v ++ "\n"
+instance Show AbsOpExprOrOpExpr where
+  show = \case
+    AbstractionOperatorExpr abs_op_expr -> show abs_op_expr
+    OperatorExpression op_expr -> show op_expr
 
 instance Show LiteralOrValueName where 
   show = \case
     Lit literal -> show literal
     ValName value_name -> show value_name
+
+instance Show SpecificCase where
+  show = \(SC lovn value) -> show lovn ++ " ->\n" ++ show value ++ "\n"
+
+instance Show DefaultCase where
+  show = \(DC value) -> "... ->\n" ++ show value ++ "\n"
 
 instance Show Cases where
   show = \case
@@ -204,43 +211,41 @@ instance Show Cases where
         Nothing -> ""
 
 instance Show NameTypeAndValue where
-  show = \(NTAV vn vt v) ->
-    show vn ++ ": " ++ show vt ++ "\n  = " ++ show v ++ "\n"
+  show = \(NTAV value_name value_type value) ->
+    show value_name ++ ": " ++ show value_type ++ "\n  = " ++ show value ++ "\n"
 
 instance Show NameTypeAndValueLists where
-  show = \(NTAVLists vns vts vs) -> 
-    vns==>map show==>intercalate ", " ++ ": " ++
-    vts==>map show==>intercalate ", " ++ "\n  = " ++
-    vs==>map show==>intercalate ", " ++ "\n"
+  show = \(NTAVLists value_names value_types values) -> 
+    value_names==>map show==>intercalate ", " ++ ": " ++
+    value_types==>map show==>intercalate ", " ++ "\n  = " ++
+    values==>map show==>intercalate ", " ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case
-    NameTypeAndValue ntav -> show ntav
-    NameTypeAndValueLists ntavl -> show ntavl
+    NameTypeAndValue name_type_and_value -> show name_type_and_value
+    NameTypeAndValueLists ntav_lists -> show ntav_lists
 
 instance Show NamesTypesAndValues where
   show = \(NTAVs ns_ts_and_vs) ->
     "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
 
 instance Show Where where
-  show = \(Where_ v ns_ts_and_vs) -> 
-    "output\n" ++ show v ++ "where\n" ++ show ns_ts_and_vs 
+  show = \(Where_ value ns_ts_and_vs) -> 
+    "output\n" ++ show value ++ "where\n" ++ show ns_ts_and_vs 
 
 instance Show CasesOrWhere where
   show = \case
-    Cases cs -> show cs
+    Cases cases -> show cases
     Where where_ -> show where_
 
 instance Show AbstractionCasesOrWhere where
-  show = \(AbstractionAndCOWResult abstraction cases_or_where) ->
-    show abstraction ++ " -> " ++ show cases_or_where
+  show = \(AbstractionAndCOWResult abs cases_or_where) ->
+    show abs ++ " -> " ++ show cases_or_where
 
 instance Show ValueExpression where
   show = \case
-    AbstractionCasesOrWhere abstraction_cases_or_where ->
-      show abstraction_cases_or_where
-    OperatorExpression operator_expression ->
-      show operator_expression
+    AbstractionCasesOrWhere abs_cases_or_where -> show abs_cases_or_where
+    AbsOpExprOrOpExpr abs_op_expr_or_op_expr -> show abs_op_expr_or_op_expr
 
 -- data BaseValueOrCases = 
 --   BaseValue BaseValue | Cases Cases
