@@ -19,19 +19,19 @@ import HaskellTypes.Types
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOperatorExpression, AbsOpExprOrOpExpr
+-- OperatorExpression, AbstractionOpExpression, AbsOpOrOpExpression
 -- LiteralOrValueName, SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
 
 newtype ParenthesisValue =
-  Parenthesis AbsOpExprOrOpExpr 
+  Parenthesis AbsOpOrOpExpression 
 
 data TupleValue =
-  Values AbsOpExprOrOpExpr AbsOpExprOrOpExpr [ AbsOpExprOrOpExpr ]
+  Values AbsOpOrOpExpression AbsOpOrOpExpression [ AbsOpOrOpExpression ]
 
 data MathApplication =
-  MathApp ValueName AbsOpExprOrOpExpr [ AbsOpExprOrOpExpr ]
+  MathApp ValueName AbsOpOrOpExpression [ AbsOpOrOpExpression ]
 
 data BaseValue =
   ParenthesisValue ParenthesisValue |
@@ -70,11 +70,11 @@ data Equality =
 data OperatorExpression =
   Equality Equality | EquF EqualityFactor
 
-data AbstractionOperatorExpression =
+data AbstractionOpExpression =
   AbstractionAndOpResult Abstraction OperatorExpression 
 
-data AbsOpExprOrOpExpr =
-  AbstractionOperatorExpr AbstractionOperatorExpression |
+data AbsOpOrOpExpression =
+  AbstractionOpExpression AbstractionOpExpression |
   OperatorExpression OperatorExpression
 
 data LiteralOrValueName = 
@@ -114,14 +114,14 @@ data AbstractionCasesOrWhere =
 data ValueExpression =
   AbstractionCasesOrWhere AbstractionCasesOrWhere |
   CasesOrWhere CasesOrWhere |
-  AbsOpExprOrOpExpr AbsOpExprOrOpExpr
+  AbsOpOrOpExpression AbsOpOrOpExpression
 
 -- Show instances:
 -- ParenthesisValue, TupleValue, MathApplication, BaseValue
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOperatorExpression, AbsOpExprOrOpExpr
+-- OperatorExpression, AbstractionOpExpression, AbsOpOrOpExpression
 -- LiteralOrValueName, SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
@@ -183,12 +183,12 @@ instance Show OperatorExpression where
     Equality equ -> show equ
     EquF f -> show f
 
-instance Show AbstractionOperatorExpression where
+instance Show AbstractionOpExpression where
   show = \(AbstractionAndOpResult as ov) -> show as ++ show ov
 
-instance Show AbsOpExprOrOpExpr where
+instance Show AbsOpOrOpExpression where
   show = \case
-    AbstractionOperatorExpr abs_op_expr -> show abs_op_expr
+    AbstractionOpExpression abs_op_expr -> show abs_op_expr
     OperatorExpression op_expr -> show op_expr
 
 instance Show LiteralOrValueName where 
@@ -245,7 +245,7 @@ instance Show AbstractionCasesOrWhere where
 instance Show ValueExpression where
   show = \case
     AbstractionCasesOrWhere abs_cases_or_where -> show abs_cases_or_where
-    AbsOpExprOrOpExpr abs_op_expr_or_op_expr -> show abs_op_expr_or_op_expr
+    AbsOpOrOpExpression abs_op_expr_or_op_expr -> show abs_op_expr_or_op_expr
 
 -- data BaseValueOrCases = 
 --   BaseValue BaseValue | Cases Cases

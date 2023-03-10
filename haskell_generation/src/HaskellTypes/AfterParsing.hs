@@ -17,7 +17,7 @@ import HaskellTypes.Types
   , TypeDef(..), FieldsOrCases(..) )
 import HaskellTypes.Values
   ( BaseValue(..), ApplicationDirection(..), FunctionApplicationChain(..)
-  , MathApplication(..), AbsOpExprOrOpExpr(..), OperatorExpression(..)
+  , MathApplication(..), AbsOpOrOpExpression(..), OperatorExpression(..)
   , EqualityFactor(..), SubtractionFactor(..), MultiplicationFactor(..)
   , ParenthesisValue(..) )
 
@@ -52,7 +52,7 @@ math_app_to_app_tree = ( \(MathApp value_name expr1 exprs) ->
 expr_to_base_value = ( \expr -> case expr of
   OperatorExpression (EquF (SFEF (MFSF (BaseValueMF bv)))) -> bv
   _ -> ParenthesisValue $ Parenthesis $ expr
-  ) :: AbsOpExprOrOpExpr -> BaseValue
+  ) :: AbsOpOrOpExpression -> BaseValue
 
 bvs_to_app_tree = ( \case
   [] -> error "empty list in bvs_to_app_tree"
