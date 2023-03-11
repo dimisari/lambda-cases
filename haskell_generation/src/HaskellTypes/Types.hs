@@ -13,7 +13,7 @@ import HaskellTypes.LowLevel
 -- All: Types, Show instances
 
 -- Types:
--- TypeName, CartesianProduct, Output, MultipleInputs, Input, FuncType, ValueType,
+-- TypeName, CartesianProduct, Output, MultipleInputs, Input, FunctionType, ValueType,
 -- FieldAndType, TupleTypeDef, CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
 
 newtype TypeName =
@@ -31,11 +31,11 @@ data MultipleInputs =
 data Input =
   OneInput ValueType | MultipleInputs MultipleInputs
 
-data FuncType =
+data FunctionType =
   InputAndOutput Input Output
 
 data ValueType =
-  FuncType FuncType | CartesianProduct CartesianProduct | TypeName TypeName
+  FunctionType FunctionType | CartesianProduct CartesianProduct | TypeName TypeName
 
 data FieldAndType =
   FT { get_field_name :: ValueName, get_field_type :: ValueType }
@@ -56,7 +56,7 @@ data FieldsOrCases =
   FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
 
 -- Show instances:
--- TypeName, CartesianProduct, Output, MultipleInputs, Input, FuncType, ValueType,
+-- TypeName, CartesianProduct, Output, MultipleInputs, Input, FunctionType, ValueType,
 -- FieldAndType, TupleTypeDef CaseAndMaybeType, OrTypeDef, TypeDef
  
 instance Show TypeName where
@@ -80,12 +80,12 @@ instance Show Input where
     OneInput input -> show input
     MultipleInputs multiple_inputs -> show multiple_inputs
 
-instance Show FuncType where
+instance Show FunctionType where
   show = \(InputAndOutput input output) -> show input ++ " -> " ++ show output
 
 instance Show ValueType where
   show = \case
-    FuncType func_type -> show func_type
+    FunctionType func_type -> show func_type
     TypeName name -> show name
     CartesianProduct cartesian_product -> show cartesian_product
 

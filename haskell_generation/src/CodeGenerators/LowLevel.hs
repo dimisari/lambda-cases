@@ -61,7 +61,7 @@ value_name_type_inference_g = ( \value_name ->
 many_abstractions_g = ( \case
   -- possibly later with symbol table ?
   NamedType tn -> undefined
-  FunctionType _ _ -> undefined
+  FuncType _ _ -> undefined
   TupleValType vt1 vt2 vts -> \(MA vn1 vn2 vns) -> case length vts == length vns of
     False -> undefined
     True -> 

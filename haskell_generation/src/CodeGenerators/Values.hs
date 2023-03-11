@@ -62,7 +62,7 @@ parenthesis_value_type_inference_g = ( \(Parenthesis expr) ->
 -- correct_type_name_tuple_values_g, tuple_value_type_inference_g
 
 tuple_value_g = ( \vt (Values v1 v2 vs) -> case vt of 
-  FunctionType _ _ -> undefined
+  FuncType _ _ -> undefined
   NamedType tn -> type_name_tuple_values_g tn (v1 : v2 : vs)
   TupleValType vt1 vt2 vts ->
     tuple_types_and_values_g (vt1 : vt2 : vts) (v1 : v2 : vs)
@@ -151,7 +151,7 @@ application_tree_g = ( \vt -> \case
 application_tree_type_inference_g = ( \case 
   Application at1 at2 -> application_tree_type_inference_g at1 >>=
     \(vt1, hs1) -> case vt1 of 
-      FunctionType input_t output_t -> 
+      FuncType input_t output_t -> 
         application_tree_g input_t at2 >>= \hs2 ->
         let 
         hs2_ = case at2 of 
@@ -233,7 +233,7 @@ operator_expression_type_inference_g = ( \case
 -- abstraction_operator_expr_g, abstraction_op_expr_type_inference_g
 
 abstraction_operator_expr_g = ( \case
-  FunctionType input_t output_t ->
+  FuncType input_t output_t ->
     \(AbstractionAndOpResult abstraction op_expr) ->
       undefined >>
       return $ "\\" ++ undefined ++ " -> " ++ undefined
@@ -272,7 +272,7 @@ lit_or_val_name_type_inference_g = ( \case
 
 -- SpecificCase: specific_case_g, abs_g, specific_case_type_inference_g
 specific_case_g = ( \vt sc@(SC lovn v) -> case vt of 
-  FunctionType input_t output_t -> case lovn of 
+  FuncType input_t output_t -> case lovn of 
     Lit l -> literal_g input_t l >>= add_value_g 
     ValName vn -> value_map_insert vn input_t >> add_value_g (show vn)
     where
@@ -295,12 +295,12 @@ specific_case_type_inference_g = ( \sc@(SC lovn v) ->
   lit_or_val_name_type_inference_g lovn >>= \(lovn_vt, lovn_g) ->
   value_expression_type_inference_g v >>= \(v_vt, v_g) ->
   get_indent_level >>= \i ->
-  return (FunctionType lovn_vt v_vt, indent i ++ lovn_g ++ " -> " ++ v_g)
+  return (FuncType lovn_vt v_vt, indent i ++ lovn_g ++ " -> " ++ v_g)
   ) :: SpecificCase -> Stateful (ValType, Haskell)
 
 -- DefaultCase: specific_case_g, specific_case_type_inference_g
 default_case_g = ( \vt dc@(DC v) -> case vt of 
-  FunctionType input_t output_t -> 
+  FuncType input_t output_t -> 
     value_map_insert (VN "value") input_t >>
     value_expression_g output_t v >>= \v_g ->
     get_indent_level >>= \i ->
@@ -340,27 +340,29 @@ cases_type_inference_g = ( \case
 -- NameTypeAndValue: name_type_and_value_g
 
 name_type_and_value_g = ( \(NTAV vn vt v) -> 
-  let val_t = value_type_to_val_type vt in
-  value_map_insert vn val_t >> value_expression_g val_t v >>= \v_g ->
+  value_expression_g (value_type_to_val_type vt) v >>= \v_g ->
   get_indent_level >>= \i ->
   return $
-  "\n" ++ indent i  ++ show vn ++ " :: " ++ value_type_g vt ++ "\n" ++
-  indent i  ++ show vn ++ " = " ++ v_g ++ "\n"
+    "\n" ++ indent i ++ show vn ++ " :: " ++ value_type_g vt ++ "\n" ++
+    indent i ++ show vn ++ " = " ++ v_g ++ "\n"
   ) :: NameTypeAndValue -> Stateful Haskell
+
+ntav_map_insert = ( \(NTAV vn vt v) ->
+  value_map_insert vn $ value_type_to_val_type vt
+  ) :: NameTypeAndValue -> Stateful ()
 
 -- NameTypeAndValueLists: name_type_and_value_lists_g
 
-name_type_and_value_lists_g = ( \ntavls@(NTAVLists vns vts vs) -> 
-  let
-  zip3 = ( \case
-    (vn : vns, vt : vts, v : vs) -> NTAV vn vt v : zip3 (vns, vts, vs)
-    ([], [], []) -> []
-    _ -> error $ name_type_and_value_lists_err ntavls
-    ) :: ([ ValueName ], [ ValueType ], [ ValueExpression ]) ->
-         [ NameTypeAndValue ]
-  in
-  zip3 (vns, vts, vs)==>mapM name_type_and_value_g >>= concat .> return
-  ) :: NameTypeAndValueLists -> Stateful Haskell
+name_type_and_value_lists_g =  
+  ntav_lists_to_list_of_ntavs .> mapM name_type_and_value_g >=> concat .> return
+  :: NameTypeAndValueLists -> Stateful Haskell
+
+ntav_lists_to_list_of_ntavs = ( \ntav_lists -> case ntav_lists of
+  NTAVLists (vn : vns) (vt : vts) (v : vs) ->
+    NTAV vn vt v : ntav_lists_to_list_of_ntavs (NTAVLists vns vts vs)
+  NTAVLists [] [] [] -> []
+  _ -> error $ name_type_and_value_lists_err ntav_lists
+  ) :: NameTypeAndValueLists -> [ NameTypeAndValue ]
 
 -- NTAVOrNTAVLists: ntav_or_ntav_lists_g
 
@@ -369,11 +371,24 @@ ntav_or_ntav_lists_g = ( \case
   NameTypeAndValueLists ntav_lists -> name_type_and_value_lists_g ntav_lists
   ) :: NTAVOrNTAVLists -> Stateful Haskell
 
+ntav_or_ntav_lists_to_list_of_ntavs = ( \case 
+  NameTypeAndValue ntav -> [ ntav ]
+  NameTypeAndValueLists ntav_lists -> ntav_lists_to_list_of_ntavs ntav_lists
+  ) :: NTAVOrNTAVLists -> [ NameTypeAndValue ]
+
 -- NamesTypesAndValues: names_types_and_values_g
 
-names_types_and_values_g = ( \(NTAVs ntavs) ->
-  ntavs==>mapM ntav_or_ntav_lists_g >>= concat .> return
-  ) :: NamesTypesAndValues -> Stateful Haskell
+names_types_and_values_g = ( ns_ts_and_vs_to_list_of_ntavs .> list_of_ntavs_g)
+  :: NamesTypesAndValues -> Stateful Haskell
+
+ns_ts_and_vs_to_list_of_ntavs = ( \(NTAVs ntavs) ->
+  concatMap ntav_or_ntav_lists_to_list_of_ntavs ntavs
+  ) :: NamesTypesAndValues -> [ NameTypeAndValue ]
+
+list_of_ntavs_g = ( \ntavs_l ->
+  mapM_ ntav_map_insert ntavs_l >>
+  ntavs_l ==>mapM name_type_and_value_g >>= concat .> return
+  ) :: [ NameTypeAndValue ] -> Stateful Haskell
 
 -- Where: where_g, where_type_inference_g 
 
@@ -408,7 +423,7 @@ cases_or_where_type_inference_g = ( \case
 -- AbstractionCasesOrWhere: abstraction_cases_or_where_g
 
 abstraction_cases_or_where_g = ( \case
-  FunctionType input_t output_t ->
+  FuncType input_t output_t ->
     \(AbstractionAndCOWResult abstraction cases_or_where) ->
     abstraction_g input_t abstraction >>= \abs_g ->
     cases_or_where_g output_t cases_or_where >>= \cow_g ->

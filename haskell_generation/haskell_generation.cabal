@@ -23,7 +23,8 @@ executable haskell_generation
                       HaskellTypes.Values, HaskellTypes.AfterParsing,
                       HaskellTypes.Generation,
                       CodeGenerators.LowLevel, CodeGenerators.Types,
-                      CodeGenerators.Values, CodeGenerators.ErrorMessages
+                      CodeGenerators.Values, CodeGenerators.TypeChecking,
+                      CodeGenerators.ErrorMessages
 
     build-depends:    base ^>=4.16.4.0, parsec, mtl, containers
     other-extensions: LambdaCase

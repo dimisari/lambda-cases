@@ -24,15 +24,15 @@ bool_val_t = NamedType $ TN "Bool"
   :: ValType
 
 int_int_int_val_t_only =
-  [ FunctionType int_val_t $ FunctionType int_val_t int_val_t ]
+  [ FuncType int_val_t $ FuncType int_val_t int_val_t ]
   :: [ ValType ]
 
 init_value_map = 
   M.fromList
     [ ( VN "div" , int_int_int_val_t_only )
     , ( VN "mod" , int_int_int_val_t_only )
-    , ( VN "get_first" , [ FunctionType int_int_val_t int_val_t ] )
-    , ( VN "abs" , [ FunctionType int_val_t int_val_t ] )
+    , ( VN "get_first" , [ FuncType int_int_val_t int_val_t ] )
+    , ( VN "abs" , [ FuncType int_val_t int_val_t ] )
     , ( VN "max" , int_int_int_val_t_only )
     , ( VN "min" , int_int_int_val_t_only )
     , ( VN "true" , [ bool_val_t ] )

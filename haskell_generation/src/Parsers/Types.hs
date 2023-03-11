@@ -12,7 +12,7 @@ import Helpers
 
 import HaskellTypes.Types
   ( TypeName(..), CartesianProduct(..), Output(..), MultipleInputs(..), Input(..)
-  , FuncType(..), ValueType(..)
+  , FunctionType(..), ValueType(..)
   , FieldAndType(..), TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..)
   , TypeDef(..) )
 
@@ -20,7 +20,7 @@ import Parsers.LowLevel
   ( value_name_p )
 
 -- All:
--- TypeName, CartesianProduct, Output, MultipleInputs, Input, FuncType, ValueType,
+-- TypeName, CartesianProduct, Output, MultipleInputs, Input, FunctionType, ValueType,
 -- FieldAndType, TupleTypeDef, CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
 
 -- TypeName: type_name_p
@@ -41,7 +41,7 @@ cartesian_product_p =
 
 inner_value_type_p =
   try (char '(' *>
-  (FuncType <$> try func_type_p <|> CartesianProduct <$> cartesian_product_p)
+  (FunctionType <$> try func_type_p <|> CartesianProduct <$> cartesian_product_p)
   <* char ')') <|>
   TypeName <$> type_name_p
   :: Parser ValueType
@@ -70,22 +70,22 @@ input_p =
   :: Parser Input
 
 one_input_val_type_p =
-  FuncType <$> (char '(' *> func_type_p <* char ')') <|>
+  FunctionType <$> (char '(' *> func_type_p <* char ')') <|>
   CartesianProduct <$> try cartesian_product_p <|>
   TypeName <$> type_name_p
   :: Parser ValueType
 
--- FuncType: func_type_p
+-- FunctionType: func_type_p
 
 func_type_p =
   input_p >>= \input -> string " -> " >> output_p >>= \output ->
   return $ InputAndOutput input output
-  :: Parser FuncType
+  :: Parser FunctionType
 
 -- ValueType: value_type_p
 
 value_type_p =
-  FuncType <$> try func_type_p <|> CartesianProduct <$> try cartesian_product_p <|>
+  FunctionType <$> try func_type_p <|> CartesianProduct <$> try cartesian_product_p <|>
   TypeName <$> type_name_p
   :: Parser ValueType
 

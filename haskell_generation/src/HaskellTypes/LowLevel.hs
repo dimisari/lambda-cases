@@ -9,8 +9,8 @@ import Helpers
 
 -- All: Types, Show instances
 
--- Types:
--- Literal, ValueName, ManyAbstractions, Abstraction
+-- Types: Literal, ValueName, ManyAbstractions, Abstraction
+
 type Literal = Integer
 
 newtype ValueName =
@@ -22,8 +22,8 @@ data ManyAbstractions =
 data Abstraction =
   NameAbstraction ValueName | ManyAbstractions ManyAbstractions | UseFields
 
--- Show instances:
--- ValueName, ManyAbstractions, Abstraction
+-- Show instances: ValueName, ManyAbstractions, Abstraction
+
 instance Show ValueName where
   show = \(VN n) -> n
 

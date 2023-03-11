@@ -30,7 +30,7 @@ type_check_value_name_g = ( \vt lookup_vt vn ->
 
 ts_are_equivalent = ( \vt1 vt2 -> case (vt1, vt2) of
 
-  (FunctionType in_vt1 out_vt1, FunctionType in_vt2 out_vt2) ->
+  (FuncType in_vt1 out_vt1, FuncType in_vt2 out_vt2) ->
     ts_are_equivalent in_vt1 in_vt2 >>= \in_equiv ->
     ts_are_equivalent out_vt1 out_vt2 >>= \out_equiv -> 
     return $ in_equiv && out_equiv
@@ -39,11 +39,11 @@ ts_are_equivalent = ( \vt1 vt2 -> case (vt1, vt2) of
     zipWith ts_are_equivalent (vt1_1 : vt1_2 : vts1) (vt2_1 : vt2_2 : vts2)
       ==> sequence ==> fmap and
 
-  (FunctionType _ _ ,NamedType _) -> return False
-  (NamedType _, FunctionType _ _) -> return False
+  (FuncType _ _ ,NamedType _) -> return False
+  (NamedType _, FuncType _ _) -> return False
 
-  (FunctionType _ _ ,TupleValType _ _ _) -> return False
-  (TupleValType _ _ _, FunctionType _ _) -> return False
+  (FuncType _ _ ,TupleValType _ _ _) -> return False
+  (TupleValType _ _ _, FuncType _ _) -> return False
 
   (NamedType tn, TupleValType _ _ _) -> tn_t_are_equivalent tn vt2
   (TupleValType _ _ _, NamedType tn) -> tn_t_are_equivalent tn vt1

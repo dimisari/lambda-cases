@@ -46,7 +46,7 @@ value_type_g = ( value_type_to_val_type .> show )
 
 -- ValType
 val_type_g = ( \case
-  FunctionType t_in t_out -> val_type_g t_in ++ " -> " ++ val_type_g t_out
+  FuncType t_in t_out -> val_type_g t_in ++ " -> " ++ val_type_g t_out
   NamedType tn -> show tn
   TupleValType t1 t2 ts -> 
     "(" ++ map val_type_g (t1 : t2 : ts)==>intercalate ", " ++ ")" 
@@ -61,7 +61,7 @@ tuple_val_type_def_g = ( \(NameAndFields tn fs) ->
     :: Stateful Haskell
 
   field_and_val_type_g = ( \(FVT vn vt) ->
-    value_map_insert (VN $ "get_" ++ show vn) (FunctionType (NamedType tn) vt) >>
+    value_map_insert (VN $ "get_" ++ show vn) (FuncType (NamedType tn) vt) >>
     return ("get_" ++ show vn ++ " :: " ++ val_type_g vt)
     ) :: FieldAndValType -> Stateful Haskell
   in

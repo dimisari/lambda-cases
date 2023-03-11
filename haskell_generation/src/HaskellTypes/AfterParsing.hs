@@ -12,7 +12,7 @@ import HaskellTypes.LowLevel
   ( ValueName )
 import HaskellTypes.Types
   ( TypeName, CartesianProduct(..), Output(..), MultipleInputs(..), Input(..)
-  , FuncType(..), ValueType(..)
+  , FunctionType(..), ValueType(..)
   , FieldAndType(..), TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..)
   , TypeDef(..), FieldsOrCases(..) )
 import HaskellTypes.Values
@@ -61,14 +61,14 @@ bvs_to_app_tree = ( \case
   ) :: [ BaseValue ] -> ApplicationTree
 
 data ValType =
-  FunctionType ValType ValType | NamedType TypeName |
+  FuncType ValType ValType | NamedType TypeName |
   TupleValType ValType ValType [ ValType ]
   deriving Eq
 
 instance Show ValType where
   show = \case
-    FunctionType in_vt out_vt -> (case in_vt of
-      FunctionType _ _ ->
+    FuncType in_vt out_vt -> (case in_vt of
+      FuncType _ _ ->
         "(" ++ show in_vt ++ ")"
       _ -> show in_vt) ++ " -> " ++ show out_vt
     NamedType tn -> show tn
@@ -76,17 +76,15 @@ instance Show ValType where
       "(" ++ map show (vt1 : vt2 : vts) ==> intercalate ", " ++ ")"
 
 value_type_to_val_type = ( \case
-  FuncType func_type -> func_type_to_val_type func_type
+  FunctionType func_type -> func_type_to_val_type func_type
   CartesianProduct cartesian_product -> cp_to_val_type cartesian_product
   TypeName name -> NamedType name
   ) :: ValueType -> ValType
 
 func_type_to_val_type = ( \(InputAndOutput input output) -> case input of 
-  OneInput input ->
-    one_input_to_val_type input output
-  MultipleInputs multiple_inputs ->
-    multiple_inputs_to_val_type multiple_inputs output
-  ) :: FuncType -> ValType
+  OneInput input -> one_input_to_val_type input output
+  MultipleInputs mult_ins -> multiple_inputs_to_val_type mult_ins output
+  ) :: FunctionType -> ValType
 
 one_input_to_val_type = ( \input output -> 
   let
@@ -95,17 +93,20 @@ one_input_to_val_type = ( \input output ->
   output_type = nocp_to_val_type output
     :: ValType
   in
-  FunctionType input_type output_type
+  FuncType input_type output_type
   ) :: ValueType -> Output -> ValType
 
 multiple_inputs_to_val_type = (
-  \(InputTypes value_type1 value_type2 value_types) output -> 
+  \(InputTypes in_t1 in_t2 in_ts) output -> 
   let
-  input_type = value_type_to_val_type value_type1
+  input_type = value_type_to_val_type in_t1
     :: ValType
-  output_type = undefined
+  output_type = case in_ts of 
+    [] -> one_input_to_val_type in_t2 output
+    in_t3 : rest_of_in_ts ->
+      multiple_inputs_to_val_type (Input in_t2 in_t3 rest_of_in_ts)
   in
-  FunctionType input_type output_type
+  FuncType input_type output_type
   ) :: MultipleInputs -> Output -> ValType
 
 nocp_to_val_type = ( \case
@@ -173,5 +174,5 @@ foc_to_vfoc = undefined
 --   deriving (Eq, Show)
 
 -- data ValType =
---   FunctionType ValType TupleType | NamedType TypeName
+--   FuncType ValType TupleType | NamedType TypeName
 --   deriving (Eq, Show)
