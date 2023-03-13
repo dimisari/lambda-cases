@@ -77,7 +77,7 @@ abstraction_g = ( \vt -> \case
   ) :: ValType -> Abstraction -> Stateful Haskell
 
 use_fields_g = ( \vt -> case vt of
-  NamedType tn -> type_map_get tn >>= \case
+  NamedType tn -> type_map_get tn "use_fields_g" >>= \case
     FieldAndValTypeList fatl -> 
       value_map_insert (VN "value") vt >>
       mapM ( \(FVT vn vt) -> value_map_insert vn vt >> return vn ) fatl >>= \vns ->

@@ -48,8 +48,7 @@ import CodeGenerators.Types
 -- ParenthesisValue: parenthesis_value_g, parenthesis_value_type_inference_g
 
 parenthesis_value_g = ( \vt (Parenthesis expr) ->
-  abs_op_expr_or_op_expr_g vt expr >>= \hs ->
-  return $ "(" ++ hs ++ ")"
+  abs_op_expr_or_op_expr_g vt expr >>= \hs -> return $ "(" ++ hs ++ ")"
   ) :: ValType -> ParenthesisValue -> Stateful Haskell
 
 parenthesis_value_type_inference_g = ( \(Parenthesis expr) ->
@@ -68,7 +67,8 @@ tuple_value_g = ( \vt (Values v1 v2 vs) -> case vt of
     tuple_types_and_values_g (vt1 : vt2 : vts) (v1 : v2 : vs)
   ) :: ValType -> TupleValue -> Stateful Haskell
 
-type_name_tuple_values_g = ( \tn vs -> type_map_get tn >>= \case
+type_name_tuple_values_g = ( \tn vs ->
+  type_map_get tn "type_name_tuple_values_g" >>= \case
   FieldAndValTypeList fatl -> case length vs == length fatl of 
     False -> error values_fields_lengths_dont_match_err
     True -> correct_type_name_tuple_values_g tn (map get_f_valtype fatl) vs
@@ -114,6 +114,7 @@ math_application_type_inference_g = (
 
 base_value_g = ( \vt -> \case
   ParenthesisValue parenthesis_value -> parenthesis_value_g vt parenthesis_value
+  TupleValue tuple_value -> tuple_value_g vt tuple_value
   Literal literal -> literal_g vt literal
   ValueName value_name -> value_name_g vt value_name
   MathApplication math_app -> math_application_g vt math_app
@@ -121,6 +122,7 @@ base_value_g = ( \vt -> \case
 
 base_value_type_inference_g = ( \case
   ParenthesisValue par_val -> parenthesis_value_type_inference_g par_val
+  TupleValue tuple_value -> tuple_value_type_inference_g tuple_value
   Literal literal -> literal_type_inference_g literal
   ValueName value_name -> value_name_type_inference_g value_name
   MathApplication math_app -> math_application_type_inference_g math_app

@@ -104,7 +104,7 @@ multiple_inputs_to_val_type = (
   output_type = case in_ts of 
     [] -> one_input_to_val_type in_t2 output
     in_t3 : rest_of_in_ts ->
-      multiple_inputs_to_val_type (Input in_t2 in_t3 rest_of_in_ts)
+      multiple_inputs_to_val_type (InputTypes in_t2 in_t3 rest_of_in_ts) output
   in
   FuncType input_type output_type
   ) :: MultipleInputs -> Output -> ValType

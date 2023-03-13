@@ -58,7 +58,7 @@ tns_are_equivalent = ( \tn1 tn2 -> case tn1 == tn2 of
 tn_t_are_equivalent = ( \tn vt -> tn_to_t tn >>= ts_are_equivalent vt
   ) :: TypeName -> ValType -> Stateful Bool
 
-tn_to_t = ( type_map_get >=> \case
+tn_to_t = ( flip type_map_get "tn_to_t" >=> \case
   FieldAndValTypeList favtl -> case favtl of
     [] -> undefined
     [ favt ] -> return $ get_f_valtype favt
