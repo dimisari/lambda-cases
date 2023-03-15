@@ -2,15 +2,12 @@
 
 module HaskellTypes.Values where
 
-import Data.List
-  ( intercalate )
-import Helpers
-  ( (==>), (.>) )
+import Data.List ( intercalate )
 
-import HaskellTypes.LowLevel
-  ( Literal, ValueName, Abstraction )
-import HaskellTypes.Types
-  ( ValueType )
+import Helpers ( (==>), (.>) )
+
+import HaskellTypes.LowLevel ( Literal, ValueName, Input )
+import HaskellTypes.Types ( ValueType )
 
 -- All: Types, Show instances
 
@@ -19,19 +16,19 @@ import HaskellTypes.Types
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOpExpression, AbsOpOrOpExpression
+-- OperatorExpression, InputOpExpression, InputOpExprOrOpExpr
 -- LiteralOrValueName, SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
+-- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 newtype Parenthesis =
-  InnerExpression AbsOpOrOpExpression 
+  InnerExpression InputOpExprOrOpExpr 
 
 data Tuple =
-  Values AbsOpOrOpExpression AbsOpOrOpExpression [ AbsOpOrOpExpression ]
+  Values InputOpExprOrOpExpr InputOpExprOrOpExpr [ InputOpExprOrOpExpr ]
 
 data MathApplication =
-  MathApp ValueName AbsOpOrOpExpression [ AbsOpOrOpExpression ]
+  MathApp ValueName InputOpExprOrOpExpr [ InputOpExprOrOpExpr ]
 
 data BaseValue =
   Parenthesis Parenthesis | Tuple Tuple | Literal Literal | ValueName ValueName |
@@ -67,11 +64,11 @@ data Equality =
 data OperatorExpression =
   Equality Equality | EqualityFactor EqualityFactor
 
-data AbstractionOpExpression =
-  AbstractionAndOpResult Abstraction OperatorExpression 
+data InputOpExpression =
+  InputAndOpResult Input OperatorExpression 
 
-data AbsOpOrOpExpression =
-  AbstractionOpExpression AbstractionOpExpression |
+data InputOpExprOrOpExpr =
+  InputOpExpression InputOpExpression |
   OperatorExpression OperatorExpression
 
 data LiteralOrValueName = 
@@ -105,23 +102,23 @@ data Where =
 data CasesOrWhere =
   Cases Cases | Where Where
 
-data AbstractionCasesOrWhere =
-  AbstractionAndCOWResult Abstraction CasesOrWhere
+data InputCasesOrWhere =
+  InputAndCOWResult Input CasesOrWhere
 
 data ValueExpression =
-  AbstractionCasesOrWhere AbstractionCasesOrWhere |
+  InputCasesOrWhere InputCasesOrWhere |
   CasesOrWhere CasesOrWhere |
-  AbsOpOrOpExpression AbsOpOrOpExpression
+  InputOpExprOrOpExpr InputOpExprOrOpExpr
 
 -- Show instances:
 -- Parenthesis, Tuple, MathApplication, BaseValue
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOpExpression, AbsOpOrOpExpression
+-- OperatorExpression, InputOpExpression, InputOpExprOrOpExpr
 -- LiteralOrValueName, SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
+-- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 instance Show Parenthesis where
   show = \(InnerExpression expr) -> "(" ++ show expr ++ ")"
@@ -185,12 +182,12 @@ instance Show OperatorExpression where
     Equality equality -> show equality
     EqualityFactor factor -> show factor 
 
-instance Show AbstractionOpExpression where
-  show = \(AbstractionAndOpResult abs op_expr) -> show abs ++ show op_expr
+instance Show InputOpExpression where
+  show = \(InputAndOpResult abs op_expr) -> show abs ++ show op_expr
 
-instance Show AbsOpOrOpExpression where
+instance Show InputOpExprOrOpExpr where
   show = \case
-    AbstractionOpExpression abs_op_expr -> show abs_op_expr
+    InputOpExpression abs_op_expr -> show abs_op_expr
     OperatorExpression op_expr -> show op_expr
 
 instance Show LiteralOrValueName where 
@@ -243,11 +240,11 @@ instance Show CasesOrWhere where
     Cases cases -> show cases
     Where where_ -> show where_
 
-instance Show AbstractionCasesOrWhere where
-  show = \(AbstractionAndCOWResult abs cases_or_where) ->
+instance Show InputCasesOrWhere where
+  show = \(InputAndCOWResult abs cases_or_where) ->
     show abs ++ " -> " ++ show cases_or_where
 
 instance Show ValueExpression where
   show = \case
-    AbstractionCasesOrWhere abs_cases_or_where -> show abs_cases_or_where
-    AbsOpOrOpExpression abs_op_expr_or_op_expr -> show abs_op_expr_or_op_expr
+    InputCasesOrWhere abs_cases_or_where -> show abs_cases_or_where
+    InputOpExprOrOpExpr abs_op_expr_or_op_expr -> show abs_op_expr_or_op_expr

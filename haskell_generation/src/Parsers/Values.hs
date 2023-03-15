@@ -18,7 +18,7 @@ import HaskellTypes.Types
 import HaskellTypes.Values
 
 import Parsers.LowLevel
-  ( literal_p, value_name_p, abstraction_p )
+  ( literal_p, value_name_p, input_p )
 import Parsers.Types
   ( value_type_p )
 
@@ -27,10 +27,10 @@ import Parsers.Types
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOpExpression, AbsOpOrOpExpression
+-- OperatorExpression, InputOpExpression, InputOpExprOrOpExpr
 -- LiteralOrValueName, SpecificCase, DefaultCase, Cases
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
--- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
+-- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 -- Parenthesis: parenthesis_p
 
@@ -139,19 +139,19 @@ operator_expr_p =
   Equality <$> try equality_p <|> EqualityFactor <$> equality_factor_p
   :: Parser OperatorExpression
 
--- AbstractionOpExpression: abstraction_op_expr_p
+-- InputOpExpression: input_op_expr_p
 
-abstraction_op_expr_p =
-  abstraction_p >>= \abs -> operator_expr_p >>= \op_expr ->
-  return $ AbstractionAndOpResult abs op_expr
-  :: Parser AbstractionOpExpression
+input_op_expr_p =
+  input_p >>= \input -> operator_expr_p >>= \op_expr ->
+  return $ InputAndOpResult input op_expr
+  :: Parser InputOpExpression
 
--- AbsOpOrOpExpression: abs_op_or_op_expr_p
+-- InputOpExprOrOpExpr: abs_op_or_op_expr_p
 
 abs_op_or_op_expr_p =
-  AbstractionOpExpression <$> try abstraction_op_expr_p <|>
+  InputOpExpression <$> try input_op_expr_p <|>
   OperatorExpression <$> operator_expr_p
-  :: Parser AbsOpOrOpExpression
+  :: Parser InputOpExprOrOpExpr
 
 -- LiteralOrValueName: literal_or_value_name_p
 
@@ -249,17 +249,17 @@ cases_or_where_p =
   Cases <$> try cases_p <|> Where <$> where_p
   :: Parser CasesOrWhere
 
--- AbstractionCasesOrWhere: abs_cases_or_where_p
+-- InputCasesOrWhere: input_cases_or_where_p
 
-abs_cases_or_where_p = 
-  abstraction_p >>= \abs -> cases_or_where_p >>= \cases_or_where -> 
-  return $ AbstractionAndCOWResult abs cases_or_where
-  :: Parser AbstractionCasesOrWhere
+input_cases_or_where_p = 
+  input_p >>= \input -> cases_or_where_p >>= \cases_or_where -> 
+  return $ InputAndCOWResult input cases_or_where
+  :: Parser InputCasesOrWhere
 
 -- ValueExpression: value_expression_p
 
 value_expression_p =
-  AbstractionCasesOrWhere <$> try abs_cases_or_where_p <|>
+  InputCasesOrWhere <$> try input_cases_or_where_p <|>
   CasesOrWhere <$> try cases_or_where_p <|>
-  AbsOpOrOpExpression <$> abs_op_or_op_expr_p
+  InputOpExprOrOpExpr <$> abs_op_or_op_expr_p
   :: Parser ValueExpression

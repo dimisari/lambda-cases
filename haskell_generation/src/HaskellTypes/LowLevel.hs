@@ -3,34 +3,42 @@
 module HaskellTypes.LowLevel where
 
 import Data.List ( intercalate )
+
 import Helpers ( (==>) )
 
 -- All: Types, Show instances
 
--- Types: Literal, ValueName, ManyAbstractions, Abstraction
+-- Types: Literal, ValueName, Abstraction, ManyAbstractions, Input
 
 type Literal = Integer
 
 newtype ValueName =
   VN String deriving (Eq, Ord)
 
-data ManyAbstractions =
-  AbstractionsNames ValueName ValueName [ ValueName ]
-
 data Abstraction =
-  NameAbstraction ValueName | ManyAbstractions ManyAbstractions | UseFields
+  AbstractionName ValueName | UseFields
 
--- Show instances: ValueName, ManyAbstractions, Abstraction
+data ManyAbstractions =
+  AbstractionsNames Abstraction Abstraction [ Abstraction ]
+
+data Input =
+  OneAbstraction Abstraction | ManyAbstractions ManyAbstractions 
+
+-- Show instances: ValueName, Abstraction, ManyAbstractions, Input
 
 instance Show ValueName where
   show = \(VN n) -> n
 
-instance Show ManyAbstractions where
-  show = \(AbstractionsNames vn1 vn2 vns) ->
-    "(" ++ map show (vn1 : vn2 : vns)==>intercalate ", " ++ ")"
-
 instance Show Abstraction where
   show = \case
-    NameAbstraction vn -> show vn
-    ManyAbstractions tm -> show tm
+    AbstractionName value_name -> show value_name
     UseFields -> "use_fields"
+
+instance Show ManyAbstractions where
+  show = \(AbstractionsNames abs1 abs2 rest_of_abs) ->
+    "(" ++ map show (abs1 : abs2 : rest_of_abs)==>intercalate ", " ++ ")"
+
+instance Show Input where
+  show = \case
+    OneAbstraction abstraction -> show abstraction
+    ManyAbstractions abstractions -> show abstractions

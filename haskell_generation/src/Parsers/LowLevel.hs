@@ -11,17 +11,21 @@ import Helpers
   ( (==>), keywords, seperated2 )
 
 import HaskellTypes.LowLevel
-  ( Literal(..), ValueName(..), ManyAbstractions(..), Abstraction(..) )
+  ( Literal(..), ValueName(..), ManyAbstractions(..), Abstraction(..), Input(..) )
 
--- All:
--- integer_p, literal_p, value_name_p, many_abstractions, abstraction_p
+-- All: Literal, ValueName, Abstraction, ManyAbstractions, Input
+
+-- Literal: literal_p, integer_p
+
+literal_p = integer_p
+  :: Parser Literal
+
 integer_p =
   let natural_number_string = many1 digit :: Parser String in
   read <$> ((:) <$> char '-' <*> natural_number_string <|> natural_number_string)
   :: Parser Integer
 
-literal_p = integer_p
-  :: Parser Literal
+-- ValueName: value_name_p
 
 value_name_p =
   many1 (lower <|> char '_') >>= \lowers_underscores ->
@@ -30,15 +34,24 @@ value_name_p =
     _ -> return $ VN lowers_underscores
   :: Parser ValueName 
 
-many_abstractions =
-  string "(" >> value_name_p >>= \vn1 ->
-  string ", " >> value_name_p >>= \vn2 ->
-  many (try $ string ", " *> value_name_p) >>= \vns ->
-  string ")" >> return (AbstractionsNames vn1 vn2 vns)
-  :: Parser ManyAbstractions
+-- Abstraction: abstraction_p
 
 abstraction_p =
-  (string "use_fields" *> return UseFields <|>
-  NameAbstraction <$> value_name_p <|>
-  ManyAbstractions <$> many_abstractions) <* string " -> "
+  string "use_fields" *> return UseFields <|> AbstractionName <$> value_name_p
   :: Parser Abstraction
+
+-- ManyAbstractions: many_abstractions_p
+
+many_abstractions_p =
+  string "(" >> abstraction_p >>= \abstraction1 ->
+  string ", " >> abstraction_p >>= \abstraction2 ->
+  many (string ", " >> abstraction_p) >>= \abstractions ->
+  string ")" >> return (AbstractionsNames abstraction1 abstraction2 abstractions)
+  :: Parser ManyAbstractions
+
+-- Input: input_p
+
+input_p =
+  (OneAbstraction <$> abstraction_p <|> ManyAbstractions <$> many_abstractions_p)
+  <* string " -> "
+  :: Parser Input

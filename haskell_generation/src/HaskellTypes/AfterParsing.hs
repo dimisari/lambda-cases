@@ -49,7 +49,7 @@ expr_to_base_value = ( \expr -> case expr of
         (MulFactorSubFactor
           (BaseValue bv)))) -> bv
   _ -> Parenthesis $ InnerExpression $ expr
-  ) :: AbsOpOrOpExpression -> BaseValue
+  ) :: InputOpExprOrOpExpr -> BaseValue
 
 base_vals_to_app_tree = ( \case
   [] -> error "empty list in base_vals_to_app_tree"

@@ -28,9 +28,9 @@ import HaskellTypes.Generation
 import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel
   ( literal_g, literal_type_inference_g, value_name_g, value_name_type_inference_g
-  , abstraction_g )
+  , input_g )
 import CodeGenerators.TypeChecking
-  ( ts_are_equivalent )
+  ( types_are_equivalent )
 import CodeGenerators.Types
   ( value_type_g )
 
@@ -40,7 +40,7 @@ import CodeGenerators.Types
 -- FunctionApplicationChain,
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
--- OperatorExpression, AbstractionOpExpression, AbsOpOrOpExpression
+-- OperatorExpression, InputOpExpression, InputOpExprOrOpExpr
 -- SpecificCase, Cases,
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, ValueExpression
@@ -72,14 +72,14 @@ type_name_tuple_values_g = ( \tn vs ->
     False -> error values_fields_lengths_dont_match_err
     True -> correct_type_name_tuple_values_g tn (map get_f_valtype fatl) vs
   CaseAndMaybeValTypeList _ -> undefined
-  ) :: TypeName -> [ AbsOpOrOpExpression ] -> Stateful Haskell
+  ) :: TypeName -> [ InputOpExprOrOpExpr ] -> Stateful Haskell
 
 tuple_types_and_values_g = ( \vts vs -> case length vts == length vs of
   False -> error tuple_values_types_lengths_dont_match_err
   True -> 
     zipWith abs_op_expr_or_op_expr_g vts vs==>sequence >>= \vs_g ->
     return $ "(" ++ intercalate ", " vs_g ++ ")"
-  ) :: [ ValType ] -> [ AbsOpOrOpExpression ] -> Stateful Haskell
+  ) :: [ ValType ] -> [ InputOpExprOrOpExpr ] -> Stateful Haskell
 
 correct_type_name_tuple_values_g = ( \tn vts vs ->
   get_indent_level >>= \il ->
@@ -87,7 +87,7 @@ correct_type_name_tuple_values_g = ( \tn vts vs ->
   return $
     "\n" ++ indent (il + 1) ++ show tn ++ "C" ++
     concatMap (\v_g ->  " (" ++ v_g ++ ")") vs_g
-  ) :: TypeName -> [ ValType ] -> [ AbsOpOrOpExpression ] ->
+  ) :: TypeName -> [ ValType ] -> [ InputOpExprOrOpExpr ] ->
        Stateful Haskell
 
 tuple_type_inference_g = ( \(Values v1 v2 vs) ->
@@ -139,7 +139,7 @@ application_tree_g = ( \vt -> \case
   BaseValueLeaf bv -> base_value_g vt bv
   at ->
     application_tree_type_inference_g at >>= \(at_vt, at_hs) ->
-    ts_are_equivalent vt at_vt >>= \case 
+    types_are_equivalent vt at_vt >>= \case 
       True -> return at_hs
       False ->
         value_map_get (VN "gcd") >>= \t ->
@@ -230,33 +230,33 @@ operator_expression_type_inference_g = ( \case
       :: ValType
   ) :: OperatorExpression -> Stateful (ValType, Haskell)
 
--- AbstractionOpExpression:
+-- InputOpExpression:
 -- abstraction_operator_expr_g, abstraction_op_expr_type_inference_g
 
 abstraction_operator_expr_g = ( \case
   FuncType input_t output_t ->
-    \(AbstractionAndOpResult abstraction op_expr) ->
+    \(InputAndOpResult abstraction op_expr) ->
       undefined >>
       return $ "\\" ++ undefined ++ " -> " ++ undefined
   _ -> undefined
-  ) :: ValType -> AbstractionOpExpression -> Stateful Haskell
+  ) :: ValType -> InputOpExpression -> Stateful Haskell
 
-abs_op_expr_type_inference_g = ( \(AbstractionAndOpResult as opval) ->
+abs_op_expr_type_inference_g = ( \(InputAndOpResult as opval) ->
   undefined
-  ) :: AbstractionOpExpression -> Stateful (ValType, Haskell)
+  ) :: InputOpExpression -> Stateful (ValType, Haskell)
 
--- AbsOpOrOpExpression:
+-- InputOpExprOrOpExpr:
 -- abstraction_operator_expr_g, abstraction_op_expr_type_inference_g
 
 abs_op_expr_or_op_expr_g = ( \vt -> \case
-  AbstractionOpExpression abs_op_expr -> abstraction_operator_expr_g vt abs_op_expr
+  InputOpExpression abs_op_expr -> abstraction_operator_expr_g vt abs_op_expr
   OperatorExpression op_expr -> operator_expression_g vt op_expr
-  ) :: ValType -> AbsOpOrOpExpression -> Stateful Haskell
+  ) :: ValType -> InputOpExprOrOpExpr -> Stateful Haskell
 
 abs_op_expr_or_op_expr_type_inference_g = ( \case
-  AbstractionOpExpression abs_op_expr -> abs_op_expr_type_inference_g abs_op_expr
+  InputOpExpression abs_op_expr -> abs_op_expr_type_inference_g abs_op_expr
   OperatorExpression op_expr -> operator_expression_type_inference_g op_expr
-  ) :: AbsOpOrOpExpression -> Stateful (ValType, Haskell)
+  ) :: InputOpExprOrOpExpr -> Stateful (ValType, Haskell)
 
 -- LiteralOrValueName:
 -- literal_or_value_name_g, lit_or_val_name_type_inference_g
@@ -421,31 +421,29 @@ cases_or_where_type_inference_g = ( \case
   Where where_ -> where_type_inference_g where_
   ) :: CasesOrWhere -> Stateful (ValType, Haskell)
 
--- AbstractionCasesOrWhere: abstraction_cases_or_where_g
+-- InputCasesOrWhere: abstraction_cases_or_where_g
 
-abstraction_cases_or_where_g = ( \case
-  FuncType input_t output_t ->
-    \(AbstractionAndCOWResult abstraction cases_or_where) ->
-    abstraction_g input_t abstraction >>= \abs_g ->
-    cases_or_where_g output_t cases_or_where >>= \cow_g ->
-    return $ "\\" ++ abs_g ++ " -> " ++ cow_g
-  _ -> undefined
-  ) :: ValType -> AbstractionCasesOrWhere -> Stateful Haskell
+abstraction_cases_or_where_g = ( 
+  \val_type (InputAndCOWResult abstraction cases_or_where) ->
+  input_g val_type abstraction >>= \(output_type, abstraction_hs) ->
+  cases_or_where_g output_type cases_or_where >>= \cases_or_where_hs ->
+  return $ abstraction_hs ++ cases_or_where_hs
+  ) :: ValType -> InputCasesOrWhere -> Stateful Haskell
 
 abstraction_cow_type_inference_g = ( 
   undefined
-  ) :: AbstractionCasesOrWhere -> Stateful (ValType, Haskell)
+  ) :: InputCasesOrWhere -> Stateful (ValType, Haskell)
 
 -- ValueExpression: value_expression_g, value_expression_type_inference_g
 value_expression_g = ( \vt -> \case
-  AbstractionCasesOrWhere abs_cow -> abstraction_cases_or_where_g vt abs_cow
+  InputCasesOrWhere abs_cow -> abstraction_cases_or_where_g vt abs_cow
   CasesOrWhere cases_or_where -> cases_or_where_g vt cases_or_where
-  AbsOpOrOpExpression expr -> abs_op_expr_or_op_expr_g vt expr
+  InputOpExprOrOpExpr expr -> abs_op_expr_or_op_expr_g vt expr
   ) :: ValType -> ValueExpression -> Stateful Haskell
 
 value_expression_type_inference_g = ( \case
-  AbstractionCasesOrWhere abs_cow -> abstraction_cow_type_inference_g abs_cow
+  InputCasesOrWhere abs_cow -> abstraction_cow_type_inference_g abs_cow
   CasesOrWhere cases_or_where -> cases_or_where_type_inference_g cases_or_where
-  AbsOpOrOpExpression expr -> abs_op_expr_or_op_expr_type_inference_g expr
+  InputOpExprOrOpExpr expr -> abs_op_expr_or_op_expr_type_inference_g expr
   ) :: ValueExpression -> Stateful (ValType, Haskell)
 
