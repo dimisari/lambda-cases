@@ -34,7 +34,7 @@ many_abstractions =
   string "(" >> value_name_p >>= \vn1 ->
   string ", " >> value_name_p >>= \vn2 ->
   many (try $ string ", " *> value_name_p) >>= \vns ->
-  string ")" >> return (MA vn1 vn2 vns)
+  string ")" >> return (AbstractionsNames vn1 vn2 vns)
   :: Parser ManyAbstractions
 
 abstraction_p =

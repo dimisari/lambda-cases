@@ -43,8 +43,6 @@ literal_g = ( \vt l ->
 literal_type_inference_g = ( \l -> return (NamedType $ TN "Int", show l) )
   :: Literal -> Stateful ( ValType, Haskell )
 
--- Literal, ValueName, ManyAbstractions, Abstraction
-
 -- ValueName: value_name_g, value_name_type_inference_g
 
 value_name_g = ( \vt value_name -> 
@@ -60,15 +58,33 @@ value_name_type_inference_g = ( \value_name ->
 -- ManyAbstractions: many_abstractions_g
 
 many_abstractions_g = ( \case
-  -- possibly later with symbol table ?
-  NamedType tn -> undefined
-  FuncType _ _ -> undefined
-  ProdType vt1 vt2 vts -> \(MA vn1 vn2 vns) -> case length vts == length vns of
+  NamedType type_name -> named_type_many_abs_g type_name
+  FuncType input_type output_type -> func_type_many_abs_g input_type output_type
+  ProdType val_t1 val_t2 val_ts -> product_type_many_abs_g val_t1 val_t2 val_ts
+  ) :: ValType -> ManyAbstractions -> Stateful Haskell
+
+named_type_many_abs_g = (
+  \type_name (AbstractionsNames val_name1 val_name2 val_names) ->
+  undefined
+  ) :: TypeName -> ManyAbstractions -> Stateful Haskell
+
+func_type_many_abs_g = (
+  \input_type output_type (AbstractionsNames val_name1 val_name2 val_names) ->
+  undefined
+  ) :: ValType -> ValType -> ManyAbstractions -> Stateful Haskell
+
+product_type_many_abs_g = (
+  \val_t1 val_t2 val_ts (AbstractionsNames val_name1 val_name2 val_names) ->
+  case length val_ts == length val_names of
     False -> undefined
     True -> 
-      zipWith value_map_insert (vn1 : vn2 : vns) (vt1 : vt2 : vts)==>sequence_ >>
-      return ("(" ++ map show (vn1 : vn2 : vns)==>intercalate ", " ++ ")")
-  ) :: ValType -> ManyAbstractions -> Stateful Haskell
+      zipWith value_map_insert
+        (val_name1 : val_name2 : val_names) (val_t1 : val_t2 : val_ts)
+        ==>sequence_ >>
+      return
+        ("(" ++ map show (val_name1 : val_name2 : val_names)==>
+        intercalate ", " ++ ")")
+  ) :: ValType -> ValType -> [ ValType ] -> ManyAbstractions -> Stateful Haskell
 
 -- Abstraction: abstraction_g, use_fields_g
 

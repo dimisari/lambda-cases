@@ -15,7 +15,7 @@ newtype ValueName =
   VN String deriving (Eq, Ord)
 
 data ManyAbstractions =
-  MA ValueName ValueName [ ValueName ]
+  AbstractionsNames ValueName ValueName [ ValueName ]
 
 data Abstraction =
   NameAbstraction ValueName | ManyAbstractions ManyAbstractions | UseFields
@@ -26,7 +26,7 @@ instance Show ValueName where
   show = \(VN n) -> n
 
 instance Show ManyAbstractions where
-  show = \(MA vn1 vn2 vns) ->
+  show = \(AbstractionsNames vn1 vn2 vns) ->
     "(" ++ map show (vn1 : vn2 : vns)==>intercalate ", " ++ ")"
 
 instance Show Abstraction where
