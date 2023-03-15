@@ -14,7 +14,7 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.Types
-  ( TypeName(..), ValueType(..), FieldAndType, CaseAndMaybeType
+  ( TypeName(..), ValueType(..), FieldNameAndType, CaseAndMaybeType
   , FieldsOrCases )
 import HaskellTypes.AfterParsing
   ( ValType(..), ValFieldsOrCases(..) )
@@ -31,6 +31,8 @@ type TypeMap =
 
 data GenState =
   GS { indent_level :: Int, value_map :: ValueMap, type_map :: TypeMap }
+
+type Error = String 
 
 type Stateful = State GenState
 
@@ -50,7 +52,7 @@ get_from_state = ( \f -> get >>= f .> return )
   ( \il -> modify ( \s -> s { indent_level = il } )
   , \vm -> modify ( \s -> s { value_map = vm } ) 
   , \tm -> modify ( \s -> s { type_map = tm } )
-  ) :: ( Int -> Stateful (), ValueMap -> Stateful (), TypeMap -> Stateful () )
+  ) :: (Int -> Stateful (), ValueMap -> Stateful (), TypeMap -> Stateful ())
 
 -- value_map operations: value_map_insert, value_map_get
   

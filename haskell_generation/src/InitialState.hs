@@ -12,12 +12,15 @@ import HaskellTypes.AfterParsing
 import HaskellTypes.Generation
   ( ValueMap, TypeMap, GenState(..) )
 
--- initial state: int_bt, int_int_tuple_bt, init_value_map, init_state
+-- Initial state:
+-- int_val_t, int_int_val_t, bool_val_t, int_int_int_val_t_only
+-- init_value_map, init_state
+
 int_val_t = NamedType $ TN "Int"
   :: ValType
 
 int_int_val_t =
-  TupleValType int_val_t int_val_t []
+  ProdType int_val_t int_val_t []
   :: ValType
 
 bool_val_t = NamedType $ TN "Bool"

@@ -38,6 +38,7 @@ many_abstractions =
   :: Parser ManyAbstractions
 
 abstraction_p =
-  (string "use_fields" *> return UseFields <|> NameAbstraction <$> value_name_p <|>
+  (string "use_fields" *> return UseFields <|>
+  NameAbstraction <$> value_name_p <|>
   ManyAbstractions <$> many_abstractions) <* string " -> "
   :: Parser Abstraction

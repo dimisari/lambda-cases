@@ -36,7 +36,7 @@ import CodeGenerators.Types
 
 
 -- All:
--- ParenthesisValue, TupleValue, MathApplication, BaseValue
+-- Parenthesis, Tuple, MathApplication, BaseValue
 -- FunctionApplicationChain,
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
@@ -45,27 +45,26 @@ import CodeGenerators.Types
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, ValueExpression
 
--- ParenthesisValue: parenthesis_value_g, parenthesis_value_type_inference_g
+-- Parenthesis: parenthesis_value_g, parenthesis_value_type_inference_g
 
-parenthesis_value_g = ( \vt (Parenthesis expr) ->
+parenthesis_value_g = ( \vt (InnerExpression expr) ->
   abs_op_expr_or_op_expr_g vt expr >>= \hs -> return $ "(" ++ hs ++ ")"
-  ) :: ValType -> ParenthesisValue -> Stateful Haskell
+  ) :: ValType -> Parenthesis -> Stateful Haskell
 
-parenthesis_value_type_inference_g = ( \(Parenthesis expr) ->
+parenthesis_value_type_inference_g = ( \(InnerExpression expr) ->
   abs_op_expr_or_op_expr_type_inference_g expr >>= \(vt, hs) ->
   return (vt, "(" ++ hs ++ ")")
-  ) :: ParenthesisValue -> Stateful (ValType, Haskell)
+  ) :: Parenthesis -> Stateful (ValType, Haskell)
 
--- TupleValue:
--- tuple_value_g, type_name_tuple_values_g, tuple_types_and_values_g,
--- correct_type_name_tuple_values_g, tuple_value_type_inference_g
+-- Tuple:
+-- tuple_g, type_name_tuple_values_g, tuple_types_and_values_g,
+-- correct_type_name_tuple_values_g, tuple_type_inference_g
 
-tuple_value_g = ( \vt (Values v1 v2 vs) -> case vt of 
+tuple_g = ( \vt (Values v1 v2 vs) -> case vt of 
   FuncType _ _ -> undefined
   NamedType tn -> type_name_tuple_values_g tn (v1 : v2 : vs)
-  TupleValType vt1 vt2 vts ->
-    tuple_types_and_values_g (vt1 : vt2 : vts) (v1 : v2 : vs)
-  ) :: ValType -> TupleValue -> Stateful Haskell
+  ProdType vt1 vt2 vts -> tuple_types_and_values_g (vt1 : vt2 : vts) (v1 : v2 : vs)
+  ) :: ValType -> Tuple -> Stateful Haskell
 
 type_name_tuple_values_g = ( \tn vs ->
   type_map_get tn "type_name_tuple_values_g" >>= \case
@@ -91,13 +90,13 @@ correct_type_name_tuple_values_g = ( \tn vts vs ->
   ) :: TypeName -> [ ValType ] -> [ AbsOpOrOpExpression ] ->
        Stateful Haskell
 
-tuple_value_type_inference_g = ( \(Values v1 v2 vs) ->
+tuple_type_inference_g = ( \(Values v1 v2 vs) ->
   mapM abs_op_expr_or_op_expr_type_inference_g (v1 : v2 : vs) >>=
   unzip .> \(vts, vs_g) -> case vts of
     vt1 : vt2 : vts ->
-      return (TupleValType vt1 vt2 vts, "(" ++ intercalate ", " vs_g ++ ")")
+      return (ProdType vt1 vt2 vts, "(" ++ intercalate ", " vs_g ++ ")")
     _ -> undefined
-  ) :: TupleValue -> Stateful (ValType, Haskell)
+  ) :: Tuple -> Stateful (ValType, Haskell)
 
 -- MathApplication:
 -- math_application_g, math_application_type_inference_g
@@ -113,16 +112,16 @@ math_application_type_inference_g = (
 -- BaseValue: base_value_g, base_value_type_inference_g
 
 base_value_g = ( \vt -> \case
-  ParenthesisValue parenthesis_value -> parenthesis_value_g vt parenthesis_value
-  TupleValue tuple_value -> tuple_value_g vt tuple_value
+  Parenthesis parenthesis_value -> parenthesis_value_g vt parenthesis_value
+  Tuple tuple -> tuple_g vt tuple
   Literal literal -> literal_g vt literal
   ValueName value_name -> value_name_g vt value_name
   MathApplication math_app -> math_application_g vt math_app
   ) :: ValType -> BaseValue -> Stateful Haskell
 
 base_value_type_inference_g = ( \case
-  ParenthesisValue par_val -> parenthesis_value_type_inference_g par_val
-  TupleValue tuple_value -> tuple_value_type_inference_g tuple_value
+  Parenthesis par_val -> parenthesis_value_type_inference_g par_val
+  Tuple tuple -> tuple_type_inference_g tuple
   Literal literal -> literal_type_inference_g literal
   ValueName value_name -> value_name_type_inference_g value_name
   MathApplication math_app -> math_application_type_inference_g math_app
@@ -169,13 +168,13 @@ application_tree_type_inference_g = ( \case
 -- MultiplicationFactor: multiplication_factor_g
 
 multiplication_factor_g = ( \vt -> \case
-  OneArgAppMF oaas -> function_application_chain_g vt oaas
-  BaseValueMF bv -> base_value_g vt bv
+  FuncAppChain oaas -> function_application_chain_g vt oaas
+  BaseValue bv -> base_value_g vt bv
   ) :: ValType -> MultiplicationFactor -> Stateful Haskell
 
 -- Multiplication: multiplication_g
 
-multiplication_g = ( \vt (Mul mf1 mf2 mfs) -> 
+multiplication_g = ( \vt (MulFactors mf1 mf2 mfs) -> 
   mapM (multiplication_factor_g vt) (mf1 : mf2 : mfs) >>=
   intercalate " * " .> return
   ) :: ValType -> Multiplication -> Stateful Haskell
@@ -183,13 +182,13 @@ multiplication_g = ( \vt (Mul mf1 mf2 mfs) ->
 -- SubtractionFactor: subtraction_factor_g
 
 subtraction_factor_g = ( \vt -> \case
-  MulSF m -> multiplication_g vt m
-  MFSF f -> multiplication_factor_g vt f
+  MulSubFactor m -> multiplication_g vt m
+  MulFactorSubFactor f -> multiplication_factor_g vt f
   ) :: ValType -> SubtractionFactor -> Stateful Haskell
 
 -- Subtraction: subtraction_g
 
-subtraction_g = ( \vt (Sub sf1 sf2) ->
+subtraction_g = ( \vt (SubFactors sf1 sf2) ->
   subtraction_factor_g vt sf1 >>= \sf1_g ->
   subtraction_factor_g vt sf2 >>= \sf2_g ->
   return $ sf1_g ++ " - " ++ sf2_g
@@ -198,14 +197,14 @@ subtraction_g = ( \vt (Sub sf1 sf2) ->
 -- EqualityFactor: equality_factor_g
 
 equality_factor_g = ( \vt -> \case
-  SubEF s -> subtraction_g vt s
-  SFEF f -> subtraction_factor_g vt f
+  SubEquFactor s -> subtraction_g vt s
+  SubFactorEquFactor f -> subtraction_factor_g vt f
   ) :: ValType -> EqualityFactor -> Stateful Haskell
 
 -- Equality: equality_g
 
 equality_g = ( \case 
-  (NamedType (TN "Bool")) -> \(Equ ef1 ef2) ->
+  (NamedType (TN "Bool")) -> \(EqualityFactors ef1 ef2) ->
     let int_vt = (NamedType (TN "Int")) in
     equality_factor_g int_vt ef1 >>= \ef1_g ->
     equality_factor_g int_vt ef2 >>= \ef2_g ->
@@ -218,7 +217,7 @@ equality_g = ( \case
 
 operator_expression_g = ( \vt -> \case
   Equality equ -> equality_g vt equ
-  EquF f -> equality_factor_g vt f
+  EqualityFactor f -> equality_factor_g vt f
   ) :: ValType -> OperatorExpression -> Stateful Haskell
 
 operator_expression_type_inference_g = ( \case
@@ -226,7 +225,7 @@ operator_expression_type_inference_g = ( \case
     vt = NamedType $ TN "Bool"
       :: ValType
 
-  EquF f -> equality_factor_g vt f >>= \hs -> return (vt, hs) where
+  EqualityFactor f -> equality_factor_g vt f >>= \hs -> return (vt, hs) where
     vt = NamedType $ TN "Int"
       :: ValType
   ) :: OperatorExpression -> Stateful (ValType, Haskell)
@@ -273,7 +272,7 @@ lit_or_val_name_type_inference_g = ( \case
   ) :: LiteralOrValueName -> Stateful (ValType, Haskell)
 
 -- SpecificCase: specific_case_g, abs_g, specific_case_type_inference_g
-specific_case_g = ( \vt sc@(SC lovn v) -> case vt of 
+specific_case_g = ( \vt sc@(SpecificCase lovn v) -> case vt of 
   FuncType input_t output_t -> case lovn of 
     Lit l -> literal_g input_t l >>= add_value_g 
     ValName vn -> value_map_insert vn input_t >> add_value_g (show vn)
@@ -293,7 +292,7 @@ abs_g = \case
   g -> g
   :: String -> Haskell
 
-specific_case_type_inference_g = ( \sc@(SC lovn v) ->
+specific_case_type_inference_g = ( \sc@(SpecificCase lovn v) ->
   lit_or_val_name_type_inference_g lovn >>= \(lovn_vt, lovn_g) ->
   value_expression_type_inference_g v >>= \(v_vt, v_g) ->
   get_indent_level >>= \i ->
@@ -301,7 +300,7 @@ specific_case_type_inference_g = ( \sc@(SC lovn v) ->
   ) :: SpecificCase -> Stateful (ValType, Haskell)
 
 -- DefaultCase: specific_case_g, specific_case_type_inference_g
-default_case_g = ( \vt dc@(DC v) -> case vt of 
+default_case_g = ( \vt dc@(DefaultCase v) -> case vt of 
   FuncType input_t output_t -> 
     value_map_insert (VN "value") input_t >>
     value_expression_g output_t v >>= \v_g ->
@@ -394,7 +393,7 @@ list_of_ntavs_g = ( \ntavs_l ->
 
 -- Where: where_g, where_type_inference_g 
 
-where_g = ( \vt (Where_ v ntavs) ->
+where_g = ( \vt (ValueWhereNTAVs v ntavs) ->
   get_indent_level >>= \i -> update_indent_level (i + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_expression_g vt v >>= \v_g ->
@@ -402,7 +401,7 @@ where_g = ( \vt (Where_ v ntavs) ->
   <* update_indent_level i
   ) :: ValType -> Where -> Stateful Haskell
 
-where_type_inference_g = ( \(Where_ v ntavs) ->
+where_type_inference_g = ( \(ValueWhereNTAVs v ntavs) ->
   get_indent_level >>= \i -> update_indent_level (i + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_g ->
   value_expression_type_inference_g v >>= \(vt, v_g) ->

@@ -30,10 +30,10 @@ import CodeGenerators.ErrorMessages
 import CodeGenerators.TypeChecking
   ( type_check_value_name_g )
 
--- All:
--- Literal, ValueName, ManyAbstractions, Abstraction
+-- All: Literal, ValueName, ManyAbstractions, Abstraction
 
 -- Literal: literal_g, literal_type_inference_g
+
 literal_g = ( \vt l -> 
   (vt == NamedType (TN "Int")) ==> \case
     True -> return $ show l
@@ -46,6 +46,7 @@ literal_type_inference_g = ( \l -> return (NamedType $ TN "Int", show l) )
 -- Literal, ValueName, ManyAbstractions, Abstraction
 
 -- ValueName: value_name_g, value_name_type_inference_g
+
 value_name_g = ( \vt value_name -> 
   value_map_get value_name >>= \value_type ->
   type_check_value_name_g vt value_type value_name
@@ -56,13 +57,13 @@ value_name_type_inference_g = ( \value_name ->
   return (value_type, show value_name)
   ) :: ValueName -> Stateful (ValType, Haskell)
 
--- ManyAbstractions:
--- many_abstractions_g
+-- ManyAbstractions: many_abstractions_g
+
 many_abstractions_g = ( \case
   -- possibly later with symbol table ?
   NamedType tn -> undefined
   FuncType _ _ -> undefined
-  TupleValType vt1 vt2 vts -> \(MA vn1 vn2 vns) -> case length vts == length vns of
+  ProdType vt1 vt2 vts -> \(MA vn1 vn2 vns) -> case length vts == length vns of
     False -> undefined
     True -> 
       zipWith value_map_insert (vn1 : vn2 : vns) (vt1 : vt2 : vts)==>sequence_ >>
@@ -70,6 +71,7 @@ many_abstractions_g = ( \case
   ) :: ValType -> ManyAbstractions -> Stateful Haskell
 
 -- Abstraction: abstraction_g, use_fields_g
+
 abstraction_g = ( \vt -> \case
   UseFields -> use_fields_g vt
   NameAbstraction vn -> value_map_insert vn vt >> show vn ==> return
@@ -88,6 +90,7 @@ use_fields_g = ( \vt -> case vt of
   ) :: ValType -> Stateful Haskell
 
 -- Abstractions: abstractions_g, correct_abstractions_g
+
 abstractions_g = ( \vts as -> case length vts == length as of
   False -> error abstractions_types_lengths_dont_match_err
   True -> correct_abstractions_g vts as

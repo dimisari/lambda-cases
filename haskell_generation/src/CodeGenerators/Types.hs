@@ -15,47 +15,31 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( TypeName(..), ValueType(..) )
 import HaskellTypes.AfterParsing
-  ( ValType(..), FieldAndValType(..), TupleValTypeDef(..)
-  , CaseAndMaybeValType(..), ValOrTypeDef(..), ValFieldsOrCases(..)
-  , ValTypeDef(..), value_type_to_val_type )
+  ( ValType(..), FieldAndValType(..), ProdTypeDefinition(..)
+  , CaseAndMaybeValType(..), ValOrTypeDefinition(..), ValFieldsOrCases(..)
+  , ValTypeDefinition(..), value_type_to_val_type )
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 
--- All: BaseType, ValueType, TupleTypeDef, OrTypeDef, TypeDef
-
--- BaseType
--- base_type_g = ( \case
---   TypeName tn -> show tn
---   TupleType vt1 vt2 vts ->
---     "(" ++ intercalate ", " (map value_type_g (vt1 : vt2 : vts)) ++ ")" 
---   ParenType vt -> case vt of
---     (AbsTypesAndResType [] bt) -> base_type_g bt
---     _ -> "(" ++ value_type_g vt ++ ")"
---   ) :: BaseType -> Haskell
-
--- base_type_g = ( base_type_to_val_type .> show )
---   :: BaseType -> Haskell
-
--- ValueType
--- value_type_g = ( \(AbsTypesAndResType bts bt) -> 
---   bts==>concatMap (base_type_g .> (++ " -> ")) ++ base_type_g bt
---   ) :: ValueType -> Haskell
+-- All: ValueType, TupleTypeDefinition, OrTypeDefinition, TypeDefinition
 
 value_type_g = ( value_type_to_val_type .> show )
   :: ValueType -> Haskell
 
 -- ValType
+
 val_type_g = ( \case
   FuncType t_in t_out -> val_type_g t_in ++ " -> " ++ val_type_g t_out
   NamedType tn -> show tn
-  TupleValType t1 t2 ts -> 
+  ProdType t1 t2 ts -> 
     "(" ++ map val_type_g (t1 : t2 : ts)==>intercalate ", " ++ ")" 
   ) :: ValType -> Haskell
 
--- TupleValTypeDef
-tuple_val_type_def_g = ( \(NameAndFields tn fs) ->
+-- ProdTypeDefinition
+
+tuple_val_type_def_g = ( \(NameAndValFields tn fs) ->
   let
-  tuple_value_g =
+  tuple_g =
     fs==>mapM field_and_val_type_g >>= \fs_g ->
     return $ show tn ++ "C { " ++ intercalate ", " fs_g ++ " }"
     :: Stateful Haskell
@@ -66,12 +50,13 @@ tuple_val_type_def_g = ( \(NameAndFields tn fs) ->
     ) :: FieldAndValType -> Stateful Haskell
   in
   type_map_exists_check tn >>
-  type_map_insert tn (FieldAndValTypeList fs) >> tuple_value_g >>= \tv_g ->
+  type_map_insert tn (FieldAndValTypeList fs) >> tuple_g >>= \tv_g ->
   return $ "\ndata " ++ show tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
-  ) :: TupleValTypeDef -> Stateful Haskell
+  ) :: ProdTypeDefinition -> Stateful Haskell
 
--- ValOrTypeDef
-val_or_type_def_g = ( \(ValNameAndValues tn otvs) -> 
+-- ValOrTypeDefinition
+
+val_or_type_def_g = ( \(ValNameAndCases tn otvs) -> 
   let
   or_values_g =
     otvs==>mapM case_and_maybe_val_type_g >>= \otvs_g ->
@@ -91,10 +76,11 @@ val_or_type_def_g = ( \(ValNameAndValues tn otvs) ->
   type_map_insert tn (CaseAndMaybeValTypeList otvs) >> or_values_g >>=
     \otvs_g ->
   return $ "\n\ndata " ++ show tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show"
-  ) :: ValOrTypeDef -> Stateful Haskell
+  ) :: ValOrTypeDefinition -> Stateful Haskell
 
--- ValTypeDef
+-- ValTypeDefinition
+
 val_type_def_g = ( \case
-  TupleValTypeDef tt -> tuple_val_type_def_g tt
-  ValOrTypeDef ot -> val_or_type_def_g ot
-  ) :: ValTypeDef -> Stateful Haskell
+  ProdTypeDefinition tt -> tuple_val_type_def_g tt
+  ValOrTypeDefinition ot -> val_or_type_def_g ot
+  ) :: ValTypeDefinition -> Stateful Haskell

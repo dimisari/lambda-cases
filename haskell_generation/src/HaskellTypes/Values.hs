@@ -15,7 +15,7 @@ import HaskellTypes.Types
 -- All: Types, Show instances
 
 -- Types:
--- ParenthesisValue, TupleValue, MathApplication, BaseValue
+-- Parenthesis, Tuple, MathApplication, BaseValue
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
@@ -24,20 +24,17 @@ import HaskellTypes.Types
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
 
-newtype ParenthesisValue =
-  Parenthesis AbsOpOrOpExpression 
+newtype Parenthesis =
+  InnerExpression AbsOpOrOpExpression 
 
-data TupleValue =
+data Tuple =
   Values AbsOpOrOpExpression AbsOpOrOpExpression [ AbsOpOrOpExpression ]
 
 data MathApplication =
   MathApp ValueName AbsOpOrOpExpression [ AbsOpOrOpExpression ]
 
 data BaseValue =
-  ParenthesisValue ParenthesisValue |
-  TupleValue TupleValue |
-  Literal Literal |
-  ValueName ValueName |
+  Parenthesis Parenthesis | Tuple Tuple | Literal Literal | ValueName ValueName |
   MathApplication MathApplication
 
 data ApplicationDirection =
@@ -50,25 +47,25 @@ data FunctionApplicationChain =
     BaseValue
 
 data MultiplicationFactor =
-  OneArgAppMF FunctionApplicationChain | BaseValueMF BaseValue
+  FuncAppChain FunctionApplicationChain | BaseValue BaseValue
 
 data Multiplication =
-  Mul MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
+  MulFactors MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
 
 data SubtractionFactor =
-  MulSF Multiplication | MFSF MultiplicationFactor
+  MulSubFactor Multiplication | MulFactorSubFactor MultiplicationFactor
 
 data Subtraction =
-  Sub SubtractionFactor SubtractionFactor 
+  SubFactors SubtractionFactor SubtractionFactor 
 
 data EqualityFactor =
-  SubEF Subtraction | SFEF SubtractionFactor
+  SubEquFactor Subtraction | SubFactorEquFactor SubtractionFactor
 
 data Equality =
-  Equ EqualityFactor EqualityFactor
+  EqualityFactors EqualityFactor EqualityFactor
 
 data OperatorExpression =
-  Equality Equality | EquF EqualityFactor
+  Equality Equality | EqualityFactor EqualityFactor
 
 data AbstractionOpExpression =
   AbstractionAndOpResult Abstraction OperatorExpression 
@@ -81,10 +78,10 @@ data LiteralOrValueName =
   Lit Literal | ValName ValueName
 
 data SpecificCase =
-  SC LiteralOrValueName ValueExpression 
+  SpecificCase LiteralOrValueName ValueExpression 
 
 data DefaultCase = 
-  DC ValueExpression
+  DefaultCase ValueExpression
 
 data Cases =
   OneAndDefault SpecificCase DefaultCase |
@@ -103,7 +100,7 @@ newtype NamesTypesAndValues =
   NTAVs [ NTAVOrNTAVLists ]
 
 data Where =
-  Where_ ValueExpression NamesTypesAndValues
+  ValueWhereNTAVs ValueExpression NamesTypesAndValues
 
 data CasesOrWhere =
   Cases Cases | Where Where
@@ -117,7 +114,7 @@ data ValueExpression =
   AbsOpOrOpExpression AbsOpOrOpExpression
 
 -- Show instances:
--- ParenthesisValue, TupleValue, MathApplication, BaseValue
+-- Parenthesis, Tuple, MathApplication, BaseValue
 -- ApplicationDirection, FunctionApplicationChain
 -- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
 -- EqualityFactor, Equality
@@ -126,21 +123,21 @@ data ValueExpression =
 -- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
 -- Where, CasesOrWhere, AbstractionCasesOrWhere, ValueExpression
 
-instance Show ParenthesisValue where
-  show = \(Parenthesis value) -> "(" ++ show value ++ ")"
+instance Show Parenthesis where
+  show = \(InnerExpression expr) -> "(" ++ show expr ++ ")"
 
-instance Show TupleValue where
-  show = \(Values value1 value2 values) ->
-    "(" ++ map show (value1 : value2 : values)==>intercalate ", " ++ ")"
+instance Show Tuple where
+  show = \(Values expr1 expr2 exprs) ->
+    "(" ++ map show (expr1 : expr2 : exprs)==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
-  show = \(MathApp value_name lov1 lovs) ->
-    show value_name ++ "(" ++ (lov1 : lovs)==>map show==>intercalate ", " ++ ")"
+  show = \(MathApp value_name expr1 exprs) ->
+    show value_name ++ "(" ++ (expr1 : exprs)==>map show==>intercalate ", " ++ ")"
 
 instance Show BaseValue where
   show = \case
-    ParenthesisValue parenthesis_value -> show parenthesis_value
-    TupleValue tuple_value -> show tuple_value
+    Parenthesis parenthesis_value -> show parenthesis_value
+    Tuple tuple -> show tuple
     Literal literal -> show literal
     ValueName value_name -> show value_name
     MathApplication math_application -> show math_application
@@ -151,40 +148,45 @@ instance Show ApplicationDirection where
     RightApplication -> "==>"
 
 instance Show FunctionApplicationChain where
-  show = \(ValuesAndDirections bv_ad bv_ad_s bv) ->
-    (bv_ad : bv_ad_s)==>concatMap (\(bv, ad) -> show bv ++ show ad) ++ show bv
+  show = \(ValuesAndDirections base_val_app_dir base_val_app_dir_s base_val) ->
+    concatMap
+      (\(base_val, app_dir) -> show base_val ++ show app_dir)
+      (base_val_app_dir : base_val_app_dir_s)
+    ++ show base_val
 
 instance Show MultiplicationFactor where
   show = \case
-    OneArgAppMF oaa -> show oaa
-    BaseValueMF bv -> show bv
+    FuncAppChain func_app_chain -> show func_app_chain
+    BaseValue base_value -> show base_value
 
 instance Show Multiplication where
-  show = \(Mul mf1 mf2 mfs) -> (mf1 : mf2 : mfs)==>map show==>intercalate " * "
+  show = \(MulFactors factor1 factor2 factors) ->
+    (factor1 : factor2 : factors)==>map show==>intercalate " * "
 
 instance Show SubtractionFactor where
   show = \case
-    MulSF m -> show m
-    MFSF f -> show f
+    MulSubFactor m -> show m
+    MulFactorSubFactor f -> show f
 
 instance Show Subtraction where
-  show = \(Sub sf1 sf2) -> show sf1 ++ " - " ++ show sf2
+  show = \(SubFactors factor1 factor2) -> show factor1 ++ " - " ++ show factor2
 
 instance Show EqualityFactor where
   show = \case
-    SubEF s -> show s
-    SFEF f -> show f
+    SubEquFactor s -> show s
+    SubFactorEquFactor f -> show f
 
 instance Show Equality where
-  show = \(Equ ef1 ef2) -> show ef1 ++ " = " ++ show ef2
+  show = \(EqualityFactors factor1 factor2) ->
+    show factor1 ++ " = " ++ show factor2
 
 instance Show OperatorExpression where
   show = \case
-    Equality equ -> show equ
-    EquF f -> show f
+    Equality equality -> show equality
+    EqualityFactor factor -> show factor 
 
 instance Show AbstractionOpExpression where
-  show = \(AbstractionAndOpResult as ov) -> show as ++ show ov
+  show = \(AbstractionAndOpResult abs op_expr) -> show abs ++ show op_expr
 
 instance Show AbsOpOrOpExpression where
   show = \case
@@ -197,28 +199,31 @@ instance Show LiteralOrValueName where
     ValName value_name -> show value_name
 
 instance Show SpecificCase where
-  show = \(SC lovn value) -> show lovn ++ " ->\n" ++ show value ++ "\n"
+  show = \(SpecificCase lit_or_val_name value_expr) ->
+    show lit_or_val_name ++ " ->\n" ++ show value_expr ++ "\n"
 
 instance Show DefaultCase where
-  show = \(DC value) -> "... ->\n" ++ show value ++ "\n"
+  show = \(DefaultCase value_expr) -> "... ->\n" ++ show value_expr ++ "\n"
 
 instance Show Cases where
-  show = \case
-    OneAndDefault sc dc -> "\ncases\n\n" ++ show sc ++ show dc
-    Many sc1 sc2 scs mdc ->
-      "\ncases\n\n" ++ (sc1 : sc2 : scs)==>concatMap show ++ case mdc of
-        Just dc -> show dc
+  show = \cases -> "\ncases\n\n" ++ case cases of 
+    OneAndDefault spec_case def_case -> show spec_case ++ show def_case
+    Many spec_case1 spec_case2 spec_cases maybe_default_case ->
+      (spec_case1 : spec_case2 : spec_cases)==>concatMap show ++
+      case maybe_default_case of
+        Just default_case -> show default_case
         Nothing -> ""
 
 instance Show NameTypeAndValue where
-  show = \(NTAV value_name value_type value) ->
-    show value_name ++ ": " ++ show value_type ++ "\n  = " ++ show value ++ "\n"
+  show = \(NTAV value_name value_type value_expr) ->
+    show value_name ++ ": " ++ show value_type ++
+    "\n  = " ++ show value_expr ++ "\n"
 
 instance Show NameTypeAndValueLists where
-  show = \(NTAVLists value_names value_types values) -> 
+  show = \(NTAVLists value_names value_types value_exprs) -> 
     value_names==>map show==>intercalate ", " ++ ": " ++
     value_types==>map show==>intercalate ", " ++ "\n  = " ++
-    values==>map show==>intercalate ", " ++ "\n"
+    value_exprs==>map show==>intercalate ", " ++ "\n"
 
 instance Show NTAVOrNTAVLists where
   show = \case
@@ -230,8 +235,8 @@ instance Show NamesTypesAndValues where
     "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
 
 instance Show Where where
-  show = \(Where_ value ns_ts_and_vs) -> 
-    "output\n" ++ show value ++ "where\n" ++ show ns_ts_and_vs 
+  show = \(ValueWhereNTAVs value_expr ns_ts_and_vs) -> 
+    "output\n" ++ show value_expr ++ "where\n" ++ show ns_ts_and_vs 
 
 instance Show CasesOrWhere where
   show = \case
@@ -246,6 +251,3 @@ instance Show ValueExpression where
   show = \case
     AbstractionCasesOrWhere abs_cases_or_where -> show abs_cases_or_where
     AbsOpOrOpExpression abs_op_expr_or_op_expr -> show abs_op_expr_or_op_expr
-
--- data BaseValueOrCases = 
---   BaseValue BaseValue | Cases Cases

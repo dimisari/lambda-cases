@@ -13,108 +13,108 @@ import HaskellTypes.LowLevel
 -- All: Types, Show instances
 
 -- Types:
--- TypeName, CartesianProduct, Output, MultipleInputs, Input, FunctionType, ValueType,
--- FieldAndType, TupleTypeDef, CaseAndMaybeType, OrTypeDef, TypeDef, FieldsOrCases
+-- TypeName, ProductType, Input, MultipleInputs, Output, FunctionType
+-- ValueType
+-- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
+-- TypeDefinition, FieldsOrCases
 
 newtype TypeName =
   TN String deriving (Eq, Ord)
 
-data CartesianProduct =
+data ProductType =
   Types ValueType ValueType [ ValueType ]
 
-data Output =
-  OutputTypeName TypeName | OutputCartesianProduct CartesianProduct
+data Input =
+  OneInput ValueType | MultipleInputs MultipleInputs
 
 data MultipleInputs =
   InputTypes ValueType ValueType [ ValueType ]
 
-data Input =
-  OneInput ValueType | MultipleInputs MultipleInputs
+data Output =
+  OutputTypeName TypeName | OutputProductType ProductType
 
 data FunctionType =
   InputAndOutput Input Output
 
 data ValueType =
-  FunctionType FunctionType | CartesianProduct CartesianProduct | TypeName TypeName
+  FunctionType FunctionType | ProductType ProductType | TypeName TypeName
 
-data FieldAndType =
-  FT { get_field_name :: ValueName, get_field_type :: ValueType }
+data FieldNameAndType =
+  NameAndType ValueName ValueType 
 
-data TupleTypeDef =
-  NameAndValue TypeName [ FieldAndType ]
+data TupleTypeDefinition =
+  NameAndFields TypeName [ FieldNameAndType ]
 
 data CaseAndMaybeType =
-  CMT ValueName (Maybe ValueType)
+  CaseAndMaybeType ValueName (Maybe ValueType)
 
-data OrTypeDef =
-  NameAndValues TypeName [ CaseAndMaybeType ]
+data OrTypeDefinition =
+  NameAndCases TypeName CaseAndMaybeType CaseAndMaybeType [ CaseAndMaybeType ]
 
-data TypeDef =
-  TupleTypeDef TupleTypeDef | OrTypeDef OrTypeDef
+data TypeDefinition =
+  TupleTypeDefinition TupleTypeDefinition | OrTypeDefinition OrTypeDefinition
 
 data FieldsOrCases =
-  FieldAndTypeList [ FieldAndType ] | CaseAndMaybeTypeList [ CaseAndMaybeType ]
+  FieldNameAndTypeList [ FieldNameAndType ] |
+  CaseAndMaybeTypeList [ CaseAndMaybeType ]
 
 -- Show instances:
--- TypeName, CartesianProduct, Output, MultipleInputs, Input, FunctionType, ValueType,
--- FieldAndType, TupleTypeDef CaseAndMaybeType, OrTypeDef, TypeDef
- 
-instance Show TypeName where
-  show = \(TN n) -> n
+-- TypeName, ProductType, Input, MultipleInputs, Output, FunctionType
+-- ValueType
+-- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
+-- TypeDefinition
 
-instance Show CartesianProduct where
+instance Show TypeName where
+  show = \(TN name) -> name
+
+instance Show ProductType where
   show = \(Types name1 name2 names) ->
     map show (name1 : name2 : names)==>intercalate " x "
-
-instance Show Output where
-  show = \case
-    OutputTypeName name -> show name
-    OutputCartesianProduct cartesian_product -> show cartesian_product
-
-instance Show MultipleInputs where
-  show = \(InputTypes input1 input2 inputs) ->
-    "(" ++ map show (input1 : input2 : inputs)==>intercalate ", " ++ ")"
 
 instance Show Input where
   show = \case
     OneInput input -> show input
     MultipleInputs multiple_inputs -> show multiple_inputs
 
+instance Show MultipleInputs where
+  show = \(InputTypes input1 input2 inputs) ->
+    "(" ++ map show (input1 : input2 : inputs)==>intercalate ", " ++ ")"
+
+instance Show Output where
+  show = \case
+    OutputTypeName name -> show name
+    OutputProductType product_type -> show product_type
+
 instance Show FunctionType where
   show = \(InputAndOutput input output) -> show input ++ " -> " ++ show output
 
 instance Show ValueType where
   show = \case
-    FunctionType func_type -> show func_type
+    FunctionType funcion_type -> show funcion_type
     TypeName name -> show name
-    CartesianProduct cartesian_product -> show cartesian_product
+    ProductType product_type -> show product_type
 
-instance Show FieldAndType where
-  show = \(FT vn vt) -> show vn ++ ": " ++ show vt
+instance Show FieldNameAndType where
+  show = \(NameAndType field_name field_type) ->
+    show field_name ++ ": " ++ show field_type
 
-instance Show TupleTypeDef where
-  show = \(NameAndValue tn ttfs) ->
-    "\ntuple_type " ++ show tn ++
-    "\nvalue (" ++ ttfs==>map show==>intercalate ", "  ++ ")\n"
+instance Show TupleTypeDefinition where
+  show = \(NameAndFields type_name fields) ->
+    "\ntuple_type " ++ show type_name ++
+    "\nvalue (" ++ fields==>map show==>intercalate ", "  ++ ")\n"
 
 instance Show CaseAndMaybeType where
-  show = \(CMT vn mvt) -> show vn ++ case mvt of 
-    Just vt -> "<==(value: " ++ show vt ++ ")"
-    Nothing -> ""
+  show = \(CaseAndMaybeType case_name maybe_case_type) ->
+    show case_name ++ case maybe_case_type of 
+      Just case_type -> "<==(value: " ++ show case_type ++ ")"
+      Nothing -> ""
 
-instance Show OrTypeDef where
-  show = \(NameAndValues tn otvs) ->
-    "\nor_type " ++ show tn ++
-    "\nvalues " ++ otvs==>map show==>intercalate " | " ++ "\n"
+instance Show OrTypeDefinition where
+  show = \(NameAndCases type_name case1 case2 cases) ->
+    "\nor_type " ++ show type_name ++
+    "\nvalues " ++ (case1 : case2 : cases)==>map show==>intercalate " | " ++ "\n"
 
-instance Show TypeDef where
+instance Show TypeDefinition where
   show = \case
-    TupleTypeDef ttd -> show ttd
-    OrTypeDef otd -> show otd
-
--- Commented out:
--- newtype ArgName = 
---   AN Char
--- 
--- data TypeConstructorExpr =
---   ArgnamesAndName [ ArgName ] TypeName
+    TupleTypeDefinition tuple_type_definition -> show tuple_type_definition   
+    OrTypeDefinition or_type_definition -> show or_type_definition

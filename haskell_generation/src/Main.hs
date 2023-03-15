@@ -17,9 +17,9 @@ import Helpers
   ( Haskell, (.>) )
 
 -- import HaskellTypes.Types
---   ( TypeDef )
+--   ( TypeDefinition )
 import HaskellTypes.AfterParsing
-  ( ValTypeDef, td_to_vtd )
+  ( ValTypeDefinition, td_to_vtd )
 import HaskellTypes.Values
   ( NamesTypesAndValues )
 
@@ -36,24 +36,27 @@ import CodeGenerators.Values
 -- All: Constants, Types, Parsing, Generating Haskell, main
 
 -- Constants
-[ example_name, files, haskell_header,
-  example_lc, example_hs ] =
+
+[ example_name, files, haskell_header, example_lc, example_hs ] =
   [ files ++ "example", "files/", files ++ "haskell_code_header.hs"
   , example_name ++ ".lc", example_name ++ ".hs" ] 
   :: [ String ]
 
 -- Types
+
 data NTAVsOrType =
-  TypeDef ValTypeDef | NTAVs NamesTypesAndValues deriving Show
+  TypeDefinition ValTypeDefinition | NTAVs NamesTypesAndValues deriving Show
 
 type Program = [ NTAVsOrType ]
 
 -- Parsing 
+
 parse_with = flip parse example_lc
   :: Parser a -> String -> Either ParseError a
 
 ntavs_or_tt_p =
-  TypeDef <$> td_to_vtd <$> try type_def_p <|> NTAVs <$> names_types_and_values_p
+  TypeDefinition <$> td_to_vtd <$> try type_def_p <|>
+  NTAVs <$> names_types_and_values_p
   :: Parser NTAVsOrType
 
 program_p =
@@ -64,26 +67,26 @@ parse_string = parse_with program_p
   :: String -> Either ParseError Program
 
 -- Generating Haskell
+
 program_g = mapM ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  TypeDef t -> val_type_def_g t
+  TypeDefinition t -> val_type_def_g t
   ) .> fmap concat .> flip evalState init_state
   :: Program -> Haskell
 
-generate_code =
+generate_haskell =
   parse_string >=> program_g .> return
   :: String -> Either ParseError Haskell
 
-write_code = ( generate_code .> \case
+write_haskell = ( generate_haskell .> \case
   Left e -> print e
-  Right source -> 
+  Right haskell -> 
     readFile haskell_header >>= \header ->
-    writeFile example_hs $ header ++ source
+    writeFile example_hs $ header ++ haskell
   ) :: String -> IO ()
 
 -- main
+
 main =
-  readFile example_lc >>=
-  write_code
-  -- parse_string .> print
+  readFile example_lc >>= write_haskell
   :: IO ()

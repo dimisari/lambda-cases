@@ -76,7 +76,7 @@ bv_type_inference_err = ( \pv ->
   "\nCannot infer types for values inside parenthesis in one argument" ++
   " application, please define the following as an intermediate value: " ++
   show pv ++ "\n"
-  ) :: ParenthesisValue -> Error
+  ) :: Parenthesis -> Error
 
 not_a_fun_err = ( \fun_vt val_vt ->
   "\nThis is not a function type: " ++ show fun_vt ++

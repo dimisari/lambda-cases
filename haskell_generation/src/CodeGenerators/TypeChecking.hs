@@ -35,18 +35,18 @@ ts_are_equivalent = ( \vt1 vt2 -> case (vt1, vt2) of
     ts_are_equivalent out_vt1 out_vt2 >>= \out_equiv -> 
     return $ in_equiv && out_equiv
   (NamedType tn1, NamedType tn2) -> tns_are_equivalent tn1 tn2
-  (TupleValType vt1_1 vt1_2 vts1, TupleValType vt2_1 vt2_2 vts2) ->
+  (ProdType vt1_1 vt1_2 vts1, ProdType vt2_1 vt2_2 vts2) ->
     zipWith ts_are_equivalent (vt1_1 : vt1_2 : vts1) (vt2_1 : vt2_2 : vts2)
       ==> sequence ==> fmap and
 
   (FuncType _ _ ,NamedType _) -> return False
   (NamedType _, FuncType _ _) -> return False
 
-  (FuncType _ _ ,TupleValType _ _ _) -> return False
-  (TupleValType _ _ _, FuncType _ _) -> return False
+  (FuncType _ _ ,ProdType _ _ _) -> return False
+  (ProdType _ _ _, FuncType _ _) -> return False
 
-  (NamedType tn, TupleValType _ _ _) -> tn_t_are_equivalent tn vt2
-  (TupleValType _ _ _, NamedType tn) -> tn_t_are_equivalent tn vt1
+  (NamedType tn, ProdType _ _ _) -> tn_t_are_equivalent tn vt2
+  (ProdType _ _ _, NamedType tn) -> tn_t_are_equivalent tn vt1
 
   ) :: ValType -> ValType -> Stateful Bool
 
@@ -62,7 +62,7 @@ tn_to_t = ( flip type_map_get "tn_to_t" >=> \case
   FieldAndValTypeList favtl -> case favtl of
     [] -> undefined
     [ favt ] -> return $ get_f_valtype favt
-    favt1 : favt2 : rest -> return $ TupleValType
+    favt1 : favt2 : rest -> return $ ProdType
       (get_f_valtype favt1) (get_f_valtype favt2) (map get_f_valtype rest)
   _ -> undefined
   ) :: TypeName -> Stateful ValType

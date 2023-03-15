@@ -11,15 +11,7 @@ import Helpers
 import HaskellTypes.LowLevel
   ( ValueName )
 import HaskellTypes.Types
-  ( TypeName, CartesianProduct(..), Output(..), MultipleInputs(..), Input(..)
-  , FunctionType(..), ValueType(..)
-  , FieldAndType(..), TupleTypeDef(..), CaseAndMaybeType(..), OrTypeDef(..)
-  , TypeDef(..), FieldsOrCases(..) )
 import HaskellTypes.Values
-  ( BaseValue(..), ApplicationDirection(..), FunctionApplicationChain(..)
-  , MathApplication(..), AbsOpOrOpExpression(..), OperatorExpression(..)
-  , EqualityFactor(..), SubtractionFactor(..), MultiplicationFactor(..)
-  , ParenthesisValue(..) )
 
 data ApplicationTree = 
   Application ApplicationTree ApplicationTree | BaseValueLeaf BaseValue
@@ -46,23 +38,28 @@ combine_with_reverse_direction = ( \at1 ad at2 -> case ad of
 -- math_app_to_app_tree
 
 math_app_to_app_tree = ( \(MathApp value_name expr1 exprs) ->
-  bvs_to_app_tree $ ValueName value_name : map expr_to_base_value (expr1 : exprs) 
+  base_vals_to_app_tree $
+    ValueName value_name : map expr_to_base_value (expr1 : exprs) 
   ) :: MathApplication -> ApplicationTree 
 
 expr_to_base_value = ( \expr -> case expr of
-  OperatorExpression (EquF (SFEF (MFSF (BaseValueMF bv)))) -> bv
-  _ -> ParenthesisValue $ Parenthesis $ expr
+  OperatorExpression
+    (EqualityFactor
+      (SubFactorEquFactor
+        (MulFactorSubFactor
+          (BaseValue bv)))) -> bv
+  _ -> Parenthesis $ InnerExpression $ expr
   ) :: AbsOpOrOpExpression -> BaseValue
 
-bvs_to_app_tree = ( \case
-  [] -> error "empty list in bvs_to_app_tree"
+base_vals_to_app_tree = ( \case
+  [] -> error "empty list in base_vals_to_app_tree"
   [ bv ] -> BaseValueLeaf bv
-  bv : bvs -> Application (BaseValueLeaf bv) $ bvs_to_app_tree bvs
+  bv : bvs -> Application (BaseValueLeaf bv) $ base_vals_to_app_tree bvs
   ) :: [ BaseValue ] -> ApplicationTree
 
 data ValType =
   FuncType ValType ValType | NamedType TypeName |
-  TupleValType ValType ValType [ ValType ]
+  ProdType ValType ValType [ ValType ]
   deriving Eq
 
 instance Show ValType where
@@ -72,12 +69,12 @@ instance Show ValType where
         "(" ++ show in_vt ++ ")"
       _ -> show in_vt) ++ " -> " ++ show out_vt
     NamedType tn -> show tn
-    TupleValType vt1 vt2 vts ->
+    ProdType vt1 vt2 vts ->
       "(" ++ map show (vt1 : vt2 : vts) ==> intercalate ", " ++ ")"
 
 value_type_to_val_type = ( \case
   FunctionType func_type -> func_type_to_val_type func_type
-  CartesianProduct cartesian_product -> cp_to_val_type cartesian_product
+  ProductType cartesian_product -> cp_to_val_type cartesian_product
   TypeName name -> NamedType name
   ) :: ValueType -> ValType
 
@@ -111,53 +108,53 @@ multiple_inputs_to_val_type = (
 
 nocp_to_val_type = ( \case
   OutputTypeName name -> NamedType name
-  OutputCartesianProduct cartesian_product -> cp_to_val_type cartesian_product
+  OutputProductType cartesian_product -> cp_to_val_type cartesian_product
   ) :: Output -> ValType
 
 cp_to_val_type = ( \(Types value_type1 value_type2 other_value_types) ->
-  TupleValType
+  ProdType
     (value_type_to_val_type value_type1)
     (value_type_to_val_type value_type2)
     (map value_type_to_val_type other_value_types)
-  ) :: CartesianProduct -> ValType
+  ) :: ProductType -> ValType
 
 data FieldAndValType =
   FVT { get_f_name :: ValueName, get_f_valtype :: ValType }
   deriving Show
 
-ft_to_fvt = ( \(FT vn vt) -> FVT vn (value_type_to_val_type vt) )
-  :: FieldAndType -> FieldAndValType
+ft_to_fvt = ( \(NameAndType vn vt) -> FVT vn (value_type_to_val_type vt) )
+  :: FieldNameAndType -> FieldAndValType
 
-data TupleValTypeDef =
-  NameAndFields TypeName [ FieldAndValType ]
+data ProdTypeDefinition =
+  NameAndValFields TypeName [ FieldAndValType ]
   deriving Show
 
-ttd_to_tvtd = ( \(NameAndValue tn fts) -> NameAndFields tn (map ft_to_fvt fts) )
-  :: TupleTypeDef -> TupleValTypeDef
+ttd_to_tvtd = ( \(NameAndFields tn fts) -> NameAndValFields tn (map ft_to_fvt fts) )
+  :: TupleTypeDefinition -> ProdTypeDefinition
 
 data CaseAndMaybeValType =
   CMVT ValueName (Maybe ValType)
   deriving Show
 
-camt_to_camvt = ( \(CMT vn mvt) -> CMVT vn (value_type_to_val_type <$> mvt) )
+camt_to_camvt = ( \(CaseAndMaybeType vn mvt) -> CMVT vn (value_type_to_val_type <$> mvt) )
   :: CaseAndMaybeType -> CaseAndMaybeValType
 
-data ValOrTypeDef =
-  ValNameAndValues TypeName [ CaseAndMaybeValType ]
+data ValOrTypeDefinition =
+  ValNameAndCases TypeName [ CaseAndMaybeValType ]
   deriving Show
 
-otd_to_votd = ( \(NameAndValues tn camts) ->
-  ValNameAndValues tn (map camt_to_camvt camts)
-  ) :: OrTypeDef -> ValOrTypeDef
+otd_to_votd = ( \(NameAndCases type_name case1 case2 cases) ->
+  ValNameAndCases type_name (map camt_to_camvt $ case1 : case2 : cases)
+  ) :: OrTypeDefinition -> ValOrTypeDefinition
 
-data ValTypeDef =
-  TupleValTypeDef TupleValTypeDef | ValOrTypeDef ValOrTypeDef
+data ValTypeDefinition =
+  ProdTypeDefinition ProdTypeDefinition | ValOrTypeDefinition ValOrTypeDefinition
   deriving Show
 
 td_to_vtd = \case
-  TupleTypeDef ttd -> TupleValTypeDef $ ttd_to_tvtd ttd
-  OrTypeDef otd -> ValOrTypeDef $ otd_to_votd otd
-  :: TypeDef -> ValTypeDef
+  TupleTypeDefinition ttd -> ProdTypeDefinition $ ttd_to_tvtd ttd
+  OrTypeDefinition otd -> ValOrTypeDefinition $ otd_to_votd otd
+  :: TypeDefinition -> ValTypeDefinition
 
 data ValFieldsOrCases =
   FieldAndValTypeList [ FieldAndValType ] |
