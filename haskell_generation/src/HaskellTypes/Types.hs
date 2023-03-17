@@ -13,7 +13,7 @@ import HaskellTypes.LowLevel
 -- All: Types, Show instances
 
 -- Types:
--- TypeName, ProductType, Input, MultipleInputs, Output, FunctionType
+-- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
 -- ValueType
 -- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
 -- TypeDefinition, FieldsOrCases
@@ -24,17 +24,17 @@ newtype TypeName =
 data ProductType =
   Types ValueType ValueType [ ValueType ]
 
-data Input =
-  OneInput ValueType | MultipleInputs MultipleInputs
+data InputTypeOrTypes =
+  OneInput ValueType | MultipleInputs InputTypes
 
-data MultipleInputs =
-  InputTypes ValueType ValueType [ ValueType ]
+data InputTypes =
+  InTypes ValueType ValueType [ ValueType ]
 
-data Output =
+data OutputType =
   OutputTypeName TypeName | OutputProductType ProductType
 
 data FunctionType =
-  InputAndOutput Input Output
+  InputAndOutput InputTypeOrTypes OutputType
 
 data ValueType =
   FunctionType FunctionType | ProductType ProductType | TypeName TypeName
@@ -59,7 +59,7 @@ data FieldsOrCases =
   CaseAndMaybeTypeList [ CaseAndMaybeType ]
 
 -- Show instances:
--- TypeName, ProductType, Input, MultipleInputs, Output, FunctionType
+-- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
 -- ValueType
 -- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
 -- TypeDefinition
@@ -71,22 +71,23 @@ instance Show ProductType where
   show = \(Types name1 name2 names) ->
     map show (name1 : name2 : names)==>intercalate " x "
 
-instance Show Input where
+instance Show InputTypeOrTypes where
   show = \case
-    OneInput input -> show input
+    OneInput input_type -> show input_type
     MultipleInputs multiple_inputs -> show multiple_inputs
 
-instance Show MultipleInputs where
-  show = \(InputTypes input1 input2 inputs) ->
+instance Show InputTypes where
+  show = \(InTypes input1 input2 inputs) ->
     "(" ++ map show (input1 : input2 : inputs)==>intercalate ", " ++ ")"
 
-instance Show Output where
+instance Show OutputType where
   show = \case
     OutputTypeName name -> show name
     OutputProductType product_type -> show product_type
 
 instance Show FunctionType where
-  show = \(InputAndOutput input output) -> show input ++ " -> " ++ show output
+  show = \(InputAndOutput input_type output_type) ->
+    show input_type ++ " -> " ++ show output_type
 
 instance Show ValueType where
   show = \case

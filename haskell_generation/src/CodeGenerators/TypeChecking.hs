@@ -20,23 +20,14 @@ import CodeGenerators.ErrorMessages
   ( type_check_err )
 
 -- All:
--- type_check_value_name_g, types_are_equivalent, type_names_are_equivalent,
+-- types_are_equivalent, type_names_are_equivalent,
 -- func_types_are_equivalent, prod_types_are_equivalent,
 -- named_type_and_val_type_are_equivalent, type_name_to_val_type
 
-type_check_value_name_g = ( \value_name val_type map_val_type ->
-  types_are_equivalent val_type map_val_type >>= \case
-    False -> error $ type_check_err value_name val_type map_val_type
-    True -> case value_name of
-      VN "true" -> return "True"
-      VN "false" -> return "False"
-      _ -> return $ show value_name
-  ) :: ValueName -> ValType -> ValType -> Stateful Haskell
-
 types_are_equivalent = ( \val_type1 val_type2 -> case (val_type1, val_type2) of
 
-  (NamedType type_name_1, NamedType type_name2) ->
-    type_names_are_equivalent type_name_1 type_name2
+  (NamedType type_name1, NamedType type_name2) ->
+    type_names_are_equivalent type_name1 type_name2
   (ProdType t1_1 t1_2 ts1, ProdType t2_1 t2_2 ts2) ->
     prod_types_are_equivalent (t1_1 : t1_2 : ts1) (t2_1 : t2_2 : ts2)
   (FuncType input_t1 output_t1, FuncType input_t2 output_t2) ->
@@ -55,11 +46,11 @@ types_are_equivalent = ( \val_type1 val_type2 -> case (val_type1, val_type2) of
 
   ) :: ValType -> ValType -> Stateful Bool
 
-type_names_are_equivalent = ( \type_name_1 type_name2 ->
-  case type_name_1 == type_name2 of
+type_names_are_equivalent = ( \type_name1 type_name2 ->
+  case type_name1 == type_name2 of
     True -> return True
     False ->
-      type_name_to_val_type type_name_1 >>=
+      type_name_to_val_type type_name1 >>=
       named_type_and_val_type_are_equivalent type_name2
   ) :: TypeName -> TypeName -> Stateful Bool
 

@@ -16,7 +16,7 @@ import Parsers.LowLevel
   ( value_name_p )
 
 -- All:
--- TypeName, ProductType, Input, MultipleInputs, Output, FunctionType
+-- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
 -- ValueType
 -- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
 -- TypeDefinition
@@ -44,12 +44,11 @@ inner_value_type_p =
   TypeName <$> type_name_p
   :: Parser ValueType
 
--- Input: input_p, one_input_val_type_p
+-- InputTypeOrTypes: input_type_or_types_p, one_input_val_type_p
 
-input_p = 
-  MultipleInputs <$> try multiple_inputs_p <|>
-  OneInput <$> one_input_val_type_p
-  :: Parser Input
+input_type_or_types_p = 
+  MultipleInputs <$> try input_types_p <|> OneInput <$> one_input_val_type_p
+  :: Parser InputTypeOrTypes
 
 one_input_val_type_p =
   FunctionType <$> (char '(' *> function_type_p <* char ')') <|>
@@ -57,26 +56,26 @@ one_input_val_type_p =
   TypeName <$> type_name_p
   :: Parser ValueType
 
--- MultipleInputs: multiple_inputs_p
+-- InputTypes: input_types_p
 
-multiple_inputs_p =
+input_types_p =
   char '(' >> value_type_p >>= \value_type1 ->
   string ", " >> value_type_p >>= \value_type2 ->
   many (string ", " >> value_type_p) >>= \value_types ->
-  char ')' >> return (InputTypes value_type1 value_type2 value_types)
-  :: Parser MultipleInputs
+  char ')' >> return (InTypes value_type1 value_type2 value_types)
+  :: Parser InputTypes
 
--- Output: output_p
+-- OutputType: output_type_p
 
-output_p =
+output_type_p =
   OutputProductType <$> try product_type_p <|>
   OutputTypeName <$> type_name_p
-  :: Parser Output
+  :: Parser OutputType
 
 -- FunctionType: function_type_p
 
 function_type_p =
-  input_p >>= \input -> string " -> " >> output_p >>= \output ->
+  input_type_or_types_p >>= \input -> string " -> " >> output_type_p >>= \output ->
   return $ InputAndOutput input output
   :: Parser FunctionType
 

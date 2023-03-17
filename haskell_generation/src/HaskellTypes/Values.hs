@@ -50,13 +50,13 @@ data Multiplication =
   MulFactors MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
 
 data SubtractionFactor =
-  MulSubFactor Multiplication | MulFactorSubFactor MultiplicationFactor
+  Multiplication Multiplication | MultiplicationFactor MultiplicationFactor
 
 data Subtraction =
   SubFactors SubtractionFactor SubtractionFactor 
 
 data EqualityFactor =
-  SubEquFactor Subtraction | SubFactorEquFactor SubtractionFactor
+  Subtraction Subtraction | SubtractionFactor SubtractionFactor
 
 data Equality =
   EqualityFactors EqualityFactor EqualityFactor
@@ -162,16 +162,16 @@ instance Show Multiplication where
 
 instance Show SubtractionFactor where
   show = \case
-    MulSubFactor m -> show m
-    MulFactorSubFactor f -> show f
+    Multiplication m -> show m
+    MultiplicationFactor f -> show f
 
 instance Show Subtraction where
   show = \(SubFactors factor1 factor2) -> show factor1 ++ " - " ++ show factor2
 
 instance Show EqualityFactor where
   show = \case
-    SubEquFactor s -> show s
-    SubFactorEquFactor f -> show f
+    Subtraction s -> show s
+    SubtractionFactor f -> show f
 
 instance Show Equality where
   show = \(EqualityFactors factor1 factor2) ->

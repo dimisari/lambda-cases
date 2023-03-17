@@ -106,8 +106,8 @@ multiplication_p =
 -- SubtractionFactor: subtraction_factor_p
 
 subtraction_factor_p =
-  MulSubFactor <$> try multiplication_p <|>
-  MulFactorSubFactor <$> multiplication_factor_p
+  Multiplication <$> try multiplication_p <|>
+  MultiplicationFactor <$> multiplication_factor_p
   :: Parser SubtractionFactor
 
 -- Subtraction: subtraction_p
@@ -121,8 +121,8 @@ subtraction_p =
 -- EqualityFactor: equality_factor_p
 
 equality_factor_p =
-  SubEquFactor <$> try subtraction_p <|>
-  SubFactorEquFactor <$> subtraction_factor_p
+  Subtraction <$> try subtraction_p <|>
+  SubtractionFactor <$> subtraction_factor_p
   :: Parser EqualityFactor
 
 -- Equality: equality_p

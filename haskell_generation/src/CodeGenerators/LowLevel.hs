@@ -24,44 +24,53 @@ import HaskellTypes.Generation
 
 import CodeGenerators.ErrorMessages
 import CodeGenerators.TypeChecking
-  ( type_check_value_name_g, type_name_to_val_type )
+  ( types_are_equivalent, type_name_to_val_type )
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions
 
 -- Literal: literal_g, literal_type_inference_g
 
-literal_g = ( \val_type literal -> 
+literal_g = ( \literal val_type -> 
   (val_type == NamedType (TN "Int")) ==> \case
     True -> return $ show literal
     False -> error $ literal_not_int_err val_type
-  ) :: ValType -> Literal -> Stateful Haskell
+  ) :: Literal -> ValType -> Stateful Haskell
 
 literal_type_inference_g = ( \literal ->
-  return (NamedType $ TN "Int", show literal)
-  ) :: Literal -> Stateful (ValType, Haskell)
+  return (show literal, NamedType $ TN "Int")
+  ) :: Literal -> Stateful (Haskell, ValType)
 
 -- ValueName: value_name_g, value_name_type_inference_g
 
-value_name_g = ( \val_type value_name -> 
+value_name_g = ( \value_name val_type -> 
   value_map_get value_name >>= \map_val_type ->
-  type_check_value_name_g value_name val_type map_val_type
-  ) :: ValType -> ValueName -> Stateful Haskell
+  types_are_equivalent val_type map_val_type >>= \case
+    False -> error $ type_check_err value_name val_type map_val_type
+    True -> return $ value_name_to_hs value_name
+  ) :: ValueName -> ValType -> Stateful Haskell
 
 value_name_type_inference_g = ( \value_name ->
   value_map_get value_name >>= \map_val_type ->
-  return (map_val_type, show value_name)
-  ) :: ValueName -> Stateful (ValType, Haskell)
+  return (value_name_to_hs value_name, map_val_type)
+  ) :: ValueName -> Stateful (Haskell, ValType)
 
--- Abstraction: abstraction_g, use_fields_g
+value_name_to_hs = \case
+  VN "true" -> "True"
+  VN "false" -> "False"
+  value_name -> show value_name
+  :: ValueName -> Haskell
 
-abstraction_g = ( \val_type -> \case
-  AbstractionName value_name -> val_name_insert_and_return val_type value_name
-  UseFields -> use_fields_g val_type
-  ) :: ValType -> Abstraction -> Stateful Haskell
+-- Abstraction:
+-- abstraction_g, val_name_insert_and_return, use_fields_g, field_and_val_type_g
 
-val_name_insert_and_return = ( \val_type value_name ->
+abstraction_g = ( \case
+  AbstractionName value_name -> val_name_insert_and_return value_name
+  UseFields -> use_fields_g
+  ) :: Abstraction -> ValType -> Stateful Haskell
+
+val_name_insert_and_return = ( \value_name val_type ->
   value_map_insert value_name val_type >> return (show value_name)
-  ) :: ValType -> ValueName -> Stateful Haskell
+  ) :: ValueName -> ValType -> Stateful Haskell
 
 use_fields_g = ( \val_type -> case val_type of
   NamedType tn -> type_map_get tn "use_fields_g" >>= \case
@@ -74,34 +83,33 @@ use_fields_g = ( \val_type -> case val_type of
   ) :: ValType -> Stateful Haskell
 
 field_and_val_type_g = ( \(FVT field_name field_type) ->
-  val_name_insert_and_return field_type field_name
+  val_name_insert_and_return field_name field_type
   ) :: FieldAndValType -> Stateful Haskell
 
 -- ManyAbstractions: many_abstractions_g
 
-many_abstractions_g = (
-  \val_type (AbstractionsNames value_name1 value_name2 value_names) ->
-  abstractions_g val_type (value_name1 : value_name2 : value_names)
-  ) :: ValType -> ManyAbstractions -> Stateful (ValType, Haskell)
+many_abstractions_g = ( \(Abstractions abstraction1 abstraction2 abstractions) ->
+  abstractions_g (abstraction1 : abstraction2 : abstractions)
+  ) :: ManyAbstractions -> ValType -> Stateful (ValType, Haskell)
 
 -- Input: input_g, abstractions_g
 
-input_g = ( \val_type input ->
+input_g = ( \input val_type ->
   let 
   case_result = case input of
-    OneAbstraction abstraction -> abstractions_g val_type [ abstraction ] 
-    ManyAbstractions many_abs -> many_abstractions_g val_type many_abs
+    OneAbstraction abstraction -> abstractions_g [ abstraction ] val_type 
+    ManyAbstractions many_abs -> many_abstractions_g many_abs val_type
     :: Stateful (ValType, Haskell)
   in
-  case_result >>= \(val_type, hs) -> return (val_type, "\\" ++ hs ++ " -> ")
-  ) :: ValType -> Input -> Stateful (ValType, Haskell)
+  case_result >>= \(val_t, hs) -> return (val_t, "\\" ++ hs ++ " -> ")
+  ) :: Input -> ValType -> Stateful (ValType, Haskell)
 
-abstractions_g = ( \val_type abstractions -> case abstractions of
+abstractions_g = ( \abstractions val_type -> case abstractions of
   [] -> return (val_type, "")
   abs1 : other_abs -> case val_type of
     FuncType input_type output_type -> 
-      abstraction_g input_type abs1 >>= \abs1_hs ->
-      abstractions_g output_type other_abs >>= \(abs_type, other_abs_hs) ->
+      abstraction_g abs1 input_type >>= \abs1_hs ->
+      abstractions_g other_abs output_type >>= \(abs_type, other_abs_hs) ->
       return (abs_type, abs1_hs ++ " " ++ other_abs_hs)
     _ -> undefined
-  ) :: ValType -> [ Abstraction ] -> Stateful (ValType, Haskell)
+  ) :: [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)

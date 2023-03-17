@@ -46,7 +46,7 @@ many_abstractions_p =
   string "(" >> abstraction_p >>= \abstraction1 ->
   string ", " >> abstraction_p >>= \abstraction2 ->
   many (string ", " >> abstraction_p) >>= \abstractions ->
-  string ")" >> return (AbstractionsNames abstraction1 abstraction2 abstractions)
+  string ")" >> return (Abstractions abstraction1 abstraction2 abstractions)
   :: Parser ManyAbstractions
 
 -- Input: input_p

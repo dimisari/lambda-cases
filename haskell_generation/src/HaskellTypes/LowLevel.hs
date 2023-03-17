@@ -19,7 +19,7 @@ data Abstraction =
   AbstractionName ValueName | UseFields
 
 data ManyAbstractions =
-  AbstractionsNames Abstraction Abstraction [ Abstraction ]
+  Abstractions Abstraction Abstraction [ Abstraction ]
 
 data Input =
   OneAbstraction Abstraction | ManyAbstractions ManyAbstractions 
@@ -35,10 +35,10 @@ instance Show Abstraction where
     UseFields -> "use_fields"
 
 instance Show ManyAbstractions where
-  show = \(AbstractionsNames abs1 abs2 rest_of_abs) ->
+  show = \(Abstractions abs1 abs2 rest_of_abs) ->
     "(" ++ map show (abs1 : abs2 : rest_of_abs)==>intercalate ", " ++ ")"
 
 instance Show Input where
-  show = \case
+  show = \input -> (++ " -> ") $ case input of
     OneAbstraction abstraction -> show abstraction
     ManyAbstractions abstractions -> show abstractions
