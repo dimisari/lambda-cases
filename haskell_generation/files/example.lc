@@ -1,4 +1,7 @@
 
+extended_euclidean: (Int, Int) -> Int x Int x Int
+  = (1, 0)==>ee_recursion<==(0, 1)
+
 ee_recursion: (Int x Int, Int x Int, Int, Int) -> Int x Int x Int
   = (a_coeffs, b_coeffs, x) -> cases
     0 -> (x, a_coeffs==>first, b_coeffs==>first)
