@@ -15,9 +15,6 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( TypeName(..), ValueType(..) )
 import HaskellTypes.AfterParsing
-  ( ValType(..), FieldAndValType(..), ProdTypeDefinition(..)
-  , CaseAndMaybeValType(..), ValOrTypeDefinition(..), ValFieldsOrCases(..)
-  , ValTypeDefinition(..), value_type_to_val_type )
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 
@@ -28,31 +25,30 @@ value_type_g = ( value_type_to_val_type .> show )
 
 -- ValType
 
-val_type_g = ( \case
-  FuncType t_in t_out -> val_type_g t_in ++ " -> " ++ val_type_g t_out
-  NamedType tn -> show tn
-  ProdType t1 t2 ts -> 
-    "(" ++ map val_type_g (t1 : t2 : ts)==>intercalate ", " ++ ")" 
-  ) :: ValType -> Haskell
+val_type_g = show
+  :: ValType -> Haskell
 
 -- ProdTypeDefinition
 
 tuple_val_type_def_g = ( \(NameAndValFields tn fs) ->
   let
   tuple_g =
-    fs==>mapM field_and_val_type_g >>= \fs_g ->
+    fs==>mapM (field_and_val_type_g tn) >>= \fs_g ->
     return $ show tn ++ "C { " ++ intercalate ", " fs_g ++ " }"
     :: Stateful Haskell
 
-  field_and_val_type_g = ( \(FVT vn vt) ->
-    value_map_insert (VN $ "get_" ++ show vn) (FuncType (NamedType tn) vt) >>
-    return ("get_" ++ show vn ++ " :: " ++ val_type_g vt)
-    ) :: FieldAndValType -> Stateful Haskell
   in
   type_map_exists_check tn >>
   type_map_insert tn (FieldAndValTypeList fs) >> tuple_g >>= \tv_g ->
   return $ "\ndata " ++ show tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
   ) :: ProdTypeDefinition -> Stateful Haskell
+
+field_and_val_type_g = ( \tn (FVT vn vt) ->
+  value_map_insert
+    (VN $ "get_" ++ show vn)
+    (FuncType $ InAndOutType (NamedType tn) vt) >>
+  return ("get_" ++ show vn ++ " :: " ++ val_type_g vt)
+  ) :: TypeName -> FieldAndValType -> Stateful Haskell
 
 -- ValOrTypeDefinition
 

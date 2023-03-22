@@ -17,7 +17,7 @@ import HaskellTypes.LowLevel
 import HaskellTypes.Types
   ( TypeName(..) )
 import HaskellTypes.AfterParsing
-  ( ValType(..), ValFieldsOrCases(..), FieldAndValType(..) )
+  ( ValType(..), FuncType(..), ValFieldsOrCases(..), FieldAndValType(..) )
 
 import HaskellTypes.Generation
   ( Stateful, value_map_get, value_map_insert, type_map_get )
@@ -73,14 +73,30 @@ val_name_insert_and_return = ( \value_name val_type ->
   ) :: ValueName -> ValType -> Stateful Haskell
 
 use_fields_g = ( \val_type -> case val_type of
-  NamedType tn -> type_map_get tn "use_fields_g" >>= \case
+  NamedType type_name -> use_fields_type_name_g type_name val_type
+  ProdType types -> use_fields_prod_type_g types val_type
+  _ -> undefined 
+  ) :: ValType -> Stateful Haskell
+
+use_fields_type_name_g = ( \type_name val_type ->
+  type_map_get type_name "use_fields_type_name_g" >>= \case
     FieldAndValTypeList fields -> 
       value_map_insert (VN "tuple") val_type >>
       mapM field_and_val_type_g fields >>= \val_names ->
-      return $ "tuple@(" ++ show tn ++ "C" ++ concatMap (" " ++) val_names ++ ")"
+      return $
+        "tuple@(" ++ show type_name ++ "C" ++ concatMap (" " ++) val_names ++ ")"
     _ -> undefined
-  _ -> undefined 
-  ) :: ValType -> Stateful Haskell
+  ) :: TypeName -> ValType -> Stateful Haskell
+
+use_fields_prod_type_g = ( \types val_type ->
+  value_map_insert (VN "tuple") val_type >>
+  zipWith val_name_insert_and_return prod_type_fields types ==> sequence >>=
+    \val_names ->
+  return $ "(" ++ intercalate ", " val_names ++ ")"
+  ) :: [ ValType ] -> ValType -> Stateful Haskell
+
+prod_type_fields = map VN [ "first", "second", "third", "fourth", "fifth" ]
+  :: [ ValueName ]
 
 field_and_val_type_g = ( \(FVT field_name field_type) ->
   val_name_insert_and_return field_name field_type
@@ -107,7 +123,7 @@ input_g = ( \input val_type ->
 abstractions_g = ( \abstractions val_type -> case abstractions of
   [] -> return (val_type, "")
   abs1 : other_abs -> case val_type of
-    FuncType input_type output_type -> 
+    FuncType (InAndOutType input_type output_type) -> 
       abstraction_g abs1 input_type >>= \abs1_hs ->
       abstractions_g other_abs output_type >>= \(abs_type, other_abs_hs) ->
       return (abs_type, abs1_hs ++ " " ++ other_abs_hs)

@@ -17,13 +17,20 @@ import HaskellTypes.Values
 
 -- Types: ApplicationTree, ValType, FieldAndValType, 
 
-data ApplicationTree = 
-  Application ApplicationTree ApplicationTree | BaseValueLeaf BaseValue
+data Application =
+  ApplicationTrees ApplicationTree ApplicationTree
   deriving Show
 
+data ApplicationTree = 
+  Application Application | BaseValueLeaf BaseValue
+  deriving Show
+
+data FuncType = 
+  InAndOutType ValType ValType
+  deriving Eq
+
 data ValType =
-  FuncType ValType ValType | NamedType TypeName |
-  ProdType ValType ValType [ ValType ]
+  FuncType FuncType | NamedType TypeName | ProdType [ ValType ]
   deriving Eq
 
 data FieldAndValType =
@@ -64,8 +71,8 @@ func_app_chain_to_app_tree_help = ( \prev_bv -> \case
   ) :: BaseValue -> [ (BaseValue, ApplicationDirection) ] -> ApplicationTree 
 
 combine_with_reverse_direction = ( \at1 ad at2 -> case ad of 
-  LeftApplication -> Application at2 at1
-  RightApplication -> Application at1 at2
+  LeftApplication -> Application $ ApplicationTrees at2 at1
+  RightApplication -> Application $ ApplicationTrees at1 at2
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
 
@@ -88,18 +95,20 @@ expr_to_base_value = ( \expr -> case expr of
 base_vals_to_app_tree = ( \case
   [] -> error "empty list in base_vals_to_app_tree"
   [ bv ] -> BaseValueLeaf bv
-  bv : bvs -> Application (BaseValueLeaf bv) $ base_vals_to_app_tree bvs
+  bv : bvs ->
+    Application $ ApplicationTrees (BaseValueLeaf bv) $ base_vals_to_app_tree bvs
   ) :: [ BaseValue ] -> ApplicationTree
 
 instance Show ValType where
   show = \case
-    FuncType in_vt out_vt -> (case in_vt of
-      FuncType _ _ ->
-        "(" ++ show in_vt ++ ")"
-      _ -> show in_vt) ++ " -> " ++ show out_vt
+    FuncType func_type -> show func_type
     NamedType tn -> show tn
-    ProdType vt1 vt2 vts ->
-      "(" ++ map show (vt1 : vt2 : vts) ==> intercalate ", " ++ ")"
+    ProdType types -> "(" ++ map show types ==> intercalate ", " ++ ")"
+
+instance Show FuncType where
+  show = \(InAndOutType in_t out_t) -> (case in_t of
+    FuncType _ -> "(" ++ show in_t ++ ")"
+    _ -> show in_t) ++ " -> " ++ show out_t
 
 value_type_to_val_type = ( \case
   FunctionType func_type -> func_type_to_val_type func_type
@@ -119,7 +128,7 @@ one_input_to_val_type = ( \input output ->
   output_type = nocp_to_val_type output
     :: ValType
   in
-  FuncType input_type output_type
+  FuncType $ InAndOutType input_type output_type
   ) :: ValueType -> OutputType -> ValType
 
 multiple_inputs_to_val_type = (
@@ -132,7 +141,7 @@ multiple_inputs_to_val_type = (
     in_t3 : rest_of_in_ts ->
       multiple_inputs_to_val_type (InTypes in_t2 in_t3 rest_of_in_ts) output
   in
-  FuncType input_type output_type
+  FuncType $ InAndOutType input_type output_type
   ) :: InputTypes -> OutputType -> ValType
 
 nocp_to_val_type = ( \case
@@ -141,10 +150,10 @@ nocp_to_val_type = ( \case
   ) :: OutputType -> ValType
 
 cp_to_val_type = ( \(Types value_type1 value_type2 other_value_types) ->
-  ProdType
-    (value_type_to_val_type value_type1)
-    (value_type_to_val_type value_type2)
-    (map value_type_to_val_type other_value_types)
+  ProdType $
+    value_type_to_val_type value_type1 :
+    value_type_to_val_type value_type2 :
+    map value_type_to_val_type other_value_types
   ) :: ProductType -> ValType
 
 ft_to_fvt = ( \(NameAndType vn vt) -> FVT vn (value_type_to_val_type vt) )

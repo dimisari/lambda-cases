@@ -52,42 +52,41 @@ paren_type_inference_g = ( \(InnerExpression expr) ->
 -- tuple_g, type_name_tuple_values_g, tuple_types_and_values_g,
 -- correct_type_name_tuple_values_g, tuple_type_inference_g
 
-tuple_g = ( \(Values v1 v2 vs) val_type -> case val_type of 
-  FuncType _ _ -> undefined
-  NamedType tn -> type_name_tuple_values_g tn (v1 : v2 : vs)
-  ProdType vt1 vt2 vts -> tuple_types_and_values_g (vt1 : vt2 : vts) (v1 : v2 : vs)
+tuple_g = ( \(Values val1 val2 vals) val_type -> case val_type of 
+  FuncType _ -> undefined
+  NamedType type_name -> type_name_tuple_values_g type_name (val1 : val2 : vals)
+  ProdType types -> tuple_types_and_values_g types (val1 : val2 : vals)
   ) :: Tuple -> ValType -> Stateful Haskell
 
-type_name_tuple_values_g = ( \tn vs ->
-  type_map_get tn "type_name_tuple_values_g" >>= \case
-  FieldAndValTypeList fatl -> case length vs == length fatl of 
+type_name_tuple_values_g = ( \type_name vals ->
+  type_map_get type_name "type_name_tuple_values_g" >>= \case
+  FieldAndValTypeList fatl -> case length vals == length fatl of 
     False -> error values_fields_lengths_dont_match_err
-    True -> correct_type_name_tuple_values_g tn (map get_f_valtype fatl) vs
+    True ->
+      correct_type_name_tuple_values_g type_name (map get_f_valtype fatl) vals
   CaseAndMaybeValTypeList _ -> undefined
   ) :: TypeName -> [ InputOpExprOrOpExpr ] -> Stateful Haskell
 
-tuple_types_and_values_g = ( \vts vs -> case length vts == length vs of
-  False -> error tuple_values_types_lengths_dont_match_err
+tuple_types_and_values_g = ( \types vals -> case length types == length vals of
+  False -> error $ show types ++ "\n" ++ show vals
   True -> 
-    zipWith input_op_expr_or_op_expr_g vs vts==>sequence >>= \vs_hs ->
-    return $ "(" ++ intercalate ", " vs_hs ++ ")"
+    zipWith input_op_expr_or_op_expr_g vals types==>sequence >>= \vals_hs ->
+    return $ "(" ++ intercalate ", " vals_hs ++ ")"
   ) :: [ ValType ] -> [ InputOpExprOrOpExpr ] -> Stateful Haskell
 
-correct_type_name_tuple_values_g = ( \tn vts vs ->
+correct_type_name_tuple_values_g = ( \type_name types vals ->
   get_indent_level >>= \indent_level ->
-  zipWith input_op_expr_or_op_expr_g vs vts==>sequence >>= \vs_hs -> 
+  zipWith input_op_expr_or_op_expr_g vals types==>sequence >>= \vals_hs -> 
   return $
-    "\n" ++ indent (indent_level + 1) ++ show tn ++ "C" ++
-    concatMap (\v_hs ->  " (" ++ v_hs ++ ")") vs_hs
+    "\n" ++ indent (indent_level + 1) ++ show type_name ++ "C" ++
+    concatMap (\v_hs ->  " (" ++ v_hs ++ ")") vals_hs
   ) :: TypeName -> [ ValType ] -> [ InputOpExprOrOpExpr ] ->
        Stateful Haskell
 
-tuple_type_inference_g = ( \(Values v1 v2 vs) ->
-  mapM input_op_expr_or_op_expr_type_inf_g (v1 : v2 : vs) >>=
-  unzip .> \(vs_hs, vts) -> case vts of
-    vt1 : vt2 : vts ->
-      return ("(" ++ intercalate ", " vs_hs ++ ")", ProdType vt1 vt2 vts)
-    _ -> undefined
+tuple_type_inference_g = ( \(Values val1 val2 vals) ->
+  mapM input_op_expr_or_op_expr_type_inf_g (val1 : val2 : vals) >>= unzip .>
+    \(vals_hs, types) -> 
+  return ("(" ++ intercalate ", " vals_hs ++ ")", ProdType types)
   ) :: Tuple -> Stateful (Haskell, ValType)
 
 -- MathApplication: math_application_g, math_app_type_inference_g
@@ -127,28 +126,52 @@ func_app_chain_g =
 
 application_tree_g = ( \case 
   BaseValueLeaf base_value -> base_value_g base_value
-  app_tree -> \val_type ->
-    app_tree_type_inference_g app_tree >>= \(app_tree_hs, app_tree_t) ->
-    types_are_equivalent val_type app_tree_t >>= \case 
-      True -> return app_tree_hs
-      False -> undefined
+  Application application -> application_g application
   ) :: ApplicationTree -> ValType -> Stateful Haskell
 
+application_g = ( \application val_type ->
+  application_type_inference_g application >>= \(application_hs, application_t) ->
+  types_are_equivalent val_type application_t >>= \case 
+    True -> return application_hs
+    False -> error $ show application
+  ) :: Application -> ValType -> Stateful Haskell
+
 app_tree_type_inference_g = ( \case 
-  Application app_tree1 app_tree2 ->
-    app_tree_type_inference_g app_tree1 >>= \(app_tree1_hs, app_tree1_t) ->
-    case app_tree1_t of 
-      FuncType input_t output_t -> 
-        application_tree_g app_tree2 input_t >>= \app_tree2_hs ->
-        let 
-        app_tree2_hs_ = case app_tree2 of 
-          Application _ _ -> "(" ++ app_tree2_hs ++ ")"
-          _ -> app_tree2_hs
-        in
-        return (app_tree1_hs ++ " " ++ app_tree2_hs_, output_t) 
-      _ -> undefined
+  Application application -> application_type_inference_g application
   BaseValueLeaf base_value -> base_value_type_inference_g base_value
   ) :: ApplicationTree -> Stateful (Haskell, ValType)
+
+application_type_inference_g = ( \(ApplicationTrees tree1 tree2) ->
+  app_tree_type_inference_g tree1 >>= \(tree1_hs, tree1_t) ->
+  case tree1_t of 
+    FuncType func_type -> tree1_func_type_g tree1 tree2 tree1_hs func_type
+    _ -> undefined
+  ) :: Application -> Stateful (Haskell, ValType)
+
+tree1_func_type_g = ( \tree1 tree2 tree1_hs (InAndOutType input_t output_t) -> 
+  app_tree_type_inference_g tree2 >>= \(tree2_hs, tree2_t) ->
+  types_are_equivalent input_t tree2_t >>= \case 
+    True -> return (tree1_hs ++ " " ++ tree_paren tree2 tree2_hs, output_t) 
+    False -> case tree2 of 
+      BaseValueLeaf (Tuple (Values val1 val2 vals)) ->
+        let
+        tree1' = 
+          Application $ ApplicationTrees
+            tree1 $
+            BaseValueLeaf $ Parenthesis $ InnerExpression val1
+        tree2' = BaseValueLeaf $ case vals of 
+          [] -> Parenthesis $ InnerExpression val2
+          val3 : other_vals -> Tuple $ Values val2 val3 other_vals
+        in
+        application_type_inference_g $ ApplicationTrees tree1' tree2'
+      _ -> undefined
+  ) :: ApplicationTree -> ApplicationTree -> Haskell -> FuncType ->
+       Stateful (Haskell, ValType)
+
+tree_paren = ( \tree tree_hs -> case tree of 
+  Application _ -> "(" ++ tree_hs ++ ")"
+  _ -> tree_hs
+  ) :: ApplicationTree -> Haskell -> Haskell
 
 -- MultiplicationFactor: multiplication_factor_g
 
@@ -254,7 +277,7 @@ lit_or_val_name_type_inference_g = (
 -- SpecificCase: specific_case_g, abs_g, specific_case_type_inference_g
 
 specific_case_g = ( \(SpecificCase lit_or_val_name value_expression) -> \case
-  FuncType input_t output_t ->
+  FuncType (InAndOutType input_t output_t) ->
     get_indent_level >>= \ind_lev ->
     literal_or_value_name_g lit_or_val_name input_t >>= \lit_or_val_name_hs ->
     value_expression_g value_expression output_t >>= \value_expr_hs ->
@@ -270,15 +293,17 @@ abs_g = \case
 
 specific_case_type_inference_g = ( \(SpecificCase lit_or_val_name val_expr) ->
   get_indent_level >>= \ind_lev ->
-  lit_or_val_name_type_inference_g lit_or_val_name >>= \(lovn_g, lovn_vt) ->
-  value_expression_type_inference_g val_expr >>= \(val_expr_hs, v_vt) ->
-  return (indent ind_lev ++ lovn_g ++ " -> " ++ val_expr_hs, FuncType lovn_vt v_vt)
+  lit_or_val_name_type_inference_g lit_or_val_name >>= \(lovn_g, lovn_t) ->
+  value_expression_type_inference_g val_expr >>= \(val_expr_hs, v_t) ->
+  return
+    ( indent ind_lev ++ lovn_g ++ " -> " ++ val_expr_hs
+    , FuncType $ InAndOutType lovn_t v_t )
   ) :: SpecificCase -> Stateful (Haskell, ValType)
 
 -- DefaultCase: specific_case_g, specific_case_type_inference_g
 
 default_case_g = ( \(DefaultCase value_expression) -> \case
-  FuncType input_t output_t -> 
+  FuncType (InAndOutType input_t output_t) -> 
     get_indent_level >>= \ind_lev ->
     value_map_insert (VN "value") input_t >>
     value_expression_g value_expression output_t >>= \value_expression_hs ->

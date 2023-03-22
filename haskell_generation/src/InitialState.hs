@@ -8,37 +8,37 @@ import HaskellTypes.Types
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.AfterParsing
-  ( ValType(..), ValFieldsOrCases(..) )
+  ( ValType(..), FuncType(..), ValFieldsOrCases(..) )
 import HaskellTypes.Generation
   ( ValueMap, TypeMap, GenState(..) )
 
 -- Initial state:
--- int_val_t, int_int_val_t, bool_val_t, int_int_int_val_t_only
+-- int, int_x_int, bool, int_to_int_to_int
 -- init_value_map, init_state
 
-int_val_t = NamedType $ TN "Int"
+int = NamedType $ TN "Int"
   :: ValType
 
-int_int_val_t =
-  ProdType int_val_t int_val_t []
+int_x_int = ProdType [ int, int ]
   :: ValType
 
-bool_val_t = NamedType $ TN "Bool"
+bool = NamedType $ TN "Bool"
   :: ValType
 
-int_int_int_val_t_only =
-  [ FuncType int_val_t $ FuncType int_val_t int_val_t ]
+int_to_int_to_int =
+  [ FuncType $ InAndOutType int $ FuncType $ InAndOutType int int ]
   :: [ ValType ]
 
 init_value_map = 
   M.fromList
-    [ ( VN "div" , int_int_int_val_t_only )
-    , ( VN "mod" , int_int_int_val_t_only )
-    , ( VN "get_first" , [ FuncType int_int_val_t int_val_t ] )
-    , ( VN "abs" , [ FuncType int_val_t int_val_t ] )
-    , ( VN "max" , int_int_int_val_t_only )
-    , ( VN "min" , int_int_int_val_t_only )
-    , ( VN "true" , [ bool_val_t ] )
+    [ (VN "div" , int_to_int_to_int)
+    , (VN "mod" , int_to_int_to_int)
+    , (VN "get_1st" , [ FuncType $ InAndOutType int_x_int int ])
+    , (VN "abs" , [ FuncType $ InAndOutType int int ])
+    , (VN "max" , int_to_int_to_int)
+    , (VN "min" , int_to_int_to_int)
+    , (VN "true" , [ bool ])
+    , (VN "false" , [ bool ])
     ]
   :: ValueMap
 

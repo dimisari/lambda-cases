@@ -4,10 +4,10 @@ extended_euclidean: (Int, Int) -> Int x Int x Int
 
 ee_recursion: (Int x Int, Int x Int, Int, Int) -> Int x Int x Int
   = (a_coeffs, b_coeffs, x) -> cases
-    0 -> (x, a_coeffs==>first, b_coeffs==>first)
+    0 -> (x, a_coeffs==>get_1st, b_coeffs==>get_1st)
     y ->
       let
       next: Int x Int -> Int x Int
-        = use_fields -> (pair_second, pair_first - x==>div<==y * pair_second)
+        = use_fields -> (second, first - x==>div<==y * second)
       output
       (next<==a_coeffs, next<==b_coeffs, y, x==>mod<==y)==>ee_recursion

@@ -28,11 +28,16 @@ integer_p =
 -- ValueName: value_name_p
 
 value_name_p =
-  many1 (lower <|> char '_') >>= \lowers_underscores ->
-  elem lowers_underscores keywords ==> \case
+  lower_under_p >>= \starting_char ->
+  many (lower_under_p <|> digit) >>= \lowers_unders_or_digits ->
+  let value_name = (starting_char : lowers_unders_or_digits) in
+  elem value_name keywords ==> \case
     True -> parserFail "keyword"
-    _ -> return $ VN lowers_underscores
+    _ -> return $ VN value_name
   :: Parser ValueName 
+
+lower_under_p = lower <|> char '_'
+  :: Parser Char
 
 -- Abstraction: abstraction_p
 
