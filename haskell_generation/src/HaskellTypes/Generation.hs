@@ -4,6 +4,8 @@ module HaskellTypes.Generation where
 
 import Control.Monad.State
   ( State, get, modify )
+import Control.Monad.Trans.Either
+  ( EitherT )
 import qualified Data.Map as M
   ( Map, lookup, insert, insertWith )
 --import Control.Monad.Trans.Except ( ExceptT )
@@ -34,7 +36,7 @@ data GenState =
 
 type Error = String 
 
-type Stateful = State GenState
+type Stateful = EitherT State GenState
 
 -- get fields: get_from_state, get_indent_level, get_value_map, get_type_map
 
