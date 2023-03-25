@@ -44,6 +44,7 @@ eof_or_new_lines = eof <|> skipMany1 new_line_space_surrounded
 
 -- Haskell generation 
 
+type Error = String
 type Haskell = String
 
 indent = ( \i -> replicate (2 * i) ' ' )

@@ -1,5 +1,3 @@
-{-# language LambdaCase #-}
-
 module HaskellTypes.LowLevel where
 
 import Data.List ( intercalate )

@@ -1,5 +1,3 @@
-{-# language LambdaCase #-}
-
 module HaskellTypes.AfterParsing where
 
 import Data.List
@@ -15,7 +13,7 @@ import HaskellTypes.Values
 
 -- All: Types, Functions
 
--- Types: ApplicationTree, ValType, FieldAndValType, 
+-- Types: ApplicationTree, ValType, Field, 
 
 data Application =
   ApplicationTrees ApplicationTree ApplicationTree
@@ -33,29 +31,28 @@ data ValType =
   FuncType FuncType | NamedType TypeName | ProdType [ ValType ]
   deriving Eq
 
-data FieldAndValType =
-  FVT { get_f_name :: ValueName, get_f_valtype :: ValType }
+data Field =
+  FNameAndType { get_name :: ValueName, get_type :: ValType }
   deriving Show
 
-data ProdTypeDefinition =
-  NameAndValFields TypeName [ FieldAndValType ]
+data TupleTypeDef =
+  TTNameAndFields TypeName [ Field ]
   deriving Show
 
-data CaseAndMaybeValType =
-  CMVT ValueName (Maybe ValType)
+data OrTypeCase =
+  NameAndMaybeType ValueName (Maybe ValType)
   deriving Show
 
-data ValOrTypeDefinition =
-  ValNameAndCases TypeName [ CaseAndMaybeValType ]
+data OrTypeDef =
+  ValNameAndCases TypeName [ OrTypeCase ]
   deriving Show
 
-data ValTypeDefinition =
-  ProdTypeDefinition ProdTypeDefinition | ValOrTypeDefinition ValOrTypeDefinition
+data TypeDef =
+  TupleTypeDef TupleTypeDef | OrTypeDef OrTypeDef
   deriving Show
 
-data ValFieldsOrCases =
-  FieldAndValTypeList [ FieldAndValType ] |
-  CaseAndMaybeValTypeList [ CaseAndMaybeValType ]
+data TypeFieldsOrCases =
+  FieldList [ Field ] | OrTypeCaseList [ OrTypeCase ]
   deriving Show
 
 -- func_app_chain_to_app_tree
@@ -156,27 +153,27 @@ cp_to_val_type = ( \(Types value_type1 value_type2 other_value_types) ->
     map value_type_to_val_type other_value_types
   ) :: ProductType -> ValType
 
-ft_to_fvt = ( \(NameAndType vn vt) -> FVT vn (value_type_to_val_type vt) )
-  :: FieldNameAndType -> FieldAndValType
+ft_to_fvt = ( \(NameAndType vn vt) -> FNameAndType vn (value_type_to_val_type vt) )
+  :: FieldNameAndType -> Field
 
-ttd_to_tvtd = ( \(NameAndFields tn fts) -> NameAndValFields tn (map ft_to_fvt fts) )
-  :: TupleTypeDefinition -> ProdTypeDefinition
+ttd_to_tvtd = ( \(NameAndFields tn fts) -> TTNameAndFields tn (map ft_to_fvt fts) )
+  :: TupleTypeDefinition -> TupleTypeDef
 
 camt_to_camvt = ( \(CaseAndMaybeType vn mvt) ->
-  CMVT vn (value_type_to_val_type <$> mvt)
-  ) :: CaseAndMaybeType -> CaseAndMaybeValType
+  NameAndMaybeType vn (value_type_to_val_type <$> mvt)
+  ) :: CaseAndMaybeType -> OrTypeCase
 
 otd_to_votd = ( \(NameAndCases type_name case1 case2 cases) ->
   ValNameAndCases type_name (map camt_to_camvt $ case1 : case2 : cases)
-  ) :: OrTypeDefinition -> ValOrTypeDefinition
+  ) :: OrTypeDefinition -> OrTypeDef
 
 td_to_vtd = \case
-  TupleTypeDefinition ttd -> ProdTypeDefinition $ ttd_to_tvtd ttd
-  OrTypeDefinition otd -> ValOrTypeDefinition $ otd_to_votd otd
-  :: TypeDefinition -> ValTypeDefinition
+  TupleTypeDefinition ttd -> TupleTypeDef $ ttd_to_tvtd ttd
+  OrTypeDefinition otd -> OrTypeDef $ otd_to_votd otd
+  :: TypeDefinition -> TypeDef
 
 foc_to_vfoc = undefined
-  :: FieldsOrCases -> ValFieldsOrCases
+  :: FieldsOrCases -> TypeFieldsOrCases
 
 -- Commented out:
 

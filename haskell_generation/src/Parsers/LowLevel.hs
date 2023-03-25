@@ -1,5 +1,3 @@
-{-# language LambdaCase #-}
-
 module Parsers.LowLevel where
 
 import Text.Parsec
@@ -8,7 +6,7 @@ import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), keywords, seperated2 )
+  ( (==>), keywords )
 
 import HaskellTypes.LowLevel
   ( Literal(..), ValueName(..), ManyAbstractions(..), Abstraction(..), Input(..) )

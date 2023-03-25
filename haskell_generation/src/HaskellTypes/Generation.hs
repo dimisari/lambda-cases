@@ -1,17 +1,16 @@
-{-# language LambdaCase #-}
-
 module HaskellTypes.Generation where
 
 import Control.Monad.State
   ( State, get, modify )
-import Control.Monad.Trans.Either
-  ( EitherT )
+import Control.Monad.Trans.Except
+  ( ExceptT, throwE )
 import qualified Data.Map as M
   ( Map, lookup, insert, insertWith )
---import Control.Monad.Trans.Except ( ExceptT )
+import Control.Monad.Trans.Except
+  ( ExceptT, catchE )
 
 import Helpers
-  ( (.>), (==>) )
+  ( Haskell, Error, (.>), (==>) )
 
 import HaskellTypes.LowLevel
   ( ValueName(..) )
@@ -19,7 +18,7 @@ import HaskellTypes.Types
   ( TypeName(..), ValueType(..), FieldNameAndType, CaseAndMaybeType
   , FieldsOrCases )
 import HaskellTypes.AfterParsing
-  ( ValType(..), ValFieldsOrCases(..) )
+  ( ValType(..), TypeFieldsOrCases(..) )
 
 -- All:
 -- Types, get fields, update fields, value_map operations, type_map operations
@@ -29,14 +28,12 @@ type ValueMap =
   M.Map ValueName [ ValType ]
 
 type TypeMap =
-  M.Map TypeName ValFieldsOrCases
+  M.Map TypeName TypeFieldsOrCases
 
 data GenState =
   GS { indent_level :: Int, value_map :: ValueMap, type_map :: TypeMap }
 
-type Error = String 
-
-type Stateful = EitherT State GenState
+type Stateful = ExceptT Error (State GenState)
 
 -- get fields: get_from_state, get_indent_level, get_value_map, get_type_map
 
@@ -63,7 +60,7 @@ value_map_insert = ( \vn vt ->
   ) :: ValueName -> ValType -> Stateful ()
 
 value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
-  Nothing -> error $ "No definition for value: " ++ show vn
+  Nothing -> throwE $ "No definition for value: " ++ show vn
   Just vts -> case vts of
     [] -> undefined
     vt:_ -> return vt
@@ -73,16 +70,21 @@ value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
 -- type_map_exists_check, type_map_insert, type_map_get
 
 type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case
-  Just _ -> error $ "Type of the same name already defined: " ++ show tn
+  Just _ -> throwE $ "Type of the same name already defined: " ++ show tn
   Nothing -> return ()
   ) :: TypeName -> Stateful ()
 
 type_map_insert =
   (\tn vfoc -> get_type_map >>= M.insert tn vfoc .> update_type_map)
-  :: TypeName -> ValFieldsOrCases -> Stateful ()
+  :: TypeName -> TypeFieldsOrCases -> Stateful ()
 
-type_map_get = ( \tn@(TN s) fun_name -> get_type_map >>= M.lookup tn .> \case
-  Nothing ->
-    error $ "No definition for type: " ++ s ++ " from function: " ++ fun_name
+type_map_get = ( \tn@(TN s) -> get_type_map >>= M.lookup tn .> \case
+  Nothing -> throwE $ "No definition for type: " ++ s
   Just foc -> return foc
-  ) :: TypeName -> String -> Stateful ValFieldsOrCases
+  ) :: TypeName -> Stateful TypeFieldsOrCases
+
+debug = ( \f -> catchE f (\_ -> throwE "hi" ) )
+  :: Stateful a -> Stateful a
+
+debug_with_msg = ( \f s -> catchE f (\_ -> throwE s ) )
+  :: Stateful a -> String -> Stateful a

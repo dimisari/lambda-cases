@@ -8,7 +8,7 @@ import HaskellTypes.Types
 import HaskellTypes.LowLevel
   ( ValueName(..) )
 import HaskellTypes.AfterParsing
-  ( ValType(..), FuncType(..), ValFieldsOrCases(..) )
+  ( ValType(..), FuncType(..), TypeFieldsOrCases(..) )
 import HaskellTypes.Generation
   ( ValueMap, TypeMap, GenState(..) )
 

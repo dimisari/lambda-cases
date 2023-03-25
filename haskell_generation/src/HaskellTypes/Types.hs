@@ -1,5 +1,3 @@
-{-# language LambdaCase #-}
-
 module HaskellTypes.Types where
 
 import Data.List 

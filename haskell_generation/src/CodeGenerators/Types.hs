@@ -1,5 +1,3 @@
-{-# language LambdaCase #-}
-
 module CodeGenerators.Types where
 
 import Data.List
@@ -28,9 +26,9 @@ value_type_g = ( value_type_to_val_type .> show )
 val_type_g = show
   :: ValType -> Haskell
 
--- ProdTypeDefinition
+-- TupleTypeDef
 
-tuple_val_type_def_g = ( \(NameAndValFields tn fs) ->
+tuple_val_type_def_g = ( \(TTNameAndFields tn fs) ->
   let
   tuple_g =
     fs==>mapM (field_and_val_type_g tn) >>= \fs_g ->
@@ -39,18 +37,18 @@ tuple_val_type_def_g = ( \(NameAndValFields tn fs) ->
 
   in
   type_map_exists_check tn >>
-  type_map_insert tn (FieldAndValTypeList fs) >> tuple_g >>= \tv_g ->
+  type_map_insert tn (FieldList fs) >> tuple_g >>= \tv_g ->
   return $ "\ndata " ++ show tn ++ " =\n  " ++ tv_g ++ "\n  deriving Show\n"
-  ) :: ProdTypeDefinition -> Stateful Haskell
+  ) :: TupleTypeDef -> Stateful Haskell
 
-field_and_val_type_g = ( \tn (FVT vn vt) ->
+field_and_val_type_g = ( \tn (FNameAndType vn vt) ->
   value_map_insert
     (VN $ "get_" ++ show vn)
     (FuncType $ InAndOutType (NamedType tn) vt) >>
   return ("get_" ++ show vn ++ " :: " ++ val_type_g vt)
-  ) :: TypeName -> FieldAndValType -> Stateful Haskell
+  ) :: TypeName -> Field -> Stateful Haskell
 
--- ValOrTypeDefinition
+-- OrTypeDef
 
 val_or_type_def_g = ( \(ValNameAndCases tn otvs) -> 
   let
@@ -59,24 +57,24 @@ val_or_type_def_g = ( \(ValNameAndCases tn otvs) ->
     return $ intercalate " | " otvs_g 
     :: Stateful Haskell
 
-  case_and_maybe_val_type_g = ( \(CMVT vn mvt) ->
+  case_and_maybe_val_type_g = ( \(NameAndMaybeType vn mvt) ->
     ( case mvt of
       Nothing -> value_map_insert vn $ NamedType tn
       _ -> return () ) >>
     return ("C" ++ show vn ++ case mvt of 
       Nothing -> ""
       Just vt  -> " " ++ show vt)
-    ) :: CaseAndMaybeValType -> Stateful Haskell
+    ) :: OrTypeCase -> Stateful Haskell
   in
   type_map_exists_check tn >>
-  type_map_insert tn (CaseAndMaybeValTypeList otvs) >> or_values_g >>=
+  type_map_insert tn (OrTypeCaseList otvs) >> or_values_g >>=
     \otvs_g ->
   return $ "\n\ndata " ++ show tn ++ " =\n  " ++ otvs_g ++ "\n  deriving Show"
-  ) :: ValOrTypeDefinition -> Stateful Haskell
+  ) :: OrTypeDef -> Stateful Haskell
 
--- ValTypeDefinition
+-- TypeDef
 
 val_type_def_g = ( \case
-  ProdTypeDefinition tt -> tuple_val_type_def_g tt
-  ValOrTypeDefinition ot -> val_or_type_def_g ot
-  ) :: ValTypeDefinition -> Stateful Haskell
+  TupleTypeDef tt -> tuple_val_type_def_g tt
+  OrTypeDef ot -> val_or_type_def_g ot
+  ) :: TypeDef -> Stateful Haskell

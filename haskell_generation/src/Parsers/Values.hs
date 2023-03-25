@@ -1,7 +1,7 @@
 module Parsers.Values where
 
 import Text.Parsec
-  ( (<|>), try, char, many, many1, string, optionMaybe )
+  ( (<|>), try, char, many, many1, string, optionMaybe, unexpected )
 import Text.Parsec.String
   ( Parser )
 import Text.Parsec.Combinator
@@ -217,7 +217,14 @@ name_type_and_value_lists_p =
   string ": " >> value_types_p >>= \value_types ->
   new_line_space_surrounded >> string "= " >>
   seperated2 ", " value_expression_p >>= \value_expressions ->
-  return $ NTAVLists value_names value_types value_expressions
+  case
+  length value_types /= length value_names ||
+  length value_expressions /= length value_names
+  of 
+  True -> 
+    unexpected "value names, types and expressions don't match"
+  False ->
+    return $ NTAVLists value_names value_types value_expressions
   :: Parser NameTypeAndValueLists
 
 -- NTAVOrNTAVLists: ntav_or_ntav_lists_p

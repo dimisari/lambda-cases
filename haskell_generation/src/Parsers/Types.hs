@@ -1,5 +1,3 @@
-{-# language LambdaCase #-}
-
 module Parsers.Types where
 
 import Text.Parsec
@@ -8,7 +6,7 @@ import Text.Parsec.String
   ( Parser )
 
 import Helpers
-  ( (==>), seperated2, eof_or_new_lines )
+  ( (==>), eof_or_new_lines )
 
 import HaskellTypes.Types
 

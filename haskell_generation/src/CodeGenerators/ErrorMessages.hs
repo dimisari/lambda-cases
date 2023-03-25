@@ -9,9 +9,7 @@ import HaskellTypes.AfterParsing
 import HaskellTypes.Values
 
 import Helpers
-  ( Haskell )
-
-type Error = String
+  ( Haskell, Error )
 
 -- All: LowLevel, Values
 
