@@ -16,8 +16,8 @@ import HaskellTypes.Generation
 import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel
 import CodeGenerators.TypeChecking ( types_are_equivalent )
-import CodeGenerators.Types ( value_type_g )
 
+import CodeGenerators.Types ( val_type_g )
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue
@@ -344,20 +344,19 @@ cases_type_inference_g = ( \case
       ("\\case\n" ++ spec_c1_hs ++ "\n" ++ intercalate "\n" spec_cs_hs, val_type)
   ) :: Cases -> Stateful (Haskell, ValType)
 
--- NameTypeAndValue: name_type_and_value_g, ntav_map_insert
+-- NameTypeAndValue: name_type_and_value_g
 
 name_type_and_value_g = ( \(NTAV value_name value_type value_expr) -> 
   get_indent_level >>= \ind_lev ->
-  value_expression_g value_expr (value_type_to_val_type value_type) >>=
-    \val_expr_hs ->
+  let 
+  val_type = value_type_to_val_type value_type
+    :: ValType
+  in
+  value_expression_g value_expr val_type >>= \val_expr_hs ->
   return $
-    "\n" ++ indent ind_lev ++ show value_name ++ " :: " ++ value_type_g value_type
-    ++ "\n" ++ indent ind_lev ++ show value_name ++ " = " ++ val_expr_hs ++ "\n"
+    "\n" ++ indent ind_lev ++ show value_name ++ " :: " ++ val_type_g val_type ++
+    "\n" ++ indent ind_lev ++ show value_name ++ " = " ++ val_expr_hs ++ "\n"
   ) :: NameTypeAndValue -> Stateful Haskell
-
-ntav_map_insert = ( \(NTAV value_name value_type value_expr) ->
-  value_map_insert value_name $ value_type_to_val_type value_type
-  ) :: NameTypeAndValue -> Stateful ()
 
 -- NameTypeAndValueLists: ntav_lists_to_list_of_ntavs
 
@@ -376,7 +375,9 @@ ntav_or_ntav_lists_to_list_of_ntavs = ( \case
   NameTypeAndValueLists ntav_lists -> ntav_lists_to_list_of_ntavs ntav_lists
   ) :: NTAVOrNTAVLists -> [ NameTypeAndValue ]
 
--- NamesTypesAndValues: names_types_and_values_g
+-- NamesTypesAndValues:
+-- names_types_and_values_g, ns_ts_and_vs_to_list_of_ntavs, list_of_ntavs_g,
+-- ntav_map_insert
 
 names_types_and_values_g =
   ns_ts_and_vs_to_list_of_ntavs .> list_of_ntavs_g
@@ -390,6 +391,10 @@ list_of_ntavs_g = ( \list_of_ntavs ->
   mapM_ ntav_map_insert list_of_ntavs >>
   list_of_ntavs==>mapM name_type_and_value_g >>= concat .> return
   ) :: [ NameTypeAndValue ] -> Stateful Haskell
+
+ntav_map_insert = ( \(NTAV value_name value_type value_expr) ->
+  value_map_insert value_name $ value_type_to_val_type value_type
+  ) :: NameTypeAndValue -> Stateful ()
 
 -- Where: where_g, where_type_inference_g 
 
@@ -447,4 +452,3 @@ value_expression_type_inference_g = ( \case
   CasesOrWhere cases_or_where -> cases_or_where_type_inference_g cases_or_where
   InputOpExprOrOpExpr expr -> input_op_expr_or_op_expr_type_inf_g expr
   ) :: ValueExpression -> Stateful (Haskell, ValType)
-

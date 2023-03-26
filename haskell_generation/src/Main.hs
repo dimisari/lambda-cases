@@ -19,7 +19,7 @@ import Helpers
 import HaskellTypes.Generation
    ( Stateful )
 import HaskellTypes.AfterParsing
-  ( TypeDef, td_to_vtd )
+  ( TypeDef, type_def_conversion )
 import HaskellTypes.Values
   ( NamesTypesAndValues )
 
@@ -55,12 +55,11 @@ parse_with = flip parse example_lc
   :: Parser a -> String -> Either ParseError a
 
 ntavs_or_tt_p =
-  TypeDefinition <$> td_to_vtd <$> try type_def_p <|>
+  TypeDefinition <$> type_def_conversion <$> try type_def_p <|>
   NTAVs <$> names_types_and_values_p
   :: Parser NTAVsOrTypeDef
 
-program_p =
-  many (char '\n') *> many ntavs_or_tt_p <* eof 
+program_p = many (char '\n') *> many ntavs_or_tt_p <* eof 
   :: Parser Program
 
 parse_string = parse_with program_p
@@ -94,6 +93,5 @@ write_haskell = (
 
 -- main
 
-main =
-  readFile example_lc >>= write_haskell
+main = readFile example_lc >>= write_haskell
   :: IO ()

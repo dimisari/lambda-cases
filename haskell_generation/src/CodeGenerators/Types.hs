@@ -16,10 +16,7 @@ import HaskellTypes.AfterParsing
 import HaskellTypes.Generation
   ( Stateful, value_map_insert, type_map_insert, type_map_exists_check )
 
--- All: ValueType, TupleTypeDefinition, OrTypeDefinition, TypeDefinition
-
-value_type_g = ( value_type_to_val_type .> show )
-  :: ValueType -> Haskell
+-- All: ValType, TupleTypeDefinition, OrTypeDefinition, TypeDefinition
 
 -- ValType
 
