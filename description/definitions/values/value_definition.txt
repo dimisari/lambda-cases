@@ -6,10 +6,6 @@ Value definition example:
 function definition (functions are values!):
 - arrows:
   - Example:
-    function_name: Type0 -> Type1 -> Type2
-      = value_name0 -> value_name1 -> expression of type Type2
-  - Comments: 
-    Syntactic sugar version example:
     function_name: (Type0, Type1) -> Type2
       = (value_name0, value_name1) -> expression of type Type2
 

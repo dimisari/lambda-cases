@@ -1,15 +1,11 @@
 module CodeGenerators.ErrorMessages where
   
-import HaskellTypes.LowLevel
-  ( ValueName, Abstraction )
-import HaskellTypes.Types
-  ( TypeName  )
-import HaskellTypes.AfterParsing
-  ( ValType )
-import HaskellTypes.Values
+import Helpers (Haskell, Error)
 
-import Helpers
-  ( Haskell, Error )
+import HaskellTypes.LowLevel (ValueName, Abstraction)
+import HaskellTypes.LowLevelTypes (TypeName)
+import HaskellTypes.AfterParsing (ValType)
+import HaskellTypes.Values
 
 -- All: LowLevel, Values
 

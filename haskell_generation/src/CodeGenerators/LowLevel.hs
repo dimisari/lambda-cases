@@ -1,25 +1,20 @@
 module CodeGenerators.LowLevel where
 
-import Data.List ( intercalate )
-import qualified Data.Map as M ( lookup )
-import Control.Monad ( (>=>) )
-import Control.Monad.Trans.Except ( throwE )
+import Data.List (intercalate)
+import qualified Data.Map as M (lookup)
+import Control.Monad ((>=>))
+import Control.Monad.Trans.Except (throwE)
 
-import Helpers ( Haskell, (==>), (.>) )
+import Helpers (Haskell, (==>), (.>))
 
 import HaskellTypes.LowLevel
-  ( Literal(..), ValueName(..), Abstraction(..), ManyAbstractions(..), Input(..) )
-import HaskellTypes.Types
-  ( TypeName(..) )
+import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.AfterParsing
-  ( ValType(..), FuncType(..), TypeFieldsOrCases(..), Field(..) )
 
 import HaskellTypes.Generation
-  ( Stateful, value_map_get, value_map_insert, type_map_get )
 
 import CodeGenerators.ErrorMessages
-import CodeGenerators.TypeChecking
-  ( types_are_equivalent )
+import CodeGenerators.TypeChecking (types_are_equivalent)
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions
 

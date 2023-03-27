@@ -1,12 +1,10 @@
 module HaskellTypes.Types where
 
-import Data.List 
-  ( intercalate )
+import Data.List (intercalate)
+import Helpers ((==>), (.>))
 
-import Helpers
-  ( (==>), (.>) )
-import HaskellTypes.LowLevel
-  ( ValueName )
+import HaskellTypes.LowLevel (ValueName)
+import HaskellTypes.LowLevelTypes (TypeName)
 
 -- All: Types, Show instances
 
@@ -15,9 +13,6 @@ import HaskellTypes.LowLevel
 -- ValueType
 -- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
 -- TypeDefinition, FieldsOrCases
-
-newtype TypeName =
-  TN String deriving (Eq, Ord)
 
 data ProductType =
   Types ValueType ValueType [ ValueType ]
@@ -61,9 +56,6 @@ data FieldsOrCases =
 -- ValueType
 -- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
 -- TypeDefinition
-
-instance Show TypeName where
-  show = \(TN name) -> name
 
 instance Show ProductType where
   show = \(Types name1 name2 names) ->

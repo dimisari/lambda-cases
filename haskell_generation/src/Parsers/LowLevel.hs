@@ -1,15 +1,11 @@
 module Parsers.LowLevel where
 
 import Text.Parsec
-  ( (<|>), char, string, parserFail, many, many1, lower, try, digit )
-import Text.Parsec.String
-  ( Parser )
+import Text.Parsec.String (Parser)
 
-import Helpers
-  ( (==>), keywords )
+import Helpers ((==>), keywords)
 
 import HaskellTypes.LowLevel
-  ( Literal(..), ValueName(..), ManyAbstractions(..), Abstraction(..), Input(..) )
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions, Input
 

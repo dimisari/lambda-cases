@@ -1,26 +1,17 @@
 module Parsers.Values where
 
-import Text.Parsec
-  ( (<|>), try, char, many, many1, string, optionMaybe, unexpected )
-import Text.Parsec.String
-  ( Parser )
-import Text.Parsec.Combinator
-  ( choice )
+import Text.Parsec ((<|>), try, char, many, many1, string, optionMaybe, unexpected)
+import Text.Parsec.String (Parser)
+import Text.Parsec.Combinator (choice)
 
 import Helpers
-  ( (==>), seperated2, new_line_space_surrounded, space_or_newline
-  , eof_or_new_lines )
 
-import HaskellTypes.LowLevel
-  ( Abstraction )
-import HaskellTypes.Types
-  ( ValueType )
+import HaskellTypes.LowLevel (Abstraction)
+import HaskellTypes.Types (ValueType)
 import HaskellTypes.Values
 
-import Parsers.LowLevel
-  ( literal_p, value_name_p, input_p )
-import Parsers.Types
-  ( value_type_p )
+import Parsers.LowLevel (literal_p, value_name_p, input_p)
+import Parsers.Types (value_type_p)
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue

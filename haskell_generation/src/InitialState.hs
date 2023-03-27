@@ -1,16 +1,12 @@
 module InitialState where
 
-import qualified Data.Map as M
-  ( empty, fromList )
+import qualified Data.Map as M ( empty, fromList )
 
-import HaskellTypes.Types
-  ( TypeName(..), ValueType(..) )
-import HaskellTypes.LowLevel
-  ( ValueName(..) )
-import HaskellTypes.AfterParsing
-  ( ValType(..), FuncType(..), TypeFieldsOrCases(..) )
-import HaskellTypes.Generation
-  ( ValueMap, TypeMap, GenState(..) )
+import HaskellTypes.LowLevel (ValueName(..))
+import HaskellTypes.LowLevelTypes (TypeName(..))
+import HaskellTypes.Types (ValueType(..))
+import HaskellTypes.AfterParsing (ValType(..), FuncType(..), TypeFieldsOrCases(..))
+import HaskellTypes.Generation (ValueMap, TypeMap, GenState(..))
 
 -- Initial state:
 -- int, int_x_int, bool, int_to_int_to_int

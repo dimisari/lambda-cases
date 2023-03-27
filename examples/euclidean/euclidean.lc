@@ -1,6 +1,6 @@
 
 my_gcd: (Int, Int) -> Int
-  = gcd_help .> abs
+  = (x, y) -> (x, y)==>gcd_help==>abs
 
 gcd_help: (Int, Int) -> Int
   = x -> cases

@@ -1,11 +1,11 @@
 module HaskellTypes.Values where
 
-import Data.List ( intercalate )
+import Data.List (intercalate)
 
-import Helpers ( (==>), (.>) )
+import Helpers ((==>), (.>))
 
-import HaskellTypes.LowLevel ( Literal, ValueName, Input )
-import HaskellTypes.Types ( ValueType )
+import HaskellTypes.LowLevel (Literal, ValueName, Input)
+import HaskellTypes.Types (ValueType)
 
 -- All: Types, Show instances
 

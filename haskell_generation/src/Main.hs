@@ -29,7 +29,7 @@ import Parsers.Values
   ( names_types_and_values_p )
 
 import CodeGenerators.Types
-  ( val_type_def_g )
+  ( type_def_g )
 import CodeGenerators.Values
   ( names_types_and_values_g )
 
@@ -69,7 +69,7 @@ parse_string = parse_with program_p
 
 ntavs_or_type_def_g = ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  TypeDefinition t -> val_type_def_g t
+  TypeDefinition t -> type_def_g t
   ) :: NTAVsOrTypeDef -> Stateful Haskell
 
 program_g = mapM ntavs_or_type_def_g .> fmap concat

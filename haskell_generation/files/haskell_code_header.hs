@@ -1,5 +1,7 @@
 {-# language LambdaCase #-}
 
+-- HasFirst
+
 class HasFirst a b where
   get_1st :: a -> b
 
@@ -14,6 +16,8 @@ instance HasFirst (a, b, c, d) a where
 
 instance HasFirst (a, b, c, d, e) a where
   get_1st = \(a, _, _, _, _) -> a
+
+-- HasSecond
 
 class HasSecond a b where
   get_2nd :: a -> b
@@ -30,6 +34,8 @@ instance HasSecond (a, b, c, d) b where
 instance HasSecond (a, b, c, d, e) b where
   get_2nd = \(_, b, _, _, _) -> b
 
+-- HasThird
+
 class HasThird a b where
   get_3rd :: a -> b
 
@@ -42,6 +48,8 @@ instance HasThird (a, b, c, d) c where
 instance HasThird (a, b, c, d, e) c where
   get_3rd = \(_, _, c, _, _) -> c
 
+-- HasFourth
+
 class HasFourth a b where
   get_4th :: a -> b
 
@@ -51,9 +59,12 @@ instance HasFourth (a, b, c, d) d where
 instance HasFourth (a, b, c, d, e) d where
   get_4th = \(_, _, _, d, _) -> d
 
+-- HasFifth
+
 class HasFifth a b where
   get_5th :: a -> b
 
 instance HasFifth (a, b, c, d, e) e where
   get_5th = \(_, _, _, _, e) -> e
 
+-- Generated

@@ -12,6 +12,7 @@ Comments:
     = cases
       case2 -> from_type<==pair_first
       ... -> nothing
+
 - "value" is the value inside each case. Examples:
   - fun1: (A, B)==>TypeName -> A==>OrNothing
       = cases
@@ -21,6 +22,7 @@ Comments:
       = cases
         case2 -> from_type<==value
         ... -> nothing
+
 - is functions should be generated automatically:
   - is_case0: (A, B)==>TypeName -> Bool
   - is_case1: (A, B)==>TypeName -> Bool

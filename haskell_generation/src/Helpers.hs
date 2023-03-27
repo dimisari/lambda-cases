@@ -1,11 +1,8 @@
 module Helpers where
 
-import Text.Parsec
-  ( (<|>), many, many1, string, char, try, eof, skipMany1, digit )
-import Text.Parsec.String
-  ( Parser )
-import Data.List
-  ( intercalate )
+import Text.Parsec ((<|>), many, many1, string, char, try, eof, skipMany1, digit)
+import Text.Parsec.String (Parser)
+import Data.List (intercalate)
 
 -- All: Keywords, Function application/composition, Parsing, Haskell generation
 

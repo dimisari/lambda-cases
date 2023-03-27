@@ -14,10 +14,8 @@ fix:
 - let-output -> where:
   - problem with values in and outside of function
   - add intentation levels in parsing
-- many abstractions in tuple ? I meant arguments ?
-- split value type into function and constant types ?
 - load "get_first" only when needed
-- change types to recursive instead of lists ?
+- no "try" for better error messages
 
 cases:
 - "value" default for the value of each case that has a value:
@@ -53,8 +51,6 @@ parentheses in the middle:
 - function application
 
 better error:
-- transform the state with EitherT (or ExceptT)
-- find error calls that are errors for the user and modify them appropriately
 - add line/column numbers
 
 type predicates
@@ -66,6 +62,3 @@ undefined
 testing:
 - more right examples
 - wrong examples 
-
-change?:
-- A, A *-> A ===> A x A -> A

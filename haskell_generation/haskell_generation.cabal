@@ -15,21 +15,23 @@ extra-doc-files:    CHANGELOG.md
 -- extra-source-files:
 
 executable haskell_generation
-    hs-source-dirs:   src
-    main-is:          Main.hs
-    other-modules:    Helpers, InitialState,
-                      Parsers.LowLevel, Parsers.Types, Parsers.Values,
-                      HaskellTypes.LowLevel, HaskellTypes.Types,
-                      HaskellTypes.Values, HaskellTypes.AfterParsing,
-                      HaskellTypes.Generation,
-                      CodeGenerators.LowLevel, CodeGenerators.Types,
-                      CodeGenerators.Values, CodeGenerators.TypeChecking,
-                      CodeGenerators.ErrorMessages
+    hs-source-dirs:     src
+    main-is:            Main.hs
+    other-modules:      Helpers, InitialState,
+                        HaskellTypes.LowLevel, HaskellTypes.LowLevelTypes,
+                        HaskellTypes.Types,
+                        HaskellTypes.Values, HaskellTypes.AfterParsing,
+                        HaskellTypes.Generation,
+                        Parsers.LowLevel, Parsers.LowLevelTypes,
+                        Parsers.Types, Parsers.Values,
+                        CodeGenerators.LowLevel, CodeGenerators.Types,
+                        CodeGenerators.Values, CodeGenerators.TypeChecking,
+                        CodeGenerators.ErrorMessages
 
-    build-depends:    base ^>=4.16.4.0, parsec, mtl, containers, transformers
-    default-language: Haskell2010
-    import:           warnings
-    ghc-options:      -XLambdaCase
+    build-depends:      base ^>=4.16.4.0, parsec, mtl, containers, transformers
+    default-language:   Haskell2010
+    import:             warnings
+    default-extensions: LambdaCase
 
 common warnings
     ghc-options: -Wall

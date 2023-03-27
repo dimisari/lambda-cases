@@ -1,25 +1,24 @@
 - automatic type classes! for all tuple_types! for the functions:
-  - first: T==>Has_First<==A => T -> A
-  - second: T==>Has_Second<==A => T -> A
-  - third: T==>Has_Third<==A => T -> A
-  - fourth: T==>Has_Fourth<==A => T -> A
-  - fifth: T==>Has_Fifth<==A => T -> A
+  - get_1st: T==>Has_1st<==A => T -> A
+  - get_2nd: T==>Has_2nd<==A => T -> A
+  - get_3rd: T==>Has_3rd<==A => T -> A
+  - get_4th: T==>Has_4th<==A => T -> A
+  - get_5th: T==>Has_5th<==A => T -> A
 
 parsec:
 - <?> for better parsing error messages!
 - string literal: char '"' *> many (noneOf ['"']) <* char '"'
 
 Questions:
-- mutual recursion: need to load whole level?
-- String = ListOf(Char)s ??
+- String = ListOf(Char)s?
 
 Tuple Application:
 - f: (A, B) -> C
   pair: (A, B)==>Pair
   pair==>f: C
+- done?
 
 Function composition:
-- not built-in
 - given:
   - f0: Type0 -> Type1 
   - f1: Type1 -> Type2 
@@ -34,11 +33,6 @@ Compilation targets to consider:
 - BEAM (Erlang virtual machine)
 - RISC-V
 - Java bytecode
-- Python IR ?
 
 Other:
 - graph reduction
-
-or_type (A, B)==>TypeName
-values A | B | (A, B) | ListOf(A)s | ListOf(B)s
-- Possible? no. need names if same type 

@@ -1,8 +1,8 @@
 module HaskellTypes.LowLevel where
 
-import Data.List ( intercalate )
+import Data.List (intercalate)
 
-import Helpers ( (==>) )
+import Helpers ((==>))
 
 -- All: Types, Show instances
 

@@ -1,30 +1,21 @@
 module Parsers.Types where
 
 import Text.Parsec
-  ( (<|>), many, char, lower, upper, string, sepBy, try, optionMaybe )
-import Text.Parsec.String
-  ( Parser )
+import Text.Parsec.String (Parser)
 
-import Helpers
-  ( (==>), eof_or_new_lines )
+import Helpers ((==>), eof_or_new_lines)
 
+import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.Types
 
-import Parsers.LowLevel
-  ( value_name_p )
+import Parsers.LowLevel (value_name_p)
+import Parsers.LowLevelTypes (type_name_p)
 
 -- All:
 -- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
 -- ValueType
 -- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
 -- TypeDefinition
-
--- TypeName: type_name_p
- 
-type_name_p =
-  upper >>= \initial_upper -> many (lower <|> upper) >>= \lowers_uppers ->
-  return $ TN (initial_upper : lowers_uppers)
-  :: Parser TypeName
 
 -- ProductType: product_type_p, inner_value_type_p
 

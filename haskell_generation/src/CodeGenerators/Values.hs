@@ -1,23 +1,24 @@
 module CodeGenerators.Values where
 
-import Data.List ( intercalate, splitAt )
-import Control.Monad ( foldM )
-import Control.Monad.State ( (>=>) )
-import Control.Monad.Trans.Except ( throwE, catchE )
+import Data.List (intercalate, splitAt)
+import Control.Monad (foldM)
+import Control.Monad.State ((>=>))
+import Control.Monad.Trans.Except (throwE, catchE)
 
-import Helpers ( Haskell, Error, (==>), (.>), indent )
+import Helpers (Haskell, Error, (==>), (.>), indent)
 
-import HaskellTypes.LowLevel ( ValueName(..), Abstraction(..) )
-import HaskellTypes.Types ( TypeName(..), ValueType(..) )
+import HaskellTypes.LowLevel (ValueName(..), Abstraction(..))
+import HaskellTypes.LowLevelTypes (TypeName(..))
+import HaskellTypes.Types (ValueType(..))
 import HaskellTypes.Values
 import HaskellTypes.AfterParsing
 import HaskellTypes.Generation
 
 import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel
-import CodeGenerators.TypeChecking ( types_are_equivalent )
+import CodeGenerators.TypeChecking (types_are_equivalent)
 
-import CodeGenerators.Types ( val_type_g )
+import CodeGenerators.Types (val_type_g)
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue
@@ -126,9 +127,7 @@ application_g = ( \application val_type ->
   application_type_inference_g application >>= \(application_hs, application_t) ->
   types_are_equivalent val_type application_t >>= \case 
     True -> return application_hs
-    False ->
-      throwE $
-        concatMap ("\n" ++) [ show application, show val_type, show application_t ]
+    False -> throwE "Cannot match types"
   ) :: Application -> ValType -> Stateful Haskell
 
 app_tree_type_inference_g = ( \case 
@@ -147,8 +146,7 @@ application_type_inference_g = ( \(ApplicationTrees tree1 tree2) ->
   ) :: Application -> Stateful (Haskell, ValType)
 
 tree1_func_type_g = ( \tree1_hs (InAndOutType input_t output_t) tree2 -> 
-  application_tree_g tree2 input_t >>=
-    \tree2_hs ->
+  application_tree_g tree2 input_t >>= \tree2_hs ->
   let 
   tree2_hs' = case tree2 of 
     Application _ -> "(" ++ tree2_hs ++ ")"

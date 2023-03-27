@@ -1,22 +1,16 @@
 module CodeGenerators.TypeChecking where
 
-import Control.Monad ( (>=>) )
-import Control.Monad.Trans.Except ( throwE )
+import Control.Monad ((>=>))
+import Control.Monad.Trans.Except (throwE)
 
-import Helpers
-  ( Haskell, (==>) )
+import Helpers (Haskell, (==>))
 
-import HaskellTypes.LowLevel
-  ( ValueName(..) )
-import HaskellTypes.Types
-  ( TypeName(..) )
+import HaskellTypes.LowLevel (ValueName(..))
+import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.AfterParsing 
-  ( ValType(..), FuncType(..), Field(..), TypeFieldsOrCases(..) )
-import HaskellTypes.Generation
-  ( Stateful, type_map_get, debug, debug_with_msg )
+import HaskellTypes.Generation (Stateful, type_map_get, debug, debug_with_msg)
 
-import CodeGenerators.ErrorMessages
-  ( type_check_err )
+import CodeGenerators.ErrorMessages (type_check_err)
 
 -- All:
 -- types_are_equivalent, type_names_are_equivalent,

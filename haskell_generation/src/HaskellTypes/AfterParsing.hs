@@ -1,13 +1,11 @@
 module HaskellTypes.AfterParsing where
 
-import Data.List
-  ( intercalate )
+import Data.List (intercalate)
 
-import Helpers
-  ( (==>) )
+import Helpers ((==>))
 
-import HaskellTypes.LowLevel
-  ( ValueName )
+import HaskellTypes.LowLevel (ValueName)
+import HaskellTypes.LowLevelTypes (TypeName)
 import HaskellTypes.Types
 import HaskellTypes.Values
 

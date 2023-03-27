@@ -1,5 +1,7 @@
 {-# language LambdaCase #-}
 
+-- HasFirst
+
 class HasFirst a b where
   get_1st :: a -> b
 
@@ -14,6 +16,8 @@ instance HasFirst (a, b, c, d) a where
 
 instance HasFirst (a, b, c, d, e) a where
   get_1st = \(a, _, _, _, _) -> a
+
+-- HasSecond
 
 class HasSecond a b where
   get_2nd :: a -> b
@@ -30,6 +34,8 @@ instance HasSecond (a, b, c, d) b where
 instance HasSecond (a, b, c, d, e) b where
   get_2nd = \(_, b, _, _, _) -> b
 
+-- HasThird
+
 class HasThird a b where
   get_3rd :: a -> b
 
@@ -42,6 +48,8 @@ instance HasThird (a, b, c, d) c where
 instance HasThird (a, b, c, d, e) c where
   get_3rd = \(_, _, c, _, _) -> c
 
+-- HasFourth
+
 class HasFourth a b where
   get_4th :: a -> b
 
@@ -51,39 +59,20 @@ instance HasFourth (a, b, c, d) d where
 instance HasFourth (a, b, c, d, e) d where
   get_4th = \(_, _, _, d, _) -> d
 
+-- HasFifth
+
 class HasFifth a b where
   get_5th :: a -> b
 
 instance HasFifth (a, b, c, d, e) e where
   get_5th = \(_, _, _, _, e) -> e
 
+-- Generated
 
-data PrevCoeffs =
-  PrevCoeffsC { get_prev_prev :: Int, get_prev :: Int }
-  deriving Show
+my_gcd :: Int -> Int -> Int
+my_gcd = \x y -> abs (gcd_help (x) (y))
 
-data GcdAndCoeffs =
-  GcdAndCoeffsC { get_gcd :: Int, get_a :: Int, get_b :: Int }
-  deriving Show
-
-extended_euclidean :: Int -> Int -> GcdAndCoeffs
-extended_euclidean = ee_recursion (init_a_coeffs) (init_b_coeffs)
-
-init_a_coeffs :: PrevCoeffs
-init_a_coeffs = 
-  PrevCoeffsC (1) (0)
-
-init_b_coeffs :: PrevCoeffs
-init_b_coeffs = 
-  PrevCoeffsC (0) (1)
-
-ee_recursion :: PrevCoeffs -> PrevCoeffs -> Int -> Int -> GcdAndCoeffs
-ee_recursion = \a_coeffs b_coeffs x -> \case
-  0 -> 
-    GcdAndCoeffsC (x) (get_prev_prev a_coeffs) (get_prev_prev b_coeffs)
-  y -> 
-    ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y) where
-    next :: PrevCoeffs -> PrevCoeffs
-    next = \tuple@(PrevCoeffsC prev_prev prev) -> 
-      PrevCoeffsC (prev) (prev_prev - div x y * prev)
-
+gcd_help :: Int -> Int -> Int
+gcd_help = \x -> \case
+  0 -> x
+  y -> gcd_help (y) (mod x y)

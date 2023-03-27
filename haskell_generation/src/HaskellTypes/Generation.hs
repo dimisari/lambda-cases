@@ -1,27 +1,18 @@
 module HaskellTypes.Generation where
 
-import Control.Monad.State
-  ( State, get, modify )
-import Control.Monad.Trans.Except
-  ( ExceptT, throwE )
-import qualified Data.Map as M
-  ( Map, lookup, insert, insertWith )
-import Control.Monad.Trans.Except
-  ( ExceptT, catchE )
+import Control.Monad.State (State, get, modify)
+import Control.Monad.Trans.Except (ExceptT, throwE, catchE)
+import qualified Data.Map as M (Map, lookup, insert, insertWith)
 
-import Helpers
-  ( Haskell, Error, (.>), (==>) )
+import Helpers (Haskell, Error, (.>), (==>))
 
-import HaskellTypes.LowLevel
-  ( ValueName(..) )
+import HaskellTypes.LowLevel (ValueName(..))
+import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.Types
-  ( TypeName(..), ValueType(..), FieldNameAndType, CaseAndMaybeType
-  , FieldsOrCases )
-import HaskellTypes.AfterParsing
-  ( ValType(..), TypeFieldsOrCases(..) )
+import HaskellTypes.AfterParsing (ValType(..), TypeFieldsOrCases(..))
 
--- All:
--- Types, get fields, update fields, value_map operations, type_map operations
+-- All: Types, get fields, update fields, value_map operations, type_map operations
+
 -- Types: ValueMap, TypeMap, GenState, Stateful
 
 type ValueMap =
@@ -66,8 +57,7 @@ value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
     vt:_ -> return vt
   ) :: ValueName -> Stateful ValType
 
--- type_map operations:
--- type_map_exists_check, type_map_insert, type_map_get
+-- type_map operations: type_map_exists_check, type_map_insert, type_map_get
 
 type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case
   Just _ -> throwE $ "Type of the same name already defined: " ++ show tn
