@@ -1,97 +1,114 @@
 module Main where
 
-import Control.Monad
-  ( (>=>) )
-import Text.Parsec
-  ( ParseError, (<|>), eof, many, parse, char, try )
-import Text.Parsec.String
-  ( Parser )
-import Control.Monad.State
-  ( evalState )
-import Control.Monad.Trans.Except
-  ( runExceptT )
+import Text.Parsec (ParseError, (<|>), eof, many, parse, char, try)
+import Text.Parsec.String (Parser)
+import Control.Monad ((>=>))
+import Control.Monad.State (evalState)
+import Control.Monad.Trans.Except (runExceptT)
 
-import InitialState
-  ( init_state )
-import Helpers
-  ( Haskell, Error, (.>) )
+import InitialState (init_state)
+import Helpers (Haskell, Error, (.>), (==>))
 
-import HaskellTypes.Generation
-   ( Stateful )
-import HaskellTypes.AfterParsing
-  ( TypeDef, type_def_conversion )
-import HaskellTypes.Values
-  ( NamesTypesAndValues )
+import HaskellTypes.Generation (Stateful)
+import HaskellTypes.Types (TypeDefinition)
+import HaskellTypes.AfterParsing (TypeDef, type_def_conversion)
+import HaskellTypes.Values (NamesTypesAndValues)
 
-import Parsers.Types
-  ( type_def_p )
-import Parsers.Values
-  ( names_types_and_values_p )
+import Parsers.Types (type_definition_p)
+import Parsers.Values (names_types_and_values_p)
 
-import CodeGenerators.Types
-  ( type_def_g )
-import CodeGenerators.Values
-  ( names_types_and_values_g )
+import CodeGenerators.Types (type_def_g)
+import CodeGenerators.Values (names_types_and_values_g)
 
--- All: Constants, Types, Parsing, Generating Haskell, main
+-- All: Path, Constants, Types, Parsing, Generating Haskell, main
 
--- Constants
+-- Path
+ 
+type Path = String 
 
-[ example_name, files, haskell_header, example_lc, example_hs ] =
-  [ files ++ "example", "files/", files ++ "haskell_code_header.hs"
-  , example_name ++ ".lc", example_name ++ ".hs" ] 
+-- Constants: ex_name, files, haskell_header, example_lc, example_hs
+
+lcases_example_names =
+  [ "my_gcd", "ext_euc_no_tuple_type", "ext_euc_tuple_type" ]
   :: [ String ]
 
--- Types
+lcases_examples_paths =
+  map ( \ex_name -> "lcases/" ++ ex_name ++ ".lc" ) lcases_example_names
+  :: [ Path ]
+
+examples_generated_haskell_paths =
+  map ( \ex_name -> "generated_haskell/" ++ ex_name ++ ".hs" ) lcases_example_names
+  :: [ Path ]
+
+examples_input_output_paths = 
+  zip lcases_examples_paths examples_generated_haskell_paths
+  :: [ (Path, Path) ]
+
+haskell_header =
+  "haskell_headers/haskell_code_header.hs"
+  :: Path
+
+-- Types: NTAVsOrTypeDef, Program
 
 data NTAVsOrTypeDef =
-  TypeDefinition TypeDef | NTAVs NamesTypesAndValues deriving Show
+  TypeDefinition TypeDefinition | NTAVs NamesTypesAndValues deriving Show
 
 type Program = [ NTAVsOrTypeDef ]
 
--- Parsing 
+-- Parsing: parse_lcases, parse_with, program_p, ntavs_or_type_def_p
 
-parse_with = flip parse example_lc
-  :: Parser a -> String -> Either ParseError a
+parse_lcases =
+  parse program_p
+  :: Path -> String -> Either ParseError Program
 
-ntavs_or_tt_p =
-  TypeDefinition <$> type_def_conversion <$> try type_def_p <|>
-  NTAVs <$> names_types_and_values_p
-  :: Parser NTAVsOrTypeDef
-
-program_p = many (char '\n') *> many ntavs_or_tt_p <* eof 
+program_p =
+  many (char '\n') *> many ntavs_or_type_def_p <* eof 
   :: Parser Program
 
-parse_string = parse_with program_p
-  :: String -> Either ParseError Program
+ntavs_or_type_def_p =
+  TypeDefinition <$> try type_definition_p <|> NTAVs <$> names_types_and_values_p
+  :: Parser NTAVsOrTypeDef
 
--- Generating Haskell
+-- Generating Haskell:
+-- print_error_or_haskell_to_file, print_parse_error_or_semantic_analysis,
+-- print_semantic_error_or_haskell_to_file, run_semantic_analysis, program_g
+-- ntavs_or_type_def_g
+
+read_and_generate_example = ( \(input_path, output_path) ->
+  readFile input_path >>= \lcases_input ->
+  parse_lcases input_path lcases_input ==> \parser_output ->
+  print_parse_error_or_semantic_analysis parser_output output_path
+  ) :: (Path, Path) -> IO ()
+
+print_parse_error_or_semantic_analysis = ( \parser_output output_path ->
+  case parser_output of 
+    Left parse_error -> print parse_error
+    Right program -> print_semantic_error_or_haskell_to_file program output_path
+  ) :: Either ParseError Program -> Path -> IO ()
+
+print_semantic_error_or_haskell_to_file = ( \program output_path ->
+  run_semantic_analysis program ==> \case
+    Left semantic_error -> putStrLn semantic_error
+    Right generated_haskell -> 
+      readFile haskell_header >>= \header ->
+      writeFile output_path $ header ++ generated_haskell
+  ) :: Program -> Path -> IO ()
+
+run_semantic_analysis =
+  program_g .> runExceptT .> flip evalState init_state
+  :: Program -> Either Error Haskell
+
+program_g =
+  mapM ntavs_or_type_def_g .> fmap concat
+  :: Program -> Stateful Haskell
 
 ntavs_or_type_def_g = ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  TypeDefinition t -> type_def_g t
+  TypeDefinition type_def -> type_def_g $ type_def_conversion type_def
   ) :: NTAVsOrTypeDef -> Stateful Haskell
-
-program_g = mapM ntavs_or_type_def_g .> fmap concat
-  :: Program -> Stateful Haskell
- 
-program_to_haskell = program_g .> runExceptT .> flip evalState init_state
-  :: Program -> Either Error Haskell
-
-generate_haskell = ( \case 
-  Left error -> Left $ show error 
-  Right program -> program_to_haskell program
-  ) :: Either ParseError Program -> Either Error Haskell
-
-write_haskell = (
-  parse_string .> generate_haskell .> \case
-    Left e -> putStrLn e
-    Right haskell -> 
-      readFile haskell_header >>= \header ->
-      writeFile example_hs $ header ++ haskell
-  ) :: String -> IO ()
 
 -- main
 
-main = readFile example_lc >>= write_haskell
+main =
+  mapM_ read_and_generate_example examples_input_output_paths
   :: IO ()

@@ -27,7 +27,7 @@ product_type_p =
   :: Parser ProductType
 
 inner_value_type_p =
-  try (char '(' *>
+  (char '(' *>
   (FunctionType <$> try function_type_p <|> ProductType <$> product_type_p)
   <* char ')') <|>
   TypeName <$> type_name_p
@@ -82,9 +82,9 @@ field_name_and_type_p =
   return $ NameAndType value_name value_type
   :: Parser FieldNameAndType
 
--- TupleTypeDefinition: tuple_type_def_p
+-- TupleTypeDefinition: tuple_type_definition_p
 
-tuple_type_def_p =
+tuple_type_definition_p =
   string "tuple_type " >> type_name_p >>= \type_name ->
   string "\nvalue (" >>
   (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
@@ -100,9 +100,9 @@ case_and_maybe_type_p =
   return $ CaseAndMaybeType value_name maybe_value_type
   :: Parser CaseAndMaybeType
 
--- OrTypeDefinition: or_type_def_p
+-- OrTypeDefinition: or_type_definition_p
 
-or_type_def_p =
+or_type_definition_p =
   string "or_type " >> type_name_p >>= \type_name ->
   string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
   string " | " >> case_and_maybe_type_p >>= \case2 ->
@@ -112,6 +112,7 @@ or_type_def_p =
 
 -- TypeDefinition: type_def_p
 
-type_def_p = 
-  TupleTypeDefinition <$> tuple_type_def_p <|> OrTypeDefinition <$> or_type_def_p
+type_definition_p = 
+  TupleTypeDefinition <$> tuple_type_definition_p <|>
+  OrTypeDefinition <$> or_type_definition_p
   :: Parser TypeDefinition

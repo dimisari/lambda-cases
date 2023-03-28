@@ -1,0 +1,22 @@
+
+tuple_type PrevCoeffs
+value (prev_prev: Int, prev: Int)
+
+tuple_type GcdAndCoeffs
+value (gcd: Int, a: Int, b: Int)
+
+extended_euclidean: (Int, Int) -> GcdAndCoeffs
+  = (init_a_coeffs, init_b_coeffs)==>ee_recursion
+
+init_a_coeffs, init_b_coeffs: all PrevCoeffs
+  = (1, 0), (0, 1)
+
+ee_recursion: (PrevCoeffs, PrevCoeffs, Int, Int) -> GcdAndCoeffs
+  = (a_coeffs, b_coeffs, x) -> cases
+    0 -> (x, a_coeffs==>get_prev_prev, b_coeffs==>get_prev_prev)
+    y ->
+      let
+      next: PrevCoeffs -> PrevCoeffs
+        = use_fields -> (prev, prev_prev - x==>div<==y * prev)
+      output
+      (a_coeffs==>next, b_coeffs==>next, y, x==>mod<==y)==>ee_recursion
