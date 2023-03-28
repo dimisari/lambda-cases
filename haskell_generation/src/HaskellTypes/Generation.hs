@@ -9,7 +9,7 @@ import Helpers (Haskell, Error, (.>), (==>))
 import HaskellTypes.LowLevel (ValueName(..))
 import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.Types
-import HaskellTypes.AfterParsing (ValueType'(..), FieldsOrCases'(..))
+import HaskellTypes.AfterParsing (ValueType'(..), FieldsOrCases(..))
 
 -- All: Types, get fields, update fields, value_map operations, type_map operations
 
@@ -19,7 +19,7 @@ type ValueMap =
   M.Map ValueName [ ValueType' ]
 
 type TypeMap =
-  M.Map TypeName FieldsOrCases'
+  M.Map TypeName FieldsOrCases
 
 data GenState =
   GS { indent_level :: Int, value_map :: ValueMap, type_map :: TypeMap }
@@ -59,22 +59,15 @@ value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
 
 -- type_map operations: type_map_exists_check, type_map_insert, type_map_get
 
-type_map_exists_check = ( \tn -> get_type_map >>= M.lookup tn .> \case
-  Just _ -> throwE $ "Type of the same name already defined: " ++ show tn
-  Nothing -> return ()
-  ) :: TypeName -> Stateful ()
+type_map_insert = ( \type_name fields_or_cases ->
+  get_type_map >>= \type_map ->
+  M.lookup type_name type_map ==> \case
+    Just _ -> throwE $ "Type of the same name already defined: " ++ show type_name
+    Nothing -> update_type_map $ M.insert type_name fields_or_cases type_map
+  ) :: TypeName -> FieldsOrCases -> Stateful ()
 
-type_map_insert =
-  (\tn vfoc -> get_type_map >>= M.insert tn vfoc .> update_type_map)
-  :: TypeName -> FieldsOrCases' -> Stateful ()
-
-type_map_get = ( \tn@(TN s) -> get_type_map >>= M.lookup tn .> \case
+type_map_get = ( \type_name@(TN s) -> get_type_map >>= M.lookup type_name .> \case
   Nothing -> throwE $ "No definition for type: " ++ s
   Just foc -> return foc
-  ) :: TypeName -> Stateful FieldsOrCases'
+  ) :: TypeName -> Stateful FieldsOrCases
 
-debug = ( \f -> catchE f (\_ -> throwE "hi" ) )
-  :: Stateful a -> Stateful a
-
-debug_with_msg = ( \f s -> catchE f (\_ -> throwE s ) )
-  :: Stateful a -> String -> Stateful a

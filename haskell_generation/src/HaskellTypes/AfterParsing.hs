@@ -16,7 +16,7 @@ import HaskellTypes.TypeDefinitions
 -- Application, ApplicationTree,
 -- FunctionType', ValueType',
 -- Field', TupleTypeDefinition', OrTypeCase'
--- OrTypeDefinition', TypeDefinition', FieldsOrCases'
+-- OrTypeDefinition', TypeDefinition', FieldsOrCases
 
 data Application =
   ApplicationTrees ApplicationTree ApplicationTree
@@ -65,7 +65,7 @@ data TypeDefinition' =
   TupleTypeDefinition' TupleTypeDefinition' | OrTypeDefinition' OrTypeDefinition'
   deriving Show
 
-data FieldsOrCases' =
+data FieldsOrCases =
   FieldList [ Field' ] | OrTypeCaseList [ OrTypeCase' ]
   deriving Show
 
@@ -117,10 +117,10 @@ expr_to_base_value = ( \expr -> case expr of
   ) :: InputOpExprOrOpExpr -> BaseValue
 
 -- ValueType':
--- value_type_to_val_type, func_type_to_val_type, one_input_to_val_type,
+-- value_type_conversion, func_type_to_val_type, one_input_to_val_type,
 -- multiple_inputs_to_val_type, output_type_to_val_type, cart_prod_to_val_type
 
-value_type_to_val_type = ( \case
+value_type_conversion = ( \case
   FunctionType func_type -> func_type_to_val_type func_type
   ProductType cartesian_product -> cart_prod_to_val_type cartesian_product
   TypeName name -> TypeName' name
@@ -133,7 +133,7 @@ func_type_to_val_type = ( \(InputAndOutput input output) -> case input of
 
 one_input_to_val_type = ( \input output -> 
   FunctionType' $
-    InAndOutType (value_type_to_val_type input) $ output_type_to_val_type output
+    InAndOutType (value_type_conversion input) $ output_type_to_val_type output
   ) :: ValueType -> OutputType -> ValueType'
 
 multiple_inputs_to_val_type = ( \(InTypes in_t1 in_t2 in_ts) output -> 
@@ -143,7 +143,7 @@ multiple_inputs_to_val_type = ( \(InTypes in_t1 in_t2 in_ts) output ->
     in_t3 : rest_of_in_ts ->
       multiple_inputs_to_val_type (InTypes in_t2 in_t3 rest_of_in_ts) output
   in
-  FunctionType' $ InAndOutType (value_type_to_val_type in_t1) output_type
+  FunctionType' $ InAndOutType (value_type_conversion in_t1) output_type
   ) :: InputTypes -> OutputType -> ValueType'
 
 output_type_to_val_type = ( \case
@@ -153,31 +153,16 @@ output_type_to_val_type = ( \case
 
 cart_prod_to_val_type = ( \(Types value_type1 value_type2 other_value_types) ->
   ProductType' $
-    value_type_to_val_type value_type1 : value_type_to_val_type value_type2 :
-    map value_type_to_val_type other_value_types
+    value_type_conversion value_type1 : value_type_conversion value_type2 :
+    map value_type_conversion other_value_types
   ) :: ProductType -> ValueType'
 
--- Conversions: 
--- field_conversion, tuple_t_def_conv, or_t_case_conv,
--- or_t_def_conv, type_def_conversion, fields_or_cases_conversion
+-- Conversions: field_conversion, or_type_case_conversion,
 
 field_conversion = ( \(NameAndType value_name value_type) ->
-  FNameAndType value_name (value_type_to_val_type value_type)
+  FNameAndType value_name (value_type_conversion value_type)
   ) :: Field -> Field'
 
-tuple_t_def_conv = ( \(NameAndFields type_name fields) ->
-  TTNameAndFields type_name (map field_conversion fields)
-  ) :: TupleTypeDefinition -> TupleTypeDefinition'
-
-or_t_case_conv = ( \(OrTypeCase value_name maybe_value_type) ->
-  NameAndMaybeType value_name (value_type_to_val_type <$> maybe_value_type)
+or_type_case_conversion = ( \(OrTypeCase value_name maybe_value_type) ->
+  NameAndMaybeType value_name (value_type_conversion <$> maybe_value_type)
   ) :: OrTypeCase -> OrTypeCase'
-
-or_t_def_conv = ( \(NameAndCases type_name case1 case2 cases) ->
-  ValNameAndCases type_name (map or_t_case_conv $ case1 : case2 : cases)
-  ) :: OrTypeDefinition -> OrTypeDefinition'
-
-type_def_conversion = \case
-  TupleTypeDefinition tt_def -> TupleTypeDefinition' $ tuple_t_def_conv tt_def
-  OrTypeDefinition or_type_def -> OrTypeDefinition' $ or_t_def_conv or_type_def
-  :: TypeDefinition -> TypeDefinition'

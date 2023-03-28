@@ -345,7 +345,7 @@ cases_type_inference_g = ( \case
 name_type_and_value_g = ( \(NTAV value_name value_type value_expr) -> 
   get_indent_level >>= \ind_lev ->
   let 
-  val_type = value_type_to_val_type value_type
+  val_type = value_type_conversion value_type
     :: ValueType'
   in
   value_expression_g value_expr val_type >>= \val_expr_hs ->
@@ -389,7 +389,7 @@ list_of_ntavs_g = ( \list_of_ntavs ->
   ) :: [ NameTypeAndValue ] -> Stateful Haskell
 
 ntav_map_insert = ( \(NTAV value_name value_type value_expr) ->
-  value_map_insert value_name $ value_type_to_val_type value_type
+  value_map_insert value_name $ value_type_conversion value_type
   ) :: NameTypeAndValue -> Stateful ()
 
 -- Where: where_g, where_type_inference_g 

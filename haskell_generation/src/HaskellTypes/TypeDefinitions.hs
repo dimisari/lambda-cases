@@ -9,9 +9,7 @@ import HaskellTypes.Types (ValueType)
 
 -- All: Types, Show instances
 
--- Types:
--- Field, TupleTypeDefinition, OrTypeCase, OrTypeDefinition
--- TypeDefinition, FieldsOrCases
+-- Types: Field, TupleTypeDefinition, OrTypeCase, OrTypeDefinition, TypeDefinition
 
 data Field =
   NameAndType ValueName ValueType 
@@ -28,14 +26,8 @@ data OrTypeDefinition =
 data TypeDefinition =
   TupleTypeDefinition TupleTypeDefinition | OrTypeDefinition OrTypeDefinition
 
-data FieldsOrCases =
-  FieldList [ Field ] | OrTypeCaseList [ OrTypeCase ]
-
 -- Show instances:
--- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
--- ValueType
--- Field, TupleTypeDefinition, OrTypeCase, OrTypeDefinition
--- TypeDefinition
+-- Field, TupleTypeDefinition, OrTypeCase, OrTypeDefinition, TypeDefinition
 
 instance Show Field where
   show = \(NameAndType field_name field_type) ->

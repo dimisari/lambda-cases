@@ -3,8 +3,12 @@ module Helpers where
 import Text.Parsec ((<|>), many, many1, string, char, try, eof, skipMany1, digit)
 import Text.Parsec.String (Parser)
 import Data.List (intercalate)
+import Control.Monad.State (State)
+import Control.Monad.Trans.Except (catchE, throwE, ExceptT)
 
--- All: Keywords, Function application/composition, Parsing, Haskell generation
+-- All:
+-- Keywords, Function application/composition, Parsing, Haskell generation,
+-- Debugging
 
 -- Keywords
 
@@ -46,3 +50,12 @@ type Haskell = String
 
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
+
+-- Debugging: debug, debug_with_msg
+
+debug = ( \f -> catchE f (\_ -> throwE "hi" ) )
+  :: ExceptT String (State b) c -> ExceptT String (State b) c
+
+debug_with_msg = ( \f s -> catchE f (\_ -> throwE s ) )
+  :: ExceptT String (State b) c -> String -> ExceptT String (State b) c
+

@@ -8,7 +8,7 @@ import Helpers (Haskell, (==>))
 import HaskellTypes.LowLevel (ValueName(..))
 import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.AfterParsing 
-import HaskellTypes.Generation (Stateful, type_map_get, debug, debug_with_msg)
+import HaskellTypes.Generation (Stateful, type_map_get)
 
 import CodeGenerators.ErrorMessages (type_check_err)
 
@@ -60,7 +60,7 @@ named_type_and_val_type_are_equivalent = ( \type_name val_type ->
 
 type_name_to_val_type = ( \type_name -> 
   type_map_get type_name >>= \case
-    FieldList favtl -> case favtl of
+    FieldList fields -> case fields of
       [] -> undefined
       [ favt ] -> return $ get_type favt
       favt1 : favt2 : rest -> return $ ProductType' $

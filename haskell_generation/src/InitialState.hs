@@ -5,7 +5,7 @@ import qualified Data.Map as M ( empty, fromList )
 import HaskellTypes.LowLevel (ValueName(..))
 import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.Types (ValueType(..))
-import HaskellTypes.AfterParsing (ValueType'(..), FunctionType'(..), FieldsOrCases'(..))
+import HaskellTypes.AfterParsing (ValueType'(..), FunctionType'(..), FieldsOrCases(..))
 import HaskellTypes.Generation (ValueMap, TypeMap, GenState(..))
 
 -- Initial state:
