@@ -10,34 +10,35 @@ import InitialState (init_state)
 import Helpers (Haskell, Error, (.>), (==>))
 
 import HaskellTypes.Generation (Stateful)
-import HaskellTypes.Types (TypeDefinition)
-import HaskellTypes.AfterParsing (TypeDef, type_def_conversion)
+import HaskellTypes.TypeDefinitions (TypeDefinition)
 import HaskellTypes.Values (NamesTypesAndValues)
 
-import Parsers.Types (type_definition_p)
+import Parsers.TypeDefinitions (type_definition_p)
 import Parsers.Values (names_types_and_values_p)
 
-import CodeGenerators.Types (type_def_g)
+import CodeGenerators.TypeDefinitions (type_definition_g)
 import CodeGenerators.Values (names_types_and_values_g)
 
 -- All: Path, Constants, Types, Parsing, Generating Haskell, main
 
--- Path
+-- Path: Path
  
 type Path = String 
 
--- Constants: ex_name, files, haskell_header, example_lc, example_hs
+-- Constants:
+-- lcases_examples_names, lcases_examples_paths, examples_generated_haskell_paths,
+-- examples_input_output_paths, haskell_header
 
-lcases_example_names =
+lcases_examples_names =
   [ "my_gcd", "ext_euc_no_tuple_type", "ext_euc_tuple_type" ]
   :: [ String ]
 
 lcases_examples_paths =
-  map ( \ex_name -> "lcases/" ++ ex_name ++ ".lc" ) lcases_example_names
+  map ( \ex_name -> "lcases/" ++ ex_name ++ ".lc" ) lcases_examples_names
   :: [ Path ]
 
 examples_generated_haskell_paths =
-  map ( \ex_name -> "generated_haskell/" ++ ex_name ++ ".hs" ) lcases_example_names
+  map ( \ex_name -> "generated_haskell/" ++ ex_name ++ ".hs" ) lcases_examples_names
   :: [ Path ]
 
 examples_input_output_paths = 
@@ -104,7 +105,7 @@ program_g =
 
 ntavs_or_type_def_g = ( \case 
   NTAVs ntavs -> names_types_and_values_g ntavs
-  TypeDefinition type_def -> type_def_g $ type_def_conversion type_def
+  TypeDefinition type_def -> type_definition_g type_def
   ) :: NTAVsOrTypeDef -> Stateful Haskell
 
 -- main

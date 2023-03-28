@@ -5,32 +5,32 @@ import qualified Data.Map as M ( empty, fromList )
 import HaskellTypes.LowLevel (ValueName(..))
 import HaskellTypes.LowLevelTypes (TypeName(..))
 import HaskellTypes.Types (ValueType(..))
-import HaskellTypes.AfterParsing (ValType(..), FuncType(..), TypeFieldsOrCases(..))
+import HaskellTypes.AfterParsing (ValueType'(..), FunctionType'(..), FieldsOrCases'(..))
 import HaskellTypes.Generation (ValueMap, TypeMap, GenState(..))
 
 -- Initial state:
 -- int, int_x_int, bool, int_to_int_to_int
 -- init_value_map, init_state
 
-int = NamedType $ TN "Int"
-  :: ValType
+int = TypeName' $ TN "Int"
+  :: ValueType'
 
-int_x_int = ProdType [ int, int ]
-  :: ValType
+int_x_int = ProductType' [ int, int ]
+  :: ValueType'
 
-bool = NamedType $ TN "Bool"
-  :: ValType
+bool = TypeName' $ TN "Bool"
+  :: ValueType'
 
 int_to_int_to_int =
-  [ FuncType $ InAndOutType int $ FuncType $ InAndOutType int int ]
-  :: [ ValType ]
+  [ FunctionType' $ InAndOutType int $ FunctionType' $ InAndOutType int int ]
+  :: [ ValueType' ]
 
 init_value_map = 
   M.fromList
     [ (VN "div" , int_to_int_to_int)
     , (VN "mod" , int_to_int_to_int)
-    , (VN "get_1st" , [ FuncType $ InAndOutType int_x_int int ])
-    , (VN "abs" , [ FuncType $ InAndOutType int int ])
+    , (VN "get_1st" , [ FunctionType' $ InAndOutType int_x_int int ])
+    , (VN "abs" , [ FunctionType' $ InAndOutType int int ])
     , (VN "max" , int_to_int_to_int)
     , (VN "min" , int_to_int_to_int)
     , (VN "true" , [ bool ])

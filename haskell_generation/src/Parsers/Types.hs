@@ -12,10 +12,7 @@ import Parsers.LowLevel (value_name_p)
 import Parsers.LowLevelTypes (type_name_p)
 
 -- All:
--- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
--- ValueType
--- FieldNameAndType, TupleTypeDefinition, CaseAndMaybeType, OrTypeDefinition
--- TypeDefinition
+-- ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType, ValueType
 
 -- ProductType: product_type_p, inner_value_type_p
 
@@ -74,45 +71,3 @@ value_type_p =
   FunctionType <$> try function_type_p <|> ProductType <$> try product_type_p <|>
   TypeName <$> type_name_p
   :: Parser ValueType
-
--- FieldNameAndType: field_name_and_type_p
-
-field_name_and_type_p = 
-  value_name_p >>= \value_name -> string ": " >> value_type_p >>= \value_type ->
-  return $ NameAndType value_name value_type
-  :: Parser FieldNameAndType
-
--- TupleTypeDefinition: tuple_type_definition_p
-
-tuple_type_definition_p =
-  string "tuple_type " >> type_name_p >>= \type_name ->
-  string "\nvalue (" >>
-  (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
-  string ")" >> eof_or_new_lines >> NameAndFields type_name fields==>return
-  :: Parser TupleTypeDefinition
-
--- CaseAndMaybeType: case_and_maybe_type_p
-
-case_and_maybe_type_p = 
-  value_name_p >>= \value_name ->
-  optionMaybe (string "<==(value: " *> value_type_p <* char ')') >>=
-    \maybe_value_type ->
-  return $ CaseAndMaybeType value_name maybe_value_type
-  :: Parser CaseAndMaybeType
-
--- OrTypeDefinition: or_type_definition_p
-
-or_type_definition_p =
-  string "or_type " >> type_name_p >>= \type_name ->
-  string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
-  string " | " >> case_and_maybe_type_p >>= \case2 ->
-  many (try $ string " | " >> case_and_maybe_type_p) >>= \cases ->
-  eof_or_new_lines >> NameAndCases type_name case1 case2 cases==>return
-  :: Parser OrTypeDefinition
-
--- TypeDefinition: type_def_p
-
-type_definition_p = 
-  TupleTypeDefinition <$> tuple_type_definition_p <|>
-  OrTypeDefinition <$> or_type_definition_p
-  :: Parser TypeDefinition

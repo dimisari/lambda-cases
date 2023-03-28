@@ -1,21 +1,26 @@
 
 src/HaskellTypes/LowLevel.hs
 src/HaskellTypes/LowLevelTypes.hs
+src/HaskellTypes/TypeDefinitions.hs
 src/HaskellTypes/Types.hs
 src/HaskellTypes/Values.hs
+
 src/HaskellTypes/AfterParsing.hs
 src/HaskellTypes/Generation.hs
 
 src/Parsers/LowLevel.hs
 src/Parsers/LowLevelTypes.hs
+src/Parsers/TypeDefinitions.hs
 src/Parsers/Types.hs
 src/Parsers/Values.hs
 
-src/CodeGenerators/ErrorMessages.hs
 src/CodeGenerators/LowLevel.hs
-src/CodeGenerators/TypeChecking.hs
-src/CodeGenerators/Types.hs
+src/CodeGenerators/LowLevelTypes.hs
+src/CodeGenerators/TypeDefinitions.hs
 src/CodeGenerators/Values.hs
+
+src/CodeGenerators/TypeChecking.hs
+src/CodeGenerators/ErrorMessages.hs
 
 src/InitialState.hs
 src/Helpers.hs
