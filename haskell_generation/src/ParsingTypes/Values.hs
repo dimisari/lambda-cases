@@ -4,7 +4,7 @@ import Data.List (intercalate)
 
 import Helpers ((==>), (.>))
 
-import ParsingTypes.LowLevel (Literal, ValueName, Input)
+import ParsingTypes.LowLevelValues (Literal, ValueName, Input)
 import ParsingTypes.Types (ValueType)
 
 -- All: Types, Show instances

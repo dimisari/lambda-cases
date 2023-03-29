@@ -1,8 +1,8 @@
-module CodeGenerators.ErrorMessages where
+module GenerationHelpers.ErrorMessages where
   
 import Helpers (Haskell, Error)
 
-import ParsingTypes.LowLevel (ValueName, Abstraction)
+import ParsingTypes.LowLevelValues (ValueName, Abstraction)
 import ParsingTypes.LowLevelTypes (TypeName)
 import ParsingTypes.Values
 

@@ -1,4 +1,4 @@
-module ParsingTypes.LowLevel where
+module ParsingTypes.LowLevelValues where
 
 import Data.List (intercalate)
 

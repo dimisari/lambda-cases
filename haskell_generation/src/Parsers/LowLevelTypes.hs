@@ -14,7 +14,7 @@ type_name_p =
   return $ TN (initial_upper : lowers_uppers)
   :: Parser TypeName
 
--- LeftTypeInputs:
+-- LeftTypeInputs: left_type_inputs_p, non_empty_left_type_inputs_p
 
 left_type_inputs_p =
   option (LeftTypeInputs []) non_empty_left_type_inputs_p
@@ -27,7 +27,7 @@ non_empty_left_type_inputs_p =
   return (LeftTypeInputs $ type_name1 : type_names)
   :: Parser LeftTypeInputs
 
--- RightTypeInputs:
+-- RightTypeInputs: right_type_inputs_p, non_empty_right_type_inputs_p
 
 right_type_inputs_p =
   option (RightTypeInputs []) non_empty_right_type_inputs_p
@@ -40,7 +40,7 @@ non_empty_right_type_inputs_p =
   return (RightTypeInputs $ type_name1 : type_names)
   :: Parser RightTypeInputs
 
--- TypeApplication
+-- TypeApplication: type_application_p
 
 type_application_p = 
   left_type_inputs_p >>= \left_type_inputs ->

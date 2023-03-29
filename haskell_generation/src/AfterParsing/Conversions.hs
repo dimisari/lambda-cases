@@ -4,8 +4,8 @@ import Data.List (intercalate)
 
 import Helpers ((==>))
 
-import ParsingTypes.LowLevel (ValueName)
-import ParsingTypes.LowLevelTypes (TypeName)
+import ParsingTypes.LowLevelValues (ValueName)
+import ParsingTypes.LowLevelTypes (TypeApplication(..))
 import ParsingTypes.Types
 import ParsingTypes.Values
 import ParsingTypes.TypeDefinitions
@@ -66,7 +66,7 @@ expr_to_base_value = ( \expr -> case expr of
 value_type_conversion = ( \case
   FunctionType func_type -> func_type_to_val_type func_type
   ProductType cartesian_product -> cart_prod_to_val_type cartesian_product
-  TypeName name -> TypeName' name
+  TypeApplication (NameAndTypeInputs name _ _) -> TypeName' name
   ) :: ValueType -> ValueType'
 
 func_type_to_val_type = ( \(InputAndOutput input output) -> case input of 
@@ -90,7 +90,7 @@ multiple_inputs_to_val_type = ( \(InTypes in_t1 in_t2 in_ts) output ->
   ) :: InputTypes -> OutputType -> ValueType'
 
 output_type_to_val_type = ( \case
-  OutputTypeName name -> TypeName' name
+  OutputTypeApplication (NameAndTypeInputs name _ _) -> TypeName' name
   OutputProductType cartesian_product -> cart_prod_to_val_type cartesian_product
   ) :: OutputType -> ValueType'
 

@@ -5,11 +5,10 @@ import Text.Parsec.String (Parser)
 
 import Helpers ((==>), eof_or_new_lines)
 
-import ParsingTypes.LowLevelTypes (TypeName(..))
 import ParsingTypes.Types
 
-import Parsers.LowLevel (value_name_p)
-import Parsers.LowLevelTypes (type_name_p)
+import Parsers.LowLevelValues (value_name_p)
+import Parsers.LowLevelTypes (type_application_p)
 
 -- All:
 -- ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType, ValueType
@@ -27,7 +26,7 @@ inner_value_type_p =
   (char '(' *>
   (FunctionType <$> try function_type_p <|> ProductType <$> product_type_p)
   <* char ')') <|>
-  TypeName <$> type_name_p
+  TypeApplication <$> type_application_p
   :: Parser ValueType
 
 -- InputTypeOrTypes: input_type_or_types_p, one_input_val_type_p
@@ -39,7 +38,7 @@ input_type_or_types_p =
 one_input_val_type_p =
   FunctionType <$> (char '(' *> function_type_p <* char ')') <|>
   ProductType <$> try product_type_p <|>
-  TypeName <$> type_name_p
+  TypeApplication <$> type_application_p
   :: Parser ValueType
 
 -- InputTypes: input_types_p
@@ -55,7 +54,7 @@ input_types_p =
 
 output_type_p =
   OutputProductType <$> try product_type_p <|>
-  OutputTypeName <$> type_name_p
+  OutputTypeApplication <$> type_application_p
   :: Parser OutputType
 
 -- FunctionType: function_type_p
@@ -69,5 +68,5 @@ function_type_p =
 
 value_type_p =
   FunctionType <$> try function_type_p <|> ProductType <$> try product_type_p <|>
-  TypeName <$> type_name_p
+  TypeApplication <$> type_application_p
   :: Parser ValueType

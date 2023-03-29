@@ -6,7 +6,7 @@ import qualified Data.Map as M (Map, lookup, insert, insertWith)
 
 import Helpers (Haskell, Error, (.>), (==>))
 
-import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.LowLevelValues (ValueName(..))
 import ParsingTypes.LowLevelTypes (TypeName(..))
 import ParsingTypes.Types
 

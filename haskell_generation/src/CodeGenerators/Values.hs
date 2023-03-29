@@ -7,7 +7,7 @@ import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers (Haskell, Error, (==>), (.>), indent)
 
-import ParsingTypes.LowLevel (ValueName(..), Abstraction(..))
+import ParsingTypes.LowLevelValues (ValueName(..), Abstraction(..))
 import ParsingTypes.LowLevelTypes (TypeName(..))
 import ParsingTypes.Types (ValueType(..))
 import ParsingTypes.Values
@@ -17,9 +17,10 @@ import AfterParsing.Conversions
 
 import GenerationState.TypesAndOperations
 
-import CodeGenerators.ErrorMessages
-import CodeGenerators.LowLevel
-import CodeGenerators.TypeChecking (types_are_equivalent)
+import GenerationHelpers.ErrorMessages
+import GenerationHelpers.TypeChecking (types_are_equivalent)
+
+import CodeGenerators.LowLevelValues
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue

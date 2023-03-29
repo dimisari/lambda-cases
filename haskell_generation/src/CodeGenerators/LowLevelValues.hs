@@ -1,4 +1,4 @@
-module CodeGenerators.LowLevel where
+module CodeGenerators.LowLevelValues where
 
 import Data.List (intercalate)
 import qualified Data.Map as M (lookup)
@@ -7,15 +7,15 @@ import Control.Monad.Trans.Except (throwE)
 
 import Helpers (Haskell, (==>), (.>))
 
-import ParsingTypes.LowLevel
+import ParsingTypes.LowLevelValues
 import ParsingTypes.LowLevelTypes (TypeName(..))
 
 import AfterParsing.Types
 
 import GenerationState.TypesAndOperations
 
-import CodeGenerators.ErrorMessages
-import CodeGenerators.TypeChecking (types_are_equivalent)
+import GenerationHelpers.ErrorMessages
+import GenerationHelpers.TypeChecking (types_are_equivalent)
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions
 

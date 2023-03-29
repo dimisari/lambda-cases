@@ -3,8 +3,8 @@ module ParsingTypes.Types where
 import Data.List (intercalate)
 import Helpers ((==>), (.>))
 
-import ParsingTypes.LowLevel (ValueName)
-import ParsingTypes.LowLevelTypes (TypeName)
+import ParsingTypes.LowLevelValues (ValueName)
+import ParsingTypes.LowLevelTypes (TypeApplication)
 
 -- All: Types, Show instances
 
@@ -21,13 +21,14 @@ data InputTypes =
   InTypes ValueType ValueType [ ValueType ]
 
 data OutputType =
-  OutputTypeName TypeName | OutputProductType ProductType
+  OutputTypeApplication TypeApplication | OutputProductType ProductType
 
 data FunctionType =
   InputAndOutput InputTypeOrTypes OutputType
 
 data ValueType =
-  FunctionType FunctionType | ProductType ProductType | TypeName TypeName
+  FunctionType FunctionType | ProductType ProductType |
+  TypeApplication TypeApplication
 
 -- Show instances:
 -- ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType, ValueType
@@ -47,7 +48,7 @@ instance Show InputTypes where
 
 instance Show OutputType where
   show = \case
-    OutputTypeName name -> show name
+    OutputTypeApplication type_application -> show type_application
     OutputProductType product_type -> show product_type
 
 instance Show FunctionType where
@@ -57,5 +58,5 @@ instance Show FunctionType where
 instance Show ValueType where
   show = \case
     FunctionType funcion_type -> show funcion_type
-    TypeName name -> show name
+    TypeApplication name -> show name
     ProductType product_type -> show product_type

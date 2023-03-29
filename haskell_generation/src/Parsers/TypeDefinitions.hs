@@ -8,7 +8,7 @@ import Helpers ((==>), eof_or_new_lines)
 import ParsingTypes.LowLevelTypes (TypeName(..))
 import ParsingTypes.TypeDefinitions
 
-import Parsers.LowLevel (value_name_p)
+import Parsers.LowLevelValues (value_name_p)
 import Parsers.LowLevelTypes (type_name_p)
 import Parsers.Types (value_type_p)
 

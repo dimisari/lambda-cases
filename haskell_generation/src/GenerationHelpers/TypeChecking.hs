@@ -1,11 +1,11 @@
-module CodeGenerators.TypeChecking where
+module GenerationHelpers.TypeChecking where
 
 import Control.Monad ((>=>))
 import Control.Monad.Trans.Except (throwE)
 
 import Helpers (Haskell, (==>))
 
-import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.LowLevelValues (ValueName(..))
 import ParsingTypes.LowLevelTypes (TypeName(..))
 
 import AfterParsing.Types
@@ -13,7 +13,7 @@ import AfterParsing.Conversions
 
 import GenerationState.TypesAndOperations (Stateful, type_map_get)
 
-import CodeGenerators.ErrorMessages (type_check_err)
+import GenerationHelpers.ErrorMessages (type_check_err)
 
 -- All:
 -- types_are_equivalent, type_names_are_equivalent,
