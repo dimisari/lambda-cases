@@ -1,8 +1,8 @@
-module HaskellTypes.LowLevel where
+module ParsingTypes.LowLevel where
 
 import Data.List (intercalate)
 
-import Helpers ((==>))
+import Helpers ((==>), (.>))
 
 -- All: Types, Show instances
 
@@ -37,6 +37,7 @@ instance Show ManyAbstractions where
     "(" ++ map show (abs1 : abs2 : rest_of_abs)==>intercalate ", " ++ ")"
 
 instance Show Input where
-  show = \input -> (++ " -> ") $ case input of
-    OneAbstraction abstraction -> show abstraction
-    ManyAbstractions abstractions -> show abstractions
+  show = show_input .> (++ " -> ") where
+    show_input = \case
+      OneAbstraction abstraction -> show abstraction
+      ManyAbstractions abstractions -> show abstractions

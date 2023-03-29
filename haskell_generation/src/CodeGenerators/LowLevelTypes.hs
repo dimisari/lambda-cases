@@ -2,7 +2,7 @@ module CodeGenerators.LowLevelTypes where
 
 import Helpers (Haskell, (.>))
 
-import HaskellTypes.LowLevelTypes 
+import ParsingTypes.LowLevelTypes 
 
 -- All: TypeName, LeftTypeInputs, RightTypeInputs, TypeApplication
 

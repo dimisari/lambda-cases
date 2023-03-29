@@ -1,12 +1,14 @@
-module InitialState where
+module GenerationState.InitialState where
 
 import qualified Data.Map as M ( empty, fromList )
 
-import HaskellTypes.LowLevel (ValueName(..))
-import HaskellTypes.LowLevelTypes (TypeName(..))
-import HaskellTypes.Types (ValueType(..))
-import HaskellTypes.AfterParsing (ValueType'(..), FunctionType'(..), FieldsOrCases(..))
-import HaskellTypes.Generation (ValueMap, TypeMap, GenState(..))
+import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.LowLevelTypes (TypeName(..))
+import ParsingTypes.Types (ValueType(..))
+
+import AfterParsing.Types (ValueType'(..), FunctionType'(..))
+
+import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..))
 
 -- Initial state:
 -- int, int_x_int, bool, int_to_int_to_int
@@ -39,4 +41,4 @@ init_value_map =
   :: ValueMap
 
 init_state = GS 0 init_value_map M.empty
-  :: GenState
+  :: GenerationState

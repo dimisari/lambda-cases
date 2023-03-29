@@ -7,12 +7,15 @@ import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers (Haskell, Error, (==>), (.>), indent)
 
-import HaskellTypes.LowLevel (ValueName(..), Abstraction(..))
-import HaskellTypes.LowLevelTypes (TypeName(..))
-import HaskellTypes.Types (ValueType(..))
-import HaskellTypes.Values
-import HaskellTypes.AfterParsing
-import HaskellTypes.Generation
+import ParsingTypes.LowLevel (ValueName(..), Abstraction(..))
+import ParsingTypes.LowLevelTypes (TypeName(..))
+import ParsingTypes.Types (ValueType(..))
+import ParsingTypes.Values
+
+import AfterParsing.Types 
+import AfterParsing.Conversions 
+
+import GenerationState.TypesAndOperations
 
 import CodeGenerators.ErrorMessages
 import CodeGenerators.LowLevel

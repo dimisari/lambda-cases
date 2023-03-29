@@ -1,4 +1,4 @@
-module HaskellTypes.LowLevelTypes where
+module ParsingTypes.LowLevelTypes where
 
 import Data.List (intercalate)
 

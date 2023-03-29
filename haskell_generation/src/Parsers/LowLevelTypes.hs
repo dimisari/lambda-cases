@@ -3,7 +3,7 @@ module Parsers.LowLevelTypes where
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-import HaskellTypes.LowLevelTypes 
+import ParsingTypes.LowLevelTypes 
 
 -- All: TypeName, LeftTypeInputs, RightTypeInputs, TypeApplication
 

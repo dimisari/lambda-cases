@@ -5,8 +5,8 @@ import Text.Parsec.String (Parser)
 
 import Helpers ((==>), eof_or_new_lines)
 
-import HaskellTypes.LowLevelTypes (TypeName(..))
-import HaskellTypes.TypeDefinitions
+import ParsingTypes.LowLevelTypes (TypeName(..))
+import ParsingTypes.TypeDefinitions
 
 import Parsers.LowLevel (value_name_p)
 import Parsers.LowLevelTypes (type_name_p)

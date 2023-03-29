@@ -6,12 +6,13 @@ import Control.Monad ((>=>))
 import Control.Monad.State (evalState)
 import Control.Monad.Trans.Except (runExceptT)
 
-import InitialState (init_state)
+import GenerationState.InitialState (init_state)
 import Helpers (Haskell, Error, (.>), (==>))
 
-import HaskellTypes.Generation (Stateful)
-import HaskellTypes.TypeDefinitions (TypeDefinition)
-import HaskellTypes.Values (NamesTypesAndValues)
+import GenerationState.TypesAndOperations (Stateful)
+
+import ParsingTypes.TypeDefinitions (TypeDefinition)
+import ParsingTypes.Values (NamesTypesAndValues)
 
 import Parsers.TypeDefinitions (type_definition_p)
 import Parsers.Values (names_types_and_values_p)

@@ -4,11 +4,14 @@ import Data.List (intercalate)
 
 import Helpers (Haskell, (==>))
 
-import HaskellTypes.LowLevel (ValueName(..))
-import HaskellTypes.LowLevelTypes (TypeName(..))
-import HaskellTypes.TypeDefinitions 
-import HaskellTypes.AfterParsing
-import HaskellTypes.Generation (value_map_insert, type_map_insert, Stateful)
+import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.LowLevelTypes (TypeName(..))
+import ParsingTypes.TypeDefinitions 
+
+import AfterParsing.Types (ValueType'(..), FunctionType'(..), FieldsOrCases(..))
+import AfterParsing.Conversions 
+
+import GenerationState.TypesAndOperations
 
 -- All: Field, TupleTypeDefinition, OrTypeCase, OrTypeDefinition, TypeDefinition
 

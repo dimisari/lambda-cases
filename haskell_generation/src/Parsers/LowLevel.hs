@@ -5,7 +5,7 @@ import Text.Parsec.String (Parser)
 
 import Helpers ((==>), keywords)
 
-import HaskellTypes.LowLevel
+import ParsingTypes.LowLevel
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions, Input
 

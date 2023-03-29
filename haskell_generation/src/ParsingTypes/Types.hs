@@ -1,18 +1,15 @@
-module HaskellTypes.Types where
+module ParsingTypes.Types where
 
 import Data.List (intercalate)
 import Helpers ((==>), (.>))
 
-import HaskellTypes.LowLevel (ValueName)
-import HaskellTypes.LowLevelTypes (TypeName)
+import ParsingTypes.LowLevel (ValueName)
+import ParsingTypes.LowLevelTypes (TypeName)
 
 -- All: Types, Show instances
 
 -- Types:
--- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
--- ValueType
--- Field, TupleTypeDefinition, OrTypeCase, OrTypeDefinition
--- TypeDefinition, FieldsOrCases
+-- ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType, ValueType
 
 data ProductType =
   Types ValueType ValueType [ ValueType ]
@@ -33,10 +30,7 @@ data ValueType =
   FunctionType FunctionType | ProductType ProductType | TypeName TypeName
 
 -- Show instances:
--- TypeName, ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
--- ValueType
--- Field, TupleTypeDefinition, OrTypeCase, OrTypeDefinition
--- TypeDefinition
+-- ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType, ValueType
 
 instance Show ProductType where
   show = \(Types name1 name2 names) ->

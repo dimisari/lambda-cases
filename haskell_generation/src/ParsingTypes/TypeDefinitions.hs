@@ -1,11 +1,11 @@
-module HaskellTypes.TypeDefinitions where
+module ParsingTypes.TypeDefinitions where
 
 import Data.List (intercalate)
 import Helpers ((==>), (.>))
 
-import HaskellTypes.LowLevel (ValueName)
-import HaskellTypes.LowLevelTypes (TypeName)
-import HaskellTypes.Types (ValueType)
+import ParsingTypes.LowLevel (ValueName)
+import ParsingTypes.LowLevelTypes (TypeName)
+import ParsingTypes.Types (ValueType)
 
 -- All: Types, Show instances
 

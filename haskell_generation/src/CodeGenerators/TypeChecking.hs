@@ -5,10 +5,13 @@ import Control.Monad.Trans.Except (throwE)
 
 import Helpers (Haskell, (==>))
 
-import HaskellTypes.LowLevel (ValueName(..))
-import HaskellTypes.LowLevelTypes (TypeName(..))
-import HaskellTypes.AfterParsing 
-import HaskellTypes.Generation (Stateful, type_map_get)
+import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.LowLevelTypes (TypeName(..))
+
+import AfterParsing.Types
+import AfterParsing.Conversions 
+
+import GenerationState.TypesAndOperations (Stateful, type_map_get)
 
 import CodeGenerators.ErrorMessages (type_check_err)
 

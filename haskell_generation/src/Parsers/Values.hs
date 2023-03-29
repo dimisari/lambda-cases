@@ -6,9 +6,9 @@ import Text.Parsec.Combinator (choice)
 
 import Helpers
 
-import HaskellTypes.LowLevel (Abstraction)
-import HaskellTypes.Types (ValueType)
-import HaskellTypes.Values
+import ParsingTypes.LowLevel (Abstraction)
+import ParsingTypes.Types (ValueType)
+import ParsingTypes.Values
 
 import Parsers.LowLevel (literal_p, value_name_p, input_p)
 import Parsers.Types (value_type_p)

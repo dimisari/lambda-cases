@@ -7,11 +7,12 @@ import Control.Monad.Trans.Except (throwE)
 
 import Helpers (Haskell, (==>), (.>))
 
-import HaskellTypes.LowLevel
-import HaskellTypes.LowLevelTypes (TypeName(..))
-import HaskellTypes.AfterParsing
+import ParsingTypes.LowLevel
+import ParsingTypes.LowLevelTypes (TypeName(..))
 
-import HaskellTypes.Generation
+import AfterParsing.Types
+
+import GenerationState.TypesAndOperations
 
 import CodeGenerators.ErrorMessages
 import CodeGenerators.TypeChecking (types_are_equivalent)
