@@ -1,22 +1,22 @@
 
-src/HaskellTypes/LowLevel.hs
 src/HaskellTypes/LowLevelTypes.hs
-src/HaskellTypes/TypeDefinitions.hs
 src/HaskellTypes/Types.hs
+src/HaskellTypes/TypeDefinitions.hs
+src/HaskellTypes/LowLevel.hs
 src/HaskellTypes/Values.hs
 
 src/HaskellTypes/AfterParsing.hs
 src/HaskellTypes/Generation.hs
 
-src/Parsers/LowLevel.hs
 src/Parsers/LowLevelTypes.hs
-src/Parsers/TypeDefinitions.hs
 src/Parsers/Types.hs
+src/Parsers/TypeDefinitions.hs
+src/Parsers/LowLevel.hs
 src/Parsers/Values.hs
 
-src/CodeGenerators/LowLevel.hs
 src/CodeGenerators/LowLevelTypes.hs
 src/CodeGenerators/TypeDefinitions.hs
+src/CodeGenerators/LowLevel.hs
 src/CodeGenerators/Values.hs
 
 src/CodeGenerators/TypeChecking.hs
