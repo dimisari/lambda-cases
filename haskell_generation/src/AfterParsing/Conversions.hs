@@ -66,7 +66,8 @@ expr_to_base_value = ( \expr -> case expr of
 value_type_conversion = ( \case
   FunctionType func_type -> func_type_to_val_type func_type
   ProductType cartesian_product -> cart_prod_to_val_type cartesian_product
-  TypeApplication (ConstructorAndInputs name _ _) -> TypeName' name
+  TypeApplication type_application ->
+    TypeApplication' $ type_application_conversion type_application
   ) :: ValueType -> ValueType'
 
 func_type_to_val_type = ( \(InputAndOutputTypes input output_t) -> case input of 
@@ -91,7 +92,8 @@ multiple_inputs_to_val_type = ( \(InTypes in_t1 in_t2 in_ts) output_t ->
   ) :: InputTypes -> OutputType -> ValueType'
 
 output_type_to_val_type = ( \case
-  OutputTypeApplication (ConstructorAndInputs name _ _) -> TypeName' name
+  OutputTypeApplication type_application ->
+    TypeApplication' $ type_application_conversion type_application
   OutputProductType cartesian_product -> cart_prod_to_val_type cartesian_product
   ) :: OutputType -> ValueType'
 

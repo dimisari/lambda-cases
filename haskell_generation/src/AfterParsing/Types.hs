@@ -2,7 +2,7 @@ module AfterParsing.Types where
 
 import Data.List (intercalate)
 
-import Helpers ((==>))
+import Helpers ((==>), (.>))
 
 import ParsingTypes.LowLevelValues (ValueName)
 import ParsingTypes.LowLevelTypes (TypeName)
@@ -24,7 +24,8 @@ data ApplicationTree =
   Application Application | BaseValueLeaf BaseValue
   deriving Show
 
--- ValueType': FunctionType' + Show instance, ValueType' + Show instance
+-- ValueType':
+-- FunctionType', TypeApplication', ValueType' + Show instances
 
 data FunctionType' = 
   InputAndOutputType' ValueType' ValueType'
@@ -35,20 +36,24 @@ instance Show FunctionType' where
     FunctionType' _ -> "(" ++ show in_t ++ ")"
     _ -> show in_t) ++ " -> " ++ show out_t
 
+data TypeApplication' =
+  ConstructorAndInputs' TypeName [ TypeName ]
+  deriving Eq
+
+instance Show TypeApplication' where
+  show = \(ConstructorAndInputs' type_name input_types) ->
+    show type_name ++ concatMap (show .> (" " ++)) input_types
+
 data ValueType' =
-  FunctionType' FunctionType' | TypeName' TypeName | ProductType' [ ValueType' ]
+  FunctionType' FunctionType' | TypeApplication' TypeApplication' |
+  ProductType' [ ValueType' ]
   deriving Eq
 
 instance Show ValueType' where
   show = \case
     FunctionType' func_type -> show func_type
-    TypeName' type_name -> show type_name
+    TypeApplication' type_application -> show type_application
     ProductType' types -> "(" ++ map show types==>intercalate ", " ++ ")"
-
--- TypeApplication'
-
-data TypeApplication' =
-  ConstructorAndInputs' TypeName [ TypeName ]
 
 -- Type Definitions:
 -- Field', TupleTypeDefinition', OrTypeCase', OrTypeDefinition', FieldsOrCases

@@ -6,7 +6,7 @@ import ParsingTypes.LowLevelValues (ValueName(..))
 import ParsingTypes.LowLevelTypes (TypeName(..))
 import ParsingTypes.Types (ValueType(..))
 
-import AfterParsing.Types (ValueType'(..), FunctionType'(..))
+import AfterParsing.Types 
 
 import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..))
 
@@ -14,17 +14,18 @@ import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..
 -- int, int_x_int, bool, int_to_int_to_int
 -- init_value_map, init_state
 
-int = TypeName' $ TN "Int"
+int = TypeApplication' $ ConstructorAndInputs' (TN "Int") []
   :: ValueType'
 
 int_x_int = ProductType' [ int, int ]
   :: ValueType'
 
-bool = TypeName' $ TN "Bool"
+bool = TypeApplication' $ ConstructorAndInputs' (TN "Bool") []
   :: ValueType'
 
 int_to_int_to_int =
-  [ FunctionType' $ InputAndOutputType' int $ FunctionType' $ InputAndOutputType' int int ]
+  [ FunctionType' $
+    InputAndOutputType' int $ FunctionType' $ InputAndOutputType' int int ]
   :: [ ValueType' ]
 
 init_value_map = 
