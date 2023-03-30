@@ -147,7 +147,7 @@ application_type_inference_g = ( \(ApplicationTrees tree1 tree2) ->
     _ -> throwE "Cannot apply something that is not a function"
   ) :: Application -> Stateful (Haskell, ValueType')
 
-tree1_func_type_g = ( \tree1_hs (InAndOutType input_t output_t) tree2 -> 
+tree1_func_type_g = ( \tree1_hs (InputAndOutputType' input_t output_t) tree2 -> 
   application_tree_g tree2 input_t >>= \tree2_hs ->
   let 
   tree2_hs' = case tree2 of 
@@ -277,7 +277,7 @@ lit_or_val_name_type_inference_g = (
 -- SpecificCase: specific_case_g, abs_g, specific_case_type_inference_g
 
 specific_case_g = ( \(SpecificCase lit_or_val_name value_expression) -> \case
-  FunctionType' (InAndOutType input_t output_t) ->
+  FunctionType' (InputAndOutputType' input_t output_t) ->
     get_indent_level >>= \ind_lev ->
     literal_or_value_name_g lit_or_val_name input_t >>= \lit_or_val_name_hs ->
     value_expression_g value_expression output_t >>= \value_expr_hs ->
@@ -297,13 +297,13 @@ specific_case_type_inference_g = ( \(SpecificCase lit_or_val_name val_expr) ->
   value_expression_type_inference_g val_expr >>= \(val_expr_hs, v_t) ->
   return
     ( indent ind_lev ++ lovn_g ++ " -> " ++ val_expr_hs
-    , FunctionType' $ InAndOutType lovn_t v_t )
+    , FunctionType' $ InputAndOutputType' lovn_t v_t )
   ) :: SpecificCase -> Stateful (Haskell, ValueType')
 
 -- DefaultCase: specific_case_g, specific_case_type_inference_g
 
 default_case_g = ( \(DefaultCase value_expression) -> \case
-  FunctionType' (InAndOutType input_t output_t) -> 
+  FunctionType' (InputAndOutputType' input_t output_t) -> 
     get_indent_level >>= \ind_lev ->
     value_map_insert (VN "value") input_t >>
     value_expression_g value_expression output_t >>= \value_expression_hs ->

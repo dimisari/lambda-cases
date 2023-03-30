@@ -46,5 +46,5 @@ type_application_p =
   left_type_inputs_p >>= \left_type_inputs ->
   type_name_p >>= \type_name ->
   right_type_inputs_p >>= \right_type_inputs ->
-  return $ NameAndTypeInputs type_name left_type_inputs right_type_inputs
+  return $ ConstructorAndInputs type_name left_type_inputs right_type_inputs
   :: Parser TypeApplication

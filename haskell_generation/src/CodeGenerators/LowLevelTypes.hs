@@ -25,7 +25,8 @@ right_type_inputs_g = ( \(RightTypeInputs type_names) ->
 
 -- TypeApplication
 
-type_application_g = ( \(NameAndTypeInputs t_name left_t_inputs right_t_inputs) ->
+type_application_g = (
+  \(ConstructorAndInputs t_name left_t_inputs right_t_inputs) ->
   type_name_g t_name ++
     left_type_inputs_g left_t_inputs ++ right_type_inputs_g right_t_inputs
   ) :: TypeApplication -> Haskell

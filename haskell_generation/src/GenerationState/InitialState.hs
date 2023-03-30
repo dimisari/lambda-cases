@@ -24,15 +24,15 @@ bool = TypeName' $ TN "Bool"
   :: ValueType'
 
 int_to_int_to_int =
-  [ FunctionType' $ InAndOutType int $ FunctionType' $ InAndOutType int int ]
+  [ FunctionType' $ InputAndOutputType' int $ FunctionType' $ InputAndOutputType' int int ]
   :: [ ValueType' ]
 
 init_value_map = 
   M.fromList
     [ (VN "div" , int_to_int_to_int)
     , (VN "mod" , int_to_int_to_int)
-    , (VN "get_1st" , [ FunctionType' $ InAndOutType int_x_int int ])
-    , (VN "abs" , [ FunctionType' $ InAndOutType int int ])
+    , (VN "get_1st" , [ FunctionType' $ InputAndOutputType' int_x_int int ])
+    , (VN "abs" , [ FunctionType' $ InputAndOutputType' int int ])
     , (VN "max" , int_to_int_to_int)
     , (VN "min" , int_to_int_to_int)
     , (VN "true" , [ bool ])

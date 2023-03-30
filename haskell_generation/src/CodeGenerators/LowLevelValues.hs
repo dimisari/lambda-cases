@@ -89,7 +89,7 @@ use_fields_prod_type_g = ( \types val_type ->
 prod_type_fields = map VN [ "first", "second", "third", "fourth", "fifth" ]
   :: [ ValueName ]
 
-field_and_val_type_g = ( \(FNameAndType field_name field_type) ->
+field_and_val_type_g = ( \(NameAndType' field_name field_type) ->
   val_name_insert_and_return field_name field_type
   ) :: Field' -> Stateful Haskell
 
@@ -114,7 +114,7 @@ input_g = ( \input val_type ->
 abstractions_g = ( \abstractions val_type -> case abstractions of
   [] -> return (val_type, "")
   abs1 : other_abs -> case val_type of
-    FunctionType' (InAndOutType input_type output_type) -> 
+    FunctionType' (InputAndOutputType' input_type output_type) -> 
       abstraction_g abs1 input_type >>= \abs1_hs ->
       abstractions_g other_abs output_type >>= \(abs_type, other_abs_hs) ->
       return (abs_type, abs1_hs ++ " " ++ other_abs_hs)

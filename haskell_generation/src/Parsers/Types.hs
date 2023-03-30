@@ -61,7 +61,7 @@ output_type_p =
 
 function_type_p =
   input_type_or_types_p >>= \input -> string " -> " >> output_type_p >>= \output ->
-  return $ InputAndOutput input output
+  return $ InputAndOutputTypes input output
   :: Parser FunctionType
 
 -- ValueType: value_type_p

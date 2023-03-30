@@ -10,13 +10,11 @@ import ParsingTypes.Types
 import ParsingTypes.Values
 import ParsingTypes.TypeDefinitions
 
--- All: Types, Functions
+-- All: Types, Show instances
 
--- Types:
--- Application, ApplicationTree,
--- FunctionType', ValueType',
--- Field', TupleTypeDefinition', OrTypeCase'
--- OrTypeDefinition', TypeDefinition', FieldsOrCases
+-- Types: Application, ValueType', TypeApplication', Type Definitions
+
+-- Application: Application, ApplicationTree
 
 data Application =
   ApplicationTrees ApplicationTree ApplicationTree
@@ -26,12 +24,14 @@ data ApplicationTree =
   Application Application | BaseValueLeaf BaseValue
   deriving Show
 
+-- ValueType': FunctionType' + Show instance, ValueType' + Show instance
+
 data FunctionType' = 
-  InAndOutType ValueType' ValueType'
+  InputAndOutputType' ValueType' ValueType'
   deriving Eq
 
 instance Show FunctionType' where
-  show = \(InAndOutType in_t out_t) -> (case in_t of
+  show = \(InputAndOutputType' in_t out_t) -> (case in_t of
     FunctionType' _ -> "(" ++ show in_t ++ ")"
     _ -> show in_t) ++ " -> " ++ show out_t
 
@@ -45,25 +45,27 @@ instance Show ValueType' where
     TypeName' type_name -> show type_name
     ProductType' types -> "(" ++ map show types==>intercalate ", " ++ ")"
 
+-- TypeApplication'
+
+data TypeApplication' =
+  ConstructorAndInputs' TypeName [ TypeName ]
+
+-- Type Definitions:
+-- Field', TupleTypeDefinition', OrTypeCase', OrTypeDefinition', FieldsOrCases
+
 data Field' =
-  FNameAndType { get_name :: ValueName, get_type :: ValueType' }
+  NameAndType' { get_name :: ValueName, get_type :: ValueType' }
   deriving Show
 
 data TupleTypeDefinition' =
-  TTNameAndFields TypeName [ Field' ]
-  deriving Show
+  NameAndFields' TypeApplication' [ Field' ]
 
 data OrTypeCase' =
-  NameAndMaybeType ValueName (Maybe ValueType')
+  NameAndMaybeInputType' ValueName (Maybe ValueType')
   deriving Show
 
 data OrTypeDefinition' =
-  ValNameAndCases TypeName [ OrTypeCase' ]
-  deriving Show
-
-data TypeDefinition' =
-  TupleTypeDefinition' TupleTypeDefinition' | OrTypeDefinition' OrTypeDefinition'
-  deriving Show
+  NameAndCases' TypeApplication' [ OrTypeCase' ]
 
 data FieldsOrCases =
   FieldList [ Field' ] | OrTypeCaseList [ OrTypeCase' ]

@@ -18,7 +18,7 @@ newtype RightTypeInputs =
   RightTypeInputs [ TypeName ]
 
 data TypeApplication =
-  NameAndTypeInputs TypeName LeftTypeInputs RightTypeInputs
+  ConstructorAndInputs TypeName LeftTypeInputs RightTypeInputs
 
 -- Show instances: TypeName, LeftTypeInputs, RightTypeInputs, TypeApplication
 
@@ -34,5 +34,5 @@ instance Show RightTypeInputs where
     "<==(" ++ type_names==>map show==>intercalate ", " ++ ")"
 
 instance Show TypeApplication where
-  show = \(NameAndTypeInputs type_name left_type_inputs right_type_inputs) ->
+  show = \(ConstructorAndInputs type_name left_type_inputs right_type_inputs) ->
     show left_type_inputs ++ show type_name ++ show right_type_inputs

@@ -9,7 +9,7 @@ import ParsingTypes.LowLevelTypes (TypeName(..))
 import ParsingTypes.TypeDefinitions
 
 import Parsers.LowLevelValues (value_name_p)
-import Parsers.LowLevelTypes (type_name_p)
+import Parsers.LowLevelTypes (type_application_p)
 import Parsers.Types (value_type_p)
 
 -- All:
@@ -25,10 +25,10 @@ field_name_and_type_p =
 -- TupleTypeDefinition: tuple_type_definition_p
 
 tuple_type_definition_p =
-  string "tuple_type " >> type_name_p >>= \type_name ->
+  string "tuple_type " >> type_application_p >>= \type_application ->
   string "\nvalue (" >>
   (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
-  string ")" >> eof_or_new_lines >> NameAndFields type_name fields==>return
+  string ")" >> eof_or_new_lines >> NameAndFields type_application fields==>return
   :: Parser TupleTypeDefinition
 
 -- OrTypeCase: case_and_maybe_type_p
@@ -37,17 +37,17 @@ case_and_maybe_type_p =
   value_name_p >>= \value_name ->
   optionMaybe (string "<==(value: " *> value_type_p <* char ')') >>=
     \maybe_value_type ->
-  return $ OrTypeCase value_name maybe_value_type
+  return $ NameAndMaybeInputType value_name maybe_value_type
   :: Parser OrTypeCase
 
 -- OrTypeDefinition: or_type_definition_p
 
 or_type_definition_p =
-  string "or_type " >> type_name_p >>= \type_name ->
+  string "or_type " >> type_application_p >>= \type_application ->
   string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
   string " | " >> case_and_maybe_type_p >>= \case2 ->
   many (try $ string " | " >> case_and_maybe_type_p) >>= \cases ->
-  eof_or_new_lines >> NameAndCases type_name case1 case2 cases==>return
+  eof_or_new_lines >> NameAndCases type_application case1 case2 cases==>return
   :: Parser OrTypeDefinition
 
 -- TypeDefinition: type_definition_p

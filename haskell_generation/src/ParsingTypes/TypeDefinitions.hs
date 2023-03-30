@@ -4,7 +4,7 @@ import Data.List (intercalate)
 import Helpers ((==>), (.>))
 
 import ParsingTypes.LowLevelValues (ValueName)
-import ParsingTypes.LowLevelTypes (TypeName)
+import ParsingTypes.LowLevelTypes (TypeName, TypeApplication)
 import ParsingTypes.Types (ValueType)
 
 -- All: Types, Show instances
@@ -15,13 +15,13 @@ data Field =
   NameAndType ValueName ValueType 
 
 data TupleTypeDefinition =
-  NameAndFields TypeName [ Field ]
+  NameAndFields TypeApplication [ Field ]
 
 data OrTypeCase =
-  OrTypeCase ValueName (Maybe ValueType)
+  NameAndMaybeInputType ValueName (Maybe ValueType)
 
 data OrTypeDefinition =
-  NameAndCases TypeName OrTypeCase OrTypeCase [ OrTypeCase ]
+  NameAndCases TypeApplication OrTypeCase OrTypeCase [ OrTypeCase ]
 
 data TypeDefinition =
   TupleTypeDefinition TupleTypeDefinition | OrTypeDefinition OrTypeDefinition
@@ -34,19 +34,19 @@ instance Show Field where
     show field_name ++ ": " ++ show field_type
 
 instance Show TupleTypeDefinition where
-  show = \(NameAndFields type_name fields) ->
-    "\ntuple_type " ++ show type_name ++
+  show = \(NameAndFields type_application fields) ->
+    "\ntuple_type " ++ show type_application ++
     "\nvalue (" ++ fields==>map show==>intercalate ", "  ++ ")\n"
 
 instance Show OrTypeCase where
-  show = \(OrTypeCase case_name maybe_case_type) ->
+  show = \(NameAndMaybeInputType case_name maybe_case_type) ->
     show case_name ++ case maybe_case_type of 
       Just case_type -> "<==(value: " ++ show case_type ++ ")"
       Nothing -> ""
 
 instance Show OrTypeDefinition where
-  show = \(NameAndCases type_name case1 case2 cases) ->
-    "\nor_type " ++ show type_name ++
+  show = \(NameAndCases type_application case1 case2 cases) ->
+    "\nor_type " ++ show type_application ++
     "\nvalues " ++ (case1 : case2 : cases)==>map show==>intercalate " | " ++ "\n"
 
 instance Show TypeDefinition where
