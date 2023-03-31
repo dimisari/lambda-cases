@@ -22,13 +22,13 @@ import GenerationHelpers.TypeChecking (types_are_equivalent)
 -- Literal: literal_g, literal_type_inference_g
 
 literal_g = ( \literal val_type -> 
-  (val_type == (TypeApplication' $ ConstructorAndInputs' (TN "Int") [])) ==> \case
+  (val_type == (ConsAndTypeVars' $ ConsAndTVars' (TN "Int") [])) ==> \case
     True -> return $ show literal
     False -> throwE $ literal_not_int_err val_type
   ) :: Literal -> ValueType' -> Stateful Haskell
 
 literal_type_inference_g = ( \literal ->
-  return (show literal, TypeApplication' $ ConstructorAndInputs' (TN "Int") [])
+  return (show literal, ConsAndTypeVars' $ ConsAndTVars' (TN "Int") [])
   ) :: Literal -> Stateful (Haskell, ValueType')
 
 -- ValueName: value_name_g, value_name_type_inference_g
@@ -64,7 +64,7 @@ val_name_insert_and_return = ( \value_name val_type ->
   ) :: ValueName -> ValueType' -> Stateful Haskell
 
 use_fields_g = ( \val_type -> case val_type of
-  TypeApplication' (ConstructorAndInputs' type_name _) ->
+  ConsAndTypeVars' (ConsAndTVars' type_name _) ->
     use_fields_type_name_g type_name val_type
   ProductType' types -> use_fields_prod_type_g types val_type
   _ -> undefined 
@@ -76,7 +76,7 @@ use_fields_type_name_g = ( \type_name val_type ->
       value_map_insert (VN "tuple") val_type >>
       mapM field_and_val_type_g fields >>= \val_names ->
       return $
-        "tuple@(" ++ show type_name ++ "C" ++ concatMap (" " ++) val_names ++ ")"
+        "tuple@(C" ++ show type_name ++ concatMap (" " ++) val_names ++ ")"
     _ -> undefined
   ) :: TypeName -> ValueType' -> Stateful Haskell
 

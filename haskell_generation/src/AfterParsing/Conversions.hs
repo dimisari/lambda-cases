@@ -66,8 +66,8 @@ expr_to_base_value = ( \expr -> case expr of
 value_type_conversion = ( \case
   FunctionType func_type -> func_type_to_val_type func_type
   ProductType cartesian_product -> cart_prod_to_val_type cartesian_product
-  TypeApplication type_application ->
-    TypeApplication' $ type_application_conversion type_application
+  ConsAndTypeVars type_application ->
+    ConsAndTypeVars' $ type_application_conversion type_application
   ) :: ValueType -> ValueType'
 
 func_type_to_val_type = ( \(InputAndOutputTypes input output_t) -> case input of 
@@ -92,8 +92,8 @@ multiple_inputs_to_val_type = ( \(InTypes in_t1 in_t2 in_ts) output_t ->
   ) :: InputTypes -> OutputType -> ValueType'
 
 output_type_to_val_type = ( \case
-  OutputTypeApplication type_application ->
-    TypeApplication' $ type_application_conversion type_application
+  OutputConsAndTypeVars type_application ->
+    ConsAndTypeVars' $ type_application_conversion type_application
   OutputProductType cartesian_product -> cart_prod_to_val_type cartesian_product
   ) :: OutputType -> ValueType'
 
@@ -103,13 +103,26 @@ cart_prod_to_val_type = ( \(Types value_type1 value_type2 other_value_types) ->
     map value_type_conversion other_value_types
   ) :: ProductType -> ValueType'
 
--- TypeApplication: type_application_conversion
+-- ConsAndTypeVars: type_application_conversion
 
 type_application_conversion = ( 
-  \(ConstructorAndInputs constructor_name
-    (LeftTypeInputs left_inputs) (RightTypeInputs right_inputs)) ->
-  ConstructorAndInputs' constructor_name $ left_inputs ++ right_inputs
-  ) :: TypeApplication -> TypeApplication'
+  \(ConsAndTVars constructor_name left_input_ts right_input_ts) ->
+  ConsAndTVars' constructor_name $
+    left_input_ts_conversion left_input_ts ++
+    right_input_ts_conversion right_input_ts
+  ) :: ConsAndTypeVars -> ConsAndTypeVars'
+
+left_input_ts_conversion = ( \case
+  NoLeftTVars -> []
+  OneLeftTVar type_name -> [ type_name ]
+  ManyLeftTVars t_name1 t_name2 t_names -> t_name1 : t_name2 : t_names
+  ) :: LeftTypeVars -> [ TypeName ]
+
+right_input_ts_conversion = ( \case
+  NoRightTVar -> []
+  OneRightTVar type_name -> [ type_name ]
+  ManyRightTVars t_name1 t_name2 t_names -> t_name1 : t_name2 : t_names
+  ) :: RightTypeVars -> [ TypeName ]
 
 -- Type Definitions:
 -- field_conversion, tuple_type_def_conversion,

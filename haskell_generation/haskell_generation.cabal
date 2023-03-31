@@ -34,7 +34,6 @@ executable haskell_generation
                         GenerationHelpers.TypeChecking,
                         GenerationHelpers.ErrorMessages,
 
-                        CodeGenerators.LowLevelTypes,
                         CodeGenerators.TypeDefinitions,
                         CodeGenerators.LowLevelValues, CodeGenerators.Values
 

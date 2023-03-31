@@ -4,7 +4,7 @@ import Data.List (intercalate)
 import Helpers ((==>), (.>))
 
 import ParsingTypes.LowLevelValues (ValueName)
-import ParsingTypes.LowLevelTypes (TypeName, TypeApplication)
+import ParsingTypes.LowLevelTypes (TypeName, ConsAndTypeVars)
 import ParsingTypes.Types (ValueType)
 
 -- All: Types, Show instances
@@ -15,13 +15,13 @@ data Field =
   NameAndType ValueName ValueType 
 
 data TupleTypeDefinition =
-  NameAndFields TypeApplication [ Field ]
+  NameAndFields ConsAndTypeVars [ Field ]
 
 data OrTypeCase =
   NameAndMaybeInputType ValueName (Maybe ValueType)
 
 data OrTypeDefinition =
-  NameAndCases TypeApplication OrTypeCase OrTypeCase [ OrTypeCase ]
+  NameAndCases ConsAndTypeVars OrTypeCase OrTypeCase [ OrTypeCase ]
 
 data TypeDefinition =
   TupleTypeDefinition TupleTypeDefinition | OrTypeDefinition OrTypeDefinition

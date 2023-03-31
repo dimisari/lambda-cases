@@ -31,7 +31,7 @@ type Path = String
 -- examples_input_output_paths, haskell_header
 
 lcases_examples_names =
-  [ "my_gcd", "ext_euc_no_tuple_type", "ext_euc_tuple_type" ]
+  [ "my_gcd", "ext_euc_no_tuple_type", "ext_euc_tuple_type", "basic_or_types" ]
   :: [ String ]
 
 lcases_examples_paths =

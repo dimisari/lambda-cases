@@ -6,33 +6,41 @@ import Helpers ((==>))
 
 -- All: Types, Show instances
 
--- Types: TypeName, LeftTypeInputs, RightTypeInputs, TypeApplication
+-- Types: TypeName, LeftTypeVars, RightTypeVars, ConsAndTypeVars
 
 newtype TypeName =
   TN String deriving (Eq, Ord)
 
-newtype LeftTypeInputs = 
-  LeftTypeInputs [ TypeName ]
+data LeftTypeVars = 
+  NoLeftTVars | OneLeftTVar TypeName |
+  ManyLeftTVars TypeName TypeName [ TypeName ]
 
-newtype RightTypeInputs = 
-  RightTypeInputs [ TypeName ]
+data RightTypeVars = 
+  NoRightTVar | OneRightTVar TypeName |
+  ManyRightTVars TypeName TypeName [ TypeName ]
 
-data TypeApplication =
-  ConstructorAndInputs TypeName LeftTypeInputs RightTypeInputs
+data ConsAndTypeVars =
+  ConsAndTVars TypeName LeftTypeVars RightTypeVars
 
--- Show instances: TypeName, LeftTypeInputs, RightTypeInputs, TypeApplication
+-- Show instances: TypeName, LeftTypeVars, RightTypeVars, ConsAndTypeVars
 
 instance Show TypeName where
   show = \(TN name) -> name
 
-instance Show LeftTypeInputs where
-  show = \(LeftTypeInputs type_names) ->
-    "(" ++ type_names==>map show==>intercalate ", " ++ ")==>"
+instance Show LeftTypeVars where
+  show = \case
+    NoLeftTVars -> ""
+    OneLeftTVar type_name -> show type_name ++ "==>"
+    ManyLeftTVars t_name1 t_name2 t_names ->
+      "(" ++ (t_name1 : t_name2 : t_names)==>map show==>intercalate ", " ++ ")==>"
 
-instance Show RightTypeInputs where
-  show = \(RightTypeInputs type_names) ->
-    "<==(" ++ type_names==>map show==>intercalate ", " ++ ")"
+instance Show RightTypeVars where
+  show = \case
+    NoRightTVar -> ""
+    OneRightTVar type_name -> "<==" ++ show type_name
+    ManyRightTVars t_name1 t_name2 t_names ->
+      "<==("  ++ (t_name1 : t_name2 : t_names)==>map show==>intercalate ", " ++ ")"
 
-instance Show TypeApplication where
-  show = \(ConstructorAndInputs type_name left_type_inputs right_type_inputs) ->
-    show left_type_inputs ++ show type_name ++ show right_type_inputs
+instance Show ConsAndTypeVars where
+  show = \(ConsAndTVars type_name left_type_vars right_type_vars) ->
+    show left_type_vars ++ show type_name ++ show right_type_vars

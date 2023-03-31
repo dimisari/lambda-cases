@@ -1,0 +1,12 @@
+
+or_type LeftT==>Or<==RightT
+values from_left<==(value: LeftT) | from_right<==(value: RightT)
+
+or_type T==>OrNothing
+values from_type<==(value: T) | nothing
+
+tuple_type HeadAndTailOf<==T
+value (head: T, tail: ListOf<==T)
+
+or_type ListOf<==T
+values non_empty<==(value: HeadAndTailOf<==T) | empty

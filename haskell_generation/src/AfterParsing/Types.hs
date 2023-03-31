@@ -12,7 +12,7 @@ import ParsingTypes.TypeDefinitions
 
 -- All: Types, Show instances
 
--- Types: Application, ValueType', TypeApplication', Type Definitions
+-- Types: Application, ValueType', ConsAndTypeVars', Type Definitions
 
 -- Application: Application, ApplicationTree
 
@@ -25,7 +25,7 @@ data ApplicationTree =
   deriving Show
 
 -- ValueType':
--- FunctionType', TypeApplication', ValueType' + Show instances
+-- FunctionType', ConsAndTypeVars', ValueType' + Show instances
 
 data FunctionType' = 
   InputAndOutputType' ValueType' ValueType'
@@ -36,23 +36,24 @@ instance Show FunctionType' where
     FunctionType' _ -> "(" ++ show in_t ++ ")"
     _ -> show in_t) ++ " -> " ++ show out_t
 
-data TypeApplication' =
-  ConstructorAndInputs' TypeName [ TypeName ]
+data ConsAndTypeVars' =
+  ConsAndTVars'
+    { get_t_cons_name :: TypeName, get_input_ts :: [ TypeName ] }
   deriving Eq
 
-instance Show TypeApplication' where
-  show = \(ConstructorAndInputs' type_name input_types) ->
+instance Show ConsAndTypeVars' where
+  show = \(ConsAndTVars' type_name input_types) ->
     show type_name ++ concatMap (show .> (" " ++)) input_types
 
 data ValueType' =
-  FunctionType' FunctionType' | TypeApplication' TypeApplication' |
+  FunctionType' FunctionType' | ConsAndTypeVars' ConsAndTypeVars' |
   ProductType' [ ValueType' ]
   deriving Eq
 
 instance Show ValueType' where
   show = \case
     FunctionType' func_type -> show func_type
-    TypeApplication' type_application -> show type_application
+    ConsAndTypeVars' type_application -> show type_application
     ProductType' types -> "(" ++ map show types==>intercalate ", " ++ ")"
 
 -- Type Definitions:
@@ -63,14 +64,14 @@ data Field' =
   deriving Show
 
 data TupleTypeDefinition' =
-  NameAndFields' TypeApplication' [ Field' ]
+  NameAndFields' ConsAndTypeVars' [ Field' ]
 
 data OrTypeCase' =
   NameAndMaybeInputType' ValueName (Maybe ValueType')
   deriving Show
 
 data OrTypeDefinition' =
-  NameAndCases' TypeApplication' [ OrTypeCase' ]
+  NameAndCases' ConsAndTypeVars' [ OrTypeCase' ]
 
 data FieldsOrCases =
   FieldList [ Field' ] | OrTypeCaseList [ OrTypeCase' ]

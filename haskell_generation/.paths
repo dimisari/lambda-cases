@@ -20,7 +20,6 @@ src/GenerationState/InitialState.hs
 src/GenerationHelpers/TypeChecking.hs
 src/GenerationHelpers/ErrorMessages.hs
 
-src/CodeGenerators/LowLevelTypes.hs
 src/CodeGenerators/TypeDefinitions.hs
 src/CodeGenerators/LowLevelValues.hs
 src/CodeGenerators/Values.hs

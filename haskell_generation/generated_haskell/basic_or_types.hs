@@ -69,32 +69,18 @@ instance HasFifth (a, b, c, d, e) e where
 
 -- Generated
 
-data PrevCoeffs =
-  CPrevCoeffs { get_prev_prev :: Int, get_prev :: Int }
+data Or LeftT RightT =
+  Cfrom_left LeftT | Cfrom_right RightT
   deriving Show
 
-data GcdAndCoeffs =
-  CGcdAndCoeffs { get_gcd :: Int, get_a :: Int, get_b :: Int }
+data OrNothing T =
+  Cfrom_type T | Cnothing
   deriving Show
 
-extended_euclidean :: Int -> Int -> GcdAndCoeffs
-extended_euclidean = ee_recursion (init_a_coeffs) (init_b_coeffs)
+data HeadAndTailOf T =
+  CHeadAndTailOf { get_head :: T, get_tail :: ListOf T }
+  deriving Show
 
-init_a_coeffs :: PrevCoeffs
-init_a_coeffs = 
-  CPrevCoeffs (1) (0)
-
-init_b_coeffs :: PrevCoeffs
-init_b_coeffs = 
-  CPrevCoeffs (0) (1)
-
-ee_recursion :: PrevCoeffs -> PrevCoeffs -> Int -> Int -> GcdAndCoeffs
-ee_recursion = \a_coeffs b_coeffs x -> \case
-  0 -> 
-    CGcdAndCoeffs (x) (get_prev_prev a_coeffs) (get_prev_prev b_coeffs)
-  y -> 
-    ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y) where
-    next :: PrevCoeffs -> PrevCoeffs
-    next = \tuple@(CPrevCoeffs prev_prev prev) -> 
-      CPrevCoeffs (prev) (prev_prev - div x y * prev)
-
+data ListOf T =
+  Cnon_empty HeadAndTailOf T | Cempty
+  deriving Show

@@ -9,7 +9,7 @@ import ParsingTypes.LowLevelTypes (TypeName(..))
 import ParsingTypes.TypeDefinitions
 
 import Parsers.LowLevelValues (value_name_p)
-import Parsers.LowLevelTypes (type_application_p)
+import Parsers.LowLevelTypes (cons_and_type_vars_p)
 import Parsers.Types (value_type_p)
 
 -- All:
@@ -25,7 +25,7 @@ field_name_and_type_p =
 -- TupleTypeDefinition: tuple_type_definition_p
 
 tuple_type_definition_p =
-  string "tuple_type " >> type_application_p >>= \type_application ->
+  string "tuple_type " >> cons_and_type_vars_p >>= \type_application ->
   string "\nvalue (" >>
   (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
   string ")" >> eof_or_new_lines >> NameAndFields type_application fields==>return
@@ -43,7 +43,7 @@ case_and_maybe_type_p =
 -- OrTypeDefinition: or_type_definition_p
 
 or_type_definition_p =
-  string "or_type " >> type_application_p >>= \type_application ->
+  string "or_type " >> cons_and_type_vars_p >>= \type_application ->
   string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
   string " | " >> case_and_maybe_type_p >>= \case2 ->
   many (try $ string " | " >> case_and_maybe_type_p) >>= \cases ->

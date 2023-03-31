@@ -50,7 +50,7 @@ paren_type_inference_g = ( \(InnerExpression expr) ->
 
 tuple_g = ( \(Values val1 val2 vals) -> \case
   FunctionType' _ -> throwE "Tuple can't have function type"
-  TypeApplication' (ConstructorAndInputs' type_name _) ->
+  ConsAndTypeVars' (ConsAndTVars' type_name _) ->
     tuple_values_type_name_g (val1 : val2 : vals) type_name
   ProductType' types -> tuple_values_types_g (val1 : val2 : vals) types
   ) :: Tuple -> ValueType' -> Stateful Haskell
@@ -70,7 +70,7 @@ tuple_values_field_types_g = ( \values types type_name ->
   get_indent_level >>= \indent_level ->
   zipWith input_op_expr_or_op_expr_g values types==>sequence
     >>= concatMap ( \value_hs ->  " (" ++ value_hs ++ ")" ) .> \values_hs -> 
-  return $ "\n" ++ indent (indent_level + 1) ++ show type_name ++ "C" ++ values_hs
+  return $ "\n" ++ indent (indent_level + 1) ++ "C" ++ show type_name ++ values_hs
   ) :: [ InputOpExprOrOpExpr ] -> [ ValueType' ] -> TypeName -> Stateful Haskell
 
 tuple_values_types_g = ( \values types -> case length types == length values of
@@ -213,8 +213,8 @@ equality_factor_g = ( \case
 -- Equality: equality_g
 
 equality_g = ( \(EqualityFactors equality_factor1 equality_factor2) -> \case 
-  TypeApplication' (ConstructorAndInputs' (TN "Bool") []) ->
-    let int_t = TypeApplication' $ ConstructorAndInputs' (TN "Int") [] in
+  ConsAndTypeVars' (ConsAndTVars' (TN "Bool") []) ->
+    let int_t = ConsAndTypeVars' $ ConsAndTVars' (TN "Int") [] in
     equality_factor_g equality_factor1 int_t >>= \equality_factor1_hs ->
     equality_factor_g equality_factor2 int_t >>= \equality_factor2_hs ->
     return $ equality_factor1_hs ++ " == " ++ equality_factor2_hs
@@ -232,9 +232,9 @@ op_expr_type_inference_g = ( \operator_expr ->
   let
   pair = case operator_expr of
     Equality equality -> (equality_g equality val_type, val_type) where
-      val_type = TypeApplication' $ ConstructorAndInputs' (TN "Bool") []
+      val_type = ConsAndTypeVars' $ ConsAndTVars' (TN "Bool") []
     EqualityFactor equ_fac -> (equality_factor_g equ_fac val_type, val_type) where
-      val_type = TypeApplication' $ ConstructorAndInputs' (TN "Int") []
+      val_type = ConsAndTypeVars' $ ConsAndTVars' (TN "Int") []
     :: (Stateful Haskell, ValueType')
   in
   pair ==> \(g, t) -> g >>= \hs -> return (hs, t)

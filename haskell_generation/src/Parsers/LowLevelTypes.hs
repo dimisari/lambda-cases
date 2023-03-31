@@ -5,7 +5,7 @@ import Text.Parsec.String (Parser)
 
 import ParsingTypes.LowLevelTypes 
 
--- All: TypeName, LeftTypeInputs, RightTypeInputs, TypeApplication
+-- All: TypeName, LeftTypeVars, RightTypeVars, ConsAndTypeVars
 
 -- TypeName: type_name_p
  
@@ -14,37 +14,52 @@ type_name_p =
   return $ TN (initial_upper : lowers_uppers)
   :: Parser TypeName
 
--- LeftTypeInputs: left_type_inputs_p, non_empty_left_type_inputs_p
+-- LeftTypeVars: left_type_vars_p, some_left_type_vars_p, many_left_type_vars_p
 
-left_type_inputs_p =
-  option (LeftTypeInputs []) non_empty_left_type_inputs_p
-  :: Parser LeftTypeInputs
+left_type_vars_p =
+  option NoLeftTVars $ try some_left_type_vars_p
+  :: Parser LeftTypeVars
 
-non_empty_left_type_inputs_p =
+some_left_type_vars_p =
+  (many_left_type_vars_p <|> OneLeftTVar <$> type_name_p) <* string "==>"
+  :: Parser LeftTypeVars
+
+many_left_type_vars_p = 
+  many_type_vars_p >>= \(type_name1, type_name2, type_names) ->
+  return $ ManyLeftTVars type_name1 type_name2 type_names
+  :: Parser LeftTypeVars
+
+-- RightTypeVars: right_type_vars_p, some_right_type_vars_p, many_right_type_vars_p
+
+right_type_vars_p =
+  option NoRightTVar some_right_type_vars_p
+  :: Parser RightTypeVars
+
+some_right_type_vars_p =
+  string "<==" *> (many_right_type_vars_p <|> OneRightTVar <$> type_name_p)
+  :: Parser RightTypeVars
+
+many_right_type_vars_p = 
+  many_type_vars_p >>= \(type_name1, type_name2, type_names) ->
+  return $ ManyRightTVars type_name1 type_name2 type_names
+  :: Parser RightTypeVars
+
+-- ConsAndTypeVars: cons_and_type_vars_p
+
+cons_and_type_vars_p = 
+  left_type_vars_p >>= \left_input_ts ->
+  type_name_p >>= \type_name ->
+  right_type_vars_p >>= \right_input_ts ->
+  return $ ConsAndTVars type_name left_input_ts right_input_ts
+  :: Parser ConsAndTypeVars
+
+-- Helpers: many_type_vars_p
+
+many_type_vars_p =
   string "(" >> type_name_p >>= \type_name1 ->
-  many (string ", " >> type_name_p) >>= \type_names ->
-  string ")==>" >>
-  return (LeftTypeInputs $ type_name1 : type_names)
-  :: Parser LeftTypeInputs
-
--- RightTypeInputs: right_type_inputs_p, non_empty_right_type_inputs_p
-
-right_type_inputs_p =
-  option (RightTypeInputs []) non_empty_right_type_inputs_p
-  :: Parser RightTypeInputs
-
-non_empty_right_type_inputs_p =
-  string "<==(" >> type_name_p >>= \type_name1 ->
+  string ", " >> type_name_p >>= \type_name2 ->
   many (string ", " >> type_name_p) >>= \type_names ->
   string ")" >>
-  return (RightTypeInputs $ type_name1 : type_names)
-  :: Parser RightTypeInputs
+  return (type_name1, type_name2, type_names)
+  :: Parser (TypeName, TypeName, [ TypeName ])
 
--- TypeApplication: type_application_p
-
-type_application_p = 
-  left_type_inputs_p >>= \left_type_inputs ->
-  type_name_p >>= \type_name ->
-  right_type_inputs_p >>= \right_type_inputs ->
-  return $ ConstructorAndInputs type_name left_type_inputs right_type_inputs
-  :: Parser TypeApplication
