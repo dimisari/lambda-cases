@@ -16,7 +16,7 @@ data LeftTypeVars =
   ManyLeftTVars TypeName TypeName [ TypeName ]
 
 data RightTypeVars = 
-  NoRightTVar | OneRightTVar TypeName |
+  NoRightTVars | OneRightTVar TypeName |
   ManyRightTVars TypeName TypeName [ TypeName ]
 
 data ConsAndTypeVars =
@@ -36,7 +36,7 @@ instance Show LeftTypeVars where
 
 instance Show RightTypeVars where
   show = \case
-    NoRightTVar -> ""
+    NoRightTVars -> ""
     OneRightTVar type_name -> "<==" ++ show type_name
     ManyRightTVars t_name1 t_name2 t_names ->
       "<==("  ++ (t_name1 : t_name2 : t_names)==>map show==>intercalate ", " ++ ")"

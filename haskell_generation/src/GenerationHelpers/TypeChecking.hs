@@ -21,8 +21,8 @@ import GenerationHelpers.ErrorMessages (type_check_err)
 -- named_type_and_val_type_are_equivalent, type_name_to_val_type
 
 types_are_equivalent = ( \val_type1 val_type2 -> case (val_type1, val_type2) of
-  ( ConsAndTypeVars' (ConsAndTVars' type_name1 _) 
-    , ConsAndTypeVars' (ConsAndTVars' type_name2 _)) ->
+  ( TypeApplication' (ConsAndTypeInputs' type_name1 _) 
+    , TypeApplication' (ConsAndTypeInputs' type_name2 _)) ->
     type_names_are_equivalent type_name1 type_name2
   (ProductType' types1, ProductType' types2) ->
     prod_types_are_equivalent types1 types2

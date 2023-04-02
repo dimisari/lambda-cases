@@ -14,13 +14,13 @@ import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..
 -- int, int_x_int, bool, int_to_int_to_int
 -- init_value_map, init_state
 
-int = ConsAndTypeVars' $ ConsAndTVars' (TN "Int") []
+int = TypeApplication' $ ConsAndTypeInputs' (TN "Int") []
   :: ValueType'
 
 int_x_int = ProductType' [ int, int ]
   :: ValueType'
 
-bool = ConsAndTypeVars' $ ConsAndTVars' (TN "Bool") []
+bool = TypeApplication' $ ConsAndTypeInputs' (TN "Bool") []
   :: ValueType'
 
 int_to_int_to_int =
@@ -41,5 +41,5 @@ init_value_map =
     ]
   :: ValueMap
 
-init_state = GS 0 init_value_map M.empty
+init_state = GS 0 init_value_map M.empty-- 'a'
   :: GenerationState

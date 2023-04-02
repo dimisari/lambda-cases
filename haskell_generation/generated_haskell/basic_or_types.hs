@@ -69,18 +69,18 @@ instance HasFifth (a, b, c, d, e) e where
 
 -- Generated
 
-data Or LeftT RightT =
-  Cfrom_left LeftT | Cfrom_right RightT
+data Or a b =
+  Cfrom_left a | Cfrom_right b
   deriving Show
 
-data OrNothing T =
-  Cfrom_type T | Cnothing
+data OrNothing a =
+  Cfrom_type a | Cnothing
   deriving Show
 
-data HeadAndTailOf T =
-  CHeadAndTailOf { get_head :: T, get_tail :: ListOf T }
+data HeadAndTailOf a =
+  CHeadAndTailOf { get_head :: a, get_tail :: (ListOf a) }
   deriving Show
 
-data ListOf T =
-  Cnon_empty HeadAndTailOf T | Cempty
+data ListOf a =
+  Cnon_empty (HeadAndTailOf a) | Cempty
   deriving Show

@@ -31,29 +31,28 @@ data FunctionType' =
   InputAndOutputType' ValueType' ValueType'
   deriving Eq
 
+data TypeApplication' = 
+  ConsAndTypeInputs' TypeName [ ValueType' ]
+  deriving Eq
+
+data ValueType' =
+  FunctionType' FunctionType' | TypeApplication' TypeApplication' |
+  ProductType' [ ValueType' ]
+  deriving Eq
+
 instance Show FunctionType' where
   show = \(InputAndOutputType' in_t out_t) -> (case in_t of
     FunctionType' _ -> "(" ++ show in_t ++ ")"
     _ -> show in_t) ++ " -> " ++ show out_t
 
-data ConsAndTypeVars' =
-  ConsAndTVars'
-    { get_t_cons_name :: TypeName, get_input_ts :: [ TypeName ] }
-  deriving Eq
-
-instance Show ConsAndTypeVars' where
-  show = \(ConsAndTVars' type_name input_types) ->
-    show type_name ++ concatMap (show .> (" " ++)) input_types
-
-data ValueType' =
-  FunctionType' FunctionType' | ConsAndTypeVars' ConsAndTypeVars' |
-  ProductType' [ ValueType' ]
-  deriving Eq
+instance Show TypeApplication' where
+  show = \(ConsAndTypeInputs' type_name type_inputs) ->
+    show type_name ++ concatMap (show .> (" " ++)) type_inputs
 
 instance Show ValueType' where
   show = \case
     FunctionType' func_type -> show func_type
-    ConsAndTypeVars' type_application -> show type_application
+    TypeApplication' type_application -> show type_application
     ProductType' types -> "(" ++ map show types==>intercalate ", " ++ ")"
 
 -- Type Definitions:
@@ -76,3 +75,14 @@ data OrTypeDefinition' =
 data FieldsOrCases =
   FieldList [ Field' ] | OrTypeCaseList [ OrTypeCase' ]
   deriving Show
+
+-- Other
+
+data ConsAndTypeVars' =
+  ConsAndTVars'
+    { get_t_cons_name :: TypeName, get_type_vars :: [ (TypeName, String) ] }
+
+instance Show ConsAndTypeVars' where
+  show = \(ConsAndTVars' type_name type_variables) ->
+    show type_name ++ concatMap (snd .> (" " ++)) type_variables
+

@@ -4,7 +4,7 @@ import Data.List (intercalate)
 import Helpers ((==>), (.>))
 
 import ParsingTypes.LowLevelValues (ValueName)
-import ParsingTypes.LowLevelTypes (TypeName, ConsAndTypeVars)
+import ParsingTypes.LowLevelTypes (TypeName)
 
 -- All: Types, Show instances
 
@@ -22,7 +22,7 @@ data InputTypes =
   InTypes ValueType ValueType [ ValueType ]
 
 data OutputType =
-  OutputConsAndTypeVars ConsAndTypeVars | OutputProductType ProductType
+  OutputTypeApp TypeApplication | OutputProductType ProductType
 
 data FunctionType =
   InputAndOutputTypes InputTypeOrTypes OutputType
@@ -40,7 +40,7 @@ data TypeApplication =
 
 data ValueType =
   FunctionType FunctionType | ProductType ProductType |
-  ConsAndTypeVars ConsAndTypeVars
+  TypeApplication TypeApplication
 
 -- Show instances:
 -- ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType
@@ -61,7 +61,7 @@ instance Show InputTypes where
 
 instance Show OutputType where
   show = \case
-    OutputConsAndTypeVars type_application -> show type_application
+    OutputTypeApp type_application -> show type_application
     OutputProductType product_type -> show product_type
 
 instance Show FunctionType where
@@ -89,5 +89,5 @@ instance Show TypeApplication where
 instance Show ValueType where
   show = \case
     FunctionType funcion_type -> show funcion_type
-    ConsAndTypeVars name -> show name
+    TypeApplication name -> show name
     ProductType product_type -> show product_type

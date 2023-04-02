@@ -20,30 +20,49 @@ import GenerationState.TypesAndOperations
 
 -- Field': field_g
 
-field_g = ( \(NameAndType' field_name field_type) type_application ->
+field_g = ( \(NameAndType' field_name field_type) cons_and_type_vars ->
+  let
+  input_type =
+    TypeApplication' $ ConsAndTypeInputs' (get_t_cons_name cons_and_type_vars) []
+    :: ValueType'
+  field_type_hs = type_g field_type $ get_type_vars cons_and_type_vars
+    :: Haskell
+  in
   value_map_insert
     (VN $ "get_" ++ show field_name)
-    (FunctionType' $
-      InputAndOutputType' (ConsAndTypeVars' type_application) field_type) >>
-  return ("get_" ++ show field_name ++ " :: " ++ show field_type)
+    (FunctionType' $ InputAndOutputType' input_type field_type) >>
+  return ("get_" ++ show field_name ++ " :: " ++ field_type_hs)
   ) :: Field' -> ConsAndTypeVars' -> Stateful Haskell
 
--- type_g =
---   :: ValueType' -> ConsAndTypeVars' -> Stateful Haskell
+type_g = ( \value_type type_vars -> case value_type of
+  TypeApplication' (ConsAndTypeInputs' type_name type_inputs) ->
+    (type_name_g type_name type_vars ++
+    concatMap (flip type_g type_vars .> (" " ++)) type_inputs) ==>
+      case type_inputs of
+        [] -> id
+        _  -> \s -> "(" ++ s ++ ")"
+  other_type -> show other_type
+  ) :: ValueType' -> [ (TypeName, String) ] -> Haskell
+
+type_name_g = ( \type_name type_vars->
+  lookup type_name type_vars ==> \case
+    Just type_var -> type_var
+    Nothing -> show type_name
+  ) :: TypeName -> [ (TypeName, String) ] -> Haskell
 
 -- TupleTypeDefinition': tuple_type_definition'_g, fields_g
 
 tuple_type_definition'_g = (
-  \(NameAndFields' type_application@(ConsAndTVars' type_name _) fields) ->
+  \(NameAndFields' cons_and_type_vars@(ConsAndTVars' type_name _) fields) ->
   type_map_insert type_name (FieldList fields) >>
-  fields_g fields type_application >>= \fields_hs ->
+  fields_g fields cons_and_type_vars >>= \fields_hs ->
   return $
-    "\ndata " ++ show type_application ++ " =\n  " ++
+    "\ndata " ++ show cons_and_type_vars ++ " =\n  " ++
     fields_hs ++ "\n  deriving Show\n"
   ) :: TupleTypeDefinition' -> Stateful Haskell
 
-fields_g = ( \fields type_application@(ConsAndTVars' type_name _) ->
-  fields==>mapM (flip field_g type_application) >>= \fields_hs ->
+fields_g = ( \fields cons_and_type_vars@(ConsAndTVars' type_name _) ->
+  fields==>mapM (flip field_g cons_and_type_vars) >>= \fields_hs ->
   return $ "C" ++ show type_name ++ " { " ++ intercalate ", " fields_hs ++ " }"
   ) :: [ Field' ] -> ConsAndTypeVars' -> Stateful Haskell
 
@@ -56,34 +75,37 @@ tuple_type_definition_g =
 -- OrTypeCase': or_type_case_g
 
 or_type_case_g = (
-  \(NameAndMaybeInputType' case_name maybe_input_t) type_application ->
+  \(NameAndMaybeInputType' case_name maybe_input_t) cons_and_type_vars ->
   let 
-  (case_type, input_type_g) = case maybe_input_t of
-    Nothing -> (ConsAndTypeVars' type_application, "")
+  or_type =
+    TypeApplication' $ ConsAndTypeInputs' (get_t_cons_name cons_and_type_vars) []
+    :: ValueType'
+  (case_type, input_type_hs) = case maybe_input_t of
+    Nothing -> (or_type, "")
     Just input_type ->
       ( FunctionType' $
-        InputAndOutputType' input_type $ ConsAndTypeVars' type_application
-      , " " ++ show input_type )
+        InputAndOutputType' input_type or_type
+      , " " ++ type_g input_type (get_type_vars cons_and_type_vars) )
     :: (ValueType', Haskell)
   in
   value_map_insert case_name case_type >>
-  return ("C" ++ show case_name ++ input_type_g)
+  return ("C" ++ show case_name ++ input_type_hs)
   ) :: OrTypeCase' -> ConsAndTypeVars' -> Stateful Haskell
 
 -- OrTypeDefinition': or_type_definition'_g, or_type_cases_g
 
 or_type_definition'_g = (
   \(NameAndCases'
-    type_application@(ConsAndTVars' type_name _) or_type_cases) -> 
+    cons_and_type_vars@(ConsAndTVars' type_name _) or_type_cases) -> 
   type_map_insert type_name (OrTypeCaseList or_type_cases) >>
-  or_type_cases_g or_type_cases type_application >>= \cases_hs ->
+  or_type_cases_g or_type_cases cons_and_type_vars >>= \cases_hs ->
   return $
-    "\ndata " ++ show type_application ++ " =\n  " ++
+    "\ndata " ++ show cons_and_type_vars ++ " =\n  " ++
     cases_hs ++ "\n  deriving Show\n"
   ) :: OrTypeDefinition' -> Stateful Haskell
 
-or_type_cases_g = ( \or_type_cases type_application ->
-  mapM (flip or_type_case_g type_application) or_type_cases >>= \cases_hs ->
+or_type_cases_g = ( \or_type_cases cons_and_type_vars ->
+  mapM (flip or_type_case_g cons_and_type_vars) or_type_cases >>= \cases_hs ->
   return $ intercalate " | " cases_hs 
   ) :: [ OrTypeCase' ] -> ConsAndTypeVars' -> Stateful Haskell
 

@@ -66,8 +66,8 @@ expr_to_base_value = ( \expr -> case expr of
 value_type_conversion = ( \case
   FunctionType func_type -> func_type_to_val_type func_type
   ProductType cartesian_product -> cart_prod_to_val_type cartesian_product
-  ConsAndTypeVars type_application ->
-    ConsAndTypeVars' $ type_application_conversion type_application
+  TypeApplication type_application ->
+    TypeApplication' $ type_application_conversion type_application
   ) :: ValueType -> ValueType'
 
 func_type_to_val_type = ( \(InputAndOutputTypes input output_t) -> case input of 
@@ -92,8 +92,8 @@ multiple_inputs_to_val_type = ( \(InTypes in_t1 in_t2 in_ts) output_t ->
   ) :: InputTypes -> OutputType -> ValueType'
 
 output_type_to_val_type = ( \case
-  OutputConsAndTypeVars type_application ->
-    ConsAndTypeVars' $ type_application_conversion type_application
+  OutputTypeApp type_application ->
+    TypeApplication' $ type_application_conversion type_application
   OutputProductType cartesian_product -> cart_prod_to_val_type cartesian_product
   ) :: OutputType -> ValueType'
 
@@ -103,23 +103,47 @@ cart_prod_to_val_type = ( \(Types value_type1 value_type2 other_value_types) ->
     map value_type_conversion other_value_types
   ) :: ProductType -> ValueType'
 
--- ConsAndTypeVars: type_application_conversion
+-- TypeApplication: type_application_conversion
 
 type_application_conversion = ( 
-  \(ConsAndTVars constructor_name left_input_ts right_input_ts) ->
+  \(ConsAndTypeInputs constructor_name left_type_inputs right_type_inputs) ->
+  ConsAndTypeInputs' constructor_name $
+    left_type_inputs_conversion left_type_inputs ++
+    right_type_inputs_conversion right_type_inputs
+  ) :: TypeApplication -> TypeApplication'
+
+left_type_inputs_conversion = ( \case
+  NoLeftTypeInputs -> []
+  OneLeftTypeInput type_input -> [ value_type_conversion type_input ]
+  ManyLeftTypeInputs t_in1 t_in2 t_ins ->
+    map value_type_conversion $ t_in1 : t_in2 : t_ins
+  ) :: LeftTypeInputs -> [ ValueType' ]
+
+right_type_inputs_conversion = ( \case
+  NoRightTypeInputs -> []
+  OneRightTypeInput type_input -> [ value_type_conversion type_input ]
+  ManyRightTypeInputs t_in1 t_in2 t_ins -> 
+    map value_type_conversion $ t_in1 : t_in2 : t_ins
+  ) :: RightTypeInputs -> [ ValueType' ]
+
+-- ConsAndTypeVars: cons_and_type_vars_conversion
+
+cons_and_type_vars_conversion = ( 
+  \(ConsAndTVars constructor_name left_type_vars right_type_vars) ->
   ConsAndTVars' constructor_name $
-    left_input_ts_conversion left_input_ts ++
-    right_input_ts_conversion right_input_ts
+    flip zip [ "a", "b", "c", "d", "e" ] $
+    left_type_vars_conversion left_type_vars ++
+    right_type_vars_conversion right_type_vars
   ) :: ConsAndTypeVars -> ConsAndTypeVars'
 
-left_input_ts_conversion = ( \case
+left_type_vars_conversion = ( \case
   NoLeftTVars -> []
   OneLeftTVar type_name -> [ type_name ]
   ManyLeftTVars t_name1 t_name2 t_names -> t_name1 : t_name2 : t_names
   ) :: LeftTypeVars -> [ TypeName ]
 
-right_input_ts_conversion = ( \case
-  NoRightTVar -> []
+right_type_vars_conversion = ( \case
+  NoRightTVars -> []
   OneRightTVar type_name -> [ type_name ]
   ManyRightTVars t_name1 t_name2 t_names -> t_name1 : t_name2 : t_names
   ) :: RightTypeVars -> [ TypeName ]
@@ -134,7 +158,7 @@ field_conversion = ( \(NameAndType value_name value_type) ->
 
 tuple_type_def_conversion = ( \(NameAndFields type_application fields) ->
   NameAndFields'
-    (type_application_conversion type_application)
+    (cons_and_type_vars_conversion type_application)
     (map field_conversion fields)
   ) :: TupleTypeDefinition -> TupleTypeDefinition'
 
@@ -144,6 +168,6 @@ or_type_case_conversion = ( \(NameAndMaybeInputType value_name maybe_value_type)
 
 or_type_def_conversion = ( \(NameAndCases type_application case1 case2 cases) ->
   NameAndCases'
-    (type_application_conversion type_application)
+    (cons_and_type_vars_conversion type_application)
     (map or_type_case_conversion $ case1 : case2 : cases)
   ) :: OrTypeDefinition -> OrTypeDefinition'

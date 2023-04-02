@@ -8,7 +8,7 @@ import Helpers ((==>), eof_or_new_lines)
 import ParsingTypes.Types
 
 import Parsers.LowLevelValues (value_name_p)
-import Parsers.LowLevelTypes (type_name_p, cons_and_type_vars_p)
+import Parsers.LowLevelTypes (type_name_p)
 
 -- All:
 -- ProductType, InputTypeOrTypes, InputTypes, OutputType, FunctionType,
@@ -24,10 +24,10 @@ product_type_p =
   :: Parser ProductType
 
 inner_value_type_p =
-  (char '(' *>
+  try (char '(' *>
   (FunctionType <$> try function_type_p <|> ProductType <$> product_type_p)
   <* char ')') <|>
-  ConsAndTypeVars <$> cons_and_type_vars_p
+  TypeApplication <$> type_application_p
   :: Parser ValueType
 
 -- InputTypeOrTypes: input_type_or_types_p, one_input_val_type_p
@@ -37,9 +37,9 @@ input_type_or_types_p =
   :: Parser InputTypeOrTypes
 
 one_input_val_type_p =
-  FunctionType <$> (char '(' *> function_type_p <* char ')') <|>
+  FunctionType <$> try (char '(' *> function_type_p <* char ')') <|>
   ProductType <$> try product_type_p <|>
-  ConsAndTypeVars <$> cons_and_type_vars_p
+  TypeApplication <$> type_application_p
   :: Parser ValueType
 
 -- InputTypes: input_types_p
@@ -47,7 +47,7 @@ one_input_val_type_p =
 input_types_p =
   char '(' >> value_type_p >>= \value_type1 ->
   string ", " >> value_type_p >>= \value_type2 ->
-  many (string ", " >> value_type_p) >>= \value_types ->
+  many (try $ string ", " >> value_type_p) >>= \value_types ->
   char ')' >> return (InTypes value_type1 value_type2 value_types)
   :: Parser InputTypes
 
@@ -55,7 +55,7 @@ input_types_p =
 
 output_type_p =
   OutputProductType <$> try product_type_p <|>
-  OutputConsAndTypeVars <$> cons_and_type_vars_p
+  OutputTypeApp <$> type_application_p
   :: Parser OutputType
 
 -- FunctionType: function_type_p
@@ -73,11 +73,13 @@ left_type_inputs_p =
   :: Parser LeftTypeInputs
 
 some_left_type_inputs_p =
-  (many_left_type_inputs_p <|> OneLeftTypeInput <$> value_type_p) <* string "==>"
+  (try many_left_type_inputs_p <|>
+  OneLeftTypeInput <$> (char '(' *> value_type_p <* char ')'))
+  <* string "==>"
   :: Parser LeftTypeInputs
 
 many_left_type_inputs_p = 
-  many_type_inputs_p >>= \(input_t1, input_t2, input_ts) ->
+  value_type_tuple_p >>= \(input_t1, input_t2, input_ts) ->
   return $ ManyLeftTypeInputs input_t1 input_t2 input_ts
   :: Parser LeftTypeInputs
 
@@ -85,15 +87,17 @@ many_left_type_inputs_p =
 -- right_type_inputs_p, some_right_type_inputs_p, many_right_type_inputs_p
 
 right_type_inputs_p =
-  option NoRightTypeInputs some_right_type_inputs_p
+  option NoRightTypeInputs $ try some_right_type_inputs_p
   :: Parser RightTypeInputs
 
 some_right_type_inputs_p =
-  string "<==" *> (many_right_type_inputs_p <|> OneRightTypeInput <$> value_type_p)
+  string "<==" *>
+  (try many_right_type_inputs_p <|>
+  OneRightTypeInput <$> (char '(' *> value_type_p <* char ')'))
   :: Parser RightTypeInputs
 
 many_right_type_inputs_p = 
-  many_type_inputs_p >>= \(input_t1, input_t2, input_ts) ->
+  value_type_tuple_p >>= \(input_t1, input_t2, input_ts) ->
   return $ ManyRightTypeInputs input_t1 input_t2 input_ts
   :: Parser RightTypeInputs
 
@@ -110,12 +114,12 @@ type_application_p =
 
 value_type_p =
   FunctionType <$> try function_type_p <|> ProductType <$> try product_type_p <|>
-  ConsAndTypeVars <$> cons_and_type_vars_p
+  TypeApplication <$> type_application_p
   :: Parser ValueType
 
--- Helpers: many_type_inputs_p
+-- Helpers: value_type_tuple_p
 
-many_type_inputs_p =
+value_type_tuple_p =
   string "(" >> value_type_p >>= \input_t1 ->
   string ", " >> value_type_p >>= \input_t2 ->
   many (string ", " >> value_type_p) >>= \input_ts ->

@@ -32,7 +32,7 @@ many_left_type_vars_p =
 -- RightTypeVars: right_type_vars_p, some_right_type_vars_p, many_right_type_vars_p
 
 right_type_vars_p =
-  option NoRightTVar some_right_type_vars_p
+  option NoRightTVars some_right_type_vars_p
   :: Parser RightTypeVars
 
 some_right_type_vars_p =
