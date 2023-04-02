@@ -19,7 +19,7 @@ data InputTypeOrTypes =
   OneInput ValueType | MultipleInputs InputTypes
 
 data InputTypes =
-  InTypes ValueType ValueType [ ValueType ]
+  InputTypes ValueType ValueType [ ValueType ]
 
 data OutputType =
   OutputTypeApp TypeApplication | OutputProductType ProductType
@@ -47,8 +47,8 @@ data ValueType =
 -- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType
 
 instance Show ProductType where
-  show = \(Types name1 name2 names) ->
-    map show (name1 : name2 : names)==>intercalate " x "
+  show = \(Types value_type1 value_type2 value_types) ->
+    map show (value_type1 : value_type2 : value_types)==>intercalate " x "
 
 instance Show InputTypeOrTypes where
   show = \case
@@ -56,7 +56,7 @@ instance Show InputTypeOrTypes where
     MultipleInputs multiple_inputs -> show multiple_inputs
 
 instance Show InputTypes where
-  show = \(InTypes input1 input2 inputs) ->
+  show = \(InputTypes input1 input2 inputs) ->
     "(" ++ map show (input1 : input2 : inputs)==>intercalate ", " ++ ")"
 
 instance Show OutputType where
@@ -71,14 +71,14 @@ instance Show FunctionType where
 instance Show LeftTypeInputs where
   show = \case
     NoLeftTypeInputs -> ""
-    OneLeftTypeInput type_ -> show type_ ++ "==>"
+    OneLeftTypeInput value_type -> show value_type ++ "==>"
     ManyLeftTypeInputs t1 t2 ts ->
       "(" ++ (t1 : t2 : ts)==>map show==>intercalate ", " ++ ")==>"
 
 instance Show RightTypeInputs where
   show = \case
     NoRightTypeInputs -> ""
-    OneRightTypeInput type_ -> "<==" ++ show type_
+    OneRightTypeInput value_type -> "<==" ++ show value_type
     ManyRightTypeInputs t1 t2 ts ->
       "<==("  ++ (t1 : t2 : ts)==>map show==>intercalate ", " ++ ")"
 
@@ -89,5 +89,5 @@ instance Show TypeApplication where
 instance Show ValueType where
   show = \case
     FunctionType funcion_type -> show funcion_type
-    TypeApplication name -> show name
+    TypeApplication type_application -> show type_application
     ProductType product_type -> show product_type

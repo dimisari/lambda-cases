@@ -81,12 +81,12 @@ one_input_to_val_type = ( \input_t output_t ->
       (value_type_conversion input_t) (output_type_to_val_type output_t)
   ) :: ValueType -> OutputType -> ValueType'
 
-multiple_inputs_to_val_type = ( \(InTypes in_t1 in_t2 in_ts) output_t -> 
+multiple_inputs_to_val_type = ( \(InputTypes in_t1 in_t2 in_ts) output_t -> 
   let
   output_type = case in_ts of 
     [] -> one_input_to_val_type in_t2 output_t
     in_t3 : rest_of_in_ts ->
-      multiple_inputs_to_val_type (InTypes in_t2 in_t3 rest_of_in_ts) output_t
+      multiple_inputs_to_val_type (InputTypes in_t2 in_t3 rest_of_in_ts) output_t
   in
   FunctionType' $ InputAndOutputType' (value_type_conversion in_t1) output_type
   ) :: InputTypes -> OutputType -> ValueType'

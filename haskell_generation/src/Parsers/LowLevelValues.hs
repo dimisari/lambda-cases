@@ -19,6 +19,9 @@ integer_p =
   read <$> ((:) <$> char '-' <*> natural_number_string <|> natural_number_string)
   :: Parser Integer
 
+string_p = char '"' *> many (noneOf ['"']) <* char '"'
+  :: Parser String
+
 -- ValueName: value_name_p
 
 value_name_p =

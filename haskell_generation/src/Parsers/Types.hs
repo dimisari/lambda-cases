@@ -5,6 +5,7 @@ import Text.Parsec.String (Parser)
 
 import Helpers ((==>), eof_or_new_lines)
 
+import ParsingTypes.LowLevelTypes (TypeName)
 import ParsingTypes.Types
 
 import Parsers.LowLevelValues (value_name_p)
@@ -45,10 +46,8 @@ one_input_val_type_p =
 -- InputTypes: input_types_p
 
 input_types_p =
-  char '(' >> value_type_p >>= \value_type1 ->
-  string ", " >> value_type_p >>= \value_type2 ->
-  many (try $ string ", " >> value_type_p) >>= \value_types ->
-  char ')' >> return (InTypes value_type1 value_type2 value_types)
+  value_type_tuple_p >>= \(value_type1, value_type2, value_types) ->
+  return (InputTypes value_type1 value_type2 value_types)
   :: Parser InputTypes
 
 -- OutputType: output_type_p
@@ -73,14 +72,13 @@ left_type_inputs_p =
   :: Parser LeftTypeInputs
 
 some_left_type_inputs_p =
-  (try many_left_type_inputs_p <|>
-  OneLeftTypeInput <$> (char '(' *> value_type_p <* char ')'))
+  (try many_left_type_inputs_p <|> OneLeftTypeInput <$> one_type_input_p)
   <* string "==>"
   :: Parser LeftTypeInputs
 
 many_left_type_inputs_p = 
-  value_type_tuple_p >>= \(input_t1, input_t2, input_ts) ->
-  return $ ManyLeftTypeInputs input_t1 input_t2 input_ts
+  value_type_tuple_p >>= \(input_t1, input_t2, type_inputs) ->
+  return $ ManyLeftTypeInputs input_t1 input_t2 type_inputs
   :: Parser LeftTypeInputs
 
 -- RightTypeInputs:
@@ -92,22 +90,21 @@ right_type_inputs_p =
 
 some_right_type_inputs_p =
   string "<==" *>
-  (try many_right_type_inputs_p <|>
-  OneRightTypeInput <$> (char '(' *> value_type_p <* char ')'))
+  (try many_right_type_inputs_p <|> OneRightTypeInput <$> one_type_input_p)
   :: Parser RightTypeInputs
 
 many_right_type_inputs_p = 
-  value_type_tuple_p >>= \(input_t1, input_t2, input_ts) ->
-  return $ ManyRightTypeInputs input_t1 input_t2 input_ts
+  value_type_tuple_p >>= \(input_t1, input_t2, type_inputs) ->
+  return $ ManyRightTypeInputs input_t1 input_t2 type_inputs
   :: Parser RightTypeInputs
 
 -- TypeApplication: type_application_p
 
 type_application_p = 
-  left_type_inputs_p >>= \left_input_ts ->
+  left_type_inputs_p >>= \left_type_inputs ->
   type_name_p >>= \type_name ->
-  right_type_inputs_p >>= \right_input_ts ->
-  return $ ConsAndTypeInputs type_name left_input_ts right_input_ts
+  right_type_inputs_p >>= \right_type_inputs ->
+  return $ ConsAndTypeInputs type_name left_type_inputs right_type_inputs
   :: Parser TypeApplication
 
 -- ValueType: value_type_p
@@ -120,9 +117,18 @@ value_type_p =
 -- Helpers: value_type_tuple_p
 
 value_type_tuple_p =
-  string "(" >> value_type_p >>= \input_t1 ->
-  string ", " >> value_type_p >>= \input_t2 ->
-  many (string ", " >> value_type_p) >>= \input_ts ->
+  string "(" >> value_type_p >>= \value_type1 ->
+  string ", " >> value_type_p >>= \value_type2 ->
+  many (string ", " >> value_type_p) >>= \value_types ->
   string ")" >>
-  return (input_t1, input_t2, input_ts)
+  return (value_type1, value_type2, value_types)
   :: Parser (ValueType, ValueType, [ ValueType ])
+
+one_type_input_p =
+  (char '(' *> value_type_p <* char ')') <|>
+  type_name_to_value_type <$> type_name_p
+
+type_name_to_value_type = ( \type_name ->
+  TypeApplication $
+    ConsAndTypeInputs type_name NoLeftTypeInputs NoRightTypeInputs
+  ) :: TypeName -> ValueType

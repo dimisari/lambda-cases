@@ -25,7 +25,7 @@ data ApplicationTree =
   deriving Show
 
 -- ValueType':
--- FunctionType', ConsAndTypeVars', ValueType' + Show instances
+-- FunctionType', TypeApplication', ValueType' + Show instances
 
 data FunctionType' = 
   InputAndOutputType' ValueType' ValueType'

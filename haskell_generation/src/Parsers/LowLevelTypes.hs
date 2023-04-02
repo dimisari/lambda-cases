@@ -8,7 +8,7 @@ import ParsingTypes.LowLevelTypes
 -- All: TypeName, LeftTypeVars, RightTypeVars, ConsAndTypeVars
 
 -- TypeName: type_name_p
- 
+
 type_name_p =
   upper >>= \initial_upper -> many (lower <|> upper) >>= \lowers_uppers ->
   return $ TN (initial_upper : lowers_uppers)
@@ -25,7 +25,7 @@ some_left_type_vars_p =
   :: Parser LeftTypeVars
 
 many_left_type_vars_p = 
-  many_type_vars_p >>= \(type_name1, type_name2, type_names) ->
+  type_name_tuple_p >>= \(type_name1, type_name2, type_names) ->
   return $ ManyLeftTVars type_name1 type_name2 type_names
   :: Parser LeftTypeVars
 
@@ -40,7 +40,7 @@ some_right_type_vars_p =
   :: Parser RightTypeVars
 
 many_right_type_vars_p = 
-  many_type_vars_p >>= \(type_name1, type_name2, type_names) ->
+  type_name_tuple_p >>= \(type_name1, type_name2, type_names) ->
   return $ ManyRightTVars type_name1 type_name2 type_names
   :: Parser RightTypeVars
 
@@ -53,13 +53,12 @@ cons_and_type_vars_p =
   return $ ConsAndTVars type_name left_input_ts right_input_ts
   :: Parser ConsAndTypeVars
 
--- Helpers: many_type_vars_p
+-- Helpers: type_name_tuple_p
 
-many_type_vars_p =
+type_name_tuple_p =
   string "(" >> type_name_p >>= \type_name1 ->
   string ", " >> type_name_p >>= \type_name2 ->
   many (string ", " >> type_name_p) >>= \type_names ->
   string ")" >>
   return (type_name1, type_name2, type_names)
   :: Parser (TypeName, TypeName, [ TypeName ])
-

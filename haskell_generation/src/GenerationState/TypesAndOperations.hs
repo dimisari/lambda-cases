@@ -26,7 +26,6 @@ data GenerationState = GS
   { indent_level :: Int
   , value_map :: ValueMap
   , type_map :: TypeMap
-  -- , next_type_var :: Char
   }
 
 type Stateful = ExceptT Error (State GenerationState)
@@ -36,25 +35,22 @@ type Stateful = ExceptT Error (State GenerationState)
 get_from_state = ( \f -> get >>= f .> return )
   :: (GenerationState -> a) -> Stateful a
 
-(get_indent_level, get_value_map, get_type_map {-, get_next_type_var -}) =
-  (indent_level, value_map, type_map{-, next_type_var-})==>
-    \(i, vm, tm{-, ntv-}) ->
-  (get_from_state i, get_from_state vm, get_from_state tm{-, get_from_state ntv-})
-  :: (Stateful Int, Stateful ValueMap, Stateful TypeMap{-, Stateful Char-})
+(get_indent_level, get_value_map, get_type_map) =
+  (indent_level, value_map, type_map)==> \(i, vm, tm) ->
+  (get_from_state i, get_from_state vm, get_from_state tm)
+  :: (Stateful Int, Stateful ValueMap, Stateful TypeMap)
 
 -- update fields: update_indent_level, update_value_map, update_type_map
 
 (update_indent_level, update_value_map, update_type_map
-  {-, update_next_type_var-}) =
+  ) =
   ( \il -> modify ( \s -> s { indent_level = il } )
   , \vm -> modify ( \s -> s { value_map = vm } ) 
   , \tm -> modify ( \s -> s { type_map = tm } )
-  -- , \ntv -> modify ( \s -> s { next_type_var = ntv } )
   ) ::
   ( Int -> Stateful ()
   , ValueMap -> Stateful ()
   , TypeMap -> Stateful ()
-  -- , Char -> Stateful ()
   )
 
 -- value_map operations: value_map_insert, value_map_get
