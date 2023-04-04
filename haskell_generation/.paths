@@ -2,11 +2,13 @@
 src/ParsingTypes/Types.hs
 src/ParsingTypes/TypeDefinitions.hs
 src/ParsingTypes/LowLevel.hs
+src/ParsingTypes/OperatorValues.hs
 src/ParsingTypes/Values.hs
 
 src/Parsers/Types.hs
 src/Parsers/TypeDefinitions.hs
 src/Parsers/LowLevel.hs
+src/Parsers/OperatorValues.hs
 src/Parsers/Values.hs
 
 src/AfterParsing/Types.hs
@@ -20,6 +22,7 @@ src/GenerationHelpers/ErrorMessages.hs
 
 src/CodeGenerators/TypeDefinitions.hs
 src/CodeGenerators/LowLevelValues.hs
+src/CodeGenerators/OperatorValues.hs
 src/CodeGenerators/Values.hs
 
 src/Helpers.hs

@@ -6,3 +6,6 @@ pair: Int x Int
 
 product: Int
   = pair==>multiply
+
+multiply_by_2: Int -> Int
+  = 2==>multiply

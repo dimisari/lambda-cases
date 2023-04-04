@@ -6,7 +6,7 @@ import Helpers ((==>), (.>))
 
 -- All: Types, Show instances
 
--- Types: Literal, ValueName, TypeName, Abstraction, ManyAbstractions, Input
+-- Types: Literal, ValueName, Abstraction, ManyAbstractions, Input
 
 type Literal = Integer
 
@@ -22,7 +22,7 @@ data ManyAbstractions =
 data Input =
   OneAbstraction Abstraction | ManyAbstractions ManyAbstractions 
 
--- Show instances: ValueName, TypeName, Abstraction, ManyAbstractions, Input
+-- Show instances: ValueName, Abstraction, ManyAbstractions, Input
 
 instance Show ValueName where
   show = \(VN n) -> n

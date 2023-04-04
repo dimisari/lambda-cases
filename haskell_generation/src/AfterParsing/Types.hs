@@ -6,6 +6,7 @@ import Helpers ((==>), (.>))
 
 import ParsingTypes.LowLevel (ValueName)
 import ParsingTypes.Types
+import ParsingTypes.OperatorValues (BaseValue)
 import ParsingTypes.Values
 import ParsingTypes.TypeDefinitions
 

@@ -4,6 +4,7 @@ import Helpers (Haskell, Error)
 
 import ParsingTypes.LowLevel (ValueName, Abstraction)
 import ParsingTypes.Types (TypeName)
+import ParsingTypes.OperatorValues
 import ParsingTypes.Values
 
 import AfterParsing.Types (ValueType')
@@ -53,7 +54,7 @@ abstractions_types_lengths_dont_match_err =
 
 tuple_fun_type_err = ( \lovs val_type ->
   show lovs ++ " can't have type: " ++ show val_type ++ "\n"
-  ) :: [ InputOpExpression ] -> ValueType' -> Error
+  ) :: [ InputOperatorExpression ] -> ValueType' -> Error
 
 values_fields_lengths_dont_match_err =
   "\nLength of tuple values and fields of the corresponding tuple_type must be " ++

@@ -6,6 +6,7 @@ import Helpers ((==>))
 
 import ParsingTypes.LowLevel (ValueName)
 import ParsingTypes.Types
+import ParsingTypes.OperatorValues
 import ParsingTypes.Values
 import ParsingTypes.TypeDefinitions
 
@@ -50,7 +51,7 @@ base_vals_to_app_tree = ( \case
   ) :: [ BaseValue ] -> ApplicationTree
 
 expr_to_base_value = ( \expr -> case expr of
-  OperatorExpression
+  PureOperatorExpression
     (EqualityFactor
       (SubtractionFactor
         (MultiplicationFactor
