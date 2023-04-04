@@ -1,14 +1,12 @@
 
-src/ParsingTypes/LowLevelTypes.hs
 src/ParsingTypes/Types.hs
 src/ParsingTypes/TypeDefinitions.hs
-src/ParsingTypes/LowLevelValues.hs
+src/ParsingTypes/LowLevel.hs
 src/ParsingTypes/Values.hs
 
-src/Parsers/LowLevelTypes.hs
 src/Parsers/Types.hs
 src/Parsers/TypeDefinitions.hs
-src/Parsers/LowLevelValues.hs
+src/Parsers/LowLevel.hs
 src/Parsers/Values.hs
 
 src/AfterParsing/Types.hs

@@ -1,11 +1,11 @@
-module Parsers.LowLevelValues where
+module Parsers.LowLevel where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
 import Helpers ((==>), keywords)
 
-import ParsingTypes.LowLevelValues
+import ParsingTypes.LowLevel
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions, Input
 

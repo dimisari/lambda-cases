@@ -7,14 +7,13 @@
 
 parsec:
 - <?> for better parsing error messages!
-- string literal: char '"' *> many (noneOf ['"']) <* char '"'
 
 Questions:
 - String = ListOf(Char)s?
 
 Tuple Application:
 - f: (A, B) -> C
-  pair: (A, B)==>Pair
+  pair: A x B
   pair==>f: C
 - done?
 

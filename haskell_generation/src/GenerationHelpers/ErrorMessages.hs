@@ -2,8 +2,8 @@ module GenerationHelpers.ErrorMessages where
   
 import Helpers (Haskell, Error)
 
-import ParsingTypes.LowLevelValues (ValueName, Abstraction)
-import ParsingTypes.LowLevelTypes (TypeName)
+import ParsingTypes.LowLevel (ValueName, Abstraction)
+import ParsingTypes.Types (TypeName)
 import ParsingTypes.Values
 
 import AfterParsing.Types (ValueType')

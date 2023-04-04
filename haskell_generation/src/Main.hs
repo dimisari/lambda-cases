@@ -35,6 +35,7 @@ lcases_examples_names =
   , "ext_euc_no_tuple_type"
   , "ext_euc_tuple_type"
   , "basic_or_types"
+  , "pair"
   ]
   :: [ String ]
 

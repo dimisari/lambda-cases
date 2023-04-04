@@ -2,9 +2,8 @@ module GenerationState.InitialState where
 
 import qualified Data.Map as M ( empty, fromList )
 
-import ParsingTypes.LowLevelValues (ValueName(..))
-import ParsingTypes.LowLevelTypes (TypeName(..))
-import ParsingTypes.Types (ValueType(..))
+import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.Types (TypeName(..), ValueType(..))
 
 import AfterParsing.Types 
 
@@ -14,13 +13,13 @@ import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..
 -- int, int_x_int, bool, int_to_int_to_int
 -- init_value_map, init_state
 
-int = TypeApplication' $ ConsAndTypeInputs' (TN "Int") []
+int = TypeApplication' $ TypeConstructorAndInputs' (TN "Int") []
   :: ValueType'
 
 int_x_int = ProductType' [ int, int ]
   :: ValueType'
 
-bool = TypeApplication' $ ConsAndTypeInputs' (TN "Bool") []
+bool = TypeApplication' $ TypeConstructorAndInputs' (TN "Bool") []
   :: ValueType'
 
 int_to_int_to_int =
@@ -33,6 +32,8 @@ init_value_map =
     [ (VN "div" , int_to_int_to_int)
     , (VN "mod" , int_to_int_to_int)
     , (VN "get_1st" , [ FunctionType' $ InputAndOutputType' int_x_int int ])
+    , ( VN "get_all_but_1st"
+      , [ FunctionType' $ InputAndOutputType' int_x_int int ])
     , (VN "abs" , [ FunctionType' $ InputAndOutputType' int int ])
     , (VN "max" , int_to_int_to_int)
     , (VN "min" , int_to_int_to_int)

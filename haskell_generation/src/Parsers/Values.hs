@@ -6,11 +6,11 @@ import Text.Parsec.Combinator (choice)
 
 import Helpers
 
-import ParsingTypes.LowLevelValues (Abstraction)
+import ParsingTypes.LowLevel (Abstraction)
 import ParsingTypes.Types (ValueType)
 import ParsingTypes.Values
 
-import Parsers.LowLevelValues (literal_p, value_name_p, input_p)
+import Parsers.LowLevel (literal_p, value_name_p, input_p)
 import Parsers.Types (value_type_p)
 
 -- All:

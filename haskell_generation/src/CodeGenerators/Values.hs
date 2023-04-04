@@ -7,9 +7,8 @@ import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers (Haskell, Error, (==>), (.>), indent)
 
-import ParsingTypes.LowLevelValues (ValueName(..), Abstraction(..))
-import ParsingTypes.LowLevelTypes (TypeName(..))
-import ParsingTypes.Types (ValueType(..))
+import ParsingTypes.LowLevel (ValueName(..), Abstraction(..))
+import ParsingTypes.Types (TypeName(..), ValueType(..))
 import ParsingTypes.Values
 
 import AfterParsing.Types 
@@ -50,7 +49,7 @@ paren_type_inference_g = ( \(InnerExpression expr) ->
 
 tuple_g = ( \(Values val1 val2 vals) -> \case
   FunctionType' _ -> throwE "Tuple can't have function type"
-  TypeApplication' (ConsAndTypeInputs' type_name _) ->
+  TypeApplication' (TypeConstructorAndInputs' type_name _) ->
     tuple_values_type_name_g (val1 : val2 : vals) type_name
   ProductType' types -> tuple_values_types_g (val1 : val2 : vals) types
   ) :: Tuple -> ValueType' -> Stateful Haskell
@@ -138,17 +137,18 @@ app_tree_type_inference_g = ( \case
   BaseValueLeaf base_value -> base_value_type_inference_g base_value
   ) :: ApplicationTree -> Stateful (Haskell, ValueType')
 
-application_type_inference_g = ( \(ApplicationTrees tree1 tree2) ->
+application_type_inference_g = ( \application@(ApplicationTrees tree1 tree2) ->
   app_tree_type_inference_g tree1 >>= \(tree1_hs, tree1_t) ->
   case tree1_t of 
     FunctionType' func_type ->
       catchE
         (tree1_func_type_g tree1_hs func_type tree2)
-        (application_handler tree1 tree2)
+        (application_handler application)
     _ -> throwE "Cannot apply something that is not a function"
   ) :: Application -> Stateful (Haskell, ValueType')
 
-tree1_func_type_g = ( \tree1_hs (InputAndOutputType' input_t output_t) tree2 -> 
+tree1_func_type_g = (
+  \tree1_hs func_type@(InputAndOutputType' input_t output_t) tree2 -> 
   application_tree_g tree2 input_t >>= \tree2_hs ->
   let 
   tree2_hs' = case tree2 of 
@@ -157,10 +157,23 @@ tree1_func_type_g = ( \tree1_hs (InputAndOutputType' input_t output_t) tree2 ->
     :: Haskell
   in
   return (tree1_hs ++ " " ++ tree2_hs', output_t) 
-  ) :: Haskell -> FunctionType' -> ApplicationTree -> Stateful (Haskell, ValueType')
+  ) :: Haskell -> FunctionType' -> ApplicationTree ->
+       Stateful (Haskell, ValueType')
 
-application_handler = ( \tree1 -> \case
-  BaseValueLeaf (Tuple (Values val1 val2 vals)) -> \_ ->
+tree1_func_type_catch_g = (
+  \tree1_hs func_type@(InputAndOutputType' input_t output_t) tree2 _ -> 
+  app_tree_type_inference_g tree2 >>= \(tree2_hs, tree2_t) ->
+  case tree2_t of
+    ProductType' (prod_type1 : prod_types) ->
+      types_are_equivalent input_t prod_type1 >>= \case 
+        True -> error "true"
+        _ -> error "false"
+    _ -> error "not product type"
+  ) :: Haskell -> FunctionType' -> ApplicationTree -> Error ->
+       Stateful (Haskell, ValueType')
+
+application_handler = ( \(ApplicationTrees tree1 tree2) error_msg -> case tree2 of 
+  BaseValueLeaf (Tuple (Values val1 val2 vals)) -> 
     let
     tree1' = 
       Application $ ApplicationTrees
@@ -171,8 +184,22 @@ application_handler = ( \tree1 -> \case
       val3 : other_vals -> Tuple $ Values val2 val3 other_vals
     in
     application_type_inference_g $ ApplicationTrees tree1' tree2'
-  _ -> undefined
-  ) :: ApplicationTree -> ApplicationTree -> Error -> Stateful (Haskell, ValueType')
+  BaseValueLeaf base_value -> 
+    let
+    tree1' = 
+      Application $ ApplicationTrees
+        tree1 $
+        Application $ ApplicationTrees
+          (BaseValueLeaf $ ValueName $ VN "get_1st")
+          $ BaseValueLeaf base_value
+    tree2' = 
+      Application $ ApplicationTrees
+        (BaseValueLeaf $ ValueName $ VN "get_all_but_1st")
+        $ BaseValueLeaf base_value
+    in
+    application_type_inference_g $ ApplicationTrees tree1' tree2'
+  _ -> error $ show tree1 ++ "\n" ++ show tree2 ++ "\n" ++ error_msg
+  ) :: Application -> Error -> Stateful (Haskell, ValueType')
 
 -- MultiplicationFactor: multiplication_factor_g
 
@@ -213,8 +240,8 @@ equality_factor_g = ( \case
 -- Equality: equality_g
 
 equality_g = ( \(EqualityFactors equality_factor1 equality_factor2) -> \case 
-  TypeApplication' (ConsAndTypeInputs' (TN "Bool") []) ->
-    let int_t = TypeApplication' $ ConsAndTypeInputs' (TN "Int") [] in
+  TypeApplication' (TypeConstructorAndInputs' (TN "Bool") []) ->
+    let int_t = TypeApplication' $ TypeConstructorAndInputs' (TN "Int") [] in
     equality_factor_g equality_factor1 int_t >>= \equality_factor1_hs ->
     equality_factor_g equality_factor2 int_t >>= \equality_factor2_hs ->
     return $ equality_factor1_hs ++ " == " ++ equality_factor2_hs
@@ -232,9 +259,9 @@ op_expr_type_inference_g = ( \operator_expr ->
   let
   pair = case operator_expr of
     Equality equality -> (equality_g equality val_type, val_type) where
-      val_type = TypeApplication' $ ConsAndTypeInputs' (TN "Bool") []
+      val_type = TypeApplication' $ TypeConstructorAndInputs' (TN "Bool") []
     EqualityFactor equ_fac -> (equality_factor_g equ_fac val_type, val_type) where
-      val_type = TypeApplication' $ ConsAndTypeInputs' (TN "Int") []
+      val_type = TypeApplication' $ TypeConstructorAndInputs' (TN "Int") []
     :: (Stateful Haskell, ValueType')
   in
   pair ==> \(g, t) -> g >>= \hs -> return (hs, t)

@@ -4,8 +4,8 @@ import Data.List (intercalate)
 
 import Helpers (Haskell, (==>), (.>))
 
-import ParsingTypes.LowLevelValues (ValueName(..))
-import ParsingTypes.LowLevelTypes (TypeName(..), ConsAndTypeVars(..))
+import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.Types (TypeName(..))
 import ParsingTypes.TypeDefinitions 
 
 import AfterParsing.Types 
@@ -23,7 +23,7 @@ import GenerationState.TypesAndOperations
 field_g = ( \(NameAndType' field_name field_type) cons_and_type_vars ->
   let
   input_type =
-    TypeApplication' $ ConsAndTypeInputs' (get_t_cons_name cons_and_type_vars) []
+    TypeApplication' $ TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
     :: ValueType'
   field_type_hs = type_g field_type $ get_type_vars cons_and_type_vars
     :: Haskell
@@ -32,10 +32,10 @@ field_g = ( \(NameAndType' field_name field_type) cons_and_type_vars ->
     (VN $ "get_" ++ show field_name)
     (FunctionType' $ InputAndOutputType' input_type field_type) >>
   return ("get_" ++ show field_name ++ " :: " ++ field_type_hs)
-  ) :: Field' -> ConsAndTypeVars' -> Stateful Haskell
+  ) :: Field' -> TypeConstructorAndVariables' -> Stateful Haskell
 
 type_g = ( \value_type type_vars -> case value_type of
-  TypeApplication' (ConsAndTypeInputs' type_name type_inputs) ->
+  TypeApplication' (TypeConstructorAndInputs' type_name type_inputs) ->
     (type_name_g type_name type_vars ++
     concatMap (flip type_g type_vars .> (" " ++)) type_inputs) ==>
       case type_inputs of
@@ -53,7 +53,7 @@ type_name_g = ( \type_name type_vars->
 -- TupleTypeDefinition': tuple_type_definition'_g, fields_g
 
 tuple_type_definition'_g = (
-  \(NameAndFields' cons_and_type_vars@(ConsAndTVars' type_name _) fields) ->
+  \(ConstructorAndFields' cons_and_type_vars@(TypeConstructorAndVariables' type_name _) fields) ->
   type_map_insert type_name (FieldList fields) >>
   fields_g fields cons_and_type_vars >>= \fields_hs ->
   return $
@@ -61,10 +61,10 @@ tuple_type_definition'_g = (
     fields_hs ++ "\n  deriving Show\n"
   ) :: TupleTypeDefinition' -> Stateful Haskell
 
-fields_g = ( \fields cons_and_type_vars@(ConsAndTVars' type_name _) ->
+fields_g = ( \fields cons_and_type_vars@(TypeConstructorAndVariables' type_name _) ->
   fields==>mapM (flip field_g cons_and_type_vars) >>= \fields_hs ->
   return $ "C" ++ show type_name ++ " { " ++ intercalate ", " fields_hs ++ " }"
-  ) :: [ Field' ] -> ConsAndTypeVars' -> Stateful Haskell
+  ) :: [ Field' ] -> TypeConstructorAndVariables' -> Stateful Haskell
 
 -- TupleTypeDefinition: tuple_type_definition_g
 
@@ -78,7 +78,7 @@ or_type_case_g = (
   \(NameAndMaybeInputType' case_name maybe_input_t) cons_and_type_vars ->
   let 
   or_type =
-    TypeApplication' $ ConsAndTypeInputs' (get_t_cons_name cons_and_type_vars) []
+    TypeApplication' $ TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
     :: ValueType'
   (case_type, input_type_hs) = case maybe_input_t of
     Nothing -> (or_type, "")
@@ -90,13 +90,13 @@ or_type_case_g = (
   in
   value_map_insert case_name case_type >>
   return ("C" ++ show case_name ++ input_type_hs)
-  ) :: OrTypeCase' -> ConsAndTypeVars' -> Stateful Haskell
+  ) :: OrTypeCase' -> TypeConstructorAndVariables' -> Stateful Haskell
 
 -- OrTypeDefinition': or_type_definition'_g, or_type_cases_g
 
 or_type_definition'_g = (
-  \(NameAndCases'
-    cons_and_type_vars@(ConsAndTVars' type_name _) or_type_cases) -> 
+  \(ConstructorAndCases'
+    cons_and_type_vars@(TypeConstructorAndVariables' type_name _) or_type_cases) -> 
   type_map_insert type_name (OrTypeCaseList or_type_cases) >>
   or_type_cases_g or_type_cases cons_and_type_vars >>= \cases_hs ->
   return $
@@ -107,7 +107,7 @@ or_type_definition'_g = (
 or_type_cases_g = ( \or_type_cases cons_and_type_vars ->
   mapM (flip or_type_case_g cons_and_type_vars) or_type_cases >>= \cases_hs ->
   return $ intercalate " | " cases_hs 
-  ) :: [ OrTypeCase' ] -> ConsAndTypeVars' -> Stateful Haskell
+  ) :: [ OrTypeCase' ] -> TypeConstructorAndVariables' -> Stateful Haskell
 
 -- OrTypeDefinition: or_type_definition_g
 

@@ -1,0 +1,8 @@
+multiply: (Int, Int) -> Int
+  = (x, y) -> x * y
+
+pair: Int x Int
+  = (1, 1)
+
+product: Int
+  = pair==>multiply

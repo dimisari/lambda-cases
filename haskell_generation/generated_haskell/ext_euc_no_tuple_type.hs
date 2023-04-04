@@ -1,5 +1,22 @@
 {-# language LambdaCase #-}
 
+-- AllButFirst
+
+class AllButFirst a b where
+  get_all_but_1st :: a -> b
+
+instance AllButFirst (a, b) b where
+  get_all_but_1st = \(_, b) -> b
+
+instance AllButFirst (a, b, c) (b, c) where
+  get_all_but_1st = \(_, b, c) -> (b, c)
+
+instance AllButFirst (a, b, c, d) (b, c, d) where
+  get_all_but_1st = \(_, b, c, d) -> (b, c, d)
+
+instance AllButFirst (a, b, c, d, e) (b, c, d, e) where
+  get_all_but_1st = \(_, b, c, d, e) -> (b, c, d, e)
+
 -- HasFirst
 
 class HasFirst a b where

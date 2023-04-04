@@ -86,18 +86,11 @@ instance HasFifth (a, b, c, d, e) e where
 
 -- Generated
 
-data Or a b =
-  Cfrom_left a | Cfrom_right b
-  deriving Show
+multiply :: Int -> Int -> Int
+multiply = \x y -> x * y
 
-data OrNothing a =
-  Cfrom_type a | Cnothing
-  deriving Show
+pair :: (Int, Int)
+pair = (1, 1)
 
-data HeadAndTailOf a =
-  CHeadAndTailOf { get_head :: a, get_tail :: (ListOf a) }
-  deriving Show
-
-data ListOf a =
-  Cnon_empty (HeadAndTailOf a) | Cempty
-  deriving Show
+product :: Int
+product = multiply (get_1st pair) (get_all_but_1st pair)

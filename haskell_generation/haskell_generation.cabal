@@ -19,12 +19,11 @@ executable haskell_generation
     main-is:            Main.hs
     other-modules:      Helpers,
 
-                        ParsingTypes.LowLevelTypes, ParsingTypes.Types,
-                        ParsingTypes.TypeDefinitions,
-                        ParsingTypes.LowLevelValues, ParsingTypes.Values,
+                        ParsingTypes.LowLevel, ParsingTypes.Types,
+                        ParsingTypes.TypeDefinitions, ParsingTypes.Values,
 
-                        Parsers.LowLevelValues, Parsers.LowLevelTypes,
-                        Parsers.Types, Parsers.TypeDefinitions, Parsers.Values,
+                        Parsers.LowLevel, Parsers.Types,
+                        Parsers.TypeDefinitions, Parsers.Values,
 
                         AfterParsing.Types, AfterParsing.Conversions,
 
