@@ -12,8 +12,7 @@ import ParsingTypes.OperatorValues (OperatorExpression)
 
 -- Types:
 -- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases,
--- ValueNameTypeAndExpression, ValueNamesTypesAndExpressions,
--- ValueOrValues, ValueOrValuesList
+-- ValueNamesTypesAndExpressions, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 data CaseLiteralOrValueName = 
@@ -29,21 +28,14 @@ data Cases =
   OneAndDefault SpecificCase DefaultCase |
   Many SpecificCase SpecificCase [ SpecificCase ] (Maybe DefaultCase)
 
-data ValueNameTypeAndExpression =
-  NameTypeAndExpression ValueName ValueType ValueExpression
-
 data ValueNamesTypesAndExpressions =
   NamesTypesAndExpressions [ ValueName ] [ ValueType ] [ ValueExpression ]
 
-data ValueOrValues =
-  ValueNameTypeAndExpression ValueNameTypeAndExpression |
-  ValueNamesTypesAndExpressions ValueNamesTypesAndExpressions
-
-newtype ValueOrValuesList =
-  ValueOrValuesList [ ValueOrValues ]
+newtype Values =
+  Values [ ValueNamesTypesAndExpressions ]
 
 data Where =
-  ValueExpressionWhereValues ValueExpression ValueOrValuesList
+  ValueExpressionWhereValues ValueExpression Values
 
 data CasesOrWhere =
   Cases Cases | Where Where
@@ -58,8 +50,7 @@ data ValueExpression =
 
 -- Show instances:
 -- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases,
--- ValueNameTypeAndExpression, ValueNamesTypesAndExpressions,
--- ValueOrValues, ValueOrValuesList
+-- ValueNamesTypesAndExpressions, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 instance Show CaseLiteralOrValueName where 
@@ -84,29 +75,19 @@ instance Show Cases where
         Just default_case -> show default_case
         Nothing -> ""
 
-instance Show ValueNameTypeAndExpression where
-  show = \(NameTypeAndExpression value_name value_type value_expression) ->
-    show value_name ++ ": " ++ show value_type ++
-    "\n  = " ++ show value_expression ++ "\n"
-
 instance Show ValueNamesTypesAndExpressions where
   show = \(NamesTypesAndExpressions value_names value_types value_exprs) -> 
     value_names==>map show==>intercalate ", " ++ ": " ++
     value_types==>map show==>intercalate ", " ++ "\n  = " ++
     value_exprs==>map show==>intercalate ", " ++ "\n"
 
-instance Show ValueOrValues where
-  show = \case
-    ValueNameTypeAndExpression name_type_and_expr -> show name_type_and_expr
-    ValueNamesTypesAndExpressions names_ts_and_exprs -> show names_ts_and_exprs
-
-instance Show ValueOrValuesList where
-  show = \(ValueOrValuesList val_or_vals_list) ->
-    "\n" ++ val_or_vals_list==>concatMap (show .> (++ "\n"))
+instance Show Values where
+  show = \(Values values) ->
+    "\n" ++ values==>concatMap (show .> (++ "\n"))
 
 instance Show Where where
-  show = \(ValueExpressionWhereValues value_expression val_or_vals_list) -> 
-    "output\n" ++ show value_expression ++ "where\n" ++ show val_or_vals_list 
+  show = \(ValueExpressionWhereValues value_expression values) -> 
+    "output\n" ++ show value_expression ++ "where\n" ++ show values 
 
 instance Show CasesOrWhere where
   show = \case

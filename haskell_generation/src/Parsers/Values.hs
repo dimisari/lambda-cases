@@ -1,6 +1,6 @@
 module Parsers.Values where
 
-import Text.Parsec ((<|>), try, char, many, many1, string, optionMaybe, unexpected)
+import Text.Parsec 
 import Text.Parsec.String (Parser)
 import Text.Parsec.Combinator (choice)
 
@@ -63,56 +63,40 @@ many_cases_p =
   return $ Many specific_case1 specific_case2 specific_cases maybe_default_case
   :: Parser Cases
 
--- ValueNameTypeAndExpression: value_name_type_and_expression_p
- 
-value_name_type_and_expression_p =
-  value_name_p >>= \value_name -> string ": " >> value_type_p >>= \value_type ->
-  new_line_space_surrounded >> string "= " >> value_expression_p >>= \value_expr ->
-  return $ NameTypeAndExpression value_name value_type value_expr
-  :: Parser ValueNameTypeAndExpression
-
 -- ValueNamesTypesAndExpressions: value_names_types_and_expressions_p
 
+value_types_p = ( \value_names_length ->
+  sepBy1 value_type_p (string ", ") <|>
+  (string "all " *> value_type_p >>= \value_type ->
+  return $ replicate value_names_length value_type)
+  ) :: Int -> Parser [ ValueType ]
+
 value_names_types_and_expressions_p = 
-  seperated2 ", " value_name_p >>= \value_names ->
-  let
-  value_types_p =
-    seperated2 ", " value_type_p <|>
-    (string "all " *> value_type_p >>= \value_type ->
-    return $ replicate (length value_names) value_type)
-    :: Parser [ ValueType ]
-  in
-  string ": " >> value_types_p >>= \value_types ->
+  sepBy1 value_name_p (string ", ") >>= \value_names ->
+  string ": " >> value_types_p (length value_names) >>= \value_types ->
   new_line_space_surrounded >> string "= " >>
-  seperated2 ", " value_expression_p >>= \value_expressions ->
-  case
-  length value_types /= length value_names ||
-  length value_expressions /= length value_names
-  of 
-  True -> 
-    unexpected "value names, types and expressions don't match"
-  False ->
-    return $ NamesTypesAndExpressions value_names value_types value_expressions
+  sepBy1 value_expression_p (string ", ") >>= \value_expressions ->
+  case length value_types /= length value_names of 
+    True -> 
+      unexpected ": names and types don't match in numbers"
+    False -> case length value_expressions /= length value_names of 
+      True -> 
+        unexpected ": names and expressions don't match in numbers"
+      False ->
+        return $ NamesTypesAndExpressions value_names value_types value_expressions
   :: Parser ValueNamesTypesAndExpressions
-
--- ValueOrValues: value_or_values_p
-
-value_or_values_p = 
-  ValueNamesTypesAndExpressions <$> try value_names_types_and_expressions_p <|>
-  ValueNameTypeAndExpression <$> value_name_type_and_expression_p
-  :: Parser ValueOrValues
 
 -- ValueOrValuesList: value_or_values_list_p
 
-value_or_values_list_p =
-  ValueOrValuesList <$> try (value_or_values_p <* eof_or_new_lines)==>many1
-  :: Parser ValueOrValuesList
+values_p =
+  Values <$> try (value_names_types_and_expressions_p <* eof_or_new_lines)==>many1
+  :: Parser Values
 
 -- Where: where_p
 
 where_p = 
   string "let" >> new_line_space_surrounded >>
-  value_or_values_list_p >>= \names_types_and_values ->
+  values_p >>= \names_types_and_values ->
   string "output" >> new_line_space_surrounded >>
   value_expression_p >>= \value_expression ->
   return $ ValueExpressionWhereValues value_expression names_types_and_values

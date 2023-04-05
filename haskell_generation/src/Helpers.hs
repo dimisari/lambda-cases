@@ -27,10 +27,6 @@ keywords =
 
 -- Parsing 
 
-seperated2 = (\s p ->
-  try p >>= \a -> try (string s *> p) ==> many1 >>= \as -> return $ a:as
-  ) :: String -> Parser a -> Parser [a]
-
 spaces_tabs = many $ char ' ' <|> char '\t'
   :: Parser String
 

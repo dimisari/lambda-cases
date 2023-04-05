@@ -25,7 +25,7 @@ import CodeGenerators.OperatorValues
 
 -- All:
 -- CaseLiteralOrValueName, SpecificCase, Cases,
--- ValueNameTypeAndExpression, ValueNamesTypesAndExpressions, ValueOrValues, ValueOrValuesList
+-- ValueNamesTypesAndExpressions, Values,
 -- Where, CasesOrWhere, ValueExpression
 
 -- CaseLiteralOrValueName: literal_or_value_name_g, lit_or_val_name_type_inference_g
@@ -111,7 +111,7 @@ cases_type_inference_g = ( \case
 
 -- ValueNameTypeAndExpression: name_type_and_value_g
 
-name_type_and_value_g = ( \(NameTypeAndExpression value_name value_type value_expr) -> 
+name_type_and_value_g = ( \(value_name, value_type, value_expr) -> 
   get_indent_level >>= \ind_lev ->
   let 
   val_type = value_type_conversion value_type
@@ -121,59 +121,52 @@ name_type_and_value_g = ( \(NameTypeAndExpression value_name value_type value_ex
   return $
     "\n" ++ indent ind_lev ++ show value_name ++ " :: " ++ show val_type ++
     "\n" ++ indent ind_lev ++ show value_name ++ " = " ++ val_expr_hs ++ "\n"
-  ) :: ValueNameTypeAndExpression -> Stateful Haskell
+  ) :: (ValueName, ValueType, ValueExpression) -> Stateful Haskell
 
--- ValueNamesTypesAndExpressions: ntav_lists_to_list_of_ntavs
+-- ValueNamesTypesAndExpressions: ns_ts_and_es_to_list
 
-ntav_lists_to_list_of_ntavs = ( \ntav_lists -> case ntav_lists of
-  NamesTypesAndExpressions (val_name : val_names) (val_type : val_types) (val_expr : val_exprs) ->
-    NameTypeAndExpression val_name val_type val_expr :
-    ntav_lists_to_list_of_ntavs (NamesTypesAndExpressions val_names val_types val_exprs)
+ns_ts_and_es_to_list = ( \ntav_lists -> case ntav_lists of
+  NamesTypesAndExpressions
+    (val_name : val_names) (val_type : val_types) (val_expr : val_exprs) ->
+    (val_name, val_type, val_expr) :
+      ns_ts_and_es_to_list (NamesTypesAndExpressions val_names val_types val_exprs)
   NamesTypesAndExpressions [] [] [] -> []
   _ -> error $ name_type_and_value_lists_err ntav_lists
-  ) :: ValueNamesTypesAndExpressions -> [ ValueNameTypeAndExpression ]
+  ) :: ValueNamesTypesAndExpressions -> [ (ValueName, ValueType, ValueExpression) ]
 
--- ValueOrValues: ntav_or_ntav_lists_to_list_of_ntavs
+-- Values:
+-- values_g, values_to_list, list_of_values_g,
+-- insert_value_to_map
 
-ntav_or_ntav_lists_to_list_of_ntavs = ( \case 
-  ValueNameTypeAndExpression name_type_and_value -> [ name_type_and_value ]
-  ValueNamesTypesAndExpressions ntav_lists -> ntav_lists_to_list_of_ntavs ntav_lists
-  ) :: ValueOrValues -> [ ValueNameTypeAndExpression ]
+values_g =
+  values_to_list .> list_of_values_g
+  :: Values -> Stateful Haskell
 
--- ValueOrValuesList:
--- names_types_and_values_g, ns_ts_and_vs_to_list_of_ntavs, list_of_ntavs_g,
--- ntav_map_insert
+values_to_list = ( \(Values values) -> concatMap ns_ts_and_es_to_list values)
+  :: Values -> [ (ValueName, ValueType, ValueExpression) ]
 
-names_types_and_values_g =
-  ns_ts_and_vs_to_list_of_ntavs .> list_of_ntavs_g
-  :: ValueOrValuesList -> Stateful Haskell
+list_of_values_g = ( \values ->
+  mapM_ insert_value_to_map values >>
+  values==>mapM name_type_and_value_g >>= concat .> return
+  ) :: [ (ValueName, ValueType, ValueExpression) ] -> Stateful Haskell
 
-ns_ts_and_vs_to_list_of_ntavs = ( \(ValueOrValuesList ntavs) ->
-  concatMap ntav_or_ntav_lists_to_list_of_ntavs ntavs
-  ) :: ValueOrValuesList -> [ ValueNameTypeAndExpression ]
-
-list_of_ntavs_g = ( \list_of_ntavs ->
-  mapM_ ntav_map_insert list_of_ntavs >>
-  list_of_ntavs==>mapM name_type_and_value_g >>= concat .> return
-  ) :: [ ValueNameTypeAndExpression ] -> Stateful Haskell
-
-ntav_map_insert = ( \(NameTypeAndExpression value_name value_type value_expr) ->
+insert_value_to_map = ( \(value_name, value_type, value_expr) ->
   value_map_insert value_name $ value_type_conversion value_type
-  ) :: ValueNameTypeAndExpression -> Stateful ()
+  ) :: (ValueName, ValueType, ValueExpression) -> Stateful ()
 
 -- Where: where_g, where_type_inference_g 
 
-where_g = ( \(ValueExpressionWhereValues val_expr ntavs) val_type ->
+where_g = ( \(ValueExpressionWhereValues val_expr values) val_type ->
   get_indent_level >>= \ind_lev -> update_indent_level (ind_lev + 1) >>
-  names_types_and_values_g ntavs >>= \ntavs_hs ->
+  values_g values >>= \ntavs_hs ->
   value_expression_g val_expr val_type >>= \val_expr_hs ->
   update_indent_level ind_lev >>
   return ("\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ ntavs_hs)
   ) :: Where -> ValueType' -> Stateful Haskell
 
-where_type_inference_g = ( \(ValueExpressionWhereValues val_expr ntavs) ->
+where_type_inference_g = ( \(ValueExpressionWhereValues val_expr values) ->
   get_indent_level >>= \ind_lev -> update_indent_level (ind_lev + 1) >>
-  names_types_and_values_g ntavs >>= \ntavs_hs ->
+  values_g values >>= \ntavs_hs ->
   value_expression_type_inference_g val_expr >>= \(val_expr_hs, val_type) ->
   update_indent_level ind_lev >>
   return

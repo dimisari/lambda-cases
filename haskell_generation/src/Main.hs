@@ -12,13 +12,13 @@ import Helpers (Haskell, Error, (.>), (==>))
 import GenerationState.TypesAndOperations (Stateful)
 
 import ParsingTypes.TypeDefinitions (TypeDefinition)
-import ParsingTypes.Values (ValueOrValuesList)
+import ParsingTypes.Values (Values)
 
 import Parsers.TypeDefinitions (type_definition_p)
-import Parsers.Values (value_or_values_list_p)
+import Parsers.Values (values_p)
 
 import CodeGenerators.TypeDefinitions (type_definition_g)
-import CodeGenerators.Values (names_types_and_values_g)
+import CodeGenerators.Values (values_g)
 
 -- All: Path, Constants, Types, Parsing, Generating Haskell, main
 
@@ -58,7 +58,7 @@ haskell_header =
 -- Types: ValueOrValuesListOrTypeDef, Program
 
 data ValueOrValuesListOrTypeDef =
-  TypeDefinition TypeDefinition | ValueOrValuesList ValueOrValuesList deriving Show
+  TypeDefinition TypeDefinition | Values Values deriving Show
 
 type Program = [ ValueOrValuesListOrTypeDef ]
 
@@ -74,7 +74,7 @@ program_p =
 
 ntavs_or_type_def_p =
   TypeDefinition <$> try type_definition_p <|>
-  ValueOrValuesList <$> value_or_values_list_p
+  Values <$> values_p
   :: Parser ValueOrValuesListOrTypeDef
 
 -- Generating Haskell:
@@ -111,7 +111,7 @@ program_g =
   :: Program -> Stateful Haskell
 
 ntavs_or_type_def_g = ( \case 
-  ValueOrValuesList ntavs -> names_types_and_values_g ntavs
+  Values ntavs -> values_g ntavs
   TypeDefinition type_def -> type_definition_g type_def
   ) :: ValueOrValuesListOrTypeDef -> Stateful Haskell
 
