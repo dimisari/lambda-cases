@@ -13,25 +13,26 @@ import ParsingTypes.Values
 
 import Parsers.LowLevel (literal_p, value_name_p, input_p)
 import Parsers.Types (value_type_p)
-import Parsers.OperatorValues (abs_op_or_op_expr_p)
+import Parsers.OperatorValues (operator_expression_p)
 
 -- All:
--- LiteralOrValueName, SpecificCase, DefaultCase, Cases
--- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases
+-- ValueNameTypeAndExpression, ValueNamesTypesAndExpressions,
+-- ValueOrValues, ValueOrValuesList
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
--- LiteralOrValueName: literal_or_value_name_p
+-- CaseLiteralOrValueName: case_literal_or_value_name_p
 
-literal_or_value_name_p =
-  Lit <$> literal_p <|> ValName <$> value_name_p
-  :: Parser LiteralOrValueName
+case_literal_or_value_name_p =
+  CaseLiteral <$> literal_p <|> CaseValueName <$> value_name_p
+  :: Parser CaseLiteralOrValueName
 
 -- SpecificCase: specific_case_p
 
 specific_case_p =
-  literal_or_value_name_p >>= \lit_or_val_name ->
+  case_literal_or_value_name_p >>= \case_literal_or_value_name_p ->
   string " ->" >> space_or_newline >> value_expression_p >>= \value_expression ->
-  return $ SpecificCase lit_or_val_name value_expression
+  return $ SpecificCase case_literal_or_value_name_p value_expression
   :: Parser SpecificCase
 
 -- DefaultCase: default_case_p
@@ -62,17 +63,17 @@ many_cases_p =
   return $ Many specific_case1 specific_case2 specific_cases maybe_default_case
   :: Parser Cases
 
--- NameTypeAndValue: name_type_and_value_p
+-- ValueNameTypeAndExpression: value_name_type_and_expression_p
  
-name_type_and_value_p =
+value_name_type_and_expression_p =
   value_name_p >>= \value_name -> string ": " >> value_type_p >>= \value_type ->
   new_line_space_surrounded >> string "= " >> value_expression_p >>= \value_expr ->
-  return $ NTAV value_name value_type value_expr
-  :: Parser NameTypeAndValue
+  return $ NameTypeAndExpression value_name value_type value_expr
+  :: Parser ValueNameTypeAndExpression
 
--- NameTypeAndValueLists: name_type_and_value_lists_p
+-- ValueNamesTypesAndExpressions: value_names_types_and_expressions_p
 
-name_type_and_value_lists_p = 
+value_names_types_and_expressions_p = 
   seperated2 ", " value_name_p >>= \value_names ->
   let
   value_types_p =
@@ -91,30 +92,30 @@ name_type_and_value_lists_p =
   True -> 
     unexpected "value names, types and expressions don't match"
   False ->
-    return $ NTAVLists value_names value_types value_expressions
-  :: Parser NameTypeAndValueLists
+    return $ NamesTypesAndExpressions value_names value_types value_expressions
+  :: Parser ValueNamesTypesAndExpressions
 
--- NTAVOrNTAVLists: ntav_or_ntav_lists_p
+-- ValueOrValues: value_or_values_p
 
-ntav_or_ntav_lists_p = 
-  NameTypeAndValueLists <$> try name_type_and_value_lists_p <|>
-  NameTypeAndValue <$> name_type_and_value_p
-  :: Parser NTAVOrNTAVLists
+value_or_values_p = 
+  ValueNamesTypesAndExpressions <$> try value_names_types_and_expressions_p <|>
+  ValueNameTypeAndExpression <$> value_name_type_and_expression_p
+  :: Parser ValueOrValues
 
--- NamesTypesAndValues: names_types_and_values_p
+-- ValueOrValuesList: value_or_values_list_p
 
-names_types_and_values_p =
-  NTAVs <$> try (ntav_or_ntav_lists_p <* eof_or_new_lines)==>many1
-  :: Parser NamesTypesAndValues
+value_or_values_list_p =
+  ValueOrValuesList <$> try (value_or_values_p <* eof_or_new_lines)==>many1
+  :: Parser ValueOrValuesList
 
 -- Where: where_p
 
 where_p = 
   string "let" >> new_line_space_surrounded >>
-  names_types_and_values_p >>= \names_types_and_values ->
+  value_or_values_list_p >>= \names_types_and_values ->
   string "output" >> new_line_space_surrounded >>
   value_expression_p >>= \value_expression ->
-  return $ ValueWhereNTAVs value_expression names_types_and_values
+  return $ ValueExpressionWhereValues value_expression names_types_and_values
   :: Parser Where
 
 -- CasesOrWhere: cases_or_where_p
@@ -127,7 +128,7 @@ cases_or_where_p =
 
 input_cases_or_where_p = 
   input_p >>= \input -> cases_or_where_p >>= \cases_or_where -> 
-  return $ InputAndCOWResult input cases_or_where
+  return $ InputAndCasesOrWhere input cases_or_where
   :: Parser InputCasesOrWhere
 
 -- ValueExpression: value_expression_p
@@ -135,5 +136,5 @@ input_cases_or_where_p =
 value_expression_p =
   InputCasesOrWhere <$> try input_cases_or_where_p <|>
   CasesOrWhere <$> try cases_or_where_p <|>
-  InputOpExprOrOpExpr <$> abs_op_or_op_expr_p
+  OperatorExpression <$> operator_expression_p
   :: Parser ValueExpression

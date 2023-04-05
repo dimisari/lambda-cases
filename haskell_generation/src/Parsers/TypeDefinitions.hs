@@ -54,10 +54,10 @@ some_right_type_vars_p =
 -- TypeConstructorAndVariables: cons_and_type_vars_p
 
 cons_and_type_vars_p = 
-  left_type_vars_p >>= \left_input_ts ->
+  left_type_vars_p >>= \left_type_vars ->
   type_name_p >>= \type_name ->
-  right_type_vars_p >>= \right_input_ts ->
-  return $ TypeConstructorAndVariables type_name left_input_ts right_input_ts
+  right_type_vars_p >>= \right_type_vars ->
+  return $ TypeConstructorAndVariables type_name left_type_vars right_type_vars
   :: Parser TypeConstructorAndVariables
 
 -- Field: field_name_and_type_p
@@ -70,11 +70,11 @@ field_name_and_type_p =
 -- TupleTypeDefinition: tuple_type_definition_p
 
 tuple_type_definition_p =
-  string "tuple_type " >> cons_and_type_vars_p >>= \type_application ->
+  string "tuple_type " >> cons_and_type_vars_p >>= \cons_and_type_vars ->
   string "\nvalue (" >>
   (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
   string ")" >> eof_or_new_lines >>
-  ConstructorAndFields type_application fields==>return
+  return (ConstructorAndFields cons_and_type_vars fields)
   :: Parser TupleTypeDefinition
 
 -- OrTypeCase: case_and_maybe_type_p
@@ -89,12 +89,12 @@ case_and_maybe_type_p =
 -- OrTypeDefinition: or_type_definition_p
 
 or_type_definition_p =
-  string "or_type " >> cons_and_type_vars_p >>= \type_application ->
+  string "or_type " >> cons_and_type_vars_p >>= \cons_and_type_vars ->
   string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
   string " | " >> case_and_maybe_type_p >>= \case2 ->
   many (try $ string " | " >> case_and_maybe_type_p) >>= \cases ->
   eof_or_new_lines >>
-  ConstructorAndCases type_application case1 case2 cases==>return
+  return (ConstructorAndCases cons_and_type_vars case1 case2 cases)
   :: Parser OrTypeDefinition
 
 -- TypeDefinition: type_definition_p

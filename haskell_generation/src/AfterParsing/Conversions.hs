@@ -38,7 +38,7 @@ combine_with_reverse_direction = ( \at1 ad at2 -> case ad of
 
 -- MathApplication: math_app_to_app_tree, base_vals_to_app_tree, expr_to_base_value
 
-math_app_to_app_tree = ( \(MathApp value_name expr1 exprs) ->
+math_app_to_app_tree = ( \(NameAndInputExpressions value_name expr1 exprs) ->
   base_vals_to_app_tree $
     ValueName value_name : map expr_to_base_value (expr1 : exprs) 
   ) :: MathApplication -> ApplicationTree 
@@ -52,12 +52,12 @@ base_vals_to_app_tree = ( \case
 
 expr_to_base_value = ( \expr -> case expr of
   PureOperatorExpression
-    (EqualityFactor
-      (SubtractionFactor
+    (EqualityTerm
+      (SubtractionTerm
         (MultiplicationFactor
           (BaseValue bv)))) -> bv
   _ -> Parenthesis $ InnerExpression $ expr
-  ) :: InputOpExprOrOpExpr -> BaseValue
+  ) :: OperatorExpression -> BaseValue
 
 -- ValueType':
 -- value_type_conversion, func_type_to_val_type, one_input_to_val_type,

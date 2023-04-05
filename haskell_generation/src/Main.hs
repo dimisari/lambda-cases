@@ -12,10 +12,10 @@ import Helpers (Haskell, Error, (.>), (==>))
 import GenerationState.TypesAndOperations (Stateful)
 
 import ParsingTypes.TypeDefinitions (TypeDefinition)
-import ParsingTypes.Values (NamesTypesAndValues)
+import ParsingTypes.Values (ValueOrValuesList)
 
 import Parsers.TypeDefinitions (type_definition_p)
-import Parsers.Values (names_types_and_values_p)
+import Parsers.Values (value_or_values_list_p)
 
 import CodeGenerators.TypeDefinitions (type_definition_g)
 import CodeGenerators.Values (names_types_and_values_g)
@@ -55,12 +55,12 @@ haskell_header =
   "haskell_headers/haskell_code_header.hs"
   :: Path
 
--- Types: NTAVsOrTypeDef, Program
+-- Types: ValueOrValuesListOrTypeDef, Program
 
-data NTAVsOrTypeDef =
-  TypeDefinition TypeDefinition | NTAVs NamesTypesAndValues deriving Show
+data ValueOrValuesListOrTypeDef =
+  TypeDefinition TypeDefinition | ValueOrValuesList ValueOrValuesList deriving Show
 
-type Program = [ NTAVsOrTypeDef ]
+type Program = [ ValueOrValuesListOrTypeDef ]
 
 -- Parsing: parse_lcases, parse_with, program_p, ntavs_or_type_def_p
 
@@ -73,8 +73,9 @@ program_p =
   :: Parser Program
 
 ntavs_or_type_def_p =
-  TypeDefinition <$> try type_definition_p <|> NTAVs <$> names_types_and_values_p
-  :: Parser NTAVsOrTypeDef
+  TypeDefinition <$> try type_definition_p <|>
+  ValueOrValuesList <$> value_or_values_list_p
+  :: Parser ValueOrValuesListOrTypeDef
 
 -- Generating Haskell:
 -- print_error_or_haskell_to_file, print_parse_error_or_semantic_analysis,
@@ -110,9 +111,9 @@ program_g =
   :: Program -> Stateful Haskell
 
 ntavs_or_type_def_g = ( \case 
-  NTAVs ntavs -> names_types_and_values_g ntavs
+  ValueOrValuesList ntavs -> names_types_and_values_g ntavs
   TypeDefinition type_def -> type_definition_g type_def
-  ) :: NTAVsOrTypeDef -> Stateful Haskell
+  ) :: ValueOrValuesListOrTypeDef -> Stateful Haskell
 
 -- main
 

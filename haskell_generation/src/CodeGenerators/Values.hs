@@ -24,20 +24,20 @@ import CodeGenerators.LowLevelValues
 import CodeGenerators.OperatorValues
 
 -- All:
--- LiteralOrValueName, SpecificCase, Cases,
--- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- CaseLiteralOrValueName, SpecificCase, Cases,
+-- ValueNameTypeAndExpression, ValueNamesTypesAndExpressions, ValueOrValues, ValueOrValuesList
 -- Where, CasesOrWhere, ValueExpression
 
--- LiteralOrValueName: literal_or_value_name_g, lit_or_val_name_type_inference_g
+-- CaseLiteralOrValueName: literal_or_value_name_g, lit_or_val_name_type_inference_g
 
 literal_or_value_name_g = ( \case
-  Lit literal -> literal_g literal
-  ValName value_name -> val_name_insert_and_return value_name
-  ) :: LiteralOrValueName -> ValueType' -> Stateful Haskell
+  CaseLiteral literal -> literal_g literal
+  CaseValueName value_name -> val_name_insert_and_return value_name
+  ) :: CaseLiteralOrValueName -> ValueType' -> Stateful Haskell
 
 lit_or_val_name_type_inference_g = ( 
   undefined
-  ) :: LiteralOrValueName -> Stateful (Haskell, ValueType')
+  ) :: CaseLiteralOrValueName -> Stateful (Haskell, ValueType')
 
 -- SpecificCase: specific_case_g, abs_g, specific_case_type_inference_g
 
@@ -109,9 +109,9 @@ cases_type_inference_g = ( \case
       ("\\case\n" ++ spec_c1_hs ++ "\n" ++ intercalate "\n" spec_cs_hs, val_type)
   ) :: Cases -> Stateful (Haskell, ValueType')
 
--- NameTypeAndValue: name_type_and_value_g
+-- ValueNameTypeAndExpression: name_type_and_value_g
 
-name_type_and_value_g = ( \(NTAV value_name value_type value_expr) -> 
+name_type_and_value_g = ( \(NameTypeAndExpression value_name value_type value_expr) -> 
   get_indent_level >>= \ind_lev ->
   let 
   val_type = value_type_conversion value_type
@@ -121,49 +121,49 @@ name_type_and_value_g = ( \(NTAV value_name value_type value_expr) ->
   return $
     "\n" ++ indent ind_lev ++ show value_name ++ " :: " ++ show val_type ++
     "\n" ++ indent ind_lev ++ show value_name ++ " = " ++ val_expr_hs ++ "\n"
-  ) :: NameTypeAndValue -> Stateful Haskell
+  ) :: ValueNameTypeAndExpression -> Stateful Haskell
 
--- NameTypeAndValueLists: ntav_lists_to_list_of_ntavs
+-- ValueNamesTypesAndExpressions: ntav_lists_to_list_of_ntavs
 
 ntav_lists_to_list_of_ntavs = ( \ntav_lists -> case ntav_lists of
-  NTAVLists (val_name : val_names) (val_type : val_types) (val_expr : val_exprs) ->
-    NTAV val_name val_type val_expr :
-    ntav_lists_to_list_of_ntavs (NTAVLists val_names val_types val_exprs)
-  NTAVLists [] [] [] -> []
+  NamesTypesAndExpressions (val_name : val_names) (val_type : val_types) (val_expr : val_exprs) ->
+    NameTypeAndExpression val_name val_type val_expr :
+    ntav_lists_to_list_of_ntavs (NamesTypesAndExpressions val_names val_types val_exprs)
+  NamesTypesAndExpressions [] [] [] -> []
   _ -> error $ name_type_and_value_lists_err ntav_lists
-  ) :: NameTypeAndValueLists -> [ NameTypeAndValue ]
+  ) :: ValueNamesTypesAndExpressions -> [ ValueNameTypeAndExpression ]
 
--- NTAVOrNTAVLists: ntav_or_ntav_lists_to_list_of_ntavs
+-- ValueOrValues: ntav_or_ntav_lists_to_list_of_ntavs
 
 ntav_or_ntav_lists_to_list_of_ntavs = ( \case 
-  NameTypeAndValue name_type_and_value -> [ name_type_and_value ]
-  NameTypeAndValueLists ntav_lists -> ntav_lists_to_list_of_ntavs ntav_lists
-  ) :: NTAVOrNTAVLists -> [ NameTypeAndValue ]
+  ValueNameTypeAndExpression name_type_and_value -> [ name_type_and_value ]
+  ValueNamesTypesAndExpressions ntav_lists -> ntav_lists_to_list_of_ntavs ntav_lists
+  ) :: ValueOrValues -> [ ValueNameTypeAndExpression ]
 
--- NamesTypesAndValues:
+-- ValueOrValuesList:
 -- names_types_and_values_g, ns_ts_and_vs_to_list_of_ntavs, list_of_ntavs_g,
 -- ntav_map_insert
 
 names_types_and_values_g =
   ns_ts_and_vs_to_list_of_ntavs .> list_of_ntavs_g
-  :: NamesTypesAndValues -> Stateful Haskell
+  :: ValueOrValuesList -> Stateful Haskell
 
-ns_ts_and_vs_to_list_of_ntavs = ( \(NTAVs ntavs) ->
+ns_ts_and_vs_to_list_of_ntavs = ( \(ValueOrValuesList ntavs) ->
   concatMap ntav_or_ntav_lists_to_list_of_ntavs ntavs
-  ) :: NamesTypesAndValues -> [ NameTypeAndValue ]
+  ) :: ValueOrValuesList -> [ ValueNameTypeAndExpression ]
 
 list_of_ntavs_g = ( \list_of_ntavs ->
   mapM_ ntav_map_insert list_of_ntavs >>
   list_of_ntavs==>mapM name_type_and_value_g >>= concat .> return
-  ) :: [ NameTypeAndValue ] -> Stateful Haskell
+  ) :: [ ValueNameTypeAndExpression ] -> Stateful Haskell
 
-ntav_map_insert = ( \(NTAV value_name value_type value_expr) ->
+ntav_map_insert = ( \(NameTypeAndExpression value_name value_type value_expr) ->
   value_map_insert value_name $ value_type_conversion value_type
-  ) :: NameTypeAndValue -> Stateful ()
+  ) :: ValueNameTypeAndExpression -> Stateful ()
 
 -- Where: where_g, where_type_inference_g 
 
-where_g = ( \(ValueWhereNTAVs val_expr ntavs) val_type ->
+where_g = ( \(ValueExpressionWhereValues val_expr ntavs) val_type ->
   get_indent_level >>= \ind_lev -> update_indent_level (ind_lev + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_hs ->
   value_expression_g val_expr val_type >>= \val_expr_hs ->
@@ -171,7 +171,7 @@ where_g = ( \(ValueWhereNTAVs val_expr ntavs) val_type ->
   return ("\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ ntavs_hs)
   ) :: Where -> ValueType' -> Stateful Haskell
 
-where_type_inference_g = ( \(ValueWhereNTAVs val_expr ntavs) ->
+where_type_inference_g = ( \(ValueExpressionWhereValues val_expr ntavs) ->
   get_indent_level >>= \ind_lev -> update_indent_level (ind_lev + 1) >>
   names_types_and_values_g ntavs >>= \ntavs_hs ->
   value_expression_type_inference_g val_expr >>= \(val_expr_hs, val_type) ->
@@ -194,7 +194,7 @@ cases_or_where_type_inference_g = ( \case
 
 -- InputCasesOrWhere: abstraction_cases_or_where_g
 
-abstraction_cases_or_where_g = ( \(InputAndCOWResult input cases_or_where) ->
+abstraction_cases_or_where_g = ( \(InputAndCasesOrWhere input cases_or_where) ->
   input_g input >=> \(output_type, input_hs) ->
   cases_or_where_g cases_or_where output_type >>= \cases_or_where_hs ->
   return $ input_hs ++ cases_or_where_hs
@@ -209,11 +209,11 @@ abstraction_cow_type_inference_g = (
 value_expression_g = ( \case
   InputCasesOrWhere input_cow -> abstraction_cases_or_where_g input_cow
   CasesOrWhere cases_or_where -> cases_or_where_g cases_or_where 
-  InputOpExprOrOpExpr expr -> input_op_expr_or_op_expr_g expr
+  OperatorExpression expr -> input_op_expr_or_op_expr_g expr
   ) :: ValueExpression -> ValueType' -> Stateful Haskell
 
 value_expression_type_inference_g = ( \case
   InputCasesOrWhere input_cow -> abstraction_cow_type_inference_g input_cow
   CasesOrWhere cases_or_where -> cases_or_where_type_inference_g cases_or_where
-  InputOpExprOrOpExpr expr -> input_op_expr_or_op_expr_type_inf_g expr
+  OperatorExpression expr -> input_op_expr_or_op_expr_type_inf_g expr
   ) :: ValueExpression -> Stateful (Haskell, ValueType')

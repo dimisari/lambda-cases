@@ -12,7 +12,7 @@ import Parsers.LowLevel (value_name_p)
 -- All:
 -- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParenthesis, OutputType,
 -- FunctionType,
--- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType
+-- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType, Helpers
 
 -- TypeName: type_name_p
 
@@ -21,16 +21,16 @@ type_name_p =
   return $ TN (initial_upper : lowers_uppers)
   :: Parser TypeName
 
--- ProductType: product_type_p, inner_value_type_p
+-- ProductType: product_type_p, product_value_type_p
 
 product_type_p =
-  inner_value_type_p >>= \value_type1 ->
-  string " x " >> inner_value_type_p >>= \value_type2 ->
-  many (try $ string " x " >> inner_value_type_p) >>= \value_types ->
+  product_value_type_p >>= \value_type1 ->
+  string " x " >> product_value_type_p >>= \value_type2 ->
+  many (try $ string " x " >> product_value_type_p) >>= \value_types ->
   return $ ProductTypes value_type1 value_type2 value_types
   :: Parser ProductType
 
-inner_value_type_p =
+product_value_type_p =
   try (char '(' *>
   (FunctionType <$> try function_type_p <|> ProductType <$> product_type_p)
   <* char ')') <|>
@@ -74,8 +74,7 @@ function_type_p =
   return $ InputAndOutputTypes input output
   :: Parser FunctionType
 
--- LeftTypeInputs:
--- left_type_inputs_p, some_left_type_inputs_p
+-- LeftTypeInputs: left_type_inputs_p, some_left_type_inputs_p
 
 left_type_inputs_p =
   option NoLeftTypeInputs $ try some_left_type_inputs_p
@@ -88,8 +87,7 @@ some_left_type_inputs_p =
   <* string "==>"
   :: Parser LeftTypeInputs
 
--- RightTypeInputs:
--- right_type_inputs_p, some_right_type_inputs_p, many_right_type_inputs_p
+-- RightTypeInputs: right_type_inputs_p, some_right_type_inputs_p
 
 right_type_inputs_p =
   option NoRightTypeInputs $ try some_right_type_inputs_p

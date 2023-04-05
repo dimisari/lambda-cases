@@ -25,9 +25,9 @@ import CodeGenerators.LowLevelValues
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue
 -- FunctionApplicationChain,
--- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
--- EqualityFactor, Equality
--- PureOperatorExpression, InputOperatorExpression, InputOpExprOrOpExpr
+-- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
+-- EqualityTerm, Equality
+-- PureOperatorExpression, InputOperatorExpression, OperatorExpression
 
 -- Parenthesis: parenthesis_g, paren_type_inference_g
 
@@ -45,7 +45,7 @@ paren_type_inference_g = ( \(InnerExpression expr) ->
 -- tuple_g, tuple_values_type_name_g, tuple_values_types_g,
 -- tuple_values_field_types_g, tuple_type_inference_g
 
-tuple_g = ( \(Values val1 val2 vals) -> \case
+tuple_g = ( \(TupleExpressions val1 val2 vals) -> \case
   FunctionType' _ -> throwE "Tuple can't have function type"
   TypeApplication' (TypeConstructorAndInputs' type_name _) ->
     tuple_values_type_name_g (val1 : val2 : vals) type_name
@@ -55,29 +55,29 @@ tuple_g = ( \(Values val1 val2 vals) -> \case
 tuple_values_type_name_g = ( \values type_name -> type_map_get type_name >>= \case
   OrTypeCaseList _ -> throwE "Tuple can't be an or_type"
   FieldList fields -> tuple_values_fields_g values fields type_name
-  ) :: [ InputOpExprOrOpExpr ] -> TypeName -> Stateful Haskell
+  ) :: [ OperatorExpression ] -> TypeName -> Stateful Haskell
 
 tuple_values_fields_g = ( \values fields type_name ->
   case length values == length fields of 
     False -> throwE values_fields_lengths_dont_match_err
     True -> tuple_values_field_types_g values (map get_type fields) type_name
-  ) :: [ InputOpExprOrOpExpr ] -> [ Field' ] -> TypeName -> Stateful Haskell
+  ) :: [ OperatorExpression ] -> [ Field' ] -> TypeName -> Stateful Haskell
 
 tuple_values_field_types_g = ( \values types type_name ->
   get_indent_level >>= \indent_level ->
   zipWith input_op_expr_or_op_expr_g values types==>sequence
     >>= concatMap ( \value_hs ->  " (" ++ value_hs ++ ")" ) .> \values_hs -> 
   return $ "\n" ++ indent (indent_level + 1) ++ "C" ++ show type_name ++ values_hs
-  ) :: [ InputOpExprOrOpExpr ] -> [ ValueType' ] -> TypeName -> Stateful Haskell
+  ) :: [ OperatorExpression ] -> [ ValueType' ] -> TypeName -> Stateful Haskell
 
 tuple_values_types_g = ( \values types -> case length types == length values of
   False -> throwE "Length of tuple does not match length of product type"
   True -> 
     zipWith input_op_expr_or_op_expr_g values types==>sequence >>= \vals_hs ->
     return $ "(" ++ intercalate ", " vals_hs ++ ")"
-  ) :: [ InputOpExprOrOpExpr ] -> [ ValueType' ] -> Stateful Haskell
+  ) :: [ OperatorExpression ] -> [ ValueType' ] -> Stateful Haskell
 
-tuple_type_inference_g = ( \(Values val1 val2 values) ->
+tuple_type_inference_g = ( \(TupleExpressions val1 val2 values) ->
   mapM input_op_expr_or_op_expr_type_inf_g (val1 : val2 : values) >>= unzip .>
     \(vals_hs, types) -> 
   return ("(" ++ intercalate ", " vals_hs ++ ")", ProductType' types)
@@ -159,7 +159,7 @@ tree1_func_type_g = (
        Stateful (Haskell, ValueType')
 
 application_handler = ( \(ApplicationTrees tree1 tree2) error_msg -> case tree2 of 
-  BaseValueLeaf (Tuple (Values val1 val2 vals)) -> 
+  BaseValueLeaf (Tuple (TupleExpressions val1 val2 vals)) -> 
     let
     tree1' = 
       Application $ ApplicationTrees
@@ -167,7 +167,7 @@ application_handler = ( \(ApplicationTrees tree1 tree2) error_msg -> case tree2 
         BaseValueLeaf $ Parenthesis $ InnerExpression val1
     tree2' = BaseValueLeaf $ case vals of 
       [] -> Parenthesis $ InnerExpression val2
-      val3 : other_vals -> Tuple $ Values val2 val3 other_vals
+      val3 : other_vals -> Tuple $ TupleExpressions val2 val3 other_vals
     in
     application_type_inference_g $ ApplicationTrees tree1' tree2'
   BaseValueLeaf base_value -> 
@@ -190,42 +190,42 @@ application_handler = ( \(ApplicationTrees tree1 tree2) error_msg -> case tree2 
 -- MultiplicationFactor: multiplication_factor_g
 
 multiplication_factor_g = ( \case
-  FuncAppChain func_app_chain -> func_app_chain_g func_app_chain 
+  FunctionApplicationChain func_app_chain -> func_app_chain_g func_app_chain 
   BaseValue base_value -> base_value_g base_value 
   ) :: MultiplicationFactor -> ValueType' -> Stateful Haskell
 
 -- Multiplication: multiplication_g
 
-multiplication_g = ( \(MulFactors mul_fac1 mul_fac2 mul_facs) val_type -> 
+multiplication_g = ( \(MultiplicationFactors mul_fac1 mul_fac2 mul_facs) val_type -> 
   mapM (flip multiplication_factor_g val_type) (mul_fac1 : mul_fac2 : mul_facs) >>=
   intercalate " * " .> return
   ) :: Multiplication -> ValueType' -> Stateful Haskell
 
--- SubtractionFactor: subtraction_factor_g
+-- SubtractionTerm: subtraction_factor_g
 
 subtraction_factor_g = ( \case
   Multiplication multiplication -> multiplication_g multiplication
   MultiplicationFactor mul_fac -> multiplication_factor_g mul_fac
-  ) :: SubtractionFactor -> ValueType' -> Stateful Haskell
+  ) :: SubtractionTerm -> ValueType' -> Stateful Haskell
 
 -- Subtraction: subtraction_g
 
-subtraction_g = ( \(SubFactors subtraction_factor1 subtraction_factor2) val_type ->
+subtraction_g = ( \(SubtractionTerms subtraction_factor1 subtraction_factor2) val_type ->
   subtraction_factor_g subtraction_factor1 val_type >>= \subtraction_factor1_hs ->
   subtraction_factor_g subtraction_factor2 val_type >>= \subtraction_factor2_hs ->
   return $ subtraction_factor1_hs ++ " - " ++ subtraction_factor2_hs
   ) :: Subtraction -> ValueType' -> Stateful Haskell
 
--- EqualityFactor: equality_factor_g
+-- EqualityTerm: equality_factor_g
 
 equality_factor_g = ( \case
   Subtraction subtraction -> subtraction_g subtraction
-  SubtractionFactor subtraction_factor -> subtraction_factor_g subtraction_factor
-  ) :: EqualityFactor -> ValueType' -> Stateful Haskell
+  SubtractionTerm subtraction_factor -> subtraction_factor_g subtraction_factor
+  ) :: EqualityTerm -> ValueType' -> Stateful Haskell
 
 -- Equality: equality_g
 
-equality_g = ( \(EqualityFactors equality_factor1 equality_factor2) -> \case 
+equality_g = ( \(EqualityTerms equality_factor1 equality_factor2) -> \case 
   TypeApplication' (TypeConstructorAndInputs' (TN "Bool") []) ->
     let int_t = TypeApplication' $ TypeConstructorAndInputs' (TN "Int") [] in
     equality_factor_g equality_factor1 int_t >>= \equality_factor1_hs ->
@@ -237,7 +237,7 @@ equality_g = ( \(EqualityFactors equality_factor1 equality_factor2) -> \case
 -- PureOperatorExpression: operator_expression_g, op_expr_type_inference_g
 
 operator_expression_g = ( \case
-  EqualityFactor equality_factor -> equality_factor_g equality_factor
+  EqualityTerm equality_factor -> equality_factor_g equality_factor
   Equality equality -> equality_g equality
   ) :: PureOperatorExpression -> ValueType' -> Stateful Haskell
 
@@ -246,7 +246,7 @@ op_expr_type_inference_g = ( \operator_expr ->
   pair = case operator_expr of
     Equality equality -> (equality_g equality val_type, val_type) where
       val_type = TypeApplication' $ TypeConstructorAndInputs' (TN "Bool") []
-    EqualityFactor equ_fac -> (equality_factor_g equ_fac val_type, val_type) where
+    EqualityTerm equ_fac -> (equality_factor_g equ_fac val_type, val_type) where
       val_type = TypeApplication' $ TypeConstructorAndInputs' (TN "Int") []
     :: (Stateful Haskell, ValueType')
   in
@@ -255,25 +255,25 @@ op_expr_type_inference_g = ( \operator_expr ->
 
 -- InputOperatorExpression: input_op_expression_g, input_op_expr_type_inference_g
 
-input_op_expression_g = ( \(InputAndPureOpExpr input operator_expr) ->
+input_op_expression_g = ( \(InputAndPureOperatorExpression input operator_expr) ->
   input_g input >=> \(output_type, input_hs) ->
   operator_expression_g operator_expr output_type >>= \op_expr_hs ->
   return $ input_hs ++ op_expr_hs
   ) :: InputOperatorExpression -> ValueType' -> Stateful Haskell
 
-abs_op_expr_type_inference_g = ( \(InputAndPureOpExpr as opval) ->
+abs_op_expr_type_inference_g = ( \(InputAndPureOperatorExpression as opval) ->
   undefined
   ) :: InputOperatorExpression -> Stateful (Haskell, ValueType')
 
--- InputOpExprOrOpExpr: input_op_expression_g, input_op_expr_type_inference_g
+-- OperatorExpression: input_op_expression_g, input_op_expr_type_inference_g
 
 input_op_expr_or_op_expr_g = ( \case
   InputOperatorExpression input_op_expr -> input_op_expression_g input_op_expr
   PureOperatorExpression operator_expr -> operator_expression_g operator_expr
-  ) :: InputOpExprOrOpExpr -> ValueType' -> Stateful Haskell
+  ) :: OperatorExpression -> ValueType' -> Stateful Haskell
 
 input_op_expr_or_op_expr_type_inf_g = ( \case
   InputOperatorExpression input_op_expr -> abs_op_expr_type_inference_g input_op_expr
   PureOperatorExpression operator_expr -> op_expr_type_inference_g operator_expr
-  ) :: InputOpExprOrOpExpr -> Stateful (Haskell, ValueType')
+  ) :: OperatorExpression -> Stateful (Haskell, ValueType')
 

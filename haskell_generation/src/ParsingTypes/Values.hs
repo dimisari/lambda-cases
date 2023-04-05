@@ -6,20 +6,21 @@ import Helpers ((==>), (.>))
 
 import ParsingTypes.LowLevel (Literal, ValueName, Input)
 import ParsingTypes.Types (ValueType)
-import ParsingTypes.OperatorValues (InputOpExprOrOpExpr)
+import ParsingTypes.OperatorValues (OperatorExpression)
 
 -- All: Types, Show instances
 
 -- Types:
--- LiteralOrValueName, SpecificCase, DefaultCase, Cases
--- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases,
+-- ValueNameTypeAndExpression, ValueNamesTypesAndExpressions,
+-- ValueOrValues, ValueOrValuesList
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
-data LiteralOrValueName = 
-  Lit Literal | ValName ValueName
+data CaseLiteralOrValueName = 
+  CaseLiteral Literal | CaseValueName ValueName
 
 data SpecificCase =
-  SpecificCase LiteralOrValueName ValueExpression 
+  SpecificCase CaseLiteralOrValueName ValueExpression 
 
 data DefaultCase = 
   DefaultCase ValueExpression
@@ -28,48 +29,51 @@ data Cases =
   OneAndDefault SpecificCase DefaultCase |
   Many SpecificCase SpecificCase [ SpecificCase ] (Maybe DefaultCase)
 
-data NameTypeAndValue =
-  NTAV ValueName ValueType ValueExpression
+data ValueNameTypeAndExpression =
+  NameTypeAndExpression ValueName ValueType ValueExpression
 
-data NameTypeAndValueLists =
-  NTAVLists [ ValueName ] [ ValueType ] [ ValueExpression ]
+data ValueNamesTypesAndExpressions =
+  NamesTypesAndExpressions [ ValueName ] [ ValueType ] [ ValueExpression ]
 
-data NTAVOrNTAVLists =
-  NameTypeAndValue NameTypeAndValue | NameTypeAndValueLists NameTypeAndValueLists
+data ValueOrValues =
+  ValueNameTypeAndExpression ValueNameTypeAndExpression |
+  ValueNamesTypesAndExpressions ValueNamesTypesAndExpressions
 
-newtype NamesTypesAndValues =
-  NTAVs [ NTAVOrNTAVLists ]
+newtype ValueOrValuesList =
+  ValueOrValuesList [ ValueOrValues ]
 
 data Where =
-  ValueWhereNTAVs ValueExpression NamesTypesAndValues
+  ValueExpressionWhereValues ValueExpression ValueOrValuesList
 
 data CasesOrWhere =
   Cases Cases | Where Where
 
 data InputCasesOrWhere =
-  InputAndCOWResult Input CasesOrWhere
+  InputAndCasesOrWhere Input CasesOrWhere
 
 data ValueExpression =
   InputCasesOrWhere InputCasesOrWhere |
   CasesOrWhere CasesOrWhere |
-  InputOpExprOrOpExpr InputOpExprOrOpExpr
+  OperatorExpression OperatorExpression
 
 -- Show instances:
--- LiteralOrValueName, SpecificCase, DefaultCase, Cases
--- NameTypeAndValue, NameTypeAndValueLists, NTAVOrNTAVLists, NamesTypesAndValues
+-- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases,
+-- ValueNameTypeAndExpression, ValueNamesTypesAndExpressions,
+-- ValueOrValues, ValueOrValuesList
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
-instance Show LiteralOrValueName where 
+instance Show CaseLiteralOrValueName where 
   show = \case
-    Lit literal -> show literal
-    ValName value_name -> show value_name
+    CaseLiteral literal -> show literal
+    CaseValueName value_name -> show value_name
 
 instance Show SpecificCase where
-  show = \(SpecificCase lit_or_val_name value_expr) ->
-    show lit_or_val_name ++ " ->\n" ++ show value_expr ++ "\n"
+  show = \(SpecificCase lit_or_val_name value_expression) ->
+    show lit_or_val_name ++ " ->\n" ++ show value_expression ++ "\n"
 
 instance Show DefaultCase where
-  show = \(DefaultCase value_expr) -> "... ->\n" ++ show value_expr ++ "\n"
+  show = \(DefaultCase value_expression) ->
+    "... ->\n" ++ show value_expression ++ "\n"
 
 instance Show Cases where
   show = \cases -> "\ncases\n\n" ++ case cases of 
@@ -80,29 +84,29 @@ instance Show Cases where
         Just default_case -> show default_case
         Nothing -> ""
 
-instance Show NameTypeAndValue where
-  show = \(NTAV value_name value_type value_expr) ->
+instance Show ValueNameTypeAndExpression where
+  show = \(NameTypeAndExpression value_name value_type value_expression) ->
     show value_name ++ ": " ++ show value_type ++
-    "\n  = " ++ show value_expr ++ "\n"
+    "\n  = " ++ show value_expression ++ "\n"
 
-instance Show NameTypeAndValueLists where
-  show = \(NTAVLists value_names value_types value_exprs) -> 
+instance Show ValueNamesTypesAndExpressions where
+  show = \(NamesTypesAndExpressions value_names value_types value_exprs) -> 
     value_names==>map show==>intercalate ", " ++ ": " ++
     value_types==>map show==>intercalate ", " ++ "\n  = " ++
     value_exprs==>map show==>intercalate ", " ++ "\n"
 
-instance Show NTAVOrNTAVLists where
+instance Show ValueOrValues where
   show = \case
-    NameTypeAndValue name_type_and_value -> show name_type_and_value
-    NameTypeAndValueLists ntav_lists -> show ntav_lists
+    ValueNameTypeAndExpression name_type_and_expr -> show name_type_and_expr
+    ValueNamesTypesAndExpressions names_ts_and_exprs -> show names_ts_and_exprs
 
-instance Show NamesTypesAndValues where
-  show = \(NTAVs ns_ts_and_vs) ->
-    "\n" ++ ns_ts_and_vs==>concatMap (show .> (++ "\n"))
+instance Show ValueOrValuesList where
+  show = \(ValueOrValuesList val_or_vals_list) ->
+    "\n" ++ val_or_vals_list==>concatMap (show .> (++ "\n"))
 
 instance Show Where where
-  show = \(ValueWhereNTAVs value_expr ns_ts_and_vs) -> 
-    "output\n" ++ show value_expr ++ "where\n" ++ show ns_ts_and_vs 
+  show = \(ValueExpressionWhereValues value_expression val_or_vals_list) -> 
+    "output\n" ++ show value_expression ++ "where\n" ++ show val_or_vals_list 
 
 instance Show CasesOrWhere where
   show = \case
@@ -110,10 +114,11 @@ instance Show CasesOrWhere where
     Where where_ -> show where_
 
 instance Show InputCasesOrWhere where
-  show = \(InputAndCOWResult abs cases_or_where) ->
-    show abs ++ " -> " ++ show cases_or_where
+  show = \(InputAndCasesOrWhere input cases_or_where) ->
+    show input ++ " -> " ++ show cases_or_where
 
 instance Show ValueExpression where
   show = \case
-    InputCasesOrWhere abs_cases_or_where -> show abs_cases_or_where
-    InputOpExprOrOpExpr abs_op_expr_or_op_expr -> show abs_op_expr_or_op_expr
+    InputCasesOrWhere input_cases_or_where -> show input_cases_or_where
+    CasesOrWhere cases_or_where -> show cases_or_where
+    OperatorExpression operator_expression -> show operator_expression

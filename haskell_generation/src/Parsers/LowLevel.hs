@@ -15,8 +15,7 @@ literal_p = integer_p
   :: Parser Literal
 
 integer_p =
-  let natural_number_string = many1 digit :: Parser String in
-  read <$> ((:) <$> char '-' <*> natural_number_string <|> natural_number_string)
+  read <$> ((:) <$> char '-' <*> many1 digit <|> many1 digit)
   :: Parser Integer
 
 string_p = char '"' *> many (noneOf ['"']) <* char '"'
@@ -25,15 +24,15 @@ string_p = char '"' *> many (noneOf ['"']) <* char '"'
 -- ValueName: value_name_p
 
 value_name_p =
-  lower_under_p >>= \starting_char ->
-  many (lower_under_p <|> digit) >>= \lowers_unders_or_digits ->
-  let value_name = (starting_char : lowers_unders_or_digits) in
+  lower_case_or_underscore_p >>= \starting_char ->
+  many (lower_case_or_underscore_p <|> digit) >>= \other_chars ->
+  let value_name = (starting_char : other_chars) in
   elem value_name keywords ==> \case
     True -> parserFail "keyword"
     _ -> return $ VN value_name
   :: Parser ValueName 
 
-lower_under_p = lower <|> char '_'
+lower_case_or_underscore_p = lower <|> char '_'
   :: Parser Char
 
 -- Abstraction: abstraction_p

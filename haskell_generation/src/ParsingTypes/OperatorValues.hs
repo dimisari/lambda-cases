@@ -12,21 +12,24 @@ import ParsingTypes.Types (ValueType)
 -- Types:
 -- Parenthesis, Tuple, MathApplication, BaseValue
 -- ApplicationDirection, FunctionApplicationChain
--- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
--- EqualityFactor, Equality
--- PureOperatorExpression, InputOperatorExpression, InputOpExprOrOpExpr
+-- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
+-- EqualityTerm, Equality
+-- PureOperatorExpression, InputOperatorExpression, OperatorExpression
 
 newtype Parenthesis =
-  InnerExpression InputOpExprOrOpExpr 
+  InnerExpression OperatorExpression 
 
 data Tuple =
-  Values InputOpExprOrOpExpr InputOpExprOrOpExpr [ InputOpExprOrOpExpr ]
+  TupleExpressions OperatorExpression OperatorExpression [ OperatorExpression ]
 
 data MathApplication =
-  MathApp ValueName InputOpExprOrOpExpr [ InputOpExprOrOpExpr ]
+  NameAndInputExpressions ValueName OperatorExpression [ OperatorExpression ]
 
 data BaseValue =
-  Parenthesis Parenthesis | Tuple Tuple | Literal Literal | ValueName ValueName |
+  Literal Literal |
+  ValueName ValueName |
+  Parenthesis Parenthesis |
+  Tuple Tuple |
   MathApplication MathApplication
 
 data ApplicationDirection =
@@ -39,49 +42,50 @@ data FunctionApplicationChain =
     BaseValue
 
 data MultiplicationFactor =
-  FuncAppChain FunctionApplicationChain | BaseValue BaseValue
+  FunctionApplicationChain FunctionApplicationChain | BaseValue BaseValue
 
 data Multiplication =
-  MulFactors MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
+  MultiplicationFactors
+    MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
 
-data SubtractionFactor =
+data SubtractionTerm =
   Multiplication Multiplication | MultiplicationFactor MultiplicationFactor
 
 data Subtraction =
-  SubFactors SubtractionFactor SubtractionFactor 
+  SubtractionTerms SubtractionTerm SubtractionTerm 
 
-data EqualityFactor =
-  Subtraction Subtraction | SubtractionFactor SubtractionFactor
+data EqualityTerm =
+  Subtraction Subtraction | SubtractionTerm SubtractionTerm
 
 data Equality =
-  EqualityFactors EqualityFactor EqualityFactor
+  EqualityTerms EqualityTerm EqualityTerm
 
 data PureOperatorExpression =
-  Equality Equality | EqualityFactor EqualityFactor
+  Equality Equality | EqualityTerm EqualityTerm
 
 data InputOperatorExpression =
-  InputAndPureOpExpr Input PureOperatorExpression 
+  InputAndPureOperatorExpression Input PureOperatorExpression 
 
-data InputOpExprOrOpExpr =
+data OperatorExpression =
   InputOperatorExpression InputOperatorExpression |
   PureOperatorExpression PureOperatorExpression
 
 -- Show instances:
 -- Parenthesis, Tuple, MathApplication, BaseValue
 -- ApplicationDirection, FunctionApplicationChain
--- MultiplicationFactor, Multiplication, SubtractionFactor, Subtraction
--- EqualityFactor, Equality
--- PureOperatorExpression, InputOperatorExpression, InputOpExprOrOpExpr
+-- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
+-- EqualityTerm, Equality
+-- PureOperatorExpression, InputOperatorExpression, OperatorExpression
 
 instance Show Parenthesis where
   show = \(InnerExpression expr) -> "(" ++ show expr ++ ")"
 
 instance Show Tuple where
-  show = \(Values expr1 expr2 exprs) ->
+  show = \(TupleExpressions expr1 expr2 exprs) ->
     "(" ++ map show (expr1 : expr2 : exprs)==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
-  show = \(MathApp value_name expr1 exprs) ->
+  show = \(NameAndInputExpressions value_name expr1 exprs) ->
     show value_name ++ "(" ++ (expr1 : exprs)==>map show==>intercalate ", " ++ ")"
 
 instance Show BaseValue where
@@ -100,45 +104,45 @@ instance Show ApplicationDirection where
 instance Show FunctionApplicationChain where
   show = \(ValuesAndDirections base_val_app_dir base_val_app_dir_s base_val) ->
     concatMap
-      (\(base_val, app_dir) -> show base_val ++ show app_dir)
+      ( \(base_val, app_dir) -> show base_val ++ show app_dir )
       (base_val_app_dir : base_val_app_dir_s)
     ++ show base_val
 
 instance Show MultiplicationFactor where
   show = \case
-    FuncAppChain func_app_chain -> show func_app_chain
+    FunctionApplicationChain func_app_chain -> show func_app_chain
     BaseValue base_value -> show base_value
 
 instance Show Multiplication where
-  show = \(MulFactors factor1 factor2 factors) ->
-    (factor1 : factor2 : factors)==>map show==>intercalate " * "
+  show = \(MultiplicationFactors f1 f2 fs) ->
+    (f1 : f2 : fs)==>map show==>intercalate " * "
 
-instance Show SubtractionFactor where
+instance Show SubtractionTerm where
   show = \case
-    Multiplication m -> show m
-    MultiplicationFactor f -> show f
+    Multiplication multiplication -> show multiplication
+    MultiplicationFactor multiplication_factor -> show multiplication_factor
 
 instance Show Subtraction where
-  show = \(SubFactors factor1 factor2) -> show factor1 ++ " - " ++ show factor2
+  show = \(SubtractionTerms term1 term2) -> show term1 ++ " - " ++ show term2
 
-instance Show EqualityFactor where
+instance Show EqualityTerm where
   show = \case
-    Subtraction s -> show s
-    SubtractionFactor f -> show f
+    Subtraction subtraction -> show subtraction
+    SubtractionTerm subtraction_term -> show subtraction_term
 
 instance Show Equality where
-  show = \(EqualityFactors factor1 factor2) ->
-    show factor1 ++ " = " ++ show factor2
+  show = \(EqualityTerms term1 term2) -> show term1 ++ " = " ++ show term2
 
 instance Show PureOperatorExpression where
   show = \case
     Equality equality -> show equality
-    EqualityFactor factor -> show factor 
+    EqualityTerm equality_term -> show equality_term 
 
 instance Show InputOperatorExpression where
-  show = \(InputAndPureOpExpr abs op_expr) -> show abs ++ show op_expr
+  show = \(InputAndPureOperatorExpression input pure_op_expr) ->
+    show input ++ show pure_op_expr
 
-instance Show InputOpExprOrOpExpr where
+instance Show OperatorExpression where
   show = \case
-    InputOperatorExpression abs_op_expr -> show abs_op_expr
-    PureOperatorExpression op_expr -> show op_expr
+    InputOperatorExpression input_op_expr -> show input_op_expr
+    PureOperatorExpression pure_op_expr -> show pure_op_expr
