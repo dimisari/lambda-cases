@@ -8,7 +8,9 @@ import Helpers (Haskell, (==>))
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types (TypeName(..))
 
-import AfterParsing.Types
+import IntermediateTypes.Types
+import IntermediateTypes.TypeDefinitions
+
 import AfterParsing.Conversions 
 
 import GenerationState.TypesAndOperations (Stateful, type_map_get)

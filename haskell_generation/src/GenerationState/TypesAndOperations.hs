@@ -9,7 +9,8 @@ import Helpers (Haskell, Error, (.>), (==>))
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types
 
-import AfterParsing.Types (ValueType'(..), FieldsOrCases(..))
+import IntermediateTypes.Types (ValueType'(..))
+import IntermediateTypes.TypeDefinitions (FieldsOrCases(..))
 
 -- All: Types, get fields, update fields, value_map operations, type_map operations
 

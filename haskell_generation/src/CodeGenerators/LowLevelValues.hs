@@ -10,7 +10,8 @@ import Helpers (Haskell, (==>), (.>))
 import ParsingTypes.LowLevel
 import ParsingTypes.Types (TypeName(..))
 
-import AfterParsing.Types
+import IntermediateTypes.Types
+import IntermediateTypes.TypeDefinitions
 
 import GenerationState.TypesAndOperations
 

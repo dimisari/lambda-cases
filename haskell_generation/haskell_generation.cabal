@@ -29,7 +29,10 @@ executable haskell_generation
                         Parsers.OperatorValues,
                         Parsers.Values,
 
-                        AfterParsing.Types, AfterParsing.Conversions,
+                        IntermediateTypes.Types,
+                        IntermediateTypes.TypeDefinitions,
+                        IntermediateTypes.Values,
+                        AfterParsing.Conversions,
 
                         GenerationState.InitialState,
                         GenerationState.TypesAndOperations,

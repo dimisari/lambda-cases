@@ -5,7 +5,7 @@ import qualified Data.Map as M ( empty, fromList )
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types (TypeName(..), ValueType(..))
 
-import AfterParsing.Types 
+import IntermediateTypes.Types 
 
 import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..))
 
@@ -42,5 +42,5 @@ init_value_map =
     ]
   :: ValueMap
 
-init_state = GS 0 init_value_map M.empty-- 'a'
+init_state = GS 0 init_value_map M.empty
   :: GenerationState

@@ -7,7 +7,7 @@ import ParsingTypes.Types (TypeName)
 import ParsingTypes.OperatorValues
 import ParsingTypes.Values
 
-import AfterParsing.Types (ValueType')
+import IntermediateTypes.Types (ValueType')
 
 -- All: LowLevel, Values
 

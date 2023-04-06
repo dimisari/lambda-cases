@@ -10,7 +10,9 @@ import ParsingTypes.OperatorValues
 import ParsingTypes.Values
 import ParsingTypes.TypeDefinitions
 
-import AfterParsing.Types
+import IntermediateTypes.Types
+import IntermediateTypes.TypeDefinitions
+import IntermediateTypes.Values
 
 -- All: ApplicationTree, ValueType', Type Definitions
 

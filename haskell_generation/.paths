@@ -11,7 +11,10 @@ src/Parsers/LowLevel.hs
 src/Parsers/OperatorValues.hs
 src/Parsers/Values.hs
 
-src/AfterParsing/Types.hs
+src/IntermediateTypes/Types.hs
+src/IntermediateTypes/TypeDefinitions.hs
+src/IntermediateTypes/Values.hs
+
 src/AfterParsing/Conversions.hs
 
 src/GenerationState/TypesAndOperations.hs

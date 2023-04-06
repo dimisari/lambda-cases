@@ -8,7 +8,9 @@ import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types (TypeName(..))
 import ParsingTypes.TypeDefinitions 
 
-import AfterParsing.Types 
+import IntermediateTypes.Types 
+import IntermediateTypes.TypeDefinitions
+
 import AfterParsing.Conversions 
 
 import GenerationState.TypesAndOperations
@@ -23,7 +25,8 @@ import GenerationState.TypesAndOperations
 field_g = ( \(NameAndType' field_name field_type) cons_and_type_vars ->
   let
   input_type =
-    TypeApplication' $ TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
+    TypeApplication' $
+      TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
     :: ValueType'
   field_type_hs = type_g field_type $ get_type_vars cons_and_type_vars
     :: Haskell
@@ -53,7 +56,8 @@ type_name_g = ( \type_name type_vars->
 -- TupleTypeDefinition': tuple_type_definition'_g, fields_g
 
 tuple_type_definition'_g = (
-  \(ConstructorAndFields' cons_and_type_vars@(TypeConstructorAndVariables' type_name _) fields) ->
+  \(ConstructorAndFields'
+    cons_and_type_vars@(TypeConstructorAndVariables' type_name _) fields) ->
   type_map_insert type_name (FieldList fields) >>
   fields_g fields cons_and_type_vars >>= \fields_hs ->
   return $
@@ -61,7 +65,8 @@ tuple_type_definition'_g = (
     fields_hs ++ "\n  deriving Show\n"
   ) :: TupleTypeDefinition' -> Stateful Haskell
 
-fields_g = ( \fields cons_and_type_vars@(TypeConstructorAndVariables' type_name _) ->
+fields_g = (
+  \fields cons_and_type_vars@(TypeConstructorAndVariables' type_name _) ->
   fields==>mapM (flip field_g cons_and_type_vars) >>= \fields_hs ->
   return $ "C" ++ show type_name ++ " { " ++ intercalate ", " fields_hs ++ " }"
   ) :: [ Field' ] -> TypeConstructorAndVariables' -> Stateful Haskell
@@ -78,7 +83,8 @@ or_type_case_g = (
   \(NameAndMaybeInputType' case_name maybe_input_t) cons_and_type_vars ->
   let 
   or_type =
-    TypeApplication' $ TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
+    TypeApplication' $
+      TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
     :: ValueType'
   (case_type, input_type_hs) = case maybe_input_t of
     Nothing -> (or_type, "")
