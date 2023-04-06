@@ -1,18 +1,9 @@
 module Parsers.OperatorValues where
 
-import Text.Parsec ((<|>), try, char, many, many1, string, optionMaybe, unexpected)
+import Text.Parsec 
 import Text.Parsec.String (Parser)
-import Text.Parsec.Combinator (choice)
-
-import Helpers
-
-import ParsingTypes.LowLevel (Abstraction)
-import ParsingTypes.Types (ValueType)
 import ParsingTypes.OperatorValues
-import ParsingTypes.Values
-
 import Parsers.LowLevel (literal_p, value_name_p, input_p)
-import Parsers.Types (value_type_p)
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue

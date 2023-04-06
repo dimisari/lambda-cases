@@ -1,9 +1,7 @@
 module ParsingTypes.Values where
 
 import Data.List (intercalate)
-
 import Helpers ((==>), (.>))
-
 import ParsingTypes.LowLevel (Literal, ValueName, Input)
 import ParsingTypes.Types (ValueType)
 import ParsingTypes.OperatorValues (OperatorExpression)

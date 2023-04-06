@@ -15,7 +15,9 @@ src/IntermediateTypes/Types.hs
 src/IntermediateTypes/TypeDefinitions.hs
 src/IntermediateTypes/Values.hs
 
-src/AfterParsing/Conversions.hs
+src/Conversions/Types.hs
+src/Conversions/TypeDefinitions.hs
+src/Conversions/Values.hs
 
 src/GenerationState/TypesAndOperations.hs
 src/GenerationState/InitialState.hs

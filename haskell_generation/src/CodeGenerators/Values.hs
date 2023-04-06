@@ -15,7 +15,8 @@ import ParsingTypes.Values
 import IntermediateTypes.Types 
 import IntermediateTypes.Values
 
-import AfterParsing.Conversions 
+import Conversions.Types
+import Conversions.TypeDefinitions
 
 import GenerationState.TypesAndOperations
 

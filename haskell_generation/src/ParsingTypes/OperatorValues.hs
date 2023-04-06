@@ -1,11 +1,8 @@
 module ParsingTypes.OperatorValues where
 
 import Data.List (intercalate)
-
-import Helpers ((==>), (.>))
-
+import Helpers ((==>))
 import ParsingTypes.LowLevel (Literal, ValueName, Input)
-import ParsingTypes.Types (ValueType)
 
 -- All: Types, Show instances
 

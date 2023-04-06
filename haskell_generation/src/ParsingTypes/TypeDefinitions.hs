@@ -1,8 +1,7 @@
 module ParsingTypes.TypeDefinitions where
 
 import Data.List (intercalate)
-import Helpers ((==>), (.>))
-
+import Helpers ((==>))
 import ParsingTypes.LowLevel (ValueName)
 import ParsingTypes.Types (TypeName, ValueType)
 

@@ -5,7 +5,6 @@ import Text.Parsec.String (Parser)
 
 import Helpers ((==>), eof_or_new_lines)
 
-import ParsingTypes.Types (TypeName(..))
 import ParsingTypes.TypeDefinitions
 
 import Parsers.LowLevel (value_name_p)

@@ -1,19 +1,21 @@
 module IntermediateTypes.TypeDefinitions where
 
-import Data.List (intercalate)
-
-import Helpers ((==>), (.>))
+import Helpers ((.>))
 
 import ParsingTypes.LowLevel (ValueName)
 import ParsingTypes.Types (TypeName(..))
-import ParsingTypes.OperatorValues (BaseValue)
 
 import IntermediateTypes.Types (ValueType'(..), TypeApplication'(..))
 
--- All: Types, Show instances
+-- All: Types, Show instances, Helpers
 
--- Type Definitions:
--- Field', TupleTypeDefinition', OrTypeCase', OrTypeDefinition', FieldsOrCases
+-- Types:
+-- TypeConstructorAndVariables' Field', TupleTypeDefinition',
+-- OrTypeCase', OrTypeDefinition', FieldsOrCases
+
+data TypeConstructorAndVariables' =
+  TypeConstructorAndVariables'
+    { get_t_cons_name :: TypeName, get_type_vars :: [ (TypeName, String) ] }
 
 data Field' =
   NameAndType' { get_name :: ValueName, get_type :: ValueType' }
@@ -33,9 +35,7 @@ data FieldsOrCases =
   FieldList [ Field' ] | OrTypeCaseList [ OrTypeCase' ]
   deriving Show
 
-data TypeConstructorAndVariables' =
-  TypeConstructorAndVariables'
-    { get_t_cons_name :: TypeName, get_type_vars :: [ (TypeName, String) ] }
+-- Show instances: TypeConstructorAndVariables'
 
 instance Show TypeConstructorAndVariables' where
   show = \(TypeConstructorAndVariables' type_name type_variables) ->

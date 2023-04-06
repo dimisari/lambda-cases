@@ -20,19 +20,18 @@ executable haskell_generation
     other-modules:      Helpers,
 
                         ParsingTypes.LowLevel, ParsingTypes.Types,
-                        ParsingTypes.TypeDefinitions,
-                        ParsingTypes.OperatorValues,
+                        ParsingTypes.TypeDefinitions, ParsingTypes.OperatorValues,
                         ParsingTypes.Values,
 
-                        Parsers.LowLevel, Parsers.Types,
-                        Parsers.TypeDefinitions,
-                        Parsers.OperatorValues,
-                        Parsers.Values,
+                        Parsers.LowLevel, Parsers.Types, Parsers.TypeDefinitions,
+                        Parsers.OperatorValues, Parsers.Values,
 
-                        IntermediateTypes.Types,
-                        IntermediateTypes.TypeDefinitions,
+                        IntermediateTypes.Types, IntermediateTypes.TypeDefinitions,
                         IntermediateTypes.Values,
-                        AfterParsing.Conversions,
+
+                        Conversions.Types,
+                        Conversions.TypeDefinitions,
+                        Conversions.Values,
 
                         GenerationState.InitialState,
                         GenerationState.TypesAndOperations,
@@ -42,8 +41,7 @@ executable haskell_generation
 
                         CodeGenerators.TypeDefinitions,
                         CodeGenerators.LowLevelValues,
-                        CodeGenerators.OperatorValues,
-                        CodeGenerators.Values
+                        CodeGenerators.OperatorValues, CodeGenerators.Values
 
     build-depends:      base ^>=4.16.4.0, parsec, mtl, containers, transformers
     default-language:   Haskell2010

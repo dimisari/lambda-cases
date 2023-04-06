@@ -2,12 +2,7 @@ module Parsers.Types where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
-
-import Helpers ((==>), eof_or_new_lines)
-
 import ParsingTypes.Types
-
-import Parsers.LowLevel (value_name_p)
 
 -- All:
 -- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParenthesis, OutputType,

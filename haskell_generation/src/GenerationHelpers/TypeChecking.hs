@@ -11,7 +11,7 @@ import ParsingTypes.Types (TypeName(..))
 import IntermediateTypes.Types
 import IntermediateTypes.TypeDefinitions
 
-import AfterParsing.Conversions 
+import Conversions.TypeDefinitions
 
 import GenerationState.TypesAndOperations (Stateful, type_map_get)
 
