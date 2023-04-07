@@ -72,7 +72,7 @@ tuple_type_definition_p =
   string "tuple_type " >> cons_and_type_vars_p >>= \cons_and_type_vars ->
   string "\nvalue (" >>
   (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
-  string ")" >> eof_or_new_lines >>
+  string ")" >>
   return (ConstructorAndFields cons_and_type_vars fields)
   :: Parser TupleTypeDefinition
 
@@ -92,7 +92,6 @@ or_type_definition_p =
   string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
   string " | " >> case_and_maybe_type_p >>= \case2 ->
   many (try $ string " | " >> case_and_maybe_type_p) >>= \cases ->
-  eof_or_new_lines >>
   return (ConstructorAndCases cons_and_type_vars case1 case2 cases)
   :: Parser OrTypeDefinition
 

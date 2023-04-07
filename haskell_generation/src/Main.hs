@@ -7,18 +7,22 @@ import Control.Monad.State (evalState)
 import Control.Monad.Trans.Except (runExceptT)
 
 import GenerationState.InitialState (init_state)
-import Helpers (Haskell, Error, (.>), (==>))
+import Helpers (Haskell, Error, (.>), (==>), eof_or_new_lines)
 
-import GenerationState.TypesAndOperations (Stateful)
+import GenerationState.TypesAndOperations (Stateful, value_map_insert)
 
 import ParsingTypes.TypeDefinitions (TypeDefinition)
-import ParsingTypes.Values (Values)
+import ParsingTypes.LowLevel (ValueName)
+import ParsingTypes.Types (ValueType)
+import ParsingTypes.Values (Values, ValueExpression)
 
 import Parsers.TypeDefinitions (type_definition_p)
 import Parsers.Values (values_p)
 
+import Conversions.Types (value_type_conversion)
+
 import CodeGenerators.TypeDefinitions (type_definition_g)
-import CodeGenerators.Values (values_g)
+import CodeGenerators.Values (values_g, values_to_list)
 
 -- All: Path, Constants, Types, Parsing, Generating Haskell, main
 
@@ -31,11 +35,13 @@ type Path = String
 -- examples_input_output_paths, haskell_header
 
 lcases_examples_names =
-  [ "my_gcd"
-  , "ext_euc_no_tuple_type"
-  , "ext_euc_tuple_type"
-  , "basic_or_types"
-  , "pair"
+  [-- "my_gcd"
+  --, "ext_euc_no_tuple_type"
+  --, "ext_euc_tuple_type"
+  --, "basic_or_types"
+  --, "pair"
+  --, "int_or_string"
+  "ok"
   ]
   :: [ String ]
 
@@ -55,12 +61,13 @@ haskell_header =
   "haskell_headers/haskell_code_header.hs"
   :: Path
 
--- Types: ValueOrValuesListOrTypeDef, Program
+-- Types: ValuesOrTypeDefinition, Program
 
-data ValueOrValuesListOrTypeDef =
+data ValuesOrTypeDefinition =
   TypeDefinition TypeDefinition | Values Values deriving Show
 
-type Program = [ ValueOrValuesListOrTypeDef ]
+newtype Program =
+  ValsOrTypeDefsList [ ValuesOrTypeDefinition ]
 
 -- Parsing: parse_lcases, parse_with, program_p, ntavs_or_type_def_p
 
@@ -69,18 +76,18 @@ parse_lcases =
   :: Path -> String -> Either ParseError Program
 
 program_p =
-  many (char '\n') *> many ntavs_or_type_def_p <* eof 
+  many (char '\n') *> (ValsOrTypeDefsList <$> many ntavs_or_type_def_p) <* eof
   :: Parser Program
 
 ntavs_or_type_def_p =
-  TypeDefinition <$> try type_definition_p <|>
-  Values <$> values_p
-  :: Parser ValueOrValuesListOrTypeDef
+  (TypeDefinition <$> try type_definition_p <|>
+  Values <$> values_p) <* eof_or_new_lines
+  :: Parser ValuesOrTypeDefinition
 
 -- Generating Haskell:
 -- print_error_or_haskell_to_file, print_parse_error_or_semantic_analysis,
 -- print_semantic_error_or_haskell_to_file, run_semantic_analysis, program_g
--- ntavs_or_type_def_g
+-- values_or_type_definition_g
 
 read_and_generate_example = ( \(input_path, output_path) ->
   readFile input_path >>= \lcases_input ->
@@ -106,14 +113,28 @@ run_semantic_analysis =
   program_g .> runExceptT .> flip evalState init_state
   :: Program -> Either Error Haskell
 
-program_g =
-  mapM ntavs_or_type_def_g .> fmap concat
-  :: Program -> Stateful Haskell
+program_g = ( \(ValsOrTypeDefsList vals_or_type_defs_list) ->
+  mapM_ insert_value_to_map (vals_or_type_defs_to_list vals_or_type_defs_list) >>
+  mapM values_or_type_definition_g vals_or_type_defs_list ==> fmap concat
+  ) :: Program -> Stateful Haskell
 
-ntavs_or_type_def_g = ( \case 
-  Values ntavs -> values_g ntavs
-  TypeDefinition type_def -> type_definition_g type_def
-  ) :: ValueOrValuesListOrTypeDef -> Stateful Haskell
+insert_value_to_map = ( \(value_name, value_type, value_expr) ->
+  value_map_insert value_name $ value_type_conversion value_type
+  ) :: (ValueName, ValueType, ValueExpression) -> Stateful ()
+
+vals_or_type_defs_to_list = ( \vals_or_type_defs_list ->
+  concatMap vals_or_type_def_to_list vals_or_type_defs_list
+  ) :: [ ValuesOrTypeDefinition ] -> [ (ValueName, ValueType, ValueExpression) ]
+
+vals_or_type_def_to_list = ( \case 
+  Values values -> values_to_list values
+  TypeDefinition _ -> []
+  ) :: ValuesOrTypeDefinition -> [ (ValueName, ValueType, ValueExpression) ]
+
+values_or_type_definition_g = ( \case 
+  Values values -> values_g values
+  TypeDefinition type_definition -> type_definition_g type_definition
+  ) :: ValuesOrTypeDefinition -> Stateful Haskell
 
 -- main
 

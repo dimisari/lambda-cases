@@ -11,12 +11,17 @@ import ParsingTypes.LowLevel
 
 -- Literal: literal_p, integer_p
 
-literal_p = integer_p
+literal_p =
+  Integer <$> integer_p <|> String <$> string_p <|> Char <$> char_p
   :: Parser Literal
 
 integer_p =
   read <$> ((:) <$> char '-' <*> many1 digit <|> many1 digit)
   :: Parser Integer
+
+char_p = 
+  char '\'' *> noneOf ['\''] <* char '\''
+  :: Parser Char
 
 string_p = char '"' *> many (noneOf ['"']) <* char '"'
   :: Parser String

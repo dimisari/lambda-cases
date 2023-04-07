@@ -5,12 +5,13 @@ import Helpers ((==>), (.>))
 
 -- All: Types, Show instances
 
--- Types: Literal, ValueName, Abstraction, ManyAbstractions, Input
-
-type Literal = Integer
+-- Types: ValueName, Literal, Abstraction, ManyAbstractions, Input
 
 newtype ValueName =
   VN String deriving (Eq, Ord)
+
+data Literal =
+  Integer Integer | Char Char | String String
 
 data Abstraction =
   AbstractionName ValueName | UseFields
@@ -21,10 +22,16 @@ data ManyAbstractions =
 data Input =
   OneAbstraction Abstraction | ManyAbstractions ManyAbstractions 
 
--- Show instances: ValueName, Abstraction, ManyAbstractions, Input
+-- Show instances: ValueName, Literal, Abstraction, ManyAbstractions, Input
 
 instance Show ValueName where
   show = \(VN n) -> n
+
+instance Show Literal where
+  show = \case
+    Integer integer -> show integer
+    Char char -> [ char ]
+    String string -> string
 
 instance Show Abstraction where
   show = \case

@@ -36,7 +36,10 @@ new_line_space_surrounded = spaces_tabs *> char '\n' <* spaces_tabs
 space_or_newline = char ' ' <|> try new_line_space_surrounded
   :: Parser Char
 
-eof_or_new_lines = eof <|> skipMany1 new_line_space_surrounded
+new_lines = skipMany1 new_line_space_surrounded
+  :: Parser ()
+
+eof_or_new_lines = new_lines <|> eof
   :: Parser ()
 
 -- Haskell generation 

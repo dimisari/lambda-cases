@@ -1,21 +1,14 @@
 module GenerationHelpers.TypeChecking where
 
-import Control.Monad ((>=>))
-import Control.Monad.Trans.Except (throwE)
-
 import Helpers (Haskell, (==>))
 
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types (TypeName(..))
 
 import IntermediateTypes.Types
-import IntermediateTypes.TypeDefinitions
-
-import Conversions.TypeDefinitions
+import IntermediateTypes.TypeDefinitions (FieldsOrCases(..), get_type)
 
 import GenerationState.TypesAndOperations (Stateful, type_map_get)
-
-import GenerationHelpers.ErrorMessages (type_check_err)
 
 -- All:
 -- types_are_equivalent, type_names_are_equivalent,

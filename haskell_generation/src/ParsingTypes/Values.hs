@@ -9,8 +9,7 @@ import ParsingTypes.OperatorValues (OperatorExpression)
 -- All: Types, Show instances
 
 -- Types:
--- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases,
--- ValueNamesTypesAndExpressions, Values
+-- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 data CaseLiteralOrValueName = 
@@ -23,17 +22,13 @@ data DefaultCase =
   DefaultCase ValueExpression
 
 data Cases =
-  OneAndDefault SpecificCase DefaultCase |
-  Many SpecificCase SpecificCase [ SpecificCase ] (Maybe DefaultCase)
+  CasesAndMaybeDefault SpecificCase [ SpecificCase ] (Maybe DefaultCase)
 
-data ValueNamesTypesAndExpressions =
+data Values =
   NamesTypesAndExpressions [ ValueName ] [ ValueType ] [ ValueExpression ]
 
-newtype Values =
-  Values [ ValueNamesTypesAndExpressions ]
-
 data Where =
-  ValueExpressionWhereValues ValueExpression Values
+  ValueExpressionWhereValues ValueExpression [ Values ]
 
 data CasesOrWhere =
   Cases Cases | Where Where
@@ -65,23 +60,16 @@ instance Show DefaultCase where
     "... ->\n" ++ show value_expression ++ "\n"
 
 instance Show Cases where
-  show = \cases -> "\ncases\n\n" ++ case cases of 
-    OneAndDefault spec_case def_case -> show spec_case ++ show def_case
-    Many spec_case1 spec_case2 spec_cases maybe_default_case ->
-      (spec_case1 : spec_case2 : spec_cases)==>concatMap show ++
-      case maybe_default_case of
-        Just default_case -> show default_case
-        Nothing -> ""
+  show = \(CasesAndMaybeDefault case1 cases maybe_default_case) ->
+    "\ncases\n\n" ++ concatMap show (case1 : cases) ++ case maybe_default_case of
+      Just default_case -> show default_case
+      Nothing -> ""
 
-instance Show ValueNamesTypesAndExpressions where
+instance Show Values where
   show = \(NamesTypesAndExpressions value_names value_types value_exprs) -> 
     value_names==>map show==>intercalate ", " ++ ": " ++
     value_types==>map show==>intercalate ", " ++ "\n  = " ++
-    value_exprs==>map show==>intercalate ", " ++ "\n"
-
-instance Show Values where
-  show = \(Values values) ->
-    "\n" ++ values==>concatMap (show .> (++ "\n"))
+    value_exprs==>map show==>intercalate ", " ++ "\n\n"
 
 instance Show Where where
   show = \(ValueExpressionWhereValues value_expression values) -> 

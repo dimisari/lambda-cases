@@ -115,4 +115,4 @@ specific_case_not_abstraction_err = ( \val_type sc ->
 name_type_and_value_lists_err = ( \ntavls ->
   "\nName, type and value lists must have the same length but are:\n  " ++
   show ntavls ++ "\n"
-  ) :: ValueNamesTypesAndExpressions -> Error
+  ) :: Values -> Error

@@ -1,0 +1,6 @@
+
+or_type Or
+values from_left<==(value: I) | r
+
+a: Int
+  = from_left<==1
