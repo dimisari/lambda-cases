@@ -13,16 +13,16 @@ import Parsers.Types (value_type_p)
 import Parsers.OperatorValues (operator_expression_p)
 
 -- All:
--- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases
+-- LitOrValName, SpecificCase, DefaultCase, Cases
 -- ValueNameTypeAndExpression, Values,
 -- ValueOrValues, ValueOrValuesList
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
--- CaseLiteralOrValueName: case_literal_or_value_name_p
+-- LitOrValName: case_literal_or_value_name_p
 
 case_literal_or_value_name_p =
   CaseLiteral <$> literal_p <|> CaseValueName <$> value_name_p
-  :: Parser CaseLiteralOrValueName
+  :: Parser LitOrValName
 
 -- SpecificCase: specific_case_p
 
@@ -77,7 +77,7 @@ values_p =
 
 where_p = 
   string "let" >> new_line_space_surrounded >>
-  many1 values_p >>= \names_types_and_values ->
+  many1 (try $ values_p <* new_lines) >>= \names_types_and_values ->
   string "output" >> new_line_space_surrounded >>
   value_expression_p >>= \value_expression ->
   return $ ValueExpressionWhereValues value_expression names_types_and_values

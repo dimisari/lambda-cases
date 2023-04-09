@@ -1,0 +1,9 @@
+
+or_type Boolean
+values my_true | my_false
+
+a: Boolean
+  = my_true
+
+b: Boolean
+  = my_false

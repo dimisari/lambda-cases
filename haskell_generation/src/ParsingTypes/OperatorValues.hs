@@ -8,10 +8,10 @@ import ParsingTypes.LowLevel (Literal, ValueName, Input)
 
 -- Types:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FunctionApplicationChain
+-- ApplicationDirection, FuncAppChain
 -- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
 -- EqualityTerm, Equality
--- PureOperatorExpression, InputOperatorExpression, OperatorExpression
+-- PureOpExpr, InputOpExpr, OperatorExpression
 
 newtype Parenthesis =
   InnerExpression OperatorExpression 
@@ -20,26 +20,23 @@ data Tuple =
   TupleExpressions OperatorExpression OperatorExpression [ OperatorExpression ]
 
 data MathApplication =
-  NameAndInputExpressions ValueName OperatorExpression [ OperatorExpression ]
+  NameAndInputExprs ValueName OperatorExpression [ OperatorExpression ]
 
 data BaseValue =
-  Literal Literal |
-  ValueName ValueName |
-  Parenthesis Parenthesis |
-  Tuple Tuple |
-  MathApplication MathApplication
+  Literal Literal | ValueName ValueName | Parenthesis Parenthesis |
+  Tuple Tuple | MathApplication MathApplication
 
 data ApplicationDirection =
   LeftApplication | RightApplication
 
-data FunctionApplicationChain =
+data FuncAppChain =
   ValuesAndDirections
     (BaseValue, ApplicationDirection)
     [ (BaseValue, ApplicationDirection) ]
     BaseValue
 
 data MultiplicationFactor =
-  FunctionApplicationChain FunctionApplicationChain | BaseValue BaseValue
+  FuncAppChain FuncAppChain | BaseValue BaseValue
 
 data Multiplication =
   MultiplicationFactors
@@ -57,22 +54,21 @@ data EqualityTerm =
 data Equality =
   EqualityTerms EqualityTerm EqualityTerm
 
-data PureOperatorExpression =
+data PureOpExpr =
   Equality Equality | EqualityTerm EqualityTerm
 
-data InputOperatorExpression =
-  InputAndPureOperatorExpression Input PureOperatorExpression 
+data InputOpExpr =
+  InputAndPureOpExpr Input PureOpExpr 
 
 data OperatorExpression =
-  InputOperatorExpression InputOperatorExpression |
-  PureOperatorExpression PureOperatorExpression
+  InputOpExpr InputOpExpr | PureOpExpr PureOpExpr
 
 -- Show instances:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FunctionApplicationChain
+-- ApplicationDirection, FuncAppChain
 -- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
 -- EqualityTerm, Equality
--- PureOperatorExpression, InputOperatorExpression, OperatorExpression
+-- PureOpExpr, InputOpExpr, OperatorExpression
 
 instance Show Parenthesis where
   show = \(InnerExpression expr) -> "(" ++ show expr ++ ")"
@@ -82,7 +78,7 @@ instance Show Tuple where
     "(" ++ map show (expr1 : expr2 : exprs)==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
-  show = \(NameAndInputExpressions value_name expr1 exprs) ->
+  show = \(NameAndInputExprs value_name expr1 exprs) ->
     show value_name ++ "(" ++ (expr1 : exprs)==>map show==>intercalate ", " ++ ")"
 
 instance Show BaseValue where
@@ -98,7 +94,7 @@ instance Show ApplicationDirection where
     LeftApplication -> "<=="
     RightApplication -> "==>"
 
-instance Show FunctionApplicationChain where
+instance Show FuncAppChain where
   show = \(ValuesAndDirections base_val_app_dir base_val_app_dir_s base_val) ->
     concatMap
       ( \(base_val, app_dir) -> show base_val ++ show app_dir )
@@ -107,7 +103,7 @@ instance Show FunctionApplicationChain where
 
 instance Show MultiplicationFactor where
   show = \case
-    FunctionApplicationChain func_app_chain -> show func_app_chain
+    FuncAppChain func_app_chain -> show func_app_chain
     BaseValue base_value -> show base_value
 
 instance Show Multiplication where
@@ -130,16 +126,16 @@ instance Show EqualityTerm where
 instance Show Equality where
   show = \(EqualityTerms term1 term2) -> show term1 ++ " = " ++ show term2
 
-instance Show PureOperatorExpression where
+instance Show PureOpExpr where
   show = \case
     Equality equality -> show equality
     EqualityTerm equality_term -> show equality_term 
 
-instance Show InputOperatorExpression where
-  show = \(InputAndPureOperatorExpression input pure_op_expr) ->
+instance Show InputOpExpr where
+  show = \(InputAndPureOpExpr input pure_op_expr) ->
     show input ++ show pure_op_expr
 
 instance Show OperatorExpression where
   show = \case
-    InputOperatorExpression input_op_expr -> show input_op_expr
-    PureOperatorExpression pure_op_expr -> show pure_op_expr
+    InputOpExpr input_op_expr -> show input_op_expr
+    PureOpExpr pure_op_expr -> show pure_op_expr

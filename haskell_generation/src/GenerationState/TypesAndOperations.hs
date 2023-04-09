@@ -10,7 +10,7 @@ import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types
 
 import IntermediateTypes.Types (ValueType'(..))
-import IntermediateTypes.TypeDefinitions (FieldsOrCases(..))
+import IntermediateTypes.TypeDefinitions (TypeInfo(..))
 
 -- All: Types, get fields, update fields, value_map operations, type_map operations
 
@@ -20,7 +20,7 @@ type ValueMap =
   M.Map ValueName [ ValueType' ]
 
 type TypeMap =
-  M.Map TypeName FieldsOrCases
+  M.Map TypeName TypeInfo
 
 data GenerationState = GS
   { indent_level :: Int
@@ -73,10 +73,10 @@ type_map_insert = ( \type_name fields_or_cases ->
   M.lookup type_name type_map ==> \case
     Just _ -> throwE $ "Type of the same name already defined: " ++ show type_name
     Nothing -> update_type_map $ M.insert type_name fields_or_cases type_map
-  ) :: TypeName -> FieldsOrCases -> Stateful ()
+  ) :: TypeName -> TypeInfo -> Stateful ()
 
 type_map_get = ( \type_name@(TN s) -> get_type_map >>= M.lookup type_name .> \case
   Nothing -> throwE $ "No definition for type: " ++ s
   Just foc -> return foc
-  ) :: TypeName -> Stateful FieldsOrCases
+  ) :: TypeName -> Stateful TypeInfo
 

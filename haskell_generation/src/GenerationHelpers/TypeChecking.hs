@@ -6,7 +6,7 @@ import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types (TypeName(..))
 
 import IntermediateTypes.Types
-import IntermediateTypes.TypeDefinitions (FieldsOrCases(..), get_type)
+import IntermediateTypes.TypeDefinitions (TypeInfo(..), get_type)
 
 import GenerationState.TypesAndOperations (Stateful, type_map_get)
 
@@ -59,10 +59,11 @@ named_type_and_val_type_are_equivalent = ( \type_name val_type ->
 
 type_name_to_val_type = ( \type_name -> 
   type_map_get type_name >>= \case
-    FieldList fields -> case fields of
+    TupleType _ fields -> case fields of
       [] -> undefined
       [ favt ] -> return $ get_type favt
       favt1 : favt2 : rest -> return $ ProductType' $
         get_type favt1 : get_type favt2 : map get_type rest
+    IntType -> return $ TypeApplication' $ TypeConstructorAndInputs' (TN "Int") []
     _ -> undefined
   ) :: TypeName -> Stateful ValueType'

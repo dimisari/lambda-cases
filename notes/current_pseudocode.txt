@@ -1,0 +1,7 @@
+or type definition: types of case functions
+
+type map must have constructors
+
+if input type in type variables 
+  need to change the case_type
+  for that we definately need type variables for the case_type

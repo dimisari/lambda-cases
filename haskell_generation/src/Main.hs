@@ -22,7 +22,7 @@ import Parsers.Values (values_p)
 import Conversions.Types (value_type_conversion)
 
 import CodeGenerators.TypeDefinitions (type_definition_g)
-import CodeGenerators.Values (values_g, values_to_list)
+import CodeGenerators.Values (values_g, values_to_list, insert_value_to_map)
 
 -- All: Path, Constants, Types, Parsing, Generating Haskell, main
 
@@ -35,13 +35,14 @@ type Path = String
 -- examples_input_output_paths, haskell_header
 
 lcases_examples_names =
-  [-- "my_gcd"
-  --, "ext_euc_no_tuple_type"
-  --, "ext_euc_tuple_type"
-  --, "basic_or_types"
-  --, "pair"
-  --, "int_or_string"
-  "ok"
+  [
+    "my_gcd"
+  , "ext_euc_no_tuple_type"
+  , "ext_euc_tuple_type"
+  , "basic_or_types"
+  , "pair"
+  , "bool"
+  , "or_t"
   ]
   :: [ String ]
 
@@ -117,10 +118,6 @@ program_g = ( \(ValsOrTypeDefsList vals_or_type_defs_list) ->
   mapM_ insert_value_to_map (vals_or_type_defs_to_list vals_or_type_defs_list) >>
   mapM values_or_type_definition_g vals_or_type_defs_list ==> fmap concat
   ) :: Program -> Stateful Haskell
-
-insert_value_to_map = ( \(value_name, value_type, value_expr) ->
-  value_map_insert value_name $ value_type_conversion value_type
-  ) :: (ValueName, ValueType, ValueExpression) -> Stateful ()
 
 vals_or_type_defs_to_list = ( \vals_or_type_defs_list ->
   concatMap vals_or_type_def_to_list vals_or_type_defs_list

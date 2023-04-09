@@ -40,8 +40,8 @@ executable haskell_generation
                         GenerationHelpers.ErrorMessages,
 
                         CodeGenerators.TypeDefinitions,
-                        CodeGenerators.LowLevelValues,
-                        CodeGenerators.OperatorValues, CodeGenerators.Values
+                        CodeGenerators.LowLevel, CodeGenerators.OperatorValues,
+                        CodeGenerators.Values
 
     build-depends:      base ^>=4.16.4.0, parsec, mtl, containers, transformers
     default-language:   Haskell2010

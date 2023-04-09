@@ -6,6 +6,7 @@ import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types (TypeName(..))
 
 import IntermediateTypes.Types
+import IntermediateTypes.TypeDefinitions (TypeInfo(..))
 
 import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..))
 
@@ -43,5 +44,10 @@ init_value_map =
     ]
   :: ValueMap
 
-init_state = GS 0 init_value_map M.empty
+init_type_map =
+  M.fromList
+   [ (TN "Int", IntType) ]
+  :: TypeMap
+
+init_state = GS 0 init_value_map init_type_map
   :: GenerationState

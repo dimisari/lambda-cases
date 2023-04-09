@@ -54,7 +54,7 @@ abstractions_types_lengths_dont_match_err =
 
 tuple_fun_type_err = ( \lovs val_type ->
   show lovs ++ " can't have type: " ++ show val_type ++ "\n"
-  ) :: [ InputOperatorExpression ] -> ValueType' -> Error
+  ) :: [ InputOpExpr ] -> ValueType' -> Error
 
 values_fields_lengths_dont_match_err =
   "\nLength of tuple values and fields of the corresponding tuple_type must be " ++
@@ -68,7 +68,7 @@ no_application_err =
 one_arg_applications_type_err = ( \oaa val_type inferred_vt -> 
   "\nCould't match type: " ++ show val_type ++ "\nwith type:" ++ show inferred_vt ++
   "In one argument applications expression: " ++ show oaa ++ "\n"
-  ) :: FunctionApplicationChain -> ValueType' -> ValueType' -> Error
+  ) :: FuncAppChain -> ValueType' -> ValueType' -> Error
 
 bv_type_inference_err = ( \pv ->
   "\nCannot infer types for values inside parenthesis in one argument" ++

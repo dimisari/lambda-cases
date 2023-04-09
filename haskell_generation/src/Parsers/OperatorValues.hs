@@ -7,10 +7,10 @@ import Parsers.LowLevel (literal_p, value_name_p, input_p)
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FunctionApplicationChain
+-- ApplicationDirection, FuncAppChain
 -- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
 -- EqualityTerm, Equality
--- PureOperatorExpression, InputOperatorExpression, OperatorExpression
+-- PureOpExpr, InputOpExpr, OperatorExpression
 
 -- Parenthesis: parenthesis_p
 
@@ -33,7 +33,7 @@ math_application_p =
   value_name_p >>= \value_name ->
   char '(' >> operator_expression_p >>= \op_expr ->
   many (string ", " >> operator_expression_p) >>= \op_exprs ->
-  char ')' >> return (NameAndInputExpressions value_name op_expr op_exprs)
+  char ')' >> return (NameAndInputExprs value_name op_expr op_exprs)
   :: Parser MathApplication
 
 -- BaseValue: base_value_p
@@ -53,7 +53,7 @@ application_direction_p =
   string "==>" *> return RightApplication
   :: Parser ApplicationDirection
 
--- FunctionApplicationChain:
+-- FuncAppChain:
 -- function_application_chain_p, base_value_application_direction_p
 
 function_application_chain_p =
@@ -61,7 +61,7 @@ function_application_chain_p =
   many (try base_value_application_direction_p) >>= \base_val_app_dirs ->
   base_value_p >>= \base_value ->
   return $ ValuesAndDirections base_val_app_dir base_val_app_dirs base_value
-  :: Parser FunctionApplicationChain
+  :: Parser FuncAppChain
 
 base_value_application_direction_p = 
   base_value_p >>= \base_value ->
@@ -72,7 +72,7 @@ base_value_application_direction_p =
 -- MultiplicationFactor: multiplication_factor_p
 
 multiplication_factor_p =
-  FunctionApplicationChain <$> try function_application_chain_p <|>
+  FuncAppChain <$> try function_application_chain_p <|>
   BaseValue <$> base_value_p
   :: Parser MultiplicationFactor
 
@@ -115,23 +115,23 @@ equality_p =
   return $ EqualityTerms equality_term1 equality_term2
   :: Parser Equality
 
--- PureOperatorExpression: pure_operator_expression_p
+-- PureOpExpr: pure_operator_expression_p
 
 pure_operator_expression_p =
   Equality <$> try equality_p <|> EqualityTerm <$> equality_term_p
-  :: Parser PureOperatorExpression
+  :: Parser PureOpExpr
 
--- InputOperatorExpression: input_operator_expression_p
+-- InputOpExpr: input_operator_expression_p
 
 input_operator_expression_p =
   input_p >>= \input -> pure_operator_expression_p >>= \op_expr ->
-  return $ InputAndPureOperatorExpression input op_expr
-  :: Parser InputOperatorExpression
+  return $ InputAndPureOpExpr input op_expr
+  :: Parser InputOpExpr
 
 -- OperatorExpression: operator_expression_p
 
 operator_expression_p =
-  InputOperatorExpression <$> try input_operator_expression_p <|>
-  PureOperatorExpression <$> pure_operator_expression_p
+  InputOpExpr <$> try input_operator_expression_p <|>
+  PureOpExpr <$> pure_operator_expression_p
   :: Parser OperatorExpression
 

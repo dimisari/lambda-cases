@@ -11,7 +11,7 @@ import IntermediateTypes.Types (ValueType'(..), TypeApplication'(..))
 
 -- Types:
 -- TypeConstructorAndVariables' Field', TupleTypeDefinition',
--- OrTypeCase', OrTypeDefinition', FieldsOrCases
+-- OrTypeCase', OrTypeDefinition', TypeInfo
 
 data TypeConstructorAndVariables' =
   TypeConstructorAndVariables'
@@ -31,8 +31,8 @@ data OrTypeCase' =
 data OrTypeDefinition' =
   ConstructorAndCases' TypeConstructorAndVariables' [ OrTypeCase' ]
 
-data FieldsOrCases =
-  FieldList [ Field' ] | OrTypeCaseList [ OrTypeCase' ]
+data TypeInfo =
+  TupleType Int [ Field' ] | OrType Int [ OrTypeCase' ] | IntType | CharType
   deriving Show
 
 -- Show instances: TypeConstructorAndVariables'

@@ -1,21 +1,8 @@
-- automatic type classes! for all tuple_types! for the functions:
-  - get_1st: T==>Has_1st<==A => T -> A
-  - get_2nd: T==>Has_2nd<==A => T -> A
-  - get_3rd: T==>Has_3rd<==A => T -> A
-  - get_4th: T==>Has_4th<==A => T -> A
-  - get_5th: T==>Has_5th<==A => T -> A
-
 parsec:
-- <?> for better parsing error messages!
+- <?> for better parsing error messages
 
 Questions:
 - String = ListOf(Char)s?
-
-Tuple Application:
-- f: (A, B) -> C
-  pair: A x B
-  pair==>f: C
-- done?
 
 Function composition:
 - given:

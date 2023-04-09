@@ -23,24 +23,24 @@ import GenerationState.TypesAndOperations
 import GenerationHelpers.ErrorMessages
 import GenerationHelpers.TypeChecking (types_are_equivalent)
 
-import CodeGenerators.LowLevelValues
+import CodeGenerators.LowLevel
 import CodeGenerators.OperatorValues
 
 -- All:
--- CaseLiteralOrValueName, SpecificCase, Cases,
+-- LitOrValName, SpecificCase, Cases,
 -- ValueNamesTypesAndExpressions, Values,
 -- Where, CasesOrWhere, ValueExpression
 
--- CaseLiteralOrValueName: literal_or_value_name_g, lit_or_val_name_type_inference_g
+-- LitOrValName: literal_or_value_name_g, lit_or_val_name_type_inference_g
 
 literal_or_value_name_g = ( \case
   CaseLiteral literal -> literal_g literal
   CaseValueName value_name -> val_name_insert_and_return value_name
-  ) :: CaseLiteralOrValueName -> ValueType' -> Stateful Haskell
+  ) :: LitOrValName -> ValueType' -> Stateful Haskell
 
 lit_or_val_name_type_inference_g = ( 
   undefined
-  ) :: CaseLiteralOrValueName -> Stateful (Haskell, ValueType')
+  ) :: LitOrValName -> Stateful (Haskell, ValueType')
 
 -- SpecificCase: specific_case_g, abs_g, specific_case_type_inference_g
 
@@ -150,6 +150,7 @@ list_of_values_g = ( \values ->
 
 where_g = ( \(ValueExpressionWhereValues val_expr values) val_type ->
   get_indent_level >>= \ind_lev -> update_indent_level (ind_lev + 1) >>
+  insert_values_to_map values >>
   mapM values_g values >>= concat .> \ntavs_hs ->
   value_expression_g val_expr val_type >>= \val_expr_hs ->
   update_indent_level ind_lev >>
@@ -158,12 +159,21 @@ where_g = ( \(ValueExpressionWhereValues val_expr values) val_type ->
 
 where_type_inference_g = ( \(ValueExpressionWhereValues val_expr values) ->
   get_indent_level >>= \ind_lev -> update_indent_level (ind_lev + 1) >>
+  insert_values_to_map values >>
   mapM values_g values >>= concat .> \ntavs_hs ->
   value_expression_type_inference_g val_expr >>= \(val_expr_hs, val_type) ->
   update_indent_level ind_lev >>
   return
     ("\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ ntavs_hs, val_type)
   ) :: Where -> Stateful (Haskell, ValueType')
+
+insert_values_to_map = 
+  concatMap values_to_list .> mapM_ insert_value_to_map
+  :: [ Values ] -> Stateful ()
+
+insert_value_to_map = ( \(value_name, value_type, value_expr) ->
+  value_map_insert value_name $ value_type_conversion value_type
+  ) :: (ValueName, ValueType, ValueExpression) -> Stateful ()
 
 -- CasesOrWhere: cases_or_where_g, cases_or_where_type_inference_g
 

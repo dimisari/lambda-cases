@@ -1,4 +1,4 @@
-module CodeGenerators.LowLevelValues where
+module CodeGenerators.LowLevel where
 
 import Data.List (intercalate)
 import qualified Data.Map as M (lookup)
@@ -38,7 +38,13 @@ value_name_g = ( \value_name value_type ->
   value_map_get value_name >>= \map_val_type ->
   types_are_equivalent value_type map_val_type >>= \case
     False -> throwE $ type_check_err value_name value_type map_val_type
-    True -> return $ value_name_to_hs value_name
+    True ->
+      case value_type of
+        TypeApplication' (TypeConstructorAndInputs' type_name _) ->
+          type_map_get type_name >>= \case
+            OrType _ _ -> return $ "C" ++ value_name_to_hs value_name
+            _ -> return $ value_name_to_hs value_name
+        _ -> return $ value_name_to_hs value_name
   ) :: ValueName -> ValueType' -> Stateful Haskell
 
 value_name_type_inference_g = ( \value_name ->
@@ -73,7 +79,7 @@ use_fields_g = ( \value_type -> case value_type of
 
 use_fields_type_name_g = ( \type_name value_type ->
   type_map_get type_name >>= \case
-    FieldList fields -> 
+    TupleType _ fields -> 
       value_map_insert (VN "tuple") value_type >>
       mapM field_and_val_type_g fields >>= \val_names ->
       return $

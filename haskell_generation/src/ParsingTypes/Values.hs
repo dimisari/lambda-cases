@@ -9,14 +9,14 @@ import ParsingTypes.OperatorValues (OperatorExpression)
 -- All: Types, Show instances
 
 -- Types:
--- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases, Values
+-- LitOrValName, SpecificCase, DefaultCase, Cases, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
-data CaseLiteralOrValueName = 
+data LitOrValName = 
   CaseLiteral Literal | CaseValueName ValueName
 
 data SpecificCase =
-  SpecificCase CaseLiteralOrValueName ValueExpression 
+  SpecificCase LitOrValName ValueExpression 
 
 data DefaultCase = 
   DefaultCase ValueExpression
@@ -42,11 +42,11 @@ data ValueExpression =
   OperatorExpression OperatorExpression
 
 -- Show instances:
--- CaseLiteralOrValueName, SpecificCase, DefaultCase, Cases,
+-- LitOrValName, SpecificCase, DefaultCase, Cases,
 -- ValueNamesTypesAndExpressions, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
-instance Show CaseLiteralOrValueName where 
+instance Show LitOrValName where 
   show = \case
     CaseLiteral literal -> show literal
     CaseValueName value_name -> show value_name

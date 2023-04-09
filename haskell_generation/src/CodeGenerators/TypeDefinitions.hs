@@ -24,28 +24,25 @@ import GenerationState.TypesAndOperations
 
 field_g = ( \(NameAndType' field_name field_type) cons_and_type_vars ->
   let
-  input_type =
-    TypeApplication' $
-      TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
-    :: ValueType'
+  get_function_hs = "get_" ++ show field_name
+    :: Haskell
   field_type_hs = type_g field_type $ get_type_vars cons_and_type_vars
     :: Haskell
   in
   value_map_insert
-    (VN $ "get_" ++ show field_name)
-    (FunctionType' $ InputAndOutputType' input_type field_type) >>
-  return ("get_" ++ show field_name ++ " :: " ++ field_type_hs)
+    (VN get_function_hs) (get_function_type cons_and_type_vars field_type) >>
+  return (get_function_hs ++ " :: " ++ field_type_hs)
   ) :: Field' -> TypeConstructorAndVariables' -> Stateful Haskell
 
-type_g = ( \value_type type_vars -> case value_type of
-  TypeApplication' (TypeConstructorAndInputs' type_name type_inputs) ->
-    (type_name_g type_name type_vars ++
-    concatMap (flip type_g type_vars .> (" " ++)) type_inputs) ==>
-      case type_inputs of
-        [] -> id
-        _  -> \s -> "(" ++ s ++ ")"
-  other_type -> show other_type
-  ) :: ValueType' -> [ (TypeName, String) ] -> Haskell
+get_function_type = ( \cons_and_type_vars field_type ->
+  FunctionType' $
+    InputAndOutputType' (cons_and_vars_to_val_type cons_and_type_vars) field_type
+  ) :: TypeConstructorAndVariables' -> ValueType' -> ValueType'
+
+cons_and_vars_to_val_type = ( \cons_and_type_vars ->
+  TypeApplication' $
+    TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
+  ) :: TypeConstructorAndVariables' -> ValueType'
 
 type_name_g = ( \type_name type_vars->
   lookup type_name type_vars ==> \case
@@ -57,8 +54,9 @@ type_name_g = ( \type_name type_vars->
 
 tuple_type_definition'_g = (
   \(ConstructorAndFields'
-    cons_and_type_vars@(TypeConstructorAndVariables' type_name _) fields) ->
-  type_map_insert type_name (FieldList fields) >>
+    cons_and_type_vars@(TypeConstructorAndVariables' type_name type_vars)
+    fields) ->
+  type_map_insert type_name (TupleType (length type_vars) fields) >>
   fields_g fields cons_and_type_vars >>= \fields_hs ->
   return $
     "\ndata " ++ show cons_and_type_vars ++ " =\n  " ++
@@ -82,28 +80,32 @@ tuple_type_definition_g =
 or_type_case_g = (
   \(NameAndMaybeInputType' case_name maybe_input_t) cons_and_type_vars ->
   let 
-  or_type =
-    TypeApplication' $
-      TypeConstructorAndInputs' (get_t_cons_name cons_and_type_vars) []
+  or_type = cons_and_vars_to_val_type cons_and_type_vars
     :: ValueType'
-  (case_type, input_type_hs) = case maybe_input_t of
-    Nothing -> (or_type, "")
-    Just input_type ->
-      ( FunctionType' $
-        InputAndOutputType' input_type or_type
-      , " " ++ type_g input_type (get_type_vars cons_and_type_vars) )
-    :: (ValueType', Haskell)
   in
-  value_map_insert case_name case_type >>
-  return ("C" ++ show case_name ++ input_type_hs)
+  value_map_insert case_name (case_type maybe_input_t or_type) >>
+  return
+    ("C" ++ show case_name ++ (input_type_hs maybe_input_t cons_and_type_vars))
   ) :: OrTypeCase' -> TypeConstructorAndVariables' -> Stateful Haskell
+
+case_type = ( \maybe_input_t or_type ->
+  case maybe_input_t of
+    Nothing -> or_type
+    Just input_type -> FunctionType' $ InputAndOutputType' input_type or_type
+  ) :: Maybe ValueType' -> ValueType' -> ValueType'
+
+input_type_hs = ( \maybe_input_t cons_and_type_vars -> case maybe_input_t of
+  Nothing -> ""
+  Just input_type -> " " ++ type_g input_type (get_type_vars cons_and_type_vars)
+  ) :: Maybe ValueType' -> TypeConstructorAndVariables' -> Haskell
 
 -- OrTypeDefinition': or_type_definition'_g, or_type_cases_g
 
 or_type_definition'_g = (
   \(ConstructorAndCases'
-    cons_and_type_vars@(TypeConstructorAndVariables' type_name _) or_type_cases) -> 
-  type_map_insert type_name (OrTypeCaseList or_type_cases) >>
+    cons_and_type_vars@(TypeConstructorAndVariables' type_name type_vars)
+    or_type_cases) -> 
+  type_map_insert type_name (OrType (length type_vars) or_type_cases) >>
   or_type_cases_g or_type_cases cons_and_type_vars >>= \cases_hs ->
   return $
     "\ndata " ++ show cons_and_type_vars ++ " =\n  " ++
@@ -127,3 +129,16 @@ type_definition_g = ( \case
   TupleTypeDefinition tuple_t_def -> tuple_type_definition_g tuple_t_def
   OrTypeDefinition or_t_def -> or_type_definition_g or_t_def
   ) :: TypeDefinition -> Stateful Haskell
+
+-- Helpers: type_g
+
+type_g = ( \value_type type_vars -> case value_type of
+  TypeApplication' (TypeConstructorAndInputs' type_name type_inputs) ->
+    (type_name_g type_name type_vars ++
+    concatMap (flip type_g type_vars .> (" " ++)) type_inputs) ==>
+      case type_inputs of
+        [] -> id
+        _  -> \s -> "(" ++ s ++ ")"
+  other_type -> show other_type
+  ) :: ValueType' -> [ (TypeName, String) ] -> Haskell
+

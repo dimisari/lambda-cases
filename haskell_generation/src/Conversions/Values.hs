@@ -4,15 +4,15 @@ import ParsingTypes.OperatorValues
 import IntermediateTypes.Values
 
 -- All:
--- FunctionApplicationChain to ApplicationTree, MathApplication to ApplicationTree
+-- FuncAppChain to ApplicationTree, MathApplication to ApplicationTree
 
--- FunctionApplicationChain to ApplicationTree:
+-- FuncAppChain to ApplicationTree:
 -- func_app_chain_to_app_tree, func_app_chain_to_app_tree_help,
 -- combine_with_reverse_direction
 
 func_app_chain_to_app_tree = ( \(ValuesAndDirections bv_ad bv_ads bv_last) ->
   func_app_chain_to_app_tree_help bv_last (reverse $ bv_ad : bv_ads)
-  ) :: FunctionApplicationChain -> ApplicationTree 
+  ) :: FuncAppChain -> ApplicationTree 
 
 func_app_chain_to_app_tree_help = ( \prev_bv -> \case
   [] -> BaseValueLeaf prev_bv
@@ -29,7 +29,7 @@ combine_with_reverse_direction = ( \at1 ad at2 -> case ad of
 -- MathApplication to ApplicationTree:
 -- math_app_to_app_tree, base_vals_to_app_tree, expr_to_base_value
 
-math_app_to_app_tree = ( \(NameAndInputExpressions value_name expr1 exprs) ->
+math_app_to_app_tree = ( \(NameAndInputExprs value_name expr1 exprs) ->
   base_vals_to_app_tree $
     ValueName value_name : map expr_to_base_value (expr1 : exprs) 
   ) :: MathApplication -> ApplicationTree 
@@ -42,7 +42,7 @@ base_vals_to_app_tree = ( \case
   ) :: [ BaseValue ] -> ApplicationTree
 
 expr_to_base_value = ( \expr -> case expr of
-  PureOperatorExpression
+  PureOpExpr
     (EqualityTerm
       (SubtractionTerm
         (MultiplicationFactor
