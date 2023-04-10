@@ -27,19 +27,19 @@ one_input_to_val_type = ( \input_t output_t ->
       (value_type_conversion input_t) (output_type_to_val_type output_t)
   ) :: ValueType -> OutputType -> ValueType'
 
-multiple_inputs_to_val_type = ( \(TypesInParenthesis in_t1 in_t2 in_ts) output_t -> 
+multiple_inputs_to_val_type = ( \(TypesInParen in_t1 in_t2 in_ts) output_t -> 
   let
   output_type = case in_ts of 
     [] -> one_input_to_val_type in_t2 output_t
     in_t3 : rest_of_in_ts ->
       multiple_inputs_to_val_type
-        (TypesInParenthesis in_t2 in_t3 rest_of_in_ts) output_t
+        (TypesInParen in_t2 in_t3 rest_of_in_ts) output_t
   in
   FunctionType' $ InputAndOutputType' (value_type_conversion in_t1) output_type
-  ) :: ManyTypesInParenthesis -> OutputType -> ValueType'
+  ) :: ManyTypesInParen -> OutputType -> ValueType'
 
 output_type_to_val_type = ( \case
-  OutputTypeApplication type_application ->
+  OutputTypeApp type_application ->
     TypeApplication' $ type_application_conversion type_application
   OutputProductType cartesian_product -> cart_prod_to_val_type cartesian_product
   ) :: OutputType -> ValueType'
@@ -54,8 +54,8 @@ cart_prod_to_val_type = (
 -- TypeApplication: type_application_conversion
 
 type_application_conversion = ( 
-  \(TypeConstructorAndInputs constructor_name left_type_inputs right_type_inputs) ->
-  TypeConstructorAndInputs' constructor_name $
+  \(TypeConsAndInputs constructor_name left_type_inputs right_type_inputs) ->
+  TypeConsAndInputs' constructor_name $
     left_type_inputs_conversion left_type_inputs ++
     right_type_inputs_conversion right_type_inputs
   ) :: TypeApplication -> TypeApplication'
@@ -72,6 +72,6 @@ right_type_inputs_conversion = ( \case
   ManyRightTypeInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren 
   ) :: RightTypeInputs -> [ ValueType' ]
 
-many_ts_in_paren_conv = ( \(TypesInParenthesis t1 t2 ts) ->
+many_ts_in_paren_conv = ( \(TypesInParen t1 t2 ts) ->
   map value_type_conversion $ t1 : t2 : ts
-  ) :: ManyTypesInParenthesis -> [ ValueType' ]
+  ) :: ManyTypesInParen -> [ ValueType' ]

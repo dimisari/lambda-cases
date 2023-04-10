@@ -29,15 +29,15 @@ string_p = char '"' *> many (noneOf ['"']) <* char '"'
 -- ValueName: value_name_p
 
 value_name_p =
-  lower_case_or_underscore_p >>= \starting_char ->
-  many (lower_case_or_underscore_p <|> digit) >>= \other_chars ->
+  lower_or_under_p >>= \starting_char ->
+  many (lower_or_under_p <|> digit) >>= \other_chars ->
   let value_name = (starting_char : other_chars) in
   elem value_name keywords ==> \case
     True -> parserFail "keyword"
     _ -> return $ VN value_name
   :: Parser ValueName 
 
-lower_case_or_underscore_p = lower <|> char '_'
+lower_or_under_p = lower <|> char '_'
   :: Parser Char
 
 -- Abstraction: abstraction_p

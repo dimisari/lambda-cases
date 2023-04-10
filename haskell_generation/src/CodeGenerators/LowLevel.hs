@@ -1,17 +1,15 @@
 module CodeGenerators.LowLevel where
 
 import Data.List (intercalate)
-import qualified Data.Map as M (lookup)
-import Control.Monad ((>=>))
 import Control.Monad.Trans.Except (throwE)
 
-import Helpers (Haskell, (==>), (.>))
+import Helpers (Haskell, (==>))
 
 import ParsingTypes.LowLevel
 import ParsingTypes.Types (TypeName(..))
 
 import IntermediateTypes.Types
-import IntermediateTypes.TypeDefinitions
+import IntermediateTypes.TypeDefinitions (Field'(..), TypeInfo(..), int)
 
 import GenerationState.TypesAndOperations
 
@@ -23,13 +21,13 @@ import GenerationHelpers.TypeChecking (types_are_equivalent)
 -- Literal: literal_g, literal_type_inference_g
 
 literal_g = ( \literal value_type -> 
-  (value_type == int_value_t) ==> \case
+  (value_type == int) ==> \case
     True -> return $ show literal
     False -> throwE $ literal_not_int_err value_type
   ) :: Literal -> ValueType' -> Stateful Haskell
 
 literal_type_inference_g = ( \literal ->
-  return (show literal, int_value_t)
+  return (show literal, int)
   ) :: Literal -> Stateful (Haskell, ValueType')
 
 -- ValueName: value_name_g, value_name_type_inference_g
@@ -40,7 +38,7 @@ value_name_g = ( \value_name value_type ->
     False -> throwE $ type_check_err value_name value_type map_val_type
     True ->
       case value_type of
-        TypeApplication' (TypeConstructorAndInputs' type_name _) ->
+        TypeApplication' (TypeConsAndInputs' type_name _) ->
           type_map_get type_name >>= \case
             OrType _ _ -> return $ "C" ++ value_name_to_hs value_name
             _ -> return $ value_name_to_hs value_name
@@ -71,7 +69,7 @@ val_name_insert_and_return = ( \value_name value_type ->
   ) :: ValueName -> ValueType' -> Stateful Haskell
 
 use_fields_g = ( \value_type -> case value_type of
-  TypeApplication' (TypeConstructorAndInputs' type_name _) ->
+  TypeApplication' (TypeConsAndInputs' type_name _) ->
     use_fields_type_name_g type_name value_type
   ProductType' types -> use_fields_prod_type_g types value_type
   _ -> undefined 

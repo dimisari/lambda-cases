@@ -5,7 +5,7 @@ import Text.Parsec.String (Parser)
 import ParsingTypes.Types
 
 -- All:
--- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParenthesis, OutputType,
+-- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParen, OutputType,
 -- FunctionType,
 -- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType, Helpers
 
@@ -45,21 +45,21 @@ one_input_val_type_p =
   TypeApplication <$> type_application_p
   :: Parser ValueType
 
--- ManyTypesInParenthesis: many_types_in_parenthesis_p
+-- ManyTypesInParen: many_types_in_parenthesis_p
 
 many_types_in_parenthesis_p =
   string "(" >> value_type_p >>= \value_type1 ->
   string ", " >> value_type_p >>= \value_type2 ->
   many (string ", " >> value_type_p) >>= \value_types ->
   string ")" >>
-  return (TypesInParenthesis value_type1 value_type2 value_types)
-  :: Parser ManyTypesInParenthesis
+  return (TypesInParen value_type1 value_type2 value_types)
+  :: Parser ManyTypesInParen
 
 -- OutputType: output_type_p
 
 output_type_p =
   OutputProductType <$> try product_type_p <|>
-  OutputTypeApplication <$> type_application_p
+  OutputTypeApp <$> type_application_p
   :: Parser OutputType
 
 -- FunctionType: function_type_p
@@ -101,7 +101,7 @@ type_application_p =
   left_type_inputs_p >>= \left_type_inputs ->
   type_name_p >>= \type_name ->
   right_type_inputs_p >>= \right_type_inputs ->
-  return $ TypeConstructorAndInputs type_name left_type_inputs right_type_inputs
+  return $ TypeConsAndInputs type_name left_type_inputs right_type_inputs
   :: Parser TypeApplication
 
 -- ValueType: value_type_p
@@ -119,5 +119,5 @@ one_type_input_p =
 
 type_name_to_value_type = ( \type_name ->
   TypeApplication $
-    TypeConstructorAndInputs type_name NoLeftTypeInputs NoRightTypeInputs
+    TypeConsAndInputs type_name NoLeftTypeInputs NoRightTypeInputs
   ) :: TypeName -> ValueType

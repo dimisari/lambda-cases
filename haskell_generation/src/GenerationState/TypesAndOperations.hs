@@ -1,10 +1,10 @@
 module GenerationState.TypesAndOperations where
 
 import Control.Monad.State (State, get, modify)
-import Control.Monad.Trans.Except (ExceptT, throwE, catchE)
+import Control.Monad.Trans.Except (ExceptT, throwE)
 import qualified Data.Map as M (Map, lookup, insert, insertWith)
 
-import Helpers (Haskell, Error, (.>), (==>))
+import Helpers (Error, (.>), (==>))
 
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types

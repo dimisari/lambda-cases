@@ -53,17 +53,16 @@ application_direction_p =
   string "==>" *> return RightApplication
   :: Parser ApplicationDirection
 
--- FuncAppChain:
--- function_application_chain_p, base_value_application_direction_p
+-- FuncAppChain: func_app_chain_p, base_val_app_dir_p
 
-function_application_chain_p =
-  base_value_application_direction_p >>= \base_val_app_dir ->
-  many (try base_value_application_direction_p) >>= \base_val_app_dirs ->
+func_app_chain_p =
+  base_val_app_dir_p >>= \base_val_app_dir ->
+  many (try base_val_app_dir_p) >>= \base_val_app_dirs ->
   base_value_p >>= \base_value ->
   return $ ValuesAndDirections base_val_app_dir base_val_app_dirs base_value
   :: Parser FuncAppChain
 
-base_value_application_direction_p = 
+base_val_app_dir_p = 
   base_value_p >>= \base_value ->
   application_direction_p >>= \application_direction ->
   return (base_value, application_direction)
@@ -72,8 +71,7 @@ base_value_application_direction_p =
 -- MultiplicationFactor: multiplication_factor_p
 
 multiplication_factor_p =
-  FuncAppChain <$> try function_application_chain_p <|>
-  BaseValue <$> base_value_p
+  FuncAppChain <$> try func_app_chain_p <|> BaseValue <$> base_value_p
   :: Parser MultiplicationFactor
 
 -- Multiplication: multiplication_p
@@ -115,23 +113,22 @@ equality_p =
   return $ EqualityTerms equality_term1 equality_term2
   :: Parser Equality
 
--- PureOpExpr: pure_operator_expression_p
+-- PureOpExpr: pure_op_expr_p
 
-pure_operator_expression_p =
+pure_op_expr_p =
   Equality <$> try equality_p <|> EqualityTerm <$> equality_term_p
   :: Parser PureOpExpr
 
--- InputOpExpr: input_operator_expression_p
+-- InputOpExpr: input_op_expr_p
 
-input_operator_expression_p =
-  input_p >>= \input -> pure_operator_expression_p >>= \op_expr ->
-  return $ InputAndPureOpExpr input op_expr
+input_op_expr_p =
+  input_p >>= \input -> pure_op_expr_p >>= \pure_op_expr ->
+  return $ InputAndPureOpExpr input pure_op_expr
   :: Parser InputOpExpr
 
 -- OperatorExpression: operator_expression_p
 
 operator_expression_p =
-  InputOpExpr <$> try input_operator_expression_p <|>
-  PureOpExpr <$> pure_operator_expression_p
+  InputOpExpr <$> try input_op_expr_p <|> PureOpExpr <$> pure_op_expr_p
   :: Parser OperatorExpression
 

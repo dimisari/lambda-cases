@@ -7,7 +7,7 @@ import Control.Monad.State (evalState)
 import Control.Monad.Trans.Except (runExceptT)
 
 import GenerationState.InitialState (init_state)
-import Helpers (Haskell, Error, (.>), (==>), eof_or_new_lines)
+import Helpers (Haskell, Error, (.>), (==>), eof_or_spicy_nls)
 
 import GenerationState.TypesAndOperations (Stateful, value_map_insert)
 
@@ -31,10 +31,10 @@ import CodeGenerators.Values (values_g, values_to_list, insert_value_to_map)
 type Path = String 
 
 -- Constants:
--- lcases_examples_names, lcases_examples_paths, examples_generated_haskell_paths,
--- examples_input_output_paths, haskell_header
+-- lcases_names, lcases_paths, generated_haskell_paths,
+-- in_out_path_pairs, haskell_header
 
-lcases_examples_names =
+lcases_names =
   [
     "my_gcd"
   , "ext_euc_no_tuple_type"
@@ -46,29 +46,29 @@ lcases_examples_names =
   ]
   :: [ String ]
 
-lcases_examples_paths =
-  map ( \ex_name -> "lcases/" ++ ex_name ++ ".lc" ) lcases_examples_names
+lcases_paths =
+  map ( \ex_name -> "lcases/" ++ ex_name ++ ".lc" ) lcases_names
   :: [ Path ]
 
-examples_generated_haskell_paths =
-  map ( \ex_name -> "generated_haskell/" ++ ex_name ++ ".hs" ) lcases_examples_names
+generated_haskell_paths =
+  map ( \ex_name -> "generated_haskell/" ++ ex_name ++ ".hs" ) lcases_names
   :: [ Path ]
 
-examples_input_output_paths = 
-  zip lcases_examples_paths examples_generated_haskell_paths
+in_out_path_pairs = 
+  zip lcases_paths generated_haskell_paths
   :: [ (Path, Path) ]
 
 haskell_header =
   "haskell_headers/haskell_code_header.hs"
   :: Path
 
--- Types: ValuesOrTypeDefinition, Program
+-- Types: ValuesOrTypeDef, Program
 
-data ValuesOrTypeDefinition =
+data ValuesOrTypeDef =
   TypeDefinition TypeDefinition | Values Values deriving Show
 
 newtype Program =
-  ValsOrTypeDefsList [ ValuesOrTypeDefinition ]
+  ValsOrTypeDefsList [ ValuesOrTypeDef ]
 
 -- Parsing: parse_lcases, parse_with, program_p, ntavs_or_type_def_p
 
@@ -81,9 +81,9 @@ program_p =
   :: Parser Program
 
 ntavs_or_type_def_p =
-  (TypeDefinition <$> try type_definition_p <|>
-  Values <$> values_p) <* eof_or_new_lines
-  :: Parser ValuesOrTypeDefinition
+  (TypeDefinition <$> try type_definition_p <|> Values <$> values_p)
+  <* eof_or_spicy_nls
+  :: Parser ValuesOrTypeDef
 
 -- Generating Haskell:
 -- print_error_or_haskell_to_file, print_parse_error_or_semantic_analysis,
@@ -121,20 +121,20 @@ program_g = ( \(ValsOrTypeDefsList vals_or_type_defs_list) ->
 
 vals_or_type_defs_to_list = ( \vals_or_type_defs_list ->
   concatMap vals_or_type_def_to_list vals_or_type_defs_list
-  ) :: [ ValuesOrTypeDefinition ] -> [ (ValueName, ValueType, ValueExpression) ]
+  ) :: [ ValuesOrTypeDef ] -> [ (ValueName, ValueType, ValueExpression) ]
 
 vals_or_type_def_to_list = ( \case 
   Values values -> values_to_list values
   TypeDefinition _ -> []
-  ) :: ValuesOrTypeDefinition -> [ (ValueName, ValueType, ValueExpression) ]
+  ) :: ValuesOrTypeDef -> [ (ValueName, ValueType, ValueExpression) ]
 
 values_or_type_definition_g = ( \case 
   Values values -> values_g values
   TypeDefinition type_definition -> type_definition_g type_definition
-  ) :: ValuesOrTypeDefinition -> Stateful Haskell
+  ) :: ValuesOrTypeDef -> Stateful Haskell
 
 -- main
 
 main =
-  mapM_ read_and_generate_example examples_input_output_paths
+  mapM_ read_and_generate_example in_out_path_pairs
   :: IO ()

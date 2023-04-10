@@ -13,7 +13,7 @@ import ParsingTypes.OperatorValues (OperatorExpression)
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 data LitOrValName = 
-  CaseLiteral Literal | CaseValueName ValueName
+  Literal Literal | ValueName ValueName
 
 data SpecificCase =
   SpecificCase LitOrValName ValueExpression 
@@ -48,8 +48,8 @@ data ValueExpression =
 
 instance Show LitOrValName where 
   show = \case
-    CaseLiteral literal -> show literal
-    CaseValueName value_name -> show value_name
+    Literal literal -> show literal
+    ValueName value_name -> show value_name
 
 instance Show SpecificCase where
   show = \(SpecificCase lit_or_val_name value_expression) ->

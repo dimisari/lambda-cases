@@ -22,24 +22,25 @@ keywords =
 
 (==>) = flip ($)
   :: a -> (a -> b) -> b
+
 (.>) = flip (.)
   :: (a -> b) -> (b -> c) -> (a -> c)
 
 -- Parsing 
 
-spaces_tabs = many $ char ' ' <|> char '\t'
+spaces_and_tabs = many $ char ' ' <|> char '\t'
   :: Parser String
 
-new_line_space_surrounded = spaces_tabs *> char '\n' <* spaces_tabs
+spicy_new_line = spaces_and_tabs *> char '\n' <* spaces_and_tabs
   :: Parser Char
 
-space_or_newline = char ' ' <|> try new_line_space_surrounded
+space_or_spicy_nl = char ' ' <|> spicy_new_line
   :: Parser Char
 
-new_lines = skipMany1 new_line_space_surrounded
+spicy_new_lines = skipMany1 spicy_new_line
   :: Parser ()
 
-eof_or_new_lines = new_lines <|> eof
+eof_or_spicy_nls = spicy_new_lines <|> eof
   :: Parser ()
 
 -- Haskell generation 

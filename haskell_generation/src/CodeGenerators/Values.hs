@@ -9,7 +9,6 @@ import Helpers (Haskell, Error, (==>), (.>), indent)
 
 import ParsingTypes.LowLevel (ValueName(..), Abstraction(..))
 import ParsingTypes.Types (TypeName(..), ValueType(..))
-import ParsingTypes.OperatorValues
 import ParsingTypes.Values
 
 import IntermediateTypes.Types 
@@ -34,8 +33,8 @@ import CodeGenerators.OperatorValues
 -- LitOrValName: literal_or_value_name_g, lit_or_val_name_type_inference_g
 
 literal_or_value_name_g = ( \case
-  CaseLiteral literal -> literal_g literal
-  CaseValueName value_name -> val_name_insert_and_return value_name
+  Literal literal -> literal_g literal
+  ValueName value_name -> val_name_insert_and_return value_name
   ) :: LitOrValName -> ValueType' -> Stateful Haskell
 
 lit_or_val_name_type_inference_g = ( 

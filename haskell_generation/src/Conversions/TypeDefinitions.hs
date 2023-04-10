@@ -7,32 +7,32 @@ import Conversions.Types (value_type_conversion)
 
 -- All: ValueType', Type Definitions
 
--- TypeConstructorAndVariables: cons_and_type_vars_conversion
+-- TypeConsAndVars: cons_and_type_vars_conversion
 
 cons_and_type_vars_conversion = ( 
-  \(TypeConstructorAndVariables constructor_name left_type_vars right_type_vars) ->
-  TypeConstructorAndVariables' constructor_name $
+  \(TypeConsAndVars constructor_name left_type_vars right_type_vars) ->
+  TypeConsAndVars' constructor_name $
     flip zip [ "a", "b", "c", "d", "e" ] $
     left_type_vars_conversion left_type_vars ++
     right_type_vars_conversion right_type_vars
-  ) :: TypeConstructorAndVariables -> TypeConstructorAndVariables'
+  ) :: TypeConsAndVars -> TypeConsAndVars'
 
 left_type_vars_conversion = ( \case
-  NoLeftTypeVariables -> []
-  OneLeftTypeVariable type_name -> [ type_name ]
-  ManyLeftTypeVariables many_t_names_in_paren ->
+  NoLeftTypeVars -> []
+  OneLeftTypeVar type_name -> [ type_name ]
+  ManyLeftTypeVars many_t_names_in_paren ->
     many_t_names_in_paren_conv many_t_names_in_paren
-  ) :: LeftTypeVariables -> [ TypeName ]
+  ) :: LeftTypeVars -> [ TypeName ]
 
 right_type_vars_conversion = ( \case
-  NoRightTypeVariables -> []
-  OneRightTypeVariable type_name -> [ type_name ]
-  ManyRightTypeVariables many_t_names_in_paren ->
+  NoRightTypeVars -> []
+  OneRightTypeVar type_name -> [ type_name ]
+  ManyRightTypeVars many_t_names_in_paren ->
     many_t_names_in_paren_conv many_t_names_in_paren
-  ) :: RightTypeVariables -> [ TypeName ]
+  ) :: RightTypeVars -> [ TypeName ]
 
 many_t_names_in_paren_conv = ( \(ParenTypeNames n1 n2 ns) -> n1 : n2 : ns)
-  :: ManyTypeNamesInParenthesis -> [ TypeName ]
+  :: ManyTNamesInParen -> [ TypeName ]
 
 -- Type Definitions: 
 -- field_conversion, tuple_type_def_conversion,
@@ -42,19 +42,19 @@ field_conversion = ( \(NameAndType value_name value_type) ->
   NameAndType' value_name (value_type_conversion value_type)
   ) :: Field -> Field'
 
-tuple_type_def_conversion = ( \(ConstructorAndFields type_application fields) ->
-  ConstructorAndFields'
+tuple_type_def_conversion = ( \(ConsVarsAndFields type_application fields) ->
+  ConsVarsAndFields'
     (cons_and_type_vars_conversion type_application)
     (map field_conversion fields)
-  ) :: TupleTypeDefinition -> TupleTypeDefinition'
+  ) :: TupleTypeDef -> TupleTypeDef'
 
-or_type_case_conversion = ( \(NameAndMaybeInputType value_name maybe_value_type) ->
-  NameAndMaybeInputType' value_name (value_type_conversion <$> maybe_value_type)
+or_type_case_conversion = ( \(NameAndMaybeInT value_name maybe_value_type) ->
+  NameAndMaybeInT' value_name (value_type_conversion <$> maybe_value_type)
   ) :: OrTypeCase -> OrTypeCase'
 
 or_type_def_conversion = (
-  \(ConstructorAndCases type_application case1 case2 cases) ->
-  ConstructorAndCases'
+  \(ConsVarsAndCases type_application case1 case2 cases) ->
+  ConsVarsAndCases'
     (cons_and_type_vars_conversion type_application)
     (map or_type_case_conversion $ case1 : case2 : cases)
-  ) :: OrTypeDefinition -> OrTypeDefinition'
+  ) :: OrTypeDef -> OrTypeDef'

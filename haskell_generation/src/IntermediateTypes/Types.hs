@@ -15,12 +15,12 @@ data FunctionType' =
   deriving Eq
 
 data TypeApplication' = 
-  TypeConstructorAndInputs' TypeName [ ValueType' ]
+  TypeConsAndInputs' TypeName [ ValueType' ]
   deriving Eq
 
 data ValueType' =
   FunctionType' FunctionType' | TypeApplication' TypeApplication' |
-  ProductType' [ ValueType' ]
+  ProductType' [ ValueType' ] | TypeVariable' Int
   deriving Eq
 
 -- Show instances: FunctionType', TypeApplication', ValueType'
@@ -31,7 +31,7 @@ instance Show FunctionType' where
     _ -> show in_t) ++ " -> " ++ show out_t
 
 instance Show TypeApplication' where
-  show = \(TypeConstructorAndInputs' type_name type_inputs) ->
+  show = \(TypeConsAndInputs' type_name type_inputs) ->
     show type_name ++ concatMap (show .> (" " ++)) type_inputs
 
 instance Show ValueType' where
@@ -39,4 +39,4 @@ instance Show ValueType' where
     FunctionType' func_type -> show func_type
     TypeApplication' type_application -> show type_application
     ProductType' types -> "(" ++ map show types==>intercalate ", " ++ ")"
-
+    TypeVariable' int -> ["T1", "T2", "T3", "T4", "T5"] !! (int-1)

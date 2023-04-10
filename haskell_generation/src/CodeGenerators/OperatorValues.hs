@@ -1,22 +1,19 @@
 module CodeGenerators.OperatorValues where
 
-import Data.List (intercalate, splitAt)
-import Control.Monad (foldM)
+import Data.List (intercalate)
 import Control.Monad.State ((>=>))
 import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers (Haskell, Error, (==>), (.>), indent)
 
-import ParsingTypes.LowLevel (ValueName(..), Abstraction(..))
-import ParsingTypes.Types (TypeName(..), ValueType(..))
+import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.Types (TypeName(..))
 import ParsingTypes.OperatorValues
-import ParsingTypes.Values
 
 import IntermediateTypes.Types 
-import IntermediateTypes.TypeDefinitions
+import IntermediateTypes.TypeDefinitions (Field'(..), TypeInfo(..))
 import IntermediateTypes.Values
 
-import Conversions.TypeDefinitions
 import Conversions.Values
 
 import GenerationState.TypesAndOperations
@@ -51,7 +48,7 @@ paren_type_inference_g = ( \(InnerExpression expr) ->
 
 tuple_g = ( \(TupleExpressions val1 val2 vals) -> \case
   FunctionType' _ -> throwE "Tuple can't have function type"
-  TypeApplication' (TypeConstructorAndInputs' type_name _) ->
+  TypeApplication' (TypeConsAndInputs' type_name _) ->
     tuple_values_type_name_g (val1 : val2 : vals) type_name
   ProductType' types -> tuple_values_types_g (val1 : val2 : vals) types
   ) :: Tuple -> ValueType' -> Stateful Haskell
@@ -237,8 +234,8 @@ equality_term_g = ( \case
 -- Equality: equality_g
 
 equality_g = ( \(EqualityTerms equality_factor1 equality_factor2) -> \case 
-  TypeApplication' (TypeConstructorAndInputs' (TN "Bool") []) ->
-    let int_t = TypeApplication' $ TypeConstructorAndInputs' (TN "Int") [] in
+  TypeApplication' (TypeConsAndInputs' (TN "Bool") []) ->
+    let int_t = TypeApplication' $ TypeConsAndInputs' (TN "Int") [] in
     equality_term_g equality_factor1 int_t >>= \equality_factor1_hs ->
     equality_term_g equality_factor2 int_t >>= \equality_factor2_hs ->
     return $ equality_factor1_hs ++ " == " ++ equality_factor2_hs
@@ -256,9 +253,9 @@ pure_op_expr_type_inf_g = ( \operator_expr ->
   let
   pair = case operator_expr of
     Equality equality -> (equality_g equality val_type, val_type) where
-      val_type = TypeApplication' $ TypeConstructorAndInputs' (TN "Bool") []
+      val_type = TypeApplication' $ TypeConsAndInputs' (TN "Bool") []
     EqualityTerm equ_fac -> (equality_term_g equ_fac val_type, val_type) where
-      val_type = TypeApplication' $ TypeConstructorAndInputs' (TN "Int") []
+      val_type = TypeApplication' $ TypeConsAndInputs' (TN "Int") []
     :: (Stateful Haskell, ValueType')
   in
   pair ==> \(g, t) -> g >>= \hs -> return (hs, t)

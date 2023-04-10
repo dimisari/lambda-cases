@@ -6,7 +6,7 @@ import Helpers ((==>))
 -- All: Types, Show instances
 
 -- Types:
--- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParenthesis, OutputType,
+-- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParen, OutputType,
 -- FunctionType
 -- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType
 
@@ -17,34 +17,34 @@ data ProductType =
   ProductTypes ValueType ValueType [ ValueType ]
 
 data InputTypeOrTypes =
-  OneInputType ValueType | MultipleInputTypes ManyTypesInParenthesis
+  OneInputType ValueType | MultipleInputTypes ManyTypesInParen
 
-data ManyTypesInParenthesis =
-  TypesInParenthesis ValueType ValueType [ ValueType ]
+data ManyTypesInParen =
+  TypesInParen ValueType ValueType [ ValueType ]
 
 data OutputType =
-  OutputTypeApplication TypeApplication | OutputProductType ProductType
+  OutputTypeApp TypeApplication | OutputProductType ProductType
 
 data FunctionType =
   InputAndOutputTypes InputTypeOrTypes OutputType
 
 data LeftTypeInputs = 
   NoLeftTypeInputs | OneLeftTypeInput ValueType |
-  ManyLeftTypeInputs ManyTypesInParenthesis
+  ManyLeftTypeInputs ManyTypesInParen
 
 data RightTypeInputs = 
   NoRightTypeInputs | OneRightTypeInput ValueType |
-  ManyRightTypeInputs ManyTypesInParenthesis
+  ManyRightTypeInputs ManyTypesInParen
 
 data TypeApplication =
-  TypeConstructorAndInputs TypeName LeftTypeInputs RightTypeInputs
+  TypeConsAndInputs TypeName LeftTypeInputs RightTypeInputs
 
 data ValueType =
   FunctionType FunctionType | ProductType ProductType |
-  TypeApplication TypeApplication
+  TypeApplication TypeApplication 
 
 -- Show instances:
--- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParenthesis, OutputType,
+-- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParen, OutputType,
 -- FunctionType
 -- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType
 
@@ -59,13 +59,13 @@ instance Show InputTypeOrTypes where
     OneInputType input_type -> show input_type
     MultipleInputTypes multiple_inputs -> show multiple_inputs
 
-instance Show ManyTypesInParenthesis where
-  show = \(TypesInParenthesis t1 t2 ts) ->
+instance Show ManyTypesInParen where
+  show = \(TypesInParen t1 t2 ts) ->
     "(" ++ map show (t1 : t2 : ts)==>intercalate ", " ++ ")"
 
 instance Show OutputType where
   show = \case
-    OutputTypeApplication type_application -> show type_application
+    OutputTypeApp type_application -> show type_application
     OutputProductType product_type -> show product_type
 
 instance Show FunctionType where
@@ -85,7 +85,7 @@ instance Show RightTypeInputs where
     ManyRightTypeInputs many_ts_in_paren -> "<=="  ++ show many_ts_in_paren
 
 instance Show TypeApplication where
-  show = \(TypeConstructorAndInputs type_name left_type_inputs right_type_inputs) ->
+  show = \(TypeConsAndInputs type_name left_type_inputs right_type_inputs) ->
     show left_type_inputs ++ show type_name ++ show right_type_inputs
 
 instance Show ValueType where
