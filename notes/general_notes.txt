@@ -1,8 +1,10 @@
 parsec:
 - <?> for better parsing error messages
+- what does it do exactly?
 
 Questions:
 - String = ListOf(Char)s?
+- After type variables
 
 Function composition:
 - given:

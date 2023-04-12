@@ -115,4 +115,3 @@ ee_recursion = \a_coeffs b_coeffs x -> \case
     next = \tuple@(CPrevCoeffs prev_prev prev) -> 
       CPrevCoeffs (prev) (prev_prev - div x y * prev)
 
-

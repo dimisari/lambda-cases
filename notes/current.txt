@@ -1,0 +1,11 @@
+ParsingTypes.LowLevel:
+- String Literal:
+  - what type internally?
+- Show Literal:
+  - show char with "'"?
+  - show string with "\""?
+- ManyAbstractions:
+  - what happens when multiple abstractions are "use_fields"?
+
+ParsingTypes.OperatorValues:
+- 

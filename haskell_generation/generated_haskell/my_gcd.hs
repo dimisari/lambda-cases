@@ -93,4 +93,3 @@ gcd_help :: Int -> Int -> Int
 gcd_help = \x -> \case
   0 -> x
   y -> gcd_help (y) (mod x y)
-

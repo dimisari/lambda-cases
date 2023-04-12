@@ -97,4 +97,3 @@ ee_recursion = \a_coeffs b_coeffs x -> \case
     next :: (Int, Int) -> (Int, Int)
     next = \(first, second) -> (second, first - div x y * second)
 
-

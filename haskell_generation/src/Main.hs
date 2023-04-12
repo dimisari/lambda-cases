@@ -35,14 +35,11 @@ type Path = String
 -- in_out_path_pairs, haskell_header
 
 lcases_names =
-  [
-    "my_gcd"
+  [ "my_gcd"
   , "ext_euc_no_tuple_type"
   , "ext_euc_tuple_type"
-  , "basic_or_types"
   , "pair"
   , "bool"
-  , "or_t"
   ]
   :: [ String ]
 

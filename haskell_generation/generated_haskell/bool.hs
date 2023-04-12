@@ -95,3 +95,9 @@ a = Cmy_true
 
 b :: Boolean
 b = Cmy_false
+
+f :: Boolean -> Boolean
+f = \case
+  Cmy_true -> Cmy_false
+  Cmy_false -> Cmy_true
+  asdfj -> Cmy_true
