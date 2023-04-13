@@ -66,7 +66,7 @@ output_type_p =
 
 function_type_p =
   input_type_or_types_p >>= \input -> string " -> " >> output_type_p >>= \output ->
-  return $ InputAndOutputTypes input output
+  return $ InAndOutTypes input output
   :: Parser FunctionType
 
 -- LeftTypeInputs: left_type_inputs_p, some_left_type_inputs_p

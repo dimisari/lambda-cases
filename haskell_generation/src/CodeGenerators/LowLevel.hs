@@ -120,7 +120,7 @@ input_g = ( \input value_type ->
 abstractions_g = ( \abstractions value_type -> case abstractions of
   [] -> return (value_type, "")
   abs1 : other_abs -> case value_type of
-    FunctionType' (InputAndOutputType' input_type output_type) -> 
+    FunctionType' (InAndOutType' input_type output_type) -> 
       abstraction_g abs1 input_type >>= \abs1_hs ->
       abstractions_g other_abs output_type >>= \(abs_type, other_abs_hs) ->
       return (abs_type, abs1_hs ++ " " ++ other_abs_hs)

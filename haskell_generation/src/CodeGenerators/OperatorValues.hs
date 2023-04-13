@@ -148,7 +148,7 @@ application_type_inference_g = ( \application@(ApplicationTrees tree1 tree2) ->
   ) :: Application -> Stateful (Haskell, ValueType')
 
 tree1_func_type_g = (
-  \tree1_hs func_type@(InputAndOutputType' input_t output_t) tree2 -> 
+  \tree1_hs func_type@(InAndOutType' input_t output_t) tree2 -> 
   application_tree_g tree2 input_t >>= \tree2_hs ->
   let 
   tree2_hs' = case tree2 of 
@@ -161,7 +161,7 @@ tree1_func_type_g = (
        Stateful (Haskell, ValueType')
 
 application_handler = (
-  \(ApplicationTrees tree1 tree2) (InputAndOutputType' input_t _) error_msg ->
+  \(ApplicationTrees tree1 tree2) (InAndOutType' input_t _) error_msg ->
   case tree2 of 
     BaseValueLeaf (Tuple (TupleExpressions val1 val2 vals)) -> 
       let

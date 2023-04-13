@@ -25,18 +25,18 @@ bool = TypeApplication' $ TypeConsAndInputs' (TN "Bool") []
 
 int_to_int_to_int =
   [ FunctionType' $
-    InputAndOutputType' int $ FunctionType' $ InputAndOutputType' int int ]
+    InAndOutType' int $ FunctionType' $ InAndOutType' int int ]
   :: [ ValueType' ]
 
 init_value_map = 
   M.fromList
     [ (VN "div", int_to_int_to_int)
     , (VN "mod", int_to_int_to_int)
-    , (VN "get_1st", [ FunctionType' $ InputAndOutputType' int_x_int int ])
+    , (VN "get_1st", [ FunctionType' $ InAndOutType' int_x_int int ])
     , ( VN "get_all_but_1st"
-      , [ FunctionType' $ InputAndOutputType' int_x_int int ]
+      , [ FunctionType' $ InAndOutType' int_x_int int ]
       )
-    , (VN "abs", [ FunctionType' $ InputAndOutputType' int int ])
+    , (VN "abs", [ FunctionType' $ InAndOutType' int int ])
     , (VN "max", int_to_int_to_int)
     , (VN "min", int_to_int_to_int)
     , (VN "true", [ bool ])

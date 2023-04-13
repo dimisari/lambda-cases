@@ -36,7 +36,7 @@ field_g = ( \(NameAndType' field_name field_type) type_cons_and_vars ->
 
 get_function_type = ( \type_cons_and_vars field_type ->
   FunctionType' $
-    InputAndOutputType' (cons_and_vars_to_val_type type_cons_and_vars) field_type
+    InAndOutType' (cons_and_vars_to_val_type type_cons_and_vars) field_type
   ) :: TypeConsAndVars' -> ValueType' -> ValueType'
 
 type_name_g = ( \type_name type_vars->
@@ -97,7 +97,7 @@ case_type_with_input_t = ( \input_t type_cons_and_vars -> case input_t of
 
 final_type = ( \input_t type_cons_and_vars -> 
   FunctionType' $
-    InputAndOutputType' input_t $ cons_and_vars_to_val_type type_cons_and_vars
+    InAndOutType' input_t $ cons_and_vars_to_val_type type_cons_and_vars
   ) :: ValueType' -> TypeConsAndVars' -> ValueType'
 
 input_type_hs_from = ( \maybe_input_t type_cons_and_vars -> case maybe_input_t of

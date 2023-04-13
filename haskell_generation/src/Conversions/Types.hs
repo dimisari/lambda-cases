@@ -16,14 +16,14 @@ value_type_conversion = ( \case
     TypeApplication' $ type_application_conversion type_application
   ) :: ValueType -> ValueType'
 
-func_type_to_val_type = ( \(InputAndOutputTypes input output_t) -> case input of 
+func_type_to_val_type = ( \(InAndOutTypes input output_t) -> case input of 
   OneInputType input_t -> one_input_to_val_type input_t output_t
   MultipleInputTypes mult_ins -> multiple_inputs_to_val_type mult_ins output_t
   ) :: FunctionType -> ValueType'
 
 one_input_to_val_type = ( \input_t output_t -> 
   FunctionType' $
-    InputAndOutputType'
+    InAndOutType'
       (value_type_conversion input_t) (output_type_to_val_type output_t)
   ) :: ValueType -> OutputType -> ValueType'
 
@@ -35,7 +35,7 @@ multiple_inputs_to_val_type = ( \(TypesInParen in_t1 in_t2 in_ts) output_t ->
       multiple_inputs_to_val_type
         (TypesInParen in_t2 in_t3 rest_of_in_ts) output_t
   in
-  FunctionType' $ InputAndOutputType' (value_type_conversion in_t1) output_type
+  FunctionType' $ InAndOutType' (value_type_conversion in_t1) output_type
   ) :: ManyTypesInParen -> OutputType -> ValueType'
 
 output_type_to_val_type = ( \case

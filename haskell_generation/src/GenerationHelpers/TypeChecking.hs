@@ -39,7 +39,7 @@ type_names_are_equivalent = ( \type_name1 type_name2 ->
   ) :: TypeName -> TypeName -> Stateful Bool
 
 func_types_are_equivalent = (
-  \(InputAndOutputType' in_t1 out_t1) (InputAndOutputType' in_t2 out_t2) ->
+  \(InAndOutType' in_t1 out_t1) (InAndOutType' in_t2 out_t2) ->
   types_are_equivalent in_t1 in_t2 >>= \inputs_equivalent ->
   types_are_equivalent out_t1 out_t2 >>= \outputs_equivalent -> 
   return $ inputs_equivalent && outputs_equivalent

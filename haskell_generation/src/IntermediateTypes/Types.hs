@@ -11,7 +11,7 @@ import ParsingTypes.Types (TypeName)
 -- Types: FunctionType', TypeApplication', ValueType'
 
 data FunctionType' = 
-  InputAndOutputType' ValueType' ValueType'
+  InAndOutType' ValueType' ValueType'
   deriving Eq
 
 data TypeApplication' = 
@@ -26,7 +26,7 @@ data ValueType' =
 -- Show instances: FunctionType', TypeApplication', ValueType'
 
 instance Show FunctionType' where
-  show = \(InputAndOutputType' in_t out_t) -> (case in_t of
+  show = \(InAndOutType' in_t out_t) -> (case in_t of
     FunctionType' _ -> "(" ++ show in_t ++ ")"
     _ -> show in_t) ++ " -> " ++ show out_t
 

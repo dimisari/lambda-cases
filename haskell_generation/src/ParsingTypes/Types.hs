@@ -26,7 +26,7 @@ data OutputType =
   OutputTypeApp TypeApplication | OutputProductType ProductType
 
 data FunctionType =
-  InputAndOutputTypes InputTypeOrTypes OutputType
+  InAndOutTypes InputTypeOrTypes OutputType
 
 data LeftTypeInputs = 
   NoLeftTypeInputs | OneLeftTypeInput ValueType |
@@ -69,7 +69,7 @@ instance Show OutputType where
     OutputProductType product_type -> show product_type
 
 instance Show FunctionType where
-  show = \(InputAndOutputTypes input_types output_type) ->
+  show = \(InAndOutTypes input_types output_type) ->
     show input_types ++ " -> " ++ show output_type
 
 instance Show LeftTypeInputs where

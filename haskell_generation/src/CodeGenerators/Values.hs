@@ -32,7 +32,7 @@ import CodeGenerators.OperatorValues
 
 -- LitOrValName: lit_or_val_name_g, lit_or_val_name_type_inference_g
 
-lit_or_val_name_g = ( \case
+not_last_lit_or_val_name_g = ( \case
   Literal literal -> literal_g literal
   ValueName value_name -> value_name_g value_name
   ) :: LitOrValName -> ValueType' -> Stateful Haskell
@@ -48,26 +48,27 @@ lit_or_val_name_type_inference_g = (
 
 -- SpecificCase: specific_case_g, abs_g, specific_case_type_inference_g
 
-specific_case_g = (
-  \lit_or_val_name_g (SpecificCase lit_or_val_name value_expression) -> \case
-  FunctionType' (InputAndOutputType' input_t output_t) ->
-    get_indent_level >>= \ind_lev ->
-    lit_or_val_name_g lit_or_val_name input_t >>= \lit_or_val_name_hs ->
-    value_expression_g value_expression output_t >>= \value_expr_hs ->
-    return $ indent ind_lev ++ lit_or_val_name_hs ++ " -> " ++ value_expr_hs
+specific_case_g = ( \lit_or_val_name_g spec_case -> \case
+  FunctionType' func_type ->
+    spec_case_func_type_g lit_or_val_name_g spec_case func_type
   other_t -> throwE $
     "cases expression has type:" ++ show other_t ++
     "\ninstead of a funtion type\n"
   ) :: (LitOrValName -> ValueType' -> Stateful Haskell) -> SpecificCase ->
        ValueType' -> Stateful Haskell
 
--- spec_case_func_type_g
---   get_indent_level >>= \ind_lev ->
---   lit_or_val_name_g lit_or_val_name input_t >>= \lit_or_val_name_hs ->
---   value_expression_g value_expression output_t >>= \value_expr_hs ->
---   return $ indent ind_lev ++ lit_or_val_name_hs ++ " -> " ++ value_expr_hs
+spec_case_func_type_g = (
+  \lit_or_val_name_g
+    (SpecificCase lit_or_val_name value_expression)
+    (InAndOutType' input_t output_t) ->
+  get_indent_level >>= \ind_lev ->
+  lit_or_val_name_g lit_or_val_name input_t >>= \lit_or_val_name_hs ->
+  value_expression_g value_expression output_t >>= \value_expr_hs ->
+  return $ indent ind_lev ++ lit_or_val_name_hs ++ " -> " ++ value_expr_hs
+  ) :: (LitOrValName -> ValueType' -> Stateful Haskell) -> SpecificCase ->
+       FunctionType' -> Stateful Haskell
 
-not_last_case_g = ( specific_case_g lit_or_val_name_g
+not_last_case_g = ( specific_case_g not_last_lit_or_val_name_g
   ) :: SpecificCase -> ValueType' -> Stateful Haskell
 
 last_case_g = ( specific_case_g last_lit_or_val_name_g
@@ -79,13 +80,13 @@ specific_case_type_inference_g = ( \(SpecificCase lit_or_val_name val_expr) ->
   value_expression_type_inference_g val_expr >>= \(val_expr_hs, v_t) ->
   return
     ( indent ind_lev ++ lovn_g ++ " -> " ++ val_expr_hs
-    , FunctionType' $ InputAndOutputType' lovn_t v_t )
+    , FunctionType' $ InAndOutType' lovn_t v_t )
   ) :: SpecificCase -> Stateful (Haskell, ValueType')
 
 -- DefaultCase: specific_case_g, specific_case_type_inference_g
 
 default_case_g = ( \(DefaultCase value_expression) -> \case
-  FunctionType' (InputAndOutputType' input_t output_t) -> 
+  FunctionType' (InAndOutType' input_t output_t) -> 
     get_indent_level >>= \ind_lev ->
     value_expression_g value_expression output_t >>= \value_expression_hs ->
     return $ indent ind_lev ++ "_ -> " ++ value_expression_hs
