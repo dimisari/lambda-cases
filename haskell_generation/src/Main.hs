@@ -34,25 +34,37 @@ type Path = String
 -- lcases_names, lcases_paths, generated_haskell_paths,
 -- in_out_path_pairs, haskell_header
 
-lcases_names =
-  [ "my_gcd"
-  , "ext_euc_no_tuple_type"
-  , "ext_euc_tuple_type"
-  , "pair"
-  , "bool"
-  ]
+
+correct_names =
+  map ("correct/" ++)
+    [ "my_gcd"
+    , "ext_euc_no_tuple_type"
+    , "ext_euc_tuple_type"
+    , "pair"
+    , "bool"
+    , "map"
+    ]
   :: [ String ]
 
-lcases_paths =
-  map ( \ex_name -> "lcases/" ++ ex_name ++ ".lc" ) lcases_names
-  :: [ Path ]
+wrong_names =
+  map ("wrong/" ++)
+  [ "bool" ]
+  :: [ String ]
 
-generated_haskell_paths =
-  map ( \ex_name -> "generated_haskell/" ++ ex_name ++ ".hs" ) lcases_names
-  :: [ Path ]
+all_names =
+  correct_names ++ wrong_names
+  :: [ String ]
 
-in_out_path_pairs = 
-  zip lcases_paths generated_haskell_paths
+paths =
+  map ( \s -> "lcases/" ++ s ++ ".lc" ) all_names
+  :: [ String ]
+
+hs_paths =
+  map ( \s -> "haskell/" ++ s ++ ".hs" ) all_names
+  :: [ String ]
+
+path_pairs = 
+  zip paths hs_paths
   :: [ (Path, Path) ]
 
 haskell_header =
@@ -133,5 +145,5 @@ values_or_type_definition_g = ( \case
 -- main
 
 main =
-  mapM_ read_and_generate_example in_out_path_pairs
+  mapM_ read_and_generate_example path_pairs
   :: IO ()

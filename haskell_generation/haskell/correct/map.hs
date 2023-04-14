@@ -86,18 +86,6 @@ instance HasFifth (a, b, c, d, e) e where
 
 -- Generated
 
-data Boolean =
-  Cmy_true | Cmy_false
+data ListOfInts =
+  Cnon_empty IntHeadAndTail | Cempty
   deriving Show
-
-a :: Boolean
-a = Cmy_true
-
-b :: Boolean
-b = Cmy_false
-
-f :: Boolean -> Boolean
-f = \case
-  Cmy_true -> Cmy_false
-  Cmy_false -> Cmy_true
-  asdfj -> Cmy_true

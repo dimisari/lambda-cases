@@ -12,4 +12,3 @@ f: Boolean -> Boolean
   = cases
     my_true -> my_false
     my_false -> my_true
-    asdfj -> my_true
