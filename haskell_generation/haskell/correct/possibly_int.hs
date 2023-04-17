@@ -86,6 +86,11 @@ instance HasFifth (a, b, c, d, e) e where
 
 -- Generated
 
-data ListOfInts =
-  Cnon_empty IntHeadAndTail | Cempty
+data PossiblyInt =
+  Cfrom_int Int | Cnot_int
   deriving Show
+
+identity :: PossiblyInt -> PossiblyInt
+identity = \case
+  Cfrom_int value -> from_int value
+  Cnot_int -> Cnot_int

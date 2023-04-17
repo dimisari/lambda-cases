@@ -4,7 +4,7 @@ import Text.Parsec (ParseError, (<|>), eof, many, parse, char, try)
 import Text.Parsec.String (Parser)
 import Control.Monad ((>=>))
 import Control.Monad.State (evalState)
-import Control.Monad.Trans.Except (runExceptT)
+import Control.Monad.Trans.Except (runExceptT, catchE, throwE)
 
 import GenerationState.InitialState (init_state)
 import Helpers (Haskell, Error, (.>), (==>), eof_or_spicy_nls)
@@ -42,13 +42,16 @@ correct_names =
     , "ext_euc_tuple_type"
     , "pair"
     , "bool"
-    , "map"
+    , "possibly_int"
     ]
   :: [ String ]
 
 wrong_names =
   map ("wrong/" ++)
-  [ "bool" ]
+  [ "bool"
+  , "not_covered"
+  , "duplicate"
+  ]
   :: [ String ]
 
 all_names =
@@ -99,29 +102,30 @@ ntavs_or_type_def_p =
 -- print_semantic_error_or_haskell_to_file, run_semantic_analysis, program_g
 -- values_or_type_definition_g
 
-read_and_generate_example = ( \(input_path, output_path) ->
+read_and_generate_example = ( \path_pair@(input_path, _) ->
   readFile input_path >>= \lcases_input ->
   parse_lcases input_path lcases_input ==> \parser_output ->
-  print_parse_error_or_semantic_analysis parser_output output_path
+  print_parse_error_or_semantic_analysis parser_output path_pair
   ) :: (Path, Path) -> IO ()
 
-print_parse_error_or_semantic_analysis = ( \parser_output output_path ->
+print_parse_error_or_semantic_analysis = ( \parser_output path_pair ->
   case parser_output of 
     Left parse_error -> print parse_error
-    Right program -> print_semantic_error_or_haskell_to_file program output_path
-  ) :: Either ParseError Program -> Path -> IO ()
+    Right program -> print_semantic_error_or_haskell_to_file program path_pair
+  ) :: Either ParseError Program -> (Path, Path) -> IO ()
 
-print_semantic_error_or_haskell_to_file = ( \program output_path ->
-  run_semantic_analysis program ==> \case
+print_semantic_error_or_haskell_to_file = ( \program (input_path, output_path) ->
+  run_semantic_analysis program input_path ==> \case
     Left semantic_error -> putStrLn semantic_error
     Right generated_haskell -> 
       readFile haskell_header >>= \header ->
       writeFile output_path $ header ++ generated_haskell
-  ) :: Program -> Path -> IO ()
+  ) :: Program -> (Path, Path) -> IO ()
 
-run_semantic_analysis =
-  program_g .> runExceptT .> flip evalState init_state
-  :: Program -> Either Error Haskell
+run_semantic_analysis = ( \program input_path ->
+  catchE (program_g program) (\e -> throwE $ (input_path ++ ":\n") ++ e ++ "\n")
+    ==> runExceptT ==> flip evalState init_state
+  ) :: Program -> Path -> Either Error Haskell
 
 program_g = ( \(ValsOrTypeDefsList vals_or_type_defs_list) ->
   mapM_ insert_value_to_map (vals_or_type_defs_to_list vals_or_type_defs_list) >>

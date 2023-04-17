@@ -5,7 +5,7 @@ import ParsingTypes.TypeDefinitions
 import IntermediateTypes.TypeDefinitions
 import Conversions.Types (value_type_conversion)
 
--- All: ValueType', Type Definitions
+-- All: ValType, Type Definitions
 
 -- TypeConsAndVars: cons_and_type_vars_conversion
 

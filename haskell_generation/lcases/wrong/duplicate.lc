@@ -1,0 +1,9 @@
+
+or_type ManyCases
+values case1 | case2
+
+f: ManyCases -> ManyCases
+  = cases
+    case1 -> case1
+    case1 -> case1
+    case2 -> case1

@@ -14,29 +14,29 @@ import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..
 -- int, int_x_int, bool, int_to_int_to_int
 -- init_value_map, init_state
 
-int = TypeApplication' $ TypeConsAndInputs' (TN "Int") []
-  :: ValueType'
+int = TypeApp $ TypeConsAndInputs' (TN "Int") []
+  :: ValType
 
-int_x_int = ProductType' [int, int]
-  :: ValueType'
+int_x_int = ProdType [int, int]
+  :: ValType
 
-bool = TypeApplication' $ TypeConsAndInputs' (TN "Bool") []
-  :: ValueType'
+bool = TypeApp $ TypeConsAndInputs' (TN "Bool") []
+  :: ValType
 
 int_to_int_to_int =
-  [ FunctionType' $
-    InAndOutType' int $ FunctionType' $ InAndOutType' int int ]
-  :: [ ValueType' ]
+  [ FuncType $
+    InAndOutTs int $ FuncType $ InAndOutTs int int ]
+  :: [ ValType ]
 
 init_value_map = 
   M.fromList
     [ (VN "div", int_to_int_to_int)
     , (VN "mod", int_to_int_to_int)
-    , (VN "get_1st", [ FunctionType' $ InAndOutType' int_x_int int ])
+    , (VN "get_1st", [ FuncType $ InAndOutTs int_x_int int ])
     , ( VN "get_all_but_1st"
-      , [ FunctionType' $ InAndOutType' int_x_int int ]
+      , [ FuncType $ InAndOutTs int_x_int int ]
       )
-    , (VN "abs", [ FunctionType' $ InAndOutType' int int ])
+    , (VN "abs", [ FuncType $ InAndOutTs int int ])
     , (VN "max", int_to_int_to_int)
     , (VN "min", int_to_int_to_int)
     , (VN "true", [ bool ])

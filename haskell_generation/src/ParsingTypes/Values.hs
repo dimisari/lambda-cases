@@ -16,7 +16,7 @@ data LitOrValName =
   Literal Literal | ValueName ValueName
 
 data SpecificCase =
-  SpecificCase LitOrValName ValueExpression 
+  SpecificCase { sc_lovn :: LitOrValName, sc_val_e :: ValueExpression }
 
 data DefaultCase = 
   DefaultCase ValueExpression

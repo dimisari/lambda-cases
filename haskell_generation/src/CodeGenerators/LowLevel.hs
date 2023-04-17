@@ -24,11 +24,11 @@ literal_g = ( \literal value_type ->
   (value_type == int) ==> \case
     True -> return $ show literal
     False -> throwE $ literal_not_int_err value_type
-  ) :: Literal -> ValueType' -> Stateful Haskell
+  ) :: Literal -> ValType -> Stateful Haskell
 
 literal_type_inference_g = ( \literal ->
   return (show literal, int)
-  ) :: Literal -> Stateful (Haskell, ValueType')
+  ) :: Literal -> Stateful (Haskell, ValType)
 
 -- ValueName: value_name_g, value_name_type_inference_g
 
@@ -38,17 +38,17 @@ value_name_g = ( \value_name value_type ->
     False -> throwE $ type_check_err value_name value_type map_val_type
     True ->
       case value_type of
-        TypeApplication' (TypeConsAndInputs' type_name _) ->
+        TypeApp (TypeConsAndInputs' type_name _) ->
           type_map_get type_name >>= \case
             OrType _ _ -> return $ "C" ++ value_name_to_hs value_name
             _ -> return $ value_name_to_hs value_name
         _ -> return $ value_name_to_hs value_name
-  ) :: ValueName -> ValueType' -> Stateful Haskell
+  ) :: ValueName -> ValType -> Stateful Haskell
 
 value_name_type_inference_g = ( \value_name ->
   value_map_get value_name >>= \map_val_type ->
   return (value_name_to_hs value_name, map_val_type)
-  ) :: ValueName -> Stateful (Haskell, ValueType')
+  ) :: ValueName -> Stateful (Haskell, ValType)
 
 value_name_to_hs = \case
   VN "true" -> "True"
@@ -62,18 +62,18 @@ value_name_to_hs = \case
 abstraction_g = ( \case
   AbstractionName value_name -> val_name_ins_and_ret value_name
   UseFields -> use_fields_g
-  ) :: Abstraction -> ValueType' -> Stateful Haskell
+  ) :: Abstraction -> ValType -> Stateful Haskell
 
 val_name_ins_and_ret = ( \value_name value_type ->
   value_map_insert value_name value_type >> return (show value_name)
-  ) :: ValueName -> ValueType' -> Stateful Haskell
+  ) :: ValueName -> ValType -> Stateful Haskell
 
 use_fields_g = ( \value_type -> case value_type of
-  TypeApplication' (TypeConsAndInputs' type_name _) ->
+  TypeApp (TypeConsAndInputs' type_name _) ->
     use_fields_type_name_g type_name value_type
-  ProductType' types -> use_fields_prod_type_g types value_type
+  ProdType types -> use_fields_prod_type_g types value_type
   _ -> undefined 
-  ) :: ValueType' -> Stateful Haskell
+  ) :: ValType -> Stateful Haskell
 
 use_fields_type_name_g = ( \type_name value_type ->
   type_map_get type_name >>= \case
@@ -83,14 +83,14 @@ use_fields_type_name_g = ( \type_name value_type ->
       return $
         "tuple@(C" ++ show type_name ++ concatMap (" " ++) val_names ++ ")"
     _ -> undefined
-  ) :: TypeName -> ValueType' -> Stateful Haskell
+  ) :: TypeName -> ValType -> Stateful Haskell
 
 use_fields_prod_type_g = ( \types value_type ->
   value_map_insert (VN "tuple") value_type >>
   zipWith val_name_ins_and_ret prod_type_fields types ==> sequence >>=
     \val_names ->
   return $ "(" ++ intercalate ", " val_names ++ ")"
-  ) :: [ ValueType' ] -> ValueType' -> Stateful Haskell
+  ) :: [ ValType ] -> ValType -> Stateful Haskell
 
 prod_type_fields = map VN [ "first", "second", "third", "fourth", "fifth" ]
   :: [ ValueName ]
@@ -103,7 +103,7 @@ field_and_val_type_g = ( \(NameAndType' field_name field_type) ->
 
 many_abstractions_g = ( \(Abstractions abstraction1 abstraction2 abstractions) ->
   abstractions_g (abstraction1 : abstraction2 : abstractions)
-  ) :: ManyAbstractions -> ValueType' -> Stateful (ValueType', Haskell)
+  ) :: ManyAbstractions -> ValType -> Stateful (ValType, Haskell)
 
 -- Input: input_g, abstractions_g
 
@@ -112,17 +112,17 @@ input_g = ( \input value_type ->
   input_help_g = case input of
     OneAbstraction abstraction -> abstractions_g [ abstraction ] value_type 
     ManyAbstractions many_abs -> many_abstractions_g many_abs value_type
-    :: Stateful (ValueType', Haskell)
+    :: Stateful (ValType, Haskell)
   in
   input_help_g >>= \(rest_t, help_hs) -> return (rest_t, "\\" ++ help_hs ++ "-> ")
-  ) :: Input -> ValueType' -> Stateful (ValueType', Haskell)
+  ) :: Input -> ValType -> Stateful (ValType, Haskell)
 
 abstractions_g = ( \abstractions value_type -> case abstractions of
   [] -> return (value_type, "")
   abs1 : other_abs -> case value_type of
-    FunctionType' (InAndOutType' input_type output_type) -> 
+    FuncType (InAndOutTs input_type output_type) -> 
       abstraction_g abs1 input_type >>= \abs1_hs ->
       abstractions_g other_abs output_type >>= \(abs_type, other_abs_hs) ->
       return (abs_type, abs1_hs ++ " " ++ other_abs_hs)
     _ -> undefined
-  ) :: [ Abstraction ] -> ValueType' -> Stateful (ValueType', Haskell)
+  ) :: [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)

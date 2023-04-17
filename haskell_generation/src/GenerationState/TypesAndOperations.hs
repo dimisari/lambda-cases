@@ -9,7 +9,7 @@ import Helpers (Error, (.>), (==>))
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types
 
-import IntermediateTypes.Types (ValueType'(..))
+import IntermediateTypes.Types (ValType(..))
 import IntermediateTypes.TypeDefinitions (TypeInfo(..))
 
 -- All: Types, get fields, update fields, value_map operations, type_map operations
@@ -17,34 +17,34 @@ import IntermediateTypes.TypeDefinitions (TypeInfo(..))
 -- Types: ValueMap, TypeMap, GenerationState, Stateful
 
 type ValueMap =
-  M.Map ValueName [ ValueType' ]
+  M.Map ValueName [ ValType ]
 
 type TypeMap =
   M.Map TypeName TypeInfo
 
 data GenerationState = GS
-  { indent_level :: Int
+  { ind_lev :: Int
   , value_map :: ValueMap
   , type_map :: TypeMap
   }
 
 type Stateful = ExceptT Error (State GenerationState)
 
--- get fields: get_from_state, get_indent_level, get_value_map, get_type_map
+-- get fields: get_from_state, get_ind_lev, get_value_map, get_type_map
 
 get_from_state = ( \f -> get >>= f .> return )
   :: (GenerationState -> a) -> Stateful a
 
-(get_indent_level, get_value_map, get_type_map) =
-  (indent_level, value_map, type_map)==> \(i, vm, tm) ->
+(get_ind_lev, get_value_map, get_type_map) =
+  (ind_lev, value_map, type_map)==> \(i, vm, tm) ->
   (get_from_state i, get_from_state vm, get_from_state tm)
   :: (Stateful Int, Stateful ValueMap, Stateful TypeMap)
 
--- update fields: update_indent_level, update_value_map, update_type_map
+-- update fields: update_ind_lev, update_value_map, update_type_map
 
-(update_indent_level, update_value_map, update_type_map
+(update_ind_lev, update_value_map, update_type_map
   ) =
-  ( \il -> modify ( \s -> s { indent_level = il } )
+  ( \il -> modify ( \s -> s { ind_lev = il } )
   , \vm -> modify ( \s -> s { value_map = vm } ) 
   , \tm -> modify ( \s -> s { type_map = tm } )
   ) ::
@@ -57,14 +57,14 @@ get_from_state = ( \f -> get >>= f .> return )
   
 value_map_insert = ( \vn vt ->
   get_value_map >>= M.insertWith (++) vn [vt] .> update_value_map
-  ) :: ValueName -> ValueType' -> Stateful ()
+  ) :: ValueName -> ValType -> Stateful ()
 
 value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
   Nothing -> throwE $ "No definition for value: " ++ show vn
   Just vts -> case vts of
     [] -> undefined
     vt:_ -> return vt
-  ) :: ValueName -> Stateful ValueType'
+  ) :: ValueName -> Stateful ValType
 
 -- type_map operations: type_map_exists_check, type_map_insert, type_map_get
 

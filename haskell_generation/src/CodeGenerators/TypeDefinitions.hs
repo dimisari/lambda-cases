@@ -35,9 +35,9 @@ field_g = ( \(NameAndType' field_name field_type) type_cons_and_vars ->
   ) :: Field' -> TypeConsAndVars' -> Stateful Haskell
 
 get_function_type = ( \type_cons_and_vars field_type ->
-  FunctionType' $
-    InAndOutType' (cons_and_vars_to_val_type type_cons_and_vars) field_type
-  ) :: TypeConsAndVars' -> ValueType' -> ValueType'
+  FuncType $
+    InAndOutTs (cons_and_vars_to_val_type type_cons_and_vars) field_type
+  ) :: TypeConsAndVars' -> ValType -> ValType
 
 type_name_g = ( \type_name type_vars->
   lookup type_name type_vars ==> \case
@@ -85,25 +85,25 @@ or_type_case_g = (
 case_type_from = ( \maybe_input_t type_cons_and_vars -> case maybe_input_t of
   Nothing -> cons_and_vars_to_val_type type_cons_and_vars
   Just input_type -> case_type_with_input_t input_type type_cons_and_vars
-  ) :: Maybe ValueType' -> TypeConsAndVars' -> ValueType'
+  ) :: Maybe ValType -> TypeConsAndVars' -> ValType
 
 case_type_with_input_t = ( \input_t type_cons_and_vars -> case input_t of
-  TypeApplication' (TypeConsAndInputs' type_name []) ->
+  TypeApp (TypeConsAndInputs' type_name []) ->
     type_name_to_type_var type_name type_cons_and_vars ==> \case
       Nothing -> final_type input_t type_cons_and_vars
       Just type_var -> final_type type_var type_cons_and_vars
   _ -> final_type input_t type_cons_and_vars
-  ) :: ValueType' ->  TypeConsAndVars' -> ValueType'
+  ) :: ValType ->  TypeConsAndVars' -> ValType
 
 final_type = ( \input_t type_cons_and_vars -> 
-  FunctionType' $
-    InAndOutType' input_t $ cons_and_vars_to_val_type type_cons_and_vars
-  ) :: ValueType' -> TypeConsAndVars' -> ValueType'
+  FuncType $
+    InAndOutTs input_t $ cons_and_vars_to_val_type type_cons_and_vars
+  ) :: ValType -> TypeConsAndVars' -> ValType
 
 input_type_hs_from = ( \maybe_input_t type_cons_and_vars -> case maybe_input_t of
   Nothing -> ""
   Just input_type -> " " ++ type_g input_type (get_type_vars type_cons_and_vars)
-  ) :: Maybe ValueType' -> TypeConsAndVars' -> Haskell
+  ) :: Maybe ValType -> TypeConsAndVars' -> Haskell
 
 -- OrTypeDef': or_type_def'_g, or_type_cases_g
 
@@ -137,29 +137,29 @@ type_definition_g = ( \case
 -- Helpers: type_g, cons_and_vars_to_val_type
 
 type_g = ( \value_type type_vars -> case value_type of
-  TypeApplication' (TypeConsAndInputs' type_name type_inputs) ->
+  TypeApp (TypeConsAndInputs' type_name type_inputs) ->
     (type_name_g type_name type_vars ++
     concatMap (flip type_g type_vars .> (" " ++)) type_inputs) ==>
       case type_inputs of
         [] -> id
         _  -> \s -> "(" ++ s ++ ")"
   other_type -> show other_type
-  ) :: ValueType' -> [ (TypeName, String) ] -> Haskell
+  ) :: ValType -> [ (TypeName, String) ] -> Haskell
 
 cons_and_vars_to_val_type = ( \(TypeConsAndVars' type_name type_vars) ->
   let
-  val_t_type_vars = map TypeVariable' [ 1..5 ]
-    :: [ ValueType' ]
+  val_t_type_vars = map TypeVar [ 1..5 ]
+    :: [ ValType ]
   in
-  TypeApplication' $
+  TypeApp $
     TypeConsAndInputs' type_name $ take (length type_vars) val_t_type_vars 
-  ) :: TypeConsAndVars' -> ValueType'
+  ) :: TypeConsAndVars' -> ValType
 
 type_name_to_type_var = ( \type_name type_cons_and_vars ->
   lookup type_name (get_type_vars type_cons_and_vars) ==> \case
     Just hs_t_var -> Just $ haskell_to_lcases_type_var hs_t_var
     Nothing -> Nothing
-  ) :: TypeName -> TypeConsAndVars' -> Maybe ValueType'
+  ) :: TypeName -> TypeConsAndVars' -> Maybe ValType
 
 haskell_to_lcases_type_var = ( \case
   "a" -> 1
@@ -168,5 +168,5 @@ haskell_to_lcases_type_var = ( \case
   "d" -> 4
   "e" -> 5
   _ -> error "more than five type variables"
-  ) .> TypeVariable'
-  :: String -> ValueType'
+  ) .> TypeVar
+  :: String -> ValType

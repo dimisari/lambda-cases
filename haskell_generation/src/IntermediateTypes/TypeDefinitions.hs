@@ -5,7 +5,7 @@ import Helpers ((.>))
 import ParsingTypes.LowLevel (ValueName)
 import ParsingTypes.Types (TypeName(..))
 
-import IntermediateTypes.Types (ValueType'(..), TypeApplication'(..))
+import IntermediateTypes.Types (ValType(..), TypeApp(..))
 
 -- All: Types, Show instances, Helpers
 
@@ -18,14 +18,14 @@ data TypeConsAndVars' =
     { get_cons :: TypeName, get_type_vars :: [ (TypeName, String) ] }
 
 data Field' =
-  NameAndType' { get_name :: ValueName, get_type :: ValueType' }
+  NameAndType' { get_name :: ValueName, get_type :: ValType }
   deriving Show
 
 data TupleTypeDef' =
   ConsVarsAndFields' TypeConsAndVars' [ Field' ]
 
 data OrTypeCase' =
-  NameAndMaybeInT' ValueName (Maybe ValueType')
+  NameAndMaybeInT' { get_c_name :: ValueName, get_c_t :: (Maybe ValType) }
   deriving Show
 
 data OrTypeDef' =
@@ -44,9 +44,8 @@ instance Show TypeConsAndVars' where
 -- Helpers: t_name_to_value_t'
 
 t_name_to_value_t = ( \type_name ->
-  TypeApplication' $ TypeConsAndInputs' type_name []
-  ) :: TypeName -> ValueType'
+  TypeApp $ TypeConsAndInputs' type_name []
+  ) :: TypeName -> ValType
 
 int = t_name_to_value_t $ TN "Int"
-  :: ValueType'
-
+  :: ValType

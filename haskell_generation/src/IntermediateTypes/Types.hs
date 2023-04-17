@@ -8,35 +8,34 @@ import ParsingTypes.Types (TypeName)
 
 -- All: Types, Show instances
 
--- Types: FunctionType', TypeApplication', ValueType'
+-- Types: FuncType, TypeApp, ValType
 
-data FunctionType' = 
-  InAndOutType' ValueType' ValueType'
+data FuncType = 
+  InAndOutTs ValType ValType
   deriving Eq
 
-data TypeApplication' = 
-  TypeConsAndInputs' TypeName [ ValueType' ]
+data TypeApp = 
+  TypeConsAndInputs' TypeName [ ValType ]
   deriving Eq
 
-data ValueType' =
-  FunctionType' FunctionType' | TypeApplication' TypeApplication' |
-  ProductType' [ ValueType' ] | TypeVariable' Int
+data ValType =
+  FuncType FuncType | TypeApp TypeApp | ProdType [ ValType ] | TypeVar Int
   deriving Eq
 
--- Show instances: FunctionType', TypeApplication', ValueType'
+-- Show instances: FuncType, TypeApp, ValType
 
-instance Show FunctionType' where
-  show = \(InAndOutType' in_t out_t) -> (case in_t of
-    FunctionType' _ -> "(" ++ show in_t ++ ")"
+instance Show FuncType where
+  show = \(InAndOutTs in_t out_t) -> (case in_t of
+    FuncType _ -> "(" ++ show in_t ++ ")"
     _ -> show in_t) ++ " -> " ++ show out_t
 
-instance Show TypeApplication' where
+instance Show TypeApp where
   show = \(TypeConsAndInputs' type_name type_inputs) ->
     show type_name ++ concatMap (show .> (" " ++)) type_inputs
 
-instance Show ValueType' where
+instance Show ValType where
   show = \case
-    FunctionType' func_type -> show func_type
-    TypeApplication' type_application -> show type_application
-    ProductType' types -> "(" ++ map show types==>intercalate ", " ++ ")"
-    TypeVariable' int -> ["T1", "T2", "T3", "T4", "T5"] !! (int-1)
+    FuncType func_type -> show func_type
+    TypeApp type_application -> show type_application
+    ProdType types -> "(" ++ map show types==>intercalate ", " ++ ")"
+    TypeVar int -> ["T1", "T2", "T3", "T4", "T5"] !! (int-1)
