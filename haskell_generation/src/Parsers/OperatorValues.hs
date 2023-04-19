@@ -98,6 +98,31 @@ subtraction_p =
   return $ SubtractionTerms subtraction_term1 subtraction_term2
   :: Parser Subtraction
 
+-- AddSubTerm: add_sub_term_p
+
+add_sub_term_p =
+  Mult <$> try multiplication_p <|>
+  MultFactor <$> multiplication_factor_p
+  :: Parser AddSubTerm
+
+-- PlusOrMinus: plus_or_minus_p
+
+plus_or_minus_p =
+  string " + " *> return Plus <|> string " - " *> return Minus
+  :: Parser PlusOrMinus
+
+-- AddSubExpr: 
+
+add_sub_expr_p =
+  add_sub_term_p >>= \term1 ->
+  many add_sub_op_term_pair_p >>= \op_term_pairs ->
+  return $ FirstAndOpTermPairs term1 op_term_pairs
+  :: Parser AddSubExpr
+
+add_sub_op_term_pair_p =
+  plus_or_minus_p >>= \op -> add_sub_term_p >>= \term -> return (op, term)
+  :: Parser (PlusOrMinus, AddSubTerm)
+
 -- EqualityTerm: equality_term_p
 
 equality_term_p =

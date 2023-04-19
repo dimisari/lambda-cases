@@ -2,7 +2,7 @@
 or_type PossiblyInt
 values int_wrapper<==(value: Int) | not_int
 
-identity: PossiblyInt -> PossiblyInt
+plus1: PossiblyInt -> PossiblyInt
   = cases
-    int_wrapper -> int_wrapper<==value
+    int_wrapper -> int_wrapper<==(value + 1)
     not_int -> not_int

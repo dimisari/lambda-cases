@@ -9,7 +9,7 @@ import ParsingTypes.LowLevel
 import ParsingTypes.Types (TypeName(..))
 
 import IntermediateTypes.Types
-import IntermediateTypes.TypeDefinitions (Field'(..), TypeInfo(..), int)
+import IntermediateTypes.TypeDefinitions (Field'(..), TypeInfo(..))
 
 import GenerationState.TypesAndOperations
 

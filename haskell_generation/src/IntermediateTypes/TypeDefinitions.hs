@@ -5,7 +5,7 @@ import Helpers ((.>))
 import ParsingTypes.LowLevel (ValueName)
 import ParsingTypes.Types (TypeName(..))
 
-import IntermediateTypes.Types (ValType(..), TypeApp(..))
+import IntermediateTypes.Types (ValType(..))
 
 -- All: Types, Show instances, Helpers
 
@@ -41,11 +41,3 @@ instance Show TypeConsAndVars' where
   show = \(TypeConsAndVars' type_name type_variables) ->
     show type_name ++ concatMap (snd .> (" " ++)) type_variables
 
--- Helpers: t_name_to_value_t'
-
-t_name_to_value_t = ( \type_name ->
-  TypeApp $ TypeConsAndInputs' type_name []
-  ) :: TypeName -> ValType
-
-int = t_name_to_value_t $ TN "Int"
-  :: ValType

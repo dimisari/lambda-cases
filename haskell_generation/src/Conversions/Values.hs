@@ -49,3 +49,16 @@ expr_to_base_value = ( \expr -> case expr of
           (BaseValue bv)))) -> bv
   _ -> Parenthesis $ InnerExpression $ expr
   ) :: OperatorExpression -> BaseValue
+
+-- AddSubExpr to AddSubOrTerm:
+
+add_sub_expr_conv = ( \(FirstAndOpTermPairs term1 op_term_pairs) ->
+  add_sub_help_fun op_term_pairs term1
+  ) :: AddSubExpr -> AddSubOrTerm
+
+add_sub_help_fun = ( \case
+  [] -> Term 
+  (op, term) : pairs -> \term1 -> case op of
+    Plus -> Addition $ ExprPlusTerm (add_sub_help_fun pairs term1) term
+    Minus -> Subtraction' $ ExprMinusTerm (add_sub_help_fun pairs term1) term
+  ) :: [ (PlusOrMinus, AddSubTerm) ] -> AddSubTerm -> AddSubOrTerm

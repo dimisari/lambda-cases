@@ -13,7 +13,7 @@ import ParsingTypes.Values
 
 import IntermediateTypes.Values
 import IntermediateTypes.Types 
-import IntermediateTypes.TypeDefinitions (TypeInfo(..), OrTypeCase'(..), int)
+import IntermediateTypes.TypeDefinitions (TypeInfo(..), OrTypeCase'(..))
 
 import Conversions.Types
 import Conversions.TypeDefinitions

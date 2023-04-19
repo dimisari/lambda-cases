@@ -48,6 +48,15 @@ data SubtractionTerm =
 data Subtraction =
   SubtractionTerms SubtractionTerm SubtractionTerm 
 
+data AddSubTerm =
+  Mult Multiplication | MultFactor MultiplicationFactor
+
+data PlusOrMinus = 
+  Plus | Minus
+
+data AddSubExpr =
+  FirstAndOpTermPairs AddSubTerm [ (PlusOrMinus, AddSubTerm) ]
+
 data EqualityTerm =
   Subtraction Subtraction | SubtractionTerm SubtractionTerm
 

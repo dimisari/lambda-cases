@@ -4,7 +4,7 @@ import Data.List (intercalate)
 
 import Helpers ((==>), (.>))
 
-import ParsingTypes.Types (TypeName)
+import ParsingTypes.Types (TypeName(..))
 
 -- All: Types, Show instances
 
@@ -39,3 +39,15 @@ instance Show ValType where
     TypeApp type_application -> show type_application
     ProdType types -> "(" ++ map show types==>intercalate ", " ++ ")"
     TypeVar int -> ["T1", "T2", "T3", "T4", "T5"] !! (int-1)
+
+-- Helpers: t_name_to_value_t
+
+t_name_to_value_t = ( \type_name ->
+  TypeApp $ TypeConsAndInputs' type_name []
+  ) :: TypeName -> ValType
+
+int = t_name_to_value_t $ TN "Int"
+  :: ValType
+
+bool = t_name_to_value_t $ TN "Bool"
+  :: ValType

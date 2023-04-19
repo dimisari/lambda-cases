@@ -14,13 +14,7 @@ import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..
 -- int, int_x_int, bool, int_to_int_to_int
 -- init_value_map, init_state
 
-int = TypeApp $ TypeConsAndInputs' (TN "Int") []
-  :: ValType
-
 int_x_int = ProdType [int, int]
-  :: ValType
-
-bool = TypeApp $ TypeConsAndInputs' (TN "Bool") []
   :: ValType
 
 int_to_int_to_int =
