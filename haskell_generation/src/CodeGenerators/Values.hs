@@ -201,15 +201,7 @@ cases_g = ( \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type ->
   return (indent ind_lev ++ "\\case\n" ++ cases_hs) 
   ) :: Cases -> ValType -> Stateful Haskell
 
-cases_g2 = ( \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type -> 
-  get_ind_lev >>= \ind_lev ->
-  update_ind_lev (ind_lev + 1) >>
-  cases_help_g2 (case1 : cases) maybe_def_case val_type >>= \cases_hs ->
-  update_ind_lev ind_lev >>
-  return (indent ind_lev ++ "\\case\n" ++ cases_hs) 
-  ) :: Cases -> ValType -> Stateful Haskell
-
-cases_help_g2 = ( \cases maybe_def_case val_type ->
+cases_help_g = ( \cases maybe_def_case val_type ->
   check_type val_type >>= \case
     IntInput out_t -> int_cases_g cases maybe_def_case out_t
     OrTypeInput or_type_names func_t ->
@@ -292,30 +284,8 @@ check_func_type = ( \func_type@(InAndOutTs in_t out_t) -> case in_t of
     "\ninstead of: some or_type, Int or Char \n"
   ) :: FuncType -> Stateful CasesTypeInfo
 
-cases_help_g = ( \cases maybe_def_case val_type -> case maybe_def_case of
-  Just default_case ->
-    mapM (flip not_last_case_g val_type) cases >>= \cases_hs ->
-    default_case_g default_case val_type >>= \default_case_hs ->
-    return $ intercalate "\n" $ cases_hs ++ [ default_case_hs ]
-  Nothing -> 
-    mapM (flip not_last_case_g val_type) (init cases) >>= \cases_hs ->
-    last_case_g (last cases) val_type >>= \last_case_hs ->
-    return $ intercalate "\n" $ cases_hs ++ [ last_case_hs ]
-  ) :: [ SpecificCase ] -> Maybe DefaultCase -> ValType -> Stateful Haskell
-
 cases_type_inference_g = (
-  \(CasesAndMaybeDefault case1 cases maybe_def_case) -> 
-  get_ind_lev >>= \ind_lev ->
-  update_ind_lev (ind_lev + 1) >>
-  specific_case_type_inference_g case1 >>= \(case1_hs, val_type) ->
-  mapM (flip not_last_case_g val_type) cases >>= \cases_hs ->
-  maybe_def_case_g maybe_def_case val_type >>= \maybe_def_case_hs ->
-  update_ind_lev ind_lev >>
-  return
-    ( indent ind_lev ++ "\\case\n" ++
-      intercalate "\n" ((case1_hs : cases_hs) ++ [maybe_def_case_hs])
-    , val_type
-    ) 
+  undefined
   ) :: Cases -> Stateful (Haskell, ValType)
 
 maybe_def_case_g = ( \maybe_def_case val_type -> case maybe_def_case of
@@ -389,7 +359,7 @@ insert_value_to_map = ( \(value_name, value_type, value_expr) ->
 -- CasesOrWhere: cases_or_where_g, cases_or_where_type_inference_g
 
 cases_or_where_g = ( \case
-  Cases cases -> cases_g2 cases
+  Cases cases -> cases_g cases
   Where where_ -> where_g where_
   ) :: CasesOrWhere -> ValType -> Stateful Haskell
 

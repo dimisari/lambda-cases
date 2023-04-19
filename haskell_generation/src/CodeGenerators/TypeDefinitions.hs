@@ -75,6 +75,7 @@ tuple_type_definition_g =
 
 or_type_case_g = (
   \(NameAndMaybeInT' case_name maybe_input_t) type_cons_and_vars ->
+  insert_to_or_t_cs case_name >>
   value_map_insert case_name (case_type_from maybe_input_t type_cons_and_vars) >>
   return
     ( "C" ++ show case_name ++

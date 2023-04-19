@@ -26,9 +26,8 @@ literal_g = ( \literal value_type ->
     False -> throwE $ literal_not_int_err value_type
   ) :: Literal -> ValType -> Stateful Haskell
 
-literal_type_inference_g = ( \literal ->
-  return (show literal, int)
-  ) :: Literal -> Stateful (Haskell, ValType)
+literal_type_inference_g = ( \literal -> return (show literal, int) )
+  :: Literal -> Stateful (Haskell, ValType)
 
 -- ValueName: value_name_g, value_name_type_inference_g
 
@@ -36,25 +35,19 @@ value_name_g = ( \value_name value_type ->
   value_map_get value_name >>= \map_val_type ->
   types_are_equivalent value_type map_val_type >>= \case
     False -> throwE $ type_check_err value_name value_type map_val_type
-    True ->
-      case value_type of
-        TypeApp (TypeConsAndInputs' type_name _) ->
-          type_map_get type_name >>= \case
-            OrType _ _ -> return $ "C" ++ value_name_to_hs value_name
-            _ -> return $ value_name_to_hs value_name
-        _ -> return $ value_name_to_hs value_name
+    True -> check_vn_in_or_t_cs_g value_name
   ) :: ValueName -> ValType -> Stateful Haskell
 
-value_name_type_inference_g = ( \value_name ->
+value_name_type_inference_g = ( \value_name -> 
   value_map_get value_name >>= \map_val_type ->
-  return (value_name_to_hs value_name, map_val_type)
+  check_vn_in_or_t_cs_g value_name >>= \value_name_hs ->
+  return (value_name_hs, map_val_type)
   ) :: ValueName -> Stateful (Haskell, ValType)
 
-value_name_to_hs = \case
-  VN "true" -> "True"
-  VN "false" -> "False"
-  value_name -> show value_name
-  :: ValueName -> Haskell
+check_vn_in_or_t_cs_g = ( \value_name -> in_or_t_cs value_name >>= \case
+  True -> return $ "C" ++ show value_name
+  _ -> return $ show value_name
+  ) :: ValueName -> Stateful Haskell
 
 -- Abstraction:
 -- abstraction_g, val_name_ins_and_ret, use_fields_g, field_and_val_type_g

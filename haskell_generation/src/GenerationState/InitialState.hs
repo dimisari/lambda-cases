@@ -49,5 +49,5 @@ init_type_map =
    [ (TN "Int", IntType) ]
   :: TypeMap
 
-init_state = GS 0 init_value_map init_type_map
+init_state = GS 0 init_value_map init_type_map []
   :: GenerationState

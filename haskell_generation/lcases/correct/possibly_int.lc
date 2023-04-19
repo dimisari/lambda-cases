@@ -1,8 +1,8 @@
 
 or_type PossiblyInt
-values from_int<==(value: Int) | not_int
+values int_wrapper<==(value: Int) | not_int
 
 identity: PossiblyInt -> PossiblyInt
   = cases
-    from_int -> from_int<==value
+    int_wrapper -> int_wrapper<==value
     not_int -> not_int

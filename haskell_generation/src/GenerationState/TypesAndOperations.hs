@@ -26,6 +26,7 @@ data GenerationState = GS
   { ind_lev :: Int
   , value_map :: ValueMap
   , type_map :: TypeMap
+  , or_type_cases :: [ ValueName ]
   }
 
 type Stateful = ExceptT Error (State GenerationState)
@@ -35,22 +36,24 @@ type Stateful = ExceptT Error (State GenerationState)
 get_from_state = ( \f -> get >>= f .> return )
   :: (GenerationState -> a) -> Stateful a
 
-(get_ind_lev, get_value_map, get_type_map) =
-  (ind_lev, value_map, type_map)==> \(i, vm, tm) ->
-  (get_from_state i, get_from_state vm, get_from_state tm)
-  :: (Stateful Int, Stateful ValueMap, Stateful TypeMap)
+(get_ind_lev, get_value_map, get_type_map, get_or_t_cs) =
+  (ind_lev, value_map, type_map, or_type_cases)==> \(i, vm, tm, otc) ->
+  (get_from_state i, get_from_state vm, get_from_state tm, get_from_state otc)
+  :: (Stateful Int, Stateful ValueMap, Stateful TypeMap, Stateful [ ValueName ])
 
 -- update fields: update_ind_lev, update_value_map, update_type_map
 
-(update_ind_lev, update_value_map, update_type_map
+(update_ind_lev, update_value_map, update_type_map, update_or_t_cs
   ) =
   ( \il -> modify ( \s -> s { ind_lev = il } )
   , \vm -> modify ( \s -> s { value_map = vm } ) 
   , \tm -> modify ( \s -> s { type_map = tm } )
+  , \otc -> modify ( \s -> s { or_type_cases = otc } )
   ) ::
   ( Int -> Stateful ()
   , ValueMap -> Stateful ()
   , TypeMap -> Stateful ()
+  , [ ValueName ] -> Stateful ()
   )
 
 -- value_map operations: value_map_insert, value_map_get
@@ -80,3 +83,12 @@ type_map_get = ( \type_name@(TN s) -> get_type_map >>= M.lookup type_name .> \ca
   Just foc -> return foc
   ) :: TypeName -> Stateful TypeInfo
 
+-- or_type_cases operations: 
+
+insert_to_or_t_cs = ( \value_name -> 
+  get_or_t_cs >>= (value_name:) .> update_or_t_cs
+  ) :: ValueName -> Stateful ()
+
+in_or_t_cs = ( \value_name ->
+  get_or_t_cs >>= elem value_name .> return
+  ) :: ValueName -> Stateful Bool

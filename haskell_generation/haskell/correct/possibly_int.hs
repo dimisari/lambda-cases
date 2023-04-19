@@ -87,10 +87,10 @@ instance HasFifth (a, b, c, d, e) e where
 -- Generated
 
 data PossiblyInt =
-  Cfrom_int Int | Cnot_int
+  Cint_wrapper Int | Cnot_int
   deriving Show
 
 identity :: PossiblyInt -> PossiblyInt
 identity = \case
-  Cfrom_int value -> from_int value
+  Cint_wrapper value -> Cint_wrapper value
   Cnot_int -> Cnot_int
