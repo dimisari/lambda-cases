@@ -108,7 +108,7 @@ add_sub_term_p =
 -- PlusOrMinus: plus_or_minus_p
 
 plus_or_minus_p =
-  string " + " *> return Plus <|> string " - " *> return Minus
+  try (string " + ") *> return Plus <|> try (string " - ") *> return Minus
   :: Parser PlusOrMinus
 
 -- AddSubExpr: 
@@ -133,15 +133,15 @@ equality_term_p =
 -- Equality: equality_p
 
 equality_p =
-  equality_term_p >>= \equality_term1 ->
-  string " = " >> equality_term_p >>= \equality_term2 ->
-  return $ EqualityTerms equality_term1 equality_term2
+  add_sub_expr_p >>= \add_sub_expr1 ->
+  string " = " >> add_sub_expr_p >>= \add_sub_expr2 ->
+  return $ EqualityTerms add_sub_expr1 add_sub_expr2
   :: Parser Equality
 
 -- PureOpExpr: pure_op_expr_p
 
 pure_op_expr_p =
-  Equality <$> try equality_p <|> EqualityTerm <$> equality_term_p
+  Equality <$> try equality_p <|> AddSubExpr <$> add_sub_expr_p
   :: Parser PureOpExpr
 
 -- InputOpExpr: input_op_expr_p

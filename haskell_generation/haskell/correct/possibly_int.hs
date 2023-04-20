@@ -90,7 +90,7 @@ data PossiblyInt =
   Cint_wrapper Int | Cnot_int
   deriving Show
 
-identity :: PossiblyInt -> PossiblyInt
-identity = \case
-  Cint_wrapper value -> Cint_wrapper value
+plus1 :: PossiblyInt -> PossiblyInt
+plus1 = \case
+  Cint_wrapper value -> Cint_wrapper (value + 1)
   Cnot_int -> Cnot_int

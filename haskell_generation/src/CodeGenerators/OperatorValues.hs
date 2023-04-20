@@ -256,6 +256,11 @@ add_sub_term_g = ( \case
   MultFactor mul_f -> multiplication_factor_g mul_f
   ) :: AddSubTerm -> ValType -> Stateful Haskell
 
+add_sub_term_type_inf_g = ( \case
+  Mult multiplication -> mult_type_inf_g multiplication
+  MultFactor mult_fac -> mult_factor_type_inf_g mult_fac
+  ) :: AddSubTerm -> Stateful (Haskell, ValType)
+
 -- PlusOrMinus: plus_or_minus_g 
 
 plus_or_minus_g = ( \case
@@ -268,11 +273,20 @@ plus_or_minus_g = ( \case
 add_sub_expr_g = add_sub_expr_conv .> add_sub_or_term_g
   :: AddSubExpr -> ValType -> Stateful Haskell
 
+add_sub_expr_type_inf_g = add_sub_expr_conv .> add_sub_or_term_type_inf_g
+  :: AddSubExpr -> Stateful (Haskell, ValType)
+
 add_sub_or_term_g = ( \case
   Addition addition -> addition_g addition
   Subtraction' subtraction -> subtraction'_g subtraction
   Term term -> add_sub_term_g term
   ) :: AddSubOrTerm -> ValType -> Stateful Haskell
+
+add_sub_or_term_type_inf_g = ( \case
+  Addition addition -> addition_g addition int >>= \hs -> return (hs, int)
+  Subtraction' subtr -> subtraction'_g subtr int >>= \hs -> return (hs, int)
+  Term term -> add_sub_term_type_inf_g term
+  ) :: AddSubOrTerm -> Stateful (Haskell, ValType)
 
 addition_g = ( \(ExprPlusTerm expr term) -> add_sub_g expr " + " term )
   :: Addition -> ValType -> Stateful Haskell
@@ -300,30 +314,30 @@ equ_term_type_inf_g = ( \case
 
 -- Equality: equality_g
 
-equality_g = ( \(EqualityTerms equality_term1 equality_term2) -> \case 
+equality_g = ( \(EqualityTerms term1 term2) -> \case 
   TypeApp (TypeConsAndInputs' (TN "Bool") []) ->
-    equality_term_g equality_term1 int >>= \equality_term1_hs ->
-    equality_term_g equality_term2 int >>= \equality_term2_hs ->
-    return $ equality_term1_hs ++ " == " ++ equality_term2_hs
+    add_sub_expr_g term1 int >>= \term1_hs ->
+    add_sub_expr_g term2 int >>= \term2_hs ->
+    return $ term1_hs ++ " == " ++ term2_hs
   _ -> undefined
   ) :: Equality -> ValType -> Stateful Haskell
 
-equality_type_inf_g = ( \(EqualityTerms equality_term1 equality_term2) ->
-  equality_term_g equality_term1 int >>= \equality_term1_hs ->
-  equality_term_g equality_term2 int >>= \equality_term2_hs ->
-  return (equality_term1_hs ++ " == " ++ equality_term2_hs, bool)
+equality_type_inf_g = ( \(EqualityTerms term1 term2) ->
+  add_sub_expr_g term1 int >>= \term1_hs ->
+  add_sub_expr_g term2 int >>= \term2_hs ->
+  return (term1_hs ++ " == " ++ term2_hs, bool)
   ) :: Equality -> Stateful (Haskell, ValType)
 
 -- PureOpExpr: pure_operator_expression_g, pure_op_expr_type_inf_g
 
 pure_operator_expression_g = ( \case
-  EqualityTerm equality_term -> equality_term_g equality_term
+  AddSubExpr add_sub_expr -> add_sub_expr_g add_sub_expr
   Equality equality -> equality_g equality
   ) :: PureOpExpr -> ValType -> Stateful Haskell
 
 pure_op_expr_type_inf_g = ( \case
+  AddSubExpr add_sub_expr -> add_sub_expr_type_inf_g add_sub_expr
   Equality equality -> equality_type_inf_g equality 
-  EqualityTerm equ_term -> equ_term_type_inf_g equ_term 
   ) :: PureOpExpr -> Stateful (Haskell, ValType)
 
 -- InputOpExpr: input_operator_expression_g, input_op_expr_type_inf_g

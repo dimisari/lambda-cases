@@ -61,10 +61,10 @@ data EqualityTerm =
   Subtraction Subtraction | SubtractionTerm SubtractionTerm
 
 data Equality =
-  EqualityTerms EqualityTerm EqualityTerm
+  EqualityTerms AddSubExpr AddSubExpr
 
 data PureOpExpr =
-  Equality Equality | EqualityTerm EqualityTerm
+  Equality Equality | AddSubExpr AddSubExpr
 
 data InputOpExpr =
   InputAndPureOpExpr Input PureOpExpr 
@@ -127,6 +127,20 @@ instance Show SubtractionTerm where
 instance Show Subtraction where
   show = \(SubtractionTerms term1 term2) -> show term1 ++ " - " ++ show term2
 
+instance Show AddSubTerm where
+  show = \case
+    Mult mult -> show mult
+    MultFactor mult_fac -> show mult_fac
+
+instance Show PlusOrMinus where
+  show = \case
+    Plus -> " + "
+    Minus -> " - "
+
+instance Show AddSubExpr where
+  show = \(FirstAndOpTermPairs term1 pairs) ->
+    show term1 ++ concatMap ( \(op, term) -> show op ++ show term ) pairs
+
 instance Show EqualityTerm where
   show = \case
     Subtraction subtraction -> show subtraction
@@ -138,7 +152,7 @@ instance Show Equality where
 instance Show PureOpExpr where
   show = \case
     Equality equality -> show equality
-    EqualityTerm equality_term -> show equality_term 
+    AddSubExpr add_sub_expr -> show add_sub_expr 
 
 instance Show InputOpExpr where
   show = \(InputAndPureOpExpr input pure_op_expr) ->
