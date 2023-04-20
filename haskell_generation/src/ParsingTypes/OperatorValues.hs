@@ -8,10 +8,9 @@ import ParsingTypes.LowLevel (Literal, ValueName, Input)
 
 -- Types:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain
--- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
--- EqualityTerm, Equality
--- PureOpExpr, InputOpExpr, OperatorExpression
+-- ApplicationDirection, FuncAppChain, MultiplicationFactor, Multiplication,
+-- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
+-- OperatorExpression
 
 newtype Parenthesis =
   InnerExpression OperatorExpression 
@@ -39,14 +38,7 @@ data MultiplicationFactor =
   FuncAppChain FuncAppChain | BaseValue BaseValue
 
 data Multiplication =
-  MultiplicationFactors
-    MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
-
-data SubtractionTerm =
-  Multiplication Multiplication | MultiplicationFactor MultiplicationFactor
-
-data Subtraction =
-  SubtractionTerms SubtractionTerm SubtractionTerm 
+  Factors MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
 
 data AddSubTerm =
   Mult Multiplication | MultFactor MultiplicationFactor
@@ -56,9 +48,6 @@ data PlusOrMinus =
 
 data AddSubExpr =
   FirstAndOpTermPairs AddSubTerm [ (PlusOrMinus, AddSubTerm) ]
-
-data EqualityTerm =
-  Subtraction Subtraction | SubtractionTerm SubtractionTerm
 
 data Equality =
   EqualityTerms AddSubExpr AddSubExpr
@@ -74,10 +63,9 @@ data OperatorExpression =
 
 -- Show instances:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain
--- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
--- EqualityTerm, Equality
--- PureOpExpr, InputOpExpr, OperatorExpression
+-- ApplicationDirection, FuncAppChain, MultiplicationFactor, Multiplication,
+-- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
+-- OperatorExpression
 
 instance Show Parenthesis where
   show = \(InnerExpression expr) -> "(" ++ show expr ++ ")"
@@ -116,16 +104,8 @@ instance Show MultiplicationFactor where
     BaseValue base_value -> show base_value
 
 instance Show Multiplication where
-  show = \(MultiplicationFactors f1 f2 fs) ->
+  show = \(Factors f1 f2 fs) ->
     (f1 : f2 : fs)==>map show==>intercalate " * "
-
-instance Show SubtractionTerm where
-  show = \case
-    Multiplication multiplication -> show multiplication
-    MultiplicationFactor multiplication_factor -> show multiplication_factor
-
-instance Show Subtraction where
-  show = \(SubtractionTerms term1 term2) -> show term1 ++ " - " ++ show term2
 
 instance Show AddSubTerm where
   show = \case
@@ -140,11 +120,6 @@ instance Show PlusOrMinus where
 instance Show AddSubExpr where
   show = \(FirstAndOpTermPairs term1 pairs) ->
     show term1 ++ concatMap ( \(op, term) -> show op ++ show term ) pairs
-
-instance Show EqualityTerm where
-  show = \case
-    Subtraction subtraction -> show subtraction
-    SubtractionTerm subtraction_term -> show subtraction_term
 
 instance Show Equality where
   show = \(EqualityTerms term1 term2) -> show term1 ++ " = " ++ show term2

@@ -7,10 +7,9 @@ import Parsers.LowLevel (literal_p, value_name_p, input_p)
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain
--- MultiplicationFactor, Multiplication, SubtractionTerm, Subtraction
--- EqualityTerm, Equality
--- PureOpExpr, InputOpExpr, OperatorExpression
+-- ApplicationDirection, FuncAppChain, MultiplicationFactor, Multiplication,
+-- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
+-- OperatorExpression
 
 -- Parenthesis: parenthesis_p
 
@@ -79,24 +78,9 @@ multiplication_factor_p =
 multiplication_p =
   multiplication_factor_p >>= \mul_factor1 ->
   string " * " >> multiplication_factor_p >>= \mul_factor2 ->
-  many (try $ string " * " >> multiplication_factor_p) >>= \mul_factors ->
-  return $ MultiplicationFactors mul_factor1 mul_factor2 mul_factors
+  many (try (string " * ") >> multiplication_factor_p) >>= \mul_factors ->
+  return $ Factors mul_factor1 mul_factor2 mul_factors
   :: Parser Multiplication
-
--- SubtractionTerm: subtraction_term_p
-
-subtraction_term_p =
-  Multiplication <$> try multiplication_p <|>
-  MultiplicationFactor <$> multiplication_factor_p
-  :: Parser SubtractionTerm
-
--- Subtraction: subtraction_p
-
-subtraction_p =
-  subtraction_term_p >>= \subtraction_term1 ->
-  string " - " >> subtraction_term_p >>= \subtraction_term2 ->
-  return $ SubtractionTerms subtraction_term1 subtraction_term2
-  :: Parser Subtraction
 
 -- AddSubTerm: add_sub_term_p
 
@@ -111,7 +95,7 @@ plus_or_minus_p =
   try (string " + ") *> return Plus <|> try (string " - ") *> return Minus
   :: Parser PlusOrMinus
 
--- AddSubExpr: 
+-- AddSubExpr: add_sub_expr_p, add_sub_op_term_pair_p
 
 add_sub_expr_p =
   add_sub_term_p >>= \term1 ->
@@ -122,13 +106,6 @@ add_sub_expr_p =
 add_sub_op_term_pair_p =
   plus_or_minus_p >>= \op -> add_sub_term_p >>= \term -> return (op, term)
   :: Parser (PlusOrMinus, AddSubTerm)
-
--- EqualityTerm: equality_term_p
-
-equality_term_p =
-  Subtraction <$> try subtraction_p <|>
-  SubtractionTerm <$> subtraction_term_p
-  :: Parser EqualityTerm
 
 -- Equality: equality_p
 
