@@ -8,7 +8,7 @@ import ParsingTypes.LowLevel (Literal, ValueName, Input)
 
 -- Types:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain, MultiplicationFactor, Multiplication,
+-- ApplicationDirection, FuncAppChain, Multiplication,
 -- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
 -- OperatorExpression
 
@@ -29,19 +29,13 @@ data ApplicationDirection =
   LeftApplication | RightApplication
 
 data FuncAppChain =
-  ValuesAndDirections
-    (BaseValue, ApplicationDirection)
-    [ (BaseValue, ApplicationDirection) ]
-    BaseValue
-
-data MultiplicationFactor =
-  FuncAppChain FuncAppChain | BaseValue BaseValue
+  ValuesAndDirections BaseValue [ (ApplicationDirection, BaseValue) ]
 
 data Multiplication =
-  Factors MultiplicationFactor MultiplicationFactor [ MultiplicationFactor ]
+  Factors FuncAppChain FuncAppChain [ FuncAppChain ]
 
 data AddSubTerm =
-  Mult Multiplication | MultFactor MultiplicationFactor
+  Mult Multiplication | FuncAppChain FuncAppChain
 
 data PlusOrMinus = 
   Plus | Minus
@@ -63,7 +57,7 @@ data OperatorExpression =
 
 -- Show instances:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain, MultiplicationFactor, Multiplication,
+-- ApplicationDirection, FuncAppChain, Multiplication,
 -- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
 -- OperatorExpression
 
@@ -92,16 +86,11 @@ instance Show ApplicationDirection where
     RightApplication -> "==>"
 
 instance Show FuncAppChain where
-  show = \(ValuesAndDirections base_val_app_dir base_val_app_dir_s base_val) ->
+  show = \(ValuesAndDirections base_val app_dir_base_val_s) ->
+    show base_val ++
     concatMap
-      ( \(base_val, app_dir) -> show base_val ++ show app_dir )
-      (base_val_app_dir : base_val_app_dir_s)
-    ++ show base_val
-
-instance Show MultiplicationFactor where
-  show = \case
-    FuncAppChain func_app_chain -> show func_app_chain
-    BaseValue base_value -> show base_value
+      ( \(app_dir, base_val) -> show app_dir ++ show base_val )
+      app_dir_base_val_s
 
 instance Show Multiplication where
   show = \(Factors f1 f2 fs) ->
@@ -110,7 +99,7 @@ instance Show Multiplication where
 instance Show AddSubTerm where
   show = \case
     Mult mult -> show mult
-    MultFactor mult_fac -> show mult_fac
+    FuncAppChain func_app_chain -> show func_app_chain
 
 instance Show PlusOrMinus where
   show = \case

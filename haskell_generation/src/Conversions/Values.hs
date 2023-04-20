@@ -7,22 +7,26 @@ import IntermediateTypes.Values
 -- FuncAppChain to ApplicationTree, MathApplication to ApplicationTree
 
 -- FuncAppChain to ApplicationTree:
--- func_app_chain_to_app_tree, func_app_chain_to_app_tree_help,
--- combine_with_reverse_direction
+-- func_app_chain_to_app_tree, fac_to_app_tree_help,
+-- combine
 
-func_app_chain_to_app_tree = ( \(ValuesAndDirections bv_ad bv_ads bv_last) ->
-  func_app_chain_to_app_tree_help bv_last (reverse $ bv_ad : bv_ads)
+func_app_chain_to_app_tree = (
+  \(ValuesAndDirections base_val app_dir_base_vals) ->
+  fac_to_app_tree_help base_val (reverse app_dir_base_vals)
   ) :: FuncAppChain -> ApplicationTree 
 
-func_app_chain_to_app_tree_help = ( \prev_bv -> \case
-  [] -> BaseValueLeaf prev_bv
-  (bv, ad) : bv_ads -> combine_with_reverse_direction
-    (BaseValueLeaf prev_bv) ad (func_app_chain_to_app_tree_help bv bv_ads)
-  ) :: BaseValue -> [ (BaseValue, ApplicationDirection) ] -> ApplicationTree 
+fac_to_app_tree_help = ( \base_val1 -> \case
+  [] -> BaseValueLeaf base_val1
+  (app_dir, base_val) : app_dir_base_vals ->
+    combine
+      (fac_to_app_tree_help base_val1 app_dir_base_vals)
+      app_dir
+      (BaseValueLeaf base_val)
+  ) :: BaseValue -> [ (ApplicationDirection, BaseValue) ] -> ApplicationTree 
 
-combine_with_reverse_direction = ( \at1 ad at2 -> case ad of 
-  LeftApplication -> Application $ ApplicationTrees at2 at1
-  RightApplication -> Application $ ApplicationTrees at1 at2
+combine = ( \at1 ad at2 -> case ad of 
+  LeftApplication -> Application $ ApplicationTrees at1 at2
+  RightApplication -> Application $ ApplicationTrees at2 at1
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
 
@@ -45,23 +49,23 @@ expr_to_base_value = ( \expr -> case expr of
   PureOpExpr
     (AddSubExpr
       (FirstAndOpTermPairs
-        (MultFactor
-          (BaseValue bv)
+        (FuncAppChain
+          (ValuesAndDirections base_val [])
         ) []
       )
-    ) -> bv
+    ) -> base_val
   _ -> Parenthesis $ InnerExpression $ expr
   ) :: OperatorExpression -> BaseValue
 
 -- AddSubExpr to AddSubOrTerm:
 
 add_sub_expr_conv = ( \(FirstAndOpTermPairs term1 op_term_pairs) ->
-  add_sub_help_fun op_term_pairs term1
+  add_sub_help_fun term1 op_term_pairs
   ) :: AddSubExpr -> AddSubOrTerm
 
-add_sub_help_fun = ( \case
-  [] -> Term 
-  (op, term) : pairs -> \term1 -> case op of
-    Plus -> Addition $ ExprPlusTerm (add_sub_help_fun pairs term1) term
-    Minus -> Subtraction' $ ExprMinusTerm (add_sub_help_fun pairs term1) term
-  ) :: [ (PlusOrMinus, AddSubTerm) ] -> AddSubTerm -> AddSubOrTerm
+add_sub_help_fun = ( \term1 -> \case
+  [] -> Term term1
+  (op, term) : pairs -> case op of
+    Plus -> Addition $ ExprPlusTerm (add_sub_help_fun term1 pairs) term
+    Minus -> Subtraction' $ ExprMinusTerm (add_sub_help_fun term1 pairs) term
+  ) :: AddSubTerm -> [ (PlusOrMinus, AddSubTerm) ] -> AddSubOrTerm

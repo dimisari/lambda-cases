@@ -198,27 +198,15 @@ application_handler = (
     _ -> throwE $ show tree1 ++ "\n" ++ show tree2 ++ "\n" ++ error_msg
   ) :: Application -> FuncType -> Error -> Stateful (Haskell, ValType)
 
--- MultiplicationFactor: multiplication_factor_g
-
-multiplication_factor_g = ( \case
-  FuncAppChain func_app_chain -> func_app_chain_g func_app_chain 
-  BaseValue base_value -> base_value_g base_value 
-  ) :: MultiplicationFactor -> ValType -> Stateful Haskell
-
-mult_factor_type_inf_g = ( \case
-  FuncAppChain func_app_chain ->  func_app_chain_type_inf_g func_app_chain 
-  BaseValue base_value -> base_value_type_inference_g base_value 
-  ) :: MultiplicationFactor -> Stateful (Haskell, ValType)
-
 -- Multiplication: multiplication_g
 
 multiplication_g = ( \(Factors mul_f1 mul_f2 mul_fs) val_type -> 
-  mapM (flip multiplication_factor_g val_type) (mul_f1 : mul_f2 : mul_fs) >>=
+  mapM (flip func_app_chain_g val_type) (mul_f1 : mul_f2 : mul_fs) >>=
   intercalate " * " .> return
   ) :: Multiplication -> ValType -> Stateful Haskell
 
 mult_type_inf_g = ( \(Factors mul_f1 mul_f2 mul_fs) -> 
-  mapM (flip multiplication_factor_g int) (mul_f1 : mul_f2 : mul_fs) >>=
+  mapM (flip func_app_chain_g int) (mul_f1 : mul_f2 : mul_fs) >>=
   intercalate " * " .> ( \hs -> return (hs, int) )
   ) :: Multiplication -> Stateful (Haskell, ValType)
 
@@ -226,12 +214,12 @@ mult_type_inf_g = ( \(Factors mul_f1 mul_f2 mul_fs) ->
 
 add_sub_term_g = ( \case
   Mult multiplication -> multiplication_g multiplication
-  MultFactor mul_f -> multiplication_factor_g mul_f
+  FuncAppChain func_app_chain -> func_app_chain_g func_app_chain
   ) :: AddSubTerm -> ValType -> Stateful Haskell
 
 add_sub_term_type_inf_g = ( \case
   Mult multiplication -> mult_type_inf_g multiplication
-  MultFactor mult_fac -> mult_factor_type_inf_g mult_fac
+  FuncAppChain func_app_chain -> func_app_chain_type_inf_g func_app_chain
   ) :: AddSubTerm -> Stateful (Haskell, ValType)
 
 -- AddSubExpr:

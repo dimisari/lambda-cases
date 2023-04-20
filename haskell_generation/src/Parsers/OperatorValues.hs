@@ -7,7 +7,7 @@ import Parsers.LowLevel (literal_p, value_name_p, input_p)
 
 -- All:
 -- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain, MultiplicationFactor, Multiplication,
+-- ApplicationDirection, FuncAppChain, Multiplication,
 -- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
 -- OperatorExpression
 
@@ -48,45 +48,38 @@ base_value_p =
 -- ApplicationDirection: application_direction_p
 
 application_direction_p = 
-  string "<==" *> return LeftApplication <|>
-  string "==>" *> return RightApplication
+  try (string "<==") *> return LeftApplication <|>
+  try (string "==>") *> return RightApplication
   :: Parser ApplicationDirection
 
 -- FuncAppChain: func_app_chain_p, base_val_app_dir_p
 
 func_app_chain_p =
-  base_val_app_dir_p >>= \base_val_app_dir ->
-  many (try base_val_app_dir_p) >>= \base_val_app_dirs ->
   base_value_p >>= \base_value ->
-  return $ ValuesAndDirections base_val_app_dir base_val_app_dirs base_value
+  many app_dir_base_val_p >>= \app_dir_base_vals ->
+  return $ ValuesAndDirections base_value app_dir_base_vals
   :: Parser FuncAppChain
 
-base_val_app_dir_p = 
-  base_value_p >>= \base_value ->
+app_dir_base_val_p = 
   application_direction_p >>= \application_direction ->
-  return (base_value, application_direction)
-  :: Parser (BaseValue, ApplicationDirection)
-
--- MultiplicationFactor: multiplication_factor_p
-
-multiplication_factor_p =
-  FuncAppChain <$> try func_app_chain_p <|> BaseValue <$> base_value_p
-  :: Parser MultiplicationFactor
+  base_value_p >>= \base_value ->
+  return (application_direction, base_value)
+  :: Parser (ApplicationDirection, BaseValue)
 
 -- Multiplication: multiplication_p
 
 multiplication_p =
-  multiplication_factor_p >>= \mul_factor1 ->
-  string " * " >> multiplication_factor_p >>= \mul_factor2 ->
-  many (try (string " * ") >> multiplication_factor_p) >>= \mul_factors ->
-  return $ Factors mul_factor1 mul_factor2 mul_factors
+  func_app_chain_p >>= \factor1 ->
+  string " * " >> func_app_chain_p >>= \factor2 ->
+  many (try (string " * ") >> func_app_chain_p) >>= \factors ->
+  return $ Factors factor1 factor2 factors
   :: Parser Multiplication
 
 -- AddSubTerm: add_sub_term_p
 
 add_sub_term_p =
   Mult <$> try multiplication_p <|>
-  MultFactor <$> multiplication_factor_p
+  FuncAppChain <$> func_app_chain_p
   :: Parser AddSubTerm
 
 -- PlusOrMinus: plus_or_minus_p
