@@ -69,7 +69,7 @@ field_name_and_type_p =
 -- TupleTypeDef: tuple_type_definition_p
 
 tuple_type_definition_p =
-  string "tuple_type " >> cons_and_type_vars_p >>= \cons_and_type_vars ->
+  try (string "tuple_type ") >> cons_and_type_vars_p >>= \cons_and_type_vars ->
   string "\nvalue (" >>
   (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
   string ")" >>
@@ -88,7 +88,7 @@ case_and_maybe_type_p =
 -- OrTypeDef: or_type_definition_p
 
 or_type_definition_p =
-  string "or_type " >> cons_and_type_vars_p >>= \cons_and_type_vars ->
+  try (string "or_type ") >> cons_and_type_vars_p >>= \cons_and_type_vars ->
   string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
   string " | " >> case_and_maybe_type_p >>= \case2 ->
   many (try $ string " | " >> case_and_maybe_type_p) >>= \cases ->

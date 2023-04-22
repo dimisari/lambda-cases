@@ -1,9 +1,9 @@
 
 or_type LeftT==>Or<==RightT
-values from_left<==(value: LeftT) | from_right<==(value: RightT)
+values left_wrapper<==(value: LeftT) | right_wrapper<==(value: RightT)
 
 or_type T==>OrNothing
-values from_type<==(value: T) | nothing
+values wrapper<==(value: T) | nothing
 
 tuple_type HeadAndTailOf(T)s
 value (head: T, tail: ListOf(T)s)

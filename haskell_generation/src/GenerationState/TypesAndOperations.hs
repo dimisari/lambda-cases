@@ -58,16 +58,24 @@ get_from_state = ( \f -> get >>= f .> return )
 
 -- value_map operations: value_map_insert, value_map_get
   
-value_map_insert = ( \vn vt ->
-  get_value_map >>= M.insertWith (++) vn [vt] .> update_value_map
+value_map_insert = ( \val_name val_type ->
+  get_value_map >>= M.insertWith (++) val_name [val_type] .> update_value_map
   ) :: ValueName -> ValType -> Stateful ()
 
-value_map_get = ( \vn -> get_value_map >>= M.lookup vn .> \case
-  Nothing -> throwE $ "No definition for value: " ++ show vn
+value_map_get = ( \val_name -> get_value_map >>= M.lookup val_name .> \case
+  Nothing -> throwE $ "No definition for value: " ++ show val_name
   Just vts -> case vts of
-    [] -> undefined
-    vt:_ -> return vt
+    [] -> throwE $ "No definition for value: " ++ show val_name
+    val_type:_ -> return val_type
   ) :: ValueName -> Stateful ValType
+
+value_map_remove = ( \val_name ->
+  get_value_map >>= \val_map -> 
+  M.lookup val_name val_map ==> \case
+    Just (_:t_list_tail) ->
+      update_value_map $ M.insert val_name t_list_tail val_map
+    _ -> error "removed from "
+  ) :: ValueName -> Stateful ()
 
 -- type_map operations: type_map_exists_check, type_map_insert, type_map_get
 

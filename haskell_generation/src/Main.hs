@@ -43,6 +43,7 @@ correct_names =
     , "pair"
     , "bool"
     , "possibly_int"
+    , "int_list"
     ]
   :: [ String ]
 
@@ -51,6 +52,7 @@ wrong_names =
   [ "bool"
   , "not_covered"
   , "duplicate"
+  , "out_of_scope"
   ]
   :: [ String ]
 
@@ -82,18 +84,18 @@ data ValuesOrTypeDef =
 newtype Program =
   ValsOrTypeDefsList [ ValuesOrTypeDef ]
 
--- Parsing: parse_lcases, parse_with, program_p, ntavs_or_type_def_p
+-- Parsing: parse_lcases, parse_with, program_p, values_or_type_def_p
 
 parse_lcases =
   parse program_p
   :: Path -> String -> Either ParseError Program
 
 program_p =
-  many (char '\n') *> (ValsOrTypeDefsList <$> many ntavs_or_type_def_p) <* eof
+  many (char '\n') *> (ValsOrTypeDefsList <$> many values_or_type_def_p) <* eof
   :: Parser Program
 
-ntavs_or_type_def_p =
-  (TypeDefinition <$> try type_definition_p <|> Values <$> values_p)
+values_or_type_def_p =
+  (TypeDefinition <$> type_definition_p <|> Values <$> values_p)
   <* eof_or_spicy_nls
   :: Parser ValuesOrTypeDef
 

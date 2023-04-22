@@ -86,16 +86,12 @@ instance HasFifth (a, b, c, d, e) e where
 
 -- Generated
 
-data PossiblyInt =
-  Cint_wrapper Int | Cnot_int
-  deriving Show
+a :: Int
+a = 
+  b where
+  b :: Int
+  b = 1
 
-plus1 :: PossiblyInt -> PossiblyInt
-plus1 = \case
-  Cint_wrapper value -> Cint_wrapper (value + 1)
-  Cnot_int -> Cnot_int
 
-any_func :: (Int -> Int) -> PossiblyInt -> PossiblyInt
-any_func = \f -> \case
-  Cint_wrapper value -> Cint_wrapper (f value)
-  Cnot_int -> Cnot_int
+c :: Int
+c = b

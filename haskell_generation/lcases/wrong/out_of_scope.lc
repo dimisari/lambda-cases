@@ -1,0 +1,10 @@
+
+a: Int
+  = let
+    b: Int 
+      = 1
+    output
+    b
+
+c: Int
+  = b

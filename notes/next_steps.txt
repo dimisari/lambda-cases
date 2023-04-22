@@ -1,8 +1,3 @@
-scope:
-- remove head when leaving scope
-- where?
-  - in where syntax for the values 
-
 fix:
 - cases at the end of one argument applications:
   optionMaybe or change the last type??
@@ -14,12 +9,11 @@ fix:
 cases:
 - "value" default for the value of each case that has a value:
   - use "...C value@(...)" in tuple_type cases
-  - use "...C value" in or_type cases
-  - use "...C" no value cases
-- check cases for or_type
 
 literals:
 - reals: I think I have it bookmarked in the browser somewhere
+- lists:
+  - need polymorphic lists and therefore type variables
 
 parentheses in the middle:
 - function definition

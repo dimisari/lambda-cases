@@ -68,7 +68,8 @@ tuple_values_field_types_g = ( \values types type_name ->
   get_ind_lev >>= \ind_lev ->
   zipWith operator_expression_g values types==>sequence
     >>= concatMap ( \value_hs ->  " (" ++ value_hs ++ ")" ) .> \values_hs -> 
-  return $ "\n" ++ indent (ind_lev + 1) ++ "C" ++ show type_name ++ values_hs
+  return $
+    "\n" ++ indent (ind_lev + 1) ++ "(C" ++ show type_name ++ values_hs ++ ")"
   ) :: [ OperatorExpression ] -> [ ValType ] -> TypeName -> Stateful Haskell
 
 tuple_values_types_g = ( \values types -> case length types == length values of

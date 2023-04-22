@@ -47,12 +47,15 @@ maybe_value_vn_g = ( \val_name val_type ->
   value_map_get val_name >>= \val_name_t ->
   types_are_equivalent val_name_t val_type >>= \case
     True -> return $ "C" ++ show val_name
-    False -> case val_name_t of 
-      FuncType (InAndOutTs in_t _) ->
-        value_map_insert (VN "value") in_t >>
-        return ("C" ++ show val_name ++ " value")
-      _ -> error
-        "case_with_value_vn_g: val_name_t not a FuncType, should be impossible"
+    False -> has_value_vn_g val_name val_name_t
+  ) :: ValueName -> ValType -> Stateful Haskell
+
+has_value_vn_g = ( \val_name -> \case
+  FuncType (InAndOutTs in_t _) ->
+    value_map_insert (VN "value") in_t >>
+    return ("C" ++ show val_name ++ " value")
+  _ -> error
+    "case_with_value_vn_g: val_name_t not a FuncType, should be impossible"
   ) :: ValueName -> ValType -> Stateful Haskell
 
 or_type_vn_g = ( \val_name names val_type ->
@@ -332,29 +335,40 @@ list_of_values_g = ( \values ->
 where_g = ( \(ValueExpressionWhereValues val_expr values) val_type ->
   get_ind_lev >>= \ind_lev -> update_ind_lev (ind_lev + 1) >>
   insert_values_to_map values >>
-  mapM values_g values >>= concat .> \ntavs_hs ->
+  mapM values_g values >>= concat .> \values_hs ->
   value_expression_g val_expr val_type >>= \val_expr_hs ->
+  remove_values_from_map values >>
   update_ind_lev ind_lev >>
-  return ("\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ ntavs_hs)
+  return ("\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ values_hs)
   ) :: Where -> ValType -> Stateful Haskell
 
 where_type_inference_g = ( \(ValueExpressionWhereValues val_expr values) ->
   get_ind_lev >>= \ind_lev -> update_ind_lev (ind_lev + 1) >>
   insert_values_to_map values >>
-  mapM values_g values >>= concat .> \ntavs_hs ->
+  mapM values_g values >>= concat .> \values_hs ->
   value_expression_type_inference_g val_expr >>= \(val_expr_hs, val_type) ->
+  remove_values_from_map values >>
   update_ind_lev ind_lev >>
   return
-    ("\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ ntavs_hs, val_type)
+    ( "\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ values_hs
+    , val_type
+    )
   ) :: Where -> Stateful (Haskell, ValType)
 
 insert_values_to_map = 
   concatMap values_to_list .> mapM_ insert_value_to_map
   :: [ Values ] -> Stateful ()
 
+remove_values_from_map = 
+  concatMap values_to_list .> mapM_ remove_value_from_map
+  :: [ Values ] -> Stateful ()
+
 insert_value_to_map = ( \(value_name, value_type, value_expr) ->
   value_map_insert value_name $ value_type_conversion value_type
   ) :: (ValueName, ValueType, ValueExpression) -> Stateful ()
+
+remove_value_from_map = ( \(value_name, _, _) -> value_map_remove value_name)
+  :: (ValueName, ValueType, ValueExpression) -> Stateful ()
 
 -- CasesOrWhere: cases_or_where_g, cases_or_where_type_inference_g
 

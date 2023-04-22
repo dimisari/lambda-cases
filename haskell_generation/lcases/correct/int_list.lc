@@ -1,0 +1,18 @@
+
+tuple_type IntHeadAndTail
+value (head: Int, tail: IntList)
+
+or_type IntList
+values head_and_tail<==(value: IntHeadAndTail) | empty
+
+apply_to_all: (Int -> Int, IntList) -> IntList
+  = f -> cases
+    empty -> empty
+    head_and_tail ->
+      (value==>get_head==>f, value==>get_tail==>apply_to_all(f))==>head_and_tail
+
+list: IntList 
+  = (1, (2, (3, (4, (5, empty)==>head_and_tail)==>head_and_tail)==>head_and_tail)==>head_and_tail)==>head_and_tail
+
+all_plus_1: IntList
+  = apply_to_all(x -> x + 1)<==list
