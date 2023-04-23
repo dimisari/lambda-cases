@@ -55,7 +55,7 @@ cart_prod_to_val_type = (
 
 type_application_conversion = ( 
   \(TypeConsAndInputs constructor_name left_type_inputs right_type_inputs) ->
-  TypeConsAndInputs' constructor_name $
+  ConsAndInTs constructor_name $
     left_type_inputs_conversion left_type_inputs ++
     right_type_inputs_conversion right_type_inputs
   ) :: TypeApplication -> TypeApp

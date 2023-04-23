@@ -86,27 +86,17 @@ instance HasFifth (a, b, c, d, e) e where
 
 -- Generated
 
-data IntHeadAndTail =
-  CIntHeadAndTail { get_head :: Int, get_tail :: IntList }
-  deriving Show
-
 data IntList =
-  Chead_and_tail IntHeadAndTail | Cempty
+  Cnon_empty (Int, IntList) | Cempty
   deriving Show
 
 apply_to_all :: (Int -> Int) -> IntList -> IntList
 apply_to_all = \f -> \case
   Cempty -> Cempty
-  Chead_and_tail value@(CIntHeadAndTail head tail) -> Chead_and_tail 
-    (CIntHeadAndTail (f (get_head value)) (apply_to_all f (get_tail value)))
+  Cnon_empty value@(first, second) -> Cnon_empty (f first, apply_to_all f second)
 
 list :: IntList
-list = Chead_and_tail 
-  (CIntHeadAndTail (1) (Chead_and_tail 
-  (CIntHeadAndTail (2) (Chead_and_tail 
-  (CIntHeadAndTail (3) (Chead_and_tail 
-  (CIntHeadAndTail (4) (Chead_and_tail 
-  (CIntHeadAndTail (5) (Cempty))))))))))
+list = Cnon_empty (1, Cnon_empty (2, Cnon_empty (3, Cnon_empty (4, Cnon_empty (5, Cempty)))))
 
 all_plus_1 :: IntList
 all_plus_1 = apply_to_all (\x -> x + 1) list

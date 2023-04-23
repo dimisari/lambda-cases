@@ -89,7 +89,7 @@ case_type_from = ( \maybe_input_t type_cons_and_vars -> case maybe_input_t of
   ) :: Maybe ValType -> TypeConsAndVars' -> ValType
 
 case_type_with_input_t = ( \input_t type_cons_and_vars -> case input_t of
-  TypeApp (TypeConsAndInputs' type_name []) ->
+  TypeApp (ConsAndInTs type_name []) ->
     type_name_to_type_var type_name type_cons_and_vars ==> \case
       Nothing -> final_type input_t type_cons_and_vars
       Just type_var -> final_type type_var type_cons_and_vars
@@ -138,7 +138,7 @@ type_definition_g = ( \case
 -- Helpers: type_g, cons_and_vars_to_val_type
 
 type_g = ( \value_type type_vars -> case value_type of
-  TypeApp (TypeConsAndInputs' type_name type_inputs) ->
+  TypeApp (ConsAndInTs type_name type_inputs) ->
     (type_name_g type_name type_vars ++
     concatMap (flip type_g type_vars .> (" " ++)) type_inputs) ==>
       case type_inputs of
@@ -153,7 +153,7 @@ cons_and_vars_to_val_type = ( \(TypeConsAndVars' type_name type_vars) ->
     :: [ ValType ]
   in
   TypeApp $
-    TypeConsAndInputs' type_name $ take (length type_vars) val_t_type_vars 
+    ConsAndInTs type_name $ take (length type_vars) val_t_type_vars 
   ) :: TypeConsAndVars' -> ValType
 
 type_name_to_type_var = ( \type_name type_cons_and_vars ->

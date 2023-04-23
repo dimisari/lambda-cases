@@ -1,0 +1,14 @@
+
+or_type IntList
+values non_empty<==(value: Int x IntList) | empty
+
+apply_to_all: (Int -> Int, IntList) -> IntList
+  = f -> cases
+    empty -> empty
+    non_empty -> (first==>f, apply_to_all(f)<==second)==>non_empty
+
+list: IntList 
+  = (1, (2, (3, (4, (5, empty)==>non_empty)==>non_empty)==>non_empty)==>non_empty)==>non_empty
+
+all_plus_1: IntList
+  = apply_to_all(x -> x + 1)<==list

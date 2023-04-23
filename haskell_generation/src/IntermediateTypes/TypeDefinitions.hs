@@ -40,4 +40,3 @@ data TypeInfo =
 instance Show TypeConsAndVars' where
   show = \(TypeConsAndVars' type_name type_variables) ->
     show type_name ++ concatMap (snd .> (" " ++)) type_variables
-

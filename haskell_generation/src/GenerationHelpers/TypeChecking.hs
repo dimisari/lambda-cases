@@ -16,8 +16,8 @@ import GenerationState.TypesAndOperations (Stateful, type_map_get)
 -- named_type_and_val_type_are_equivalent, type_name_to_val_type
 
 types_are_equivalent = ( \val_type1 val_type2 -> case (val_type1, val_type2) of
-  ( TypeApp (TypeConsAndInputs' type_name1 _) 
-    , TypeApp (TypeConsAndInputs' type_name2 _)) ->
+  ( TypeApp (ConsAndInTs type_name1 _) 
+    , TypeApp (ConsAndInTs type_name2 _)) ->
     type_names_are_equivalent type_name1 type_name2
   (ProdType types1, ProdType types2) ->
     prod_types_are_equivalent types1 types2
@@ -64,6 +64,6 @@ type_name_to_val_type = ( \type_name ->
       [ favt ] -> return $ get_type favt
       favt1 : favt2 : rest -> return $ ProdType $
         get_type favt1 : get_type favt2 : map get_type rest
-    IntType -> return $ TypeApp $ TypeConsAndInputs' (TN "Int") []
+    IntType -> return $ TypeApp $ ConsAndInTs (TN "Int") []
     _ -> undefined
   ) :: TypeName -> Stateful ValType

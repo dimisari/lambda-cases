@@ -47,7 +47,7 @@ paren_type_inference_g = ( \(InnerExpression expr) ->
 
 tuple_g = ( \(TupleExpressions val1 val2 vals) -> \case
   FuncType _ -> throwE "Tuple can't have function type"
-  TypeApp (TypeConsAndInputs' type_name _) ->
+  TypeApp (ConsAndInTs type_name _) ->
     tuple_values_type_name_g (val1 : val2 : vals) type_name
   ProdType types -> tuple_values_types_g (val1 : val2 : vals) types
   ) :: Tuple -> ValType -> Stateful Haskell
@@ -260,7 +260,7 @@ add_sub_g = ( \expr op term val_type ->
 -- Equality: equality_g
 
 equality_g = ( \(EqualityTerms term1 term2) -> \case 
-  TypeApp (TypeConsAndInputs' (TN "Bool") []) ->
+  TypeApp (ConsAndInTs (TN "Bool") []) ->
     add_sub_expr_g term1 int >>= \term1_hs ->
     add_sub_expr_g term2 int >>= \term2_hs ->
     return $ term1_hs ++ " == " ++ term2_hs

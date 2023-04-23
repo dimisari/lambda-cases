@@ -4,15 +4,8 @@ parsec:
 
 Questions:
 - String = ListOf(Char)s?
-- After type variables
-
-Function composition:
-- given:
-  - f0: Type0 -> Type1 
-  - f1: Type1 -> Type2 
-- we have:
-  f2: Type0 -> Type2
-    = f0 o> f1 
+  - After type variables
+  - Or hard coded
 
 Compilation targets to consider:
 - Haskell Core

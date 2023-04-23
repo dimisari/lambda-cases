@@ -98,7 +98,7 @@ apply_to_all :: (Int -> Int) -> IntList -> IntList
 apply_to_all = \f -> \case
   Cempty -> Cempty
   Chead_and_tail value@(CIntHeadAndTail head tail) -> Chead_and_tail 
-    (CIntHeadAndTail (f (get_head value)) (apply_to_all f (get_tail value)))
+    (CIntHeadAndTail (f head) (apply_to_all f tail))
 
 list :: IntList
 list = Chead_and_tail 

@@ -50,19 +50,19 @@ check_vn_in_or_t_cs_g = ( \value_name -> in_or_t_cs value_name >>= \case
   ) :: ValueName -> Stateful Haskell
 
 -- Abstraction:
--- abstraction_g, val_name_ins_and_ret, use_fields_g, field_and_val_type_g
+-- abstraction_g, val_n_ins_and_ret_hs, use_fields_g, field_ins_and_ret_hs
 
 abstraction_g = ( \case
-  AbstractionName value_name -> val_name_ins_and_ret value_name
+  AbstractionName value_name -> val_n_ins_and_ret_hs value_name
   UseFields -> use_fields_g
   ) :: Abstraction -> ValType -> Stateful Haskell
 
-val_name_ins_and_ret = ( \value_name value_type ->
+val_n_ins_and_ret_hs = ( \value_name value_type ->
   value_map_insert value_name value_type >> return (show value_name)
   ) :: ValueName -> ValType -> Stateful Haskell
 
 use_fields_g = ( \value_type -> case value_type of
-  TypeApp (TypeConsAndInputs' type_name _) ->
+  TypeApp (ConsAndInTs type_name _) ->
     use_fields_type_name_g type_name value_type
   ProdType types -> use_fields_prod_type_g types value_type
   _ -> undefined 
@@ -72,24 +72,24 @@ use_fields_type_name_g = ( \type_name value_type ->
   type_map_get type_name >>= \case
     TupleType _ fields -> 
       value_map_insert (VN "tuple") value_type >>
-      mapM field_and_val_type_g fields >>= \val_names ->
+      mapM field_ins_and_ret_hs fields >>= \val_names_hs ->
       return $
-        "tuple@(C" ++ show type_name ++ concatMap (" " ++) val_names ++ ")"
+        "tuple@(C" ++ show type_name ++ concatMap (" " ++) val_names_hs ++ ")"
     _ -> undefined
   ) :: TypeName -> ValType -> Stateful Haskell
 
 use_fields_prod_type_g = ( \types value_type ->
   value_map_insert (VN "tuple") value_type >>
-  zipWith val_name_ins_and_ret prod_type_fields types ==> sequence >>=
-    \val_names ->
-  return $ "(" ++ intercalate ", " val_names ++ ")"
+  zipWith val_n_ins_and_ret_hs prod_t_field_ns types ==> sequence >>=
+    \val_names_hs ->
+  return $ "(" ++ intercalate ", " val_names_hs ++ ")"
   ) :: [ ValType ] -> ValType -> Stateful Haskell
 
-prod_type_fields = map VN [ "first", "second", "third", "fourth", "fifth" ]
+prod_t_field_ns = map VN [ "first", "second", "third", "fourth", "fifth" ]
   :: [ ValueName ]
 
-field_and_val_type_g = ( \(NameAndType' field_name field_type) ->
-  val_name_ins_and_ret field_name field_type
+field_ins_and_ret_hs = ( \(NameAndType' field_name field_type) ->
+  val_n_ins_and_ret_hs field_name field_type
   ) :: Field' -> Stateful Haskell
 
 -- ManyAbstractions: many_abstractions_g

@@ -44,6 +44,8 @@ correct_names =
     , "bool"
     , "possibly_int"
     , "int_list"
+    , "int_list2"
+    , "int_list3"
     ]
   :: [ String ]
 
