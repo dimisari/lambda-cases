@@ -25,13 +25,13 @@ data Input =
 -- Show instances: ValueName, Literal, Abstraction, ManyAbstractions, Input
 
 instance Show ValueName where
-  show = \(VN n) -> n
+  show = \(VN val_name_str) -> val_name_str
 
 instance Show Literal where
   show = \case
     Integer integer -> show integer
-    Char char -> [ char ]
-    String string -> string
+    Char char -> show char
+    String string -> show string
 
 instance Show Abstraction where
   show = \case

@@ -31,10 +31,7 @@ string_p = char '"' *> many (noneOf ['"']) <* char '"'
 value_name_p =
   lower_or_under_p >>= \starting_char ->
   many (lower_or_under_p <|> digit) >>= \other_chars ->
-  let value_name = (starting_char : other_chars) in
-  elem value_name keywords ==> \case
-    True -> parserFail "keyword"
-    _ -> return $ VN value_name
+  return $ VN (starting_char : other_chars)
   :: Parser ValueName 
 
 lower_or_under_p = lower <|> char '_'
@@ -43,7 +40,8 @@ lower_or_under_p = lower <|> char '_'
 -- Abstraction: abstraction_p
 
 abstraction_p =
-  string "use_fields" *> return UseFields <|> AbstractionName <$> value_name_p
+  try (string "use_fields") *> return UseFields <|>
+  AbstractionName <$> value_name_p
   :: Parser Abstraction
 
 -- ManyAbstractions: many_abstractions_p

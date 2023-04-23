@@ -56,8 +56,8 @@ instance Show ProductType where
 
 instance Show InputTypeOrTypes where
   show = \case
-    OneInputType input_type -> show input_type
-    MultipleInputTypes multiple_inputs -> show multiple_inputs
+    OneInputType inp_t -> show inp_t
+    MultipleInputTypes mult_inp_ts -> show mult_inp_ts
 
 instance Show ManyTypesInParen where
   show = \(TypesInParen t1 t2 ts) ->
@@ -65,31 +65,30 @@ instance Show ManyTypesInParen where
 
 instance Show OutputType where
   show = \case
-    OutputTypeApp type_application -> show type_application
-    OutputProductType product_type -> show product_type
+    OutputTypeApp type_app -> show type_app
+    OutputProductType prod_type -> show prod_type
 
 instance Show FunctionType where
-  show = \(InAndOutTypes input_types output_type) ->
-    show input_types ++ " -> " ++ show output_type
+  show = \(InAndOutTypes inp_ts out_t) -> show inp_ts ++ " -> " ++ show out_t
 
 instance Show LeftTypeInputs where
   show = \case
     NoLeftTypeInputs -> ""
-    OneLeftTypeInput value_type -> show value_type ++ "==>"
-    ManyLeftTypeInputs many_ts_in_paren -> show many_ts_in_paren ++ "==>"
+    OneLeftTypeInput val_t -> show val_t ++ "==>"
+    ManyLeftTypeInputs ts_in_paren -> show ts_in_paren ++ "==>"
 
 instance Show RightTypeInputs where
   show = \case
     NoRightTypeInputs -> ""
-    OneRightTypeInput value_type -> "<==" ++ show value_type
-    ManyRightTypeInputs many_ts_in_paren -> "<=="  ++ show many_ts_in_paren
+    OneRightTypeInput val_t -> "<==" ++ show val_t
+    ManyRightTypeInputs ts_in_paren -> "<=="  ++ show ts_in_paren
 
 instance Show TypeApplication where
-  show = \(TypeConsAndInputs type_name left_type_inputs right_type_inputs) ->
-    show left_type_inputs ++ show type_name ++ show right_type_inputs
+  show = \(TypeConsAndInputs t_name left_t_inps right_t_inps) ->
+    show left_t_inps ++ show t_name ++ show right_t_inps
 
 instance Show ValueType where
   show = \case
-    FunctionType funcion_type -> show funcion_type
-    TypeApplication type_application -> show type_application
-    ProductType product_type -> show product_type
+    FunctionType func_type -> show func_type
+    TypeApplication type_app -> show type_app
+    ProductType prod_type -> show prod_type

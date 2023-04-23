@@ -1,0 +1,12 @@
+LowLevel:
+- String Literal:
+  - what type internally:
+    - hard coded String?
+    - ListOfChars ?
+- ManyAbstractions:
+  - what happens when multiple abstractions are "use_fields"?
+
+OperatorValues:
+- Merge Parenthesis and Tuple in ParenExpr?
+- Merge Multiplication and AddSubTerm?
+- Merge Equality and PureOpExpr?

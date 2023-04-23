@@ -69,16 +69,16 @@ instance Show Tuple where
     "(" ++ map show (expr1 : expr2 : exprs)==>intercalate ", " ++ ")"
 
 instance Show MathApplication where
-  show = \(NameAndInputExprs value_name expr1 exprs) ->
-    show value_name ++ "(" ++ (expr1 : exprs)==>map show==>intercalate ", " ++ ")"
+  show = \(NameAndInputExprs val_name expr1 exprs) ->
+    show val_name ++ "(" ++ (expr1 : exprs)==>map show==>intercalate ", " ++ ")"
 
 instance Show BaseValue where
   show = \case
-    Parenthesis parenthesis_value -> show parenthesis_value
+    Parenthesis paren_val -> show paren_val
     Tuple tuple -> show tuple
-    Literal literal -> show literal
-    ValueName value_name -> show value_name
-    MathApplication math_application -> show math_application
+    Literal lit -> show lit
+    ValueName val_name -> show val_name
+    MathApplication math_app -> show math_app
 
 instance Show ApplicationDirection where
   show = \case
@@ -89,8 +89,7 @@ instance Show FuncAppChain where
   show = \(ValuesAndDirections base_val app_dir_base_val_s) ->
     show base_val ++
     concatMap
-      ( \(app_dir, base_val) -> show app_dir ++ show base_val )
-      app_dir_base_val_s
+      ( \(app_dir, base_val) -> show app_dir ++ show base_val ) app_dir_base_val_s
 
 instance Show Multiplication where
   show = \(Factors f1 f2 fs) ->

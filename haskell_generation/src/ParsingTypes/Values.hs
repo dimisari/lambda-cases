@@ -48,32 +48,31 @@ data ValueExpression =
 
 instance Show LitOrValName where 
   show = \case
-    Literal literal -> show literal
-    ValueName value_name -> show value_name
+    Literal lit -> show lit
+    ValueName val_name -> show val_name
 
 instance Show SpecificCase where
-  show = \(SpecificCase lit_or_val_name value_expression) ->
-    show lit_or_val_name ++ " ->\n" ++ show value_expression ++ "\n"
+  show = \(SpecificCase lit_or_val_name val_expr) ->
+    show lit_or_val_name ++ " ->\n" ++ show val_expr ++ "\n"
 
 instance Show DefaultCase where
-  show = \(DefaultCase value_expression) ->
-    "... ->\n" ++ show value_expression ++ "\n"
+  show = \(DefaultCase val_expr) -> "... ->\n" ++ show val_expr ++ "\n"
 
 instance Show Cases where
-  show = \(CasesAndMaybeDefault case1 cases maybe_default_case) ->
-    "\ncases\n\n" ++ concatMap show (case1 : cases) ++ case maybe_default_case of
-      Just default_case -> show default_case
+  show = \(CasesAndMaybeDefault case1 cases maybe_def_case) ->
+    "\ncases\n\n" ++ concatMap show (case1 : cases) ++ case maybe_def_case of
+      Just def_case -> show def_case
       Nothing -> ""
 
 instance Show Values where
-  show = \(NamesTypesAndExpressions value_names value_types value_exprs) -> 
-    value_names==>map show==>intercalate ", " ++ ": " ++
-    value_types==>map show==>intercalate ", " ++ "\n  = " ++
-    value_exprs==>map show==>intercalate ", " ++ "\n\n"
+  show = \(NamesTypesAndExpressions val_names val_types val_exprs) -> 
+    val_names==>map show==>intercalate ", " ++ ": " ++
+    val_types==>map show==>intercalate ", " ++ "\n  = " ++
+    val_exprs==>map show==>intercalate ", " ++ "\n\n"
 
 instance Show Where where
-  show = \(ValueExpressionWhereValues value_expression values) -> 
-    "output\n" ++ show value_expression ++ "where\n" ++ show values 
+  show = \(ValueExpressionWhereValues val_expr values) -> 
+    "output\n" ++ show val_expr ++ "where\n" ++ show values 
 
 instance Show CasesOrWhere where
   show = \case
@@ -81,11 +80,11 @@ instance Show CasesOrWhere where
     Where where_ -> show where_
 
 instance Show InputCasesOrWhere where
-  show = \(InputAndCasesOrWhere input cases_or_where) ->
-    show input ++ " -> " ++ show cases_or_where
+  show = \(InputAndCasesOrWhere input cs_or_where) ->
+    show input ++ " -> " ++ show cs_or_where
 
 instance Show ValueExpression where
   show = \case
-    InputCasesOrWhere input_cases_or_where -> show input_cases_or_where
-    CasesOrWhere cases_or_where -> show cases_or_where
-    OperatorExpression operator_expression -> show operator_expression
+    InputCasesOrWhere inp_cs_or_where -> show inp_cs_or_where
+    CasesOrWhere cs_or_where -> show cs_or_where
+    OperatorExpression op_expr -> show op_expr

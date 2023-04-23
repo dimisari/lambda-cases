@@ -52,13 +52,13 @@ instance Show LeftTypeVars where
   show = \case
     NoLeftTypeVars -> ""
     OneLeftTypeVar type_name -> show type_name ++ "==>"
-    ManyLeftTypeVars many_t_names_in_paren -> show many_t_names_in_paren ++ "==>"
+    ManyLeftTypeVars t_names_in_paren -> show t_names_in_paren ++ "==>"
 
 instance Show RightTypeVars where
   show = \case
     NoRightTypeVars -> ""
     OneRightTypeVar type_name -> "<==" ++ show type_name
-    ManyRightTypeVars many_t_names_in_paren -> "<==" ++ show many_t_names_in_paren
+    ManyRightTypeVars t_names_in_paren -> "<==" ++ show t_names_in_paren
 
 instance Show TypeConsAndVars where
   show = \(TypeConsAndVars type_name left_type_vars right_type_vars) ->

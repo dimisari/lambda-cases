@@ -1,0 +1,9 @@
+- no "try" for better error messages:
+  - to remove "try" I need to figure out the longest common prefix and parse it
+    then
+    I need to pass it to the parsers that complete the rest respectively
+
+- <?> for better parsing error messages
+- what does it do exactly?
+
+- don't let TypeName inside paren in one_type_input_p
