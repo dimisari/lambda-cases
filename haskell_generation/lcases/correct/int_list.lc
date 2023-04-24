@@ -14,5 +14,5 @@ apply_to_all: (Int -> Int, IntList) -> IntList
 list: IntList 
   = (1, (2, (3, (4, (5, empty)==>head_and_tail)==>head_and_tail)==>head_and_tail)==>head_and_tail)==>head_and_tail
 
-all_plus_1: IntList
+res: IntList
   = apply_to_all(x -> x + 1)<==list

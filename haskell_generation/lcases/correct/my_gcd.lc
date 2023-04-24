@@ -6,3 +6,6 @@ gcd_help: (Int, Int) -> Int
   = x -> cases
     0 -> x
     y -> (y, x==>mod<==y)==>gcd_help
+
+res: Int
+  = 19728602432==>my_gcd<==437829011231234

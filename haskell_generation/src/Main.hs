@@ -1,5 +1,6 @@
 module Main where
 
+import System.Process (callCommand)
 import Text.Parsec (ParseError, (<|>), eof, many, parse, char, try)
 import Text.Parsec.String (Parser)
 import Control.Monad ((>=>))
@@ -33,7 +34,6 @@ type Path = String
 -- Constants:
 -- lcases_names, lcases_paths, generated_haskell_paths,
 -- in_out_path_pairs, haskell_header
-
 
 correct_names =
   map ("correct/" ++)
@@ -73,6 +73,22 @@ hs_paths =
 path_pairs = 
   zip paths hs_paths
   :: [ (Path, Path) ]
+
+correct_hs_paths =
+  map ( \s -> "haskell/" ++ s ++ ".hs" ) correct_names
+  :: [ String ]
+
+exec_paths = 
+  map ( \s -> "executables/" ++ s ) correct_names
+  :: [ String ]
+
+exec_path_pairs = 
+  zip correct_hs_paths exec_paths
+  :: [ (Path, Path) ]
+
+exec_path_pair_to_cmd = ( \(hs_path, exec_path) -> 
+  callCommand $ "ghc -o " ++ exec_path ++ " " ++ hs_path
+  ) :: (Path, Path) -> IO ()
 
 haskell_header =
   "haskell_headers/haskell_code_header.hs"
@@ -153,5 +169,8 @@ values_or_type_definition_g = ( \case
 -- main
 
 main =
-  mapM_ read_and_generate_example path_pairs
+  mapM_ read_and_generate_example path_pairs >>
+  mapM_ exec_path_pair_to_cmd exec_path_pairs >>
+  callCommand "rm haskell/correct/*.hi haskell/correct/*.o" >>
+  callCommand "for f in ./executables/correct/*; do echo \"\n$f\n\"; $f; done"
   :: IO ()

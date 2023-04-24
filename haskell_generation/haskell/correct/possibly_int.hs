@@ -103,3 +103,9 @@ any_func :: (Int -> Int) -> PossiblyInt -> PossiblyInt
 any_func = \f -> \case
   Cint_wrapper value -> Cint_wrapper (f value)
   Cnot_int -> Cnot_int
+
+plus2 :: PossiblyInt -> PossiblyInt
+plus2 = any_func (\x -> x + 2)
+
+res :: (PossiblyInt, PossiblyInt)
+res = (plus2 (Cint_wrapper 1), plus2 Cnot_int)

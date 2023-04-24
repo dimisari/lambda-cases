@@ -101,3 +101,6 @@ product = multiply (get_1st pair) (get_all_but_1st pair)
 
 multiply_by_2 :: Int -> Int
 multiply_by_2 = multiply 2
+
+res :: Int
+res = multiply_by_2 3

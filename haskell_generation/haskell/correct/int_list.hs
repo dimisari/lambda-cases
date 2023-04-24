@@ -112,5 +112,5 @@ list = Chead_and_tail
   (CIntHeadAndTail (4) (Chead_and_tail 
   (CIntHeadAndTail (5) (Cempty))))))))))
 
-all_plus_1 :: IntList
-all_plus_1 = apply_to_all (\x -> x + 1) list
+res :: IntList
+res = apply_to_all (\x -> x + 1) list

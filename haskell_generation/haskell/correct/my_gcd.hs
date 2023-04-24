@@ -97,3 +97,6 @@ gcd_help :: Int -> Int -> Int
 gcd_help = \x -> \case
   0 -> x
   y -> gcd_help (y) (mod x y)
+
+res :: Int
+res = my_gcd 19728602432 437829011231234

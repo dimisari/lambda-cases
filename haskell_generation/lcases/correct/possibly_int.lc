@@ -11,3 +11,9 @@ any_func: (Int -> Int, PossiblyInt) -> PossiblyInt
   = f -> cases
     int_wrapper -> value==>f==>int_wrapper
     not_int -> not_int
+
+plus2: PossiblyInt -> PossiblyInt
+  = any_func(x -> x + 2)
+
+res: PossiblyInt x PossiblyInt
+  = (1==>int_wrapper==>plus2, not_int==>plus2)

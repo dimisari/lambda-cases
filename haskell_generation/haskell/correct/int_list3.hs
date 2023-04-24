@@ -102,5 +102,5 @@ apply_to_all = \f -> \case
 list :: IntList
 list = Cnon_empty (1, Cnon_empty (2, Cnon_empty (3, Cnon_empty (4, Cnon_empty (5, Cempty)))))
 
-all_plus_1 :: IntList
-all_plus_1 = apply_to_all (\x -> x + 1) list
+res :: IntList
+res = apply_to_all (\x -> x + 1) list

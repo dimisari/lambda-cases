@@ -3,3 +3,6 @@ multiply, pair, product: (Int, Int) -> Int, Int x Int, Int
 
 multiply_by_2: Int -> Int
   = 2==>multiply
+
+res: Int 
+  = multiply_by_2<==3
