@@ -24,10 +24,9 @@ import GenerationHelpers.TypeChecking (types_are_equivalent)
 import CodeGenerators.LowLevel
 
 -- All:
--- Parenthesis, Tuple, MathApplication, BaseValue
--- FuncAppChain, MultiplicationFactor, Multiplication,
--- AddSubTerm, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
--- OperatorExpression
+-- Parenthesis, Tuple, MathApplication, BaseValue,
+-- FuncAppChain, MultExpr, AddSubExpr,
+-- Equality, PureOpExpr, InputOpExpr, OperatorExpression
 
 -- Parenthesis: parenthesis_g, paren_type_inference_g
 
@@ -199,70 +198,59 @@ application_handler = (
     _ -> throwE $ show tree1 ++ "\n" ++ show tree2 ++ "\n" ++ error_msg
   ) :: Application -> FuncType -> Error -> Stateful (Haskell, ValType)
 
--- Multiplication: multiplication_g
+-- MultExpr: mult_expr_g
 
-multiplication_g = ( \(Factors mul_f1 mul_f2 mul_fs) val_type -> 
-  mapM (flip func_app_chain_g val_type) (mul_f1 : mul_f2 : mul_fs) >>=
+mult_expr_g = ( \(Factors mul_f1 mul_fs) val_type -> 
+  mapM (flip func_app_chain_g val_type) (mul_f1 : mul_fs) >>=
   intercalate " * " .> return
-  ) :: Multiplication -> ValType -> Stateful Haskell
+  ) :: MultExpr -> ValType -> Stateful Haskell
 
-mult_type_inf_g = ( \(Factors mul_f1 mul_f2 mul_fs) -> 
-  mapM (flip func_app_chain_g int) (mul_f1 : mul_f2 : mul_fs) >>=
-  intercalate " * " .> ( \hs -> return (hs, int) )
-  ) :: Multiplication -> Stateful (Haskell, ValType)
-
--- AddSubTerm: add_sub_term_g
-
-add_sub_term_g = ( \case
-  Mult multiplication -> multiplication_g multiplication
-  FuncAppChain func_app_chain -> func_app_chain_g func_app_chain
-  ) :: AddSubTerm -> ValType -> Stateful Haskell
-
-add_sub_term_type_inf_g = ( \case
-  Mult multiplication -> mult_type_inf_g multiplication
-  FuncAppChain func_app_chain -> func_app_chain_type_inf_g func_app_chain
-  ) :: AddSubTerm -> Stateful (Haskell, ValType)
+mult_expr_type_inf_g = ( \(Factors mul_f1 mul_fs) -> 
+  undefined
+  ) :: MultExpr -> Stateful (Haskell, ValType)
 
 -- AddSubExpr:
 -- add_sub_expr_g, add_sub_expr_type_inf_g, add_sub_or_term_g,
 -- add_sub_expr_type_inf_g, addition_g, subtraction_g, add_sub_g
 
-add_sub_expr_g = add_sub_expr_conv .> add_sub_or_term_g
+add_sub_expr_g = add_sub_expr_conv .> add_sub_or_mexpr_g
   :: AddSubExpr -> ValType -> Stateful Haskell
 
 add_sub_expr_type_inf_g = add_sub_expr_conv .> add_sub_or_term_type_inf_g
   :: AddSubExpr -> Stateful (Haskell, ValType)
 
-add_sub_or_term_g = ( \case
+add_sub_or_mexpr_g = ( \case
   Addition addition -> addition_g addition
-  Subtraction' subtraction -> subtraction_g subtraction
-  Term term -> add_sub_term_g term
-  ) :: AddSubOrTerm -> ValType -> Stateful Haskell
+  Subtraction subtraction -> subtraction_g subtraction
+  MultExpr mult_expr -> mult_expr_g mult_expr
+  ) :: AddSubOrMExpr -> ValType -> Stateful Haskell
 
 add_sub_or_term_type_inf_g = ( \case
   Addition addition -> addition_g addition int >>= \hs -> return (hs, int)
-  Subtraction' subtr -> subtraction_g subtr int >>= \hs -> return (hs, int)
-  Term term -> add_sub_term_type_inf_g term
-  ) :: AddSubOrTerm -> Stateful (Haskell, ValType)
+  Subtraction subtr -> subtraction_g subtr int >>= \hs -> return (hs, int)
+  MultExpr mult_expr -> mult_expr_type_inf_g mult_expr
+  ) :: AddSubOrMExpr -> Stateful (Haskell, ValType)
 
-addition_g = ( \(ExprPlusTerm expr term) -> add_sub_g expr " + " term )
-  :: Addition -> ValType -> Stateful Haskell
+addition_g = ( \(ExprPlusMExpr expr mult_expr) ->
+  add_sub_g expr " + " mult_expr
+  ) :: Addition -> ValType -> Stateful Haskell
 
-subtraction_g = ( \(ExprMinusTerm expr term) -> add_sub_g expr " - " term )
-  :: Subtraction' -> ValType -> Stateful Haskell
+subtraction_g = ( \(ExprMinusMExpr expr mult_expr) ->
+  add_sub_g expr " - " mult_expr
+  ) :: Subtraction -> ValType -> Stateful Haskell
 
-add_sub_g = ( \expr op term val_type ->
-  add_sub_or_term_g expr val_type >>= \expr_hs ->
-  add_sub_term_g term val_type >>= \term_hs ->
+add_sub_g = ( \expr op mult_expr val_type ->
+  add_sub_or_mexpr_g expr val_type >>= \expr_hs ->
+  mult_expr_g mult_expr val_type >>= \term_hs ->
   return $ expr_hs ++ op ++ term_hs
-  ) :: AddSubOrTerm -> String -> AddSubTerm -> ValType -> Stateful Haskell
+  ) :: AddSubOrMExpr -> String -> MultExpr -> ValType -> Stateful Haskell
 
 -- Equality: equality_g
 
 equality_g = ( \(EqualityTerms term1 term2) -> \case 
   TypeApp (ConsAndInTs (TN "Bool") []) ->
     add_sub_expr_g term1 int >>= \term1_hs ->
-    add_sub_expr_g term2 int >>= \term2_hs ->
+    add_sub_expr_g  term2 int >>= \term2_hs ->
     return $ term1_hs ++ " == " ++ term2_hs
   _ -> undefined
   ) :: Equality -> ValType -> Stateful Haskell

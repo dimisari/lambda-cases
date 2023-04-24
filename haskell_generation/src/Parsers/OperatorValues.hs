@@ -6,10 +6,9 @@ import ParsingTypes.OperatorValues
 import Parsers.LowLevel (literal_p, value_name_p, input_p)
 
 -- All:
--- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain, Multiplication,
--- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
--- OperatorExpression
+-- Parenthesis, Tuple, MathApplication, BaseValue,
+-- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
+-- Equality, PureOpExpr, InputOpExpr, OperatorExpression
 
 -- Parenthesis: parenthesis_p
 
@@ -66,21 +65,13 @@ app_dir_base_val_p =
   return (application_direction, base_value)
   :: Parser (ApplicationDirection, BaseValue)
 
--- Multiplication: multiplication_p
+-- MultExpr: mult_expr_p
 
-multiplication_p =
-  func_app_chain_p >>= \factor1 ->
-  string " * " >> func_app_chain_p >>= \factor2 ->
-  many (try (string " * ") >> func_app_chain_p) >>= \factors ->
-  return $ Factors factor1 factor2 factors
-  :: Parser Multiplication
-
--- AddSubTerm: add_sub_term_p
-
-add_sub_term_p =
-  Mult <$> try multiplication_p <|>
-  FuncAppChain <$> func_app_chain_p
-  :: Parser AddSubTerm
+mult_expr_p = (
+  func_app_chain_p >>= \func_app_chain1 ->
+  many (try (string " * ") >> func_app_chain_p) >>= \func_app_chains ->
+  return $ Factors func_app_chain1 func_app_chains
+  ) :: Parser MultExpr
 
 -- PlusOrMinus: plus_or_minus_p
 
@@ -90,28 +81,28 @@ plus_or_minus_p =
 
 -- AddSubExpr: add_sub_expr_p, add_sub_op_term_pair_p
 
-add_sub_expr_p =
-  add_sub_term_p >>= \term1 ->
-  many add_sub_op_term_pair_p >>= \op_term_pairs ->
+add_sub_expr'_p =
+  mult_expr_p >>= \term1 ->
+  many op_mult_expr_pair_p >>= \op_term_pairs ->
   return $ FirstAndOpTermPairs term1 op_term_pairs
   :: Parser AddSubExpr
 
-add_sub_op_term_pair_p =
-  plus_or_minus_p >>= \op -> add_sub_term_p >>= \term -> return (op, term)
-  :: Parser (PlusOrMinus, AddSubTerm)
+op_mult_expr_pair_p =
+  plus_or_minus_p >>= \op -> mult_expr_p >>= \term -> return (op, term)
+  :: Parser (PlusOrMinus, MultExpr)
 
 -- Equality: equality_p
 
 equality_p =
-  add_sub_expr_p >>= \add_sub_expr1 ->
-  string " = " >> add_sub_expr_p >>= \add_sub_expr2 ->
+  add_sub_expr'_p >>= \add_sub_expr1 ->
+  string " = " >> add_sub_expr'_p >>= \add_sub_expr2 ->
   return $ EqualityTerms add_sub_expr1 add_sub_expr2
   :: Parser Equality
 
 -- PureOpExpr: pure_op_expr_p
 
 pure_op_expr_p =
-  Equality <$> try equality_p <|> AddSubExpr <$> add_sub_expr_p
+  Equality <$> try equality_p <|> AddSubExpr <$> add_sub_expr'_p
   :: Parser PureOpExpr
 
 -- InputOpExpr: input_op_expr_p
@@ -126,4 +117,3 @@ input_op_expr_p =
 operator_expression_p =
   InputOpExpr <$> try input_op_expr_p <|> PureOpExpr <$> pure_op_expr_p
   :: Parser OperatorExpression
-

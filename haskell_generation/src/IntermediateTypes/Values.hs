@@ -1,6 +1,6 @@
 module IntermediateTypes.Values where
 
-import ParsingTypes.OperatorValues (BaseValue, AddSubTerm)
+import ParsingTypes.OperatorValues (BaseValue, MultExpr)
 
 -- All: Application, ApplicationTree
 
@@ -13,10 +13,10 @@ data ApplicationTree =
   deriving Show
 
 data Addition = 
-  ExprPlusTerm AddSubOrTerm AddSubTerm
+  ExprPlusMExpr AddSubOrMExpr MultExpr
 
-data Subtraction' = 
-  ExprMinusTerm AddSubOrTerm AddSubTerm
+data Subtraction = 
+  ExprMinusMExpr AddSubOrMExpr MultExpr
 
-data AddSubOrTerm =
-  Addition Addition | Subtraction' Subtraction' | Term AddSubTerm
+data AddSubOrMExpr =
+  Addition Addition | Subtraction Subtraction | MultExpr MultExpr

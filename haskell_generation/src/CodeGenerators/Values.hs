@@ -176,7 +176,7 @@ cases_g = ( \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type ->
 cases_help_g = ( \cases maybe_def_case val_type ->
   check_type val_type >>= \case
     IntInput out_t -> int_cases_g cases maybe_def_case out_t
-    OrTypeInput or_type_names func_t ->
+    OrTInput or_type_names func_t ->
       check_or_type_scs cases >>= \pairs ->
       or_type_cases_g pairs maybe_def_case or_type_names func_t
   ) :: [ SpecificCase ] -> Maybe DefaultCase -> ValType -> Stateful Haskell
@@ -235,7 +235,7 @@ check_dup_vns = ( \case
   ) :: [ ValueName ] -> Stateful ()
 
 data CasesTypeInfo =
-  IntInput ValType | OrTypeInput [ ValueName ] FuncType
+  IntInput ValType | OrTInput [ ValueName ] FuncType
 
 check_type = ( \case
   FuncType func_type -> check_func_type func_type
@@ -248,7 +248,7 @@ check_func_type = ( \func_type@(InAndOutTs in_t out_t) -> case in_t of
   TypeApp (ConsAndInTs type_name []) ->
     type_map_get type_name >>= \case
       OrType _ or_cases ->
-        return $ OrTypeInput (map get_c_name or_cases) func_type
+        return $ OrTInput (map get_c_name or_cases) func_type
       IntType -> return $ IntInput out_t
       _ -> undefined
   other_t -> throwE $ 

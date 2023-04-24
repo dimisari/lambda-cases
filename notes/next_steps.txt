@@ -1,3 +1,8 @@
+test all examples at once
+
+add IO:
+- need monad and therefore type application?
+
 parentheses in the middle:
 - function definition
 - function application

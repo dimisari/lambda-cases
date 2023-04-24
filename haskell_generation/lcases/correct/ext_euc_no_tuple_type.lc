@@ -11,3 +11,6 @@ ee_recursion: (Int x Int, Int x Int, Int, Int) -> Int x Int x Int
         = use_fields -> (second, first - x==>div<==y * second)
       output
       (next<==a_coeffs, next<==b_coeffs, y, x==>mod<==y)==>ee_recursion
+
+res: Int x Int x Int
+  = 19728602432==>extended_euclidean<==437829011231234

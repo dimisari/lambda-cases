@@ -44,8 +44,7 @@ default_case_p =
 cases_p =
   string "cases" >> spicy_new_line >> specific_case_p >>= \case1 ->
   many (try $ spicy_new_line >> specific_case_p) >>= \cases ->
-  optionMaybe (try $ spicy_new_line >> default_case_p) >>=
-    \maybe_default_case ->
+  optionMaybe (try $ spicy_new_line >> default_case_p) >>= \maybe_default_case ->
   return $ CasesAndMaybeDefault case1 cases maybe_default_case
   :: Parser Cases
 
@@ -85,7 +84,7 @@ where_p =
 -- CasesOrWhere: cases_or_where_p
 
 cases_or_where_p = 
-  Cases <$> try cases_p <|> Where <$> where_p
+  Cases <$> cases_p <|> Where <$> where_p
   :: Parser CasesOrWhere
 
 -- InputCasesOrWhere: input_cases_or_where_p

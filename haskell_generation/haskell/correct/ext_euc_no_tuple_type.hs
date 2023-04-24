@@ -84,6 +84,10 @@ class HasFifth a b where
 instance HasFifth (a, b, c, d, e) e where
   get_5th = \(_, _, _, _, e) -> e
 
+-- main
+
+main = print res
+
 -- Generated
 
 extended_euclidean :: Int -> Int -> (Int, Int, Int)
@@ -97,3 +101,6 @@ ee_recursion = \a_coeffs b_coeffs x -> \case
     next :: (Int, Int) -> (Int, Int)
     next = \(first, second) -> (second, first - div x y * second)
 
+
+res :: (Int, Int, Int)
+res = extended_euclidean 19728602432 437829011231234

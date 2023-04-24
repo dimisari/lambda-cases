@@ -7,10 +7,9 @@ import ParsingTypes.LowLevel (Literal, ValueName, Input)
 -- All: Types, Show instances
 
 -- Types:
--- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain, Multiplication,
--- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
--- OperatorExpression
+-- Parenthesis, Tuple, MathApplication, BaseValue,
+-- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
+-- Equality, PureOpExpr, InputOpExpr, OperatorExpression
 
 newtype Parenthesis =
   InnerExpression OperatorExpression 
@@ -31,17 +30,14 @@ data ApplicationDirection =
 data FuncAppChain =
   ValuesAndDirections BaseValue [ (ApplicationDirection, BaseValue) ]
 
-data Multiplication =
-  Factors FuncAppChain FuncAppChain [ FuncAppChain ]
-
-data AddSubTerm =
-  Mult Multiplication | FuncAppChain FuncAppChain
+data MultExpr =
+  Factors FuncAppChain [ FuncAppChain ]
 
 data PlusOrMinus = 
   Plus | Minus
 
 data AddSubExpr =
-  FirstAndOpTermPairs AddSubTerm [ (PlusOrMinus, AddSubTerm) ]
+  FirstAndOpTermPairs MultExpr [ (PlusOrMinus, MultExpr) ]
 
 data Equality =
   EqualityTerms AddSubExpr AddSubExpr
@@ -56,10 +52,9 @@ data OperatorExpression =
   InputOpExpr InputOpExpr | PureOpExpr PureOpExpr
 
 -- Show instances:
--- Parenthesis, Tuple, MathApplication, BaseValue
--- ApplicationDirection, FuncAppChain, Multiplication,
--- AddSubTerm, PlusOrMinus, AddSubExpr, Equality, PureOpExpr, InputOpExpr,
--- OperatorExpression
+-- Parenthesis, Tuple, MathApplication, BaseValue,
+-- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
+-- Equality, PureOpExpr, InputOpExpr, OperatorExpression
 
 instance Show Parenthesis where
   show = \(InnerExpression expr) -> "(" ++ show expr ++ ")"
@@ -91,14 +86,8 @@ instance Show FuncAppChain where
     concatMap
       ( \(app_dir, base_val) -> show app_dir ++ show base_val ) app_dir_base_val_s
 
-instance Show Multiplication where
-  show = \(Factors f1 f2 fs) ->
-    (f1 : f2 : fs)==>map show==>intercalate " * "
-
-instance Show AddSubTerm where
-  show = \case
-    Mult mult -> show mult
-    FuncAppChain func_app_chain -> show func_app_chain
+instance Show MultExpr where
+  show = \(Factors f1 fs) -> (f1 : fs)==>map show==>intercalate " * "
 
 instance Show PlusOrMinus where
   show = \case

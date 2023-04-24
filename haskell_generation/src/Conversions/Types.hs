@@ -61,16 +61,16 @@ type_application_conversion = (
   ) :: TypeApplication -> TypeApp
 
 left_type_inputs_conversion = ( \case
-  NoLeftTypeInputs -> []
-  OneLeftTypeInput type_input -> [ value_type_conversion type_input ]
-  ManyLeftTypeInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren
-  ) :: LeftTypeInputs -> [ ValType ]
+  NoLeftTInputs -> []
+  OneLeftTInput type_input -> [ value_type_conversion type_input ]
+  ManyLeftTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren
+  ) :: LeftTInputs -> [ ValType ]
 
 right_type_inputs_conversion = ( \case
-  NoRightTypeInputs -> []
-  OneRightTypeInput type_input -> [ value_type_conversion type_input ]
-  ManyRightTypeInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren 
-  ) :: RightTypeInputs -> [ ValType ]
+  NoRightTInputs -> []
+  OneRightTInput type_input -> [ value_type_conversion type_input ]
+  ManyRightTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren 
+  ) :: RightTInputs -> [ ValType ]
 
 many_ts_in_paren_conv = ( \(TypesInParen t1 t2 ts) ->
   map value_type_conversion $ t1 : t2 : ts

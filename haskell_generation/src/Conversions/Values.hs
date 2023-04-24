@@ -47,25 +47,21 @@ base_vals_to_app_tree = ( \case
 
 expr_to_base_value = ( \expr -> case expr of
   PureOpExpr
-    (AddSubExpr
-      (FirstAndOpTermPairs
-        (FuncAppChain
-          (ValuesAndDirections base_val [])
-        ) []
-      )
+    ( AddSubExpr
+      (FirstAndOpTermPairs (Factors (ValuesAndDirections base_val []) []) [])
     ) -> base_val
   _ -> Parenthesis $ InnerExpression $ expr
   ) :: OperatorExpression -> BaseValue
 
--- AddSubExpr to AddSubOrTerm:
+-- AddSubExpr to AddSubOrMExpr:
 
-add_sub_expr_conv = ( \(FirstAndOpTermPairs term1 op_term_pairs) ->
-  add_sub_help_fun term1 op_term_pairs
-  ) :: AddSubExpr -> AddSubOrTerm
+add_sub_expr_conv = ( \(FirstAndOpTermPairs mult_expr1 op_term_pairs) ->
+  add_sub_help_fun mult_expr1 op_term_pairs
+  ) :: AddSubExpr -> AddSubOrMExpr
 
-add_sub_help_fun = ( \term1 -> \case
-  [] -> Term term1
+add_sub_help_fun = ( \mult_expr1 -> \case
+  [] -> MultExpr mult_expr1
   (op, term) : pairs -> case op of
-    Plus -> Addition $ ExprPlusTerm (add_sub_help_fun term1 pairs) term
-    Minus -> Subtraction' $ ExprMinusTerm (add_sub_help_fun term1 pairs) term
-  ) :: AddSubTerm -> [ (PlusOrMinus, AddSubTerm) ] -> AddSubOrTerm
+    Plus -> Addition $ ExprPlusMExpr (add_sub_help_fun mult_expr1 pairs) term
+    Minus -> Subtraction $ ExprMinusMExpr (add_sub_help_fun mult_expr1 pairs) term
+  ) :: MultExpr -> [ (PlusOrMinus, MultExpr) ] -> AddSubOrMExpr

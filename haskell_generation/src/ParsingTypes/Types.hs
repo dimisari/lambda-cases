@@ -8,7 +8,7 @@ import Helpers ((==>))
 -- Types:
 -- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParen, OutputType,
 -- FunctionType
--- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType
+-- LeftTInputs, RightTInputs, TypeApplication, ValueType
 
 newtype TypeName =
   TN String deriving (Eq, Ord)
@@ -28,16 +28,14 @@ data OutputType =
 data FunctionType =
   InAndOutTypes InputTypeOrTypes OutputType
 
-data LeftTypeInputs = 
-  NoLeftTypeInputs | OneLeftTypeInput ValueType |
-  ManyLeftTypeInputs ManyTypesInParen
+data LeftTInputs = 
+  NoLeftTInputs | OneLeftTInput ValueType | ManyLeftTInputs ManyTypesInParen
 
-data RightTypeInputs = 
-  NoRightTypeInputs | OneRightTypeInput ValueType |
-  ManyRightTypeInputs ManyTypesInParen
+data RightTInputs = 
+  NoRightTInputs | OneRightTInput ValueType | ManyRightTInputs ManyTypesInParen
 
 data TypeApplication =
-  TypeConsAndInputs TypeName LeftTypeInputs RightTypeInputs
+  TypeConsAndInputs TypeName LeftTInputs RightTInputs
 
 data ValueType =
   FunctionType FunctionType | ProductType ProductType |
@@ -46,7 +44,7 @@ data ValueType =
 -- Show instances:
 -- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParen, OutputType,
 -- FunctionType
--- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType
+-- LeftTInputs, RightTInputs, TypeApplication, ValueType
 
 instance Show TypeName where
   show = \(TN name) -> name
@@ -56,8 +54,8 @@ instance Show ProductType where
 
 instance Show InputTypeOrTypes where
   show = \case
-    OneInputType inp_t -> show inp_t
-    MultipleInputTypes mult_inp_ts -> show mult_inp_ts
+    OneInputType in_t -> show in_t
+    MultipleInputTypes mult_in_ts -> show mult_in_ts
 
 instance Show ManyTypesInParen where
   show = \(TypesInParen t1 t2 ts) ->
@@ -69,19 +67,19 @@ instance Show OutputType where
     OutputProductType prod_type -> show prod_type
 
 instance Show FunctionType where
-  show = \(InAndOutTypes inp_ts out_t) -> show inp_ts ++ " -> " ++ show out_t
+  show = \(InAndOutTypes in_ts out_t) -> show in_ts ++ " -> " ++ show out_t
 
-instance Show LeftTypeInputs where
+instance Show LeftTInputs where
   show = \case
-    NoLeftTypeInputs -> ""
-    OneLeftTypeInput val_t -> show val_t ++ "==>"
-    ManyLeftTypeInputs ts_in_paren -> show ts_in_paren ++ "==>"
+    NoLeftTInputs -> ""
+    OneLeftTInput val_t -> show val_t ++ "==>"
+    ManyLeftTInputs ts_in_paren -> show ts_in_paren ++ "==>"
 
-instance Show RightTypeInputs where
+instance Show RightTInputs where
   show = \case
-    NoRightTypeInputs -> ""
-    OneRightTypeInput val_t -> "<==" ++ show val_t
-    ManyRightTypeInputs ts_in_paren -> "<=="  ++ show ts_in_paren
+    NoRightTInputs -> ""
+    OneRightTInput val_t -> "<==" ++ show val_t
+    ManyRightTInputs ts_in_paren -> "<=="  ++ show ts_in_paren
 
 instance Show TypeApplication where
   show = \(TypeConsAndInputs t_name left_t_inps right_t_inps) ->

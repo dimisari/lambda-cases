@@ -7,7 +7,7 @@ import ParsingTypes.Types
 -- All:
 -- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParen, OutputType,
 -- FunctionType,
--- LeftTypeInputs, RightTypeInputs, TypeApplication, ValueType, Helpers
+-- LeftTInputs, RightTInputs, TypeApplication, ValueType, Helpers
 
 -- TypeName: type_name_p
 
@@ -69,31 +69,31 @@ function_type_p =
   return $ InAndOutTypes input output
   :: Parser FunctionType
 
--- LeftTypeInputs: left_type_inputs_p, some_left_type_inputs_p
+-- LeftTInputs: left_type_inputs_p, some_left_type_inputs_p
 
 left_type_inputs_p =
-  option NoLeftTypeInputs $ try some_left_type_inputs_p
-  :: Parser LeftTypeInputs
+  option NoLeftTInputs $ try some_left_type_inputs_p
+  :: Parser LeftTInputs
 
 some_left_type_inputs_p =
-  ( try (ManyLeftTypeInputs <$> many_types_in_parenthesis_p) <|>
-    OneLeftTypeInput <$> one_type_input_p
+  ( try (ManyLeftTInputs <$> many_types_in_parenthesis_p) <|>
+    OneLeftTInput <$> one_type_input_p
   )
   <* string "==>"
-  :: Parser LeftTypeInputs
+  :: Parser LeftTInputs
 
--- RightTypeInputs: right_type_inputs_p, some_right_type_inputs_p
+-- RightTInputs: right_type_inputs_p, some_right_type_inputs_p
 
 right_type_inputs_p =
-  option NoRightTypeInputs $ try some_right_type_inputs_p
-  :: Parser RightTypeInputs
+  option NoRightTInputs $ try some_right_type_inputs_p
+  :: Parser RightTInputs
 
 some_right_type_inputs_p =
   string "<==" *>
-  ( try (ManyRightTypeInputs <$> many_types_in_parenthesis_p) <|>
-    OneRightTypeInput <$> one_type_input_p
+  ( try (ManyRightTInputs <$> many_types_in_parenthesis_p) <|>
+    OneRightTInput <$> one_type_input_p
   )
-  :: Parser RightTypeInputs
+  :: Parser RightTInputs
 
 -- TypeApplication: type_application_p
 
@@ -119,5 +119,5 @@ one_type_input_p =
 
 type_name_to_value_type = ( \type_name ->
   TypeApplication $
-    TypeConsAndInputs type_name NoLeftTypeInputs NoRightTypeInputs
+    TypeConsAndInputs type_name NoLeftTInputs NoRightTInputs
   ) :: TypeName -> ValueType

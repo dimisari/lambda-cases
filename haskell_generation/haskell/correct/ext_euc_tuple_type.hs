@@ -84,6 +84,10 @@ class HasFifth a b where
 instance HasFifth (a, b, c, d, e) e where
   get_5th = \(_, _, _, _, e) -> e
 
+-- main
+
+main = print res
+
 -- Generated
 
 data PrevCoeffs =
@@ -115,3 +119,6 @@ ee_recursion = \a_coeffs b_coeffs x -> \case
     next = \tuple@(CPrevCoeffs prev_prev prev) -> 
       (CPrevCoeffs (prev) (prev_prev - div x y * prev))
 
+
+res :: GcdAndCoeffs
+res = extended_euclidean 19728602432 437829011231234

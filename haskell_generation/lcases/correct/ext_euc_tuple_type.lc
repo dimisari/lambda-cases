@@ -20,3 +20,6 @@ ee_recursion: (PrevCoeffs, PrevCoeffs, Int, Int) -> GcdAndCoeffs
         = use_fields -> (prev, prev_prev - x==>div<==y * prev)
       output
       (a_coeffs==>next, b_coeffs==>next, y, x==>mod<==y)==>ee_recursion
+
+res: GcdAndCoeffs
+  = 19728602432==>extended_euclidean<==437829011231234

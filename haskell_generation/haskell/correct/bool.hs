@@ -84,6 +84,10 @@ class HasFifth a b where
 instance HasFifth (a, b, c, d, e) e where
   get_5th = \(_, _, _, _, e) -> e
 
+-- main
+
+main = print res
+
 -- Generated
 
 data Boolean =
@@ -100,3 +104,6 @@ f :: Boolean -> Boolean
 f = \case
   Cmy_true -> Cmy_false
   Cmy_false -> Cmy_true
+
+res :: Boolean
+res = f b
