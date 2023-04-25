@@ -351,7 +351,8 @@ cases_or_where_type_inference_g = ( \case
 abstraction_cases_or_where_g = ( \(InputAndCasesOrWhere input cases_or_where) ->
   input_g input >=> \(output_type, input_hs) ->
   cases_or_where_g cases_or_where output_type >>= \cases_or_where_hs ->
-  return $ input_hs ++ cases_or_where_hs
+  input_val_map_remove input >>
+  return (input_hs ++ cases_or_where_hs)
   ) :: InputCasesOrWhere -> ValType -> Stateful Haskell
 
 abstraction_cow_type_inference_g = ( 

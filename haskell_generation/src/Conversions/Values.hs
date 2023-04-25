@@ -7,8 +7,7 @@ import IntermediateTypes.Values
 -- FuncAppChain to ApplicationTree, MathApplication to ApplicationTree
 
 -- FuncAppChain to ApplicationTree:
--- func_app_chain_to_app_tree, fac_to_app_tree_help,
--- combine
+-- func_app_chain_to_app_tree, fac_to_app_tree_help, combine
 
 func_app_chain_to_app_tree = (
   \(ValuesAndDirections base_val app_dir_base_vals) ->

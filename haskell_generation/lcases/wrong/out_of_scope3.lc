@@ -1,0 +1,6 @@
+
+a: Int x Int -> Int x Int
+  = use_fields -> tuple
+
+b: Int x Int
+  = tuple

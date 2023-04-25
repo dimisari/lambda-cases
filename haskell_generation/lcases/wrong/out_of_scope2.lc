@@ -1,0 +1,6 @@
+
+a: Int -> Int
+  = b -> b
+
+c: Int
+  = b

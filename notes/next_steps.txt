@@ -1,5 +1,3 @@
-test all examples at once
-
 add IO:
 - need monad and therefore type application?
 

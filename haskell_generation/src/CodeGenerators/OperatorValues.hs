@@ -276,10 +276,11 @@ pure_op_expr_type_inf_g = ( \case
 -- InputOpExpr: input_operator_expression_g, input_op_expr_type_inf_g
 
 input_operator_expression_g = (
-  \(InputAndPureOpExpr input operator_expr) ->
-  input_g input >=> \(output_type, input_hs) ->
-  pure_operator_expression_g operator_expr output_type >>= \op_expr_hs ->
-  return $ input_hs ++ op_expr_hs
+  \(InputAndPureOpExpr input op_expr) ->
+  input_g input >=> \(out_t, input_hs) ->
+  pure_operator_expression_g op_expr out_t >>= \op_expr_hs ->
+  input_val_map_remove input >>
+  return (input_hs ++ op_expr_hs)
   ) :: InputOpExpr -> ValType -> Stateful Haskell
 
 input_op_expr_type_inf_g = ( \(InputAndPureOpExpr as opval) ->
@@ -290,11 +291,11 @@ input_op_expr_type_inf_g = ( \(InputAndPureOpExpr as opval) ->
 
 operator_expression_g = ( \case
   InputOpExpr input_op_expr -> input_operator_expression_g input_op_expr
-  PureOpExpr operator_expr -> pure_operator_expression_g operator_expr
+  PureOpExpr op_expr -> pure_operator_expression_g op_expr
   ) :: OperatorExpression -> ValType -> Stateful Haskell
 
 op_expr_type_inf_g = ( \case
   InputOpExpr input_op_expr -> input_op_expr_type_inf_g input_op_expr
-  PureOpExpr operator_expr -> pure_op_expr_type_inf_g operator_expr
+  PureOpExpr op_expr -> pure_op_expr_type_inf_g op_expr
   ) :: OperatorExpression -> Stateful (Haskell, ValType)
 

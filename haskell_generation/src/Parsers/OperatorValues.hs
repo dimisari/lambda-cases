@@ -81,7 +81,7 @@ plus_or_minus_p =
 
 -- AddSubExpr: add_sub_expr_p, add_sub_op_term_pair_p
 
-add_sub_expr'_p =
+add_sub_expr_p =
   mult_expr_p >>= \term1 ->
   many op_mult_expr_pair_p >>= \op_term_pairs ->
   return $ FirstAndOpTermPairs term1 op_term_pairs
@@ -94,15 +94,15 @@ op_mult_expr_pair_p =
 -- Equality: equality_p
 
 equality_p =
-  add_sub_expr'_p >>= \add_sub_expr1 ->
-  string " = " >> add_sub_expr'_p >>= \add_sub_expr2 ->
+  add_sub_expr_p >>= \add_sub_expr1 ->
+  string " = " >> add_sub_expr_p >>= \add_sub_expr2 ->
   return $ EqualityTerms add_sub_expr1 add_sub_expr2
   :: Parser Equality
 
 -- PureOpExpr: pure_op_expr_p
 
 pure_op_expr_p =
-  Equality <$> try equality_p <|> AddSubExpr <$> add_sub_expr'_p
+  Equality <$> try equality_p <|> AddSubExpr <$> add_sub_expr_p
   :: Parser PureOpExpr
 
 -- InputOpExpr: input_op_expr_p

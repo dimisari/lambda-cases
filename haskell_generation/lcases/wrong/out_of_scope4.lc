@@ -1,0 +1,9 @@
+
+a: (Int, Int) -> Int
+  = b -> cases 
+    0 -> b
+    1 -> b
+    ... -> b
+
+c: Int
+  = b

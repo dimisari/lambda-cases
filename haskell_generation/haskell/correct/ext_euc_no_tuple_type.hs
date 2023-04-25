@@ -99,7 +99,7 @@ ee_recursion = \a_coeffs b_coeffs x -> \case
   y -> 
     ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y) where
     next :: (Int, Int) -> (Int, Int)
-    next = \(first, second) -> (second, first - div x y * second)
+    next = \tuple@(first, second) -> (second, first - div x y * second)
 
 
 res :: (Int, Int, Int)

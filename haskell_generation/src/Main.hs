@@ -55,6 +55,9 @@ wrong_names =
   , "not_covered"
   , "duplicate"
   , "out_of_scope"
+  , "out_of_scope2"
+  , "out_of_scope3"
+  , "out_of_scope4"
   ]
   :: [ String ]
 
@@ -169,8 +172,9 @@ values_or_type_definition_g = ( \case
 -- main
 
 main =
-  mapM_ read_and_generate_example path_pairs >>
-  mapM_ exec_path_pair_to_cmd exec_path_pairs >>
-  callCommand "rm haskell/correct/*.hi haskell/correct/*.o" >>
-  callCommand "for f in ./executables/correct/*; do echo \"\n$f\n\"; $f; done"
+  mapM_ read_and_generate_example path_pairs
+  -- >>
+  -- mapM_ exec_path_pair_to_cmd exec_path_pairs >>
+  -- callCommand "rm haskell/correct/*.hi haskell/correct/*.o" >>
+  -- callCommand "for f in ./executables/correct/*; do echo \"\n$f\n\"; $f; done"
   :: IO ()

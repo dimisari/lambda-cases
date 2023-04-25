@@ -5,6 +5,7 @@ LowLevel:
     - ListOfChars ?
 - ManyAbstractions:
   - what happens when multiple abstractions are "use_fields"?
+  - currently in any conflicts only the last one is in scope
 
 OperatorValues:
 - Merge Parenthesis and Tuple in ParenExpr?

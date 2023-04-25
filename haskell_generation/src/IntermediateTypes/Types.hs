@@ -42,9 +42,8 @@ instance Show ValType where
 
 -- Helpers: t_name_to_value_t
 
-t_name_to_value_t = ( \type_name ->
-  TypeApp $ ConsAndInTs type_name []
-  ) :: TypeName -> ValType
+t_name_to_value_t = ( \type_name -> TypeApp $ ConsAndInTs type_name [] )
+  :: TypeName -> ValType
 
 int = t_name_to_value_t $ TN "Int"
   :: ValType
