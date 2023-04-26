@@ -21,7 +21,7 @@ import Conversions.TypeDefinitions
 import GenerationState.TypesAndOperations
 
 import GenerationHelpers.ErrorMessages
-import GenerationHelpers.TypeChecking (types_are_equivalent)
+import GenerationHelpers.TypeChecking (equiv_types)
 
 import CodeGenerators.LowLevel
 import CodeGenerators.OperatorValues
@@ -45,7 +45,7 @@ check_is_or_case = ( \val_name -> \case
 
 maybe_value_vn_g = ( \val_name val_type -> 
   value_map_get val_name >>= \val_name_t ->
-  types_are_equivalent val_name_t val_type >>= \case
+  equiv_types val_name_t val_type >>= \case
     True -> return $ "C" ++ show val_name
     False -> has_value_vn_g val_name val_name_t
   ) :: ValueName -> ValType -> Stateful Haskell
@@ -265,7 +265,7 @@ cases_type_inference_g = (
 name_type_and_value_g = ( \(value_name, value_type, value_expr) -> 
   get_ind_lev >>= \ind_lev ->
   let 
-  val_type = value_type_conversion value_type
+  val_type = val_type_conv value_type
     :: ValType
   in
   value_expression_g value_expr val_type >>= \val_expr_hs ->
@@ -328,7 +328,7 @@ remove_values_from_map =
   :: [ Values ] -> Stateful ()
 
 insert_value_to_map = ( \(value_name, value_type, value_expr) ->
-  value_map_insert value_name $ value_type_conversion value_type
+  value_map_insert value_name $ val_type_conv value_type
   ) :: (ValueName, ValueType, ValueExpression) -> Stateful ()
 
 remove_value_from_map = ( \(value_name, _, _) -> value_map_remove value_name)

@@ -19,7 +19,7 @@ import Conversions.Values
 import GenerationState.TypesAndOperations
 
 import GenerationHelpers.ErrorMessages
-import GenerationHelpers.TypeChecking (types_are_equivalent)
+import GenerationHelpers.TypeChecking (equiv_types)
 
 import CodeGenerators.LowLevel
 
@@ -130,7 +130,7 @@ application_tree_g = ( \case
 
 application_g = ( \application val_type ->
   application_type_inference_g application >>= \(application_hs, application_t) ->
-  types_are_equivalent val_type application_t >>= \case 
+  equiv_types val_type application_t >>= \case 
     True -> return application_hs
     False -> throwE "Cannot match types"
   ) :: Application -> ValType -> Stateful Haskell
@@ -178,7 +178,7 @@ application_handler = (
       in
       application_type_inference_g $ ApplicationTrees tree1' tree2'
     BaseValueLeaf base_value -> base_value_type_inference_g base_value >>= \case
-      (_,ProdType (t1:_)) -> types_are_equivalent input_t t1 >>= \case 
+      (_,ProdType (t1:_)) -> equiv_types input_t t1 >>= \case 
         True ->
           let
           tree1' = 

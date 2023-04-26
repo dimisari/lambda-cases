@@ -6,54 +6,47 @@ import IntermediateTypes.Types
 -- All: ValType, Type Definitions
 
 -- ValType:
--- value_type_conversion, func_type_to_val_type, one_input_to_val_type,
--- multiple_inputs_to_val_type, output_type_to_val_type, cart_prod_to_val_type
+-- val_type_conv, func_t_to_val_t, one_in_to_val_t,
+-- mult_ins_to_val_t, out_t_to_val_t, prod_t_to_val_t
 
-value_type_conversion = ( \case
-  FunctionType func_type -> func_type_to_val_type func_type
-  ProductType cartesian_product -> cart_prod_to_val_type cartesian_product
-  TypeApplication type_application ->
-    TypeApp $ type_application_conversion type_application
+val_type_conv = ( \case
+  FunctionType func_t -> func_t_to_val_t func_t
+  ProductType prod_t -> prod_t_to_val_t prod_t
+  TypeApplication type_app -> TypeApp $ type_app_conv type_app
   ) :: ValueType -> ValType
 
-func_type_to_val_type = ( \(InAndOutTypes input output_t) -> case input of 
-  OneInputType input_t -> one_input_to_val_type input_t output_t
-  MultipleInputTypes mult_ins -> multiple_inputs_to_val_type mult_ins output_t
+func_t_to_val_t = ( \(InAndOutTypes input out_t) -> case input of 
+  OneInputType in_t -> one_in_to_val_t in_t out_t
+  MultipleInputTypes mult_ins -> mult_ins_to_val_t mult_ins out_t
   ) :: FunctionType -> ValType
 
-one_input_to_val_type = ( \input_t output_t -> 
-  FuncType $
-    InAndOutTs
-      (value_type_conversion input_t) (output_type_to_val_type output_t)
+one_in_to_val_t = ( \in_t out_t -> 
+  FuncType $ InAndOutTs (val_type_conv in_t) (out_t_to_val_t out_t)
   ) :: ValueType -> OutputType -> ValType
 
-multiple_inputs_to_val_type = ( \(TypesInParen in_t1 in_t2 in_ts) output_t -> 
+mult_ins_to_val_t = ( \(TypesInParen in_t1 in_t2 in_ts) out_t -> 
   let
-  output_type = case in_ts of 
-    [] -> one_input_to_val_type in_t2 output_t
+  func_out_t = case in_ts of 
+    [] -> one_in_to_val_t in_t2 out_t
     in_t3 : rest_of_in_ts ->
-      multiple_inputs_to_val_type
-        (TypesInParen in_t2 in_t3 rest_of_in_ts) output_t
+      mult_ins_to_val_t (TypesInParen in_t2 in_t3 rest_of_in_ts) out_t
   in
-  FuncType $ InAndOutTs (value_type_conversion in_t1) output_type
+  FuncType $ InAndOutTs (val_type_conv in_t1) func_out_t
   ) :: ManyTypesInParen -> OutputType -> ValType
 
-output_type_to_val_type = ( \case
-  OutputTypeApp type_application ->
-    TypeApp $ type_application_conversion type_application
-  OutputProductType cartesian_product -> cart_prod_to_val_type cartesian_product
+out_t_to_val_t = ( \case
+  OutputTypeApp type_app -> TypeApp $ type_app_conv type_app
+  OutputProductType prod_t -> prod_t_to_val_t prod_t
   ) :: OutputType -> ValType
 
-cart_prod_to_val_type = (
-  \(ProductTypes value_type1 value_type2 other_value_types) ->
+prod_t_to_val_t = ( \(ProductTypes val_t1 val_t2 other_val_ts) ->
   ProdType $
-    value_type_conversion value_type1 : value_type_conversion value_type2 :
-    map value_type_conversion other_value_types
+    val_type_conv val_t1 : val_type_conv val_t2 : map val_type_conv other_val_ts
   ) :: ProductType -> ValType
 
--- TypeApplication: type_application_conversion
+-- TypeApplication: type_app_conv
 
-type_application_conversion = ( 
+type_app_conv = ( 
   \(TypeConsAndInputs constructor_name left_type_inputs right_type_inputs) ->
   ConsAndInTs constructor_name $
     left_type_inputs_conversion left_type_inputs ++
@@ -62,16 +55,16 @@ type_application_conversion = (
 
 left_type_inputs_conversion = ( \case
   NoLeftTInputs -> []
-  OneLeftTInput type_input -> [ value_type_conversion type_input ]
+  OneLeftTInput type_input -> [ val_type_conv type_input ]
   ManyLeftTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren
   ) :: LeftTInputs -> [ ValType ]
 
 right_type_inputs_conversion = ( \case
   NoRightTInputs -> []
-  OneRightTInput type_input -> [ value_type_conversion type_input ]
+  OneRightTInput type_input -> [ val_type_conv type_input ]
   ManyRightTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren 
   ) :: RightTInputs -> [ ValType ]
 
 many_ts_in_paren_conv = ( \(TypesInParen t1 t2 ts) ->
-  map value_type_conversion $ t1 : t2 : ts
+  map val_type_conv $ t1 : t2 : ts
   ) :: ManyTypesInParen -> [ ValType ]

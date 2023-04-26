@@ -15,9 +15,9 @@ import IntermediateTypes.TypeDefinitions (Field'(..), TypeInfo(..))
 import GenerationState.TypesAndOperations
 
 import GenerationHelpers.ErrorMessages
-import GenerationHelpers.TypeChecking (types_are_equivalent)
+import GenerationHelpers.TypeChecking (equiv_types)
 
--- All: Literal, ValueName, Abstraction, ManyAbstractions
+-- All: Literal, ValueName, Abstraction, ManyAbstractions, Input
 
 -- Literal: literal_g, literal_type_inference_g
 
@@ -30,11 +30,11 @@ literal_g = ( \literal value_type ->
 literal_type_inference_g = ( \literal -> return (show literal, int) )
   :: Literal -> Stateful (Haskell, ValType)
 
--- ValueName: value_name_g, value_name_type_inference_g
+-- ValueName: value_name_g, value_name_type_inference_g, check_vn_in_or_t_cs_g
 
 value_name_g = ( \value_name value_type -> 
   value_map_get value_name >>= \map_val_type ->
-  types_are_equivalent value_type map_val_type >>= \case
+  equiv_types value_type map_val_type >>= \case
     False -> throwE $ type_check_err value_name value_type map_val_type
     True -> check_vn_in_or_t_cs_g value_name
   ) :: ValueName -> ValType -> Stateful Haskell
@@ -50,21 +50,23 @@ check_vn_in_or_t_cs_g = ( \value_name -> in_or_t_cs value_name >>= \case
   _ -> return $ show value_name
   ) :: ValueName -> Stateful Haskell
 
--- Abstraction:
--- abstraction_g, val_n_ins_and_ret_hs, use_fields_g, field_ins_and_ret_hs
+-- Abstraction: abstraction_g, abs_val_map_remove, helpers
 
 abstraction_g = ( \case
   AbstractionName value_name -> val_n_ins_and_ret_hs value_name
   UseFields -> use_fields_g
   ) :: Abstraction -> ValType -> Stateful Haskell
 
-val_n_ins_and_ret_hs = ( \value_name value_type ->
-  value_map_insert value_name value_type >> return (show value_name)
-  ) :: ValueName -> ValType -> Stateful Haskell
+abs_val_map_remove = ( \case
+  AbstractionName val_name -> value_map_remove val_name
+  UseFields -> use_fs_map_remove
+  ) :: Abstraction -> Stateful ()
+
+-- Abstraction (abstraction_g):
+-- use_fields_g, use_fields_type_name_g, use_fields_prod_type_g
 
 use_fields_g = ( \value_type -> case value_type of
-  TypeApp (ConsAndInTs type_name _) ->
-    use_fields_type_name_g type_name value_type
+  TypeApp (ConsAndInTs type_name _) -> use_fields_type_name_g type_name value_type
   ProdType types -> use_fields_prod_type_g types value_type
   _ -> undefined 
   ) :: ValType -> Stateful Haskell
@@ -86,17 +88,7 @@ use_fields_prod_type_g = ( \types value_type ->
   return $ "tuple@(" ++ intercalate ", " val_names_hs ++ ")"
   ) :: [ ValType ] -> ValType -> Stateful Haskell
 
-prod_t_field_ns = map VN [ "first", "second", "third", "fourth", "fifth" ]
-  :: [ ValueName ]
-
-field_ins_and_ret_hs = ( \(NameAndType' field_name field_type) ->
-  val_n_ins_and_ret_hs field_name field_type
-  ) :: Field' -> Stateful Haskell
-
-abs_val_map_remove = ( \case
-  AbstractionName val_name -> value_map_remove val_name
-  UseFields -> use_fs_map_remove
-  ) :: Abstraction -> Stateful ()
+-- Abstraction (abs_val_map_remove): use_fs_map_remove, use_fs_tn_map_remove
 
 use_fs_map_remove = ( 
   value_map_get (VN "tuple") >>= \tuple_t -> 
@@ -111,6 +103,20 @@ use_fs_tn_map_remove = ( type_map_get >=> \case
   _ -> undefined
   ) :: TypeName -> Stateful ()
 
+-- Abstraction (helpers):
+-- val_n_ins_and_ret_hs, field_ins_and_ret_hs, prod_t_field_ns
+
+val_n_ins_and_ret_hs = ( \value_name value_type ->
+  value_map_insert value_name value_type >> return (show value_name)
+  ) :: ValueName -> ValType -> Stateful Haskell
+
+field_ins_and_ret_hs = ( \(NameAndType' field_name field_type) ->
+  val_n_ins_and_ret_hs field_name field_type
+  ) :: Field' -> Stateful Haskell
+
+prod_t_field_ns = map VN [ "first", "second", "third", "fourth", "fifth" ]
+  :: [ ValueName ]
+
 -- ManyAbstractions: many_abstractions_g
 
 many_abstractions_g = ( \(Abstractions abs1 abs2 abstractions) ->
@@ -121,7 +127,7 @@ many_abs_val_map_remove = ( \(Abstractions abs1 abs2 abstractions) ->
   mapM_ abs_val_map_remove $ abs1 : abs2 : abstractions
   ) :: ManyAbstractions -> Stateful ()
 
--- Input: input_g, abstractions_g
+-- Input: input_g, abstractions_g, input_val_map_remove
 
 input_g = ( \input value_type ->
   let 

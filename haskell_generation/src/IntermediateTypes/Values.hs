@@ -2,7 +2,7 @@ module IntermediateTypes.Values where
 
 import ParsingTypes.OperatorValues (BaseValue, MultExpr)
 
--- All: Application, ApplicationTree
+-- Application, ApplicationTree
 
 data Application =
   ApplicationTrees ApplicationTree ApplicationTree
@@ -11,6 +11,8 @@ data Application =
 data ApplicationTree = 
   Application Application | BaseValueLeaf BaseValue
   deriving Show
+
+-- Addition, Subtraction, AddSubOrMExpr
 
 data Addition = 
   ExprPlusMExpr AddSubOrMExpr MultExpr

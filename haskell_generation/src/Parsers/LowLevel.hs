@@ -9,7 +9,7 @@ import ParsingTypes.LowLevel
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions, Input
 
--- Literal: literal_p, integer_p
+-- Literal: literal_p, integer_p, char_p, string_p
 
 literal_p =
   Integer <$> integer_p <|> String <$> string_p <|> Char <$> char_p
@@ -26,7 +26,7 @@ char_p =
 string_p = char '"' *> many (noneOf ['"']) <* char '"'
   :: Parser String
 
--- ValueName: value_name_p
+-- ValueName: value_name_p, lower_or_under_p
 
 value_name_p =
   lower_or_under_p >>= \starting_char ->
