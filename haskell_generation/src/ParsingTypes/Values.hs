@@ -6,57 +6,41 @@ import ParsingTypes.LowLevel (Literal, ValueName, Input)
 import ParsingTypes.Types (ValueType)
 import ParsingTypes.OperatorValues (OperatorExpression)
 
--- All: Types, Show instances
-
--- Types:
+-- All (Types and Show instances):
 -- LitOrValName, SpecificCase, DefaultCase, Cases, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
+-- LitOrValName
+
 data LitOrValName = 
   Literal Literal | ValueName ValueName
-
-data SpecificCase =
-  SpecificCase { sc_lovn :: LitOrValName, sc_val_e :: ValueExpression }
-
-data DefaultCase = 
-  DefaultCase ValueExpression
-
-data Cases =
-  CasesAndMaybeDefault SpecificCase [ SpecificCase ] (Maybe DefaultCase)
-
-data Values =
-  NamesTypesAndExpressions [ ValueName ] [ ValueType ] [ ValueExpression ]
-
-data Where =
-  ValueExpressionWhereValues ValueExpression [ Values ]
-
-data CasesOrWhere =
-  Cases Cases | Where Where
-
-data InputCasesOrWhere =
-  InputAndCasesOrWhere Input CasesOrWhere
-
-data ValueExpression =
-  InputCasesOrWhere InputCasesOrWhere |
-  CasesOrWhere CasesOrWhere |
-  OperatorExpression OperatorExpression
-
--- Show instances:
--- LitOrValName, SpecificCase, DefaultCase, Cases,
--- ValueNamesTypesAndExpressions, Values
--- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 instance Show LitOrValName where 
   show = \case
     Literal lit -> show lit
     ValueName val_name -> show val_name
 
+-- SpecificCase
+
+data SpecificCase =
+  SpecificCase { sc_lovn :: LitOrValName, sc_val_e :: ValueExpression }
+
 instance Show SpecificCase where
   show = \(SpecificCase lit_or_val_name val_expr) ->
     show lit_or_val_name ++ " ->\n" ++ show val_expr ++ "\n"
 
+-- DefaultCase
+
+data DefaultCase = 
+  DefaultCase ValueExpression
+
 instance Show DefaultCase where
   show = \(DefaultCase val_expr) -> "... ->\n" ++ show val_expr ++ "\n"
+
+-- Cases
+
+data Cases =
+  CasesAndMaybeDefault SpecificCase [ SpecificCase ] (Maybe DefaultCase)
 
 instance Show Cases where
   show = \(CasesAndMaybeDefault case1 cases maybe_def_case) ->
@@ -64,24 +48,51 @@ instance Show Cases where
       Just def_case -> show def_case
       Nothing -> ""
 
+-- Values
+
+data Values =
+  NamesTypesAndExpressions [ ValueName ] [ ValueType ] [ ValueExpression ]
+
 instance Show Values where
   show = \(NamesTypesAndExpressions val_names val_types val_exprs) -> 
     val_names==>map show==>intercalate ", " ++ ": " ++
     val_types==>map show==>intercalate ", " ++ "\n  = " ++
     val_exprs==>map show==>intercalate ", " ++ "\n\n"
 
+-- Where
+
+data Where =
+  ValueExpressionWhereValues ValueExpression [ Values ]
+
 instance Show Where where
   show = \(ValueExpressionWhereValues val_expr values) -> 
     "output\n" ++ show val_expr ++ "where\n" ++ show values 
+
+-- CasesOrWhere
+
+data CasesOrWhere =
+  Cases Cases | Where Where
 
 instance Show CasesOrWhere where
   show = \case
     Cases cases -> show cases
     Where where_ -> show where_
 
+-- InputCasesOrWhere
+
+data InputCasesOrWhere =
+  InputAndCasesOrWhere Input CasesOrWhere
+
 instance Show InputCasesOrWhere where
   show = \(InputAndCasesOrWhere input cs_or_where) ->
     show input ++ " -> " ++ show cs_or_where
+
+-- ValueExpression
+
+data ValueExpression =
+  InputCasesOrWhere InputCasesOrWhere |
+  CasesOrWhere CasesOrWhere |
+  OperatorExpression OperatorExpression
 
 instance Show ValueExpression where
   show = \case
