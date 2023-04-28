@@ -30,33 +30,35 @@ import CodeGenerators.LowLevel
 
 -- Parenthesis: parenthesis_g, paren_type_inf_g
 
-parenthesis_g = ( \(InnerExpression expr) expr_t ->
+parenthesis_g = ( \(InnerExpr expr) expr_t ->
   operator_expression_g expr expr_t >>= \expr_hs ->
   return $ "(" ++ expr_hs ++ ")"
   ) :: Parenthesis -> ValType -> Stateful Haskell
 
-paren_type_inf_g = ( \(InnerExpression expr) ->
+paren_type_inf_g = ( \(InnerExpr expr) ->
   op_expr_type_inf_g expr >>= \(expr_hs, expr_t) ->
   return ("(" ++ expr_hs ++ ")", expr_t)
   ) :: Parenthesis -> Stateful (Haskell, ValType)
 
 -- Tuple:
--- tuple_g, tuple_vals_t_name_g, tuple_vals_prod_types_g,
+-- tuple_g, tuple_t_name_g, tuple_vals_prod_types_g,
 -- tuple_vals_field_types_g, tuple_type_inf_g
 
 tuple_g = ( \(TupleExpressions val1 val2 vals) -> \case
   FuncType _ -> throwE "Tuple can't have function type"
-  TypeApp (ConsAndInTs t_name _) -> tuple_vals_t_name_g (val1 : val2 : vals) t_name
+  TypeApp (ConsAndInTs t_name _) -> tuple_t_name_g (val1 : val2 : vals) t_name
   ProdType types -> tuple_vals_prod_types_g (val1 : val2 : vals) types
+  _ -> undefined
   ) :: Tuple -> ValType -> Stateful Haskell
 
-tuple_vals_t_name_g = ( \vals t_name -> type_map_get t_name >>= \case
+tuple_t_name_g = ( \vals t_name -> type_map_get t_name >>= \case
   OrType _ _ -> throwE "Tuple can't be an or_type"
-  TupleType _ fields -> tuple_vals_fields_g vals fields t_name
-  _ -> throwE "Tuple can't be an or_type"
+  TupleType _ fields -> tuple_fields_g vals fields t_name
+  IntType -> throwE "Tuple can't be an Int"
+  CharType -> throwE "Tuple can't be a Char"
   ) :: [ OperatorExpression ] -> TypeName -> Stateful Haskell
 
-tuple_vals_fields_g = ( \vals fields t_name -> case length vals == length fields of 
+tuple_fields_g = ( \vals fields t_name -> case length vals == length fields of 
   False -> throwE tuple_field_length_err
   True -> tuple_vals_field_types_g vals (map get_type fields) t_name
   ) :: [ OperatorExpression ] -> [ TTField ] -> TypeName -> Stateful Haskell
@@ -64,7 +66,7 @@ tuple_vals_fields_g = ( \vals fields t_name -> case length vals == length fields
 tuple_vals_field_types_g = ( \vals types t_name ->
   get_ind_lev >>= \ind_lev ->
   zipWith operator_expression_g vals types==>sequence
-    >>= concatMap ( \value_hs ->  " (" ++ value_hs ++ ")" ) .> \vals_hs -> 
+    >>= concatMap ( \val_hs -> " (" ++ val_hs ++ ")" ) .> \vals_hs -> 
   return $
     "\n" ++ indent (ind_lev + 1) ++ "(C" ++ show t_name ++ vals_hs ++ ")"
   ) :: [ OperatorExpression ] -> [ ValType ] -> TypeName -> Stateful Haskell
@@ -109,8 +111,7 @@ base_value_type_inf_g = ( \case
   MathApplication math_application -> math_app_type_inf_g math_application
   ) :: BaseValue -> Stateful (Haskell, ValType)
 
--- FuncAppChain:
--- func_app_chain_g, application_tree_g, app_tree_type_inf_g
+-- FuncAppChain: func_app_chain_g, func_app_chain_type_inf_g,
 
 func_app_chain_g = 
   func_app_chain_conv .> application_tree_g
@@ -120,35 +121,39 @@ func_app_chain_type_inf_g =
   func_app_chain_conv .> app_tree_type_inf_g
   :: FuncAppChain -> Stateful (Haskell, ValType)
 
+-- ApplicationTree: application_tree_g, app_tree_type_inf_g
+
 application_tree_g = ( \case 
   BaseValueLeaf base_value -> base_value_g base_value
   Application application -> application_g application
   ) :: ApplicationTree -> ValType -> Stateful Haskell
-
-application_g = ( \application val_type ->
-  application_type_inf_g application >>= \(application_hs, application_t) ->
-  equiv_types val_type application_t >>= \case 
-    True -> return application_hs
-    False -> throwE "Cannot match types"
-  ) :: Application -> ValType -> Stateful Haskell
 
 app_tree_type_inf_g = ( \case 
   Application application -> application_type_inf_g application
   BaseValueLeaf base_value -> base_value_type_inf_g base_value
   ) :: ApplicationTree -> Stateful (Haskell, ValType)
 
+-- Application: application_g, application_type_inf_g, normal_app_type_inf_g
+
+application_g = ( \application val_type ->
+  application_type_inf_g application >>= \(application_hs, application_t) ->
+  equiv_types val_type application_t >>= \case 
+    True -> return application_hs
+    False -> throwE $ type_check_err (show application) val_type application_t
+  ) :: Application -> ValType -> Stateful Haskell
+
 application_type_inf_g = ( \application@(AppTrees tree1 tree2) ->
   app_tree_type_inf_g tree1 >>= \(tree1_hs, tree1_t) ->
   case tree1_t of 
     FuncType func_type ->
       catchE
-        (tree1_func_type_g tree1_hs func_type tree2)
+        (normal_app_type_inf_g tree1_hs func_type tree2)
         (application_handler application func_type)
-    t -> throwE $
-      "Cannot apply something that is not a function:\n" ++ show t ++ "\n"
+    _ -> throwE $
+      "Cannot apply something that is not a function:\n" ++ show tree1 ++ "\n"
   ) :: Application -> Stateful (Haskell, ValType)
 
-tree1_func_type_g = (
+normal_app_type_inf_g = (
   \tree1_hs func_type@(InAndOutTs input_t output_t) tree2 -> 
   application_tree_g tree2 input_t >>= \tree2_hs ->
   let 
@@ -158,43 +163,66 @@ tree1_func_type_g = (
     :: Haskell
   in
   return (tree1_hs ++ " " ++ tree2_hs', output_t) 
-  ) :: Haskell -> FuncType -> ApplicationTree ->
-       Stateful (Haskell, ValType)
+  ) :: Haskell -> FuncType -> ApplicationTree -> Stateful (Haskell, ValType)
 
-application_handler = (
-  \(AppTrees tree1 tree2) (InAndOutTs input_t _) error_msg ->
+-- Application (handlers): application_handler
+
+application_handler = ( \app@(AppTrees tree1 tree2) (InAndOutTs input_t _) err ->
   case tree2 of 
-    BaseValueLeaf (Tuple (TupleExpressions val1 val2 vals)) -> 
-      let
-      tree1' = 
-        Application $ AppTrees
-          tree1 $
-          BaseValueLeaf $ Parenthesis $ InnerExpression val1
-      tree2' = BaseValueLeaf $ case vals of 
-        [] -> Parenthesis $ InnerExpression val2
-        val3 : other_vals -> Tuple $ TupleExpressions val2 val3 other_vals
-      in
-      application_type_inf_g $ AppTrees tree1' tree2'
-    BaseValueLeaf base_value -> base_value_type_inf_g base_value >>= \case
-      (_,ProdType (t1:_)) -> equiv_types input_t t1 >>= \case 
-        True ->
-          let
-          tree1' = 
-            Application $ AppTrees
-              tree1 $
-              Application $ AppTrees
-                (BaseValueLeaf $ ValueName $ VN "get_1st")
-                $ BaseValueLeaf base_value
-          tree2' = 
-            Application $ AppTrees
-              (BaseValueLeaf $ ValueName $ VN "get_all_but_1st")
-              $ BaseValueLeaf base_value
-          in
-          application_type_inf_g $ AppTrees tree1' tree2'
-        _ -> throwE $ show tree1 ++ "\n" ++ show tree2 ++ "\n" ++ error_msg
-      _ -> throwE $ show tree1 ++ "\n" ++ show tree2 ++ "\n" ++ error_msg
-    _ -> throwE $ show tree1 ++ "\n" ++ show tree2 ++ "\n" ++ error_msg
+    BaseValueLeaf (Tuple tuple) -> app_handler_tuple tree1 tuple input_t err
+    _ -> general_app_handler app input_t err
   ) :: Application -> FuncType -> Error -> Stateful (Haskell, ValType)
+
+-- app_handler_tuple, app_handler_tuple_correct
+
+app_handler_tuple = ( \tree1 tuple@(TupleExpressions val1 _ _) input_t err -> 
+  op_expr_type_inf_g val1 >>= \case
+    (_, op_expr_t) -> equiv_types input_t op_expr_t >>= \case 
+      True -> app_handler_tuple_correct tree1 tuple
+      _ -> throwE err
+  ) :: ApplicationTree -> Tuple -> ValType -> Error -> Stateful (Haskell, ValType)
+
+app_handler_tuple_correct = ( \tree1 (TupleExpressions val1 val2 vals) -> 
+  let
+  tree1' = 
+    Application $ AppTrees tree1 $ BaseValueLeaf $ Parenthesis $ InnerExpr val1
+  tree2' = BaseValueLeaf $ case vals of 
+    [] -> Parenthesis $ InnerExpr val2
+    val3 : other_vals -> Tuple $ TupleExpressions val2 val3 other_vals
+  in
+  application_type_inf_g $ AppTrees tree1' tree2'
+  ) :: ApplicationTree -> Tuple -> Stateful (Haskell, ValType)
+
+-- general_app_handler, general_app_handler_correct
+
+general_app_handler = ( \app@(AppTrees tree1 tree2) input_t err ->
+  app_tree_type_inf_g tree2 >>= \case
+    (_,ProdType (t1:_)) -> equiv_types input_t t1 >>= \case 
+      True -> general_app_handler_correct app
+      _ -> throwE err
+    _ -> throwE err
+  ) :: Application -> ValType -> Error -> Stateful (Haskell, ValType)
+
+general_app_handler_correct = ( \(AppTrees tree1 tree2) ->
+  let
+  tree2_1st = Application $ AppTrees get_1st_tree tree2
+    :: ApplicationTree
+  tree1' = Application $ AppTrees tree1 tree2_1st
+    :: ApplicationTree
+
+  tree2_rest = Application $ AppTrees get_all_but_1st_tree tree2
+    :: ApplicationTree
+  in
+  application_type_inf_g $ AppTrees tree1' tree2_rest
+  ) :: Application -> Stateful (Haskell, ValType)
+
+-- general_app_handler (helpers): get_1st_tree, get_all_but_1st_tree
+
+get_1st_tree = BaseValueLeaf $ ValueName $ VN "get_1st"
+  :: ApplicationTree
+
+get_all_but_1st_tree = BaseValueLeaf $ ValueName $ VN "get_all_but_1st"
+  :: ApplicationTree
 
 -- MultExpr: mult_expr_g
 

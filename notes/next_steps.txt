@@ -12,6 +12,7 @@ fix:
   - problem with values in and outside of function
   - add intentation levels in parsing
 - seperate TypeName and TypeApp
+- get_1st + get_all_but_first need type_predicates to work for any length of tuple
 
 cases:
 - cases as an abstration in multiple abstractions

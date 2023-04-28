@@ -13,7 +13,7 @@ import Parsers.LowLevel (literal_p, value_name_p, input_p)
 -- Parenthesis: parenthesis_p
 
 parenthesis_p =
-  char '(' *> (InnerExpression <$> operator_expression_p) <* char ')'
+  char '(' *> (InnerExpr <$> operator_expression_p) <* char ')'
   :: Parser Parenthesis
 
 -- Tuple: tuple_p

@@ -12,10 +12,10 @@ import ParsingTypes.LowLevel (Literal, ValueName, Input)
 -- Parenthesis
 
 newtype Parenthesis =
-  InnerExpression OperatorExpression 
+  InnerExpr OperatorExpression 
 
 instance Show Parenthesis where
-  show = \(InnerExpression expr) -> "(" ++ show expr ++ ")"
+  show = \(InnerExpr expr) -> "(" ++ show expr ++ ")"
 
 -- Tuple
 

@@ -10,10 +10,10 @@ lit_not_int_err = ( \val_type ->
   "\nInteger literal cannot have type: " ++ show val_type ++ "\n"
   ) :: ValType -> Error
 
-type_check_err = ( \value_name val_type map_val_type -> 
-  "\nValue: " ++ show value_name ++ "\ncan't have both of these types:\n" ++
+type_check_err = ( \str val_type map_val_type -> 
+  "\nValue: " ++ str ++ "\ncan't have both of these types:\n" ++
   show val_type ++ "\n" ++ show map_val_type ++ "\n"
-  ) :: ValueName -> ValType -> ValType -> Error
+  ) :: String -> ValType -> ValType -> Error
 
 tuple_field_length_err =
   "\nLength of tuple values and fields of the corresponding tuple_type must be " ++

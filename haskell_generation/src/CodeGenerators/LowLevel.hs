@@ -34,7 +34,7 @@ literal_type_inf_g = ( \lit -> return (show lit, int) )
 value_name_g = ( \val_name val_type -> 
   value_map_get val_name >>= \map_val_type ->
   equiv_types val_type map_val_type >>= \case
-    False -> throwE $ type_check_err val_name val_type map_val_type
+    False -> throwE $ type_check_err (show val_name) val_type map_val_type
     True -> check_vn_in_or_t_cs_g val_name
   ) :: ValueName -> ValType -> Stateful Haskell
 
