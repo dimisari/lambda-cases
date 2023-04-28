@@ -7,36 +7,41 @@ import ParsingTypes.Types (TypeName(..))
 
 import IntermediateTypes.Types (ValType(..))
 
--- All: Types, Show instances, Helpers
+-- All: TConsAndVars, TTField, TupleTDef, OrTCase, OrTDef, TypeInfo
 
--- Types:
--- TypeConsAndVars' Field', TupleTypeDef',
--- OrTypeCase', OrTypeDef', TypeInfo
+-- TConsAndVars
 
-data TypeConsAndVars' =
-  TypeConsAndVars'
-    { get_cons :: TypeName, get_type_vars :: [ (TypeName, String) ] }
+data TConsAndVars =
+  TConsAndVars { get_cons :: TypeName, get_type_vars :: [ (TypeName, String) ] }
 
-data Field' =
-  NameAndType' { get_name :: ValueName, get_type :: ValType }
+instance Show TConsAndVars where
+  show = \(TConsAndVars type_name type_variables) ->
+    show type_name ++ concatMap (snd .> (" " ++)) type_variables
+
+-- TTField
+
+data TTField =
+  FNameAndType { get_name :: ValueName, get_type :: ValType }
   deriving Show
 
-data TupleTypeDef' =
-  ConsVarsAndFields' TypeConsAndVars' [ Field' ]
+-- TupleTDef
 
-data OrTypeCase' =
-  NameAndMaybeInT' { get_c_name :: ValueName, get_c_t :: (Maybe ValType) }
+data TupleTDef =
+  TTConsVarsAndFields TConsAndVars [ TTField ]
+
+-- OrTCase
+
+data OrTCase =
+  CNameAndMaybeInT { get_c_name :: ValueName, get_c_t :: (Maybe ValType) }
   deriving Show
 
-data OrTypeDef' =
-  ConsVarsAndCases' TypeConsAndVars' [ OrTypeCase' ]
+-- OrTDef
+
+data OrTDef =
+  OTConsVarsAndCases TConsAndVars [ OrTCase ]
+
+-- TypeInfo
 
 data TypeInfo =
-  TupleType Int [ Field' ] | OrType Int [ OrTypeCase' ] | IntType | CharType
+  TupleType Int [ TTField ] | OrType Int [ OrTCase ] | IntType | CharType
   deriving Show
-
--- Show instances: TypeConsAndVars'
-
-instance Show TypeConsAndVars' where
-  show = \(TypeConsAndVars' type_name type_variables) ->
-    show type_name ++ concatMap (snd .> (" " ++)) type_variables

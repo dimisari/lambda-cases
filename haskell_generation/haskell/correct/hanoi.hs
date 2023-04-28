@@ -90,36 +90,44 @@ main = print res
 
 -- Generated
 
-data PrevCoeffs =
-  CPrevCoeffs { get_prev_prev :: Int, get_prev :: Int }
+data Rod =
+  Cleft | Cmiddle | Cright
   deriving Show
 
-data GcdAndCoeffs =
-  CGcdAndCoeffs { get_gcd :: Int, get_a :: Int, get_b :: Int }
+data Move =
+  CMove { get_from :: Rod, get_to :: Rod }
   deriving Show
 
-extended_euclidean :: Int -> Int -> GcdAndCoeffs
-extended_euclidean = ee_recursion (init_a_coeffs) (init_b_coeffs)
+data NonEmptyMoves =
+  CNonEmptyMoves { get_move1 :: Move, get_other_moves :: Moves }
+  deriving Show
 
-init_a_coeffs :: PrevCoeffs
-init_a_coeffs = 
-  (CPrevCoeffs (1) (0))
+data Moves =
+  Cmoves NonEmptyMoves | Cno_moves
+  deriving Show
 
-init_b_coeffs :: PrevCoeffs
-init_b_coeffs = 
-  (CPrevCoeffs (0) (1))
-
-ee_recursion :: PrevCoeffs -> PrevCoeffs -> Int -> Int -> GcdAndCoeffs
-ee_recursion = \a_coeffs b_coeffs x -> \case
-  0 -> 
-    (CGcdAndCoeffs (x) (get_prev_prev a_coeffs) (get_prev_prev b_coeffs))
-  y -> 
+hanoi :: Rod -> Rod -> Rod -> Int -> Moves
+hanoi = \source target auxiliary -> \case
+  1 -> Cmoves 
+    (CNonEmptyMoves (
+    (CMove (source) (target))) (Cno_moves))
+  rings -> 
     let    
-    next :: PrevCoeffs -> PrevCoeffs
-    next = \tuple@(CPrevCoeffs prev_prev prev) -> 
-      (CPrevCoeffs (prev) (prev_prev - div x y * prev))
-    in
-    ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y)
+    moves1 :: Moves
+    moves1 = hanoi source auxiliary target (rings - 1)
 
-res :: GcdAndCoeffs
-res = extended_euclidean 19728602432 437829011231234
+    moves2 :: Moves
+    moves2 = hanoi auxiliary target source (rings - 1)
+    in
+    add_moves2 moves1 (Cmoves 
+      (CNonEmptyMoves (
+      (CMove (source) (target))) (moves2)))
+
+add_moves2 :: Moves -> Moves -> Moves
+add_moves2 = \case
+  Cmoves value@(CNonEmptyMoves move1 other_moves) -> \moves2 -> Cmoves 
+    (CNonEmptyMoves (move1) (add_moves2 other_moves moves2))
+  Cno_moves -> \moves2 -> moves2
+
+res :: Moves
+res = hanoi Cleft Cright Cmiddle 3

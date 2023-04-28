@@ -97,10 +97,11 @@ ee_recursion :: (Int, Int) -> (Int, Int) -> Int -> Int -> (Int, Int, Int)
 ee_recursion = \a_coeffs b_coeffs x -> \case
   0 -> (x, get_1st a_coeffs, get_1st b_coeffs)
   y -> 
-    ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y) where
+    let    
     next :: (Int, Int) -> (Int, Int)
     next = \tuple@(first, second) -> (second, first - div x y * second)
-
+    in
+    ee_recursion (next a_coeffs) (next b_coeffs) (y) (mod x y)
 
 res :: (Int, Int, Int)
 res = extended_euclidean 19728602432 437829011231234

@@ -31,7 +31,8 @@ data GenerationState = GS
 
 type Stateful = ExceptT Error (State GenerationState)
 
--- get fields: get_from_state, get_ind_lev, get_value_map, get_type_map
+-- get fields:
+-- get_from_state, get_ind_lev, get_value_map, get_type_map, get_or_t_cs
 
 get_from_state = ( \f -> get >>= f .> return )
   :: (GenerationState -> a) -> Stateful a
@@ -43,7 +44,8 @@ get_from_state = ( \f -> get >>= f .> return )
   , get_from_state or_type_cases
   ) :: (Stateful Int, Stateful ValueMap, Stateful TypeMap, Stateful [ ValueName ])
 
--- update fields: update_ind_lev, update_value_map, update_type_map
+-- update fields:
+-- update_ind_lev, update_value_map, update_type_map, update_or_t_cs
 
 (update_ind_lev, update_value_map, update_type_map, update_or_t_cs) =
   ( \il -> modify ( \s -> s { ind_lev = il } )
@@ -57,7 +59,7 @@ get_from_state = ( \f -> get >>= f .> return )
   , [ ValueName ] -> Stateful ()
   )
 
--- value_map operations: value_map_insert, value_map_get
+-- value_map operations: value_map_insert, value_map_get, value_map_remove
   
 value_map_insert = ( \val_name val_type ->
   get_value_map >>= M.insertWith (++) val_name [val_type] .> update_value_map
@@ -78,7 +80,7 @@ value_map_remove = ( \val_name ->
     _ -> error "removed from "
   ) :: ValueName -> Stateful ()
 
--- type_map operations: type_map_exists_check, type_map_insert, type_map_get
+-- type_map operations: type_map_insert, type_map_get
 
 type_map_insert = ( \type_name fields_or_cases ->
   get_type_map >>= \type_map ->
@@ -92,7 +94,7 @@ type_map_get = ( \type_name@(TN s) -> get_type_map >>= M.lookup type_name .> \ca
   Just foc -> return foc
   ) :: TypeName -> Stateful TypeInfo
 
--- or_type_cases operations: 
+-- or_type_cases operations: insert_to_or_t_cs, in_or_t_cs
 
 insert_to_or_t_cs = ( \value_name -> 
   get_or_t_cs >>= (value_name:) .> update_or_t_cs

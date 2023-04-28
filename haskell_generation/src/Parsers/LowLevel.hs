@@ -3,7 +3,7 @@ module Parsers.LowLevel where
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-import Helpers ((==>), keywords)
+import Helpers ((==>), keywords, space_or_spicy_nl)
 
 import ParsingTypes.LowLevel
 
@@ -57,5 +57,5 @@ many_abstractions_p =
 
 input_p =
   (OneAbstraction <$> abstraction_p <|> ManyAbstractions <$> many_abstractions_p)
-  <* string " -> "
+  <* (string " ->" >> space_or_spicy_nl)
   :: Parser Input

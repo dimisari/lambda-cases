@@ -7,54 +7,46 @@ import Conversions.Types (val_type_conv)
 
 -- All: ValType, Type Definitions
 
--- TypeConsAndVars: cons_and_type_vars_conversion
+-- TypeConsAndVars: cons_and_t_vars_conv
 
-cons_and_type_vars_conversion = ( 
-  \(TypeConsAndVars constructor_name left_type_vars right_type_vars) ->
-  TypeConsAndVars' constructor_name $
+cons_and_t_vars_conv = ( \(TypeConsAndVars cons_name left_t_vars right_t_vars) ->
+  TConsAndVars cons_name $
     flip zip [ "a", "b", "c", "d", "e" ] $
-    left_type_vars_conversion left_type_vars ++
-    right_type_vars_conversion right_type_vars
-  ) :: TypeConsAndVars -> TypeConsAndVars'
+      left_t_vars_conv left_t_vars ++ right_t_vars_conv right_t_vars
+  ) :: TypeConsAndVars -> TConsAndVars
 
-left_type_vars_conversion = ( \case
+left_t_vars_conv = ( \case
   NoLeftTypeVars -> []
   OneLeftTypeVar type_name -> [ type_name ]
-  ManyLeftTypeVars many_t_names_in_paren ->
-    many_t_names_in_paren_conv many_t_names_in_paren
+  ManyLeftTypeVars many_tns_in_paren -> many_tns_in_paren_conv many_tns_in_paren
   ) :: LeftTypeVars -> [ TypeName ]
 
-right_type_vars_conversion = ( \case
+right_t_vars_conv = ( \case
   NoRightTypeVars -> []
   OneRightTypeVar type_name -> [ type_name ]
-  ManyRightTypeVars many_t_names_in_paren ->
-    many_t_names_in_paren_conv many_t_names_in_paren
+  ManyRightTypeVars many_tns_in_paren -> many_tns_in_paren_conv many_tns_in_paren
   ) :: RightTypeVars -> [ TypeName ]
 
-many_t_names_in_paren_conv = ( \(ParenTypeNames n1 n2 ns) -> n1 : n2 : ns)
+many_tns_in_paren_conv = ( \(ParenTypeNames n1 n2 ns) -> n1 : n2 : ns)
   :: ManyTNamesInParen -> [ TypeName ]
 
 -- Type Definitions: 
--- field_conversion, tuple_type_def_conversion,
--- or_type_case_conversion, or_type_def_conversion
+-- field_conv, tuple_type_def_conv,
+-- or_type_case_conv, or_type_def_conv
 
-field_conversion = ( \(NameAndType value_name value_type) ->
-  NameAndType' value_name (val_type_conv value_type)
-  ) :: Field -> Field'
+field_conv = ( \(NameAndType value_name value_type) ->
+  FNameAndType value_name (val_type_conv value_type)
+  ) :: Field -> TTField
 
-tuple_type_def_conversion = ( \(ConsVarsAndFields type_application fields) ->
-  ConsVarsAndFields'
-    (cons_and_type_vars_conversion type_application)
-    (map field_conversion fields)
-  ) :: TupleTypeDef -> TupleTypeDef'
+tuple_type_def_conv = ( \(ConsVarsAndFields type_app fields) ->
+  TTConsVarsAndFields (cons_and_t_vars_conv type_app) (map field_conv fields)
+  ) :: TupleTypeDef -> TupleTDef
 
-or_type_case_conversion = ( \(NameAndMaybeInT value_name maybe_value_type) ->
-  NameAndMaybeInT' value_name (val_type_conv <$> maybe_value_type)
-  ) :: OrTypeCase -> OrTypeCase'
+or_type_case_conv = ( \(NameAndMaybeInT value_name maybe_value_type) ->
+  CNameAndMaybeInT value_name (val_type_conv <$> maybe_value_type)
+  ) :: OrTypeCase -> OrTCase
 
-or_type_def_conversion = (
-  \(ConsVarsAndCases type_application case1 case2 cases) ->
-  ConsVarsAndCases'
-    (cons_and_type_vars_conversion type_application)
-    (map or_type_case_conversion $ case1 : case2 : cases)
-  ) :: OrTypeDef -> OrTypeDef'
+or_type_def_conv = ( \(ConsVarsAndCases type_app c1 c2 cs) ->
+  OTConsVarsAndCases
+    (cons_and_t_vars_conv type_app) (map or_type_case_conv $ c1 : c2 : cs)
+  ) :: OrTypeDef -> OrTDef

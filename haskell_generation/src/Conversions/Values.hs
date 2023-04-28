@@ -7,41 +7,40 @@ import IntermediateTypes.Values
 -- FuncAppChain to ApplicationTree, MathApplication to ApplicationTree
 
 -- FuncAppChain to ApplicationTree:
--- func_app_chain_to_app_tree, fac_to_app_tree_help, combine
+-- func_app_chain_conv, func_app_chain_conv_help, combine
 
-func_app_chain_to_app_tree = (
-  \(ValuesAndDirections base_val app_dir_base_vals) ->
-  fac_to_app_tree_help base_val (reverse app_dir_base_vals)
+func_app_chain_conv = ( \(ValuesAndDirections base_val app_dir_base_vals) ->
+  func_app_chain_conv_help base_val (reverse app_dir_base_vals)
   ) :: FuncAppChain -> ApplicationTree 
 
-fac_to_app_tree_help = ( \base_val1 -> \case
+func_app_chain_conv_help = ( \base_val1 -> \case
   [] -> BaseValueLeaf base_val1
   (app_dir, base_val) : app_dir_base_vals ->
     combine
-      (fac_to_app_tree_help base_val1 app_dir_base_vals)
+      (func_app_chain_conv_help base_val1 app_dir_base_vals)
       app_dir
       (BaseValueLeaf base_val)
   ) :: BaseValue -> [ (ApplicationDirection, BaseValue) ] -> ApplicationTree 
 
 combine = ( \at1 ad at2 -> case ad of 
-  LeftApplication -> Application $ ApplicationTrees at1 at2
-  RightApplication -> Application $ ApplicationTrees at2 at1
+  LeftApplication -> Application $ AppTrees at1 at2
+  RightApplication -> Application $ AppTrees at2 at1
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
 
 -- MathApplication to ApplicationTree:
 -- math_app_to_app_tree, base_vals_to_app_tree, expr_to_base_value
 
-math_app_to_app_tree = ( \(NameAndInputExprs value_name expr1 exprs) ->
-  base_vals_to_app_tree $
-    ValueName value_name : map expr_to_base_value (expr1 : exprs) 
+math_app_to_app_tree = ( \(NameAndInputExprs val_name expr1 exprs) ->
+  base_vals_to_app_tree $ reverse $
+    ValueName val_name : map expr_to_base_value (expr1 : exprs) 
   ) :: MathApplication -> ApplicationTree 
 
 base_vals_to_app_tree = ( \case
   [] -> error "empty list in base_vals_to_app_tree"
   [ bv ] -> BaseValueLeaf bv
   bv : bvs ->
-    Application $ ApplicationTrees (BaseValueLeaf bv) $ base_vals_to_app_tree bvs
+    Application $ AppTrees (base_vals_to_app_tree bvs) (BaseValueLeaf bv)
   ) :: [ BaseValue ] -> ApplicationTree
 
 expr_to_base_value = ( \expr -> case expr of

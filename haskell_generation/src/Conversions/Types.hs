@@ -46,20 +46,18 @@ prod_t_to_val_t = ( \(ProductTypes val_t1 val_t2 other_val_ts) ->
 
 -- TypeApplication: type_app_conv
 
-type_app_conv = ( 
-  \(TypeConsAndInputs constructor_name left_type_inputs right_type_inputs) ->
-  ConsAndInTs constructor_name $
-    left_type_inputs_conversion left_type_inputs ++
-    right_type_inputs_conversion right_type_inputs
+type_app_conv = ( \(TypeConsAndInputs cons_name left_t_ins right_t_ins) ->
+  ConsAndInTs cons_name $
+    left_t_ins_conv left_t_ins ++ right_t_ins_conv right_t_ins
   ) :: TypeApplication -> TypeApp
 
-left_type_inputs_conversion = ( \case
+left_t_ins_conv = ( \case
   NoLeftTInputs -> []
   OneLeftTInput type_input -> [ val_type_conv type_input ]
   ManyLeftTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren
   ) :: LeftTInputs -> [ ValType ]
 
-right_type_inputs_conversion = ( \case
+right_t_ins_conv = ( \case
   NoRightTInputs -> []
   OneRightTInput type_input -> [ val_type_conv type_input ]
   ManyRightTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren 

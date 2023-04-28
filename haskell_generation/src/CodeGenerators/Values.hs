@@ -68,7 +68,7 @@ with_tuple_t_value_vn_g = ( \val_name type_name fields ->
     ( "C" ++ show val_name ++ " value@(C" ++ show type_name ++ 
       concatMap (" " ++) fields_hs ++ ")"
     )
-  ) :: ValueName -> TypeName -> [ Field' ] -> Stateful Haskell
+  ) :: ValueName -> TypeName -> [ TTField ] -> Stateful Haskell
 
 with_prod_t_value_vn_g = ( \val_name types ->
   zipWith val_n_ins_and_ret_hs prod_t_field_ns types ==> sequence >>= \fields_hs ->
@@ -287,7 +287,7 @@ values_to_list = ( \ntav_lists -> case ntav_lists of
     (val_name, val_type, val_expr) :
       values_to_list (NamesTypesAndExpressions val_names val_types val_exprs)
   NamesTypesAndExpressions [] [] [] -> []
-  _ -> error $ name_type_and_value_lists_err ntav_lists
+  _ -> error $ "values_to_list: should be impossible"
   ) :: Values -> [ (ValueName, ValueType, ValueExpression) ]
 
 list_of_values_g = ( \values ->
@@ -303,20 +303,18 @@ where_g = ( \(ValueExpressionWhereValues val_expr values) val_type ->
   value_expression_g val_expr val_type >>= \val_expr_hs ->
   remove_values_from_map values >>
   update_ind_lev ind_lev >>
-  return ("\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ values_hs)
+  return
+    ( "\n" ++
+      indent (ind_lev + 1) ++ "let" ++
+      indent (ind_lev + 1) ++ values_hs ++
+      indent (ind_lev + 1) ++ "in" ++
+      "\n" ++
+      indent (ind_lev + 1) ++ val_expr_hs
+    )
   ) :: Where -> ValType -> Stateful Haskell
 
 where_type_inference_g = ( \(ValueExpressionWhereValues val_expr values) ->
-  get_ind_lev >>= \ind_lev -> update_ind_lev (ind_lev + 1) >>
-  insert_values_to_map values >>
-  mapM values_g values >>= concat .> \values_hs ->
-  value_expression_type_inference_g val_expr >>= \(val_expr_hs, val_type) ->
-  remove_values_from_map values >>
-  update_ind_lev ind_lev >>
-  return
-    ( "\n" ++ indent (ind_lev + 1) ++ val_expr_hs ++ " where" ++ values_hs
-    , val_type
-    )
+  undefined
   ) :: Where -> Stateful (Haskell, ValType)
 
 insert_values_to_map = 

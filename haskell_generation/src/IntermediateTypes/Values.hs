@@ -5,7 +5,7 @@ import ParsingTypes.OperatorValues (BaseValue, MultExpr)
 -- Application, ApplicationTree
 
 data Application =
-  ApplicationTrees ApplicationTree ApplicationTree
+  AppTrees ApplicationTree ApplicationTree
   deriving Show
 
 data ApplicationTree = 

@@ -37,7 +37,8 @@ type Path = String
 
 correct_names =
   map ("correct/" ++)
-    [ "my_gcd"
+    [
+    "my_gcd"
     , "ext_euc_no_tuple_type"
     , "ext_euc_tuple_type"
     , "pair"
@@ -46,18 +47,22 @@ correct_names =
     , "int_list"
     , "int_list2"
     , "int_list3"
+    , "hanoi"
     ]
   :: [ String ]
 
 wrong_names =
   map ("wrong/" ++)
-  [ "bool"
+  [
+  "bool"
   , "not_covered"
   , "duplicate"
   , "out_of_scope"
   , "out_of_scope2"
   , "out_of_scope3"
   , "out_of_scope4"
+  , "or_t_use_fields"
+  , "func_t_use_fields"
   ]
   :: [ String ]
 
@@ -121,31 +126,31 @@ values_or_type_def_p =
   :: Parser ValuesOrTypeDef
 
 -- Generating Haskell:
--- print_error_or_haskell_to_file, print_parse_error_or_semantic_analysis,
--- print_semantic_error_or_haskell_to_file, run_semantic_analysis, program_g
+-- parse_err_or_sem_analysis,
+-- sem_err_or_hs_to_file, run_sem_analysis, program_g
 -- values_or_type_definition_g
 
-read_and_generate_example = ( \path_pair@(input_path, _) ->
+read_and_gen_example = ( \path_pair@(input_path, _) ->
   readFile input_path >>= \lcases_input ->
   parse_lcases input_path lcases_input ==> \parser_output ->
-  print_parse_error_or_semantic_analysis parser_output path_pair
+  parse_err_or_sem_analysis parser_output path_pair
   ) :: (Path, Path) -> IO ()
 
-print_parse_error_or_semantic_analysis = ( \parser_output path_pair ->
+parse_err_or_sem_analysis = ( \parser_output path_pair ->
   case parser_output of 
     Left parse_error -> print parse_error
-    Right program -> print_semantic_error_or_haskell_to_file program path_pair
+    Right program -> sem_err_or_hs_to_file program path_pair
   ) :: Either ParseError Program -> (Path, Path) -> IO ()
 
-print_semantic_error_or_haskell_to_file = ( \program (input_path, output_path) ->
-  run_semantic_analysis program input_path ==> \case
+sem_err_or_hs_to_file = ( \program (input_path, output_path) ->
+  run_sem_analysis program input_path ==> \case
     Left semantic_error -> putStrLn semantic_error
     Right generated_haskell -> 
       readFile haskell_header >>= \header ->
       writeFile output_path $ header ++ generated_haskell
   ) :: Program -> (Path, Path) -> IO ()
 
-run_semantic_analysis = ( \program input_path ->
+run_sem_analysis = ( \program input_path ->
   catchE (program_g program) (\e -> throwE $ (input_path ++ ":\n") ++ e ++ "\n")
     ==> runExceptT ==> flip evalState init_state
   ) :: Program -> Path -> Either Error Haskell
@@ -172,9 +177,9 @@ values_or_type_definition_g = ( \case
 -- main
 
 main =
-  mapM_ read_and_generate_example path_pairs
-  -- >>
-  -- mapM_ exec_path_pair_to_cmd exec_path_pairs >>
-  -- callCommand "rm haskell/correct/*.hi haskell/correct/*.o" >>
-  -- callCommand "for f in ./executables/correct/*; do echo \"\n$f\n\"; $f; done"
+  mapM_ read_and_gen_example path_pairs
+  >>
+  mapM_ exec_path_pair_to_cmd exec_path_pairs >>
+  callCommand "rm haskell/correct/*.hi haskell/correct/*.o" >>
+  callCommand "for f in ./executables/correct/*; do echo \"\n$f\n\"; $f; done"
   :: IO ()
