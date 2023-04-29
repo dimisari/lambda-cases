@@ -1,5 +1,7 @@
 module GenerationHelpers.TypeChecking where
 
+import Control.Monad (zipWithM)
+
 import Helpers (Haskell, (==>))
 
 import ParsingTypes.LowLevel (ValueName(..))
@@ -29,6 +31,6 @@ equiv_func_types = ( \(InAndOutTs in_t1 out_t1) (InAndOutTs in_t2 out_t2) ->
   ) :: FuncType -> FuncType -> Stateful Bool
 
 equiv_prod_types = ( \val_ts1 val_ts2 -> case length val_ts1 == length val_ts2 of
-  True -> zipWith equiv_types val_ts1 val_ts2==>sequence==>fmap and
+  True -> zipWithM equiv_types val_ts1 val_ts2==>fmap and
   False -> return False
   ) :: [ ValType ] -> [ ValType ] -> Stateful Bool

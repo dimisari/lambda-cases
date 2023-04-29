@@ -1,7 +1,7 @@
 module GenerationHelpers.ErrorMessages where
   
 import Helpers (Error)
-import ParsingTypes.LowLevel (ValueName)
+import ParsingTypes.LowLevel (ValueName, Literal)
 import IntermediateTypes.Types (ValType)
 
 -- All
@@ -19,3 +19,12 @@ tuple_field_length_err =
   "\nLength of tuple values and fields of the corresponding tuple_type must be " ++
   "the same\n"
   :: Error
+
+last_int_case_err = ( \literal ->
+  "last case of Int type must be \"... ->\" or \"some_name ->\"" ++
+  "to catch all the remaining cases.\nInstead of: \"" ++ show literal ++ " ->\""
+  ) :: Literal -> Error
+
+cases_not_covered = ( \val_name val_names ->
+  "the following cases are not covered: " ++ show (filter (/= val_name) val_names)
+  ) :: ValueName -> [ ValueName ] -> Error

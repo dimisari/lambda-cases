@@ -94,17 +94,16 @@ in_t_hs_from = ( \maybe_in_t cons_and_vars -> case maybe_in_t of
 -- OrTDef: or_t_def_g, or_type_cases_g
 
 or_t_def_g = (
-  \or_type_def@(OTConsVarsAndCases cons_and_vars or_type_cases) -> 
+  \or_type_def@(OTConsVarsAndCases cons_and_vars or_t_cs) -> 
   insert_or_type_to_map or_type_def >>
-  mapM (flip or_type_case_g cons_and_vars) or_type_cases >>= \cases_hs ->
+  mapM (flip or_type_case_g cons_and_vars) or_t_cs >>= \cases_hs ->
   return $
     "\ndata " ++ show cons_and_vars ++ " =\n  " ++
     intercalate " | " cases_hs ++ "\n  deriving Show\n"
   ) :: OrTDef -> Stateful Haskell
 
-insert_or_type_to_map = (
-  \(OTConsVarsAndCases (TConsAndVars cons vars) or_type_cases) -> 
-  type_map_insert cons (OrType (length vars) or_type_cases)
+insert_or_type_to_map = ( \(OTConsVarsAndCases (TConsAndVars cons vars) or_t_cs) -> 
+  type_map_insert cons (OrType (length vars) or_t_cs)
   ) :: OrTDef -> Stateful ()
 
 -- OrTypeDef: or_type_def_g

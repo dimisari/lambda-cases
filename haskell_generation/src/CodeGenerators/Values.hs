@@ -1,7 +1,7 @@
 module CodeGenerators.Values where
 
 import Data.List (intercalate, splitAt)
-import Control.Monad (foldM)
+import Control.Monad (foldM, zipWithM)
 import Control.Monad.State ((>=>))
 import Control.Monad.Trans.Except (throwE, catchE)
 
@@ -33,54 +33,11 @@ import CodeGenerators.OperatorValues
 
 -- LitOrValName: lit_or_val_name_g
 
-data ValNameIsOrCase = 
-  IsCase [ ValueName ] | IsNotCase
-
-check_is_or_case = ( \val_name -> \case
-  (_, []) -> IsNotCase
-  (acc, c:cs) -> case c == val_name of
-    True -> IsCase $ acc ++ cs
-    False -> check_is_or_case val_name (c:acc, cs)
-  ) :: ValueName -> ([ValueName], [ValueName])  -> ValNameIsOrCase
-
-maybe_value_vn_g = ( \val_name val_type -> 
-  value_map_get val_name >>= \val_name_t ->
-  equiv_types val_name_t val_type >>= \case
-    True -> return $ "C" ++ show val_name
-    False -> has_value_vn_g val_name val_name_t
-  ) :: ValueName -> ValType -> Stateful Haskell
-
-has_value_vn_g = ( \val_name -> \case
-  FuncType (InAndOutTs in_t _) ->
-    value_map_insert (VN "value") in_t >> case in_t of
-    TypeApp (ConsAndInTs type_name []) -> type_map_get type_name >>= \case
-      TupleType _ fields -> with_tuple_t_value_vn_g val_name type_name fields
-      _ -> return ("C" ++ show val_name ++ " value")
-    ProdType types -> with_prod_t_value_vn_g val_name types
-    _ -> return ("C" ++ show val_name ++ " value")
-  _ -> error
-    "case_with_value_vn_g: val_name_t not a FuncType, should be impossible"
-  ) :: ValueName -> ValType -> Stateful Haskell
-
-with_tuple_t_value_vn_g = ( \val_name type_name fields ->
-  mapM field_ins_and_ret_hs fields >>= \fields_hs ->
-  return
-    ( "C" ++ show val_name ++ " value@(C" ++ show type_name ++ 
-      concatMap (" " ++) fields_hs ++ ")"
-    )
-  ) :: ValueName -> TypeName -> [ TTField ] -> Stateful Haskell
-
-with_prod_t_value_vn_g = ( \val_name types ->
-  zipWith val_n_ins_and_ret_hs prod_t_field_ns types ==> sequence >>= \fields_hs ->
-  return
-    ( "C" ++ show val_name ++ " value@(" ++ intercalate (", ") fields_hs ++ ")" )
-  ) :: ValueName -> [ ValType ] -> Stateful Haskell
-
 or_type_vn_g = ( \val_name names val_type ->
   case check_is_or_case val_name ([], names) of
     IsCase other_names ->
-      maybe_value_vn_g val_name val_type >>= \hs ->
-      return (other_names, hs)
+      maybe_value_g val_name val_type >>= \maybe_value_hs ->
+      return (other_names, "C" ++ show val_name ++ maybe_value_hs)
     IsNotCase -> throwE $
       show val_name ++ " is not a case of the or_type: " ++ show val_type
   ) :: ValueName -> [ ValueName ] -> ValType ->
@@ -88,9 +45,10 @@ or_type_vn_g = ( \val_name names val_type ->
 
 last_or_type_vn_g = ( \val_name names val_type -> case elem val_name names of
   True -> case names == [ val_name ] of 
-    True -> maybe_value_vn_g val_name val_type
-    False -> throwE $
-      "the following cases are not covered: " ++ show (filter (/= val_name) names)
+    True ->
+      maybe_value_g val_name val_type >>= \maybe_value_hs ->
+      return $ "C" ++ show val_name ++ maybe_value_hs
+    False -> throwE $ cases_not_covered val_name names
   False -> val_n_ins_and_ret_hs val_name val_type
   ) :: ValueName -> [ ValueName ] -> ValType -> Stateful Haskell
 
@@ -101,23 +59,43 @@ int_lovn_g = ( \case
 
 last_int_lovn_g = ( \case 
   ValueName val_name -> val_n_ins_and_ret_hs val_name int
-  Literal literal ->
-    throwE $
-      "last case of Int type must be \"... ->\" or \"some_name ->\""
-      ++
-      "to catch all the remaining cases.\nInstead of: \""
-      ++ show literal ++ " ->\""
+  Literal literal -> throwE $ last_int_case_err literal
   ) :: LitOrValName -> Stateful Haskell
 
-not_last_lit_or_val_name_g = ( \case
-  Literal literal -> literal_g literal
-  ValueName value_name -> value_name_g value_name
-  ) :: LitOrValName -> ValType -> Stateful Haskell
+maybe_value_g = ( \val_name val_type -> 
+  value_map_get val_name >>= \val_name_t ->
+  equiv_types val_name_t val_type >>= \case
+    True -> return ""
+    False -> has_value_g val_name_t
+  ) :: ValueName -> ValType -> Stateful Haskell
 
-last_lit_or_val_name_g = ( \case
-  Literal literal -> literal_g literal
-  ValueName value_name -> val_n_ins_and_ret_hs value_name
-  ) :: LitOrValName -> ValType -> Stateful Haskell
+has_value_g = ( \case 
+  FuncType (InAndOutTs in_t _) ->
+    value_map_insert (VN "value") in_t >>
+    value_matching_in_t_g in_t >>= \value_matching_hs ->
+    return $ " value" ++ value_matching_hs
+  _ -> error
+    "case_with_value_vn_g: val_name_t not a FuncType, should be impossible"
+  ) :: ValType -> Stateful Haskell
+
+value_matching_in_t_g = ( \case
+  TypeApp (ConsAndInTs type_name []) -> value_matching_type_name_g type_name
+  ProdType types -> prod_type_matching_g types
+  _ -> return ""
+  ) :: ValType -> Stateful Haskell
+
+value_matching_type_name_g = type_name_matching_g (return "")
+  :: TypeName -> Stateful Haskell
+
+data ValNameIsOrCase = 
+  IsCase { other_cases :: [ ValueName ] } | IsNotCase
+
+check_is_or_case = ( \val_name -> \case
+  (_, []) -> IsNotCase
+  (acc, c:cs) -> case c == val_name of
+    True -> IsCase $ acc ++ cs
+    False -> check_is_or_case val_name (c:acc, cs)
+  ) :: ValueName -> ([ValueName], [ValueName]) -> ValNameIsOrCase
 
 -- SpecificCase: abs_g 
 
@@ -141,19 +119,19 @@ or_type_last_case_g = ( \(val_name, val_expr) (InAndOutTs in_t out_t) names ->
   ) :: (ValueName, ValueExpression) -> FuncType -> [ ValueName ] ->
        Stateful Haskell
 
-int_specific_case_g = ( \(SpecificCase lit_or_val_name val_expr) out_t ->
-  get_ind_lev >>= \ind_lev ->
-  int_lovn_g lit_or_val_name >>= \int_lovn_hs ->
-  value_expression_g val_expr out_t >>= \val_expr_hs ->
-  return $ indent ind_lev ++ int_lovn_hs ++ " -> " ++ val_expr_hs
-  ) :: SpecificCase -> ValType -> Stateful Haskell
+int_specific_case_g = int_case_general_g int_lovn_g
+  :: SpecificCase -> ValType -> Stateful Haskell
 
-int_last_case_g = ( \(SpecificCase lit_or_val_name val_expr) out_t ->
+int_last_case_g = int_case_general_g last_int_lovn_g
+  :: SpecificCase -> ValType -> Stateful Haskell
+
+int_case_general_g = ( \lovn_g (SpecificCase lit_or_val_name val_expr) out_t ->
   get_ind_lev >>= \ind_lev ->
-  last_int_lovn_g lit_or_val_name >>= \int_lovn_hs ->
+  lovn_g lit_or_val_name >>= \int_lovn_hs ->
   value_expression_g val_expr out_t >>= \val_expr_hs ->
   return $ indent ind_lev ++ int_lovn_hs ++ " -> " ++ val_expr_hs
-  ) :: SpecificCase -> ValType -> Stateful Haskell
+  ) :: (LitOrValName -> Stateful Haskell) -> SpecificCase -> ValType ->
+       Stateful Haskell
 
 -- DefaultCase: 
 
@@ -247,8 +225,7 @@ check_type = ( \case
 check_func_type = ( \func_type@(InAndOutTs in_t out_t) -> case in_t of
   TypeApp (ConsAndInTs type_name []) ->
     type_map_get type_name >>= \case
-      OrType _ or_cases ->
-        return $ OrTInput (map get_c_name or_cases) func_type
+      OrType _ or_cases -> return $ OrTInput (map get_c_name or_cases) func_type
       IntType -> return $ IntInput out_t
       _ -> undefined
   other_t -> throwE $ 
@@ -290,9 +267,9 @@ values_to_list = ( \ntav_lists -> case ntav_lists of
   _ -> error $ "values_to_list: should be impossible"
   ) :: Values -> [ (ValueName, ValueType, ValueExpression) ]
 
-list_of_values_g = ( \values ->
-  values==>mapM name_type_and_value_g >>= concat .> return
-  ) :: [ (ValueName, ValueType, ValueExpression) ] -> Stateful Haskell
+list_of_values_g = 
+  mapM name_type_and_value_g .> fmap concat
+  :: [ (ValueName, ValueType, ValueExpression) ] -> Stateful Haskell
 
 -- Where: where_g, where_type_inference_g 
 

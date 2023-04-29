@@ -1,7 +1,7 @@
 module CodeGenerators.OperatorValues where
 
 import Data.List (intercalate)
-import Control.Monad.State ((>=>))
+import Control.Monad (zipWithM, (>=>))
 import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers (Haskell, Error, (==>), (.>), indent)
@@ -65,7 +65,7 @@ tuple_fields_g = ( \vals fields t_name -> case length vals == length fields of
 
 tuple_vals_field_types_g = ( \vals types t_name ->
   get_ind_lev >>= \ind_lev ->
-  zipWith operator_expression_g vals types==>sequence
+  zipWithM operator_expression_g vals types
     >>= concatMap ( \val_hs -> " (" ++ val_hs ++ ")" ) .> \vals_hs -> 
   return $
     "\n" ++ indent (ind_lev + 1) ++ "(C" ++ show t_name ++ vals_hs ++ ")"
@@ -74,7 +74,7 @@ tuple_vals_field_types_g = ( \vals types t_name ->
 tuple_vals_prod_types_g = ( \vals types -> case length types == length vals of
   False -> throwE "Length of tuple does not match length of product type"
   True -> 
-    zipWith operator_expression_g vals types==>sequence >>= \vals_hs ->
+    zipWithM operator_expression_g vals types >>= \vals_hs ->
     return $ "(" ++ intercalate ", " vals_hs ++ ")"
   ) :: [ OperatorExpression ] -> [ ValType ] -> Stateful Haskell
 

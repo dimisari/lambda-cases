@@ -1,7 +1,7 @@
 module CodeGenerators.LowLevel where
 
 import Data.List (intercalate)
-import Control.Monad ((>=>))
+import Control.Monad ((>=>), zipWithM)
 import Control.Monad.Trans.Except (throwE)
 
 import Helpers (Haskell, (==>), (.>))
@@ -63,31 +63,39 @@ abs_val_map_remove = ( \case
 
 -- Abstraction (abstraction_g):
 -- use_fields_g, use_fields_tuple_matching_g, use_fields_type_name_g,
--- use_fields_prod_type_g
+-- prod_type_matching_g
 
 use_fields_g = ( \val_type ->
   value_map_insert (VN "tuple") val_type >>
   use_fields_tuple_matching_g val_type >>= \tuple_matching_hs ->
-  return $ "tuple@" ++ tuple_matching_hs
+  return $ "tuple" ++ tuple_matching_hs
   ) :: ValType -> Stateful Haskell
 
 use_fields_tuple_matching_g = ( \case
   TypeApp (ConsAndInTs type_name _) -> use_fields_type_name_g type_name
-  ProdType types -> use_fields_prod_type_g types
+  ProdType types -> prod_type_matching_g types
   t -> throwE $ "Can't use \"use_fields\" on the type: " ++ show t
   ) :: ValType -> Stateful Haskell
 
 use_fields_type_name_g = ( \type_name ->
-  type_map_get type_name >>= \case
-    TupleType _ fields -> 
-      mapM field_ins_and_ret_hs fields >>= \fields_hs ->
-      return $ "(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")"
-    _ -> throwE $ "Can't use \"use_fields\" on the type: " ++ show type_name
+  type_name_matching_g
+    (throwE $ "Can't use \"use_fields\" on the type: " ++ show type_name) type_name
   ) :: TypeName -> Stateful Haskell
 
-use_fields_prod_type_g = ( \types ->
-  zipWith val_n_ins_and_ret_hs prod_t_field_ns types ==> sequence >>= \fields_hs ->
-  return $ "(" ++ intercalate ", " fields_hs ++ ")"
+type_name_matching_g = ( \not_tuple_type_g type_name ->
+  type_map_get type_name >>= \case
+    TupleType _ fields -> tuple_type_matching_g type_name fields
+    _ -> not_tuple_type_g
+  ) :: Stateful Haskell -> TypeName -> Stateful Haskell
+
+tuple_type_matching_g = ( \type_name fields ->
+  mapM field_ins_and_ret_hs fields >>= \fields_hs ->
+  return $ "@(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")"
+  ) :: TypeName -> [ TTField ] -> Stateful Haskell
+
+prod_type_matching_g = ( \types ->
+  zipWithM val_n_ins_and_ret_hs prod_t_field_ns types >>= \fields_hs ->
+  return $ "@(" ++ intercalate ", " fields_hs ++ ")"
   ) :: [ ValType ] -> Stateful Haskell
 
 -- Abstraction (abs_val_map_remove): use_fs_map_remove, use_fs_tn_map_remove
