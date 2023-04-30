@@ -50,12 +50,3 @@ type Haskell = String
 
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
-
--- Debugging: debug, debug_with_msg
-
-debug = ( \f -> catchE f (\_ -> throwE "hi" ) )
-  :: ExceptT String (State b) c -> ExceptT String (State b) c
-
-debug_with_msg = ( \f s -> catchE f (\_ -> throwE s ) )
-  :: ExceptT String (State b) c -> String -> ExceptT String (State b) c
-

@@ -46,13 +46,13 @@ instance Show ValType where
     ProdType types -> "(" ++ map show types==>intercalate ", " ++ ")"
     TypeVar int -> ["T1", "T2", "T3", "T4", "T5"] !! (int-1)
 
--- Helpers: t_name_to_value_t, int, bool
+-- Helpers: tn_to_val_t, int, bool
 
-t_name_to_value_t = ( \type_name -> TypeApp $ ConsAndInTs type_name [] )
+tn_to_val_t = ( \type_name -> TypeApp $ ConsAndInTs type_name [] )
   :: TypeName -> ValType
 
-int = t_name_to_value_t $ TN "Int"
+int = tn_to_val_t $ TN "Int"
   :: ValType
 
-bool = t_name_to_value_t $ TN "Bool"
+bool = tn_to_val_t $ TN "Bool"
   :: ValType

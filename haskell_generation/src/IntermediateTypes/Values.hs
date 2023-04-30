@@ -6,11 +6,17 @@ import ParsingTypes.OperatorValues (BaseValue, MultExpr)
 
 data Application =
   AppTrees ApplicationTree ApplicationTree
-  deriving Show
+
+instance Show Application where
+  show = \(AppTrees tree1 tree2) -> show tree1 ++ "<==" ++ show tree2
 
 data ApplicationTree = 
   Application Application | BaseValueLeaf BaseValue
-  deriving Show
+
+instance Show ApplicationTree where
+  show = \case 
+    Application app -> show app
+    BaseValueLeaf base_val -> show base_val
 
 -- Addition, Subtraction, AddSubOrMExpr
 

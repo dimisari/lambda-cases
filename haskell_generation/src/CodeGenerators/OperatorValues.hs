@@ -41,29 +41,29 @@ paren_type_inf_g = ( \(InnerExpr expr) ->
   ) :: Parenthesis -> Stateful (Haskell, ValType)
 
 -- Tuple:
--- tuple_g, tuple_t_name_g, tuple_vals_prod_types_g,
--- tuple_vals_field_types_g, tuple_type_inf_g
+-- tuple_g, tuple_t_name_g, tuple_prod_t_g,
+-- correct_length_tuple_tt_g, tuple_type_inf_g
 
 tuple_g = ( \(TupleExpressions val1 val2 vals) -> \case
   FuncType _ -> throwE "Tuple can't have function type"
   TypeApp (ConsAndInTs t_name _) -> tuple_t_name_g (val1 : val2 : vals) t_name
-  ProdType types -> tuple_vals_prod_types_g (val1 : val2 : vals) types
+  ProdType types -> tuple_prod_t_g (val1 : val2 : vals) types
   _ -> undefined
   ) :: Tuple -> ValType -> Stateful Haskell
 
 tuple_t_name_g = ( \vals t_name -> type_map_get t_name >>= \case
   OrType _ _ -> throwE "Tuple can't be an or_type"
-  TupleType _ fields -> tuple_fields_g vals fields t_name
+  TupleType _ fields -> tuple_tuple_t_g vals fields t_name
   IntType -> throwE "Tuple can't be an Int"
   CharType -> throwE "Tuple can't be a Char"
   ) :: [ OperatorExpression ] -> TypeName -> Stateful Haskell
 
-tuple_fields_g = ( \vals fields t_name -> case length vals == length fields of 
+tuple_tuple_t_g = ( \vals fields t_name -> case length vals == length fields of 
   False -> throwE tuple_field_length_err
-  True -> tuple_vals_field_types_g vals (map get_type fields) t_name
+  True -> correct_length_tuple_tt_g vals (map get_type fields) t_name
   ) :: [ OperatorExpression ] -> [ TTField ] -> TypeName -> Stateful Haskell
 
-tuple_vals_field_types_g = ( \vals types t_name ->
+correct_length_tuple_tt_g = ( \vals types t_name ->
   get_ind_lev >>= \ind_lev ->
   zipWithM operator_expression_g vals types
     >>= concatMap ( \val_hs -> " (" ++ val_hs ++ ")" ) .> \vals_hs -> 
@@ -71,7 +71,7 @@ tuple_vals_field_types_g = ( \vals types t_name ->
     "\n" ++ indent (ind_lev + 1) ++ "(C" ++ show t_name ++ vals_hs ++ ")"
   ) :: [ OperatorExpression ] -> [ ValType ] -> TypeName -> Stateful Haskell
 
-tuple_vals_prod_types_g = ( \vals types -> case length types == length vals of
+tuple_prod_t_g = ( \vals types -> case length types == length vals of
   False -> throwE "Length of tuple does not match length of product type"
   True -> 
     zipWithM operator_expression_g vals types >>= \vals_hs ->
@@ -143,14 +143,12 @@ application_g = ( \application val_type ->
   ) :: Application -> ValType -> Stateful Haskell
 
 application_type_inf_g = ( \application@(AppTrees tree1 tree2) ->
-  app_tree_type_inf_g tree1 >>= \(tree1_hs, tree1_t) ->
-  case tree1_t of 
+  app_tree_type_inf_g tree1 >>= \(tree1_hs, tree1_t) -> case tree1_t of 
     FuncType func_type ->
       catchE
         (normal_app_type_inf_g tree1_hs func_type tree2)
         (application_handler application func_type)
-    _ -> throwE $
-      "Cannot apply something that is not a function:\n" ++ show tree1 ++ "\n"
+    _ -> throwE $ cant_apply_non_func_err tree1 tree2 tree1_t
   ) :: Application -> Stateful (Haskell, ValType)
 
 normal_app_type_inf_g = (
@@ -281,7 +279,7 @@ add_sub_g = ( \expr op mult_expr val_type ->
 equality_g = ( \(EqualityTerms term1 term2) -> \case 
   TypeApp (ConsAndInTs (TN "Bool") []) ->
     add_sub_expr_g term1 int >>= \term1_hs ->
-    add_sub_expr_g  term2 int >>= \term2_hs ->
+    add_sub_expr_g term2 int >>= \term2_hs ->
     return $ term1_hs ++ " == " ++ term2_hs
   t -> throwE $ "Equality must be of type Bool, not: " ++ show t
   ) :: Equality -> ValType -> Stateful Haskell
@@ -328,4 +326,3 @@ op_expr_type_inf_g = ( \case
   InputOpExpr input_op_expr -> input_op_expr_type_inf_g input_op_expr
   PureOpExpr op_expr -> pure_op_expr_type_inf_g op_expr
   ) :: OperatorExpression -> Stateful (Haskell, ValType)
-

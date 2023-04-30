@@ -74,12 +74,11 @@ use_fields_g = ( \val_type ->
 use_fields_tuple_matching_g = ( \case
   TypeApp (ConsAndInTs type_name _) -> use_fields_type_name_g type_name
   ProdType types -> prod_type_matching_g types
-  t -> throwE $ "Can't use \"use_fields\" on the type: " ++ show t
+  val_t -> throwE $ use_fields_err val_t
   ) :: ValType -> Stateful Haskell
 
 use_fields_type_name_g = ( \type_name ->
-  type_name_matching_g
-    (throwE $ "Can't use \"use_fields\" on the type: " ++ show type_name) type_name
+  type_name_matching_g (throwE $ use_fields_err $ tn_to_val_t type_name) type_name
   ) :: TypeName -> Stateful Haskell
 
 type_name_matching_g = ( \not_tuple_type_g type_name ->
@@ -157,9 +156,7 @@ abstractions_g = ( \case
       abstraction_g abs1 in_t >>= \abs1_hs ->
       abstractions_g other_abs out_t >>= \(final_t, other_abs_hs) ->
       return (final_t, abs1_hs ++ " " ++ other_abs_hs)
-    t -> throwE $
-      "Have input: " ++ show abs1 ++ "\nBut the type: " ++ show t ++
-      "\nis not a function type"
+    val_t -> throwE $ not_func_t_err abs1 val_t
   ) :: [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)
 
 input_val_map_remove = ( \case

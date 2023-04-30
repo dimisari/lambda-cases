@@ -63,6 +63,8 @@ wrong_names =
   , "out_of_scope4"
   , "or_t_use_fields"
   , "func_t_use_fields"
+  , "not_func"
+  , "not_func2"
   ]
   :: [ String ]
 

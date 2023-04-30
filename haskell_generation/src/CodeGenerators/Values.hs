@@ -38,10 +38,8 @@ or_type_vn_g = ( \val_name names val_type ->
     IsCase other_names ->
       maybe_value_g val_name val_type >>= \maybe_value_hs ->
       return (other_names, "C" ++ show val_name ++ maybe_value_hs)
-    IsNotCase -> throwE $
-      show val_name ++ " is not a case of the or_type: " ++ show val_type
-  ) :: ValueName -> [ ValueName ] -> ValType ->
-       Stateful ([ ValueName ], Haskell)
+    IsNotCase -> throwE $ not_or_type_case_err val_name val_type
+  ) :: ValueName -> [ ValueName ] -> ValType -> Stateful ([ ValueName ], Haskell)
 
 last_or_type_vn_g = ( \val_name names val_type -> case elem val_name names of
   True -> case names == [ val_name ] of 
@@ -201,14 +199,13 @@ check_all_vns = mapM check_vn
 
 check_vn = ( \case
   ValueName vn -> return vn
-  Literal lit -> throwE $
-    "can't have literal: " ++ show lit ++ "in case of or_type"
+  Literal lit -> throwE $ lit_in_or_type_case_err lit
   ) :: LitOrValName -> Stateful ValueName
 
 check_dup_vns = ( \case
   [] -> return ()
   vn : vns -> case elem vn vns of
-    True -> throwE $ "duplicate or_type case: " ++ show vn
+    True -> throwE $ "Duplicate or_type case: " ++ show vn
     False -> check_dup_vns vns
   ) :: [ ValueName ] -> Stateful ()
 
@@ -217,9 +214,7 @@ data CasesTypeInfo =
 
 check_type = ( \case
   FuncType func_type -> check_func_type func_type
-  other_t -> throwE $
-    "cases expression has type:" ++ show other_t ++
-    "\ninstead of a funtion type\n"
+  other_t -> throwE $ cases_expr_not_func_t_err other_t
   ) :: ValType -> Stateful CasesTypeInfo
 
 check_func_type = ( \func_type@(InAndOutTs in_t out_t) -> case in_t of
@@ -228,9 +223,7 @@ check_func_type = ( \func_type@(InAndOutTs in_t out_t) -> case in_t of
       OrType _ or_cases -> return $ OrTInput (map get_c_name or_cases) func_type
       IntType -> return $ IntInput out_t
       _ -> undefined
-  other_t -> throwE $ 
-    "cases expression has input type:" ++ show other_t ++
-    "\ninstead of: some or_type, Int or Char \n"
+  other_t -> throwE $ cases_expr_wrong_in_t_err other_t
   ) :: FuncType -> Stateful CasesTypeInfo
 
 cases_type_inference_g = (
