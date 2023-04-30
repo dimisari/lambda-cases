@@ -15,7 +15,7 @@ import GenerationState.TypesAndOperations (Stateful, type_map_get)
 -- All: equiv_types, equiv_func_types, equiv_prod_types,
 
 equiv_types = ( \val_type1 val_type2 -> case (val_type1, val_type2) of
-  (TypeApp (ConsAndInTs t_name1 _), TypeApp (ConsAndInTs t_name2 _)) ->
+  (TypeApp (ConsAndTIns t_name1 _), TypeApp (ConsAndTIns t_name2 _)) ->
     return $ t_name1 == t_name2
   (ProdType types1, ProdType types2) ->
     equiv_prod_types types1 types2

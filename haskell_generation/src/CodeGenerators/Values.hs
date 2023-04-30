@@ -77,7 +77,7 @@ has_value_g = ( \case
   ) :: ValType -> Stateful Haskell
 
 value_matching_in_t_g = ( \case
-  TypeApp (ConsAndInTs type_name []) -> value_matching_type_name_g type_name
+  TypeApp (ConsAndTIns type_name []) -> value_matching_type_name_g type_name
   ProdType types -> prod_type_matching_g types
   _ -> return ""
   ) :: ValType -> Stateful Haskell
@@ -218,7 +218,7 @@ check_type = ( \case
   ) :: ValType -> Stateful CasesTypeInfo
 
 check_func_type = ( \func_type@(InAndOutTs in_t out_t) -> case in_t of
-  TypeApp (ConsAndInTs type_name []) ->
+  TypeApp (ConsAndTIns type_name []) ->
     type_map_get type_name >>= \case
       OrType _ or_cases -> return $ OrTInput (map get_c_name or_cases) func_type
       IntType -> return $ IntInput out_t

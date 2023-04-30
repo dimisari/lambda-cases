@@ -47,7 +47,7 @@ prod_t_to_val_t = ( \(ProductTypes val_t1 val_t2 other_val_ts) ->
 -- TypeApplication: type_app_conv
 
 type_app_conv = ( \(TypeConsAndInputs cons_name left_t_ins right_t_ins) ->
-  ConsAndInTs cons_name $
+  ConsAndTIns cons_name $
     left_t_ins_conv left_t_ins ++ right_t_ins_conv right_t_ins
   ) :: TypeApplication -> TypeApp
 

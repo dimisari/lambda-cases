@@ -72,7 +72,7 @@ use_fields_g = ( \val_type ->
   ) :: ValType -> Stateful Haskell
 
 use_fields_tuple_matching_g = ( \case
-  TypeApp (ConsAndInTs type_name _) -> use_fields_type_name_g type_name
+  TypeApp (ConsAndTIns type_name _) -> use_fields_type_name_g type_name
   ProdType types -> prod_type_matching_g types
   val_t -> throwE $ use_fields_err val_t
   ) :: ValType -> Stateful Haskell
@@ -102,7 +102,7 @@ prod_type_matching_g = ( \types ->
 use_fs_map_remove = ( 
   value_map_get (VN "tuple") >>= \tuple_t -> 
   value_map_remove (VN "tuple") >> case tuple_t of
-    TypeApp (ConsAndInTs type_name _) -> use_fs_tn_map_remove type_name 
+    TypeApp (ConsAndTIns type_name _) -> use_fs_tn_map_remove type_name 
     ProdType types -> mapM_ value_map_remove $ take (length types) prod_t_field_ns
     _ -> error "use_fs_map_remove: should be impossible"
   ) :: Stateful ()

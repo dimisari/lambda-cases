@@ -26,11 +26,11 @@ instance Show FuncType where
 -- TypeApp
 
 data TypeApp = 
-  ConsAndInTs TypeName [ ValType ]
+  ConsAndTIns TypeName [ ValType ]
   deriving Eq
 
 instance Show TypeApp where
-  show = \(ConsAndInTs type_name type_inputs) ->
+  show = \(ConsAndTIns type_name type_inputs) ->
     show type_name ++ concatMap (show .> (" " ++)) type_inputs
 
 -- ValType
@@ -48,7 +48,7 @@ instance Show ValType where
 
 -- Helpers: tn_to_val_t, int, bool
 
-tn_to_val_t = ( \type_name -> TypeApp $ ConsAndInTs type_name [] )
+tn_to_val_t = ( \type_name -> TypeApp $ ConsAndTIns type_name [] )
   :: TypeName -> ValType
 
 int = tn_to_val_t $ TN "Int"
