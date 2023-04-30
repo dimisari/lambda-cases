@@ -92,7 +92,11 @@ main = print res
 
 data IntList =
   Cnon_empty (Int, IntList) | Cempty
-  deriving Show
+
+instance Show IntList where
+  show = \case
+    Cnon_empty val -> "non_empty<==\n" ++ show val
+    Cempty -> "empty"
 
 apply_to_all :: (Int -> Int) -> IntList -> IntList
 apply_to_all = \f -> \case

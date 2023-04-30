@@ -50,14 +50,14 @@ some_right_type_vars_p =
   )
   :: Parser RightTypeVars
 
--- TypeConsAndVars: cons_and_type_vars_p
+-- TypeNameExpr: cons_and_type_vars_p
 
 cons_and_type_vars_p = 
   left_type_vars_p >>= \left_type_vars ->
   type_name_p >>= \type_name ->
   right_type_vars_p >>= \right_type_vars ->
-  return $ TypeConsAndVars type_name left_type_vars right_type_vars
-  :: Parser TypeConsAndVars
+  return $ TypeNameExpr type_name left_type_vars right_type_vars
+  :: Parser TypeNameExpr
 
 -- Field: field_name_and_type_p
 
@@ -73,7 +73,7 @@ tuple_type_definition_p =
   string "\nvalue (" >>
   (field_name_and_type_p==>sepBy $ string ", ") >>= \fields ->
   string ")" >>
-  return (ConsVarsAndFields cons_and_type_vars fields)
+  return (NameExprAndFields cons_and_type_vars fields)
   :: Parser TupleTypeDef
 
 -- OrTypeCase: case_and_maybe_type_p
@@ -92,7 +92,7 @@ or_type_definition_p =
   string "\nvalues " >> case_and_maybe_type_p >>= \case1 ->
   string " | " >> case_and_maybe_type_p >>= \case2 ->
   many (try $ string " | " >> case_and_maybe_type_p) >>= \cases ->
-  return (ConsVarsAndCases cons_and_type_vars case1 case2 cases)
+  return (NameExprAndCases cons_and_type_vars case1 case2 cases)
   :: Parser OrTypeDef
 
 -- TypeDefinition: type_definition_p

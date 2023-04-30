@@ -92,11 +92,21 @@ main = print res
 
 data IntHeadAndTail =
   CIntHeadAndTail { get_head :: Int, get_tail :: IntList }
-  deriving Show
+
+instance Show IntHeadAndTail where
+  show = \(CIntHeadAndTail head tail) ->
+    "( " ++ 
+    "head = " ++ show head ++ "\n, " ++ 
+    "tail = " ++ show tail ++
+    ")"
 
 data IntList =
   Chead_and_tail IntHeadAndTail | Cempty
-  deriving Show
+
+instance Show IntList where
+  show = \case
+    Chead_and_tail val -> "head_and_tail<==\n" ++ show val
+    Cempty -> "empty"
 
 apply_to_all :: (Int -> Int) -> IntList -> IntList
 apply_to_all = \f -> \case

@@ -9,7 +9,7 @@ import ParsingTypes.Types (TypeName, ValueType)
 
 -- Types:
 -- ManyTNamesInParen, LeftTypeVars, RightTypeVars,
--- TypeConsAndVars,
+-- TypeNameExpr,
 -- Field, TupleTypeDef, OrTypeCase, OrTypeDef, TypeDefinition
 
 -- ManyTNamesInParen
@@ -43,13 +43,13 @@ instance Show RightTypeVars where
     OneRightTypeVar type_name -> "<==" ++ show type_name
     ManyRightTypeVars t_names_in_paren -> "<==" ++ show t_names_in_paren
 
--- TypeConsAndVars
+-- TypeNameExpr
 
-data TypeConsAndVars =
-  TypeConsAndVars TypeName LeftTypeVars RightTypeVars
+data TypeNameExpr =
+  TypeNameExpr TypeName LeftTypeVars RightTypeVars
 
-instance Show TypeConsAndVars where
-  show = \(TypeConsAndVars type_name left_type_vars right_type_vars) ->
+instance Show TypeNameExpr where
+  show = \(TypeNameExpr type_name left_type_vars right_type_vars) ->
     show left_type_vars ++ show type_name ++ show right_type_vars
 
 -- Field
@@ -64,10 +64,10 @@ instance Show Field where
 -- TupleTypeDef
 
 data TupleTypeDef =
-  ConsVarsAndFields TypeConsAndVars [ Field ]
+  NameExprAndFields TypeNameExpr [ Field ]
 
 instance Show TupleTypeDef where
-  show = \(ConsVarsAndFields type_cons_and_vars fields) ->
+  show = \(NameExprAndFields type_cons_and_vars fields) ->
     "\ntuple_type " ++ show type_cons_and_vars ++
     "\nvalue (" ++ fields==>map show==>intercalate ", "  ++ ")\n"
 
@@ -85,10 +85,10 @@ instance Show OrTypeCase where
 -- OrTypeDef
 
 data OrTypeDef =
-  ConsVarsAndCases TypeConsAndVars OrTypeCase OrTypeCase [ OrTypeCase ]
+  NameExprAndCases TypeNameExpr OrTypeCase OrTypeCase [ OrTypeCase ]
 
 instance Show OrTypeDef where
-  show = \(ConsVarsAndCases type_cons_and_vars case1 case2 cases) ->
+  show = \(NameExprAndCases type_cons_and_vars case1 case2 cases) ->
     "\nor_type " ++ show type_cons_and_vars ++
     "\nvalues " ++ (case1 : case2 : cases)==>map show==>intercalate " | " ++ "\n"
 

@@ -7,13 +7,13 @@ import Conversions.Types (val_type_conv)
 
 -- All: ValType, Type Definitions
 
--- TypeConsAndVars: cons_and_t_vars_conv
+-- TypeNameExpr: cons_and_t_vars_conv
 
-cons_and_t_vars_conv = ( \(TypeConsAndVars cons_name left_t_vars right_t_vars) ->
-  TConsAndVars cons_name $
+cons_and_t_vars_conv = ( \(TypeNameExpr cons_name left_t_vars right_t_vars) ->
+  TNameExpr cons_name $
     flip zip [ "a", "b", "c", "d", "e" ] $
       left_t_vars_conv left_t_vars ++ right_t_vars_conv right_t_vars
-  ) :: TypeConsAndVars -> TConsAndVars
+  ) :: TypeNameExpr -> TNameExpr
 
 left_t_vars_conv = ( \case
   NoLeftTypeVars -> []
@@ -38,15 +38,15 @@ field_conv = ( \(NameAndType value_name value_type) ->
   FNameAndType value_name (val_type_conv value_type)
   ) :: Field -> TTField
 
-tuple_type_def_conv = ( \(ConsVarsAndFields type_app fields) ->
-  TTConsVarsAndFields (cons_and_t_vars_conv type_app) (map field_conv fields)
+tuple_type_def_conv = ( \(NameExprAndFields type_app fields) ->
+  TTNameExprAndFields (cons_and_t_vars_conv type_app) (map field_conv fields)
   ) :: TupleTypeDef -> TupleTDef
 
 or_type_case_conv = ( \(NameAndMaybeInT value_name maybe_value_type) ->
   CNameAndMaybeInT value_name (val_type_conv <$> maybe_value_type)
   ) :: OrTypeCase -> OrTCase
 
-or_type_def_conv = ( \(ConsVarsAndCases type_app c1 c2 cs) ->
-  OTConsVarsAndCases
+or_type_def_conv = ( \(NameExprAndCases type_app c1 c2 cs) ->
+  OTNameExprAndCases
     (cons_and_t_vars_conv type_app) (map or_type_case_conv $ c1 : c2 : cs)
   ) :: OrTypeDef -> OrTDef

@@ -92,19 +92,40 @@ main = print res
 
 data Rod =
   Cleft | Cmiddle | Cright
-  deriving Show
+
+instance Show Rod where
+  show = \case
+    Cleft -> "left"
+    Cmiddle -> "middle"
+    Cright -> "right"
 
 data Move =
   CMove { get_from :: Rod, get_to :: Rod }
-  deriving Show
+
+instance Show Move where
+  show = \(CMove from to) ->
+    "( " ++ 
+    "from = " ++ show from ++ "\n, " ++ 
+    "to = " ++ show to ++
+    ")"
 
 data NonEmptyMoves =
   CNonEmptyMoves { get_move1 :: Move, get_other_moves :: Moves }
-  deriving Show
+
+instance Show NonEmptyMoves where
+  show = \(CNonEmptyMoves move1 other_moves) ->
+    "( " ++ 
+    "move1 = " ++ show move1 ++ "\n, " ++ 
+    "other_moves = " ++ show other_moves ++
+    ")"
 
 data Moves =
   Cmoves NonEmptyMoves | Cno_moves
-  deriving Show
+
+instance Show Moves where
+  show = \case
+    Cmoves val -> "moves<==\n" ++ show val
+    Cno_moves -> "no_moves"
 
 hanoi :: Rod -> Rod -> Rod -> Int -> Moves
 hanoi = \source target auxiliary -> \case

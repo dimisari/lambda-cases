@@ -92,7 +92,11 @@ main = print res
 
 data PossiblyInt =
   Cint_wrapper Int | Cnot_int
-  deriving Show
+
+instance Show PossiblyInt where
+  show = \case
+    Cint_wrapper val -> "int_wrapper<==\n" ++ show val
+    Cnot_int -> "not_int"
 
 plus1 :: PossiblyInt -> PossiblyInt
 plus1 = \case

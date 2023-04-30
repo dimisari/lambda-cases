@@ -7,15 +7,15 @@ import ParsingTypes.Types (TypeName(..))
 
 import IntermediateTypes.Types (ValType(..))
 
--- All: TConsAndVars, TTField, TupleTDef, OrTCase, OrTDef, TypeInfo
+-- All: TNameExpr, TTField, TupleTDef, OrTCase, OrTDef, TypeInfo
 
--- TConsAndVars
+-- TNameExpr
 
-data TConsAndVars =
-  TConsAndVars { get_cons :: TypeName, get_type_vars :: [ (TypeName, String) ] }
+data TNameExpr =
+  TNameExpr { get_cons :: TypeName, get_type_vars :: [ (TypeName, String) ] }
 
-instance Show TConsAndVars where
-  show = \(TConsAndVars type_name type_variables) ->
+instance Show TNameExpr where
+  show = \(TNameExpr type_name type_variables) ->
     show type_name ++ concatMap (snd .> (" " ++)) type_variables
 
 -- TTField
@@ -27,7 +27,7 @@ data TTField =
 -- TupleTDef
 
 data TupleTDef =
-  TTConsVarsAndFields TConsAndVars [ TTField ]
+  TTNameExprAndFields TNameExpr [ TTField ]
 
 -- OrTCase
 
@@ -38,7 +38,7 @@ data OrTCase =
 -- OrTDef
 
 data OrTDef =
-  OTConsVarsAndCases TConsAndVars [ OrTCase ]
+  OTNameExprAndCases TNameExpr [ OrTCase ]
 
 -- TypeInfo
 

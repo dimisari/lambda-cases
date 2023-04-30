@@ -92,11 +92,24 @@ main = print res
 
 data PrevCoeffs =
   CPrevCoeffs { get_prev_prev :: Int, get_prev :: Int }
-  deriving Show
+
+instance Show PrevCoeffs where
+  show = \(CPrevCoeffs prev_prev prev) ->
+    "( " ++ 
+    "prev_prev = " ++ show prev_prev ++ "\n, " ++ 
+    "prev = " ++ show prev ++
+    ")"
 
 data GcdAndCoeffs =
   CGcdAndCoeffs { get_gcd :: Int, get_a :: Int, get_b :: Int }
-  deriving Show
+
+instance Show GcdAndCoeffs where
+  show = \(CGcdAndCoeffs gcd a b) ->
+    "( " ++ 
+    "gcd = " ++ show gcd ++ "\n, " ++ 
+    "a = " ++ show a ++ "\n, " ++ 
+    "b = " ++ show b ++
+    ")"
 
 extended_euclidean :: Int -> Int -> GcdAndCoeffs
 extended_euclidean = ee_recursion (init_a_coeffs) (init_b_coeffs)

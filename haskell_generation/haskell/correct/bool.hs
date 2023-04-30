@@ -92,7 +92,11 @@ main = print res
 
 data Boolean =
   Cmy_true | Cmy_false
-  deriving Show
+
+instance Show Boolean where
+  show = \case
+    Cmy_true -> "my_true"
+    Cmy_false -> "my_false"
 
 a :: Boolean
 a = Cmy_true
