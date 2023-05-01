@@ -24,6 +24,7 @@ GenerationState/InitialState.hs
 
 GenerationHelpers/TypeChecking.hs
 GenerationHelpers/ErrorMessages.hs
+GenerationHelpers/Helpers.hs
 
 CodeGenerators/LowLevel.hs
 CodeGenerators/OperatorValues.hs

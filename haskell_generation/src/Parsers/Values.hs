@@ -13,7 +13,7 @@ import Parsers.Types (value_type_p)
 import Parsers.OperatorValues (operator_expression_p)
 
 -- All:
--- LitOrValName, SpecificCase, DefaultCase, Cases
+-- LitOrValName, Case, DefaultCase, Cases
 -- ValueNameTypeAndExpression, Values,
 -- ValueOrValues, ValueOrValuesList
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
@@ -24,13 +24,13 @@ lit_or_val_name_p =
   Literal <$> literal_p <|> ValueName <$> value_name_p
   :: Parser LitOrValName
 
--- SpecificCase: specific_case_p
+-- Case: specific_case_p
 
 specific_case_p =
   lit_or_val_name_p >>= \lit_or_val_name ->
   string " ->" >> space_or_spicy_nl >> value_expression_p >>= \value_expression ->
-  return $ SpecificCase lit_or_val_name value_expression
-  :: Parser SpecificCase
+  return $ Case lit_or_val_name value_expression
+  :: Parser Case
 
 -- DefaultCase: default_case_p
 

@@ -16,6 +16,7 @@ import GenerationState.TypesAndOperations
 
 import GenerationHelpers.ErrorMessages
 import GenerationHelpers.TypeChecking (equiv_types)
+import GenerationHelpers.Helpers 
 
 -- All: Literal, ValueName, Abstraction, ManyAbstractions, Input
 
@@ -81,22 +82,6 @@ use_fields_type_name_g = ( \type_name ->
   type_name_matching_g (throwE $ use_fields_err $ tn_to_val_t type_name) type_name
   ) :: TypeName -> Stateful Haskell
 
-type_name_matching_g = ( \not_tuple_type_g type_name ->
-  type_map_get type_name >>= \case
-    TupleType _ fields -> tuple_type_matching_g type_name fields
-    _ -> not_tuple_type_g
-  ) :: Stateful Haskell -> TypeName -> Stateful Haskell
-
-tuple_type_matching_g = ( \type_name fields ->
-  mapM field_ins_and_ret_hs fields >>= \fields_hs ->
-  return $ "@(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")"
-  ) :: TypeName -> [ TTField ] -> Stateful Haskell
-
-prod_type_matching_g = ( \types ->
-  zipWithM val_n_ins_and_ret_hs prod_t_field_ns types >>= \fields_hs ->
-  return $ "@(" ++ intercalate ", " fields_hs ++ ")"
-  ) :: [ ValType ] -> Stateful Haskell
-
 -- Abstraction (abs_val_map_remove): use_fs_map_remove, use_fs_tn_map_remove
 
 use_fs_map_remove = ( 
@@ -114,17 +99,6 @@ use_fs_tn_map_remove = ( type_map_get >=> \case
 
 -- Abstraction (helpers):
 -- val_n_ins_and_ret_hs, field_ins_and_ret_hs, prod_t_field_ns
-
-val_n_ins_and_ret_hs = ( \val_name val_type ->
-  value_map_insert val_name val_type >> return (show val_name)
-  ) :: ValueName -> ValType -> Stateful Haskell
-
-field_ins_and_ret_hs = ( \(FNameAndType field_name field_type) ->
-  val_n_ins_and_ret_hs field_name field_type
-  ) :: TTField -> Stateful Haskell
-
-prod_t_field_ns = map VN [ "first", "second", "third", "fourth", "fifth" ]
-  :: [ ValueName ]
 
 -- ManyAbstractions: many_abstractions_g, many_abs_val_map_remove
 

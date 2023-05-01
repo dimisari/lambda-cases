@@ -7,7 +7,7 @@ import ParsingTypes.Types (ValueType)
 import ParsingTypes.OperatorValues (OperatorExpression)
 
 -- All (Types and Show instances):
--- LitOrValName, SpecificCase, DefaultCase, Cases, Values
+-- LitOrValName, Case, DefaultCase, Cases, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 -- LitOrValName
@@ -20,13 +20,13 @@ instance Show LitOrValName where
     Literal lit -> show lit
     ValueName val_name -> show val_name
 
--- SpecificCase
+-- Case
 
-data SpecificCase =
-  SpecificCase { sc_lovn :: LitOrValName, sc_val_e :: ValueExpression }
+data Case =
+  Case { case_lovn :: LitOrValName, case_res_expr :: ValueExpression }
 
-instance Show SpecificCase where
-  show = \(SpecificCase lit_or_val_name val_expr) ->
+instance Show Case where
+  show = \(Case lit_or_val_name val_expr) ->
     show lit_or_val_name ++ " ->\n" ++ show val_expr ++ "\n"
 
 -- DefaultCase
@@ -40,7 +40,7 @@ instance Show DefaultCase where
 -- Cases
 
 data Cases =
-  CasesAndMaybeDefault SpecificCase [ SpecificCase ] (Maybe DefaultCase)
+  CasesAndMaybeDefault Case [ Case ] (Maybe DefaultCase)
 
 instance Show Cases where
   show = \(CasesAndMaybeDefault case1 cases maybe_def_case) ->
