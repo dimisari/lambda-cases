@@ -104,8 +104,7 @@ data InputOpExpr =
   InputEqExpr Input EqualityExpr
 
 instance Show InputOpExpr where
-  show = \(InputEqExpr input equality_expr) ->
-    show input ++ show equality_expr
+  show = \(InputEqExpr input equality_expr) -> show input ++ show equality_expr
 
 -- OperatorExpression
 

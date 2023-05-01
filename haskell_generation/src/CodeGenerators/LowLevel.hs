@@ -110,30 +110,37 @@ many_abs_val_map_remove = ( \(Abstractions abs1 abs2 abstractions) ->
   mapM_ abs_val_map_remove $ abs1 : abs2 : abstractions
   ) :: ManyAbstractions -> Stateful ()
 
--- Input: input_g, abstractions_g, input_val_map_remove
+-- Input: input_g, input_abstractions_g, input_val_map_remove
 
 input_g = ( \input val_type ->
-  let 
-  input_help_g = case input of
-    OneAbstraction abstraction -> abstractions_g [ abstraction ] val_type 
-    ManyAbstractions many_abs -> many_abstractions_g many_abs val_type
-    :: Stateful (ValType, Haskell)
-  in
-  input_help_g >>= \(final_t, input_hs) ->
+  input_abstractions_g input val_type >>= \(final_t, input_hs) ->
   return (final_t, "\\" ++ input_hs ++ "-> ")
   ) :: Input -> ValType -> Stateful (ValType, Haskell)
 
-abstractions_g = ( \case
-  [] -> \val_type -> return (val_type, "")
-  abs1 : other_abs -> \case
-    FuncType (InAndOutTs in_t out_t) -> 
-      abstraction_g abs1 in_t >>= \abs1_hs ->
-      abstractions_g other_abs out_t >>= \(final_t, other_abs_hs) ->
-      return (final_t, abs1_hs ++ " " ++ other_abs_hs)
-    val_t -> throwE $ not_func_t_err abs1 val_t
-  ) :: [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)
+input_abstractions_g = ( \case
+  OneAbstraction abstraction -> abstractions_g [ abstraction ]
+  ManyAbstractions many_abs -> many_abstractions_g many_abs
+  ) :: Input -> ValType ->  Stateful (ValType, Haskell)
 
 input_val_map_remove = ( \case
   OneAbstraction abs -> abs_val_map_remove abs
   ManyAbstractions many_abs -> many_abs_val_map_remove many_abs
   ) :: Input -> Stateful ()
+
+-- abstractions_g
+
+abstractions_g = ( \case
+  [] -> \val_type -> return (val_type, "")
+  abs1 : other_abs -> abstractions_check_func_t_g abs1 other_abs
+  ) :: [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)
+
+abstractions_check_func_t_g = ( \abs1 other_abs -> \case
+  FuncType func_t -> abstractions_func_t_g abs1 other_abs func_t
+  val_type -> throwE $ not_func_t_err abs1 val_type
+  ) :: Abstraction -> [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)
+
+abstractions_func_t_g = ( \abs1 other_abs (InAndOutTs in_t out_t) -> 
+  abstraction_g abs1 in_t >>= \abs1_hs ->
+  abstractions_g other_abs out_t >>= \(final_t, other_abs_hs) ->
+  return (final_t, abs1_hs ++ " " ++ other_abs_hs)
+  ) :: Abstraction -> [ Abstraction ] -> FuncType -> Stateful (ValType, Haskell)

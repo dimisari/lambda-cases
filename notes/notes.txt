@@ -1,0 +1,12 @@
+id: T -> T
+  = x -> x
+
+TypeScheme [1] (FuncType (InAndOutTs (TypeVar 1) (TypeVar 1)))
+
+i: Int
+  = 1==>id
+
+i: Int
+1: Int
+id: TypeScheme [1] (FuncType (InAndOutTs (TypeVar 1) (TypeVar 1)))
+
