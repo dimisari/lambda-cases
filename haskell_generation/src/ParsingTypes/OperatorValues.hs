@@ -9,22 +9,14 @@ import ParsingTypes.LowLevel (Literal, ValueName, Input)
 -- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
 -- Equality, PureOpExpr, InputOpExpr, OperatorExpression
 
--- Parenthesis
+-- ParenExpr
 
-newtype Parenthesis =
-  InnerExpr OperatorExpression 
+data ParenExpr =
+  ParenExprs OperatorExpression [ OperatorExpression ]
 
-instance Show Parenthesis where
-  show = \(InnerExpr expr) -> "(" ++ show expr ++ ")"
-
--- Tuple
-
-data Tuple =
-  TupleExpressions OperatorExpression OperatorExpression [ OperatorExpression ]
-
-instance Show Tuple where
-  show = \(TupleExpressions expr1 expr2 exprs) ->
-    "(" ++ map show (expr1 : expr2 : exprs)==>intercalate ", " ++ ")"
+instance Show ParenExpr where
+  show = \(ParenExprs expr1 exprs) ->
+    "(" ++ map show (expr1 : exprs)==>intercalate ", " ++ ")"
 
 -- MathApplication
 
@@ -38,13 +30,12 @@ instance Show MathApplication where
 -- BaseValue
 
 data BaseValue =
-  Literal Literal | ValueName ValueName | Parenthesis Parenthesis |
-  Tuple Tuple | MathApplication MathApplication
+  Literal Literal | ValueName ValueName | ParenExpr ParenExpr |
+  MathApplication MathApplication
 
 instance Show BaseValue where
   show = \case
-    Parenthesis paren_val -> show paren_val
-    Tuple tuple -> show tuple
+    ParenExpr paren_expr -> show paren_expr
     Literal lit -> show lit
     ValueName val_name -> show val_name
     MathApplication math_app -> show math_app

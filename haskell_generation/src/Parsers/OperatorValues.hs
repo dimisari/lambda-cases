@@ -10,20 +10,13 @@ import Parsers.LowLevel (literal_p, value_name_p, input_p)
 -- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
 -- Equality, PureOpExpr, InputOpExpr, OperatorExpression
 
--- Parenthesis: parenthesis_p
+-- ParenExpr: paren_expr_p
 
-parenthesis_p =
-  char '(' *> (InnerExpr <$> operator_expression_p) <* char ')'
-  :: Parser Parenthesis
-
--- Tuple: tuple_p
-
-tuple_p =
+paren_expr_p = 
   char '(' >> operator_expression_p >>= \op_expr1 ->
-  string ", " >> operator_expression_p >>= \op_expr2 ->
   many (string ", " >> operator_expression_p) >>= \op_exprs ->
-  char ')' >> return (TupleExpressions op_expr1 op_expr2 op_exprs)
-  :: Parser Tuple
+  char ')' >> return (ParenExprs op_expr1 op_exprs)
+  :: Parser ParenExpr
 
 -- MathApplication: math_application_p
 
@@ -37,8 +30,7 @@ math_application_p =
 -- BaseValue: base_value_p
 
 base_value_p =
-  Parenthesis <$> try parenthesis_p <|>
-  Tuple <$> tuple_p <|>
+  ParenExpr <$> paren_expr_p <|>
   MathApplication <$> try math_application_p <|>
   Literal <$> literal_p <|>
   ValueName <$> value_name_p

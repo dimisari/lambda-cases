@@ -49,7 +49,7 @@ expr_to_base_value = ( \expr -> case expr of
       (FirstAndOpTermPairs (Factors (ValuesAndDirections base_val []) []) [])
       Nothing
     )  -> base_val
-  _ -> Parenthesis $ InnerExpr $ expr
+  _ -> ParenExpr $ ParenExprs expr []
   ) :: OperatorExpression -> BaseValue
 
 -- AddSubExpr to AddSubOrMExpr:

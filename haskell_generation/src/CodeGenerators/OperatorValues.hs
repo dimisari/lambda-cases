@@ -30,26 +30,27 @@ import CodeGenerators.LowLevel
 
 -- Parenthesis: parenthesis_g, paren_type_inf_g
 
-parenthesis_g = ( \(InnerExpr expr) expr_t ->
+parenthesis_g' = ( \expr expr_t ->
   operator_expression_g expr expr_t >>= \expr_hs ->
   return $ "(" ++ expr_hs ++ ")"
-  ) :: Parenthesis -> ValType -> Stateful Haskell
+  ) :: OperatorExpression -> ValType -> Stateful Haskell
 
-paren_type_inf_g = ( \(InnerExpr expr) ->
+paren_type_inf_g' = ( \expr ->
   op_expr_type_inf_g expr >>= \(expr_hs, expr_t) ->
   return ("(" ++ expr_hs ++ ")", expr_t)
-  ) :: Parenthesis -> Stateful (Haskell, ValType)
+  ) :: OperatorExpression -> Stateful (Haskell, ValType)
 
 -- Tuple:
 -- tuple_g, tuple_t_name_g, tuple_prod_t_g,
 -- correct_length_tuple_tt_g, tuple_type_inf_g
 
-tuple_g = ( \(TupleExpressions val1 val2 vals) -> \case
+tuple_g' = ( \val1 val2 vals -> \case
   FuncType _ -> throwE "Tuple can't have function type"
   TypeApp (ConsAndTIns t_name _) -> tuple_t_name_g (val1 : val2 : vals) t_name
   ProdType types -> tuple_prod_t_g (val1 : val2 : vals) types
   _ -> undefined
-  ) :: Tuple -> ValType -> Stateful Haskell
+  ) :: OperatorExpression -> OperatorExpression -> [ OperatorExpression ] ->
+       ValType -> Stateful Haskell
 
 tuple_t_name_g = ( \vals t_name -> type_map_get t_name >>= \case
   OrType _ _ -> throwE "Tuple can't be an or_type"
@@ -78,10 +79,23 @@ tuple_prod_t_g = ( \vals types -> case length types == length vals of
     return $ "(" ++ intercalate ", " vals_hs ++ ")"
   ) :: [ OperatorExpression ] -> [ ValType ] -> Stateful Haskell
 
-tuple_type_inf_g = ( \(TupleExpressions val1 val2 vals) ->
+tuple_type_inf_g' = ( \val1 val2 vals ->
   mapM op_expr_type_inf_g (val1 : val2 : vals) >>= unzip .> \(vals_hs, ts) ->
   return ("(" ++ intercalate ", " vals_hs ++ ")", ProdType ts)
-  ) :: Tuple -> Stateful (Haskell, ValType)
+  ) :: OperatorExpression -> OperatorExpression -> [ OperatorExpression ] ->
+       Stateful (Haskell, ValType)
+
+-- ParenExpr: paren_expr_g, paren_expr_type_inf_g
+
+paren_expr_g = ( \(ParenExprs expr1 exprs) val_t -> case exprs of
+  [] -> parenthesis_g' expr1 val_t
+  expr2 : other_exprs -> tuple_g' expr1 expr2 other_exprs val_t
+  ) :: ParenExpr -> ValType -> Stateful Haskell
+
+paren_expr_type_inf_g = ( \(ParenExprs expr1 exprs) -> case exprs of
+  [] -> paren_type_inf_g' expr1
+  expr2 : other_exprs -> tuple_type_inf_g' expr1 expr2 other_exprs
+  ) :: ParenExpr -> Stateful (Haskell, ValType)
 
 -- MathApplication: math_application_g, math_app_type_inf_g
 
@@ -96,16 +110,14 @@ math_app_type_inf_g =
 -- BaseValue: base_value_g, base_value_type_inf_g
 
 base_value_g = ( \case
-  Parenthesis parenthesis -> parenthesis_g parenthesis
-  Tuple tuple -> tuple_g tuple
+  ParenExpr paren_expr -> paren_expr_g paren_expr
   Literal literal -> literal_g literal
   ValueName value_name -> value_name_g value_name
   MathApplication math_application -> math_application_g math_application
   ) :: BaseValue -> ValType -> Stateful Haskell
 
 base_value_type_inf_g = ( \case
-  Parenthesis parenthesis -> paren_type_inf_g parenthesis
-  Tuple tuple -> tuple_type_inf_g tuple
+  ParenExpr paren_expr -> paren_expr_type_inf_g paren_expr
   Literal literal -> literal_type_inf_g literal
   ValueName value_name -> value_name_type_inf_g value_name
   MathApplication math_application -> math_app_type_inf_g math_application
@@ -167,29 +179,29 @@ normal_app_type_inf_g = (
 
 application_handler = ( \app@(AppTrees tree1 tree2) (InAndOutTs input_t _) err ->
   case tree2 of 
-    BaseValueLeaf (Tuple tuple) -> app_handler_tuple tree1 tuple input_t err
+    BaseValueLeaf (ParenExpr paren_expr@(ParenExprs _ (_:_))) ->
+      app_handler_tuple tree1 paren_expr input_t err
     _ -> general_app_handler app input_t err
   ) :: Application -> FuncType -> Error -> Stateful (Haskell, ValType)
 
 -- app_handler_tuple, app_handler_tuple_correct
 
-app_handler_tuple = ( \tree1 tuple@(TupleExpressions val1 _ _) input_t err -> 
+app_handler_tuple = ( \tree1 paren_expr@(ParenExprs val1 _) input_t err -> 
   op_expr_type_inf_g val1 >>= \case
     (_, op_expr_t) -> equiv_types input_t op_expr_t >>= \case 
-      True -> app_handler_tuple_correct tree1 tuple
+      True -> app_handler_tuple_correct tree1 paren_expr
       _ -> throwE err
-  ) :: ApplicationTree -> Tuple -> ValType -> Error -> Stateful (Haskell, ValType)
+  ) :: ApplicationTree -> ParenExpr -> ValType -> Error ->
+       Stateful (Haskell, ValType)
 
-app_handler_tuple_correct = ( \tree1 (TupleExpressions val1 val2 vals) -> 
+app_handler_tuple_correct = ( \tree1 paren_expr@(ParenExprs val1 (val2:vals)) -> 
   let
-  tree1' = 
-    Application $ AppTrees tree1 $ BaseValueLeaf $ Parenthesis $ InnerExpr val1
-  tree2' = BaseValueLeaf $ case vals of 
-    [] -> Parenthesis $ InnerExpr val2
-    val3 : other_vals -> Tuple $ TupleExpressions val2 val3 other_vals
+  vals_to_tree = \val1 vals -> BaseValueLeaf $ ParenExpr $ ParenExprs val1 vals
+  tree1' = Application $ AppTrees tree1 $ vals_to_tree val1 []
+  tree2' = vals_to_tree val2 vals
   in
   application_type_inf_g $ AppTrees tree1' tree2'
-  ) :: ApplicationTree -> Tuple -> Stateful (Haskell, ValType)
+  ) :: ApplicationTree -> ParenExpr -> Stateful (Haskell, ValType)
 
 -- general_app_handler, general_app_handler_correct
 
