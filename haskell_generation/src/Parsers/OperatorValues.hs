@@ -91,29 +91,23 @@ op_mult_expr_pair_p =
   plus_or_minus_p >>= \op -> mult_expr_p >>= \term -> return (op, term)
   :: Parser (PlusOrMinus, MultExpr)
 
--- Equality: equality_p
+-- EqualityExpr: equality_expr_p
 
-equality_p =
-  add_sub_expr_p >>= \add_sub_expr1 ->
-  string " = " >> add_sub_expr_p >>= \add_sub_expr2 ->
-  return $ EqualityTerms add_sub_expr1 add_sub_expr2
-  :: Parser Equality
-
--- PureOpExpr: pure_op_expr_p
-
-pure_op_expr_p =
-  Equality <$> try equality_p <|> AddSubExpr <$> add_sub_expr_p
-  :: Parser PureOpExpr
+equality_expr_p = ( 
+  add_sub_expr_p >>= \add_sub_expr ->
+  optionMaybe (try (string " = ") >> add_sub_expr_p) >>= \maybe_add_sub_expr ->
+  return $ EqExpr add_sub_expr maybe_add_sub_expr
+  ) :: Parser EqualityExpr
 
 -- InputOpExpr: input_op_expr_p
 
 input_op_expr_p =
-  input_p >>= \input -> pure_op_expr_p >>= \pure_op_expr ->
-  return $ InputAndPureOpExpr input pure_op_expr
+  input_p >>= \input -> equality_expr_p >>= \equality_expr ->
+  return $ InputEqExpr input equality_expr
   :: Parser InputOpExpr
 
 -- OperatorExpression: operator_expression_p
 
 operator_expression_p =
-  InputOpExpr <$> try input_op_expr_p <|> PureOpExpr <$> pure_op_expr_p
+  InputOpExpr <$> try input_op_expr_p <|> EqualityExpr <$> equality_expr_p
   :: Parser OperatorExpression

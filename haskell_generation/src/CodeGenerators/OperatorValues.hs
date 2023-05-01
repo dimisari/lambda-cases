@@ -274,44 +274,37 @@ add_sub_g = ( \expr op mult_expr val_type ->
   return $ expr_hs ++ op ++ term_hs
   ) :: AddSubOrMExpr -> String -> MultExpr -> ValType -> Stateful Haskell
 
--- Equality: equality_g
+-- EqualityExpr: equality_expr_g
 
-equality_g = ( \(EqualityTerms term1 term2) -> \case 
-  TypeApp (ConsAndTIns (TN "Bool") []) ->
-    add_sub_expr_g term1 int >>= \term1_hs ->
-    add_sub_expr_g term2 int >>= \term2_hs ->
-    return $ term1_hs ++ " == " ++ term2_hs
-  t -> throwE $ "Equality must be of type Bool, not: " ++ show t
-  ) :: Equality -> ValType -> Stateful Haskell
+equality_expr_g = ( \(EqExpr term1 maybe_term2) -> case maybe_term2 of
+  Just term2 -> \case 
+    TypeApp (ConsAndTIns (TN "Bool") []) ->
+      add_sub_expr_g term1 int >>= \term1_hs ->
+      add_sub_expr_g term2 int >>= \term2_hs ->
+      return $ term1_hs ++ " == " ++ term2_hs
+    t -> throwE $ "Equality must be of type Bool, not: " ++ show t
+  Nothing -> add_sub_expr_g term1
+  ) :: EqualityExpr -> ValType -> Stateful Haskell
 
-equality_type_inf_g = ( \(EqualityTerms term1 term2) ->
-  add_sub_expr_g term1 int >>= \term1_hs ->
-  add_sub_expr_g term2 int >>= \term2_hs ->
-  return (term1_hs ++ " == " ++ term2_hs, bool)
-  ) :: Equality -> Stateful (Haskell, ValType)
-
--- PureOpExpr: pure_operator_expression_g, pure_op_expr_type_inf_g
-
-pure_operator_expression_g = ( \case
-  AddSubExpr add_sub_expr -> add_sub_expr_g add_sub_expr
-  Equality equality -> equality_g equality
-  ) :: PureOpExpr -> ValType -> Stateful Haskell
-
-pure_op_expr_type_inf_g = ( \case
-  AddSubExpr add_sub_expr -> add_sub_expr_type_inf_g add_sub_expr
-  Equality equality -> equality_type_inf_g equality
-  ) :: PureOpExpr -> Stateful (Haskell, ValType)
+equality_expr_type_inf_g = ( \(EqExpr term1 maybe_term2) ->
+  case maybe_term2 of
+    Just term2 -> 
+      add_sub_expr_g term1 int >>= \term1_hs ->
+      add_sub_expr_g term2 int >>= \term2_hs ->
+      return (term1_hs ++ " == " ++ term2_hs, bool)
+    Nothing -> add_sub_expr_type_inf_g term1
+  ) :: EqualityExpr -> Stateful (Haskell, ValType)
 
 -- InputOpExpr: input_operator_expression_g, input_op_expr_type_inf_g
 
-input_operator_expression_g = ( \(InputAndPureOpExpr input op_expr) ->
+input_operator_expression_g = ( \(InputEqExpr input eq_expr) ->
   input_g input >=> \(out_t, input_hs) ->
-  pure_operator_expression_g op_expr out_t >>= \op_expr_hs ->
+  equality_expr_g eq_expr out_t >>= \op_expr_hs ->
   input_val_map_remove input >>
   return (input_hs ++ op_expr_hs)
   ) :: InputOpExpr -> ValType -> Stateful Haskell
 
-input_op_expr_type_inf_g = ( \(InputAndPureOpExpr as opval) ->
+input_op_expr_type_inf_g = ( \(InputEqExpr as opval) ->
   undefined
   ) :: InputOpExpr -> Stateful (Haskell, ValType)
 
@@ -319,10 +312,10 @@ input_op_expr_type_inf_g = ( \(InputAndPureOpExpr as opval) ->
 
 operator_expression_g = ( \case
   InputOpExpr input_op_expr -> input_operator_expression_g input_op_expr
-  PureOpExpr op_expr -> pure_operator_expression_g op_expr
+  EqualityExpr eq_expr -> equality_expr_g eq_expr
   ) :: OperatorExpression -> ValType -> Stateful Haskell
 
 op_expr_type_inf_g = ( \case
   InputOpExpr input_op_expr -> input_op_expr_type_inf_g input_op_expr
-  PureOpExpr op_expr -> pure_op_expr_type_inf_g op_expr
+  EqualityExpr eq_expr -> equality_expr_type_inf_g eq_expr
   ) :: OperatorExpression -> Stateful (Haskell, ValType)

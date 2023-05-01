@@ -44,10 +44,11 @@ base_vals_to_app_tree = ( \case
   ) :: [ BaseValue ] -> ApplicationTree
 
 expr_to_base_value = ( \expr -> case expr of
-  PureOpExpr
-    ( AddSubExpr
+  EqualityExpr
+    ( EqExpr
       (FirstAndOpTermPairs (Factors (ValuesAndDirections base_val []) []) [])
-    ) -> base_val
+      Nothing
+    )  -> base_val
   _ -> Parenthesis $ InnerExpr $ expr
   ) :: OperatorExpression -> BaseValue
 

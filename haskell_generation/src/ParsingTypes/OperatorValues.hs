@@ -97,39 +97,31 @@ instance Show AddSubExpr where
   show = \(FirstAndOpTermPairs term1 pairs) ->
     show term1 ++ concatMap ( \(op, term) -> show op ++ show term ) pairs
 
--- Equality
+-- EqualityExpr
 
-data Equality =
-  EqualityTerms AddSubExpr AddSubExpr
+data EqualityExpr =
+  EqExpr AddSubExpr (Maybe AddSubExpr)
 
-instance Show Equality where
-  show = \(EqualityTerms term1 term2) -> show term1 ++ " = " ++ show term2
-
--- PureOpExpr
-
-data PureOpExpr =
-  Equality Equality | AddSubExpr AddSubExpr
-
-instance Show PureOpExpr where
-  show = \case
-    Equality equality -> show equality
-    AddSubExpr add_sub_expr -> show add_sub_expr 
+instance Show EqualityExpr where
+  show = \(EqExpr term1 maybe_term2) -> show term1 ++ case maybe_term2 of
+    Just term2 -> " = " ++ show term2
+    Nothing -> ""
 
 -- InputOpExpr
 
 data InputOpExpr =
-  InputAndPureOpExpr Input PureOpExpr 
+  InputEqExpr Input EqualityExpr
 
 instance Show InputOpExpr where
-  show = \(InputAndPureOpExpr input pure_op_expr) ->
-    show input ++ show pure_op_expr
+  show = \(InputEqExpr input equality_expr) ->
+    show input ++ show equality_expr
 
 -- OperatorExpression
 
 data OperatorExpression =
-  InputOpExpr InputOpExpr | PureOpExpr PureOpExpr
+  InputOpExpr InputOpExpr | EqualityExpr EqualityExpr
 
 instance Show OperatorExpression where
   show = \case
     InputOpExpr input_op_expr -> show input_op_expr
-    PureOpExpr pure_op_expr -> show pure_op_expr
+    EqualityExpr equality_expr -> show equality_expr
