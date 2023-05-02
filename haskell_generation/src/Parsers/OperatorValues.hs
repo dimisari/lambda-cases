@@ -2,13 +2,16 @@ module Parsers.OperatorValues where
 
 import Text.Parsec 
 import Text.Parsec.String (Parser)
+
+import ParsingTypes.LowLevel (ValueName)
 import ParsingTypes.OperatorValues
+
 import Parsers.LowLevel (literal_p, value_name_p, input_p)
 
 -- All:
--- Parenthesis, Tuple, MathApplication, BaseValue,
+-- ParenExpr, MathApp, BaseValue,
 -- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
--- Equality, PureOpExpr, InputOpExpr, OperatorExpression
+-- EqualityExpr, InputOpExpr, OpExpr
 
 -- ParenExpr: paren_expr_p
 
@@ -18,22 +21,25 @@ paren_expr_p =
   char ')' >> return (ParenExprs op_expr1 op_exprs)
   :: Parser ParenExpr
 
--- MathApplication: math_application_p
+-- MathApp: math_app_p
 
-math_application_p =  
-  value_name_p >>= \value_name ->
-  char '(' >> operator_expression_p >>= \op_expr ->
-  many (string ", " >> operator_expression_p) >>= \op_exprs ->
-  char ')' >> return (NameAndInputExprs value_name op_expr op_exprs)
-  :: Parser MathApplication
+math_app_p = ( \value_name ->
+  paren_expr_p >>= \paren_expr ->
+  return $ NameAndParenExpr value_name paren_expr
+  ) :: ValueName -> Parser MathApp
 
 -- BaseValue: base_value_p
 
 base_value_p =
   ParenExpr <$> paren_expr_p <|>
-  MathApplication <$> try math_application_p <|>
   Literal <$> literal_p <|>
-  ValueName <$> value_name_p
+  math_app_or_val_name_p
+  :: Parser BaseValue
+
+math_app_or_val_name_p =
+  value_name_p >>= \value_name ->
+  MathApp <$> math_app_p value_name <|>
+  return (ValueName value_name)
   :: Parser BaseValue
 
 -- ApplicationDirection: application_direction_p
@@ -98,8 +104,8 @@ input_op_expr_p =
   return $ InputEqExpr input equality_expr
   :: Parser InputOpExpr
 
--- OperatorExpression: operator_expression_p
+-- OpExpr: operator_expression_p
 
 operator_expression_p =
   InputOpExpr <$> try input_op_expr_p <|> EqualityExpr <$> equality_expr_p
-  :: Parser OperatorExpression
+  :: Parser OpExpr

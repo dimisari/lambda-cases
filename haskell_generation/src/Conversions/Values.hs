@@ -28,29 +28,12 @@ combine = ( \at1 ad at2 -> case ad of
   ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
        ApplicationTree
 
--- MathApplication to ApplicationTree:
--- math_app_to_app_tree, base_vals_to_app_tree, expr_to_base_value
+-- MathApp to ApplicationTree:
 
-math_app_to_app_tree = ( \(NameAndInputExprs val_name expr1 exprs) ->
-  base_vals_to_app_tree $ reverse $
-    ValueName val_name : map expr_to_base_value (expr1 : exprs) 
-  ) :: MathApplication -> ApplicationTree 
-
-base_vals_to_app_tree = ( \case
-  [] -> error "empty list in base_vals_to_app_tree"
-  [ bv ] -> BaseValueLeaf bv
-  bv : bvs ->
-    Application $ AppTrees (base_vals_to_app_tree bvs) (BaseValueLeaf bv)
-  ) :: [ BaseValue ] -> ApplicationTree
-
-expr_to_base_value = ( \expr -> case expr of
-  EqualityExpr
-    ( EqExpr
-      (FirstAndOpTermPairs (Factors (ValuesAndDirections base_val []) []) [])
-      Nothing
-    )  -> base_val
-  _ -> ParenExpr $ ParenExprs expr []
-  ) :: OperatorExpression -> BaseValue
+math_a_to_a_tree = ( \(NameAndParenExpr val_name paren_expr) ->
+  Application $ AppTrees
+    (BaseValueLeaf $ ValueName val_name) (BaseValueLeaf $ ParenExpr paren_expr)
+  ) :: MathApp -> ApplicationTree 
 
 -- AddSubExpr to AddSubOrMExpr:
 

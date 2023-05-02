@@ -24,11 +24,9 @@ import GenerationHelpers.TypeChecking (equiv_types)
 import CodeGenerators.LowLevel
 
 -- All:
--- Parenthesis, Tuple, MathApplication, BaseValue,
+-- ParenExpr, MathApp, BaseValue,
 -- FuncAppChain, MultExpr, AddSubExpr,
--- Equality, PureOpExpr, InputOpExpr, OperatorExpression
-
--- Parenthesis: parenthesis_g, paren_type_inf_g
+-- EqualityExpr, InputOpExpr, OpExpr
 
 -- Tuple:
 -- tuple_inside_g, tuple_t_name_g, tuple_tuple_t_g, correct_length_tuple_tt_g,
@@ -38,32 +36,32 @@ tuple_inside_g = ( \exprs -> \case
   TypeApp (ConsAndTIns t_name _) -> tuple_t_name_g exprs t_name
   ProdType types -> tuple_prod_t_g exprs types
   t -> throwE $ "Tuple can't have type: " ++ show t
-  ) :: [ OperatorExpression ] -> ValType -> Stateful Haskell
+  ) :: [ OpExpr ] -> ValType -> Stateful Haskell
 
 tuple_t_name_g = ( \exprs t_name -> type_map_get t_name >>= \case
   OrType _ _ -> throwE "Tuple can't be an or_type"
   TupleType _ fields -> tuple_tuple_t_g exprs fields t_name
   IntType -> throwE "Tuple can't be an Int"
   CharType -> throwE "Tuple can't be a Char"
-  ) :: [ OperatorExpression ] -> TypeName -> Stateful Haskell
+  ) :: [ OpExpr ] -> TypeName -> Stateful Haskell
 
 tuple_tuple_t_g = ( \exprs fields t_name -> case length exprs == length fields of 
   False -> throwE tuple_field_length_err
   True -> correct_length_tuple_tt_g exprs (map get_type fields) t_name
-  ) :: [ OperatorExpression ] -> [ TTField ] -> TypeName -> Stateful Haskell
+  ) :: [ OpExpr ] -> [ TTField ] -> TypeName -> Stateful Haskell
 
 correct_length_tuple_tt_g = ( \exprs types t_name ->
   get_ind_lev >>= \ind_lev ->
   zipWithM operator_expression_g exprs types >>= \exprs_hs -> 
   return $ "C" ++ show t_name ++ concatMap ((" (" ++) .> (++ ")")) exprs_hs
-  ) :: [ OperatorExpression ] -> [ ValType ] -> TypeName -> Stateful Haskell
+  ) :: [ OpExpr ] -> [ ValType ] -> TypeName -> Stateful Haskell
 
 tuple_prod_t_g = ( \exprs types -> case length exprs == length types of
   False -> throwE "Length of tuple does not match length of product type"
   True -> 
     zipWithM operator_expression_g exprs types >>= \exprs_hs ->
     return $ intercalate ", " exprs_hs
-  ) :: [ OperatorExpression ] -> [ ValType ] -> Stateful Haskell
+  ) :: [ OpExpr ] -> [ ValType ] -> Stateful Haskell
 
 -- ParenExpr: paren_expr_g, paren_expr_type_inf_g
 
@@ -81,15 +79,15 @@ paren_expr_type_inf_g = ( \expr ->
   undefined
   ) :: ParenExpr -> Stateful (Haskell, ValType)
 
--- MathApplication: math_application_g, math_app_type_inf_g
+-- MathApp: math_application_g, math_app_type_inf_g
 
-math_application_g =
-  math_app_to_app_tree .> application_tree_g
-  :: MathApplication -> ValType -> Stateful Haskell
+math_app_g =
+  math_a_to_a_tree .> application_tree_g
+  :: MathApp -> ValType -> Stateful Haskell
 
-math_app_type_inf_g =  
-  math_app_to_app_tree .> app_tree_type_inf_g
-  :: MathApplication -> Stateful (Haskell, ValType)
+math_app_type_inf_g' =  
+  math_a_to_a_tree .> app_tree_type_inf_g
+  :: MathApp -> Stateful (Haskell, ValType)
 
 -- BaseValue: base_value_g, base_value_type_inf_g
 
@@ -97,14 +95,14 @@ base_value_g = ( \case
   ParenExpr paren_expr -> paren_expr_g paren_expr
   Literal literal -> literal_g literal
   ValueName value_name -> value_name_g value_name
-  MathApplication math_application -> math_application_g math_application
+  MathApp math_application -> math_app_g math_application
   ) :: BaseValue -> ValType -> Stateful Haskell
 
 base_value_type_inf_g = ( \case
   ParenExpr paren_expr -> paren_expr_type_inf_g paren_expr
   Literal literal -> literal_type_inf_g literal
   ValueName value_name -> value_name_type_inf_g value_name
-  MathApplication math_application -> math_app_type_inf_g math_application
+  MathApp math_application -> math_app_type_inf_g' math_application
   ) :: BaseValue -> Stateful (Haskell, ValType)
 
 -- FuncAppChain: func_app_chain_g, func_app_chain_type_inf_g,
@@ -182,7 +180,7 @@ app_handler_tuple_correct = ( \tree1 paren_expr@(ParenExprs expr1 (expr2:exprs))
   let
   exprs_to_tree = ( \expr1 exprs ->
     BaseValueLeaf $ ParenExpr $ ParenExprs expr1 exprs
-    ) :: OperatorExpression -> [ OperatorExpression ] -> ApplicationTree
+    ) :: OpExpr -> [ OpExpr ] -> ApplicationTree
   tree1' = Application $ AppTrees tree1 $ exprs_to_tree expr1 []
   tree2' = exprs_to_tree expr2 exprs
   in
@@ -301,14 +299,14 @@ input_op_expr_type_inf_g = ( \(InputEqExpr input eq_expr) ->
   undefined
   ) :: InputOpExpr -> Stateful (Haskell, ValType)
 
--- OperatorExpression: operator_expression_g, input_op_expr_type_inf_g
+-- OpExpr: operator_expression_g, input_op_expr_type_inf_g
 
 operator_expression_g = ( \case
   InputOpExpr input_op_expr -> input_operator_expression_g input_op_expr
   EqualityExpr eq_expr -> equality_expr_g eq_expr
-  ) :: OperatorExpression -> ValType -> Stateful Haskell
+  ) :: OpExpr -> ValType -> Stateful Haskell
 
 op_expr_type_inf_g = ( \case
   InputOpExpr input_op_expr -> input_op_expr_type_inf_g input_op_expr
   EqualityExpr eq_expr -> equality_expr_type_inf_g eq_expr
-  ) :: OperatorExpression -> Stateful (Haskell, ValType)
+  ) :: OpExpr -> Stateful (Haskell, ValType)

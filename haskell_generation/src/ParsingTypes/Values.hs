@@ -4,7 +4,7 @@ import Data.List (intercalate)
 import Helpers ((==>), (.>))
 import ParsingTypes.LowLevel (Literal, ValueName, Input)
 import ParsingTypes.Types (ValueType)
-import ParsingTypes.OperatorValues (OperatorExpression)
+import ParsingTypes.OperatorValues (OpExpr)
 
 -- All (Types and Show instances):
 -- LitOrValName, Case, DefaultCase, Cases, Values
@@ -92,10 +92,10 @@ instance Show InputCasesOrWhere where
 data ValueExpression =
   InputCasesOrWhere InputCasesOrWhere |
   CasesOrWhere CasesOrWhere |
-  OperatorExpression OperatorExpression
+  OpExpr OpExpr
 
 instance Show ValueExpression where
   show = \case
     InputCasesOrWhere inp_cs_or_where -> show inp_cs_or_where
     CasesOrWhere cs_or_where -> show cs_or_where
-    OperatorExpression op_expr -> show op_expr
+    OpExpr op_expr -> show op_expr

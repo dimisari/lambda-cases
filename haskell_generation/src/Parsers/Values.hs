@@ -99,5 +99,5 @@ input_cases_or_where_p =
 value_expression_p =
   InputCasesOrWhere <$> try input_cases_or_where_p <|>
   CasesOrWhere <$> try cases_or_where_p <|>
-  OperatorExpression <$> operator_expression_p
+  OpExpr <$> operator_expression_p
   :: Parser ValueExpression

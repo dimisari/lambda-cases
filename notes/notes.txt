@@ -10,3 +10,8 @@ i: Int
 1: Int
 id: TypeScheme [1] (FuncType (InAndOutTs (TypeVar 1) (TypeVar 1)))
 
+we have 
+- value names
+- literals
+- abstractions
+- op exprs

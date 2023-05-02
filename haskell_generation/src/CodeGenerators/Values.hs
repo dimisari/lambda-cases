@@ -336,11 +336,11 @@ abstraction_cow_type_inference_g = (
 value_expression_g = ( \case
   InputCasesOrWhere input_cow -> abstraction_cases_or_where_g input_cow
   CasesOrWhere cases_or_where -> cases_or_where_g cases_or_where 
-  OperatorExpression expr -> operator_expression_g expr
+  OpExpr expr -> operator_expression_g expr
   ) :: ValueExpression -> ValType -> Stateful Haskell
 
 value_expression_type_inference_g = ( \case
   InputCasesOrWhere input_cow -> abstraction_cow_type_inference_g input_cow
   CasesOrWhere cases_or_where -> cases_or_where_type_inference_g cases_or_where
-  OperatorExpression expr -> op_expr_type_inf_g expr
+  OpExpr expr -> op_expr_type_inf_g expr
   ) :: ValueExpression -> Stateful (Haskell, ValType)
