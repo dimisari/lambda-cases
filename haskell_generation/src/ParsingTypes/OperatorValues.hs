@@ -1,8 +1,9 @@
 module ParsingTypes.OperatorValues where
 
+import Text.Parsec (SourcePos)
 import Data.List (intercalate)
 import Helpers ((==>))
-import ParsingTypes.LowLevel (Literal, ValueName, Input)
+import ParsingTypes.LowLevel 
 
 -- All (Types and Show instances):
 -- ParenExpr, MathApp, BaseValue,
@@ -18,10 +19,18 @@ instance Show ParenExpr where
   show = \(ParenExprs expr1 exprs) ->
     "(" ++ map show (expr1 : exprs)==>intercalate ", " ++ ")"
 
+-- PosParenExpr
+
+data PosParenExpr =
+  PPE { ppe_pos :: SourcePos, ppe_to_pe :: ParenExpr }
+
+instance Show PosParenExpr where
+  show = \(PPE _ paren_expr) -> show paren_expr
+
 -- MathApp
 
 data MathApp =
-  NameAndParenExpr ValueName ParenExpr
+  NameAndParenExpr PosValueName ParenExpr
 
 instance Show MathApp where
   show = \(NameAndParenExpr val_n paren_expr) -> show val_n ++ show paren_expr
@@ -29,7 +38,7 @@ instance Show MathApp where
 -- BaseValue
 
 data BaseValue =
-  Literal Literal | ValueName ValueName | ParenExpr ParenExpr |
+  Literal Literal | ValueName PosValueName | ParenExpr ParenExpr |
   MathApp MathApp
 
 instance Show BaseValue where

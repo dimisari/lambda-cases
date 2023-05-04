@@ -3,10 +3,10 @@ module Parsers.OperatorValues where
 import Text.Parsec 
 import Text.Parsec.String (Parser)
 
-import ParsingTypes.LowLevel (ValueName)
+import ParsingTypes.LowLevel
 import ParsingTypes.OperatorValues
 
-import Parsers.LowLevel (literal_p, value_name_p, input_p)
+import Parsers.LowLevel 
 
 -- All:
 -- ParenExpr, MathApp, BaseValue,
@@ -21,12 +21,18 @@ paren_expr_p =
   char ')' >> return (ParenExprs op_expr1 op_exprs)
   :: Parser ParenExpr
 
+-- PosParenExpr: pos_paren_expr_p
+
+pos_paren_expr_p = 
+  PPE <$> getPosition <*> paren_expr_p
+  :: Parser PosParenExpr
+
 -- MathApp: math_app_p
 
 math_app_p = ( \value_name ->
   paren_expr_p >>= \paren_expr ->
   return $ NameAndParenExpr value_name paren_expr
-  ) :: ValueName -> Parser MathApp
+  ) :: PosValueName -> Parser MathApp
 
 -- BaseValue: base_value_p
 
@@ -37,7 +43,7 @@ base_value_p =
   :: Parser BaseValue
 
 math_app_or_val_name_p =
-  value_name_p >>= \value_name ->
+  pos_value_name_p >>= \value_name ->
   MathApp <$> math_app_p value_name <|>
   return (ValueName value_name)
   :: Parser BaseValue

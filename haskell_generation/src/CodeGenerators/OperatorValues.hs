@@ -6,7 +6,7 @@ import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers (Haskell, Error, (==>), (.>), indent)
 
-import ParsingTypes.LowLevel (ValueName(..))
+import ParsingTypes.LowLevel 
 import ParsingTypes.Types (TypeName(..))
 import ParsingTypes.OperatorValues
 
@@ -94,14 +94,14 @@ math_app_type_inf_g' =
 base_value_g = ( \case
   ParenExpr paren_expr -> paren_expr_g paren_expr
   Literal literal -> literal_g literal
-  ValueName value_name -> value_name_g value_name
+  ValueName value_name -> pos_value_name_g value_name
   MathApp math_application -> math_app_g math_application
   ) :: BaseValue -> ValType -> Stateful Haskell
 
 base_value_type_inf_g = ( \case
   ParenExpr paren_expr -> paren_expr_type_inf_g paren_expr
   Literal literal -> literal_type_inf_g literal
-  ValueName value_name -> value_name_type_inf_g value_name
+  ValueName value_name -> value_name_type_inf_g $ pvn_to_vn value_name
   MathApp math_application -> math_app_type_inf_g' math_application
   ) :: BaseValue -> Stateful (Haskell, ValType)
 
@@ -212,10 +212,10 @@ general_app_handler_correct = ( \(AppTrees tree1 tree2) ->
 
 -- general_app_handler (helpers): get_1st_tree, get_all_but_1st_tree
 
-get_1st_tree = BaseValueLeaf $ ValueName $ VN "get_1st"
+get_1st_tree = BaseValueLeaf $ ValueName $ vn_to_pvn $ VN "get_1st"
   :: ApplicationTree
 
-get_all_but_1st_tree = BaseValueLeaf $ ValueName $ VN "get_all_but_1st"
+get_all_but_1st_tree = BaseValueLeaf $ ValueName $ vn_to_pvn $ VN "get_all_but_1st"
   :: ApplicationTree
 
 -- MultExpr: mult_expr_g
