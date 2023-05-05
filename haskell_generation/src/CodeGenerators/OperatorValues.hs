@@ -35,14 +35,14 @@ import CodeGenerators.LowLevel
 tuple_inside_g = ( \exprs -> \case
   TypeApp (ConsAndTIns t_name _) -> tuple_t_name_g exprs t_name
   ProdType types -> tuple_prod_t_g exprs types
-  t -> throwE $ "Tuple can't have type: " ++ show t
+  val_t -> throwE $ wrong_type_for_tuple_err exprs val_t
   ) :: [ OpExpr ] -> ValType -> Stateful Haskell
 
 tuple_t_name_g = ( \exprs t_name -> type_map_get t_name >>= \case
-  OrType _ _ -> throwE "Tuple can't be an or_type"
+  OrType _ _ -> throwE $ or_type_for_tuple_err exprs
   TupleType _ fields -> tuple_tuple_t_g exprs fields t_name
-  IntType -> throwE "Tuple can't be an Int"
-  CharType -> throwE "Tuple can't be a Char"
+  IntType -> throwE $ int_for_tuple_err exprs
+  CharType -> throwE $ char_for_tuple_err exprs
   ) :: [ OpExpr ] -> TypeName -> Stateful Haskell
 
 tuple_tuple_t_g = ( \exprs fields t_name -> case length exprs == length fields of 
@@ -57,7 +57,7 @@ correct_length_tuple_tt_g = ( \exprs types t_name ->
   ) :: [ OpExpr ] -> [ ValType ] -> TypeName -> Stateful Haskell
 
 tuple_prod_t_g = ( \exprs types -> case length exprs == length types of
-  False -> throwE "Length of tuple does not match length of product type"
+  False -> throwE $ tuple_prod_t_lengths_err exprs $ ProdType types
   True -> 
     zipWithM operator_expression_g exprs types >>= \exprs_hs ->
     return $ intercalate ", " exprs_hs
@@ -79,30 +79,42 @@ paren_expr_type_inf_g = ( \expr ->
   undefined
   ) :: ParenExpr -> Stateful (Haskell, ValType)
 
--- MathApp: math_application_g, math_app_type_inf_g
+-- PosParenExpr: pos_paren_expr_g, paren_expr_type_inf_g
+
+pos_paren_expr_g = ( \(PPE pos paren_expr) val_t ->
+  catchE (paren_expr_g paren_expr val_t) (add_pos_to_err pos)
+  ) :: PosParenExpr -> ValType -> Stateful Haskell
+
+-- MathApp: math_app_g, math_app_type_inf_g
 
 math_app_g =
   math_a_to_a_tree .> application_tree_g
   :: MathApp -> ValType -> Stateful Haskell
 
-math_app_type_inf_g' =  
+math_app_type_inf_g =  
   math_a_to_a_tree .> app_tree_type_inf_g
   :: MathApp -> Stateful (Haskell, ValType)
+
+-- PosMathApp: pos_math_app_g
+
+pos_math_app_g = ( \(PMApp pos math_app) val_t -> 
+  catchE (math_app_g math_app val_t) (add_pos_to_err pos)
+  ) :: PosMathApp -> ValType -> Stateful Haskell
 
 -- BaseValue: base_value_g, base_value_type_inf_g
 
 base_value_g = ( \case
-  ParenExpr paren_expr -> paren_expr_g paren_expr
-  Literal literal -> literal_g literal
+  ParenExpr paren_expr -> pos_paren_expr_g paren_expr
+  Literal literal -> pos_literal_g literal
   ValueName value_name -> pos_value_name_g value_name
-  MathApp math_application -> math_app_g math_application
+  MathApp math_application -> pos_math_app_g math_application
   ) :: BaseValue -> ValType -> Stateful Haskell
 
 base_value_type_inf_g = ( \case
-  ParenExpr paren_expr -> paren_expr_type_inf_g paren_expr
-  Literal literal -> literal_type_inf_g literal
+  ParenExpr paren_expr -> paren_expr_type_inf_g $ ppe_to_pe paren_expr
+  Literal literal -> literal_type_inf_g $ plit_to_lit literal
   ValueName value_name -> value_name_type_inf_g $ pvn_to_vn value_name
-  MathApp math_application -> math_app_type_inf_g' math_application
+  MathApp math_application -> math_app_type_inf_g $ pmapp_to_mapp math_application
   ) :: BaseValue -> Stateful (Haskell, ValType)
 
 -- FuncAppChain: func_app_chain_g, func_app_chain_type_inf_g,
@@ -114,6 +126,12 @@ func_app_chain_g =
 func_app_chain_type_inf_g = 
   func_app_chain_conv .> app_tree_type_inf_g
   :: FuncAppChain -> Stateful (Haskell, ValType)
+
+-- PosFuncAppChain: pos_func_app_chain_g
+
+pos_func_app_chain_g = ( \(PFAC pos fac) val_type ->
+  catchE (func_app_chain_g fac val_type) (add_pos_to_err pos)
+  ) :: PosFuncAppChain -> ValType -> Stateful Haskell
 
 -- ApplicationTree: application_tree_g, app_tree_type_inf_g
 
@@ -161,7 +179,7 @@ normal_app_type_inf_g = (
 
 application_handler = ( \app@(AppTrees tree1 tree2) (InAndOutTs input_t _) err ->
   case tree2 of 
-    BaseValueLeaf (ParenExpr paren_expr@(ParenExprs _ (_:_))) ->
+    BaseValueLeaf (ParenExpr (PPE _ paren_expr@(ParenExprs _ (_:_)))) ->
       app_handler_tuple tree1 paren_expr input_t err
     _ -> general_app_handler app input_t err
   ) :: Application -> FuncType -> Error -> Stateful (Haskell, ValType)
@@ -169,8 +187,8 @@ application_handler = ( \app@(AppTrees tree1 tree2) (InAndOutTs input_t _) err -
 -- app_handler_tuple, app_handler_tuple_correct
 
 app_handler_tuple = ( \tree1 paren_expr@(ParenExprs expr1 _) input_t err -> 
-  op_expr_type_inf_g expr1 >>= \case
-    (_, op_expr_t) -> equiv_types input_t op_expr_t >>= \case 
+  op_expr_type_inf_g expr1 >>= \(_, op_expr_t) ->
+    equiv_types input_t op_expr_t >>= \case 
       True -> app_handler_tuple_correct tree1 paren_expr
       _ -> throwE err
   ) :: ApplicationTree -> ParenExpr -> ValType -> Error ->
@@ -179,7 +197,7 @@ app_handler_tuple = ( \tree1 paren_expr@(ParenExprs expr1 _) input_t err ->
 app_handler_tuple_correct = ( \tree1 paren_expr@(ParenExprs expr1 (expr2:exprs)) -> 
   let
   exprs_to_tree = ( \expr1 exprs ->
-    BaseValueLeaf $ ParenExpr $ ParenExprs expr1 exprs
+    BaseValueLeaf $ ParenExpr $ PPE dummy_pos $ ParenExprs expr1 exprs
     ) :: OpExpr -> [ OpExpr ] -> ApplicationTree
   tree1' = Application $ AppTrees tree1 $ exprs_to_tree expr1 []
   tree2' = exprs_to_tree expr2 exprs
@@ -221,12 +239,12 @@ get_all_but_1st_tree = BaseValueLeaf $ ValueName $ vn_to_pvn $ VN "get_all_but_1
 -- MultExpr: mult_expr_g
 
 mult_expr_g = ( \(Factors mul_f1 mul_fs) val_type -> 
-  mapM (flip func_app_chain_g val_type) (mul_f1 : mul_fs) >>=
+  mapM (flip pos_func_app_chain_g val_type) (mul_f1 : mul_fs) >>=
   intercalate " * " .> return
   ) :: MultExpr -> ValType -> Stateful Haskell
 
 mult_expr_type_inf_g = ( \(Factors mul_f1 mul_fs) ->
-  func_app_chain_type_inf_g mul_f1 >>= \(hs1, t1) ->
+  func_app_chain_type_inf_g (pfac_to_fac mul_f1) >>= \(hs1, t1) ->
   case mul_fs of
     [] -> return (hs1, t1)
     _ -> undefined
@@ -276,7 +294,7 @@ equality_expr_g = ( \(EqExpr term1 maybe_term2) -> case maybe_term2 of
       add_sub_expr_g term1 int >>= \term1_hs ->
       add_sub_expr_g term2 int >>= \term2_hs ->
       return $ term1_hs ++ " == " ++ term2_hs
-    t -> throwE $ "Equality must be of type Bool, not: " ++ show t
+    val_t -> throwE $ equality_not_bool_err val_t
   Nothing -> add_sub_expr_g term1
   ) :: EqualityExpr -> ValType -> Stateful Haskell
 

@@ -132,30 +132,29 @@ values_or_type_def_p =
 -- sem_err_or_hs_to_file, run_sem_analysis, program_g
 -- values_or_type_definition_g
 
-read_and_gen_example = ( \path_pair@(input_path, _) ->
+read_and_gen_example = ( \(input_path, output_path) ->
   readFile input_path >>= \lcases_input ->
   parse_lcases input_path lcases_input ==> \parser_output ->
-  parse_err_or_sem_analysis parser_output path_pair
+  parse_err_or_sem_analysis parser_output output_path
   ) :: (Path, Path) -> IO ()
 
-parse_err_or_sem_analysis = ( \parser_output path_pair ->
+parse_err_or_sem_analysis = ( \parser_output output_path ->
   case parser_output of 
     Left parse_error -> print parse_error
-    Right program -> sem_err_or_hs_to_file program path_pair
-  ) :: Either ParseError Program -> (Path, Path) -> IO ()
+    Right program -> sem_err_or_hs_to_file program output_path
+  ) :: Either ParseError Program -> Path -> IO ()
 
-sem_err_or_hs_to_file = ( \program (input_path, output_path) ->
-  run_sem_analysis program input_path ==> \case
-    Left semantic_error -> putStrLn semantic_error
+sem_err_or_hs_to_file = ( \program output_path ->
+  run_sem_analysis program ==> \case
+    Left (_, sem_err_msg) -> putStrLn sem_err_msg
     Right generated_haskell -> 
       readFile haskell_header >>= \header ->
       writeFile output_path $ header ++ generated_haskell
-  ) :: Program -> (Path, Path) -> IO ()
+  ) :: Program -> Path -> IO ()
 
-run_sem_analysis = ( \program input_path ->
-  catchE (program_g program) (\e -> throwE $ (input_path ++ ":\n") ++ e ++ "\n")
-    ==> runExceptT ==> flip evalState init_state
-  ) :: Program -> Path -> Either Error Haskell
+run_sem_analysis = ( \program ->
+  program_g program ==> runExceptT ==> flip evalState init_state
+  ) :: Program -> Either Error Haskell
 
 program_g = ( \(ValsOrTypeDefsList vals_or_type_defs_list) ->
   mapM_ insert_value_to_map (vals_or_type_defs_to_list vals_or_type_defs_list) >>

@@ -4,13 +4,15 @@ import Control.Monad.State (State, get, modify)
 import Control.Monad.Trans.Except (ExceptT, throwE)
 import qualified Data.Map as M (Map, lookup, insert, insertWith)
 
-import Helpers (Error, (.>), (==>))
+import Helpers (Error, not_caught, (.>), (==>))
 
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types
 
 import IntermediateTypes.Types (ValType(..))
 import IntermediateTypes.TypeDefinitions (TypeInfo(..))
+
+import GenerationHelpers.ErrorMessages
 
 -- All: Types, get fields, update fields, value_map operations, type_map operations
 
@@ -66,9 +68,9 @@ value_map_insert = ( \val_name val_type ->
   ) :: ValueName -> ValType -> Stateful ()
 
 value_map_get = ( \val_name -> get_value_map >>= M.lookup val_name .> \case
-  Nothing -> throwE $ "No definition for value: " ++ show val_name
+  Nothing -> throwE $ no_def_for_val_err val_name
   Just vts -> case vts of
-    [] -> throwE $ "No definition for value: " ++ show val_name
+    [] -> throwE $ no_def_for_val_err val_name
     val_type:_ -> return val_type
   ) :: ValueName -> Stateful ValType
 
@@ -85,12 +87,12 @@ value_map_remove = ( \val_name ->
 type_map_insert = ( \type_name fields_or_cases ->
   get_type_map >>= \type_map ->
   M.lookup type_name type_map ==> \case
-    Just _ -> throwE $ "Type of the same name already defined: " ++ show type_name
+    Just _ -> throwE $ type_exist_err type_name
     Nothing -> update_type_map $ M.insert type_name fields_or_cases type_map
   ) :: TypeName -> TypeInfo -> Stateful ()
 
-type_map_get = ( \type_name@(TN s) -> get_type_map >>= M.lookup type_name .> \case
-  Nothing -> throwE $ "No definition for type: " ++ s
+type_map_get = ( \type_name -> get_type_map >>= M.lookup type_name .> \case
+  Nothing -> throwE $ no_def_for_type_err type_name
   Just foc -> return foc
   ) :: TypeName -> Stateful TypeInfo
 

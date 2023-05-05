@@ -66,7 +66,7 @@ last_or_type_vn_g = ( \val_name or_t_cs val_type -> case elem val_name or_t_cs o
 -- int LitOrValName
 
 not_last_int_lovn_g = ( \case 
-  ValueName val_name -> throwE $ "case of Int type can't be: " ++ show val_name
+  ValueName val_name -> throwE $ wrong_int_case_err val_name
   Literal literal -> literal_g literal int
   ) :: LitOrValName -> Stateful Haskell
 
@@ -209,7 +209,7 @@ check_vn = ( \case
 check_dup_vns = ( \case
   [] -> return ()
   vn : vns -> case elem vn vns of
-    True -> throwE $ "Duplicate or_type case: " ++ show vn
+    True -> throwE $ diplicate_case_err vn
     False -> check_dup_vns vns
   ) :: [ ValueName ] -> Stateful ()
 

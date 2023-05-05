@@ -23,7 +23,7 @@ data PosValueName =
 instance Show PosValueName where
   show = \(PVN _ vn) -> show vn
 
-vn_to_pvn = PVN (newPos "" 0 0)
+vn_to_pvn = PVN dummy_pos
   :: ValueName -> PosValueName
 
 -- Literal
@@ -40,7 +40,7 @@ instance Show Literal where
 -- PosLiteral
 
 data PosLiteral =
-  PL SourcePos Literal
+  PL { pl_pos :: SourcePos, plit_to_lit :: Literal }
 
 instance Show PosLiteral where
   show = \(PL _ lit) -> show lit
@@ -98,3 +98,7 @@ data PosInput =
 
 instance Show PosInput where
   show = \(PI _ input) -> show input
+
+-- helpers
+
+dummy_pos = newPos "" 0 0 

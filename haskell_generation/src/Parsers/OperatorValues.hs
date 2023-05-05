@@ -30,21 +30,27 @@ pos_paren_expr_p =
 -- MathApp: math_app_p
 
 math_app_p = ( \value_name ->
-  paren_expr_p >>= \paren_expr ->
+  pos_paren_expr_p >>= \paren_expr ->
   return $ NameAndParenExpr value_name paren_expr
   ) :: PosValueName -> Parser MathApp
+
+-- PosMathApp: pos_math_app_p
+
+pos_math_app_p = ( \value_name ->
+  PMApp <$> getPosition <*> math_app_p value_name
+  ) :: PosValueName -> Parser PosMathApp
 
 -- BaseValue: base_value_p
 
 base_value_p =
-  ParenExpr <$> paren_expr_p <|>
-  Literal <$> literal_p <|>
+  ParenExpr <$> pos_paren_expr_p <|>
+  Literal <$> pos_literal_p <|>
   math_app_or_val_name_p
   :: Parser BaseValue
 
 math_app_or_val_name_p =
   pos_value_name_p >>= \value_name ->
-  MathApp <$> math_app_p value_name <|>
+  MathApp <$> pos_math_app_p value_name <|>
   return (ValueName value_name)
   :: Parser BaseValue
 
@@ -69,11 +75,17 @@ app_dir_base_val_p =
   return (application_direction, base_value)
   :: Parser (ApplicationDirection, BaseValue)
 
+-- PosFuncAppChain: pos_func_app_chain_p
+
+pos_func_app_chain_p =
+  PFAC <$> getPosition <*> func_app_chain_p
+  :: Parser PosFuncAppChain
+
 -- MultExpr: mult_expr_p
 
 mult_expr_p = (
-  func_app_chain_p >>= \func_app_chain1 ->
-  many (try (string " * ") >> func_app_chain_p) >>= \func_app_chains ->
+  pos_func_app_chain_p >>= \func_app_chain1 ->
+  many (try (string " * ") >> pos_func_app_chain_p) >>= \func_app_chains ->
   return $ Factors func_app_chain1 func_app_chains
   ) :: Parser MultExpr
 

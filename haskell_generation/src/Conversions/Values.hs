@@ -32,7 +32,8 @@ combine = ( \at1 ad at2 -> case ad of
 
 math_a_to_a_tree = ( \(NameAndParenExpr val_name paren_expr) ->
   Application $ AppTrees
-    (BaseValueLeaf $ ValueName val_name) (BaseValueLeaf $ ParenExpr paren_expr)
+    (BaseValueLeaf $ ValueName val_name)
+    (BaseValueLeaf $ ParenExpr paren_expr)
   ) :: MathApp -> ApplicationTree 
 
 -- AddSubExpr to AddSubOrMExpr:

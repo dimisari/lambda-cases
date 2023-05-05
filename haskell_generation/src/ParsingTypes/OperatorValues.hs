@@ -30,16 +30,24 @@ instance Show PosParenExpr where
 -- MathApp
 
 data MathApp =
-  NameAndParenExpr PosValueName ParenExpr
+  NameAndParenExpr PosValueName PosParenExpr
 
 instance Show MathApp where
   show = \(NameAndParenExpr val_n paren_expr) -> show val_n ++ show paren_expr
 
+-- PosMathApp
+
+data PosMathApp =
+  PMApp { pmapp_pos :: SourcePos, pmapp_to_mapp :: MathApp }
+
+instance Show PosMathApp where
+  show = \(PMApp _ math_app) -> show math_app
+
 -- BaseValue
 
 data BaseValue =
-  Literal Literal | ValueName PosValueName | ParenExpr ParenExpr |
-  MathApp MathApp
+  Literal PosLiteral | ValueName PosValueName | ParenExpr PosParenExpr |
+  MathApp PosMathApp
 
 instance Show BaseValue where
   show = \case
@@ -69,10 +77,18 @@ instance Show FuncAppChain where
     concatMap
       ( \(app_dir, base_val) -> show app_dir ++ show base_val ) app_dir_base_val_s
 
+-- PosFuncAppChain
+
+data PosFuncAppChain =
+  PFAC { pfacp :: SourcePos, pfac_to_fac :: FuncAppChain }
+
+instance Show PosFuncAppChain where
+  show = \(PFAC _ func_app_chain) -> show func_app_chain
+
 -- MultExpr
 
 data MultExpr =
-  Factors FuncAppChain [ FuncAppChain ]
+  Factors PosFuncAppChain [ PosFuncAppChain ]
 
 instance Show MultExpr where
   show = \(Factors f1 fs) -> (f1 : fs)==>map show==>intercalate " * "

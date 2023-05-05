@@ -43,8 +43,10 @@ check_vn_in_or_t_cs_g = ( \val_name -> in_or_t_cs val_name >>= \case
 
 -- PosValueName
 
-add_pos_to_err = ( \pos e -> throwE $ show pos ++ "\n" ++ e )
-  :: SourcePos -> Error -> Stateful Haskell
+add_pos_to_err = ( \pos err -> case err of
+  (False, err_msg) -> throwE $ (True, show pos ++ "\n\n" ++ err_msg)
+  _ -> throwE $ err
+  ) :: SourcePos -> Error -> Stateful Haskell
 
 pos_value_name_g = ( \(PVN pos vn) val_type -> 
   catchE (value_name_g vn val_type) (add_pos_to_err pos)
