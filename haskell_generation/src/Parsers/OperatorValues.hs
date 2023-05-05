@@ -1,5 +1,6 @@
 module Parsers.OperatorValues where
 
+import Helpers 
 import Text.Parsec 
 import Text.Parsec.String (Parser)
 
@@ -21,37 +22,20 @@ paren_expr_p =
   char ')' >> return (ParenExprs op_expr1 op_exprs)
   :: Parser ParenExpr
 
--- PosParenExpr: pos_paren_expr_p
-
-pos_paren_expr_p = 
-  PPE <$> getPosition <*> paren_expr_p
-  :: Parser PosParenExpr
-
 -- MathApp: math_app_p
 
-math_app_p = ( \value_name ->
-  pos_paren_expr_p >>= \paren_expr ->
-  return $ NameAndParenExpr value_name paren_expr
-  ) :: PosValueName -> Parser MathApp
-
--- PosMathApp: pos_math_app_p
-
-pos_math_app_p = ( \value_name ->
-  PMApp <$> getPosition <*> math_app_p value_name
-  ) :: PosValueName -> Parser PosMathApp
+math_app_p = (
+  add_pos_p value_name_p >>= \value_name ->
+  optionMaybe (add_pos_p paren_expr_p) >>= \paren_expr ->
+  return $ NameAndParenExpr2 value_name paren_expr
+  ) :: Parser MathApp
 
 -- BaseValue: base_value_p
 
 base_value_p =
-  ParenExpr <$> pos_paren_expr_p <|>
-  Literal <$> pos_literal_p <|>
-  math_app_or_val_name_p
-  :: Parser BaseValue
-
-math_app_or_val_name_p =
-  pos_value_name_p >>= \value_name ->
-  MathApp <$> pos_math_app_p value_name <|>
-  return (ValueName value_name)
+  ParenExpr <$> add_pos_p paren_expr_p <|>
+  Literal <$> add_pos_p literal_p <|>
+  MathApp <$> add_pos_p math_app_p
   :: Parser BaseValue
 
 -- ApplicationDirection: application_direction_p
@@ -75,17 +59,11 @@ app_dir_base_val_p =
   return (application_direction, base_value)
   :: Parser (ApplicationDirection, BaseValue)
 
--- PosFuncAppChain: pos_func_app_chain_p
-
-pos_func_app_chain_p =
-  PFAC <$> getPosition <*> func_app_chain_p
-  :: Parser PosFuncAppChain
-
 -- MultExpr: mult_expr_p
 
 mult_expr_p = (
-  pos_func_app_chain_p >>= \func_app_chain1 ->
-  many (try (string " * ") >> pos_func_app_chain_p) >>= \func_app_chains ->
+  add_pos_p func_app_chain_p >>= \func_app_chain1 ->
+  many (try (string " * ") >> add_pos_p func_app_chain_p) >>= \func_app_chains ->
   return $ Factors func_app_chain1 func_app_chains
   ) :: Parser MultExpr
 
@@ -98,32 +76,37 @@ plus_or_minus_p =
 -- AddSubExpr: add_sub_expr_p, add_sub_op_term_pair_p
 
 add_sub_expr_p =
-  mult_expr_p >>= \term1 ->
+  add_pos_p mult_expr_p >>= \term1 ->
   many op_mult_expr_pair_p >>= \op_term_pairs ->
   return $ FirstAndOpTermPairs term1 op_term_pairs
   :: Parser AddSubExpr
 
 op_mult_expr_pair_p =
-  plus_or_minus_p >>= \op -> mult_expr_p >>= \term -> return (op, term)
-  :: Parser (PlusOrMinus, MultExpr)
+  plus_or_minus_p >>= \op ->
+  add_pos_p mult_expr_p >>= \term ->
+  return (op, term)
+  :: Parser (PlusOrMinus, Pos MultExpr)
 
 -- EqualityExpr: equality_expr_p
 
 equality_expr_p = ( 
-  add_sub_expr_p >>= \add_sub_expr ->
-  optionMaybe (try (string " = ") >> add_sub_expr_p) >>= \maybe_add_sub_expr ->
+  add_pos_p add_sub_expr_p >>=
+    \add_sub_expr ->
+  optionMaybe (try (string " = ") >> add_pos_p add_sub_expr_p) >>=
+    \maybe_add_sub_expr ->
   return $ EqExpr add_sub_expr maybe_add_sub_expr
   ) :: Parser EqualityExpr
 
 -- InputOpExpr: input_op_expr_p
 
 input_op_expr_p =
-  input_p >>= \input -> equality_expr_p >>= \equality_expr ->
+  input_p >>= \input -> add_pos_p equality_expr_p >>= \equality_expr ->
   return $ InputEqExpr input equality_expr
   :: Parser InputOpExpr
 
 -- OpExpr: operator_expression_p
 
 operator_expression_p =
-  InputOpExpr <$> try input_op_expr_p <|> EqualityExpr <$> equality_expr_p
+  InputOpExpr <$> try input_op_expr_p <|>
+  EqualityExpr <$> add_pos_p equality_expr_p
   :: Parser OpExpr

@@ -65,6 +65,9 @@ wrong_names =
   , "func_t_use_fields"
   , "not_func"
   , "not_func2"
+  , "type_check_err"
+  , "equ_err"
+  , "add_err"
   ]
   :: [ String ]
 

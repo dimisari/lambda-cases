@@ -1,7 +1,7 @@
 module ParsingTypes.Values where
 
 import Data.List (intercalate)
-import Helpers ((==>), (.>))
+import Helpers 
 import ParsingTypes.LowLevel (Literal, ValueName, Input)
 import ParsingTypes.Types (ValueType)
 import ParsingTypes.OperatorValues (OpExpr)
@@ -71,7 +71,7 @@ instance Show Where where
 -- CasesOrWhere
 
 data CasesOrWhere =
-  Cases Cases | Where Where
+  Cases (Pos Cases) | Where Where
 
 instance Show CasesOrWhere where
   show = \case

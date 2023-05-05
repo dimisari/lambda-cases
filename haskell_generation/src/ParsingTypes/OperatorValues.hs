@@ -2,7 +2,7 @@ module ParsingTypes.OperatorValues where
 
 import Text.Parsec (SourcePos)
 import Data.List (intercalate)
-import Helpers ((==>))
+import Helpers ((==>), Pos)
 import ParsingTypes.LowLevel 
 
 -- All (Types and Show instances):
@@ -19,41 +19,26 @@ instance Show ParenExpr where
   show = \(ParenExprs expr1 exprs) ->
     "(" ++ map show (expr1 : exprs)==>intercalate ", " ++ ")"
 
--- PosParenExpr
-
-data PosParenExpr =
-  PPE { ppe_pos :: SourcePos, ppe_to_pe :: ParenExpr }
-
-instance Show PosParenExpr where
-  show = \(PPE _ paren_expr) -> show paren_expr
-
 -- MathApp
 
 data MathApp =
-  NameAndParenExpr PosValueName PosParenExpr
+  NameAndParenExpr2 (Pos ValueName) (Maybe (Pos ParenExpr))
 
 instance Show MathApp where
-  show = \(NameAndParenExpr val_n paren_expr) -> show val_n ++ show paren_expr
-
--- PosMathApp
-
-data PosMathApp =
-  PMApp { pmapp_pos :: SourcePos, pmapp_to_mapp :: MathApp }
-
-instance Show PosMathApp where
-  show = \(PMApp _ math_app) -> show math_app
+  show = \(NameAndParenExpr2 val_n maybe_paren_expr) ->
+    show val_n ++ case maybe_paren_expr of 
+      Just paren_expr -> show paren_expr
+      Nothing -> ""
 
 -- BaseValue
 
 data BaseValue =
-  Literal PosLiteral | ValueName PosValueName | ParenExpr PosParenExpr |
-  MathApp PosMathApp
+  Literal (Pos Literal) | ParenExpr (Pos ParenExpr) | MathApp (Pos MathApp)
 
 instance Show BaseValue where
   show = \case
     ParenExpr paren_expr -> show paren_expr
     Literal lit -> show lit
-    ValueName val_name -> show val_name
     MathApp math_app -> show math_app
 
 -- ApplicationDirection
@@ -77,18 +62,10 @@ instance Show FuncAppChain where
     concatMap
       ( \(app_dir, base_val) -> show app_dir ++ show base_val ) app_dir_base_val_s
 
--- PosFuncAppChain
-
-data PosFuncAppChain =
-  PFAC { pfacp :: SourcePos, pfac_to_fac :: FuncAppChain }
-
-instance Show PosFuncAppChain where
-  show = \(PFAC _ func_app_chain) -> show func_app_chain
-
 -- MultExpr
 
 data MultExpr =
-  Factors PosFuncAppChain [ PosFuncAppChain ]
+  Factors (Pos FuncAppChain) [ Pos FuncAppChain ]
 
 instance Show MultExpr where
   show = \(Factors f1 fs) -> (f1 : fs)==>map show==>intercalate " * "
@@ -106,7 +83,7 @@ instance Show PlusOrMinus where
 -- AddSubExpr
 
 data AddSubExpr =
-  FirstAndOpTermPairs MultExpr [ (PlusOrMinus, MultExpr) ]
+  FirstAndOpTermPairs (Pos MultExpr) [ (PlusOrMinus, Pos MultExpr) ]
 
 instance Show AddSubExpr where
   show = \(FirstAndOpTermPairs term1 pairs) ->
@@ -115,7 +92,7 @@ instance Show AddSubExpr where
 -- EqualityExpr
 
 data EqualityExpr =
-  EqExpr AddSubExpr (Maybe AddSubExpr)
+  EqExpr (Pos AddSubExpr) (Maybe (Pos AddSubExpr))
 
 instance Show EqualityExpr where
   show = \(EqExpr term1 maybe_term2) -> show term1 ++ case maybe_term2 of
@@ -125,7 +102,7 @@ instance Show EqualityExpr where
 -- InputOpExpr
 
 data InputOpExpr =
-  InputEqExpr Input EqualityExpr
+  InputEqExpr Input (Pos EqualityExpr)
 
 instance Show InputOpExpr where
   show = \(InputEqExpr input equality_expr) -> show input ++ show equality_expr
@@ -133,7 +110,7 @@ instance Show InputOpExpr where
 -- OpExpr
 
 data OpExpr =
-  InputOpExpr InputOpExpr | EqualityExpr EqualityExpr
+  InputOpExpr InputOpExpr | EqualityExpr (Pos EqualityExpr)
 
 instance Show OpExpr where
   show = \case

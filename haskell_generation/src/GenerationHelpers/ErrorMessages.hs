@@ -7,7 +7,7 @@ import ParsingTypes.LowLevel (ValueName, Literal, Abstraction)
 import ParsingTypes.OperatorValues (OpExpr)
 import ParsingTypes.Types (TypeName)
 
-import IntermediateTypes.Values (ApplicationTree)
+import IntermediateTypes.Values
 import IntermediateTypes.Types (ValType)
 
 -- All
@@ -79,11 +79,11 @@ diplicate_case_err = ( \val_name ->
 --
 
 lit_not_int_err = ( \val_type ->
-  not_caught $ "\nInteger literal cannot have type: " ++ show val_type ++ "\n"
+  not_caught $ "Integer literal cannot have type: " ++ show val_type ++ "\n"
   ) :: ValType -> Error
 
 type_check_err = ( \str val_type map_val_type -> 
-  not_caught $ "\nValue: " ++ str ++ "\ncan't have both of these types:\n" ++
+  not_caught $ "Value: " ++ str ++ "\ncan't have both of these types:\n" ++
   show val_type ++ "\n" ++ show map_val_type ++ "\n"
   ) :: String -> ValType -> ValType -> Error
 
@@ -112,7 +112,7 @@ not_func_t_err = ( \abs val_t ->
   "\nis not a function type\n"
   ) :: Abstraction -> ValType -> Error
 
-cant_apply_non_func_err = ( \tree1 tree2 val_t ->
+cant_apply_non_func_err2 = ( \tree1 tree2 val_t ->
   not_caught $ "Trying to apply:\n" ++ show tree1 ++ 
   "\nto:\n" ++ show tree2 ++
   "\nBut it doesn't have a function type, instead the type is:\n" ++ show val_t

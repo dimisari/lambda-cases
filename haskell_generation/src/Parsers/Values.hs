@@ -84,7 +84,7 @@ where_p =
 -- CasesOrWhere: cases_or_where_p
 
 cases_or_where_p = 
-  Cases <$> cases_p <|> Where <$> where_p
+  Cases <$> add_pos_p cases_p <|> Where <$> where_p
   :: Parser CasesOrWhere
 
 -- InputCasesOrWhere: input_cases_or_where_p

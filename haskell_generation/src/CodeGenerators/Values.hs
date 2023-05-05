@@ -5,7 +5,7 @@ import Control.Monad (foldM, zipWithM)
 import Control.Monad.State ((>=>))
 import Control.Monad.Trans.Except (throwE, catchE)
 
-import Helpers (Haskell, Error, (==>), (.>), indent)
+import Helpers 
 
 import ParsingTypes.LowLevel (ValueName(..), Abstraction(..))
 import ParsingTypes.Types (TypeName(..), ValueType(..))
@@ -31,6 +31,22 @@ import CodeGenerators.OperatorValues
 -- LitOrValName, Case, Cases,
 -- ValueNamesTypesAndExpressions, Values,
 -- Where, CasesOrWhere, ValueExpression
+
+-- Generate
+
+instance Generate DefaultCase where
+  generate = \(DefaultCase value_expression) output_t -> 
+    get_ind_lev >>= \ind_lev ->
+    value_expression_g value_expression output_t >>= \value_expression_hs ->
+    return $ indent ind_lev ++ "_ -> " ++ value_expression_hs
+
+instance Generate Cases where
+  generate = \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type -> 
+    get_ind_lev >>= \ind_lev ->
+    update_ind_lev (ind_lev + 1) >>
+    cases_list_g (case1 : cases) maybe_def_case val_type >>= \cases_hs ->
+    update_ind_lev ind_lev >>
+    return (indent ind_lev ++ "\\case\n" ++ cases_hs) 
 
 -- LitOrValName: lit_or_val_name_g
 
@@ -67,7 +83,7 @@ last_or_type_vn_g = ( \val_name or_t_cs val_type -> case elem val_name or_t_cs o
 
 not_last_int_lovn_g = ( \case 
   ValueName val_name -> throwE $ wrong_int_case_err val_name
-  Literal literal -> literal_g literal int
+  Literal literal -> generate literal int
   ) :: LitOrValName -> Stateful Haskell
 
 last_int_lovn_g = ( \case 
@@ -113,23 +129,7 @@ int_case_g = ( \lovn_g (Case lit_or_val_name val_expr) out_t ->
   ) :: (LitOrValName -> Stateful Haskell) -> Case -> ValType ->
        Stateful Haskell
 
--- DefaultCase: default_case_g
-
-default_case_g = ( \(DefaultCase value_expression) output_t -> 
-  get_ind_lev >>= \ind_lev ->
-  value_expression_g value_expression output_t >>= \value_expression_hs ->
-  return $ indent ind_lev ++ "_ -> " ++ value_expression_hs
-  ) :: DefaultCase -> ValType -> Stateful Haskell
-
--- Cases: cases_g, cases_type_inference_g
-
-cases_g = ( \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type -> 
-  get_ind_lev >>= \ind_lev ->
-  update_ind_lev (ind_lev + 1) >>
-  cases_list_g (case1 : cases) maybe_def_case val_type >>= \cases_hs ->
-  update_ind_lev ind_lev >>
-  return (indent ind_lev ++ "\\case\n" ++ cases_hs) 
-  ) :: Cases -> ValType -> Stateful Haskell
+-- Cases: cases_type_inference_g
 
 cases_list_g = ( \cases maybe_def_case val_type ->
   check_type val_type >>= \case
@@ -148,7 +148,7 @@ int_cases_list_g = ( \cases maybe_def_case out_t -> case maybe_def_case of
 
 int_cases_list_with_default_g = ( \cases default_case out_t ->
   mapM (flip not_last_int_case_g out_t) cases >>= \cases_hs ->
-  default_case_g default_case out_t >>= \default_case_hs ->
+  generate default_case out_t >>= \default_case_hs ->
   return $ intercalate "\n" $ cases_hs ++ [ default_case_hs ]
   ) :: [ Case ] -> DefaultCase -> ValType -> Stateful Haskell
 
@@ -173,7 +173,7 @@ or_type_cases_with_default_g = (
   \cases default_case or_type_names func_t@(InAndOutTs _ out_t) ->
   foldM (not_last_or_type_case_g func_t) (or_type_names, "") cases >>=
     \(_, cases_hs) ->
-  default_case_g default_case out_t >>= \default_case_hs ->
+  generate default_case out_t >>= \default_case_hs ->
   return $ cases_hs ++ default_case_hs
   ) :: [ (ValueName, ValueExpression) ] -> DefaultCase -> [ ValueName ] ->
        FuncType -> Stateful Haskell
@@ -309,12 +309,12 @@ remove_value_from_map = ( \(value_name, _, _) -> value_map_remove value_name)
 -- CasesOrWhere: cases_or_where_g, cases_or_where_type_inference_g
 
 cases_or_where_g = ( \case
-  Cases cases -> cases_g cases
+  Cases cases -> generate cases
   Where where_ -> where_g where_
   ) :: CasesOrWhere -> ValType -> Stateful Haskell
 
 cases_or_where_type_inference_g = ( \case
-  Cases cases -> cases_type_inference_g cases
+  Cases cases -> cases_type_inference_g $ remove_pos cases
   Where where_ -> where_type_inference_g where_
   ) :: CasesOrWhere -> Stateful (Haskell, ValType)
 
@@ -336,7 +336,7 @@ abstraction_cow_type_inference_g = (
 value_expression_g = ( \case
   InputCasesOrWhere input_cow -> abstraction_cases_or_where_g input_cow
   CasesOrWhere cases_or_where -> cases_or_where_g cases_or_where 
-  OpExpr expr -> operator_expression_g expr
+  OpExpr expr -> generate expr
   ) :: ValueExpression -> ValType -> Stateful Haskell
 
 value_expression_type_inference_g = ( \case

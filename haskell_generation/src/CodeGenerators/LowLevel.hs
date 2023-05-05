@@ -5,7 +5,7 @@ import Data.List (intercalate)
 import Control.Monad ((>=>), zipWithM)
 import Control.Monad.Trans.Except (throwE, catchE)
 
-import Helpers (Haskell, Error, (==>), (.>))
+import Helpers 
 
 import ParsingTypes.LowLevel
 import ParsingTypes.Types (TypeName(..))
@@ -21,14 +21,33 @@ import GenerationHelpers.Helpers
 
 -- All: ValueName, Literal, Abstraction, ManyAbstractions, Input
 
--- ValueName: value_name_g, value_name_type_inf_g, check_vn_in_or_t_cs_g
+-- Generate: Pos a, ValueName, Literal, Abstraction
 
-value_name_g = ( \val_name val_type -> 
-  value_map_get val_name >>= \map_val_type ->
-  equiv_types val_type map_val_type >>= \case
-    False -> throwE $ type_check_err (show val_name) val_type map_val_type
-    True -> check_vn_in_or_t_cs_g val_name
-  ) :: ValueName -> ValType -> Stateful Haskell
+class Generate a where
+  generate :: a -> ValType -> Stateful Haskell
+
+instance Generate a => Generate (Pos a) where
+  generate = \(WithPos pos a) val_type -> 
+    catchE (generate a val_type) (add_pos_to_err pos)
+
+instance Generate ValueName where
+  generate = \val_name val_type -> 
+    value_map_get val_name >>= \map_val_type ->
+    equiv_types val_type map_val_type >>= \case
+      False -> throwE $ type_check_err (show val_name) val_type map_val_type
+      True -> check_vn_in_or_t_cs_g val_name
+
+instance Generate Literal where
+  generate = \lit val_type -> (val_type == int) ==> \case
+    True -> return $ show lit
+    False -> throwE $ lit_not_int_err val_type
+
+instance Generate Abstraction where
+  generate = \case
+    AbstractionName val_name -> val_n_ins_and_ret_hs $ remove_pos val_name
+    UseFields -> use_fields_g
+
+-- ValueName: value_name_type_inf_g, check_vn_in_or_t_cs_g
 
 value_name_type_inf_g = ( \val_name -> 
   value_map_get val_name >>= \map_val_type ->
@@ -41,46 +60,19 @@ check_vn_in_or_t_cs_g = ( \val_name -> in_or_t_cs val_name >>= \case
   _ -> return $ show val_name
   ) :: ValueName -> Stateful Haskell
 
--- PosValueName
-
-add_pos_to_err = ( \pos err -> case err of
-  (False, err_msg) -> throwE $ (True, show pos ++ "\n\n" ++ err_msg)
-  _ -> throwE $ err
-  ) :: SourcePos -> Error -> Stateful Haskell
-
-pos_value_name_g = ( \(PVN pos vn) val_type -> 
-  catchE (value_name_g vn val_type) (add_pos_to_err pos)
-  ) :: PosValueName -> ValType -> Stateful Haskell
-
--- Literal: literal_g, literal_type_inf_g
-
-literal_g = ( \lit val_type -> (val_type == int) ==> \case
-  True -> return $ show lit
-  False -> throwE $ lit_not_int_err val_type
-  ) :: Literal -> ValType -> Stateful Haskell
+-- Literal: literal_type_inf_g
 
 literal_type_inf_g = ( \lit -> return (show lit, int) )
   :: Literal -> Stateful (Haskell, ValType)
 
--- PosLiteral: pos_literal_g
-
-pos_literal_g = ( \(PL pos lit) val_t ->
-  catchE (literal_g lit val_t) (add_pos_to_err pos)
-  ) :: PosLiteral -> ValType -> Stateful Haskell
-
--- Abstraction: abstraction_g, abs_val_map_remove, helpers
-
-abstraction_g = ( \case
-  AbstractionName val_name -> val_n_ins_and_ret_hs $ pvn_to_vn val_name
-  UseFields -> use_fields_g
-  ) :: Abstraction -> ValType -> Stateful Haskell
+-- Abstraction: abs_val_map_remove, helpers
 
 abs_val_map_remove = ( \case
-  AbstractionName val_name -> value_map_remove $ pvn_to_vn val_name
+  AbstractionName val_name -> value_map_remove $ remove_pos val_name
   UseFields -> use_fs_map_remove
   ) :: Abstraction -> Stateful ()
 
--- Abstraction (abstraction_g):
+-- Abstraction:
 -- use_fields_g, use_fields_tuple_matching_g, use_fields_type_name_g,
 -- prod_type_matching_g
 
@@ -121,11 +113,11 @@ use_fs_tn_map_remove = ( type_map_get >=> \case
 -- ManyAbstractions: many_abstractions_g, many_abs_val_map_remove
 
 many_abstractions_g = ( \(Abstractions abs1 abs2 abstractions) ->
-  abstractions_g $ map pa_to_a (abs1 : abs2 : abstractions)
+  abstractions_g $ map remove_pos (abs1 : abs2 : abstractions)
   ) :: ManyAbstractions -> ValType -> Stateful (ValType, Haskell)
 
 many_abs_val_map_remove = ( \(Abstractions abs1 abs2 abstractions) ->
-  mapM_ abs_val_map_remove $ map pa_to_a $ abs1 : abs2 : abstractions
+  mapM_ abs_val_map_remove $ map remove_pos $ abs1 : abs2 : abstractions
   ) :: ManyAbstractions -> Stateful ()
 
 -- Input: input_g, input_abstractions_g, input_val_map_remove
@@ -136,13 +128,13 @@ input_g = ( \input val_type ->
   ) :: Input -> ValType -> Stateful (ValType, Haskell)
 
 input_abstractions_g = ( \case
-  OneAbstraction abstraction -> abstractions_g [ pa_to_a abstraction ]
-  ManyAbstractions many_abs -> many_abstractions_g $ pma_to_ma many_abs
+  OneAbstraction abstraction -> abstractions_g [ remove_pos abstraction ]
+  ManyAbstractions many_abs -> many_abstractions_g $ remove_pos many_abs
   ) :: Input -> ValType ->  Stateful (ValType, Haskell)
 
 input_val_map_remove = ( \case
-  OneAbstraction abs -> abs_val_map_remove $ pa_to_a abs
-  ManyAbstractions many_abs -> many_abs_val_map_remove $ pma_to_ma many_abs
+  OneAbstraction abs -> abs_val_map_remove $ remove_pos abs
+  ManyAbstractions many_abs -> many_abs_val_map_remove $ remove_pos many_abs
   ) :: Input -> Stateful ()
 
 -- abstractions_g
@@ -158,7 +150,15 @@ abstractions_check_func_t_g = ( \abs1 other_abs -> \case
   ) :: Abstraction -> [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)
 
 abstractions_func_t_g = ( \abs1 other_abs (InAndOutTs in_t out_t) -> 
-  abstraction_g abs1 in_t >>= \abs1_hs ->
+  generate abs1 in_t >>= \abs1_hs ->
   abstractions_g other_abs out_t >>= \(final_t, other_abs_hs) ->
   return (final_t, abs1_hs ++ " " ++ other_abs_hs)
   ) :: Abstraction -> [ Abstraction ] -> FuncType -> Stateful (ValType, Haskell)
+
+-- helpers
+
+add_pos_to_err = ( \pos err -> case err of
+  (False, err_msg) -> throwE $ (True, "\n" ++ show pos ++ "\n\n" ++ err_msg)
+  _ -> throwE $ err
+  ) :: SourcePos -> Error -> Stateful Haskell
+

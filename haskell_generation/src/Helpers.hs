@@ -1,6 +1,7 @@
 module Helpers where
 
-import Text.Parsec ((<|>), many, many1, string, char, try, eof, skipMany1, digit)
+import Text.Parsec
+import Text.Parsec.Pos (newPos)
 import Text.Parsec.String (Parser)
 import Data.List (intercalate)
 import Control.Monad.State (State)
@@ -54,3 +55,17 @@ type Haskell = String
 
 indent = ( \i -> replicate (2 * i) ' ' )
   :: Int -> Haskell
+
+-- other
+
+data Pos a =
+  WithPos { get_pos :: SourcePos, remove_pos :: a }
+
+instance Show a => Show (Pos a) where
+  show = \(WithPos _ a) -> show a
+
+add_dummy_pos = WithPos (newPos "" 0 0)
+  :: a -> Pos a
+
+add_pos_p = (<*>) (WithPos <$> getPosition)
+  :: Parser a -> Parser (Pos a)
