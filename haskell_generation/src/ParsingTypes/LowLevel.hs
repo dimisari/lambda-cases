@@ -29,12 +29,12 @@ instance Show Literal where
 -- Abstraction
 
 data Abstraction =
-  AbstractionName (Pos ValueName) | UseFields
+  AbstractionName (Pos ValueName) | UseFields SourcePos
 
 instance Show Abstraction where
   show = \case
     AbstractionName value_name -> show value_name
-    UseFields -> "use_fields"
+    UseFields _ -> "use_fields"
 
 -- ManyAbstractions
 

@@ -28,7 +28,7 @@ import CodeGenerators.LowLevel
 import CodeGenerators.OperatorValues
 
 -- All:
--- LitOrValName, Case, Cases,
+-- LitOrValName, Case, CasesExpr,
 -- ValueNamesTypesAndExpressions, Values,
 -- Where, CasesOrWhere, ValueExpression
 
@@ -40,24 +40,55 @@ instance Generate DefaultCase where
     generate value_expression output_t >>= \value_expression_hs ->
     return $ indent ind_lev ++ "_ -> " ++ value_expression_hs
 
-instance Generate Cases where
+instance Generate CasesExpr where
   generate = \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type -> 
     get_ind_lev >>= \ind_lev ->
     update_ind_lev (ind_lev + 1) >>
-    generate (CsAndDefC (case1 : cases) maybe_def_case) val_type >>= \cases_hs ->
+    generate (Cases (case1 : cases) maybe_def_case) val_type >>= \cases_hs ->
     update_ind_lev ind_lev >>
     return (indent ind_lev ++ "\\case\n" ++ cases_hs) 
 
-data CasesList = 
-  CsAndDefC [ Case ] (Maybe DefaultCase)
+data Cases = 
+  Cases [ Case ] (Maybe DefaultCase)
 
-instance Generate CasesList where
-  generate = \(CsAndDefC cases maybe_def_case) val_type ->
-    check_type val_type >>= \case
-      IntInput out_t -> int_cases_list_g cases maybe_def_case out_t
-      OrTInput or_type_names func_t ->
+instance Generate Cases where
+  generate = \(Cases cases maybe_def_case) val_type ->
+    check_is_func_type val_type >>= \func_t ->
+    check_in_t_is_type_name func_t >>= \(type_name, out_t) ->
+    type_map_get type_name >>= \case
+      IntType ->
+        generate (IntCases cases maybe_def_case) out_t
+      OrType _ or_cases -> 
         check_or_type_cases cases >>= \pairs ->
-        or_type_cases_g pairs maybe_def_case or_type_names func_t
+        or_type_cases_g pairs maybe_def_case (map get_c_name or_cases) func_t
+      _ -> undefined
+
+data IntCases = 
+  IntCases [ Case ] (Maybe DefaultCase)
+
+instance Generate IntCases where
+  generate = \(IntCases cases maybe_def_case) out_t ->
+    case maybe_def_case of
+      Just default_case -> generate (IntCasesDefault cases default_case) out_t
+      Nothing -> generate (IntCasesNoDefault cases) out_t
+
+data IntCasesDefault = 
+    IntCasesDefault [ Case ] DefaultCase
+
+instance Generate IntCasesDefault where
+  generate = \(IntCasesDefault cases default_case) out_t ->
+    mapM (flip not_last_int_case_g out_t) cases >>= \cases_hs ->
+    generate default_case out_t >>= \default_case_hs ->
+    return $ intercalate "\n" $ cases_hs ++ [ default_case_hs ]
+
+data IntCasesNoDefault = 
+    IntCasesNoDefault [ Case ]
+
+instance Generate IntCasesNoDefault where
+  generate = \(IntCasesNoDefault cases) out_t ->
+    mapM (flip not_last_int_case_g out_t) (init cases) >>= \cases_hs ->
+    last_int_case_g (last cases) out_t >>= \last_case_hs ->
+    return $ intercalate "\n" $ cases_hs ++ [ last_case_hs ]
 
 instance Generate Where where
   generate = \(ValueExpressionWhereValues val_expr values) val_type ->
@@ -78,7 +109,7 @@ instance Generate Where where
 
 instance Generate CasesOrWhere where
   generate =  \case
-    Cases cases -> generate cases
+    CasesExpr cases -> generate cases
     Where where_ -> generate where_
 
 instance Generate InputCasesOrWhere where
@@ -169,25 +200,6 @@ int_case_g = ( \lovn_g (Case lit_or_val_name val_expr) out_t ->
   ) :: (LitOrValName -> Stateful Haskell) -> Case -> ValType ->
        Stateful Haskell
 
--- int cases
-
-int_cases_list_g = ( \cases maybe_def_case out_t -> case maybe_def_case of
-  Just default_case -> int_cases_list_with_default_g cases default_case out_t
-  Nothing -> int_cases_list_without_default_g cases out_t
-  ) :: [ Case ] -> Maybe DefaultCase -> ValType -> Stateful Haskell
-
-int_cases_list_with_default_g = ( \cases default_case out_t ->
-  mapM (flip not_last_int_case_g out_t) cases >>= \cases_hs ->
-  generate default_case out_t >>= \default_case_hs ->
-  return $ intercalate "\n" $ cases_hs ++ [ default_case_hs ]
-  ) :: [ Case ] -> DefaultCase -> ValType -> Stateful Haskell
-
-int_cases_list_without_default_g = ( \cases out_t -> 
-  mapM (flip not_last_int_case_g out_t) (init cases) >>= \cases_hs ->
-  last_int_case_g (last cases) out_t >>= \last_case_hs ->
-  return $ intercalate "\n" $ cases_hs ++ [ last_case_hs ]
-  ) :: [ Case ] -> ValType -> Stateful Haskell
-
 -- or type cases
 
 or_type_cases_g = ( \cases maybe_def_case or_type_names func_t ->
@@ -243,26 +255,19 @@ check_dup_vns = ( \case
     False -> check_dup_vns vns
   ) :: [ ValueName ] -> Stateful ()
 
-data CasesTypeInfo =
-  IntInput ValType | OrTInput [ ValueName ] FuncType
-
-check_type = ( \case
-  FuncType func_type -> check_func_type func_type
+check_is_func_type = ( \case
+  FuncType func_type -> return func_type
   other_t -> throwE $ cases_expr_not_func_t_err other_t
-  ) :: ValType -> Stateful CasesTypeInfo
+  ) :: ValType -> Stateful FuncType
 
-check_func_type = ( \func_type@(InAndOutTs in_t out_t) -> case in_t of
-  TypeApp (ConsAndTIns type_name []) ->
-    type_map_get type_name >>= \case
-      OrType _ or_cases -> return $ OrTInput (map get_c_name or_cases) func_type
-      IntType -> return $ IntInput out_t
-      _ -> undefined
+check_in_t_is_type_name = ( \(InAndOutTs in_t out_t) -> case in_t of
+  TypeApp (ConsAndTIns type_name []) -> return (type_name, out_t)
   other_t -> throwE $ cases_expr_wrong_in_t_err other_t
-  ) :: FuncType -> Stateful CasesTypeInfo
+  ) :: FuncType -> Stateful (TypeName, ValType)
 
 cases_type_inference_g = (
   undefined
-  ) :: Cases -> Stateful (Haskell, ValType)
+  ) :: CasesExpr -> Stateful (Haskell, ValType)
 
 -- ValueNameTypeAndExpression: name_type_and_value_g
 
@@ -322,7 +327,7 @@ remove_value_from_map = ( \(value_name, _, _) -> value_map_remove value_name)
 -- CasesOrWhere: cases_or_where_type_inference_g
 
 cases_or_where_type_inference_g = ( \case
-  Cases cases -> cases_type_inference_g $ remove_pos cases
+  CasesExpr cases -> cases_type_inference_g $ remove_pos cases
   Where where_ -> where_type_inference_g where_
   ) :: CasesOrWhere -> Stateful (Haskell, ValType)
 

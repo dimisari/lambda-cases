@@ -28,7 +28,7 @@ class Generate a where
 
 instance Generate a => Generate (Pos a) where
   generate = \(WithPos pos a) val_type -> 
-    catchE (generate a val_type) (add_pos_to_err pos)
+    catchEaddPos (generate a val_type) pos
 
 instance Generate ValueName where
   generate = \val_name val_type -> 
@@ -45,16 +45,16 @@ instance Generate Literal where
 instance Generate Abstraction where
   generate = \case
     AbstractionName val_name -> val_n_ins_and_ret_hs $ remove_pos val_name
-    UseFields -> use_fields_g
+    UseFields pos -> use_fields_pos_g pos
 
--- GenerateInfer
+-- GenerateInfer: Pos a, ValueName, Literal
 
 class GenerateInfer a where
   generate_infer :: a -> Stateful (Haskell, ValType)
 
 instance GenerateInfer a => GenerateInfer (Pos a) where
   generate_infer = \(WithPos pos a) -> 
-    catchE (generate_infer a) (add_pos_to_err pos)
+    catchEaddPos (generate_infer a) pos
 
 instance GenerateInfer ValueName where
   generate_infer = \val_name -> 
@@ -65,7 +65,7 @@ instance GenerateInfer ValueName where
 instance GenerateInfer Literal where
   generate_infer = \lit -> return (show lit, int)
 
--- ValueName: value_name_type_inf_g, check_vn_in_or_t_cs_g
+-- ValueName: check_vn_in_or_t_cs_g
 
 check_vn_in_or_t_cs_g = ( \val_name -> in_or_t_cs val_name >>= \case
   True -> return $ "C" ++ show val_name
@@ -76,12 +76,15 @@ check_vn_in_or_t_cs_g = ( \val_name -> in_or_t_cs val_name >>= \case
 
 abs_val_map_remove = ( \case
   AbstractionName val_name -> value_map_remove $ remove_pos val_name
-  UseFields -> use_fs_map_remove
+  UseFields _ -> use_fs_map_remove
   ) :: Abstraction -> Stateful ()
 
 -- Abstraction:
 -- use_fields_g, use_fields_tuple_matching_g, use_fields_type_name_g,
 -- prod_type_matching_g
+
+use_fields_pos_g = ( \pos val_type -> catchEaddPos (use_fields_g val_type) pos )
+  :: SourcePos -> ValType -> Stateful Haskell
 
 use_fields_g = ( \val_type ->
   value_map_insert (VN "tuple") val_type >>
@@ -135,9 +138,13 @@ input_g = ( \input val_type ->
   ) :: Input -> ValType -> Stateful (ValType, Haskell)
 
 input_abstractions_g = ( \case
-  OneAbstraction abstraction -> abstractions_g [ remove_pos abstraction ]
+  OneAbstraction abstraction -> abstraction_g abstraction
   ManyAbstractions many_abs -> many_abstractions_g $ remove_pos many_abs
   ) :: Input -> ValType ->  Stateful (ValType, Haskell)
+
+abstraction_g = ( \(WithPos pos abstraction) val_type -> 
+  catchEaddPos (abstractions_g [ abstraction ] val_type) pos
+  ) :: Pos Abstraction -> ValType -> Stateful (ValType, Haskell)
 
 input_val_map_remove = ( \case
   OneAbstraction abs -> abs_val_map_remove $ remove_pos abs
@@ -169,3 +176,5 @@ add_pos_to_err = ( \pos err -> case err of
   _ -> throwE $ err
   ) :: SourcePos -> Error -> Stateful a
 
+catchEaddPos = ( \g pos -> catchE g (add_pos_to_err pos) )
+  :: Stateful a -> SourcePos -> Stateful a

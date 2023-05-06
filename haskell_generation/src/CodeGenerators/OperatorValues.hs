@@ -280,8 +280,8 @@ get_all_but_1st_tree =
 
 -- AddSubExpr: add_sub_g
 
-add_sub_g = ( \expr op mult_expr val_type ->
+add_sub_g = ( \expr op_hs mult_expr val_type ->
   generate expr val_type >>= \expr_hs ->
   generate mult_expr val_type >>= \term_hs ->
-  return $ expr_hs ++ op ++ term_hs
+  return $ expr_hs ++ op_hs ++ term_hs
   ) :: AddSubOrMExpr -> String -> Pos MultExpr -> ValType -> Stateful Haskell

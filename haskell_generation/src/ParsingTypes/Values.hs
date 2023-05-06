@@ -7,7 +7,7 @@ import ParsingTypes.Types (ValueType)
 import ParsingTypes.OperatorValues (OpExpr)
 
 -- All (Types and Show instances):
--- LitOrValName, Case, DefaultCase, Cases, Values
+-- LitOrValName, Case, DefaultCase, CasesExpr, Values
 -- Where, CasesOrWhere, InputCasesOrWhere, ValueExpression
 
 -- LitOrValName
@@ -37,12 +37,12 @@ data DefaultCase =
 instance Show DefaultCase where
   show = \(DefaultCase val_expr) -> "... ->\n" ++ show val_expr ++ "\n"
 
--- Cases
+-- CasesExpr
 
-data Cases =
+data CasesExpr =
   CasesAndMaybeDefault Case [ Case ] (Maybe DefaultCase)
 
-instance Show Cases where
+instance Show CasesExpr where
   show = \(CasesAndMaybeDefault case1 cases maybe_def_case) ->
     "\ncases\n\n" ++ concatMap show (case1 : cases) ++ case maybe_def_case of
       Just def_case -> show def_case
@@ -71,11 +71,11 @@ instance Show Where where
 -- CasesOrWhere
 
 data CasesOrWhere =
-  Cases (Pos Cases) | Where Where
+  CasesExpr (Pos CasesExpr) | Where Where
 
 instance Show CasesOrWhere where
   show = \case
-    Cases cases -> show cases
+    CasesExpr cases -> show cases
     Where where_ -> show where_
 
 -- InputCasesOrWhere
