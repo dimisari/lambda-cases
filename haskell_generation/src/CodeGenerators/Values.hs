@@ -37,37 +37,79 @@ import CodeGenerators.OperatorValues
 instance Generate DefaultCase where
   generate = \(DefaultCase value_expression) output_t -> 
     get_ind_lev >>= \ind_lev ->
-    value_expression_g value_expression output_t >>= \value_expression_hs ->
+    generate value_expression output_t >>= \value_expression_hs ->
     return $ indent ind_lev ++ "_ -> " ++ value_expression_hs
 
 instance Generate Cases where
   generate = \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type -> 
     get_ind_lev >>= \ind_lev ->
     update_ind_lev (ind_lev + 1) >>
-    cases_list_g (case1 : cases) maybe_def_case val_type >>= \cases_hs ->
+    generate (CsAndDefC (case1 : cases) maybe_def_case) val_type >>= \cases_hs ->
     update_ind_lev ind_lev >>
     return (indent ind_lev ++ "\\case\n" ++ cases_hs) 
+
+data CasesList = 
+  CsAndDefC [ Case ] (Maybe DefaultCase)
+
+instance Generate CasesList where
+  generate = \(CsAndDefC cases maybe_def_case) val_type ->
+    check_type val_type >>= \case
+      IntInput out_t -> int_cases_list_g cases maybe_def_case out_t
+      OrTInput or_type_names func_t ->
+        check_or_type_cases cases >>= \pairs ->
+        or_type_cases_g pairs maybe_def_case or_type_names func_t
+
+instance Generate Where where
+  generate = \(ValueExpressionWhereValues val_expr values) val_type ->
+    get_ind_lev >>= \ind_lev -> update_ind_lev (ind_lev + 1) >>
+    insert_values_to_map values >>
+    mapM values_g values >>= concat .> \values_hs ->
+    generate val_expr val_type >>= \val_expr_hs ->
+    remove_values_from_map values >>
+    update_ind_lev ind_lev >>
+    return
+      ( "\n" ++
+        indent (ind_lev + 1) ++ "let" ++
+        indent (ind_lev + 1) ++ values_hs ++
+        indent (ind_lev + 1) ++ "in" ++
+        "\n" ++
+        indent (ind_lev + 1) ++ val_expr_hs
+      )
+
+instance Generate CasesOrWhere where
+  generate =  \case
+    Cases cases -> generate cases
+    Where where_ -> generate where_
+
+instance Generate InputCasesOrWhere where
+  generate = \(InputAndCasesOrWhere input cases_or_where) ->
+    input_g input >=> \(output_type, input_hs) ->
+    generate cases_or_where output_type >>= \cases_or_where_hs ->
+    input_val_map_remove input >>
+    return (input_hs ++ cases_or_where_hs)
+
+instance Generate ValueExpression where
+  generate = \case
+    InputCasesOrWhere input_cow -> generate input_cow
+    CasesOrWhere cases_or_where -> generate cases_or_where 
+    OpExpr expr -> generate expr
 
 -- LitOrValName: lit_or_val_name_g
 
 -- or_type_vn_g, last_or_type_vn_g
 
-data ValNameIsOrCase = 
-  IsCase { other_cases :: [ ValueName ] } | IsNotCase
-
-check_is_or_case = ( \val_name -> \case
-  (_, []) -> IsNotCase
+check_is_or_case = ( \val_name val_type -> \case
+  (_, []) -> throwE $ not_or_type_case_err val_name val_type
   (acc, c:cs) -> case c == val_name of
-    True -> IsCase $ acc ++ cs
-    False -> check_is_or_case val_name (c:acc, cs)
-  ) :: ValueName -> ([ValueName], [ValueName]) -> ValNameIsOrCase
+    True -> return $ acc ++ cs
+    False -> check_is_or_case val_name val_type (c:acc, cs)
+  ) :: ValueName -> ValType -> ([ValueName], [ValueName]) ->
+       Stateful [ ValueName ]
 
 or_type_vn_g = ( \val_name val_type or_t_cs ->
-  case check_is_or_case val_name ([], or_t_cs) of
-    IsCase other_names ->
-      maybe_value_g val_name val_type >>= \maybe_value_hs ->
-      return (other_names, "C" ++ show val_name ++ maybe_value_hs)
-    IsNotCase -> throwE $ not_or_type_case_err val_name val_type
+  check_is_or_case val_name val_type ([], or_t_cs) >>= \other_names ->
+  maybe_value_g val_name val_type >>= \maybe_value_hs ->
+  return (other_names, "C" ++ show val_name ++ maybe_value_hs)
   ) :: ValueName -> ValType -> [ ValueName ] -> Stateful ([ ValueName ], Haskell)
 
 last_or_type_vn_g = ( \val_name or_t_cs val_type -> case elem val_name or_t_cs of
@@ -78,6 +120,26 @@ last_or_type_vn_g = ( \val_name or_t_cs val_type -> case elem val_name or_t_cs o
     False -> throwE $ cases_not_covered val_name or_t_cs
   False -> val_n_ins_and_ret_hs val_name val_type
   ) :: ValueName -> [ ValueName ] -> ValType -> Stateful Haskell
+
+not_last_or_type_case_g = (
+  \(InAndOutTs in_t out_t) (or_t_cs, hs_so_far) (val_name, val_expr) ->
+  get_ind_lev >>= \ind_lev ->
+  or_type_vn_g val_name in_t or_t_cs >>= \(new_names, val_name_hs) ->
+  generate val_expr out_t >>= \val_expr_hs ->
+  return
+    ( new_names
+    , hs_so_far ++ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
+    )
+  ) :: FuncType -> ([ ValueName ], Haskell) -> (ValueName, ValueExpression) ->
+       Stateful ([ ValueName ], Haskell)
+
+last_or_type_case_g = ( \(val_name, val_expr) (InAndOutTs in_t out_t) or_t_cs ->
+  get_ind_lev >>= \ind_lev ->
+  last_or_type_vn_g val_name or_t_cs in_t >>= \val_name_hs ->
+  generate val_expr out_t >>= \val_expr_hs ->
+  return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs
+  ) :: (ValueName, ValueExpression) -> FuncType -> [ ValueName ] ->
+       Stateful Haskell
 
 -- int LitOrValName
 
@@ -91,28 +153,6 @@ last_int_lovn_g = ( \case
   Literal literal -> throwE $ last_int_case_err literal
   ) :: LitOrValName -> Stateful Haskell
 
--- Case: abs_g 
-
-not_last_or_type_case_g = (
-  \(InAndOutTs in_t out_t) (or_t_cs, hs_so_far) (val_name, val_expr) ->
-  get_ind_lev >>= \ind_lev ->
-  or_type_vn_g val_name in_t or_t_cs >>= \(new_names, val_name_hs) ->
-  value_expression_g val_expr out_t >>= \val_expr_hs ->
-  return
-    ( new_names
-    , hs_so_far ++ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
-    )
-  ) :: FuncType -> ([ ValueName ], Haskell) -> (ValueName, ValueExpression) ->
-       Stateful ([ ValueName ], Haskell)
-
-last_or_type_case_g = ( \(val_name, val_expr) (InAndOutTs in_t out_t) or_t_cs ->
-  get_ind_lev >>= \ind_lev ->
-  last_or_type_vn_g val_name or_t_cs in_t >>= \val_name_hs ->
-  value_expression_g val_expr out_t >>= \val_expr_hs ->
-  return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs
-  ) :: (ValueName, ValueExpression) -> FuncType -> [ ValueName ] ->
-       Stateful Haskell
-
 -- int case
 
 not_last_int_case_g = int_case_g not_last_int_lovn_g
@@ -124,20 +164,10 @@ last_int_case_g = int_case_g last_int_lovn_g
 int_case_g = ( \lovn_g (Case lit_or_val_name val_expr) out_t ->
   get_ind_lev >>= \ind_lev ->
   lovn_g lit_or_val_name >>= \int_lovn_hs ->
-  value_expression_g val_expr out_t >>= \val_expr_hs ->
+  generate val_expr out_t >>= \val_expr_hs ->
   return $ indent ind_lev ++ int_lovn_hs ++ " -> " ++ val_expr_hs
   ) :: (LitOrValName -> Stateful Haskell) -> Case -> ValType ->
        Stateful Haskell
-
--- Cases: cases_type_inference_g
-
-cases_list_g = ( \cases maybe_def_case val_type ->
-  check_type val_type >>= \case
-    IntInput out_t -> int_cases_list_g cases maybe_def_case out_t
-    OrTInput or_type_names func_t ->
-      check_or_type_cases cases >>= \pairs ->
-      or_type_cases_g pairs maybe_def_case or_type_names func_t
-  ) :: [ Case ] -> Maybe DefaultCase -> ValType -> Stateful Haskell
 
 -- int cases
 
@@ -242,7 +272,7 @@ name_type_and_value_g = ( \(value_name, value_type, value_expr) ->
   val_type = val_type_conv value_type
     :: ValType
   in
-  value_expression_g value_expr val_type >>= \val_expr_hs ->
+  generate value_expr val_type >>= \val_expr_hs ->
   return $
     "\n" ++ indent ind_lev ++ show value_name ++ " :: " ++ show val_type ++
     "\n" ++ indent ind_lev ++ show value_name ++ " = " ++ val_expr_hs ++ "\n"
@@ -268,24 +298,7 @@ list_of_values_g =
   mapM name_type_and_value_g .> fmap concat
   :: [ (ValueName, ValueType, ValueExpression) ] -> Stateful Haskell
 
--- Where: where_g, where_type_inference_g 
-
-where_g = ( \(ValueExpressionWhereValues val_expr values) val_type ->
-  get_ind_lev >>= \ind_lev -> update_ind_lev (ind_lev + 1) >>
-  insert_values_to_map values >>
-  mapM values_g values >>= concat .> \values_hs ->
-  value_expression_g val_expr val_type >>= \val_expr_hs ->
-  remove_values_from_map values >>
-  update_ind_lev ind_lev >>
-  return
-    ( "\n" ++
-      indent (ind_lev + 1) ++ "let" ++
-      indent (ind_lev + 1) ++ values_hs ++
-      indent (ind_lev + 1) ++ "in" ++
-      "\n" ++
-      indent (ind_lev + 1) ++ val_expr_hs
-    )
-  ) :: Where -> ValType -> Stateful Haskell
+-- Where: where_type_inference_g 
 
 where_type_inference_g = ( \(ValueExpressionWhereValues val_expr values) ->
   undefined
@@ -306,41 +319,21 @@ insert_value_to_map = ( \(value_name, value_type, value_expr) ->
 remove_value_from_map = ( \(value_name, _, _) -> value_map_remove value_name)
   :: (ValueName, ValueType, ValueExpression) -> Stateful ()
 
--- CasesOrWhere: cases_or_where_g, cases_or_where_type_inference_g
-
-cases_or_where_g = ( \case
-  Cases cases -> generate cases
-  Where where_ -> where_g where_
-  ) :: CasesOrWhere -> ValType -> Stateful Haskell
+-- CasesOrWhere: cases_or_where_type_inference_g
 
 cases_or_where_type_inference_g = ( \case
   Cases cases -> cases_type_inference_g $ remove_pos cases
   Where where_ -> where_type_inference_g where_
   ) :: CasesOrWhere -> Stateful (Haskell, ValType)
 
--- InputCasesOrWhere: abstraction_cases_or_where_g
-
-abstraction_cases_or_where_g = ( \(InputAndCasesOrWhere input cases_or_where) ->
-  input_g input >=> \(output_type, input_hs) ->
-  cases_or_where_g cases_or_where output_type >>= \cases_or_where_hs ->
-  input_val_map_remove input >>
-  return (input_hs ++ cases_or_where_hs)
-  ) :: InputCasesOrWhere -> ValType -> Stateful Haskell
-
 abstraction_cow_type_inference_g = ( 
   undefined
   ) :: InputCasesOrWhere -> Stateful (Haskell, ValType)
 
--- ValueExpression: value_expression_g, value_expression_type_inference_g
-
-value_expression_g = ( \case
-  InputCasesOrWhere input_cow -> abstraction_cases_or_where_g input_cow
-  CasesOrWhere cases_or_where -> cases_or_where_g cases_or_where 
-  OpExpr expr -> generate expr
-  ) :: ValueExpression -> ValType -> Stateful Haskell
+-- ValueExpression: value_expression_type_inference_g
 
 value_expression_type_inference_g = ( \case
   InputCasesOrWhere input_cow -> abstraction_cow_type_inference_g input_cow
   CasesOrWhere cases_or_where -> cases_or_where_type_inference_g cases_or_where
-  OpExpr expr -> op_expr_type_inf_g expr
+  OpExpr expr -> generate_infer expr
   ) :: ValueExpression -> Stateful (Haskell, ValType)

@@ -47,23 +47,30 @@ instance Generate Abstraction where
     AbstractionName val_name -> val_n_ins_and_ret_hs $ remove_pos val_name
     UseFields -> use_fields_g
 
--- ValueName: value_name_type_inf_g, check_vn_in_or_t_cs_g
+-- GenerateInfer
 
-value_name_type_inf_g = ( \val_name -> 
-  value_map_get val_name >>= \map_val_type ->
-  check_vn_in_or_t_cs_g val_name >>= \value_name_hs ->
-  return (value_name_hs, map_val_type)
-  ) :: ValueName -> Stateful (Haskell, ValType)
+class GenerateInfer a where
+  generate_infer :: a -> Stateful (Haskell, ValType)
+
+instance GenerateInfer a => GenerateInfer (Pos a) where
+  generate_infer = \(WithPos pos a) -> 
+    catchE (generate_infer a) (add_pos_to_err pos)
+
+instance GenerateInfer ValueName where
+  generate_infer = \val_name -> 
+    value_map_get val_name >>= \map_val_type ->
+    check_vn_in_or_t_cs_g val_name >>= \value_name_hs ->
+    return (value_name_hs, map_val_type)
+
+instance GenerateInfer Literal where
+  generate_infer = \lit -> return (show lit, int)
+
+-- ValueName: value_name_type_inf_g, check_vn_in_or_t_cs_g
 
 check_vn_in_or_t_cs_g = ( \val_name -> in_or_t_cs val_name >>= \case
   True -> return $ "C" ++ show val_name
   _ -> return $ show val_name
   ) :: ValueName -> Stateful Haskell
-
--- Literal: literal_type_inf_g
-
-literal_type_inf_g = ( \lit -> return (show lit, int) )
-  :: Literal -> Stateful (Haskell, ValType)
 
 -- Abstraction: abs_val_map_remove, helpers
 
@@ -160,5 +167,5 @@ abstractions_func_t_g = ( \abs1 other_abs (InAndOutTs in_t out_t) ->
 add_pos_to_err = ( \pos err -> case err of
   (False, err_msg) -> throwE $ (True, "\n" ++ show pos ++ "\n\n" ++ err_msg)
   _ -> throwE $ err
-  ) :: SourcePos -> Error -> Stateful Haskell
+  ) :: SourcePos -> Error -> Stateful a
 

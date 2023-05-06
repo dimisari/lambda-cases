@@ -49,7 +49,7 @@ instance Generate ApplicationTree where
 
 instance Generate Application where
   generate = \application val_type ->
-    application_type_inf_g application >>= \(application_hs, application_t) ->
+    generate_infer application >>= \(application_hs, application_t) ->
     equiv_types val_type application_t >>= \case 
       True -> return application_hs
       False -> throwE $ type_check_err (show application) val_type application_t
@@ -95,6 +95,69 @@ instance Generate OpExpr where
     InputOpExpr input_op_expr -> generate input_op_expr
     EqualityExpr eq_expr -> generate eq_expr
 
+-- GenerateInfer
+
+instance GenerateInfer ParenExpr where
+  generate_infer = undefined
+
+instance GenerateInfer BaseValue2 where
+  generate_infer = \case
+    ParenExpr2 paren_expr -> generate_infer paren_expr
+    Literal2 literal -> generate_infer literal
+    ValueName2 value_name -> generate_infer value_name
+
+instance GenerateInfer FuncAppChain where
+  generate_infer = func_app_chain_to_app_tree .> generate_infer
+
+instance GenerateInfer ApplicationTree where
+  generate_infer = \case 
+    BaseVal2Leaf base_val2 -> generate_infer base_val2
+    Application application -> generate_infer application
+
+instance GenerateInfer Application where
+  generate_infer = \application@(AppTrees tree1 tree2) ->
+    generate_infer tree1 >>= \(tree1_hs, tree1_t) -> case tree1_t of 
+      FuncType func_type ->
+        catchE
+          (normal_app_type_inf_g tree1_hs func_type tree2)
+          (application_handler application func_type)
+      _ -> throwE $ cant_apply_non_func_err2 tree1 tree2 tree1_t
+
+instance GenerateInfer MultExpr where
+  generate_infer = \(Factors mul_f1 mul_fs) ->
+    generate_infer mul_f1 >>= \(hs1, t1) ->
+    case mul_fs of
+      [] -> return (hs1, t1)
+      _ -> undefined
+
+instance GenerateInfer AddSubExpr where
+  generate_infer = add_sub_e_to_add_sub_or_me .> generate_infer
+
+instance GenerateInfer AddSubOrMExpr where
+  generate_infer = \case
+    Addition addition -> generate_infer addition
+    Subtraction subtraction -> generate_infer subtraction
+    MultExpr mult_expr -> generate_infer mult_expr
+
+instance GenerateInfer Addition where
+  generate_infer = undefined
+
+instance GenerateInfer Subtraction where
+  generate_infer = undefined
+
+instance GenerateInfer EqualityExpr where
+  generate_infer = \(EqExpr term1 maybe_term2) -> case maybe_term2 of
+    Just term2 -> undefined
+    Nothing -> generate_infer term1
+
+instance GenerateInfer InputOpExpr where
+  generate_infer = undefined
+   
+instance GenerateInfer OpExpr where 
+  generate_infer = \case
+    InputOpExpr input_op_expr -> generate_infer input_op_expr
+    EqualityExpr eq_expr -> generate_infer eq_expr
+
 -- Tuple:
 -- tuple_inside_g, tuple_t_name_g, tuple_tuple_t_g, correct_length_tuple_tt_g,
 -- tuple_prod_t_g
@@ -137,41 +200,7 @@ paren_expr_inside_g = ( \(ParenExprs expr1 exprs) val_t -> case exprs of
   _ : _ -> tuple_inside_g (expr1 : exprs) val_t
   ) :: ParenExpr -> ValType -> Stateful Haskell
 
-paren_expr_type_inf_g = ( \expr ->
-  undefined
-  ) :: ParenExpr -> Stateful (Haskell, ValType)
-
--- BaseValue2: base_value2_type_inf_g
-
-base_value2_type_inf_g = ( \case
-  ParenExpr2 paren_expr -> paren_expr_type_inf_g $ remove_pos paren_expr
-  Literal2 literal -> literal_type_inf_g $ remove_pos literal
-  ValueName2 value_name -> value_name_type_inf_g $ remove_pos value_name
-  ) :: BaseValue2 -> Stateful (Haskell, ValType)
-
--- FuncAppChain: func_app_chain_type_inf_g
-
-func_app_chain_type_inf_g = 
-  func_app_chain_to_app_tree .> app_tree_type_inf_g
-  :: FuncAppChain -> Stateful (Haskell, ValType)
-
--- ApplicationTree: app_tree_type_inf_g
-
-app_tree_type_inf_g = ( \case 
-  Application application -> application_type_inf_g application
-  BaseVal2Leaf base_val2 -> base_value2_type_inf_g base_val2
-  ) :: ApplicationTree -> Stateful (Haskell, ValType)
-
--- Application: application_type_inf_g, normal_app_type_inf_g
-
-application_type_inf_g = ( \application@(AppTrees tree1 tree2) ->
-  app_tree_type_inf_g tree1 >>= \(tree1_hs, tree1_t) -> case tree1_t of 
-    FuncType func_type ->
-      catchE
-        (normal_app_type_inf_g tree1_hs func_type tree2)
-        (application_handler application func_type)
-    _ -> throwE $ cant_apply_non_func_err2 tree1 tree2 tree1_t
-  ) :: Application -> Stateful (Haskell, ValType)
+-- Application: normal_app_type_inf_g
 
 normal_app_type_inf_g = (
   \tree1_hs func_type@(InAndOutTs input_t output_t) tree2 -> 
@@ -197,7 +226,7 @@ application_handler = ( \app@(AppTrees tree1 tree2) (InAndOutTs input_t _) err -
 -- app_handler_tuple, app_hand_tuple_correct
 
 app_handler_tuple = ( \tree1 paren_expr@(ParenExprs expr1 _) input_t err -> 
-  op_expr_type_inf_g expr1 >>= \(_, op_expr_t) ->
+  generate_infer expr1 >>= \(_, op_expr_t) ->
     equiv_types input_t op_expr_t >>= \case 
       True -> app_hand_tuple_correct tree1 paren_expr
       _ -> throwE err
@@ -213,13 +242,13 @@ app_hand_tuple_correct = (
   tree1' = Application $ AppTrees tree1 $ exprs_to_tree expr1 []
   tree2' = exprs_to_tree expr2 exprs
   in
-  application_type_inf_g $ AppTrees tree1' tree2'
+  generate_infer $ AppTrees tree1' tree2'
   ) :: ApplicationTree -> ParenExpr -> Stateful (Haskell, ValType)
 
 -- gen_app_hand, gen_app_hand_correct
 
 gen_app_hand = ( \app@(AppTrees tree1 tree2) input_t err ->
-  app_tree_type_inf_g tree2 >>= \case
+  generate_infer tree2 >>= \case
     (_,ProdType (t1:_)) -> equiv_types input_t t1 >>= \case 
       True -> gen_app_hand_correct app
       _ -> throwE err
@@ -236,7 +265,7 @@ gen_app_hand_correct = ( \(AppTrees tree1 tree2) ->
   tree2_rest = Application $ AppTrees get_all_but_1st_tree tree2
     :: ApplicationTree
   in
-  application_type_inf_g $ AppTrees tree1' tree2_rest
+  generate_infer $ AppTrees tree1' tree2_rest
   ) :: Application -> Stateful (Haskell, ValType)
 
 -- gen_app_hand (helpers): get_1st_tree, get_all_but_1st_tree
@@ -249,51 +278,10 @@ get_all_but_1st_tree =
   BaseVal2Leaf $ ValueName2 $ add_dummy_pos $ VN "get_all_but_1st"
   :: ApplicationTree
 
--- MultExpr: mult_expr_g
-
-mult_expr_type_inf_g = ( \(Factors mul_f1 mul_fs) ->
-  func_app_chain_type_inf_g (remove_pos mul_f1) >>= \(hs1, t1) ->
-  case mul_fs of
-    [] -> return (hs1, t1)
-    _ -> undefined
-  ) :: MultExpr -> Stateful (Haskell, ValType)
-
--- AddSubExpr:
--- add_sub_expr_g, add_sub_expr_type_inf_g, add_sub_or_term_g,
--- add_sub_expr_type_inf_g, addition_g, subtraction_g, add_sub_g
-
-add_sub_expr_type_inf_g = add_sub_e_to_add_sub_or_me .> add_sub_or_term_type_inf_g 
-  :: AddSubExpr -> Stateful (Haskell, ValType)
-
-add_sub_or_term_type_inf_g = ( \case
-  Addition addition -> undefined
-  Subtraction subtr -> undefined
-  MultExpr mult_expr -> mult_expr_type_inf_g $ remove_pos mult_expr
-  ) :: AddSubOrMExpr -> Stateful (Haskell, ValType)
+-- AddSubExpr: add_sub_g
 
 add_sub_g = ( \expr op mult_expr val_type ->
   generate expr val_type >>= \expr_hs ->
   generate mult_expr val_type >>= \term_hs ->
   return $ expr_hs ++ op ++ term_hs
   ) :: AddSubOrMExpr -> String -> Pos MultExpr -> ValType -> Stateful Haskell
-
--- EqualityExpr: equality_expr_g
-
-equality_expr_type_inf_g = ( \(EqExpr term1 maybe_term2) ->
-  case maybe_term2 of
-    Just term2 -> undefined
-    Nothing -> add_sub_expr_type_inf_g $ remove_pos term1
-  ) :: EqualityExpr -> Stateful (Haskell, ValType)
-
--- InputOpExpr: input_op_expr_type_inf_g
-
-input_op_expr_type_inf_g = ( \(InputEqExpr input eq_expr) ->
-  undefined
-  ) :: InputOpExpr -> Stateful (Haskell, ValType)
-
--- OpExpr: operator_expression_g, input_op_expr_type_inf_g
-
-op_expr_type_inf_g = ( \case
-  InputOpExpr input_op_expr -> input_op_expr_type_inf_g input_op_expr
-  EqualityExpr eq_expr -> equality_expr_type_inf_g $ remove_pos eq_expr
-  ) :: OpExpr -> Stateful (Haskell, ValType)
