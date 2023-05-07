@@ -23,6 +23,7 @@ import GenerationState.TypesAndOperations
 import GenerationHelpers.ErrorMessages
 import GenerationHelpers.TypeChecking (equiv_types)
 import GenerationHelpers.Helpers
+import GenerationHelpers.CheckCases
 
 import CodeGenerators.LowLevel
 import CodeGenerators.OperatorValues
@@ -58,7 +59,6 @@ data Cases =
 
 instance Generate Cases where
   generate = \(Cases cases maybe_def_case) val_type ->
-    case_to_lovns_exprs cases ==> \(lovns, exprs) ->
     check_is_func_type val_type >>= \func_t ->
     check_in_t_is_type_name func_t >>= \(type_name, out_t) ->
     let
@@ -70,30 +70,65 @@ instance Generate Cases where
     type_map_get type_name >>= \case
 
       IntType ->
+        case_to_lovns_exprs cases ==> \(lovns, exprs) ->
         check_lovns_int lovns has_default >>= \(ints, int_or_val_name) ->
-        mapM (flip generate out_t) (zipWith IntCase ints {-- $ init --} exprs)
+        mapM (flip generate out_t) (zipWith IntCase ints $ init exprs)
           >>= \int_cases_hs -> 
         generate (LastIntCase int_or_val_name (last exprs)) out_t
           >>= \last_int_case_hs ->
         generate maybe_def_case out_t
           >>= \maybe_def_case_hs ->
-        return $
-          intercalate "\n" $
-          int_cases_hs ++ [ last_int_case_hs, maybe_def_case_hs ]
+        return $ concat $ int_cases_hs ++ [ last_int_case_hs, maybe_def_case_hs ]
 
       OrType _ or_cases -> 
-        let
-        or_t_cases_names = map get_c_name or_cases
-          :: [ ValueName ]
-        in
-        check_lovns_or_type lovns type_name or_t_cases_names has_default >>=
-          \val_names ->
-        or_type_cases_g
-          (zipWith OrTypeCase val_names exprs)
-          maybe_def_case
-          or_t_cases_names
-          func_t
+        case_to_lovns_exprs cases ==> \(lovns, exprs) ->
+        check_lovns_or_type
+          lovns
+          type_name
+          (map get_c_name or_cases)
+          has_default >>= \(val_names, last_val_name) ->
+        mapM
+          (flip generate_func_type func_t)
+          (zipWith OrTypeCase val_names $ init exprs)
+          >>= \or_type_cases_hs -> 
+        generate_func_type (LastOrTypeCase last_val_name (last exprs)) func_t
+          >>= \last_or_type_case_hs ->
+        generate maybe_def_case out_t
+          >>= \maybe_def_case_hs ->
+        return $
+          concat $ or_type_cases_hs ++ [ last_or_type_case_hs, maybe_def_case_hs ]
+
       _ -> undefined
+
+data OrTypeCase = 
+  OrTypeCase ValueName ValueExpression
+
+data LastOrTypeCase = 
+  LastOrTypeCase SpecificOrDefaultCaseVN ValueExpression
+
+-- GenerateFuncType 
+
+class GenerateFuncType a where
+  generate_func_type :: a -> FuncType -> Stateful Haskell
+
+instance GenerateFuncType OrTypeCase where
+  generate_func_type = \(OrTypeCase val_name val_expr) (InAndOutTs in_t out_t) ->
+    get_ind_lev >>= \ind_lev ->
+    or_type_vn_g val_name in_t >>= \val_name_hs ->
+    generate val_expr out_t >>= \val_expr_hs ->
+    return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
+
+instance GenerateFuncType LastOrTypeCase where
+  generate_func_type = \(LastOrTypeCase last_val_name val_expr) ->
+    case last_val_name of
+      SpecificValName val_name -> generate_func_type (OrTypeCase val_name val_expr)
+      DefaultValName val_name -> \(InAndOutTs in_t out_t) ->
+        get_ind_lev >>= \ind_lev ->
+        val_n_ins_and_ret_hs val_name in_t >>= \val_name_hs ->
+        generate val_expr out_t >>= \val_expr_hs ->
+        return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
+
+-- Int cases
 
 data IntCase = 
   IntCase Int ValueExpression
@@ -102,7 +137,7 @@ instance Generate IntCase where
   generate = \(IntCase i val_expr) out_t -> 
     get_ind_lev >>= \ind_lev ->
     generate val_expr out_t >>= \val_expr_hs ->
-    return $ indent ind_lev ++ show i  ++ " -> " ++ val_expr_hs
+    return $ indent ind_lev ++ show i ++ " -> " ++ val_expr_hs ++ "\n"
 
 data LastIntCase = 
   LastIntCase IntOrValName ValueExpression
@@ -121,7 +156,9 @@ instance Generate ValNameIntCase where
     get_ind_lev >>= \ind_lev ->
     val_n_ins_and_ret_hs val_name int >>= \val_name_hs ->
     generate val_expr out_t >>= \val_expr_hs ->
-    return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs
+    return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
+
+-- Where
 
 instance Generate Where where
   generate = \(ValueExpressionWhereValues val_expr values) val_type ->
@@ -140,6 +177,8 @@ instance Generate Where where
         indent (ind_lev + 1) ++ val_expr_hs
       )
 
+-- 
+ 
 instance Generate CasesOrWhere where
   generate =  \case
     CasesExpr cases -> generate cases
@@ -160,155 +199,10 @@ instance Generate ValueExpression where
 
 --
 
-not_last_or_type_case_g = (
-  \(InAndOutTs in_t out_t) (OrTypeCase val_name val_expr) ->
-  get_ind_lev >>= \ind_lev ->
-  or_type_vn_g val_name in_t >>= \val_name_hs ->
-  generate val_expr out_t >>= \val_expr_hs ->
-  return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
-  ) :: FuncType -> OrTypeCase -> Stateful Haskell
-
 or_type_vn_g = ( \val_name val_type ->
   maybe_value_g val_name val_type >>= \maybe_value_hs ->
   return $ "C" ++ show val_name ++ maybe_value_hs
   ) :: ValueName -> ValType -> Stateful Haskell
-
--- 
-
-last_or_type_case_g = (
-  \(OrTypeCase val_name val_expr) (InAndOutTs in_t out_t) or_t_cases_names ->
-  get_ind_lev >>= \ind_lev ->
-  last_or_type_vn_g val_name or_t_cases_names in_t >>= \val_name_hs ->
-  generate val_expr out_t >>= \val_expr_hs ->
-  return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs
-  ) :: OrTypeCase -> FuncType -> [ ValueName ] -> Stateful Haskell
-
-last_or_type_vn_g = ( \val_name or_t_cases_names val_type ->
-  case elem val_name or_t_cases_names of
-    True ->
-      maybe_value_g val_name val_type >>= \maybe_value_hs ->
-      return $ "C" ++ show val_name ++ maybe_value_hs
-    False -> val_n_ins_and_ret_hs val_name val_type
-  ) :: ValueName -> [ ValueName ] -> ValType -> Stateful Haskell
-
--- or type cases
-
-or_type_cases_g = ( \cases maybe_def_case or_t_cases_names func_t ->
-  case maybe_def_case of
-    Just default_case -> or_type_cases_with_default_g cases default_case func_t
-    Nothing -> or_type_cases_without_default_g cases func_t or_t_cases_names
-  ) :: [ OrTypeCase ] -> Maybe DefaultCase -> [ ValueName ] ->
-       FuncType -> Stateful Haskell
-
-or_type_cases_with_default_g = (
-  \cases default_case func_t@(InAndOutTs _ out_t) ->
-  mapM (not_last_or_type_case_g func_t) cases >>= \cases_hs ->
-  generate default_case out_t >>= \default_case_hs ->
-  return $ concat cases_hs ++ default_case_hs
-  ) :: [ OrTypeCase ] -> DefaultCase -> FuncType -> Stateful Haskell
-
-or_type_cases_without_default_g = ( \cases func_t or_t_cases_names ->
-  mapM (not_last_or_type_case_g func_t) (init cases) >>= \cases_hs ->
-  last_or_type_case_g (last cases) func_t or_t_cases_names >>= \last_case_hs ->
-  return $ concat cases_hs ++ last_case_hs
-  ) :: [ OrTypeCase ] -> FuncType -> [ ValueName ] -> Stateful Haskell
-
--- Check cases for or_type
-
-data OrTypeCase = 
-  OrTypeCase ValueName ValueExpression
-  
-check_lovns_or_type = ( \lovns or_t_name or_t_cases_names has_default ->
-  mapM check_lovn_is_val_name lovns >>= \val_names -> 
-  catchE
-    (check_val_names_in_cases has_default or_t_cases_names val_names)
-    (append_to_err $ show or_t_name ++ "\n") >>= \cases_already_covered ->
-  check_no_dupl_val_name val_names >> 
-  catchE
-    (check_all_cases_covered cases_already_covered val_names or_t_cases_names)
-    (append_to_err $ cases_not_covered_err_cont or_t_name) >>
-  return val_names
-  ) ::
-  [ LitOrValName ] -> TypeName -> [ ValueName ] -> Bool -> Stateful [ ValueName ]
-
-check_lovn_is_val_name = ( \case
-  ValueName val_name -> return val_name
-  Literal lit -> throwE $ lit_in_or_type_case_err lit
-  ) :: LitOrValName -> Stateful ValueName
-
-check_val_names_in_cases = ( \has_default or_t_cases_names val_names ->
-  case has_default of
-    True ->
-      mapM_ (check_val_name_in_cases or_t_cases_names) val_names >>
-      return True
-    False ->
-      mapM_ (check_val_name_in_cases or_t_cases_names) (init val_names) >>
-      return (not $ elem (last val_names) or_t_cases_names)
-  ) :: Bool -> [ ValueName ] -> [ ValueName ] -> Stateful Bool
-
-check_val_name_in_cases = ( \or_t_cases_names val_name ->
-  case elem val_name or_t_cases_names of
-    True -> return ()
-    False -> throwE $ not_or_type_case_err_new val_name
-  ) :: [ ValueName ] -> ValueName -> Stateful ()
-
-check_no_dupl_val_name = ( \case
-  [] -> return ()
-  val_name : val_names -> case elem val_name val_names of
-    True -> throwE $ duplicate_case_err val_name
-    False -> check_no_dupl_val_name val_names
-  ) :: [ ValueName ] -> Stateful ()
-
-check_all_cases_covered = ( \cases_already_covered val_names or_t_cases_names ->
-  case cases_already_covered of
-    True -> return ()
-    False -> check_all_cs_cov_no_def val_names or_t_cases_names
-  ) :: Bool -> [ ValueName ] -> [ ValueName ] -> Stateful ()
-
-check_all_cs_cov_no_def = ( \val_names or_t_cases_names ->
-  filter (not . flip elem val_names) or_t_cases_names ==> \case
-    [] -> return ()
-    not_covered_cases -> throwE $ cases_not_covered_err not_covered_cases
-  ) :: [ ValueName ] -> [ ValueName ] -> Stateful ()
-
---
-
-data IntOrValName = 
-  Int_ Int | ValName_ ValueName
-
-check_lovns_int = ( \lovns has_default ->
-  mapM check_lovn_is_int (init lovns) >>= \ints -> 
-  check_last_lovn has_default (last lovns) >>= \int_or_val_name ->
-  check_no_dupl_int_with_last ints int_or_val_name >>
-  return (ints, int_or_val_name)
-  ) :: [ LitOrValName ] -> Bool -> Stateful ([ Int ], IntOrValName)
-
-check_lovn_is_int = ( \case
-  ValueName val_name -> throwE $ wrong_int_case_err val_name
-  Literal (Int i) -> return i
-  ) :: LitOrValName -> Stateful Int
-
-check_last_lovn = ( \has_default lovn -> case has_default of
-  True -> check_lovn_is_int lovn >>= \i -> return $ Int_ i
-  False -> check_last_lovn_is_val_name lovn
-  ) :: Bool -> LitOrValName -> Stateful IntOrValName
-
-check_last_lovn_is_val_name = ( \case
-  ValueName val_name -> return $ ValName_ val_name
-  Literal lit -> throwE $ last_int_case_err lit
-  ) :: LitOrValName -> Stateful IntOrValName
-
-check_no_dupl_int_with_last = ( \ints -> \case
-  Int_ int -> check_no_dupl_int $ int : ints
-  ValName_ _ -> check_no_dupl_int ints
-  ) :: [ Int ] -> IntOrValName -> Stateful ()
-
-check_no_dupl_int = ( \case
-  [] -> return ()
-  i : is -> case elem i is of
-    True -> throwE $ duplicate_int_case_err i
-    False -> check_no_dupl_int is
-  ) :: [ Int ] -> Stateful ()
 
 -- 
 
@@ -403,9 +297,6 @@ value_expression_type_inference_g = ( \case
   ) :: ValueExpression -> Stateful (Haskell, ValType)
 
 --
-
-append_to_err = ( \str (b, e_t, err_msg) -> throwE (b, e_t, err_msg ++ str) )
-  :: String -> Error -> Stateful a
 
 case_to_lovns_exprs = ( \case
   [] -> ([], [])

@@ -11,7 +11,7 @@ import Parsers.LowLevel (value_name_p)
 import Parsers.Types (type_name_p, value_type_p)
 
 -- All:
--- Field, TupleTypeDef, OrTypeCase, OrTypeDef, TypeDefinition
+-- Field, TupleTypeDef, OrTypeCaseOld, OrTypeDef, TypeDefinition
 
 -- ManyTNamesInParen: many_type_names_in_parenthesis_p
 
@@ -76,14 +76,14 @@ tuple_type_definition_p =
   return (NameExprAndFields cons_and_type_vars fields)
   :: Parser TupleTypeDef
 
--- OrTypeCase: case_and_maybe_type_p
+-- OrTypeCaseOld: case_and_maybe_type_p
 
 case_and_maybe_type_p = 
   value_name_p >>= \value_name ->
   optionMaybe (string "<==(value: " *> value_type_p <* char ')') >>=
     \maybe_value_type ->
   return $ NameAndMaybeInT value_name maybe_value_type
-  :: Parser OrTypeCase
+  :: Parser OrTypeCaseOld
 
 -- OrTypeDef: or_type_definition_p
 

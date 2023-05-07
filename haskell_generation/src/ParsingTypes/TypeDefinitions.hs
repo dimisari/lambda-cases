@@ -10,7 +10,7 @@ import ParsingTypes.Types (TypeName, ValueType)
 -- Types:
 -- ManyTNamesInParen, LeftTypeVars, RightTypeVars,
 -- TypeNameExpr,
--- Field, TupleTypeDef, OrTypeCase, OrTypeDef, TypeDefinition
+-- Field, TupleTypeDef, OrTypeCaseOld, OrTypeDef, TypeDefinition
 
 -- ManyTNamesInParen
 
@@ -71,12 +71,12 @@ instance Show TupleTypeDef where
     "\ntuple_type " ++ show type_cons_and_vars ++
     "\nvalue (" ++ fields==>map show==>intercalate ", "  ++ ")\n"
 
--- OrTypeCase
+-- OrTypeCaseOld
 
-data OrTypeCase =
+data OrTypeCaseOld =
   NameAndMaybeInT ValueName (Maybe ValueType)
 
-instance Show OrTypeCase where
+instance Show OrTypeCaseOld where
   show = \(NameAndMaybeInT case_name maybe_case_type) ->
     show case_name ++ case maybe_case_type of 
       Just case_type -> "<==(value: " ++ show case_type ++ ")"
@@ -85,7 +85,7 @@ instance Show OrTypeCase where
 -- OrTypeDef
 
 data OrTypeDef =
-  NameExprAndCases TypeNameExpr OrTypeCase OrTypeCase [ OrTypeCase ]
+  NameExprAndCases TypeNameExpr OrTypeCaseOld OrTypeCaseOld [ OrTypeCaseOld ]
 
 instance Show OrTypeDef where
   show = \(NameExprAndCases type_cons_and_vars case1 case2 cases) ->

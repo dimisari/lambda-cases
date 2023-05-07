@@ -39,6 +39,7 @@ executable haskell_generation
                         GenerationHelpers.TypeChecking,
                         GenerationHelpers.ErrorMessages,
                         GenerationHelpers.Helpers,
+                        GenerationHelpers.CheckCases,
 
                         CodeGenerators.TypeDefinitions,
                         CodeGenerators.LowLevel, CodeGenerators.OperatorValues,

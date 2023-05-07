@@ -44,7 +44,7 @@ tuple_type_def_conv = ( \(NameExprAndFields type_app fields) ->
 
 or_type_case_conv = ( \(NameAndMaybeInT value_name maybe_value_type) ->
   CNameAndMaybeInT value_name (val_type_conv <$> maybe_value_type)
-  ) :: OrTypeCase -> OrTCase
+  ) :: OrTypeCaseOld -> OrTCase
 
 or_type_def_conv = ( \(NameExprAndCases type_app c1 c2 cs) ->
   OTNameExprAndCases
