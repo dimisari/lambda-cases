@@ -4,7 +4,7 @@ import Control.Monad.State (State, get, modify)
 import Control.Monad.Trans.Except (ExceptT, throwE)
 import qualified Data.Map as M (Map, lookup, insert, insertWith)
 
-import Helpers (Error, not_caught, (.>), (==>))
+import Helpers ((.>), (==>))
 
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types

@@ -46,11 +46,6 @@ eof_or_spicy_nls = spicy_new_lines <|> eof
 
 -- Haskell generation 
 
-type Error = (Bool, String)
-
-not_caught = ( \s -> (False, s) )
-  :: String -> Error
-
 type Haskell = String
 
 indent = ( \i -> replicate (2 * i) ' ' )

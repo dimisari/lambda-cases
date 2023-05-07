@@ -172,7 +172,8 @@ abstractions_func_t_g = ( \abs1 other_abs (InAndOutTs in_t out_t) ->
 -- helpers
 
 add_pos_to_err = ( \pos err -> case err of
-  (False, err_msg) -> throwE $ (True, "\n" ++ show pos ++ "\n\n" ++ err_msg)
+  (False, err_t, err_msg) ->
+    throwE $ (True, err_t, "\n" ++ show pos ++ "\n\n" ++ err_msg)
   _ -> throwE $ err
   ) :: SourcePos -> Error -> Stateful a
 

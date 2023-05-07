@@ -8,7 +8,7 @@ import Control.Monad.State (evalState)
 import Control.Monad.Trans.Except (runExceptT, catchE, throwE)
 
 import GenerationState.InitialState (init_state)
-import Helpers (Haskell, Error, (.>), (==>), eof_or_spicy_nls)
+import Helpers (Haskell, (.>), (==>), eof_or_spicy_nls)
 
 import GenerationState.TypesAndOperations (Stateful, value_map_insert)
 
@@ -21,6 +21,8 @@ import Parsers.TypeDefinitions (type_definition_p)
 import Parsers.Values (values_p)
 
 import Conversions.Types (val_type_conv)
+
+import GenerationHelpers.ErrorMessages (Error)
 
 import CodeGenerators.TypeDefinitions (type_definition_g)
 import CodeGenerators.Values (values_g, values_to_list, insert_value_to_map)
@@ -149,7 +151,7 @@ parse_err_or_sem_analysis = ( \parser_output output_path ->
 
 sem_err_or_hs_to_file = ( \program output_path ->
   run_sem_analysis program ==> \case
-    Left (_, sem_err_msg) -> putStrLn sem_err_msg
+    Left (_, _, sem_err_msg) -> putStrLn sem_err_msg
     Right generated_haskell -> 
       readFile haskell_header >>= \header ->
       writeFile output_path $ header ++ generated_haskell
