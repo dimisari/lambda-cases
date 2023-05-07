@@ -20,15 +20,15 @@ value_name_p =
 lower_or_under_p = lower <|> char '_'
   :: Parser Char
 
--- Literal: literal_p, integer_p, char_p, string_p
+-- Literal: literal_p, int_p, char_p, string_p
 
 literal_p =
-  Integer <$> integer_p <|> String <$> string_p <|> Char <$> char_p
+  Int <$> int_p <|> String <$> string_p <|> Char <$> char_p
   :: Parser Literal
 
-integer_p =
+int_p =
   read <$> ((:) <$> char '-' <*> many1 digit <|> many1 digit)
-  :: Parser Integer
+  :: Parser Int
 
 char_p = 
   char '\'' *> noneOf ['\''] <* char '\''

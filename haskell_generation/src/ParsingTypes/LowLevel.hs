@@ -18,11 +18,11 @@ instance Show ValueName where
 -- Literal
 
 data Literal =
-  Integer Integer | Char Char | String String
+  Int Int | Char Char | String String
 
 instance Show Literal where
   show = \case
-    Integer integer -> show integer
+    Int int -> show int
     Char char -> show char
     String string -> show string
 

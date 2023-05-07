@@ -84,6 +84,11 @@ duplicate_case_err = ( \val_name ->
   "Duplicate or_type case: " ++ show val_name ++ "\n"
   ) :: ValueName -> Error
 
+duplicate_int_case_err = ( \i ->
+  not_caught $ add_dummy_err_type $ 
+  "Duplicate Int case: " ++ show i ++ "\n"
+  ) :: Int -> Error
+
 --
 
 lit_not_int_err = ( \val_type ->

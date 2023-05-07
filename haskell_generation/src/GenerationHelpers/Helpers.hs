@@ -67,4 +67,3 @@ value_matching_in_t_g = ( \case
 
 value_matching_type_name_g = type_name_matching_g (return "")
   :: TypeName -> Stateful Haskell
-

@@ -70,6 +70,7 @@ wrong_names =
   , "type_check_err"
   , "equ_err"
   , "add_err"
+  , "dup_int_case"
   ]
   :: [ String ]
 
