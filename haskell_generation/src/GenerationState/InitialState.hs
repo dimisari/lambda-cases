@@ -14,7 +14,7 @@ import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..
 -- int_x_int, int_to_int_to_int, init_value_map, init_type_map, init_state
 
 int_x_int =
-  ProdType [int, int]
+  ProdType $ ProdTypes [int, int]
   :: ValType
 
 int_to_int_to_int =

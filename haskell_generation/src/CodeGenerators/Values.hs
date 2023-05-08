@@ -210,9 +210,9 @@ instance Generate CasesOrWhere where
 
 instance Generate InputCasesOrWhere where
   generate = \(InputAndCasesOrWhere input cases_or_where) ->
-    input_g input >=> \(output_type, input_hs) ->
+    input_g input >=> \(input_hs, output_type, inserted) ->
     generate cases_or_where output_type >>= \cases_or_where_hs ->
-    input_val_map_remove input >>
+    mapM_ value_map_remove inserted >>
     return (input_hs ++ cases_or_where_hs)
 
 instance Generate ValueExpression where

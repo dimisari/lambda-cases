@@ -2,6 +2,7 @@ module Conversions.Values where
 
 import Helpers
 
+import ParsingTypes.LowLevel
 import ParsingTypes.OperatorValues
 
 import IntermediateTypes.Values
@@ -67,3 +68,10 @@ add_sub_help_fun = ( \mult_expr1 -> \case
     Plus -> Addition $ ExprPlusMExpr (add_sub_help_fun mult_expr1 pairs) term
     Minus -> Subtraction $ ExprMinusMExpr (add_sub_help_fun mult_expr1 pairs) term
   ) :: Pos MultExpr -> [ (PlusOrMinus, Pos MultExpr) ] -> AddSubOrMExpr
+
+-- Input to Input2:
+input_to_input2 = ( \case
+  OneAbstraction abstraction -> Input2 [ abstraction ]
+  ManyAbstractions (Abstractions abs1 abs2 abs) ->
+    Input2 $ abs1 : abs2 : abs
+  ) :: Input -> Input2

@@ -57,7 +57,7 @@ many_abstractions_p =
 
 input_p =
   ( OneAbstraction <$> add_pos_p abstraction_p <|>
-    ManyAbstractions <$> add_pos_p many_abstractions_p
+    ManyAbstractions <$> many_abstractions_p
   ) <* (string " ->" >> space_or_spicy_nl)
   :: Parser Input
 

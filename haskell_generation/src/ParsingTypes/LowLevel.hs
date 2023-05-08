@@ -48,7 +48,7 @@ instance Show ManyAbstractions where
 -- Input
 
 data Input =
-  OneAbstraction (Pos Abstraction) | ManyAbstractions (Pos ManyAbstractions)
+  OneAbstraction (Pos Abstraction) | ManyAbstractions ManyAbstractions
 
 instance Show Input where
   show = show_input .> (++ " -> ") where

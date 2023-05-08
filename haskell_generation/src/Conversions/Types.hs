@@ -40,8 +40,7 @@ out_t_to_val_t = ( \case
   ) :: OutputType -> ValType
 
 prod_t_to_val_t = ( \(ProductTypes val_t1 val_t2 other_val_ts) ->
-  ProdType $
-    val_type_conv val_t1 : val_type_conv val_t2 : map val_type_conv other_val_ts
+  ProdType $ ProdTypes $ map val_type_conv (val_t1 : val_t2 : other_val_ts)
   ) :: ProductType -> ValType
 
 -- TypeApplication: type_app_conv

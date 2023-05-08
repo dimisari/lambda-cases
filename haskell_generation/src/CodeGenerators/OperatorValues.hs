@@ -85,9 +85,9 @@ instance Generate EqualityExpr where
 
 instance Generate InputOpExpr where
   generate = \(InputEqExpr input eq_expr) ->
-    input_g input >=> \(out_t, input_hs) ->
+    input_g input >=> \(input_hs, out_t, inserted) ->
     generate eq_expr out_t >>= \op_expr_hs ->
-    input_val_map_remove input >>
+    mapM_ value_map_remove inserted >>
     return (input_hs ++ op_expr_hs)
 
 instance Generate OpExpr where 
@@ -164,7 +164,7 @@ instance GenerateInfer OpExpr where
 
 tuple_inside_g = ( \exprs -> \case
   TypeApp (ConsAndTIns t_name _) -> tuple_t_name_g exprs t_name
-  ProdType types -> tuple_prod_t_g exprs types
+  ProdType prod_type -> tuple_prod_t_g exprs prod_type
   val_t -> throwE $ wrong_type_for_tuple_err exprs val_t
   ) :: [ OpExpr ] -> ValType -> Stateful Haskell
 
@@ -186,12 +186,13 @@ correct_length_tuple_tt_g = ( \exprs types t_name ->
   return $ "C" ++ show t_name ++ concatMap ((" (" ++) .> (++ ")")) exprs_hs
   ) :: [ OpExpr ] -> [ ValType ] -> TypeName -> Stateful Haskell
 
-tuple_prod_t_g = ( \exprs types -> case length exprs == length types of
-  False -> throwE $ tuple_prod_t_lengths_err exprs $ ProdType types
-  True -> 
-    zipWithM generate exprs types >>= \exprs_hs ->
-    return $ intercalate ", " exprs_hs
-  ) :: [ OpExpr ] -> [ ValType ] -> Stateful Haskell
+tuple_prod_t_g = ( \exprs prod_type@(ProdTypes types) ->
+  case length exprs == length types of
+    False -> throwE $ tuple_prod_t_lengths_err exprs $ ProdType prod_type
+    True -> 
+      zipWithM generate exprs types >>= \exprs_hs ->
+      return $ intercalate ", " exprs_hs
+  ) :: [ OpExpr ] -> ProdType -> Stateful Haskell
 
 -- ParenExpr: paren_expr_type_inf_g
 
@@ -245,11 +246,11 @@ app_hand_tuple_correct = (
   generate_infer $ AppTrees tree1' tree2'
   ) :: ApplicationTree -> ParenExpr -> Stateful (Haskell, ValType)
 
--- gen_app_hand, gen_app_hand_correct
+-- gen_app_hand
 
 gen_app_hand = ( \app@(AppTrees tree1 tree2) input_t err ->
   generate_infer tree2 >>= \case
-    (_,ProdType (t1:_)) -> equiv_types input_t t1 >>= \case 
+    (_,ProdType (ProdTypes (t1:_))) -> equiv_types input_t t1 >>= \case 
       True -> gen_app_hand_correct app
       _ -> throwE err
     _ -> throwE err
@@ -268,8 +269,6 @@ gen_app_hand_correct = ( \(AppTrees tree1 tree2) ->
   generate_infer $ AppTrees tree1' tree2_rest
   ) :: Application -> Stateful (Haskell, ValType)
 
--- gen_app_hand (helpers): get_1st_tree, get_all_but_1st_tree
-
 get_1st_tree =
   BaseVal2Leaf $ ValueName2 $ add_dummy_pos $ VN "get_1st"
   :: ApplicationTree
@@ -278,7 +277,7 @@ get_all_but_1st_tree =
   BaseVal2Leaf $ ValueName2 $ add_dummy_pos $ VN "get_all_but_1st"
   :: ApplicationTree
 
--- AddSubExpr: add_sub_g
+-- AddSubExpr
 
 add_sub_g = ( \expr op_hs mult_expr val_type ->
   generate expr val_type >>= \expr_hs ->

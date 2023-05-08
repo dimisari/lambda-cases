@@ -67,6 +67,7 @@ wrong_names =
   , "func_t_use_fields"
   , "not_func"
   , "not_func2"
+  , "not_func3"
   , "type_check_err"
   , "equ_err"
   , "add_err"

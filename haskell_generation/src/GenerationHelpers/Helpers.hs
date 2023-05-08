@@ -5,7 +5,7 @@ import Control.Monad ((>=>), zipWithM)
 import Text.Parsec (SourcePos)
 import Control.Monad.Trans.Except (throwE, catchE)
 
-import Helpers (Haskell, Pos(..))
+import Helpers ((.>), Haskell, Pos(..))
 
 import ParsingTypes.LowLevel (ValueName(..))
 import ParsingTypes.Types (TypeName)
@@ -19,6 +19,8 @@ import GenerationHelpers.ErrorMessages
 import GenerationState.TypesAndOperations
 
 
+-- GenerateInserted
+
 class GenerateInserted a where
   gen_inserted :: a -> Stateful (Haskell, [ ValueName ])
 
@@ -26,45 +28,54 @@ data ValNameType =
   ValNameType ValueName ValType
 
 instance GenerateInserted ValNameType where
-  gen_inserted = \(ValNameType val_name val_type) ->
-    value_map_insert val_name val_type >> return (show val_name, [ val_name ])
+  gen_inserted = gen_1inserted .> fmap ( \(hs, vn) -> (hs, [ vn ]) )
 
 data TTNameAndFields = 
   TTNameAndFields TypeName [ TTField ]
 
 instance GenerateInserted TTNameAndFields where
   gen_inserted = \(TTNameAndFields type_name fields) ->
-    unzip <$> mapM field_ins_and_ret_hs fields >>= \(fields_hs, inserted) ->
+    unzip <$> mapM gen_1inserted fields >>= \(fields_hs, inserted) ->
     return
-      ( "@(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")"
-      , inserted 
-      )
+      ("@(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")" , inserted)
 
--- matching
+instance GenerateInserted ProdType where
+  gen_inserted = \(ProdTypes types) ->
+    let
+    prod_val_name_types = zipWith ValNameType prod_t_field_ns types
+      :: [ ValNameType ]
+    in
+    unzip <$> mapM gen_1inserted prod_val_name_types >>= \(fields_hs, inserted) ->
+    return ("@(" ++ intercalate ", " fields_hs ++ ")", inserted)
 
-tuple_type_matching_g = ( \type_name fields ->
-  unzip <$> mapM field_ins_and_ret_hs fields >>= \(fields_hs, inserted) ->
-  return
-    ( "@(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")"
-    , inserted 
-    )
-  ) :: TypeName -> [ TTField ] -> Stateful (Haskell, [ ValueName ])
+data UseFieldsTypeName = UseFieldsTypeName TypeName
 
-prod_type_matching_g = ( \types ->
-  unzip <$> zipWithM map_ins_generate prod_t_field_ns types >>=
-    \(fields_hs, inserted) ->
-  return ("@(" ++ intercalate ", " fields_hs ++ ")", inserted)
-  ) :: [ ValType ] -> Stateful (Haskell, [ ValueName ])
+instance GenerateInserted UseFieldsTypeName where
+  gen_inserted = \(UseFieldsTypeName type_name) ->
+    type_map_get type_name >>= \case
+      TupleType _ fields -> gen_inserted $ TTNameAndFields type_name fields
+      _ -> throwE $ use_fields_err $ tn_to_val_t type_name
 
--- insert return
+data ValueTypeName = ValueTypeName TypeName
 
-map_ins_generate = ( \val_name val_type ->
-  value_map_insert val_name val_type >> return (show val_name, val_name)
-  ) :: ValueName -> ValType -> Stateful (Haskell, ValueName)
+instance GenerateInserted ValueTypeName where
+  gen_inserted = \(ValueTypeName type_name) ->
+    type_map_get type_name >>= \case
+      TupleType _ fields -> gen_inserted $ TTNameAndFields type_name fields
+      _ -> return ("", [])
 
-field_ins_and_ret_hs = ( \(FNameAndType field_name field_type) ->
-  map_ins_generate field_name field_type
-  ) :: TTField -> Stateful (Haskell, ValueName)
+-- Generate1Inserted
+
+class Generate1Inserted a where
+  gen_1inserted :: a -> Stateful (Haskell, ValueName)
+
+instance Generate1Inserted ValNameType where
+  gen_1inserted = \(ValNameType val_name val_type) ->
+    value_map_insert val_name val_type >> return (show val_name, val_name)
+
+instance Generate1Inserted TTField where
+  gen_1inserted = \(FNameAndType field_name field_type) ->
+    gen_1inserted (ValNameType field_name field_type)
 
 -- 
 
@@ -90,16 +101,10 @@ has_value_g = ( \case
   ) :: ValType -> Stateful (Haskell, [ ValueName ])
 
 value_matching_in_t_g = ( \case
-  TypeApp (ConsAndTIns type_name []) -> value_matching_type_name_g type_name
-  ProdType types -> prod_type_matching_g types
+  TypeApp (ConsAndTIns type_name []) -> gen_inserted (ValueTypeName type_name)
+  ProdType prod_type -> gen_inserted prod_type
   _ -> return ("", [])
   ) :: ValType -> Stateful (Haskell, [ ValueName ])
-
-value_matching_type_name_g = ( \type_name ->
-  type_map_get type_name >>= \case
-    TupleType _ fields -> tuple_type_matching_g type_name fields
-    _ -> return ("", [])
-  ) :: TypeName -> Stateful (Haskell, [ ValueName ])
 
 -- helpers
 

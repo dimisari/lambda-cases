@@ -41,3 +41,8 @@ data Subtraction =
 
 data AddSubOrMExpr =
   Addition Addition | Subtraction Subtraction | MultExpr (Pos MultExpr)
+
+-- Input2
+
+data Input2 =
+  Input2 [ Pos Abstraction ]
