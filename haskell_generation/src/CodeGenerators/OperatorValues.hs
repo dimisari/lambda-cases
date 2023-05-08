@@ -23,10 +23,10 @@ import GenerationHelpers.TypeChecking (equiv_types)
 
 import CodeGenerators.LowLevel
 
--- All:
--- ParenExpr, MathApp, BaseValue,
--- FuncAppChain, MultExpr, AddSubExpr,
--- EqualityExpr, InputOpExpr, OpExpr
+-- Generate:
+-- ParenExpr, BaseValue2, FuncAppChain, ApplicationTree, Application, MultExpr,
+-- AddSubExpr, AddSubOrMExpr, Addition, Subtraction, EqualityExpr,
+-- InputOpExpr, OpExpr
 
 instance Generate ParenExpr where
   generate = \expr val_t ->
@@ -95,7 +95,10 @@ instance Generate OpExpr where
     InputOpExpr input_op_expr -> generate input_op_expr
     EqualityExpr eq_expr -> generate eq_expr
 
--- GenerateInfer
+-- GenerateInfer:
+-- ParenExpr, BaseValue2, FuncAppChain, ApplicationTree, Application, MultExpr,
+-- AddSubExpr, AddSubOrMExpr, Addition, Subtraction, EqualityExpr,
+-- InputOpExpr, OpExpr
 
 instance GenerateInfer ParenExpr where
   generate_infer = undefined

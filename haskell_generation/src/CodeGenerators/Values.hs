@@ -66,41 +66,38 @@ instance Generate Cases where
       Nothing -> False
       :: Bool
     in
-    type_map_get type_name >>= \case
+    check_and_gen_cases cases has_default func_t type_name out_t >>= \cases_hs ->
+    generate (Indent maybe_def_case) out_t >>= \maybe_def_case_hs ->
+    return $ cases_hs ++ maybe_def_case_hs
 
-      IntType ->
-        generate (IntCases cases has_default) out_t >>= \int_cases_hs ->
-        generate (Indent maybe_def_case) out_t >>= \maybe_def_case_hs ->
-        return $ int_cases_hs ++ maybe_def_case_hs
+check_and_gen_cases = ( \cases has_default func_t type_name out_t ->
+  case_to_lovns_exprs cases ==> \(lovns, exprs) ->
+  type_map_get type_name >>= \case
+    IntType -> check_and_gen_int_cases lovns has_default exprs out_t
+    OrType _ or_cases -> 
+      check_and_gen_or_type_cases
+        lovns type_name (map get_c_name or_cases) has_default exprs func_t
+    _ -> undefined
+  ) :: [ Case ] -> Bool -> FuncType -> TypeName -> ValType -> Stateful Haskell
 
-      OrType _ or_cases -> 
-        case_to_lovns_exprs cases ==> \(lovns, exprs) ->
-        check_lovns_or_type
-          lovns
-          type_name
-          (map get_c_name or_cases)
-          has_default >>= \(val_names, last_val_name) ->
-        mapM
-          (flip generate_func_type func_t)
-          (map Indent $ zipWith OrTypeCase val_names $ init exprs)
-          >>= \or_type_cases_hs -> 
-        generate_func_type
-          (Indent $ LastOrTypeCase last_val_name (last exprs)) func_t
-          >>= \last_or_type_case_hs ->
-        generate (Indent maybe_def_case) out_t
-          >>= \maybe_def_case_hs ->
-        return $
-          concat $ or_type_cases_hs ++ [ last_or_type_case_hs, maybe_def_case_hs ]
+check_and_gen_int_cases = ( \lovns has_default exprs out_t ->
+  check_lovns_int lovns has_default >>= \(ints, int_or_val_name) ->
+  generate (IntCases ints int_or_val_name exprs) out_t
+  ) ::
+  [ LitOrValName ] -> Bool -> [ ValueExpression ] -> ValType -> Stateful Haskell
 
-      _ -> undefined
+check_and_gen_or_type_cases = ( \lovns t_name cases_names has_def exprs func_t ->
+  check_lovns_or_type lovns t_name cases_names has_def >>= \(vns, last_vn) ->
+  generate_func_type (OrTypeCases vns last_vn exprs) func_t
+  ) ::
+  [ LitOrValName ] -> TypeName -> [ ValueName ] -> Bool -> [ ValueExpression ] ->
+  FuncType -> Stateful Haskell
 
 data IntCases = 
-  IntCases [ Case ] Bool
+  IntCases [ Int ] IntOrValName [ ValueExpression ]
 
 instance Generate IntCases where
-  generate = \(IntCases cases has_default) out_t ->
-    case_to_lovns_exprs cases ==> \(lovns, exprs) ->
-    check_lovns_int lovns has_default >>= \(ints, int_or_val_name) ->
+  generate = \(IntCases ints int_or_val_name exprs) out_t ->
     mapM (flip generate out_t) (map Indent $ zipWith IntCase ints $ init exprs)
       >>= \int_cases_hs -> 
     generate (Indent $ LastIntCase int_or_val_name (last exprs)) out_t
@@ -111,6 +108,20 @@ instance Generate IntCases where
 
 class GenerateFuncType a where
   generate_func_type :: a -> FuncType -> Stateful Haskell
+
+data OrTypeCases = 
+  OrTypeCases [ ValueName ] SpecificOrDefaultCaseVN [ ValueExpression ]
+
+instance GenerateFuncType OrTypeCases where
+  generate_func_type = \(OrTypeCases val_names last_val_name exprs) func_t ->
+    mapM
+      (flip generate_func_type func_t)
+      (map Indent $ zipWith OrTypeCase val_names $ init exprs)
+      >>= \or_type_cases_hs -> 
+    generate_func_type
+      (Indent $ LastOrTypeCase last_val_name (last exprs)) func_t
+      >>= \last_or_type_case_hs ->
+    return $ concat $ or_type_cases_hs ++ [ last_or_type_case_hs ]
 
 data OrTypeCase = 
   OrTypeCase ValueName ValueExpression
