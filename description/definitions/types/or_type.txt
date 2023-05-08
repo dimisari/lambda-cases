@@ -3,14 +3,14 @@ Example:
 
 or_type (A, B)==>TypeName
 values
-  case0<==(value: A) | case1<==(value: B) | case2<==(value: (A, B)) |
+  case0<==(value: A) | case1<==(value: B) | case2<==(value: A x B) |
   case3<==(value: ListOf(A)s) | case4<==(value: ListOf(B)s)
 
 Comments:
 - If the type of the value is a tuple_type there is field inheritance. Example:
   fun: (A, B)==>TypeName -> A==>OrNothing
     = cases
-      case2 -> from_type<==pair_first
+      case2 -> from_type<==first
       ... -> nothing
 
 - "value" is the value inside each case. Examples:
@@ -18,7 +18,8 @@ Comments:
       = cases
         case0 -> from_type<==value
         ... -> nothing
-  - fun2: (A, B)==>TypeName -> (A, B)==>OrNothing
+
+  - fun2: (A, B)==>TypeName -> (A x B)==>OrNothing
       = cases
         case2 -> from_type<==value
         ... -> nothing

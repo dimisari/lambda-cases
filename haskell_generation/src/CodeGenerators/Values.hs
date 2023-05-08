@@ -28,18 +28,18 @@ import GenerationHelpers.CheckCases
 import CodeGenerators.LowLevel
 import CodeGenerators.OperatorValues
 
--- All:
--- LitOrValName, Case, CasesExpr,
--- ValueNamesTypesAndExpressions, Values,
--- Where, CasesOrWhere, ValueExpression
-
 -- Generate
+-- DefaultCase, Maybe, CasesExpr, Cases,
+
+data Indent a = Indent a 
+
+instance Generate a => Generate (Indent a) where
+  generate = \(Indent a) val_type -> 
+    (++) <$> indentation <*> generate a val_type
 
 instance Generate DefaultCase where
   generate = \(DefaultCase value_expression) output_t -> 
-    get_ind_lev >>= \ind_lev ->
-    generate value_expression output_t >>= \value_expression_hs ->
-    return $ indent ind_lev ++ "_ -> " ++ value_expression_hs
+    ("_ -> " ++) <$> generate value_expression output_t 
 
 instance Generate a => Generate (Maybe a) where
   generate = \case
@@ -48,11 +48,10 @@ instance Generate a => Generate (Maybe a) where
 
 instance Generate CasesExpr where
   generate = \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type -> 
-    get_ind_lev >>= \ind_lev ->
-    update_ind_lev (ind_lev + 1) >>
+    modify_ind_lev (+ 1) >>
     generate (Cases (case1 : cases) maybe_def_case) val_type >>= \cases_hs ->
-    update_ind_lev ind_lev >>
-    return (indent ind_lev ++ "\\case\n" ++ cases_hs) 
+    modify_ind_lev ((-) 1) >>
+    return ("\\case\n" ++ cases_hs) 
 
 data Cases = 
   Cases [ Case ] (Maybe DefaultCase)
@@ -70,15 +69,9 @@ instance Generate Cases where
     type_map_get type_name >>= \case
 
       IntType ->
-        case_to_lovns_exprs cases ==> \(lovns, exprs) ->
-        check_lovns_int lovns has_default >>= \(ints, int_or_val_name) ->
-        mapM (flip generate out_t) (zipWith IntCase ints $ init exprs)
-          >>= \int_cases_hs -> 
-        generate (LastIntCase int_or_val_name (last exprs)) out_t
-          >>= \last_int_case_hs ->
-        generate maybe_def_case out_t
-          >>= \maybe_def_case_hs ->
-        return $ concat $ int_cases_hs ++ [ last_int_case_hs, maybe_def_case_hs ]
+        generate (IntCases cases has_default) out_t >>= \int_cases_hs ->
+        generate (Indent maybe_def_case) out_t >>= \maybe_def_case_hs ->
+        return $ int_cases_hs ++ maybe_def_case_hs
 
       OrType _ or_cases -> 
         case_to_lovns_exprs cases ==> \(lovns, exprs) ->
@@ -89,44 +82,71 @@ instance Generate Cases where
           has_default >>= \(val_names, last_val_name) ->
         mapM
           (flip generate_func_type func_t)
-          (zipWith OrTypeCase val_names $ init exprs)
+          (map Indent $ zipWith OrTypeCase val_names $ init exprs)
           >>= \or_type_cases_hs -> 
-        generate_func_type (LastOrTypeCase last_val_name (last exprs)) func_t
+        generate_func_type
+          (Indent $ LastOrTypeCase last_val_name (last exprs)) func_t
           >>= \last_or_type_case_hs ->
-        generate maybe_def_case out_t
+        generate (Indent maybe_def_case) out_t
           >>= \maybe_def_case_hs ->
         return $
           concat $ or_type_cases_hs ++ [ last_or_type_case_hs, maybe_def_case_hs ]
 
       _ -> undefined
 
-data OrTypeCase = 
-  OrTypeCase ValueName ValueExpression
+data IntCases = 
+  IntCases [ Case ] Bool
 
-data LastOrTypeCase = 
-  LastOrTypeCase SpecificOrDefaultCaseVN ValueExpression
+instance Generate IntCases where
+  generate = \(IntCases cases has_default) out_t ->
+    case_to_lovns_exprs cases ==> \(lovns, exprs) ->
+    check_lovns_int lovns has_default >>= \(ints, int_or_val_name) ->
+    mapM (flip generate out_t) (map Indent $ zipWith IntCase ints $ init exprs)
+      >>= \int_cases_hs -> 
+    generate (Indent $ LastIntCase int_or_val_name (last exprs)) out_t
+      >>= \last_int_case_hs ->
+    return $ concat $ int_cases_hs ++ [ last_int_case_hs ]
 
 -- GenerateFuncType 
 
 class GenerateFuncType a where
   generate_func_type :: a -> FuncType -> Stateful Haskell
 
+data OrTypeCase = 
+  OrTypeCase ValueName ValueExpression
+
+instance GenerateFuncType a => GenerateFuncType (Indent a) where
+  generate_func_type = \(Indent a) val_type -> 
+    (++) <$> indentation <*> generate_func_type a val_type
+
 instance GenerateFuncType OrTypeCase where
   generate_func_type = \(OrTypeCase val_name val_expr) (InAndOutTs in_t out_t) ->
-    get_ind_lev >>= \ind_lev ->
-    or_type_vn_g val_name in_t >>= \val_name_hs ->
+    or_type_vn_g val_name in_t >>= \(val_name_hs, to_be_removed) ->
     generate val_expr out_t >>= \val_expr_hs ->
-    return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
+    mapM_ value_map_remove to_be_removed >>
+    return (val_name_hs ++ " -> " ++ val_expr_hs ++ "\n")
+
+data LastOrTypeCase = 
+  LastOrTypeCase SpecificOrDefaultCaseVN ValueExpression
 
 instance GenerateFuncType LastOrTypeCase where
   generate_func_type = \(LastOrTypeCase last_val_name val_expr) ->
     case last_val_name of
-      SpecificValName val_name -> generate_func_type (OrTypeCase val_name val_expr)
-      DefaultValName val_name -> \(InAndOutTs in_t out_t) ->
-        get_ind_lev >>= \ind_lev ->
-        val_n_ins_and_ret_hs val_name in_t >>= \val_name_hs ->
-        generate val_expr out_t >>= \val_expr_hs ->
-        return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
+      SpecificValName val_name ->
+        generate_func_type (OrTypeCase val_name val_expr)
+      DefaultValName val_name ->
+        generate_func_type (DefaultOrTypeCase val_name val_expr)
+
+data DefaultOrTypeCase = 
+  DefaultOrTypeCase ValueName ValueExpression
+
+instance GenerateFuncType DefaultOrTypeCase where
+  generate_func_type =
+    \(DefaultOrTypeCase val_name val_expr) (InAndOutTs in_t out_t) ->
+    value_map_insert val_name in_t >>
+    generate val_expr out_t >>= \val_expr_hs ->
+    value_map_remove val_name >>
+    return (show val_name ++ " -> " ++ val_expr_hs ++ "\n")
 
 -- Int cases
 
@@ -135,9 +155,8 @@ data IntCase =
 
 instance Generate IntCase where
   generate = \(IntCase i val_expr) out_t -> 
-    get_ind_lev >>= \ind_lev ->
     generate val_expr out_t >>= \val_expr_hs ->
-    return $ indent ind_lev ++ show i ++ " -> " ++ val_expr_hs ++ "\n"
+    return $ show i ++ " -> " ++ val_expr_hs ++ "\n"
 
 data LastIntCase = 
   LastIntCase IntOrValName ValueExpression
@@ -153,21 +172,26 @@ data ValNameIntCase =
 
 instance Generate ValNameIntCase where
   generate = \(ValNameIntCase val_name val_expr) out_t -> 
-    get_ind_lev >>= \ind_lev ->
-    val_n_ins_and_ret_hs val_name int >>= \val_name_hs ->
+    value_map_insert val_name int >>
     generate val_expr out_t >>= \val_expr_hs ->
-    return $ indent ind_lev ++ val_name_hs ++ " -> " ++ val_expr_hs ++ "\n"
+    value_map_remove val_name >>
+    return (show val_name ++ " -> " ++ val_expr_hs ++ "\n")
 
 -- Where
 
 instance Generate Where where
   generate = \(ValueExpressionWhereValues val_expr values) val_type ->
-    get_ind_lev >>= \ind_lev -> update_ind_lev (ind_lev + 1) >>
+    get_ind_lev >>= \ind_lev ->
+    set_ind_lev (ind_lev + 1) >>
+
     insert_values_to_map values >>
-    mapM values_g values >>= concat .> \values_hs ->
+
+    concat <$> mapM values_g values >>= \values_hs ->
     generate val_expr val_type >>= \val_expr_hs ->
+    
     remove_values_from_map values >>
-    update_ind_lev ind_lev >>
+
+    set_ind_lev ind_lev >>
     return
       ( "\n" ++
         indent (ind_lev + 1) ++ "let" ++
@@ -181,7 +205,7 @@ instance Generate Where where
  
 instance Generate CasesOrWhere where
   generate =  \case
-    CasesExpr cases -> generate cases
+    CasesExpr cases_expr -> generate (Indent cases_expr)
     Where where_ -> generate where_
 
 instance Generate InputCasesOrWhere where
@@ -200,9 +224,9 @@ instance Generate ValueExpression where
 --
 
 or_type_vn_g = ( \val_name val_type ->
-  maybe_value_g val_name val_type >>= \maybe_value_hs ->
-  return $ "C" ++ show val_name ++ maybe_value_hs
-  ) :: ValueName -> ValType -> Stateful Haskell
+  maybe_value_g val_name val_type >>= \(maybe_value_hs, to_be_removed) ->
+  return ("C" ++ show val_name ++ maybe_value_hs, to_be_removed)
+  ) :: ValueName -> ValType -> Stateful (Haskell, [ ValueName ])
 
 -- 
 

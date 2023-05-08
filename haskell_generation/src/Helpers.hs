@@ -48,9 +48,6 @@ eof_or_spicy_nls = spicy_new_lines <|> eof
 
 type Haskell = String
 
-indent = ( \i -> replicate (2 * i) ' ' )
-  :: Int -> Haskell
-
 -- other
 
 data Pos a =

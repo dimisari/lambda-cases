@@ -71,6 +71,7 @@ wrong_names =
   , "equ_err"
   , "add_err"
   , "dup_int_case"
+  , "out_of_scope5"
   ]
   :: [ String ]
 

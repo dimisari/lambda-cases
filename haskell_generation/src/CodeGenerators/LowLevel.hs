@@ -42,11 +42,6 @@ instance Generate Literal where
     True -> return $ show lit
     False -> throwE $ lit_not_int_err val_type
 
-instance Generate Abstraction where
-  generate = \case
-    AbstractionName val_name -> val_n_ins_and_ret_hs $ remove_pos val_name
-    UseFields pos -> use_fields_pos_g pos
-
 -- GenerateInfer: Pos a, ValueName, Literal
 
 class GenerateInfer a where
@@ -65,6 +60,38 @@ instance GenerateInfer ValueName where
 instance GenerateInfer Literal where
   generate_infer = \lit -> return (show lit, int)
 
+-- GenerateInserted
+
+class GenTypeInserted a where
+  gen_type_inserted :: a -> ValType -> Stateful (Haskell, [ ValueName ])
+
+instance GenTypeInserted a => GenTypeInserted (Pos a) where
+  gen_type_inserted = \(WithPos pos a) t ->
+    catchEaddPos (gen_type_inserted a t) pos
+
+instance GenTypeInserted Abstraction where
+  gen_type_inserted = \case
+    AbstractionName val_name ->
+      \t -> gen_inserted (ValNameType (remove_pos val_name) t)
+    UseFields pos ->
+      gen_type_inserted (WithPos pos UseFields_)
+
+data UseFields_ = UseFields_
+
+instance GenTypeInserted UseFields_ where
+  gen_type_inserted = \UseFields_ val_type -> 
+    value_map_insert (VN "tuple") val_type >>
+    gen_type_inserted UseFieldsMatching val_type >>= \(matching_hs, inserted) ->
+    return ("tuple" ++ matching_hs, VN "tuple" : inserted)
+
+data UseFieldsMatching = UseFieldsMatching
+
+instance GenTypeInserted UseFieldsMatching where
+  gen_type_inserted = \UseFieldsMatching -> \case
+    TypeApp (ConsAndTIns type_name _) -> use_fields_type_name_g type_name
+    ProdType types -> prod_type_matching_g types
+    val_t -> throwE $ use_fields_err val_t
+
 -- ValueName: check_vn_in_or_t_cs_g
 
 check_vn_in_or_t_cs_g = ( \val_name -> in_or_t_cs val_name >>= \case
@@ -80,27 +107,13 @@ abs_val_map_remove = ( \case
   ) :: Abstraction -> Stateful ()
 
 -- Abstraction:
--- use_fields_g, use_fields_tuple_matching_g, use_fields_type_name_g,
--- prod_type_matching_g
-
-use_fields_pos_g = ( \pos val_type -> catchEaddPos (use_fields_g val_type) pos )
-  :: SourcePos -> ValType -> Stateful Haskell
-
-use_fields_g = ( \val_type ->
-  value_map_insert (VN "tuple") val_type >>
-  use_fields_tuple_matching_g val_type >>= \tuple_matching_hs ->
-  return $ "tuple" ++ tuple_matching_hs
-  ) :: ValType -> Stateful Haskell
-
-use_fields_tuple_matching_g = ( \case
-  TypeApp (ConsAndTIns type_name _) -> use_fields_type_name_g type_name
-  ProdType types -> prod_type_matching_g types
-  val_t -> throwE $ use_fields_err val_t
-  ) :: ValType -> Stateful Haskell
+-- use_fields_type_name_g
 
 use_fields_type_name_g = ( \type_name ->
-  type_name_matching_g (throwE $ use_fields_err $ tn_to_val_t type_name) type_name
-  ) :: TypeName -> Stateful Haskell
+  type_map_get type_name >>= \case
+    TupleType _ fields -> tuple_type_matching_g type_name fields
+    _ -> throwE $ use_fields_err $ tn_to_val_t type_name
+  ) :: TypeName -> Stateful (Haskell, [ ValueName ])
 
 -- Abstraction (abs_val_map_remove): use_fs_map_remove, use_fs_tn_map_remove
 
@@ -116,9 +129,6 @@ use_fs_tn_map_remove = ( type_map_get >=> \case
   TupleType _ fields -> mapM_ (get_name .> value_map_remove) fields 
   _ -> error "use_fs_tn_map_remove: should be impossible"
   ) :: TypeName -> Stateful ()
-
--- Abstraction (helpers):
--- val_n_ins_and_ret_hs, field_ins_and_ret_hs, prod_t_field_ns
 
 -- ManyAbstractions: many_abstractions_g, many_abs_val_map_remove
 
@@ -164,18 +174,8 @@ abstractions_check_func_t_g = ( \abs1 other_abs -> \case
   ) :: Abstraction -> [ Abstraction ] -> ValType -> Stateful (ValType, Haskell)
 
 abstractions_func_t_g = ( \abs1 other_abs (InAndOutTs in_t out_t) -> 
-  generate abs1 in_t >>= \abs1_hs ->
+  gen_type_inserted abs1 in_t >>= \(abs1_hs, inserted1) ->
   abstractions_g other_abs out_t >>= \(final_t, other_abs_hs) ->
   return (final_t, abs1_hs ++ " " ++ other_abs_hs)
   ) :: Abstraction -> [ Abstraction ] -> FuncType -> Stateful (ValType, Haskell)
 
--- helpers
-
-add_pos_to_err = ( \pos err -> case err of
-  (False, err_t, err_msg) ->
-    throwE $ (True, err_t, "\n" ++ show pos ++ "\n\n" ++ err_msg)
-  _ -> throwE $ err
-  ) :: SourcePos -> Error -> Stateful a
-
-catchEaddPos = ( \g pos -> catchE g (add_pos_to_err pos) )
-  :: Stateful a -> SourcePos -> Stateful a

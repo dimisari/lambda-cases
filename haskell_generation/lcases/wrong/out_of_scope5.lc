@@ -1,0 +1,8 @@
+
+a: Int -> Int
+  = cases 
+    0 -> 1
+    b -> b
+
+c: Int
+  = b
