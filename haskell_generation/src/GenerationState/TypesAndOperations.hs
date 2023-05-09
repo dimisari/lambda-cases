@@ -34,17 +34,10 @@ data GenerationState = GS
 type Stateful = ExceptT Error (State GenerationState)
 
 -- get fields:
--- get_from_state, get_ind_lev, get_value_map, get_type_map, get_or_t_cs
-
-get_from_state = ( \f -> get >>= f .> return )
-  :: (GenerationState -> a) -> Stateful a
 
 (get_ind_lev, get_value_map, get_type_map, get_or_t_cs) =
-  ( get_from_state ind_lev
-  , get_from_state value_map
-  , get_from_state type_map
-  , get_from_state or_type_cases
-  ) :: (Stateful Int, Stateful ValueMap, Stateful TypeMap, Stateful [ ValueName ])
+  (ind_lev <$> get, value_map <$> get, type_map <$> get, or_type_cases <$> get)
+  :: (Stateful Int, Stateful ValueMap, Stateful TypeMap, Stateful [ ValueName ])
 
 -- set fields:
 -- set_ind_lev, set_value_map, set_type_map, set_or_t_cs

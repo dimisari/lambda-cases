@@ -1,47 +1,47 @@
 module Conversions.Types where
 
+import Helpers ((.>))
+
 import ParsingTypes.Types
 import IntermediateTypes.Types
 
--- All: ValType, Type Definitions
+class ToValType a where
+  to_val_type :: a -> ValType
 
--- ValType:
--- val_type_conv, func_t_to_val_t, one_in_to_val_t,
--- mult_ins_to_val_t, out_t_to_val_t, prod_t_to_val_t
+instance ToValType ValueType where
+  to_val_type = \case
+    FunctionType func_t -> to_val_type func_t
+    ProductType prod_t -> to_val_type prod_t
+    TypeApplication type_app -> to_val_type type_app
 
-val_type_conv = ( \case
-  FunctionType func_t -> func_t_to_val_t func_t
-  ProductType prod_t -> prod_t_to_val_t prod_t
-  TypeApplication type_app -> TypeApp $ type_app_conv type_app
-  ) :: ValueType -> ValType
+instance ToValType FunctionType where
+  to_val_type = \(InAndOutTypes input out_t) -> case input of 
+    OneInputType in_t ->
+      FuncType $ InAndOutTs (to_val_type in_t) (to_val_type out_t)
+    MultipleInputTypes mult_ins ->
+      to_val_type (MultInTsType (ts_in_paren_to_value_types mult_ins) out_t)
 
-func_t_to_val_t = ( \(InAndOutTypes input out_t) -> case input of 
-  OneInputType in_t -> one_in_to_val_t in_t out_t
-  MultipleInputTypes mult_ins -> mult_ins_to_val_t mult_ins out_t
-  ) :: FunctionType -> ValType
+data MultInTsType = MultInTsType [ ValueType ] OutputType
 
-one_in_to_val_t = ( \in_t out_t -> 
-  FuncType $ InAndOutTs (val_type_conv in_t) (out_t_to_val_t out_t)
-  ) :: ValueType -> OutputType -> ValType
+instance ToValType MultInTsType where
+  to_val_type = \(MultInTsType in_ts out_t) -> case in_ts of
+    [] -> to_val_type out_t
+    in_t1 : in_ts_rest ->
+      FuncType $ InAndOutTs
+        (to_val_type in_t1)
+        (to_val_type $ MultInTsType in_ts_rest out_t)
 
-mult_ins_to_val_t = ( \(TypesInParen in_t1 in_t2 in_ts) out_t -> 
-  let
-  func_out_t = case in_ts of 
-    [] -> one_in_to_val_t in_t2 out_t
-    in_t3 : rest_of_in_ts ->
-      mult_ins_to_val_t (TypesInParen in_t2 in_t3 rest_of_in_ts) out_t
-  in
-  FuncType $ InAndOutTs (val_type_conv in_t1) func_out_t
-  ) :: ManyTypesInParen -> OutputType -> ValType
+instance ToValType OutputType where
+  to_val_type = \case
+    OutputTypeApp type_app -> to_val_type type_app
+    OutputProductType prod_t -> to_val_type prod_t
 
-out_t_to_val_t = ( \case
-  OutputTypeApp type_app -> TypeApp $ type_app_conv type_app
-  OutputProductType prod_t -> prod_t_to_val_t prod_t
-  ) :: OutputType -> ValType
+instance ToValType ProductType where
+  to_val_type = \(ProductTypes val_t1 val_t2 other_val_ts) ->
+    ProdType $ ProdTypes $ map to_val_type (val_t1 : val_t2 : other_val_ts)
 
-prod_t_to_val_t = ( \(ProductTypes val_t1 val_t2 other_val_ts) ->
-  ProdType $ ProdTypes $ map val_type_conv (val_t1 : val_t2 : other_val_ts)
-  ) :: ProductType -> ValType
+instance ToValType TypeApplication where
+  to_val_type = type_app_conv .> TypeApp
 
 -- TypeApplication: type_app_conv
 
@@ -52,16 +52,19 @@ type_app_conv = ( \(TypeConsAndInputs cons_name left_t_ins right_t_ins) ->
 
 left_t_ins_conv = ( \case
   NoLeftTInputs -> []
-  OneLeftTInput type_input -> [ val_type_conv type_input ]
-  ManyLeftTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren
+  OneLeftTInput type_input -> [ to_val_type type_input ]
+  ManyLeftTInputs many_ts_in_paren -> ts_in_paren_to_val_types many_ts_in_paren
   ) :: LeftTInputs -> [ ValType ]
 
 right_t_ins_conv = ( \case
   NoRightTInputs -> []
-  OneRightTInput type_input -> [ val_type_conv type_input ]
-  ManyRightTInputs many_ts_in_paren -> many_ts_in_paren_conv many_ts_in_paren 
+  OneRightTInput type_input -> [ to_val_type type_input ]
+  ManyRightTInputs many_ts_in_paren -> ts_in_paren_to_val_types many_ts_in_paren 
   ) :: RightTInputs -> [ ValType ]
 
-many_ts_in_paren_conv = ( \(TypesInParen t1 t2 ts) ->
-  map val_type_conv $ t1 : t2 : ts
+ts_in_paren_to_val_types = ( \(TypesInParen t1 t2 ts) ->
+  map to_val_type $ t1 : t2 : ts
   ) :: ManyTypesInParen -> [ ValType ]
+
+ts_in_paren_to_value_types = ( \(TypesInParen t1 t2 ts) -> t1 : t2 : ts )
+  :: ManyTypesInParen -> [ ValueType ]

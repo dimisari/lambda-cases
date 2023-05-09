@@ -3,7 +3,7 @@ module Conversions.TypeDefinitions where
 import ParsingTypes.Types (TypeName)
 import ParsingTypes.TypeDefinitions
 import IntermediateTypes.TypeDefinitions
-import Conversions.Types (val_type_conv)
+import Conversions.Types (to_val_type)
 
 -- All: ValType, Type Definitions
 
@@ -35,7 +35,7 @@ many_tns_in_paren_conv = ( \(ParenTypeNames n1 n2 ns) -> n1 : n2 : ns)
 -- or_type_case_conv, or_type_def_conv
 
 field_conv = ( \(NameAndType value_name value_type) ->
-  FNameAndType value_name (val_type_conv value_type)
+  FNameAndType value_name (to_val_type value_type)
   ) :: Field -> TTField
 
 tuple_type_def_conv = ( \(NameExprAndFields type_app fields) ->
@@ -43,7 +43,7 @@ tuple_type_def_conv = ( \(NameExprAndFields type_app fields) ->
   ) :: TupleTypeDef -> TupleTDef
 
 or_type_case_conv = ( \(NameAndMaybeInT value_name maybe_value_type) ->
-  CNameAndMaybeInT value_name (val_type_conv <$> maybe_value_type)
+  CNameAndMaybeInT value_name (to_val_type <$> maybe_value_type)
   ) :: OrTypeCaseOld -> OrTCase
 
 or_type_def_conv = ( \(NameExprAndCases type_app c1 c2 cs) ->

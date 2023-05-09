@@ -31,7 +31,7 @@ data TypeApp =
 
 instance Show TypeApp where
   show = \(ConsAndTIns type_name type_inputs) ->
-    show type_name ++ concatMap (show .> (" " ++)) type_inputs
+    show type_name ++ concatMap (show .> (" (" ++) .> (++ ")") ) type_inputs
 
 -- ProdType
 
@@ -53,7 +53,13 @@ instance Show ValType where
     FuncType func_type -> show func_type
     TypeApp type_application -> show type_application
     ProdType prod_type -> show prod_type
-    TypeVar int -> ["T1", "T2", "T3", "T4", "T5"] !! (int-1)
+    TypeVar int -> "T" ++ show int
+
+-- TypeScheme
+
+data TypeScheme =
+  BoundVarsAndT [ Int ] ValType
+  deriving (Eq, Show)
 
 -- Helpers: tn_to_val_t, int, bool
 

@@ -30,6 +30,7 @@ executable haskell_generation
                         IntermediateTypes.Values,
 
                         Conversions.Types,
+                        Conversions.Scheme,
                         Conversions.TypeDefinitions,
                         Conversions.Values,
 

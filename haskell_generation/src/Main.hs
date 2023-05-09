@@ -20,8 +20,6 @@ import ParsingTypes.Values (Values, ValueExpression)
 import Parsers.TypeDefinitions (type_definition_p)
 import Parsers.Values (values_p)
 
-import Conversions.Types (val_type_conv)
-
 import GenerationHelpers.ErrorMessages (Error)
 
 import CodeGenerators.TypeDefinitions (type_definition_g)

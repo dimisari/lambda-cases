@@ -109,6 +109,10 @@ instance Generate IntCases where
 class GenerateFuncType a where
   generate_func_type :: a -> FuncType -> Stateful Haskell
 
+instance GenerateFuncType a => GenerateFuncType (Indent a) where
+  generate_func_type = \(Indent a) val_type -> 
+    (++) <$> indentation <*> generate_func_type a val_type
+
 data OrTypeCases = 
   OrTypeCases [ ValueName ] SpecificOrDefaultCaseVN [ ValueExpression ]
 
@@ -125,10 +129,6 @@ instance GenerateFuncType OrTypeCases where
 
 data OrTypeCase = 
   OrTypeCase ValueName ValueExpression
-
-instance GenerateFuncType a => GenerateFuncType (Indent a) where
-  generate_func_type = \(Indent a) val_type -> 
-    (++) <$> indentation <*> generate_func_type a val_type
 
 instance GenerateFuncType OrTypeCase where
   generate_func_type = \(OrTypeCase val_name val_expr) (InAndOutTs in_t out_t) ->
@@ -262,7 +262,7 @@ cases_type_inference_g = (
 name_type_and_value_g = ( \(value_name, value_type, value_expr) -> 
   get_ind_lev >>= \ind_lev ->
   let 
-  val_type = val_type_conv value_type
+  val_type = to_val_type value_type
     :: ValType
   in
   generate value_expr val_type >>= \val_expr_hs ->
@@ -306,7 +306,7 @@ remove_values_from_map =
   :: [ Values ] -> Stateful ()
 
 insert_value_to_map = ( \(value_name, value_type, value_expr) ->
-  value_map_insert value_name $ val_type_conv value_type
+  value_map_insert value_name $ to_val_type value_type
   ) :: (ValueName, ValueType, ValueExpression) -> Stateful ()
 
 remove_value_from_map = ( \(value_name, _, _) -> value_map_remove value_name)

@@ -198,7 +198,7 @@ check_tn_in_vars_g = ( \type_name vars->
 
 t_name_expr_to_val_t = ( \(TNameExpr type_name vars) ->
   let
-  val_t_type_vars = map TypeVar [ 1..5 ]
+  val_t_type_vars = map TypeVar [ 1.. ]
     :: [ ValType ]
   in
   TypeApp $ ConsAndTIns type_name $ take (length vars) val_t_type_vars 

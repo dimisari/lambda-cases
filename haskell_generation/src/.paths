@@ -17,6 +17,7 @@ IntermediateTypes/TypeDefinitions.hs
 
 Conversions/Values.hs
 Conversions/Types.hs
+Conversions/Scheme.hs
 Conversions/TypeDefinitions.hs
 
 GenerationState/TypesAndOperations.hs
