@@ -1,5 +1,6 @@
 module CodeGenerators.Values where
 
+import Data.Functor ((<&>))
 import Data.List (intercalate, splitAt)
 import Control.Monad (foldM, zipWithM)
 import Control.Monad.State ((>=>))
@@ -35,7 +36,7 @@ data Indent a = Indent a
 
 instance Generate a => Generate (Indent a) where
   generate = \(Indent a) val_type -> 
-    (++) <$> indentation <*> generate a val_type
+    indentation +++ generate a val_type
 
 instance Generate DefaultCase where
   generate = \(DefaultCase value_expression) output_t -> 
@@ -49,9 +50,8 @@ instance Generate a => Generate (Maybe a) where
 instance Generate CasesExpr where
   generate = \(CasesAndMaybeDefault case1 cases maybe_def_case) val_type -> 
     modify_ind_lev (+ 1) >>
-    generate (Cases (case1 : cases) maybe_def_case) val_type >>= \cases_hs ->
-    modify_ind_lev ((-) 1) >>
-    return ("\\case\n" ++ cases_hs) 
+    ("\\case\n" ++) <$> generate (Cases (case1 : cases) maybe_def_case) val_type
+    <* modify_ind_lev ((-) 1)
 
 data Cases = 
   Cases [ Case ] (Maybe DefaultCase)
@@ -98,11 +98,10 @@ data IntCases =
 
 instance Generate IntCases where
   generate = \(IntCases ints int_or_val_name exprs) out_t ->
+    ( concat <$>
     mapM (flip generate out_t) (map Indent $ zipWith IntCase ints $ init exprs)
-      >>= \int_cases_hs -> 
+    ) +++
     generate (Indent $ LastIntCase int_or_val_name (last exprs)) out_t
-      >>= \last_int_case_hs ->
-    return $ concat $ int_cases_hs ++ [ last_int_case_hs ]
 
 -- GenerateFuncType 
 
@@ -111,31 +110,28 @@ class GenerateFuncType a where
 
 instance GenerateFuncType a => GenerateFuncType (Indent a) where
   generate_func_type = \(Indent a) val_type -> 
-    (++) <$> indentation <*> generate_func_type a val_type
+    indentation +++ generate_func_type a val_type
 
 data OrTypeCases = 
   OrTypeCases [ ValueName ] SpecificOrDefaultCaseVN [ ValueExpression ]
 
 instance GenerateFuncType OrTypeCases where
   generate_func_type = \(OrTypeCases val_names last_val_name exprs) func_t ->
-    mapM
-      (flip generate_func_type func_t)
-      (map Indent $ zipWith OrTypeCase val_names $ init exprs)
-      >>= \or_type_cases_hs -> 
-    generate_func_type
-      (Indent $ LastOrTypeCase last_val_name (last exprs)) func_t
-      >>= \last_or_type_case_hs ->
-    return $ concat $ or_type_cases_hs ++ [ last_or_type_case_hs ]
+    ( concat <$>
+      mapM
+        (flip generate_func_type func_t)
+        (map Indent $ zipWith OrTypeCase val_names $ init exprs)
+    ) +++
+    generate_func_type (Indent $ LastOrTypeCase last_val_name (last exprs)) func_t
 
 data OrTypeCase = 
   OrTypeCase ValueName ValueExpression
 
 instance GenerateFuncType OrTypeCase where
   generate_func_type = \(OrTypeCase val_name val_expr) (InAndOutTs in_t out_t) ->
-    or_type_vn_g val_name in_t >>= \(val_name_hs, to_be_removed) ->
-    generate val_expr out_t >>= \val_expr_hs ->
-    mapM_ value_map_remove to_be_removed >>
-    return (val_name_hs ++ " -> " ++ val_expr_hs ++ "\n")
+    or_type_vn_g val_name in_t >>= \(val_name_hs, inserted) ->
+    (((val_name_hs ++ " -> ") ++) <$> generate val_expr out_t <&> (++ "\n"))
+    <* mapM_ value_map_remove inserted
 
 data LastOrTypeCase = 
   LastOrTypeCase SpecificOrDefaultCaseVN ValueExpression
@@ -235,8 +231,8 @@ instance Generate ValueExpression where
 --
 
 or_type_vn_g = ( \val_name val_type ->
-  maybe_value_g val_name val_type >>= \(maybe_value_hs, to_be_removed) ->
-  return ("C" ++ show val_name ++ maybe_value_hs, to_be_removed)
+  maybe_value_g val_name val_type >>= \(maybe_value_hs, inserted) ->
+  return ("C" ++ show val_name ++ maybe_value_hs, inserted)
   ) :: ValueName -> ValType -> Stateful (Haskell, [ ValueName ])
 
 -- 
@@ -339,4 +335,3 @@ case_to_lovns_exprs = ( \case
     case_to_lovns_exprs cases ==> \(lovns, exprs) ->
     (lovn : lovns, expr : exprs)
   ) :: [ Case ] -> ( [ LitOrValName ], [ ValueExpression ] )
-

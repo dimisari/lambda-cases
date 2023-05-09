@@ -1,6 +1,7 @@
 module CodeGenerators.OperatorValues where
 
 import Data.List (intercalate)
+import Data.Functor ((<&>))
 import Control.Monad (zipWithM, (>=>))
 import Control.Monad.Trans.Except (throwE, catchE)
 
@@ -30,8 +31,7 @@ import CodeGenerators.LowLevel
 
 instance Generate ParenExpr where
   generate = \expr val_t ->
-    paren_expr_inside_g expr val_t >>= \expr_hs ->
-    return $ "(" ++ expr_hs ++ ")"
+    ("(" ++) <$> paren_expr_inside_g expr val_t <&> (++ ")")
 
 instance Generate BaseValue2 where
   generate = \case
@@ -77,18 +77,15 @@ instance Generate EqualityExpr where
   generate = \(EqExpr term1 maybe_term2) -> case maybe_term2 of
     Just term2 -> \case 
       TypeApp (ConsAndTIns (TN "Bool") []) ->
-        generate term1 int >>= \term1_hs ->
-        generate term2 int >>= \term2_hs ->
-        return $ term1_hs ++ " == " ++ term2_hs
+        (generate term1 int <&> (++ " == ")) +++ generate term2 int
       val_t -> throwE $ equality_not_bool_err val_t
     Nothing -> generate term1
 
 instance Generate InputOpExpr where
   generate = \(InputEqExpr input eq_expr) ->
     input_g input >=> \(input_hs, out_t, inserted) ->
-    generate eq_expr out_t >>= \op_expr_hs ->
-    mapM_ value_map_remove inserted >>
-    return (input_hs ++ op_expr_hs)
+    (input_hs ++) <$> generate eq_expr out_t
+    <* mapM_ value_map_remove inserted
 
 instance Generate OpExpr where 
   generate = \case
@@ -287,3 +284,8 @@ add_sub_g = ( \expr op_hs mult_expr val_type ->
   generate mult_expr val_type >>= \term_hs ->
   return $ expr_hs ++ op_hs ++ term_hs
   ) :: AddSubOrMExpr -> String -> Pos MultExpr -> ValType -> Stateful Haskell
+
+-- 
+
+(+++) :: Stateful Haskell -> Stateful Haskell -> Stateful Haskell
+a +++ b = (++) <$> a <*> b
