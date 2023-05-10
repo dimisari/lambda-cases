@@ -8,7 +8,7 @@ when the value is equal to another value or literal
 ## application variations, import
 For both values and types the expressions below are equivalent:
 - Values:
-  - x, y *==> f
+  - (x, y)==> f
   - x==>f<==y
   - f(x,y)
 - Types:
