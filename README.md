@@ -1,5 +1,6 @@
 # Language Description
-Haskell-like programming language compiled to haskell and written in haskell
+Check it out in "description"
 # Examples
-Extended euclidean algorithm
+Check them out in "examples"
 # Haskell code generation
+Check in out in "haskell_generation"
