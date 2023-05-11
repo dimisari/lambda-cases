@@ -20,6 +20,7 @@ executable haskell_generation
     other-modules:      Helpers,
 
                         ParsingTypes.LowLevel, ParsingTypes.Types,
+                        ParsingTypes.Types2,
                         ParsingTypes.TypeDefinitions, ParsingTypes.OperatorValues,
                         ParsingTypes.Values,
 

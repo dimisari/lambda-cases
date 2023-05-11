@@ -3,6 +3,7 @@ ParsingTypes/LowLevel.hs
 ParsingTypes/OperatorValues.hs
 ParsingTypes/Values.hs
 ParsingTypes/Types.hs
+ParsingTypes/Types2.hs
 ParsingTypes/TypeDefinitions.hs
 
 Parsers/LowLevel.hs

@@ -1,0 +1,133 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{syntax}
+\usepackage[left=2cm,right=2cm,top=2cm]{geometry}
+
+\date{}
+\author{
+  Dimitris Saridakis
+}
+
+\def\imgs{../Images}
+%\newcommand\_[_]{_}
+
+\begin{document}
+
+\title{
+\textbf{Lambda Cases}
+}
+\maketitle
+
+\section{Tokens}
+
+\paragraph{Keywords}
+
+\begin{verbatim}
+cases use_fields tuple_type or_type
+\end{verbatim}
+
+\paragraph{Value names}
+
+\begin{grammar}
+<value-name> ::= 
+<lower-case-letter> ( <lower-case-letter> | `_' )*
+\end{grammar}
+
+\paragraph{Type names}
+
+\begin{grammar}
+<type-name> ::= 
+<upper-case-letter> ( <upper-case-letter> | <lower-case-letter> )*
+\end{grammar}
+
+
+
+\section{Grammar}
+
+\setlength{\grammarparsep}{20pt}
+\setlength{\grammarindent}{12em}
+
+\paragraph{Program}
+\hspace{1cm}\\
+\begin{grammar}
+
+<program> ::= <value-defs> | <type-def> 
+
+<value-defs> ::= <value-names> `:\ ' <types> `\\n\ \ =' <value-exprs>
+
+<value-names> ::= <value-name> ( `,\ ' <value-name> )*  
+
+<types> ::= <type> ( `,\ ' <type> )*  
+
+<value-exprs> ::= <value-expr> ( `,\ ' <value-expr> )*  
+
+\end{grammar}
+\hspace{1cm}\\
+
+\paragraph{Types}
+
+\hspace{1cm}\\
+\begin{grammar}
+
+<type> ::= <func-type> | <prod-type> | <type-app>
+
+<func-type> ::= <input-types-expr> `\ ->\ ' <output-type>
+
+<prod-type> ::= <prod-sub-type> ( `\ x\ ' <prod-sub-type> )+
+
+<type-app> ::= [ <t-inputs> `==>' ] <type-name> [ `<==' <t-inputs> ]
+ 
+<input-types-expr> ::= <many-ts-in-paren> | <one-type>
+
+<output-type> ::= <prod-type> | <type-app>
+
+<prod-sub-type> ::= `(' ( <func-type> | <prod-type> ) `)' | <type-app>
+
+<one-type> ::= `(' <func-type> `)' | <prod-type> | <type-app>
+
+<t-inputs> ::= <many-ts-in-paren> | `(' <type> `)' | <type-name>
+
+<many-ts-in-paren> ::=  `(' <type> (`, ' <type>)+ `)'
+
+\end{grammar}
+
+
+\hspace{1cm}\\
+\paragraph{Types}
+
+\hspace{1cm}\\
+\begin{grammar}
+
+<type> ::= <prod-type>  [ `\ ->\ ' <prod-type> ] | <many-in-ts-func-t>
+
+<many-in-ts-func-t> ::= <open-par-t> <comma-ts-close-par> `\ ->\ ' <prod-type>
+
+<prod-type> ::= <type-app> ( `\ x\ '<type-app> )*
+
+<type-app> ::= <t-app-begin> ( <left-t-app> | <right-t-app> )*
+
+<t-name-t-app> ::= <type-name> ( <left-t-app> | <right-t-app> )*
+
+<t-app-begin> ::= <open-par-t> ( `)' | <comma-ts-close-par> <right-t-app> ) 
+
+<open-par-t> ::= `(' <type>
+
+<paren-comma-types> ::= <open-par-t> `,\ ' <types> `)'
+
+<left-t-app> ::= `<==' ( `(' <types> `)' | <type-name> )
+
+<right-t-app> ::= `==>' ( `(' <type> `)' | <type-name> )
+
+\end{grammar}
+
+%\newpage
+
+%\begin{_}
+%\end{_}
+
+%  \includegraphics[width=10cm, height=8cm]{../Images/image.png}
+
+\end{document}
