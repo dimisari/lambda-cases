@@ -3,7 +3,7 @@ a: Int
   = let
     b: Int 
       = 1
-    output
+    in
     b
 
 c: Int

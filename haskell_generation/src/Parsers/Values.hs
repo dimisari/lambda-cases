@@ -27,24 +27,26 @@ lit_or_val_name_p =
 -- Case: specific_case_p
 
 specific_case_p =
-  lit_or_val_name_p >>= \lit_or_val_name ->
-  string " ->" >> space_or_spicy_nl >> value_expression_p >>= \value_expression ->
+  spicy_new_line >> lit_or_val_name_p >>= \lit_or_val_name ->
+  string " ->" >> space_or_spicy_nl >>
+  value_expression_p >>= \value_expression ->
   return $ Case lit_or_val_name value_expression
   :: Parser Case
 
 -- DefaultCase: default_case_p
 
 default_case_p =
-  string "... ->" >> space_or_spicy_nl >> value_expression_p >>= \value_expr ->
+  spicy_new_line >> string "... ->" >> space_or_spicy_nl >>
+  value_expression_p >>= \value_expr ->
   return $ DefaultCase value_expr
   :: Parser DefaultCase
 
 -- CasesExpr: cases_p
 
 cases_p =
-  string "cases" >> spicy_new_line >> specific_case_p >>= \case1 ->
-  many (try $ spicy_new_line >> specific_case_p) >>= \cases ->
-  optionMaybe (try $ spicy_new_line >> default_case_p) >>= \maybe_default_case ->
+  string "cases" >> specific_case_p >>= \case1 ->
+  many (try specific_case_p) >>= \cases ->
+  optionMaybe (try default_case_p) >>= \maybe_default_case ->
   return $ CasesAndMaybeDefault case1 cases maybe_default_case
   :: Parser CasesExpr
 
@@ -76,7 +78,7 @@ value_types_p = ( \value_names_length ->
 where_p = 
   string "let" >> spicy_new_line >>
   many1 (try values_p <* spicy_new_lines) >>= \values ->
-  string "output" >> spicy_new_line >>
+  string "in" >> spicy_new_line >>
   value_expression_p >>= \value_expression ->
   return $ ValueExpressionWhereValues value_expression values
   :: Parser Where

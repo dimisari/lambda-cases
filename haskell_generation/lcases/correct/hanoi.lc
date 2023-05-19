@@ -20,7 +20,7 @@ hanoi: (Rod, Rod, Rod, Int) -> Moves
         = hanoi(source, auxiliary, target, rings - 1)
       moves2: Moves
         = hanoi(auxiliary, target, source, rings - 1)
-      output
+      in
       add_moves(moves1, moves<==((source, target), moves2))
 
 add_moves: (Moves, Moves) -> Moves

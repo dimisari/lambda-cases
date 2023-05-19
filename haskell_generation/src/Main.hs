@@ -71,6 +71,8 @@ wrong_names =
   , "add_err"
   , "dup_int_case"
   , "out_of_scope5"
+  , "wrong_int_case"
+  , "int_str"
   ]
   :: [ String ]
 

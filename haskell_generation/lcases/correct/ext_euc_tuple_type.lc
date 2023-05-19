@@ -18,7 +18,7 @@ ee_recursion: (PrevCoeffs, PrevCoeffs, Int, Int) -> GcdAndCoeffs
       let
       next: PrevCoeffs -> PrevCoeffs
         = use_fields -> (prev, prev_prev - x==>div<==y * prev)
-      output
+      in
       (a_coeffs==>next, b_coeffs==>next, y, x==>mod<==y)==>ee_recursion
 
 res: GcdAndCoeffs
