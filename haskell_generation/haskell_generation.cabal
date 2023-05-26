@@ -46,7 +46,7 @@ executable haskell_generation
                         CodeGenerators.LowLevel, CodeGenerators.OperatorValues,
                         CodeGenerators.Values
 
-    build-depends:      base ^>=4.16.4.0, parsec, mtl, containers, transformers, 
+    build-depends:      base, parsec, mtl, containers, transformers, 
                         process
     default-language:   Haskell2010
     import:             warnings

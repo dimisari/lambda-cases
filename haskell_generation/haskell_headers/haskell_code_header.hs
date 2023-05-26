@@ -1,4 +1,4 @@
-{-# language LambdaCase #-}
+{-# language LambdaCase, FlexibleInstances, MultiParamTypeClasses #-}
 
 -- AllButFirst
 
