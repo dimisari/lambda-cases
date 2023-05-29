@@ -35,17 +35,17 @@ executable haskell_generation
                         Conversions.TypeDefinitions,
                         Conversions.Values,
 
-                        GenerationState.InitialState,
-                        GenerationState.TypesAndOperations,
+                        Generation.State.InitialState,
+                        Generation.State.TypesAndOperations,
 
-                        GenerationHelpers.TypeChecking,
-                        GenerationHelpers.ErrorMessages,
-                        GenerationHelpers.Helpers,
-                        GenerationHelpers.CheckCases,
+                        Generation.Helpers.TypeChecking,
+                        Generation.Helpers.ErrorMessages,
+                        Generation.Helpers.Helpers,
+                        Generation.Helpers.CheckCases,
 
-                        CodeGenerators.TypeDefinitions,
-                        CodeGenerators.LowLevel, CodeGenerators.OperatorValues,
-                        CodeGenerators.Values
+                        Generation.Final.TypeDefinitions,
+                        Generation.Final.LowLevel, Generation.Final.OperatorValues,
+                        Generation.Final.Values
 
     build-depends:      base, parsec, mtl, containers, transformers, 
                         process
