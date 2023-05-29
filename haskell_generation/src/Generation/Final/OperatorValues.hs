@@ -1,4 +1,4 @@
-module CodeGenerators.OperatorValues where
+module Generation.Final.OperatorValues where
 
 import Data.List (intercalate)
 import Data.Functor ((<&>))
@@ -17,12 +17,12 @@ import IntermediateTypes.Values
 
 import Conversions.Values
 
-import GenerationState.TypesAndOperations
+import Generation.State.TypesAndOperations
 
-import GenerationHelpers.ErrorMessages
-import GenerationHelpers.TypeChecking (equiv_types)
+import Generation.Helpers.ErrorMessages
+import Generation.Helpers.TypeChecking (equiv_types)
 
-import CodeGenerators.LowLevel
+import Generation.Final.LowLevel
 
 -- Generate:
 -- ParenExpr, BaseValue2, FuncAppChain, ApplicationTree, Application, MultExpr,

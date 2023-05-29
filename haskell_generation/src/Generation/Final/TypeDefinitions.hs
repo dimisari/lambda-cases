@@ -1,4 +1,4 @@
-module CodeGenerators.TypeDefinitions where
+module Generation.Final.TypeDefinitions where
 
 import Data.List (intercalate)
 
@@ -13,7 +13,7 @@ import IntermediateTypes.TypeDefinitions
 
 import Conversions.TypeDefinitions
 
-import GenerationState.TypesAndOperations
+import Generation.State.TypesAndOperations
 
 -- All:
 -- TTField, TupleTDef, TupleTypeDef,

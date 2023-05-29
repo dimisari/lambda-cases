@@ -21,18 +21,18 @@ Conversions/Types.hs
 Conversions/Scheme.hs
 Conversions/TypeDefinitions.hs
 
-GenerationState/TypesAndOperations.hs
-GenerationState/InitialState.hs
+Generation/State/TypesAndOperations.hs
+Generation/State/InitialState.hs
 
-GenerationHelpers/TypeChecking.hs
-GenerationHelpers/ErrorMessages.hs
-GenerationHelpers/Helpers.hs
-GenerationHelpers/CheckCases.hs
+Generation/Helpers/TypeChecking.hs
+Generation/Helpers/ErrorMessages.hs
+Generation/Helpers/Helpers.hs
+Generation/Helpers/CheckCases.hs
 
-CodeGenerators/LowLevel.hs
-CodeGenerators/OperatorValues.hs
-CodeGenerators/Values.hs
-CodeGenerators/TypeDefinitions.hs
+Generation/Final/LowLevel.hs
+Generation/Final/OperatorValues.hs
+Generation/Final/Values.hs
+Generation/Final/TypeDefinitions.hs
 
 Helpers.hs
 Main.hs

@@ -7,10 +7,10 @@ import Control.Monad ((>=>))
 import Control.Monad.State (evalState)
 import Control.Monad.Trans.Except (runExceptT, catchE, throwE)
 
-import GenerationState.InitialState (init_state)
+import Generation.State.InitialState (init_state)
 import Helpers (Haskell, (.>), (==>), eof_or_spicy_nls)
 
-import GenerationState.TypesAndOperations (Stateful, value_map_insert)
+import Generation.State.TypesAndOperations (Stateful, value_map_insert)
 
 import ParsingTypes.TypeDefinitions (TypeDefinition)
 import ParsingTypes.LowLevel (ValueName)
@@ -20,10 +20,10 @@ import ParsingTypes.Values (Values, ValueExpression)
 import Parsers.TypeDefinitions (type_definition_p)
 import Parsers.Values (values_p)
 
-import GenerationHelpers.ErrorMessages (Error)
+import Generation.Helpers.ErrorMessages (Error)
 
-import CodeGenerators.TypeDefinitions (type_definition_g)
-import CodeGenerators.Values (values_g, values_to_list, insert_value_to_map)
+import Generation.Final.TypeDefinitions (type_definition_g)
+import Generation.Final.Values (values_g, values_to_list, insert_value_to_map)
 
 -- All: Path, Constants, Types, Parsing, Generating Haskell, main
 
@@ -32,7 +32,7 @@ import CodeGenerators.Values (values_g, values_to_list, insert_value_to_map)
 type Path = String 
 
 -- Constants:
--- lcases_names, lcases_paths, generated_haskell_paths,
+-- correct_names, wrong_names, all_names, paths, hs_paths, path_pairs, 
 -- in_out_path_pairs, haskell_header
 
 correct_names =
@@ -84,8 +84,11 @@ paths =
   map ( \s -> "lcases/" ++ s ++ ".lc" ) all_names
   :: [ String ]
 
+hs_dir = "runtime/haskell/"
+  :: String
+
 hs_paths =
-  map ( \s -> "haskell/" ++ s ++ ".hs" ) all_names
+  map ( \s -> hs_dir ++ s ++ ".hs" ) all_names
   :: [ String ]
 
 path_pairs = 
@@ -93,11 +96,14 @@ path_pairs =
   :: [ (Path, Path) ]
 
 correct_hs_paths =
-  map ( \s -> "haskell/" ++ s ++ ".hs" ) correct_names
+  map ( \s -> hs_dir ++ s ++ ".hs" ) correct_names
   :: [ String ]
 
+execs_dir = "runtime/executables/"
+  :: String
+
 exec_paths = 
-  map ( \s -> "executables/" ++ s ) correct_names
+  map ( \s -> execs_dir ++ s ) correct_names
   :: [ String ]
 
 exec_path_pairs = 
@@ -186,9 +192,10 @@ values_or_type_definition_g = ( \case
 -- main
 
 main =
-  mapM_ read_and_gen_example path_pairs
-  >>
+  mapM_ read_and_gen_example path_pairs >>
   mapM_ exec_path_pair_to_cmd exec_path_pairs >>
-  callCommand "rm haskell/correct/*.hi haskell/correct/*.o" >>
-  callCommand "for f in ./executables/correct/*; do echo \"\n$f\n\"; $f; done"
+  callCommand
+    ("rm " ++ hs_dir ++ "correct/*.hi " ++ hs_dir ++ "correct/*.o") >>
+  callCommand 
+    ("for f in " ++ execs_dir ++ "correct/*; do echo \"\n$f\n\"; $f; done")
   :: IO ()

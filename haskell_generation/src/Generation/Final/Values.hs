@@ -1,4 +1,4 @@
-module CodeGenerators.Values where
+module Generation.Final.Values where
 
 import Data.Functor ((<&>))
 import Data.List (intercalate, splitAt)
@@ -19,15 +19,15 @@ import IntermediateTypes.TypeDefinitions
 import Conversions.Types
 import Conversions.TypeDefinitions
 
-import GenerationState.TypesAndOperations
+import Generation.State.TypesAndOperations
 
-import GenerationHelpers.ErrorMessages
-import GenerationHelpers.TypeChecking (equiv_types)
-import GenerationHelpers.Helpers
-import GenerationHelpers.CheckCases
+import Generation.Helpers.ErrorMessages
+import Generation.Helpers.TypeChecking (equiv_types)
+import Generation.Helpers.Helpers
+import Generation.Helpers.CheckCases
 
-import CodeGenerators.LowLevel
-import CodeGenerators.OperatorValues
+import Generation.Final.LowLevel
+import Generation.Final.OperatorValues
 
 -- Generate
 -- DefaultCase, Maybe, CasesExpr, Cases,

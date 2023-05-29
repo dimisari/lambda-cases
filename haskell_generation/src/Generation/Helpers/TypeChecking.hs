@@ -1,4 +1,4 @@
-module GenerationHelpers.TypeChecking where
+module Generation.Helpers.TypeChecking where
 
 import Control.Monad (zipWithM)
 
@@ -10,7 +10,7 @@ import ParsingTypes.Types (TypeName(..))
 import IntermediateTypes.Types
 import IntermediateTypes.TypeDefinitions (TypeInfo(..), get_type)
 
-import GenerationState.TypesAndOperations (Stateful, type_map_get)
+import Generation.State.TypesAndOperations (Stateful, type_map_get)
 
 -- All: equiv_types, equiv_func_types, equiv_prod_types,
 

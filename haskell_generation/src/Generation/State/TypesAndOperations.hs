@@ -1,4 +1,4 @@
-module GenerationState.TypesAndOperations where
+module Generation.State.TypesAndOperations where
 
 import Control.Monad.State (State, get, modify)
 import Control.Monad.Trans.Except (ExceptT, throwE)
@@ -12,11 +12,11 @@ import ParsingTypes.Types
 import IntermediateTypes.Types (ValType(..))
 import IntermediateTypes.TypeDefinitions (TypeInfo(..))
 
-import GenerationHelpers.ErrorMessages
+import Generation.Helpers.ErrorMessages
 
 -- All: Types, get fields, set fields, value_map operations, type_map operations
 
--- Types: ValueMap, TypeMap, GenerationState, Stateful
+-- Types: ValueMap, TypeMap, Generation.State, Stateful
 
 type ValueMap =
   M.Map ValueName [ ValType ]

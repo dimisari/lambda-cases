@@ -1,4 +1,4 @@
-module GenerationHelpers.Helpers where
+module Generation.Helpers.Helpers where
 
 import Data.List (intercalate)
 import Control.Monad ((>=>), zipWithM)
@@ -13,10 +13,10 @@ import ParsingTypes.Types (TypeName)
 import IntermediateTypes.Types 
 import IntermediateTypes.TypeDefinitions (TypeInfo(..), TTField(..))
 
-import GenerationHelpers.TypeChecking
-import GenerationHelpers.ErrorMessages
+import Generation.Helpers.TypeChecking
+import Generation.Helpers.ErrorMessages
 
-import GenerationState.TypesAndOperations
+import Generation.State.TypesAndOperations
 
 
 -- GenerateInserted

@@ -1,4 +1,4 @@
-module CodeGenerators.LowLevel where
+module Generation.Final.LowLevel where
 
 import Text.Parsec (SourcePos)
 import Data.List (intercalate)
@@ -16,11 +16,11 @@ import IntermediateTypes.TypeDefinitions (TTField(..), TypeInfo(..))
 
 import Conversions.Values (input_to_input2)
 
-import GenerationState.TypesAndOperations
+import Generation.State.TypesAndOperations
 
-import GenerationHelpers.ErrorMessages
-import GenerationHelpers.TypeChecking (equiv_types)
-import GenerationHelpers.Helpers 
+import Generation.Helpers.ErrorMessages
+import Generation.Helpers.TypeChecking (equiv_types)
+import Generation.Helpers.Helpers 
 
 -- Classes: Generate, GenerateInfer, InTGenInserted
 

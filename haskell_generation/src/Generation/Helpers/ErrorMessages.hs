@@ -1,4 +1,4 @@
-module GenerationHelpers.ErrorMessages where
+module Generation.Helpers.ErrorMessages where
   
 import Data.List (intercalate)
 import Helpers ((.>))

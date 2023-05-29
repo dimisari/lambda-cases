@@ -1,4 +1,4 @@
-module GenerationState.InitialState where
+module Generation.State.InitialState where
 
 import qualified Data.Map as M (empty, fromList)
 
@@ -8,7 +8,7 @@ import ParsingTypes.Types (TypeName(..))
 import IntermediateTypes.Types
 import IntermediateTypes.TypeDefinitions (TypeInfo(..))
 
-import GenerationState.TypesAndOperations (ValueMap, TypeMap, GenerationState(..))
+import Generation.State.TypesAndOperations (ValueMap, TypeMap, GenerationState(..))
 
 -- Initial state:
 -- int_x_int, int_to_int_to_int, init_value_map, init_type_map, init_state

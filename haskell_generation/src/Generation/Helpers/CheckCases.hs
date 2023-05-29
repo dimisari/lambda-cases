@@ -1,4 +1,4 @@
-module GenerationHelpers.CheckCases where
+module Generation.Helpers.CheckCases where
 
 import Control.Monad.Trans.Except (throwE, catchE)
 
@@ -7,9 +7,9 @@ import ParsingTypes.LowLevel
 import ParsingTypes.Types
 import ParsingTypes.Values
 
-import GenerationState.TypesAndOperations
+import Generation.State.TypesAndOperations
 
-import GenerationHelpers.ErrorMessages
+import Generation.Helpers.ErrorMessages
 
 -- Check cases for or_type
 
