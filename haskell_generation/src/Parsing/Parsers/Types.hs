@@ -1,8 +1,8 @@
-module Parsers.Types where
+module Parsing.Parsers.Types where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
-import ParsingTypes.Types
+import Parsing.Types.Types
 
 -- All:
 -- TypeName, ProductType, InputTypeOrTypes, ManyTypesInParen, OutputType,

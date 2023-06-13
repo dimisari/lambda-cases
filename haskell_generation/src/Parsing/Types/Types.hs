@@ -1,4 +1,4 @@
-module ParsingTypes.Types where
+module Parsing.Types.Types where
 
 import Data.List (intercalate)
 import Helpers ((==>))

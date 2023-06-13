@@ -1,13 +1,13 @@
-module Parsers.OperatorValues where
+module Parsing.Parsers.OperatorValues where
 
 import Helpers 
 import Text.Parsec 
 import Text.Parsec.String (Parser)
 
-import ParsingTypes.LowLevel
-import ParsingTypes.OperatorValues
+import Parsing.Types.LowLevel
+import Parsing.Types.OperatorValues
 
-import Parsers.LowLevel 
+import Parsing.Parsers.LowLevel 
 
 -- All:
 -- ParenExpr, MathApp, BaseValue,

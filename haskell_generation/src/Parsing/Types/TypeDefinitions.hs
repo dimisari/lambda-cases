@@ -1,9 +1,9 @@
-module ParsingTypes.TypeDefinitions where
+module Parsing.Types.TypeDefinitions where
 
 import Data.List (intercalate)
 import Helpers ((==>))
-import ParsingTypes.LowLevel (ValueName)
-import ParsingTypes.Types (TypeName, ValueType)
+import Parsing.Types.LowLevel (ValueName)
+import Parsing.Types.Types (TypeName, ValueType)
 
 -- All: Types, Show instances
 

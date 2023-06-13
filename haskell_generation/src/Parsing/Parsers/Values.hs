@@ -1,16 +1,16 @@
-module Parsers.Values where
+module Parsing.Parsers.Values where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
 import Helpers 
 
-import ParsingTypes.Types (ValueType)
-import ParsingTypes.Values
+import Parsing.Types.Types (ValueType)
+import Parsing.Types.Values
 
-import Parsers.LowLevel (literal_p, value_name_p, input_p)
-import Parsers.Types (value_type_p)
-import Parsers.OperatorValues (operator_expression_p)
+import Parsing.Parsers.LowLevel (literal_p, value_name_p, input_p)
+import Parsing.Parsers.Types (value_type_p)
+import Parsing.Parsers.OperatorValues (operator_expression_p)
 
 -- All:
 -- LitOrValName, Case, DefaultCase, CasesExpr

@@ -1,14 +1,14 @@
-module Parsers.TypeDefinitions where
+module Parsing.Parsers.TypeDefinitions where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
 import Helpers ((==>), eof_or_spicy_nls)
 
-import ParsingTypes.TypeDefinitions
+import Parsing.Types.TypeDefinitions
 
-import Parsers.LowLevel (value_name_p)
-import Parsers.Types (type_name_p, value_type_p)
+import Parsing.Parsers.LowLevel (value_name_p)
+import Parsing.Parsers.Types (type_name_p, value_type_p)
 
 -- All:
 -- Field, TupleTypeDef, OrTypeCaseOld, OrTypeDef, TypeDefinition

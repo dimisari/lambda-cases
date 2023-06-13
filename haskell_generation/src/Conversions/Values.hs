@@ -2,8 +2,8 @@ module Conversions.Values where
 
 import Helpers
 
-import ParsingTypes.LowLevel
-import ParsingTypes.OperatorValues
+import Parsing.Types.LowLevel
+import Parsing.Types.OperatorValues
 
 import IntermediateTypes.Values
 

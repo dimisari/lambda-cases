@@ -8,9 +8,9 @@ import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers 
 
-import ParsingTypes.LowLevel
-import ParsingTypes.Types (TypeName(..), ValueType(..))
-import ParsingTypes.Values
+import Parsing.Types.LowLevel
+import Parsing.Types.Types (TypeName(..), ValueType(..))
+import Parsing.Types.Values
 
 import IntermediateTypes.Values
 import IntermediateTypes.Types 

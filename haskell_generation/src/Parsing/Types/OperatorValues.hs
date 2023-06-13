@@ -1,9 +1,9 @@
-module ParsingTypes.OperatorValues where
+module Parsing.Types.OperatorValues where
 
 import Text.Parsec (SourcePos)
 import Data.List (intercalate)
 import Helpers ((==>), Pos)
-import ParsingTypes.LowLevel 
+import Parsing.Types.LowLevel 
 
 -- All (Types and Show instances):
 -- ParenExpr, MathApp, BaseValue,

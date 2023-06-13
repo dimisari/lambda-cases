@@ -17,15 +17,15 @@ extra-doc-files:    CHANGELOG.md
 executable haskell_generation
     hs-source-dirs:     src
     main-is:            Main.hs
-    other-modules:      Helpers,
+    other-modules:      Helpers, Script,
 
-                        ParsingTypes.LowLevel, ParsingTypes.Types,
-                        ParsingTypes.Types2,
-                        ParsingTypes.TypeDefinitions, ParsingTypes.OperatorValues,
-                        ParsingTypes.Values,
+                        Parsing.Types.LowLevel, Parsing.Types.Types,
+                        Parsing.Types.TypeDefinitions, Parsing.Types.OperatorValues,
+                        Parsing.Types.Values,
 
-                        Parsers.LowLevel, Parsers.Types, Parsers.TypeDefinitions,
-                        Parsers.OperatorValues, Parsers.Values,
+                        Parsing.Parsers.LowLevel, Parsing.Parsers.Types,
+                        Parsing.Parsers.TypeDefinitions,
+                        Parsing.Parsers.OperatorValues, Parsing.Parsers.Values,
 
                         IntermediateTypes.Types, IntermediateTypes.TypeDefinitions,
                         IntermediateTypes.Values,
@@ -45,10 +45,13 @@ executable haskell_generation
 
                         Generation.Final.TypeDefinitions,
                         Generation.Final.LowLevel, Generation.Final.OperatorValues,
-                        Generation.Final.Values
+                        Generation.Final.Values,
 
-    build-depends:      base, parsec, mtl, containers, transformers, 
-                        process
+                        Experimental.Types2,
+                        Experimental.Indent
+
+    build-depends:      base, parsec, mtl, containers, transformers, process, 
+                        indents
     default-language:   Haskell2010
     import:             warnings
     default-extensions: LambdaCase

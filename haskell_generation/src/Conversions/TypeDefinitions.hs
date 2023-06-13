@@ -1,7 +1,7 @@
 module Conversions.TypeDefinitions where
 
-import ParsingTypes.Types (TypeName)
-import ParsingTypes.TypeDefinitions
+import Parsing.Types.Types (TypeName)
+import Parsing.Types.TypeDefinitions
 import IntermediateTypes.TypeDefinitions
 import Conversions.Types (to_val_type)
 

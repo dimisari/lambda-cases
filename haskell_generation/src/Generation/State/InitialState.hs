@@ -2,8 +2,8 @@ module Generation.State.InitialState where
 
 import qualified Data.Map as M (empty, fromList)
 
-import ParsingTypes.LowLevel (ValueName(..))
-import ParsingTypes.Types (TypeName(..))
+import Parsing.Types.LowLevel (ValueName(..))
+import Parsing.Types.Types (TypeName(..))
 
 import IntermediateTypes.Types
 import IntermediateTypes.TypeDefinitions (TypeInfo(..))

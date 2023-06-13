@@ -1,10 +1,10 @@
-module ParsingTypes.Values where
+module Parsing.Types.Values where
 
 import Data.List (intercalate)
 import Helpers 
-import ParsingTypes.LowLevel (Literal, ValueName, Input)
-import ParsingTypes.Types (ValueType)
-import ParsingTypes.OperatorValues (OpExpr)
+import Parsing.Types.LowLevel (Literal, ValueName, Input)
+import Parsing.Types.Types (ValueType)
+import Parsing.Types.OperatorValues (OpExpr)
 
 -- All (Types and Show instances):
 -- LitOrValName, Case, DefaultCase, CasesExpr, Values

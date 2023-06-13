@@ -7,8 +7,8 @@ import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers ((.>), Haskell, Pos(..))
 
-import ParsingTypes.LowLevel (ValueName(..))
-import ParsingTypes.Types (TypeName)
+import Parsing.Types.LowLevel (ValueName(..))
+import Parsing.Types.Types (TypeName)
 
 import IntermediateTypes.Types 
 import IntermediateTypes.TypeDefinitions (TypeInfo(..), TTField(..))
@@ -37,7 +37,7 @@ instance GenerateInserted TTNameAndFields where
   gen_inserted = \(TTNameAndFields type_name fields) ->
     unzip <$> mapM gen_1inserted fields >>= \(fields_hs, inserted) ->
     return
-      ("@(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")" , inserted)
+      ("@(C" ++ show type_name ++ concatMap (" " ++) fields_hs ++ ")", inserted)
 
 instance GenerateInserted ProdType where
   gen_inserted = \(ProdTypes types) ->
@@ -70,12 +70,33 @@ class Generate1Inserted a where
   gen_1inserted :: a -> Stateful (Haskell, ValueName)
 
 instance Generate1Inserted ValNameType where
-  gen_1inserted = \(ValNameType val_name val_type) ->
-    value_map_insert val_name val_type >> return (show val_name, val_name)
+  gen_1inserted = \(ValNameType vn vt) ->
+    value_map_insert vn vt >> return (show vn, vn)
 
 instance Generate1Inserted TTField where
-  gen_1inserted = \(FNameAndType field_name field_type) ->
-    gen_1inserted (ValNameType field_name field_type)
+  gen_1inserted = \(FNameAndType fn ft) -> gen_1inserted (ValNameType fn ft)
+
+-- GenerateHs
+
+class GenerateHs a where
+  gen_hs :: a -> Stateful Haskell
+
+instance GenerateHs ValNameType where
+  gen_hs = \(ValNameType vn vt) -> return $ show vn
+
+instance GenerateHs TTField where
+  gen_hs = \(FNameAndType fn ft) -> gen_hs (ValNameType fn ft)
+
+-- Inserted1
+
+class Inserted1 a where
+  inserted1 :: a -> Stateful ValueName
+
+instance Inserted1 ValNameType where
+  inserted1 = \(ValNameType vn vt) -> value_map_insert vn vt >> return vn
+
+instance Inserted1 TTField where
+  inserted1 = \(FNameAndType fn ft) -> inserted1 (ValNameType fn ft)
 
 -- 
 
@@ -84,9 +105,9 @@ prod_t_field_ns = map VN [ "first", "second", "third", "fourth", "fifth" ]
 
 --  value in cases
 
-maybe_value_g = ( \val_name val_type -> 
-  value_map_get val_name >>= \val_name_t ->
-  equiv_types val_name_t val_type >>= \case
+maybe_value_g = ( \vn vt -> 
+  value_map_get vn >>= \val_name_t ->
+  equiv_types val_name_t vt >>= \case
     True -> return ("", [])
     False -> has_value_g val_name_t
   ) :: ValueName -> ValType -> Stateful (Haskell, [ ValueName ])
@@ -106,7 +127,7 @@ value_matching_in_t_g = ( \case
   _ -> return ("", [])
   ) :: ValType -> Stateful (Haskell, [ ValueName ])
 
--- helpers
+-- error position
 
 add_pos_to_err = ( \pos err -> case err of
   (False, err_t, err_msg) ->

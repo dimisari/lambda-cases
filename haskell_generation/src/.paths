@@ -1,16 +1,15 @@
 
-ParsingTypes/LowLevel.hs
-ParsingTypes/OperatorValues.hs
-ParsingTypes/Values.hs
-ParsingTypes/Types.hs
-ParsingTypes/Types2.hs
-ParsingTypes/TypeDefinitions.hs
+Parsing/Types/LowLevel.hs
+Parsing/Types/OperatorValues.hs
+Parsing/Types/Values.hs
+Parsing/Types/Types.hs
+Parsing/Types/TypeDefinitions.hs
 
-Parsers/LowLevel.hs
-Parsers/OperatorValues.hs
-Parsers/Values.hs
-Parsers/Types.hs
-Parsers/TypeDefinitions.hs
+Parsing/Parsers/LowLevel.hs
+Parsing/Parsers/OperatorValues.hs
+Parsing/Parsers/Values.hs
+Parsing/Parsers/Types.hs
+Parsing/Parsers/TypeDefinitions.hs
 
 IntermediateTypes/Values.hs
 IntermediateTypes/Types.hs
@@ -34,5 +33,9 @@ Generation/Final/OperatorValues.hs
 Generation/Final/Values.hs
 Generation/Final/TypeDefinitions.hs
 
+Experimental/Types2.hs
+Experimental/Indent.hs
+
 Helpers.hs
 Main.hs
+Script.hs

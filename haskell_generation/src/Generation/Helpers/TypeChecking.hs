@@ -1,26 +1,32 @@
 module Generation.Helpers.TypeChecking where
 
 import Control.Monad (zipWithM)
+import Control.Monad.Trans.Except (throwE)
 
 import Helpers (Haskell, (==>))
 
-import ParsingTypes.LowLevel (ValueName(..))
-import ParsingTypes.Types (TypeName(..))
+import Parsing.Types.LowLevel (ValueName(..))
+import Parsing.Types.Types (TypeName(..))
 
 import IntermediateTypes.Types
 import IntermediateTypes.TypeDefinitions (TypeInfo(..), get_type)
 
 import Generation.State.TypesAndOperations (Stateful, type_map_get)
 
+import Generation.Helpers.ErrorMessages (type_check_err)
+
 -- All: equiv_types, equiv_func_types, equiv_prod_types,
 
-equiv_types = ( \val_type1 val_type2 -> case (val_type1, val_type2) of
-  (TypeApp type_app1, TypeApp type_app2) ->
-    equiv_type_apps type_app1 type_app2
-  (ProdType prod_type1, ProdType prod_type2) ->
-    equiv_prod_types prod_type1 prod_type2
-  (FuncType func_type1, FuncType func_type2) ->
-    equiv_func_types func_type1 func_type2
+check_equiv_types = ( \t1 t2 str ->
+  equiv_types t1 t2 >>= \case
+    True -> return ()
+    False -> throwE $ type_check_err str t1 t2
+  ) :: ValType -> ValType -> String -> Stateful ()
+
+equiv_types = ( \vt1 vt2 -> case (vt1, vt2) of
+  (TypeApp ta1, TypeApp ta2) -> equiv_type_apps ta1 ta2
+  (ProdType pt1, ProdType pt2) -> equiv_prod_types pt1 pt2
+  (FuncType ft1, FuncType ft2) -> equiv_func_types ft1 ft2
   _ -> return False
   ) :: ValType -> ValType -> Stateful Bool
 

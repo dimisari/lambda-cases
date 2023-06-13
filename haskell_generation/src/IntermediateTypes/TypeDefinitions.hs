@@ -2,8 +2,8 @@ module IntermediateTypes.TypeDefinitions where
 
 import Helpers ((.>))
 
-import ParsingTypes.LowLevel (ValueName)
-import ParsingTypes.Types (TypeName(..))
+import Parsing.Types.LowLevel (ValueName)
+import Parsing.Types.Types (TypeName(..))
 
 import IntermediateTypes.Types (ValType(..))
 

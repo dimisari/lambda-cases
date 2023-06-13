@@ -4,9 +4,9 @@ import Data.List (intercalate)
 
 import Helpers (Haskell, (==>), (.>))
 
-import ParsingTypes.LowLevel (ValueName(..))
-import ParsingTypes.Types (TypeName(..))
-import ParsingTypes.TypeDefinitions 
+import Parsing.Types.LowLevel (ValueName(..))
+import Parsing.Types.Types (TypeName(..))
+import Parsing.Types.TypeDefinitions 
 
 import IntermediateTypes.Types 
 import IntermediateTypes.TypeDefinitions

@@ -3,9 +3,9 @@ module Generation.Helpers.ErrorMessages where
 import Data.List (intercalate)
 import Helpers ((.>))
 
-import ParsingTypes.LowLevel (ValueName, Literal, Abstraction)
-import ParsingTypes.OperatorValues (OpExpr)
-import ParsingTypes.Types (TypeName)
+import Parsing.Types.LowLevel (ValueName, Literal, Abstraction)
+import Parsing.Types.OperatorValues (OpExpr)
+import Parsing.Types.Types (TypeName)
 
 import IntermediateTypes.Values
 import IntermediateTypes.Types (ValType)
@@ -59,6 +59,8 @@ tuple_prod_t_lengths_err = ( \op_exprs val_type ->
   op_exprs_to_string op_exprs ++ "\n" ++
   show val_type ++ "\n"
   ) :: [ OpExpr ] -> ValType -> Error
+
+-- 
 
 op_exprs_to_string =
   map show .> intercalate ", " .> ("(" ++) .> (++ ")")

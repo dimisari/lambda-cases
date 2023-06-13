@@ -3,9 +3,9 @@ module Generation.Helpers.CheckCases where
 import Control.Monad.Trans.Except (throwE, catchE)
 
 import Helpers ((==>))
-import ParsingTypes.LowLevel
-import ParsingTypes.Types
-import ParsingTypes.Values
+import Parsing.Types.LowLevel
+import Parsing.Types.Types
+import Parsing.Types.Values
 
 import Generation.State.TypesAndOperations
 

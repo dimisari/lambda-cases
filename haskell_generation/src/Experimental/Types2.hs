@@ -1,4 +1,4 @@
-module ParsingTypes.Types2 where
+module Experimental.Types2 where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)

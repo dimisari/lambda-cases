@@ -2,7 +2,7 @@ module Conversions.Types where
 
 import Helpers ((.>))
 
-import ParsingTypes.Types
+import Parsing.Types.Types
 import IntermediateTypes.Types
 
 class ToValType a where

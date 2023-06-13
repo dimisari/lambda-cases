@@ -1,14 +1,14 @@
 module Conversions.Scheme where
 
 import Text.Parsec (parse, ParseError)
-import Parsers.Types
+import Parsing.Parsers.Types
 
 import Control.Monad.State
 import Data.Map as M
 
 import Helpers ((==>), (.>))
 
-import ParsingTypes.Types
+import Parsing.Types.Types
 import IntermediateTypes.Types
 
 type VarMap = M.Map TypeName Int

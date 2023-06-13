@@ -5,7 +5,7 @@ import qualified Data.Set as S
 
 import Helpers ((==>), (.>))
 
-import ParsingTypes.Types (TypeName(..))
+import Parsing.Types.Types (TypeName(..))
 
 -- All: FuncType, TypeApp, ValType, Helpers
 
