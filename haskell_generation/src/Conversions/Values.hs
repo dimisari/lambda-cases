@@ -13,17 +13,15 @@ import IntermediateTypes.Values
 -- FuncAppChain to ApplicationTree:
 -- func_app_chain_to_app_tree, func_app_chain_to_app_tree_help, combine
 
-func_app_chain_to_app_tree = ( \(ValuesAndDirections base_val app_dir_base_vals) ->
-  func_app_chain_to_app_tree_help base_val (reverse app_dir_base_vals)
+func_app_chain_to_app_tree = ( \(ValuesAndDirections bv ad_bvs) ->
+  func_app_chain_to_app_tree_help bv (reverse ad_bvs)
   ) :: FuncAppChain -> ApplicationTree
 
-func_app_chain_to_app_tree_help = ( \base_val1 -> \case
-  [] -> base_val_to_app_tree base_val1
-  (app_dir, base_val) : app_dir_base_vals ->
+func_app_chain_to_app_tree_help = ( \bv1 -> \case
+  [] -> base_val_to_app_tree bv1
+  (ad, bv) : ad_bvs ->
     combine
-      (func_app_chain_to_app_tree_help base_val1 app_dir_base_vals)
-      app_dir
-      (base_val_to_app_tree base_val)
+      (func_app_chain_to_app_tree_help bv1 ad_bvs) ad (base_val_to_app_tree bv)
   ) :: BaseValue -> [ (ApplicationDirection, BaseValue) ] -> ApplicationTree
 
 combine = ( \at1 ad at2 -> case ad of 
@@ -37,7 +35,7 @@ combine = ( \at1 ad at2 -> case ad of
 base_val_to_app_tree = ( \case
   ParenExpr paren_expr -> BaseVal2Leaf $ ParenExpr2 paren_expr
   Literal lit -> BaseVal2Leaf $ Literal2 lit
-  MathApp math_app -> math_app_to_app_tree $ remove_pos math_app
+  MathApp math_app -> math_app_to_app_tree math_app
   ) :: BaseValue -> ApplicationTree
 
 -- MathApp to ApplicationTree:

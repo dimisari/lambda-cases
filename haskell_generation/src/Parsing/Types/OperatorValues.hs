@@ -33,7 +33,7 @@ instance Show MathApp where
 -- BaseValue
 
 data BaseValue =
-  Literal (Pos Literal) | ParenExpr (Pos ParenExpr) | MathApp (Pos MathApp)
+  Literal (Pos Literal) | ParenExpr (Pos ParenExpr) | MathApp MathApp
 
 instance Show BaseValue where
   show = \case

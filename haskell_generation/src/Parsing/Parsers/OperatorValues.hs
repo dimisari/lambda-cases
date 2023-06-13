@@ -35,7 +35,7 @@ math_app_p = (
 base_value_p =
   ParenExpr <$> add_pos_p paren_expr_p <|>
   Literal <$> add_pos_p literal_p <|>
-  MathApp <$> add_pos_p math_app_p
+  MathApp <$> math_app_p
   :: Parser BaseValue
 
 -- ApplicationDirection: application_direction_p
