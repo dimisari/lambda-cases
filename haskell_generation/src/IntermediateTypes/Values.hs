@@ -12,6 +12,7 @@ data Application =
 instance Show Application where
   show = \(AppTrees tree1 tree2) -> show tree2 ++ "==>" ++ show tree1
 
+-- 
 data ApplicationTree = 
   Application Application | BaseVal2Leaf BaseValue2
 

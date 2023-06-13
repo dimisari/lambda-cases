@@ -40,8 +40,8 @@ string_p = char '"' *> many (noneOf ['"']) <* char '"'
 -- Abstraction: abstraction_p
 
 abstraction_p =
-  UseFields <$> getPosition <* try (string "use_fields") <|>
-  AbstractionName <$> add_pos_p value_name_p
+  return UseFields <* try (string "use_fields") <|>
+  AbstractionName <$> value_name_p
   :: Parser Abstraction
 
 -- ManyAbstractions: many_abstractions_p

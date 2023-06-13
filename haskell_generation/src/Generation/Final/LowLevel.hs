@@ -73,10 +73,8 @@ instance InTGenInserted a => InTGenInserted (Pos a) where
 
 instance InTGenInserted Abstraction where
   type_gen_inserted = \case
-    AbstractionName vn ->
-      \t -> gen_inserted (ValNameType (remove_pos vn) t)
-    UseFields pos ->
-      type_gen_inserted (WithPos pos UseFields_)
+    AbstractionName vn -> \t -> gen_inserted (ValNameType vn t)
+    UseFields -> type_gen_inserted UseFields_
 
 data UseFields_ = UseFields_
 

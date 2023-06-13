@@ -70,6 +70,7 @@ add_sub_help_fun = ( \mult_expr1 -> \case
   ) :: Pos MultExpr -> [ (PlusOrMinus, Pos MultExpr) ] -> AddSubOrMExpr
 
 -- Input to Input2:
+
 input_to_input2 = ( \case
   OneAbstraction abstraction -> Input2 [ abstraction ]
   ManyAbstractions (Abstractions abs1 abs2 abs) ->
