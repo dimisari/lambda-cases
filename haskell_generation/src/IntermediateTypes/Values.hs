@@ -14,19 +14,19 @@ instance Show Application where
 
 -- 
 data ApplicationTree = 
-  Application Application | BaseVal2Leaf BaseValue2
+  Application Application | BaseVal2Leaf BaseVal2
 
 instance Show ApplicationTree where
   show = \case 
     Application app -> show app
     BaseVal2Leaf base_val -> show base_val
 
--- BaseValue2
+-- BaseVal2
 
-data BaseValue2 =
+data BaseVal2 =
   Literal2 (Pos Literal) | ValueName2 (Pos ValueName) | ParenExpr2 (Pos ParenExpr)
 
-instance Show BaseValue2 where
+instance Show BaseVal2 where
   show = \case
     Literal2 lit -> show lit
     ValueName2 val_name -> show val_name

@@ -22,21 +22,21 @@ func_app_chain_to_app_tree_help = ( \bv1 -> \case
   (ad, bv) : ad_bvs ->
     combine
       (func_app_chain_to_app_tree_help bv1 ad_bvs) ad (base_val_to_app_tree bv)
-  ) :: BaseValue -> [ (ApplicationDirection, BaseValue) ] -> ApplicationTree
+  ) :: BaseVal -> [ (AppDir, BaseVal) ] -> ApplicationTree
 
 combine = ( \at1 ad at2 -> case ad of 
-  LeftApplication -> Application $ AppTrees at1 at2
-  RightApplication -> Application $ AppTrees at2 at1
-  ) :: ApplicationTree -> ApplicationDirection -> ApplicationTree ->
+  LeftApp -> Application $ AppTrees at1 at2
+  RightApp -> Application $ AppTrees at2 at1
+  ) :: ApplicationTree -> AppDir -> ApplicationTree ->
        ApplicationTree
 
--- BaseValue to ApplicationTree:
+-- BaseVal to ApplicationTree:
 
 base_val_to_app_tree = ( \case
   ParenExpr paren_expr -> BaseVal2Leaf $ ParenExpr2 paren_expr
   Literal lit -> BaseVal2Leaf $ Literal2 lit
   MathApp math_app -> math_app_to_app_tree math_app
-  ) :: BaseValue -> ApplicationTree
+  ) :: BaseVal -> ApplicationTree
 
 -- MathApp to ApplicationTree:
 

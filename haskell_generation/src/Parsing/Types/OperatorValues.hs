@@ -6,8 +6,8 @@ import Helpers ((==>), Pos)
 import Parsing.Types.LowLevel 
 
 -- All (Types and Show instances):
--- ParenExpr, MathApp, BaseValue,
--- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
+-- ParenExpr, MathApp, BaseVal,
+-- AppDir, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
 -- EqualityExpr, InputOpExpr, OpExpr
 
 -- ParenExpr
@@ -30,37 +30,35 @@ instance Show MathApp where
       Just paren_expr -> show paren_expr
       Nothing -> ""
 
--- BaseValue
+-- BaseVal
 
-data BaseValue =
+data BaseVal =
   Literal (Pos Literal) | ParenExpr (Pos ParenExpr) | MathApp MathApp
 
-instance Show BaseValue where
+instance Show BaseVal where
   show = \case
     ParenExpr paren_expr -> show paren_expr
     Literal lit -> show lit
     MathApp math_app -> show math_app
 
--- ApplicationDirection
+-- AppDir
 
-data ApplicationDirection =
-  LeftApplication | RightApplication
+data AppDir =
+  LeftApp | RightApp
 
-instance Show ApplicationDirection where
+instance Show AppDir where
   show = \case
-    LeftApplication -> "<=="
-    RightApplication -> "==>"
+    LeftApp -> "<=="
+    RightApp -> "==>"
 
 -- FuncAppChain
 
 data FuncAppChain =
-  ValuesAndDirections BaseValue [ (ApplicationDirection, BaseValue) ]
+  ValuesAndDirections BaseVal [ (AppDir, BaseVal) ]
 
 instance Show FuncAppChain where
-  show = \(ValuesAndDirections base_val app_dir_base_val_s) ->
-    show base_val ++
-    concatMap
-      ( \(app_dir, base_val) -> show app_dir ++ show base_val ) app_dir_base_val_s
+  show = \(ValuesAndDirections bv ad_bvs) ->
+    show bv ++ concatMap ( \(ad, bv) -> show ad ++ show bv ) ad_bvs
 
 -- MultExpr
 

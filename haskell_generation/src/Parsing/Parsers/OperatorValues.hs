@@ -10,8 +10,8 @@ import Parsing.Types.OperatorValues
 import Parsing.Parsers.LowLevel 
 
 -- All:
--- ParenExpr, MathApp, BaseValue,
--- ApplicationDirection, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
+-- ParenExpr, MathApp, BaseVal,
+-- AppDir, FuncAppChain, MultExpr, PlusOrMinus, AddSubExpr,
 -- EqualityExpr, InputOpExpr, OpExpr
 
 -- ParenExpr: paren_expr_p
@@ -30,20 +30,20 @@ math_app_p = (
   return $ NameAndParenExpr2 value_name paren_expr
   ) :: Parser MathApp
 
--- BaseValue: base_value_p
+-- BaseVal: base_value_p
 
 base_value_p =
   ParenExpr <$> add_pos_p paren_expr_p <|>
   Literal <$> add_pos_p literal_p <|>
   MathApp <$> math_app_p
-  :: Parser BaseValue
+  :: Parser BaseVal
 
--- ApplicationDirection: application_direction_p
+-- AppDir: application_direction_p
 
 application_direction_p = 
-  try (string "<==") *> return LeftApplication <|>
-  try (string "==>") *> return RightApplication
-  :: Parser ApplicationDirection
+  try (string "<==") *> return LeftApp <|>
+  try (string "==>") *> return RightApp
+  :: Parser AppDir
 
 -- FuncAppChain: func_app_chain_p, base_val_app_dir_p
 
@@ -57,7 +57,7 @@ app_dir_base_val_p =
   application_direction_p >>= \application_direction ->
   base_value_p >>= \base_value ->
   return (application_direction, base_value)
-  :: Parser (ApplicationDirection, BaseValue)
+  :: Parser (AppDir, BaseVal)
 
 -- MultExpr: mult_expr_p
 

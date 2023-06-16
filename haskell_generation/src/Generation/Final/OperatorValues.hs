@@ -20,20 +20,20 @@ import Conversions.Values
 import Generation.State.TypesAndOperations
 
 import Generation.Helpers.ErrorMessages
-import Generation.Helpers.TypeChecking (equiv_types)
+import Generation.Helpers.TypeChecking (check_equiv_types, equiv_types)
 
 import Generation.Final.LowLevel
 
 -- Generate:
--- ParenExpr, BaseValue2, FuncAppChain, ApplicationTree, Application, MultExpr,
+-- ParenExpr, BaseVal2, FuncAppChain, ApplicationTree, Application, MultExpr,
 -- AddSubExpr, AddSubOrMExpr, Addition, Subtraction, EqualityExpr,
 -- InputOpExpr, OpExpr
 
 instance Generate ParenExpr where
   generate = \expr val_t ->
-    ("(" ++) <$> paren_expr_inside_g expr val_t <&> (++ ")")
+    pure "(" +++ paren_expr_inside_g expr val_t +++ pure ")"
 
-instance Generate BaseValue2 where
+instance Generate BaseVal2 where
   generate = \case
     ParenExpr2 paren_expr -> generate paren_expr
     Literal2 literal -> generate literal
@@ -45,18 +45,17 @@ instance Generate FuncAppChain where
 instance Generate ApplicationTree where
   generate = \case 
     BaseVal2Leaf base_val2 -> generate base_val2
-    Application application -> generate application
+    Application app -> generate app
 
 instance Generate Application where
-  generate = \application val_type ->
-    generate_infer application >>= \(application_hs, application_t) ->
-    equiv_types val_type application_t >>= \case 
-      True -> return application_hs
-      False -> throwE $ type_check_err (show application) val_type application_t
+  generate = \app vt ->
+    generate_infer app >>= \(app_hs, app_t) ->
+    check_equiv_types vt app_t (show app) >>
+    return app_hs
 
 instance Generate MultExpr where
-  generate = \(Factors mul_f1 mul_fs) val_type -> 
-    mapM (flip generate val_type) (mul_f1 : mul_fs) >>= intercalate " * " .> return
+  generate = \(Factors mul_f1 mul_fs) vt -> 
+    mapM (flip generate vt) (mul_f1 : mul_fs) >>= intercalate " * " .> return
 
 instance Generate AddSubExpr where
   generate = add_sub_e_to_add_sub_or_me .> generate
@@ -77,14 +76,14 @@ instance Generate EqualityExpr where
   generate = \(EqExpr term1 maybe_term2) -> case maybe_term2 of
     Just term2 -> \case 
       TypeApp (ConsAndTIns (TN "Bool") []) ->
-        (generate term1 int <&> (++ " == ")) +++ generate term2 int
+        generate term1 int +++ pure " == " +++ generate term2 int
       val_t -> throwE $ equality_not_bool_err val_t
     Nothing -> generate term1
 
 instance Generate InputOpExpr where
   generate = \(InputEqExpr input eq_expr) ->
     input_g input >=> \(input_hs, out_t, inserted) ->
-    (input_hs ++) <$> generate eq_expr out_t
+    pure input_hs +++ generate eq_expr out_t
     <* mapM_ value_map_remove inserted
 
 instance Generate OpExpr where 
@@ -93,14 +92,14 @@ instance Generate OpExpr where
     EqualityExpr eq_expr -> generate eq_expr
 
 -- GenerateInfer:
--- ParenExpr, BaseValue2, FuncAppChain, ApplicationTree, Application, MultExpr,
+-- ParenExpr, BaseVal2, FuncAppChain, ApplicationTree, Application, MultExpr,
 -- AddSubExpr, AddSubOrMExpr, Addition, Subtraction, EqualityExpr,
 -- InputOpExpr, OpExpr
 
 instance GenerateInfer ParenExpr where
   generate_infer = undefined
 
-instance GenerateInfer BaseValue2 where
+instance GenerateInfer BaseVal2 where
   generate_infer = \case
     ParenExpr2 paren_expr -> generate_infer paren_expr
     Literal2 literal -> generate_infer literal
@@ -112,15 +111,15 @@ instance GenerateInfer FuncAppChain where
 instance GenerateInfer ApplicationTree where
   generate_infer = \case 
     BaseVal2Leaf base_val2 -> generate_infer base_val2
-    Application application -> generate_infer application
+    Application app -> generate_infer app
 
 instance GenerateInfer Application where
-  generate_infer = \application@(AppTrees tree1 tree2) ->
+  generate_infer = \app@(AppTrees tree1 tree2) ->
     generate_infer tree1 >>= \(tree1_hs, tree1_t) -> case tree1_t of 
       FuncType func_type ->
         catchE
           (normal_app_type_inf_g tree1_hs func_type tree2)
-          (application_handler application func_type)
+          (application_handler app func_type)
       _ -> throwE $ cant_apply_non_func_err2 tree1 tree2 tree1_t
 
 instance GenerateInfer MultExpr where
@@ -279,10 +278,8 @@ get_all_but_1st_tree =
 
 -- AddSubExpr
 
-add_sub_g = ( \expr op_hs mult_expr val_type ->
-  generate expr val_type >>= \expr_hs ->
-  generate mult_expr val_type >>= \term_hs ->
-  return $ expr_hs ++ op_hs ++ term_hs
+add_sub_g = ( \expr op_hs mult_expr vt ->
+  generate expr vt +++ pure op_hs +++ generate mult_expr vt
   ) :: AddSubOrMExpr -> String -> Pos MultExpr -> ValType -> Stateful Haskell
 
 -- 
