@@ -1,11 +1,11 @@
-module Conversions.Values where
+module Intermediate.Conversions.Values where
 
 import Helpers
 
 import Parsing.Types.LowLevel
 import Parsing.Types.OperatorValues
 
-import IntermediateTypes.Values
+import Intermediate.Types.Values
 
 -- All:
 -- FuncAppChain to ApplicationTree, MathApplication to ApplicationTree

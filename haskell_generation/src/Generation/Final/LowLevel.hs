@@ -10,11 +10,11 @@ import Helpers
 import Parsing.Types.LowLevel
 import Parsing.Types.Types (TypeName(..))
 
-import IntermediateTypes.Values (Input2(..))
-import IntermediateTypes.Types
-import IntermediateTypes.TypeDefinitions (TTField(..), TypeInfo(..))
+import Intermediate.Types.Values (Input2(..))
+import Intermediate.Types.Types
+import Intermediate.Types.TypeDefinitions (TTField(..), TypeInfo(..))
 
-import Conversions.Values (input_to_input2)
+import Intermediate.Conversions.Values (input_to_input2)
 
 import Generation.State.TypesAndOperations
 

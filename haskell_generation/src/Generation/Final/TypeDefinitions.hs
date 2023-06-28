@@ -8,10 +8,10 @@ import Parsing.Types.LowLevel (ValueName(..))
 import Parsing.Types.Types (TypeName(..))
 import Parsing.Types.TypeDefinitions 
 
-import IntermediateTypes.Types 
-import IntermediateTypes.TypeDefinitions
+import Intermediate.Types.Types 
+import Intermediate.Types.TypeDefinitions
 
-import Conversions.TypeDefinitions
+import Intermediate.Conversions.TypeDefinitions
 
 import Generation.State.TypesAndOperations
 

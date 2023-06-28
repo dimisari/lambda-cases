@@ -26,14 +26,15 @@ executable haskell_generation
                         Parsing.Parsers.LowLevel, Parsing.Parsers.Types,
                         Parsing.Parsers.TypeDefinitions,
                         Parsing.Parsers.OperatorValues, Parsing.Parsers.Values,
+                        Parsing.Parsers.Helpers,
 
-                        IntermediateTypes.Types, IntermediateTypes.TypeDefinitions,
-                        IntermediateTypes.Values,
+                        Intermediate.Types.Types, Intermediate.Types.TypeDefinitions,
+                        Intermediate.Types.Values,
 
-                        Conversions.Types,
-                        Conversions.Scheme,
-                        Conversions.TypeDefinitions,
-                        Conversions.Values,
+                        Intermediate.Conversions.Types,
+                        Intermediate.Conversions.Scheme,
+                        Intermediate.Conversions.TypeDefinitions,
+                        Intermediate.Conversions.Values,
 
                         Generation.State.InitialState,
                         Generation.State.TypesAndOperations,

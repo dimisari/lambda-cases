@@ -1,14 +1,13 @@
 module Main where
 
 import System.Process (callCommand)
-import Text.Parsec (ParseError, (<|>), eof, many, parse, char, try)
+import Text.Parsec ((<|>), eof, many, parse, char)
 import Text.Parsec.String (Parser)
-import Control.Monad ((>=>))
 import Control.Monad.State (evalState)
-import Control.Monad.Trans.Except (runExceptT, catchE, throwE)
+import Control.Monad.Trans.Except (runExceptT)
 
 import Generation.State.InitialState (init_state)
-import Helpers (Haskell, (.>), (==>), eof_or_spicy_nls)
+import Helpers (Haskell, (.>), (==>))
 
 import Generation.State.TypesAndOperations (Stateful, value_map_insert)
 
@@ -17,6 +16,7 @@ import Parsing.Types.LowLevel (ValueName)
 import Parsing.Types.Types (ValueType)
 import Parsing.Types.Values (Values, ValueExpression)
 
+import Parsing.Parsers.Helpers (eof_or_spicy_nls)
 import Parsing.Parsers.TypeDefinitions (type_definition_p)
 import Parsing.Parsers.Values (values_p)
 
@@ -53,35 +53,35 @@ values_or_type_def_p =
 
 type Paths = (Path, Path)
 
-read_and_gen_example = ( \paths@(input_path, output_path) ->
-  readFile input_path >>= parse_err_or_sem_analysis paths
+read_and_gen_example = ( \paths@(in_path, _) ->
+  readFile in_path >>= parse_err_or_sem_analysis paths
   ) :: Paths -> IO ()
 
-parse_err_or_sem_analysis = ( \(input_path, output_path) lcs_prog ->
-  parse program_p input_path lcs_prog ==> \case
+parse_err_or_sem_analysis = ( \(in_path, out_path) lcs_prog ->
+  parse program_p in_path lcs_prog ==> \case
     Left parse_error -> print parse_error
-    Right program -> sem_err_or_hs_to_file program output_path
+    Right prog -> sem_err_or_hs_to_file prog out_path
   ) :: Paths -> String -> IO ()
 
-sem_err_or_hs_to_file = ( \program output_path ->
-  run_sem_analysis program ==> \case
+sem_err_or_hs_to_file = ( \prog out_path ->
+  run_sem_analysis prog ==> \case
     Left (_, _, sem_err_msg) -> putStrLn sem_err_msg
     Right generated_haskell -> 
       readFile haskell_header >>= \header ->
-      writeFile output_path $ header ++ generated_haskell
+      writeFile out_path $ header ++ generated_haskell
   ) :: Program -> Path -> IO ()
 
 run_sem_analysis = 
   program_g .> runExceptT .> flip evalState init_state
   :: Program -> Either Error Haskell
 
-program_g = ( \(ValsOrTypeDefsList vals_or_type_defs_list) ->
-  mapM_ insert_value_to_map (vals_or_type_defs_to_list vals_or_type_defs_list) >>
-  mapM values_or_type_definition_g vals_or_type_defs_list ==> fmap concat
+program_g = ( \(ValsOrTypeDefsList vals_or_tdefs_l) ->
+  mapM_ insert_value_to_map (vals_or_tdefs_to_l vals_or_tdefs_l) >>
+  mapM values_or_type_definition_g vals_or_tdefs_l ==> fmap concat
   ) :: Program -> Stateful Haskell
 
-vals_or_type_defs_to_list = ( \vals_or_type_defs_list ->
-  concatMap vals_or_type_def_to_list vals_or_type_defs_list
+vals_or_tdefs_to_l = ( \vals_or_tdefs_l ->
+  concatMap vals_or_type_def_to_list vals_or_tdefs_l
   ) :: [ ValuesOrTypeDef ] -> [ (ValueName, ValueType, ValueExpression) ]
 
 vals_or_type_def_to_list = ( \case 

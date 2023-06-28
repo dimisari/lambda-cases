@@ -11,11 +11,11 @@ import Parsing.Types.LowLevel
 import Parsing.Types.Types (TypeName(..))
 import Parsing.Types.OperatorValues
 
-import IntermediateTypes.Types 
-import IntermediateTypes.TypeDefinitions (TTField(..), TypeInfo(..))
-import IntermediateTypes.Values
+import Intermediate.Types.Types 
+import Intermediate.Types.TypeDefinitions (TTField(..), TypeInfo(..))
+import Intermediate.Types.Values
 
-import Conversions.Values
+import Intermediate.Conversions.Values
 
 import Generation.State.TypesAndOperations
 

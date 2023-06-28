@@ -3,7 +3,7 @@ module Parsing.Parsers.LowLevel where
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-import Helpers
+import Parsing.Parsers.Helpers
 
 import Parsing.Types.LowLevel
 

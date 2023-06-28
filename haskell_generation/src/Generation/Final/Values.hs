@@ -12,12 +12,12 @@ import Parsing.Types.LowLevel
 import Parsing.Types.Types (TypeName(..), ValueType(..))
 import Parsing.Types.Values
 
-import IntermediateTypes.Values
-import IntermediateTypes.Types 
-import IntermediateTypes.TypeDefinitions 
+import Intermediate.Types.Values
+import Intermediate.Types.Types 
+import Intermediate.Types.TypeDefinitions 
 
-import Conversions.Types
-import Conversions.TypeDefinitions
+import Intermediate.Conversions.Types
+import Intermediate.Conversions.TypeDefinitions
 
 import Generation.State.TypesAndOperations
 

@@ -9,8 +9,8 @@ import Helpers ((.>), (==>), Haskell)
 import Parsing.Types.LowLevel (ValueName(..))
 import Parsing.Types.Types
 
-import IntermediateTypes.Types (ValType(..))
-import IntermediateTypes.TypeDefinitions (TypeInfo(..))
+import Intermediate.Types.Types (ValType(..))
+import Intermediate.Types.TypeDefinitions (TypeInfo(..))
 
 import Generation.Helpers.ErrorMessages
 

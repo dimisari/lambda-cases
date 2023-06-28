@@ -3,10 +3,11 @@ module Parsing.Parsers.TypeDefinitions where
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-import Helpers ((==>), eof_or_spicy_nls)
+import Helpers ((==>))
 
 import Parsing.Types.TypeDefinitions
 
+import Parsing.Parsers.Helpers (eof_or_spicy_nls)
 import Parsing.Parsers.LowLevel (value_name_p)
 import Parsing.Parsers.Types (type_name_p, value_type_p)
 

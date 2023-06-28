@@ -1,4 +1,4 @@
-module IntermediateTypes.Values where
+module Intermediate.Types.Values where
 
 import Helpers
 import Parsing.Types.LowLevel

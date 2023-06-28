@@ -1,4 +1,4 @@
-module IntermediateTypes.Types where
+module Intermediate.Types.Types where
 
 import Data.List (intercalate)
 import qualified Data.Set as S

@@ -10,8 +10,8 @@ import Helpers ((.>), Haskell, Pos(..))
 import Parsing.Types.LowLevel (ValueName(..))
 import Parsing.Types.Types (TypeName)
 
-import IntermediateTypes.Types 
-import IntermediateTypes.TypeDefinitions (TypeInfo(..), TTField(..))
+import Intermediate.Types.Types 
+import Intermediate.Types.TypeDefinitions (TypeInfo(..), TTField(..))
 
 import Generation.Helpers.TypeChecking
 import Generation.Helpers.ErrorMessages

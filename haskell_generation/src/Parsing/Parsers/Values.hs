@@ -3,11 +3,10 @@ module Parsing.Parsers.Values where
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
-import Helpers 
-
 import Parsing.Types.Types (ValueType)
 import Parsing.Types.Values
 
+import Parsing.Parsers.Helpers 
 import Parsing.Parsers.LowLevel (literal_p, value_name_p, input_p)
 import Parsing.Parsers.Types (value_type_p)
 import Parsing.Parsers.OperatorValues (operator_expression_p)

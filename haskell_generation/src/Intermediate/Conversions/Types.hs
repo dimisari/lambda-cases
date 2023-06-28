@@ -1,9 +1,9 @@
-module Conversions.Types where
+module Intermediate.Conversions.Types where
 
 import Helpers ((.>))
 
 import Parsing.Types.Types
-import IntermediateTypes.Types
+import Intermediate.Types.Types
 
 class ToValType a where
   to_val_type :: a -> ValType

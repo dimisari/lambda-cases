@@ -7,8 +7,8 @@ import Parsing.Types.LowLevel (ValueName, Literal, Abstraction)
 import Parsing.Types.OperatorValues (OpExpr)
 import Parsing.Types.Types (TypeName)
 
-import IntermediateTypes.Values
-import IntermediateTypes.Types (ValType)
+import Intermediate.Types.Values
+import Intermediate.Types.Types (ValType)
 
 -- All
 

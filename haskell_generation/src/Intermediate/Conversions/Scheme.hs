@@ -1,4 +1,4 @@
-module Conversions.Scheme where
+module Intermediate.Conversions.Scheme where
 
 import Text.Parsec (parse, ParseError)
 import Parsing.Parsers.Types
@@ -9,7 +9,7 @@ import Data.Map as M
 import Helpers ((==>), (.>))
 
 import Parsing.Types.Types
-import IntermediateTypes.Types
+import Intermediate.Types.Types
 
 type VarMap = M.Map TypeName Int
    

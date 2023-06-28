@@ -5,8 +5,8 @@ import qualified Data.Map as M (empty, fromList)
 import Parsing.Types.LowLevel (ValueName(..))
 import Parsing.Types.Types (TypeName(..))
 
-import IntermediateTypes.Types
-import IntermediateTypes.TypeDefinitions (TypeInfo(..))
+import Intermediate.Types.Types
+import Intermediate.Types.TypeDefinitions (TypeInfo(..))
 
 import Generation.State.TypesAndOperations (ValueMap, TypeMap, GenerationState(..))
 

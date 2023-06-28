@@ -1,6 +1,5 @@
 module Parsing.Types.LowLevel where
 
-import Text.Parsec.Pos (SourcePos, newPos)
 import Data.List (intercalate)
 import Helpers
 

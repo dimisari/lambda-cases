@@ -1,11 +1,11 @@
-module IntermediateTypes.TypeDefinitions where
+module Intermediate.Types.TypeDefinitions where
 
 import Helpers ((.>))
 
 import Parsing.Types.LowLevel (ValueName)
 import Parsing.Types.Types (TypeName(..))
 
-import IntermediateTypes.Types (ValType(..))
+import Intermediate.Types.Types (ValType(..))
 
 -- All: TNameExpr, TTField, TupleTDef, OrTCase, OrTDef, TypeInfo
 

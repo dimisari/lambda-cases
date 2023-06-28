@@ -3,19 +3,19 @@ module Generation.Helpers.TypeChecking where
 import Control.Monad (zipWithM)
 import Control.Monad.Trans.Except (throwE)
 
-import Helpers (Haskell, (==>))
+import Helpers ((==>))
 
-import Parsing.Types.LowLevel (ValueName(..))
 import Parsing.Types.Types (TypeName(..))
 
-import IntermediateTypes.Types
-import IntermediateTypes.TypeDefinitions (TypeInfo(..), get_type)
+import Intermediate.Types.Types 
 
 import Generation.State.TypesAndOperations (Stateful, type_map_get)
 
 import Generation.Helpers.ErrorMessages (type_check_err)
 
--- All: equiv_types, equiv_func_types, equiv_prod_types,
+-- All:
+-- check_equiv_types, equiv_types, equiv_func_types, equiv_prod_types, 
+-- equiv_type_apps
 
 check_equiv_types = ( \t1 t2 str ->
   equiv_types t1 t2 >>= \case

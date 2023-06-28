@@ -1,9 +1,9 @@
-module Conversions.TypeDefinitions where
+module Intermediate.Conversions.TypeDefinitions where
 
 import Parsing.Types.Types (TypeName)
 import Parsing.Types.TypeDefinitions
-import IntermediateTypes.TypeDefinitions
-import Conversions.Types (to_val_type)
+import Intermediate.Types.TypeDefinitions
+import Intermediate.Conversions.Types (to_val_type)
 
 -- All: ValType, Type Definitions
 
