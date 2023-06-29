@@ -27,8 +27,7 @@ func_app_chain_to_app_tree_help = ( \bv1 -> \case
 combine = ( \at1 ad at2 -> case ad of 
   LeftApp -> Application $ AppTrees at1 at2
   RightApp -> Application $ AppTrees at2 at1
-  ) :: ApplicationTree -> AppDir -> ApplicationTree ->
-       ApplicationTree
+  ) :: ApplicationTree -> AppDir -> ApplicationTree -> ApplicationTree
 
 -- BaseVal to ApplicationTree:
 
@@ -71,6 +70,5 @@ add_sub_help_fun = ( \mult_expr1 -> \case
 
 input_to_input2 = ( \case
   OneAbstraction abstraction -> Input2 [ abstraction ]
-  ManyAbstractions (Abstractions abs1 abs2 abs) ->
-    Input2 $ abs1 : abs2 : abs
+  ManyAbstractions (Abstractions abs1 abs2 abs) -> Input2 $ abs1 : abs2 : abs
   ) :: Input -> Input2

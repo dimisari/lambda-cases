@@ -49,7 +49,8 @@ executable haskell_generation
                         Generation.Final.Values,
 
                         Experimental.Types2,
-                        Experimental.Indent
+                        Experimental.Indent,
+                        Experimental.FreeVars
 
     build-depends:      base, parsec, mtl, containers, transformers, process, 
                         indents

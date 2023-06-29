@@ -1,6 +1,9 @@
 module Script where
 
-import System.Process (callCommand)
+import GHC.Base (liftA2)
+import System.Process (callCommand, readCreateProcess, shell)
+
+import Helpers ((.>))
 
 -- All: Path, Constants, Types, Parsing, Generating Haskell, main
 
@@ -15,86 +18,58 @@ type Path = String
 
 -- in_out_path_pairs, haskell_header
 
-correct_names =
-  map ("correct/" ++)
-    [
-    "my_gcd"
-    , "ext_euc_no_tuple_type"
-    , "ext_euc_tuple_type"
-    , "pair"
-    , "bool"
-    , "possibly_int"
-    , "int_list"
-    , "int_list2"
-    , "int_list3"
-    , "hanoi"
-    ]
-  :: [ String ]
+only_name = ( \s -> take (length s - 3) s )
+  :: String -> String
 
-wrong_names =
-  map ("wrong/" ++)
-  [
-  "bool"
-  , "not_covered"
-  , "duplicate"
-  , "out_of_scope"
-  , "out_of_scope2"
-  , "out_of_scope3"
-  , "out_of_scope4"
-  , "or_t_use_fields"
-  , "func_t_use_fields"
-  , "not_func"
-  , "not_func2"
-  , "not_func3"
-  , "type_check_err"
-  , "equ_err"
-  , "add_err"
-  , "dup_int_case"
-  , "out_of_scope5"
-  , "wrong_int_case"
-  , "int_str"
-  ]
-  :: [ String ]
+io_correct_names = 
+  fmap (lines .> map (only_name .> ("correct/" ++)) ) $
+  readCreateProcess (shell "cd lcases/correct; ls") ""
+  :: IO [ String ]
 
-all_names =
-  correct_names ++ wrong_names
-  :: [ String ]
+io_wrong_names = 
+  fmap (lines .> map (only_name .> ("wrong/" ++)) ) $
+  readCreateProcess (shell "cd lcases/wrong; ls") ""
+  :: IO [ String ]
+
+io_all_names =
+  (++) <$> io_correct_names <*> io_wrong_names
+  :: IO [ String ]
 
 -- lcases: paths
 
-paths =
-  map ( \s -> "lcases/" ++ s ++ ".lc" ) all_names
-  :: [ String ]
+io_paths =
+  fmap (map ( \s -> "lcases/" ++ s ++ ".lc" )) io_all_names
+  :: IO [ String ]
 
 -- haskell: hs_dir, hs_paths, path_pairs, correct_hs_paths
 
 hs_dir = "runtime/haskell/"
   :: String
 
-hs_paths =
-  map ( \s -> hs_dir ++ s ++ ".hs" ) all_names
-  :: [ String ]
+io_hs_paths =
+  fmap (map ( \s -> hs_dir ++ s ++ ".hs" )) io_all_names
+  :: IO [ String ]
 
-path_pairs = 
-  zip paths hs_paths
-  :: [ (Path, Path) ]
+io_path_pairs = 
+  liftA2 zip io_paths io_hs_paths
+  :: IO [ (Path, Path) ]
 
-correct_hs_paths =
-  map ( \s -> hs_dir ++ s ++ ".hs" ) correct_names
-  :: [ String ]
+io_correct_hs_paths =
+  fmap (map ( \s -> hs_dir ++ s ++ ".hs" )) io_correct_names
+  :: IO [ String ]
 
 -- executables
 
 execs_dir = "runtime/executables/"
   :: String
 
-exec_paths = 
-  map ( \s -> execs_dir ++ s ) correct_names
-  :: [ String ]
+io_exec_paths = 
+  fmap (map ( \s -> execs_dir ++ s )) io_correct_names
+  :: IO [ String ]
 
-exec_path_pairs = 
-  zip correct_hs_paths exec_paths
-  :: [ (Path, Path) ]
+io_exec_path_pairs = 
+  liftA2 zip io_correct_hs_paths io_exec_paths
+  :: IO [ (Path, Path) ]
 
 exec_path_pair_to_cmd = ( \(hs_path, exec_path) -> 
   callCommand $ "ghc -o " ++ exec_path ++ " " ++ hs_path

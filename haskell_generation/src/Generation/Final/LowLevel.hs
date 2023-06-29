@@ -39,9 +39,19 @@ instance Generate ValueName where
     check_equiv_types vt map_vt (show vn) >> if_or_t_case_add_c vn
 
 instance Generate Literal where
-  generate = \lit vt -> (vt == int) ==> \case
-    True -> return $ show lit
-    False -> throwE $ lit_not_int_err vt
+  generate = \lit vt -> case lit of
+    Int i ->
+      (vt == int) ==> \case
+        True -> return $ show lit
+        False -> throwE $ int_lit_not_int_err vt
+    Char c ->
+      (vt == char) ==> \case
+        True -> return $ show lit
+        False -> throwE $ char_lit_not_char_err vt
+    String s ->
+      (vt == string) ==> \case
+        True -> return $ show lit
+        False -> throwE $ string_lit_not_string_err vt
 
 -- GenerateInfer: Pos a, ValueName, Literal
 

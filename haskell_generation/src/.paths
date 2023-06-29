@@ -11,14 +11,14 @@ Parsing/Parsers/Values.hs
 Parsing/Parsers/Types.hs
 Parsing/Parsers/TypeDefinitions.hs
 
-Intermediate.Types/Values.hs
-Intermediate.Types/Types.hs
-Intermediate.Types/TypeDefinitions.hs
+Intermediate/Types/Values.hs
+Intermediate/Types/Types.hs
+Intermediate/Types/TypeDefinitions.hs
 
-Intermediate.Conversions/Values.hs
-Intermediate.Conversions/Types.hs
-Intermediate.Conversions/Scheme.hs
-Intermediate.Conversions/TypeDefinitions.hs
+Intermediate/Conversions/Values.hs
+Intermediate/Conversions/Types.hs
+Intermediate/Conversions/Scheme.hs
+Intermediate/Conversions/TypeDefinitions.hs
 
 Generation/State/TypesAndOperations.hs
 Generation/State/InitialState.hs
@@ -35,6 +35,7 @@ Generation/Final/TypeDefinitions.hs
 
 Experimental/Types2.hs
 Experimental/Indent.hs
+Experimental/FreeVars.hs
 
 Helpers.hs
 Main.hs

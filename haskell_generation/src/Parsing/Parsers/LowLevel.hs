@@ -2,6 +2,8 @@ module Parsing.Parsers.LowLevel where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
+import Text.Parsec.Token 
+import Text.Parsec.Language (haskellDef)
 
 import Parsing.Parsers.Helpers
 
@@ -31,10 +33,11 @@ int_p =
   :: Parser Int
 
 char_p = 
-  char '\'' *> noneOf ['\''] <* char '\''
+  charLiteral haskell_lexer
   :: Parser Char
 
-string_p = char '"' *> many (noneOf ['"']) <* char '"'
+string_p = 
+  stringLiteral haskell_lexer
   :: Parser String
 
 -- Abstraction: abstraction_p
@@ -61,3 +64,6 @@ input_p =
   ) <* (string " ->" >> space_or_spicy_nl)
   :: Parser Input
 
+-- from haskell
+
+haskell_lexer = makeTokenParser haskellDef

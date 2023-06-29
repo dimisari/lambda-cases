@@ -22,6 +22,10 @@
 }
 \maketitle
 
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+\tableofcontents
+
 \section{Introduction}
 
 \H\ is a delightful language. Yet, for some reason, it doesn't seem to have it's 
@@ -46,9 +50,33 @@ the new language (Lambda Cases) is compiled to \H.
 As with Haskell a program is a set of values, wih the "main" value determining 
 the program's behaviour.
 
-\subsubsection{Value Expressions}
+\subsubsection{Literals}
 
-\paragraph{Operator Expressions}\mbox{} \\\\
+Ints:
+\begin{verbatim}
+1, 2, 17, 42, 100 
+\end{verbatim}
+
+Reals:
+\begin{verbatim}
+1.61, 2.71, 3.14, 1234.567 
+\end{verbatim}
+
+Chars:
+\begin{verbatim}
+'a', 'b', 'c', 'x', 'y', 'z', '.', ',', '\n'
+\end{verbatim}
+
+Lists:
+\begin{verbatim}
+1.61, 2.71, 3.14, 1234.567 
+\end{verbatim}
+
+
+\subsubsection{Identifiers}
+
+\subsubsection{Operators}
+
 Function Application operators: 
 \begin{verbatim}
 ==> : (A, A -> B) -> B
@@ -82,16 +110,16 @@ o>: (A -> B, B -> C) -> (A -> C)
 <o: (B -> C, A -> B) -> (A -> C)
 \end{verbatim}
 
+\subsubsection{Functions}
+
 \paragraph{Abstractions}
 
 \begin{verbatim}
-a -> body
+x -> body
 (x, y, z) -> body
-use_fields -> body
 cases -> body
+(x, cases, z) -> body
 \end{verbatim}
-
-\paragraph{Specific Abstractions}
 
 \subsubsection{Value Definitions}
 
@@ -158,7 +186,7 @@ or_type Bool
 values true | false
 
 or_type Possibly<==A
-values wrapper<==(value: A) | nothing
+values indeed<==(value: A) | nothing
 
 or_type ListOf(A)s
 values non_empty<==(value: NonEmptyListOf(A)s) | empty
@@ -174,7 +202,7 @@ is_empty: ListOf(A)s -> Bool
 get_head: ListOf(A)s -> Possibly<==A
   = cases -> 
     empty -> nothing
-    non_empty -> head==>wrapper
+    non_empty -> head==>indeed
 \end{verbatim}
 
 \paragraph{Description}\mbox{} \\\\

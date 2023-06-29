@@ -97,8 +97,8 @@ values_or_type_definition_g = ( \case
 -- main
 
 main =
-  mapM_ read_and_gen_example path_pairs >>
-  mapM_ exec_path_pair_to_cmd exec_path_pairs >>
+  io_path_pairs >>= mapM_ read_and_gen_example >>
+  io_exec_path_pairs >>= mapM_ exec_path_pair_to_cmd >>
   callCommand
     ("rm " ++ hs_dir ++ "correct/*.hi " ++ hs_dir ++ "correct/*.o") >>
   callCommand 

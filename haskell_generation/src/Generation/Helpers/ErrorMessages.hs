@@ -93,9 +93,19 @@ duplicate_int_case_err = ( \i ->
 
 --
 
-lit_not_int_err = ( \val_type ->
+int_lit_not_int_err = ( \val_type ->
   not_caught $ add_dummy_err_type $ 
   "Integer literal cannot have type: " ++ show val_type ++ "\n"
+  ) :: ValType -> Error
+
+char_lit_not_char_err = ( \val_type ->
+  not_caught $ add_dummy_err_type $ 
+  "Character literal cannot have type: " ++ show val_type ++ "\n"
+  ) :: ValType -> Error
+
+string_lit_not_string_err = ( \val_type ->
+  not_caught $ add_dummy_err_type $ 
+  "String literal cannot have type: " ++ show val_type ++ "\n"
   ) :: ValType -> Error
 
 type_check_err = ( \str val_type map_val_type -> 
