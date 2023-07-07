@@ -2,8 +2,10 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{fancyvrb}
 \usepackage{graphicx}
 \usepackage{syntax}
+\usepackage{array}
 \usepackage[left=2cm,right=2cm,top=2cm]{geometry}
 
 \date{}
@@ -13,7 +15,11 @@
 
 \def\imgs{../Images}
 \def\H{Haskell}
+\def\ra{\texttt{->}\ }
+\def\Ra{\texttt{=>}\ }
 %\newcommand\_[_]{_}
+
+\renewcommand{\arraystretch}{1.5}
 
 \begin{document}
 
@@ -29,7 +35,8 @@
 \section{Introduction}
 
 \H\ is a delightful language. Yet, for some reason, it doesn't seem to have it's 
-rightful place in terms of popularity. Why is it so? Is it inherently hard to learn
+rightful place in terms of popularity in industry. Why is it so?
+Is it inherently hard to learn
 and therefore only the brave enough students and corporations dare to use it, or
 could it be that the syntax is perplexing to the amateur eye? It is my belief that 
 with some syntax changes that give a greater familiarity to the new user, there
@@ -52,63 +59,64 @@ the program's behaviour.
 
 \subsubsection{Literals}
 
-Ints:
-\begin{verbatim}
-1, 2, 17, 42, 100 
-\end{verbatim}
-
-Reals:
-\begin{verbatim}
-1.61, 2.71, 3.14, 1234.567 
-\end{verbatim}
-
-Chars:
-\begin{verbatim}
-'a', 'b', 'c', 'x', 'y', 'z', '.', ',', '\n'
-\end{verbatim}
-
-Lists:
-\begin{verbatim}
-1.61, 2.71, 3.14, 1234.567 
-\end{verbatim}
-
+Literals are the same as haskell \\ \\
+\begin{tabular}{ |c|c| } 
+\hline
+Examples & Type \\ 
+\hline
+\hline
+1, 2, 17, 42, -100 & Int \\ 
+\hline
+1.61, 2.71, 3.14, -1234.567 & Real \\ 
+\hline
+'a', 'b', 'c', 'x', 'y', 'z', '.', ',', '\textbackslash n' & Char \\
+\hline
+[1, 2, 3], ['a', 'b', 'c'], [1.61, 2.71, 3.14 ] & List \\
+\hline
+\end{tabular}
 
 \subsubsection{Identifiers}
 
+lower case or underscore
+
 \subsubsection{Operators}
 
-Function Application operators: 
-\begin{verbatim}
-==> : (A, A -> B) -> B
-<== : (A -> B, A) -> B
-\end{verbatim}
-Addition/Subtraction:
-\begin{verbatim}
-+ : (A)HasAddition => (A, A) -> A
-- : (A)HasSubtraction => (A, A) -> A
-\end{verbatim}
-Generalized addition/subtraction:
-\begin{verbatim}
-++ : (A)And(B)AddTo(C) => (A, B) -> C
--- : (A)And(B)SubtractTo(C) => (A, B) -> C
-\end{verbatim}
-Equality and ordering:
-\begin{verbatim}
-= : (A)HasEquality => (A, A) -> Bool
-<= : (A)HasOrder => (A, A) -> Bool
->= : (A)HasOrder => (A, A) -> Bool
-\end{verbatim}
-Generalized equality/ordering:
-\begin{verbatim}
-== : (A)And(B)AreComparable => (A, B) -> Bool
-=<= : (A)And(B)AreComparable => (A, B) -> Bool
-=>= : (A)And(B)AreComparable => (A, B) -> Bool
-\end{verbatim}
-Function composition:
-\begin{verbatim}
-o>: (A -> B, B -> C) -> (A -> C)
-<o: (B -> C, A -> B) -> (A -> C)
-\end{verbatim}
+\begin{tabular}{ |c|c|c| } 
+\hline
+Operator & Type & Description \\ 
+\hline
+\hline
+\texttt{==>} & (A, A \ra B) \ra B & Right function application \\
+\hline
+\texttt{<==} & (A \ra B, A) \ra B & Left function application \\
+\hline
+\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) & Right function composition \\
+\hline
+\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition  \\
+\hline
+\texttt{\^} & (A)ToThe(B)Gives(C) \Ra (A, B) \ra C & General exponentiation \\
+\hline
+\texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C & General multiplication \\
+\hline
+\texttt{/} & (A)Divides(B)To(C) \Ra (A, B) \ra C & General division \\
+\hline
++ & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition \\ 
+\hline
+- & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction \\
+\hline
+= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
+\hline
+\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
+\hline
+\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
+\hline
+\texttt{>>=} & (M)IsAMonad \Ra (M(A), A \ra M(B)) \ra M(B) & Monad application 
+(right bind) \\
+\hline
+\texttt{=<<} & (M)IsAMonad \Ra (A \ra M(B), M(A)) \ra M(B) & Monad application 
+(left bind) \\
+\hline
+\end{tabular}
 
 \subsubsection{Functions}
 
@@ -148,7 +156,7 @@ to group value definitions by seperating the names, the types and the expression
 with commas. It is also possible to use the keyword "all" to give the same type
 to all the values.
 
-\paragraph{Examples in \H}
+\subparagraph{Examples in \H}
 
 \begin{verbatim}
 foo :: Int
@@ -177,9 +185,15 @@ f = \a b c -> a + b * c
 
 \subsection{Types}
 
-\subsubsection{Or Types}
+\subsubsection{Type annotations}
 
-\paragraph{Examples}
+\paragraph{Differences with Haskell}
+
+\subsubsection{Type definitions}
+
+\paragraph{Or Types}
+
+\subparagraph{Examples}
 
 \begin{verbatim}
 or_type Bool
@@ -205,12 +219,12 @@ get_head: ListOf(A)s -> Possibly<==A
     non_empty -> head==>indeed
 \end{verbatim}
 
-\paragraph{Description}\mbox{} \\\\
+\subparagraph{Description}\mbox{} \\\\
 Values of an Or Type are one of many cases that possibly have values of other types
 inside. Or Types together with Int and Char are the only types on which the "cases"
 syntax can be used.
 
-\paragraph{Examples in \H}
+\subparagraph{Examples in \H}
 
 \begin{verbatim}
 {-# language LambdaCase #-}
@@ -245,9 +259,9 @@ Or Types the following have automatically generated functions:
 is_case:
 \end{verbatim}
 
-\subsubsection{Tuple Types}
+\paragraph{Tuple Types}
 
-\paragraph{Examples}
+\subparagraph{Examples}
 
 \begin{verbatim}
 tuple_type ClientInfo
@@ -260,10 +274,10 @@ tuple_type (FirstT, SecondT)==>Pair
 value (first: FirstT, second: SecondT)
 \end{verbatim}
 
-\paragraph{Description}\mbox{} \\\\
+\subparagraph{Description}\mbox{} \\\\
 Tuple types group many values into a single value.
 
-\paragraph{Examples in \H}
+\subparagraph{Examples in \H}
 
 \begin{verbatim}
 data ClientInfo =
@@ -276,7 +290,7 @@ data Pair a b =
   PairC a b
 \end{verbatim}
 
-\paragraph{Autogenerated Functions}\mbox{} \\\\
+\subparagraph{Autogenerated Functions}\mbox{} \\\\
 
 \subsection{Type Logic}
 
@@ -382,10 +396,32 @@ cases use_fields tuple_type or_type
 
 The parser was implemented using the parsec library.
 
+\subsection{AST Types}
+
+\subsection{Parsers}
+
 \section{Translation to \H}
 \section{Running examples}
 \section{Conclusion}
 
+\section{To be removed or incorporated}
+
+Addition/Subtraction:
+\begin{verbatim}
++ : (A)HasAddition => (A, A) -> A
+- : (A)HasSubtraction => (A, A) -> A
+\end{verbatim}
+Equality and ordering:
+\begin{verbatim}
+= : (A)HasEquality => (A, A) -> Bool
+<= : (A)HasOrder => (A, A) -> Bool
+>= : (A)HasOrder => (A, A) -> Bool
+\end{verbatim}
+
+(fmap)\texttt{<inside>} | (W)IsAWrapper \Ra (A \ra B, W(A)) \ra W(B) | Apply inside operator \\
+\texttt{(<*>)<wrapped_inside>} | (W)IsAWrapper \Ra (W(A \ra B), W(A)) \ra W(B) | Order operators \\
+
+better as postfix functions \\
 \hspace{1cm}\\
 %\newpage
 
