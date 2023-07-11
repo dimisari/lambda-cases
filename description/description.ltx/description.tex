@@ -17,6 +17,7 @@
 \def\H{Haskell}
 \def\ra{\texttt{->}\ }
 \def\Ra{\texttt{=>}\ }
+\def\pend{\mbox{} \\\\}
 %\newcommand\_[_]{_}
 
 \renewcommand{\arraystretch}{1.5}
@@ -24,12 +25,12 @@
 \begin{document}
 
 \title{
-\textbf{Lambda Cases}
+\textbf{Lambda Cases(lcases)}
 }
 \maketitle
 
-\setcounter{tocdepth}{4}
-\setcounter{secnumdepth}{4}
+%\setcounter{tocdepth}{4}
+%\setcounter{secnumdepth}{4}
 \tableofcontents
 
 \section{Introduction}
@@ -45,17 +46,62 @@ that familiarity, I present some new syntax, of which
 some is closer to the imperative/OOP style (to attract more already experienced
 programmers from these languages), some is closer to mathematics (in which most 
 programmers should be experienced) and some is closer to natural language
-(in which we are all already experienced). Ofcourse, I could not rewrite \H\
-from scratch by my self, so I will try to keep the language as small and to the 
-point as possible for now, as well as use as much as I can from \H\ itself, as 
-the new language (Lambda Cases) is compiled to \H.
+(in which we are all already experienced). 
 
 \section{Language Description}
 
+\paragraph{Program example: extended euclidean alogirthm}
+\begin{verbatim}
+// type definitions
+
+tuple_type PrevCoeffs
+value (prev_prev, prev : Int, Int)
+
+tuple_type GcdAndCoeffs
+value (gcd, a, b : Int, Int, Int)
+
+// algorithm functions
+
+extended_euclidean: (Int, Int) -> GcdAndCoeffs
+  = (init_a_coeffs, init_b_coeffs) ==> ee_recursion
+
+init_a_coeffs, init_b_coeffs: all PrevCoeffs
+  = (1, 0), (0, 1)
+
+ee_recursion: (PrevCoeffs, PrevCoeffs, Int, Int) -> GcdAndCoeffs
+  = (a_coeffs, b_coeffs, x, cases) ->
+    0 -> (x, a_coeffs.prev_prev, b_coeffs.prev_prev)
+    y ->
+      ee_recursion(next <== a_coeffs, next <== b_coeffs, y, x ==> mod <== y)
+      where
+      next: PrevCoeffs -> PrevCoeffs
+        = fields -> (prev, prev_prev - x ==> div <== y * prev)
+
+// reading, printing and main
+
+read_two_ints : (Int x Int)WithIO
+  = print <== "Please give me 2 ints";
+    get_line >>= split_words o> apply(from_string)to_all o> ints ->
+    ints ==> length ==> cases ->
+      2 -> ints ==> with_env
+      ... -> io_error <== "You didn't give me 2 ints"
+ 
+print_gcd_and_coeffs : GcdAndCoeffs -> (Empty)WithIO
+  = fields ->
+    print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
+
+main : (Empty)WithIO
+  = read_two_ints >>= ints ->
+    extended_euclidean(ints.1st, ints.2nd) ==> print_gcd_and_coeffs
+\end{verbatim}
+
 \subsection{Values}
 
-As with Haskell a program is a set of values, wih the "main" value determining 
-the program's behaviour.
+As with Haskell, an lcases program is a set of value/type (and other) definitions,
+wih the "main" value determining the program's behaviour. Values (constants) and
+functions have no real distinction other than the fact functions have a function
+type. Functions (just like values) can be passed to other functions as 
+arguments or can be returned as a result of other functions.
 
 \subsubsection{Literals}
 
@@ -71,13 +117,20 @@ Examples & Type \\
 \hline
 'a', 'b', 'c', 'x', 'y', 'z', '.', ',', '\textbackslash n' & Char \\
 \hline
-[1, 2, 3], ['a', 'b', 'c'], [1.61, 2.71, 3.14 ] & List \\
+[1, 2, 3], ['a', 'b', 'c'], [1.61, 2.71, 3.14 ] &
+ListOf(Int)s, ListOf(Char)s, ListOf(Real)s \\
+\hline
+"Hello World!", "What's up, doc?", "Alrighty then!" & String \\
 \hline
 \end{tabular}
 
 \subsubsection{Identifiers}
 
-lower case or underscore
+An identifier is a string of lower case letters or underscore. 
+\paragraph{Grammar}
+\begin{grammar}
+<identifier> ::= ( <lower-case-letter> | `_' )*
+\end{grammar}
 
 \subsubsection{Operators}
 
@@ -110,15 +163,87 @@ Operator & Type & Description \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
-\texttt{>>=} & (M)IsAMonad \Ra (M(A), A \ra M(B)) \ra M(B) & Monad application 
-(right bind) \\
+\texttt{>>=} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) &
+(Monad) right bind \\
 \hline
-\texttt{=<<} & (M)IsAMonad \Ra (A \ra M(B), M(A)) \ra M(B) & Monad application 
-(left bind) \\
+\texttt{=<<} & (E)IsAnEnvironment \Ra (A \ra E(B), E(A)) \ra E(B) &
+(Monad) left bind \\
 \hline
 \end{tabular}
 
-\subsubsection{Functions}
+\subsubsection{Expressions}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+42
+
+x
+
+funny_identifier 
+
+[1, 2, 3]
+
+"Hello world!"
+
+1.61 * 2.71 + 3.14
+
+a -> 17 * a + 42
+
+(x, y, z) -> (x^2 + y^2 + z^2)^(1/2)
+
+n==>(+ 1)==>(^2)==>(* 3)==>print
+
+f(x, y, z) + g(1, 2, 3)
+\end{verbatim}
+
+\paragraph{Description}\pend
+The base of expressions, are literals and identifiers, those can be combined either
+with operators, or by normal function application with mathematical notation. 
+Finally, on top of that there can be added one of more abstractions (parameters)
+in the beginning of the expressions with an arrow.
+
+\paragraph{Grammar}\pend
+
+\subsubsection{Definitions}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+foo : Int
+  = 42
+
+val1, val2, val3 : Int, Bool, Char
+  = 42, true, 'a'
+
+int1, int2, int3 : all Int
+  = 1, 2, 3
+
+succ : Int -> Int
+  = x -> x + 1
+
+f : (Int, Int, Int) -> Int
+  = (a, b, c) -> a + b * c
+\end{verbatim}
+
+\paragraph{Description}\pend
+To define a new value you give it a name, a type and an expression. It is possible
+to group value definitions by seperating the names, the types and the expressions
+with commas. It is also possible to use the keyword "all" to give the same type
+to all the values.
+
+\paragraph{Grammar}
+\begin{grammar}
+<value-definitions> ::=
+<identifiers> `\ :\ ' (<types> | `all' <type>) `\\n\ \ =' <value-expressions>
+
+<identifiers> ::= <identifier> ( `,\ ' <identifier> )*  
+
+<types> ::= <type> ( `,\ ' <type> )*  
+
+<value-expressions> ::= <value-expression> ( `,\ ' <value-expression> )*  
+\end{grammar}
+
 
 \paragraph{Abstractions}
 
@@ -129,226 +254,48 @@ cases -> body
 (x, cases, z) -> body
 \end{verbatim}
 
-\subsubsection{Value Definitions}
+\subsection{Types}
+
+\subsubsection{Type expressions}
 
 \paragraph{Examples}
 
 \begin{verbatim}
-foo: Int
-  = 42
+Int
 
-val1, val2, val3: Int, Bool, Char
-  = 42, true, 'a'
+String -> String 
 
-int1, int2, int3: all Int
-  = 1, 2, 3
+Int x Int 
 
-succ: Int -> Int
-  = x -> x + 1
+Int x Int -> Real
 
-f: (Int, Int, Int) -> Int
-  = (a, b, c) -> a + b * c
+A -> A
+
+(A, A) -> A
+
+((A, A) -> A, A, ListOf(A)s) -> A
+
+((B, A) -> B, B, ListOf(A)s) -> B
+
+(R)IsReducable => ((B, A) -> B, B, R(A)) -> B
+
+(T)HasStringRepresantion => T -> String
 \end{verbatim}
 
-\paragraph{Description}\mbox{} \\\\
-To define a new value you give it a name, a type and an expression. It is possible
-to group value definitions by seperating the names, the types and the expressions
-with commas. It is also possible to use the keyword "all" to give the same type
-to all the values.
+\paragraph{Description}\pend
 
-\subparagraph{Examples in \H}
+\paragraph{Differences from Haskell}\pend
+\begin{tabular}{ |c|c|c| } 
+\hline
+lcases & haskell & difference description \\ 
+\hline
+\hline
+A \ra A & a \ra a & Type variables for polymorphic types are  \\ 
+\hline
+\end{tabular}
 
-\begin{verbatim}
-foo :: Int
-foo = 42
+\paragraph{Grammar}
 
-val1 :: Int
-val1 = 42
-val2 :: Bool
-val2 = true
-val3 :: Char
-val3 = 'a'
-
-int1 :: Int
-int1 = 1
-int2 :: Int
-int2 = 2
-int3 :: Int
-int3 = 3
-
-succ :: Int -> Int
-succ = \x -> x + 1
-
-f :: Int -> Int -> Int -> Int
-f = \a b c -> a + b * c
-\end{verbatim}
-
-\subsection{Types}
-
-\subsubsection{Type annotations}
-
-\paragraph{Differences with Haskell}
-
-\subsubsection{Type definitions}
-
-\paragraph{Or Types}
-
-\subparagraph{Examples}
-
-\begin{verbatim}
-or_type Bool
-values true | false
-
-or_type Possibly<==A
-values indeed<==(value: A) | nothing
-
-or_type ListOf(A)s
-values non_empty<==(value: NonEmptyListOf(A)s) | empty
-
-tuple_type NonEmptyListOf(A)s
-value (head: T, tail: ListOf(A)s)
-
-is_empty: ListOf(A)s -> Bool
-  = cases -> 
-    empty -> true
-    non_empty -> false
-
-get_head: ListOf(A)s -> Possibly<==A
-  = cases -> 
-    empty -> nothing
-    non_empty -> head==>indeed
-\end{verbatim}
-
-\subparagraph{Description}\mbox{} \\\\
-Values of an Or Type are one of many cases that possibly have values of other types
-inside. Or Types together with Int and Char are the only types on which the "cases"
-syntax can be used.
-
-\subparagraph{Examples in \H}
-
-\begin{verbatim}
-{-# language LambdaCase #-}
-
-data Bool =
-  Ctrue | Cfalse
-
-data Possibly a =
-  Cwrapper a | Cnothing
-
-data ListOf_s a =
-  Cnon_empty (NonEmptyListOf_s a) | Cempty
-
-data NonEmptyListOf_s a =
-  CNonEmptyListOf_s a (ListOf_s a)
-
-is_empty :: ListOf_s a -> Bool
-is_empty = \case
-  Cempty -> Ctrue
-  Cnon_empty (CNonEmptyListOf_s head tail) -> Cfalse
-
-get_head :: ListOf_s a -> Possibly a
-get_head = \case
-  Cempty -> Cnothing
-  Cnon_empty (CNonEmptyListOf_s head tail) -> Cwrapper head
-\end{verbatim}
-
-\paragraph{Autogenerated Functions}\mbox{} \\\\
-Or Types the following have automatically generated functions:
-
-\begin{verbatim}
-is_case:
-\end{verbatim}
-
-\paragraph{Tuple Types}
-
-\subparagraph{Examples}
-
-\begin{verbatim}
-tuple_type ClientInfo
-value (name: String, age: Int, nationality: String)
-
-tuple_type ExprT==>WithPosition
-value (expr: ExprT, line: Int, column: Int)
-
-tuple_type (FirstT, SecondT)==>Pair
-value (first: FirstT, second: SecondT)
-\end{verbatim}
-
-\subparagraph{Description}\mbox{} \\\\
-Tuple types group many values into a single value.
-
-\subparagraph{Examples in \H}
-
-\begin{verbatim}
-data ClientInfo =
-  ClientInfoC String Int String
-
-data WithPosition a = 
-  WithPositionC a Int Int
-
-data Pair a b = 
-  PairC a b
-\end{verbatim}
-
-\subparagraph{Autogenerated Functions}\mbox{} \\\\
-
-\subsection{Type Logic}
-
-\paragraph{Type Predicate}
-
-\paragraph{Type Theorem}
-
-\subsection{Grammar}
-\subsubsection{Tokens}
-
-\paragraph{Keywords}
-
-\begin{verbatim}
-cases use_fields tuple_type or_type
-\end{verbatim}
-
-\paragraph{Value names}
-
-\begin{grammar}
-<value-name> ::= 
-<lower-case-letter> ( <lower-case-letter> | `_' )*
-\end{grammar}
-
-\paragraph{Type names}
-
-\begin{grammar}
-<type-name> ::= 
-<upper-case-letter> ( <upper-case-letter> | <lower-case-letter> )*
-\end{grammar}
-
-
-
-\subsubsection{Core Grammar}
-
-\setlength{\grammarparsep}{20pt}
-\setlength{\grammarindent}{12em}
-
-\paragraph{Program}
-\hspace{1cm}\\
-\begin{grammar}
-
-<program> ::= (<value-defs> | <type-def>)+
-
-<value-defs> ::=
-<value-names> `:\ ' (<types> | `all' <type>) `\\n\ \ =' <value-exprs>
-
-<value-names> ::= <value-name> ( `,\ ' <value-name> )*  
-
-<types> ::= <type> ( `,\ ' <type> )*  
-
-<value-exprs> ::= <value-expr> ( `,\ ' <value-expr> )*  
-
-\end{grammar}
-\hspace{1cm}\\
-
-\paragraph{Types}
-
-\hspace{1cm}\\
 \begin{grammar}
 
 <type> ::= <func-type> | <prod-type> | <type-app>
@@ -372,6 +319,163 @@ cases use_fields tuple_type or_type
 <many-ts-in-paren> ::=  `(' <type> (`, ' <type>)+ `)'
 
 \end{grammar}
+\subsubsection{Tuple Types}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+tuple_type ClientInfo
+value (name, age, nationality : String, Int, String)
+
+john_info: ClientInfo
+  = ("John Doe", 42, "American")
+
+giorgos_info: ClientInfo
+  = ("Giorgos Papadopoulos", 42, "Greek")
+
+print_name_and_nationality : ClientInfo -> (Empty)WithIO
+  = ci -> print("Name: " + ci.name + "\nNationality: " + ci.nationality)
+
+tuple_type (ExprT)WithPosition
+value (expr, line, column : ExprT, Int, Int)
+
+print_error_in_expr : (SomeDefinedExprT)WithPosition -> (Empty)WithIO
+  = ewp ->
+    print(
+      "Error in the expression:" + es +
+      "\nAt the position: (" + ls + ", " + cs + ")"
+    )
+    where
+    es, ls, cs : all String
+      = ewp.expr==>to_string, ewp.line==>to_string, ewp.column==>to_string
+\end{verbatim}
+
+\paragraph{Description}\pend
+Tuple types group many values into a single value. They are specified by their name,
+the names of their subvalues and the types of their subvalues. They generate 
+projection functions for all of their subvalues by using a '.' before the name of 
+the subvalue. For example the ClientInfo type above generates the following 
+functions:
+\begin{verbatim}
+.name : ClientInfo -> String
+.age : ClientInfo -> Int
+.nationality : ClientInfo -> String
+\end{verbatim}
+These functions shall be named "postfix functions" as the can just be appended to
+their argument.
+
+\subsubsection{Or Types}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+or_type Bool
+values true | false
+
+or_type Possibly(A)
+values the_value:A | nothing
+
+or_type ListOf(A)s
+values non_empty:HeadAndTailOf(A)s | empty
+
+tuple_type HeadAndTailOf(A)s
+value (head : A, tail : ListOf(A)s)
+
+is_empty : ListOf(A)s -> Bool
+  = cases -> 
+    empty -> true
+    non_empty:anything -> false
+
+get_head : ListOf(A)s -> Possibly(A)
+  = cases -> 
+    empty -> nothing
+    non_empty:list -> the_value:list.head
+\end{verbatim}
+
+\paragraph{Description}\pend
+Values of an or\_type are one of many cases that possibly have other values inside.
+The cases which have other values inside are followed by a semicolon and the 
+type of the internal value. The same syntax can be used for matching that particular 
+case in a fucntion using the "cases" syntax, with the difference that after the
+colon, we write the name given to the value inside. 
+Or\_types and basic types are the only types on which
+the "cases" syntax can be used. The cases of an or\_type which have a value
+inside create functions. For example, the case "non\_empty" of a list creates the
+function "non\_empty:" for which we can say:
+\begin{verbatim}
+non_empty: : HeadAndTailOf(A)s -> ListOf(A)s
+\end{verbatim}
+Similarly:
+\begin{verbatim}
+the_value: : A -> Possibly(A)
+\end{verbatim}
+These functions shall be named "prefix functions" as they are prepended to their
+argument.
+For example:
+\begin{verbatim}
+head_and_tail : HeadAndTailOf(Int)s
+  = (1, [2, 3, 4])
+
+list : ListOf(Int)s
+  = non_empty:head_and_tail
+\end{verbatim}
+These functions can be used like any other function as arguments to other functions.
+For example:
+\begin{verbatim}
+heads_and_tails_to_lists : ListOf(HeadAndTailOf(A)s)s -> ListOf(ListOf(A)s)s
+  = apply(non_empty:)to_each
+\end{verbatim}
+
+\subsection{Type Logic}
+
+\paragraph{Type Predicate}
+
+\paragraph{Type Theorem}
+
+\subsection{Grammar}
+\subsubsection{Tokens}
+
+\paragraph{Keywords}
+
+\begin{verbatim}
+cases use_fields tuple_type or_type
+\end{verbatim}
+
+\paragraph{Value names}
+
+\paragraph{Type names}
+
+\begin{grammar}
+<type-name> ::= 
+<upper-case-letter> ( <upper-case-letter> | <lower-case-letter> )*
+\end{grammar}
+
+\subsubsection{Core Grammar}
+
+\setlength{\grammarparsep}{20pt}
+\setlength{\grammarindent}{12em}
+
+\paragraph{Program}
+\hspace{1cm}\\
+\begin{grammar}
+
+<program> ::= (<value-definitions> | <type-def>)+
+
+<value-definitions> ::=
+<identifiers> `\ :\ ' (<types> | `all' <type>) `\\n\ \ =' <value-expressions>
+
+<identifiers> ::= <identifier> ( `,\ ' <identifier> )*  
+
+<types> ::= <type> ( `,\ ' <type> )*  
+
+<value-expressions> ::= <value-expression> ( `,\ ' <value-expression> )*  
+
+\end{grammar}
+\hspace{1cm}\\
+
+\paragraph{Types}
+
+\hspace{1cm}\\
 
 
 \hspace{1cm}\\
@@ -381,12 +485,12 @@ cases use_fields tuple_type or_type
 \hspace{1cm}\\
 \begin{grammar}
 
-<value-expr> ::= [ <input-expr> ] <cases-or-where> | <op-expr>
+<value-expression> ::= [ <input-expr> ] <cases-or-where> | <op-expr>
 
 <cases-or-where> ::= <cases-expr> | <where-expr>
 
 <where-expr> ::=
-`let' <spicy-nl> (<value-defs> <spicy-nls>)+ `in' <value-expr> <spicy-nl>
+`let' <spicy-nl> (<value-definitions> <spicy-nls>)+ `in' <value-expression> <spicy-nl>
 
 <cases-expr> ::= `cases' ( <case> )+ [ <default-case> ]
 
@@ -423,21 +527,101 @@ Equality and ordering:
 
 better as postfix functions \\
 \hspace{1cm}\\
+\paragraph{Examples in \H}
+
+\begin{verbatim}
+data ClientInfo =
+  ClientInfoC String Int String
+
+data WithPosition a = 
+  WithPositionC a Int Int
+
+data Pair a b = 
+  PairC a b
+\end{verbatim}
+
+\paragraph{Examples in \H}
+
+\begin{verbatim}
+{-# language LambdaCase #-}
+
+data Bool =
+  Ctrue | Cfalse
+
+data Possibly a =
+  Cwrapper a | Cnothing
+
+data ListOf_s a =
+  Cnon_empty (NonEmptyListOf_s a) | Cempty
+
+data NonEmptyListOf_s a =
+  CNonEmptyListOf_s a (ListOf_s a)
+
+is_empty :: ListOf_s a -> Bool
+is_empty = \case
+  Cempty -> Ctrue
+  Cnon_empty (CNonEmptyListOf_s head tail) -> Cfalse
+
+get_head :: ListOf_s a -> Possibly a
+get_head = \case
+  Cempty -> Cnothing
+  Cnon_empty (CNonEmptyListOf_s head tail) -> Cwrapper head
+\end{verbatim}
+
+\paragraph{Examples in \H}
+\begin{verbatim}
+foo :: Int
+foo = 42
+
+val1 :: Int
+val1 = 42
+val2 :: Bool
+val2 = true
+val3 :: Char
+val3 = 'a'
+
+int1 :: Int
+int1 = 1
+int2 :: Int
+int2 = 2
+int3 :: Int
+int3 = 3
+
+succ :: Int -> Int
+succ = \x -> x + 1
+
+f :: Int -> Int -> Int -> Int
+f = \a b c -> a + b * c
+\end{verbatim}
+
+Or Types the following have automatically generated functions:
+
+\begin{verbatim}
+is_case:
+\end{verbatim}
 %\newpage
 
-%EDE
 %\paragraph{Examples}
 %
 %\begin{verbatim}
 %\end{verbatim}
-%
-%\paragraph{Description}\mbox{} \\\\
+
+%\paragraph{Description}\pend
 %desc
 %
 %\paragraph{Examples in \H}
 %
 %\begin{verbatim}
 %\end{verbatim}
+
+% \begin{tabular}{ |c|c| } 
+% \hline
+% 1 & 2 \\ 
+% \hline
+% \hline
+% 1.1 & 1.2 \\ 
+% \hline
+% \end{tabular}
 
 %  \includegraphics[width=10cm, height=8cm]{../Images/image.png}
 
