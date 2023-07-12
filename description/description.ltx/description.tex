@@ -25,7 +25,7 @@
 \begin{document}
 
 \title{
-\textbf{Lambda Cases(lcases)}
+\textbf{Lambda Cases (lcases)}
 }
 \maketitle
 
@@ -50,6 +50,13 @@ programmers should be experienced) and some is closer to natural language
 
 \section{Language Description}
 
+An lcases program consists of a set of value, type and predicate definitions along
+with type theorems. The "main" value determines the program's behaviour.
+Constants and functions are all considered values and they have no real distinction
+other than the fact that functions have a function type and constants don't.
+Functions (just like "values") can be passed to other functions as arguments or can
+be returned as a result of other functions. 
+
 \paragraph{Program example: extended euclidean alogirthm}
 \begin{verbatim}
 // type definitions
@@ -60,7 +67,7 @@ value (prev_prev, prev : Int, Int)
 tuple_type GcdAndCoeffs
 value (gcd, a, b : Int, Int, Int)
 
-// algorithm functions
+// algorithm
 
 extended_euclidean: (Int, Int) -> GcdAndCoeffs
   = (init_a_coeffs, init_b_coeffs) ==> ee_recursion
@@ -87,8 +94,7 @@ read_two_ints : (Int x Int)WithIO
       ... -> io_error <== "You didn't give me 2 ints"
  
 print_gcd_and_coeffs : GcdAndCoeffs -> (Empty)WithIO
-  = fields ->
-    print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
+  = fields -> print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
 
 main : (Empty)WithIO
   = read_two_ints >>= ints ->
@@ -96,12 +102,6 @@ main : (Empty)WithIO
 \end{verbatim}
 
 \subsection{Values}
-
-As with Haskell, an lcases program is a set of value/type (and other) definitions,
-wih the "main" value determining the program's behaviour. Values (constants) and
-functions have no real distinction other than the fact functions have a function
-type. Functions (just like values) can be passed to other functions as 
-arguments or can be returned as a result of other functions.
 
 \subsubsection{Literals}
 
@@ -129,45 +129,49 @@ ListOf(Int)s, ListOf(Char)s, ListOf(Real)s \\
 An identifier is a string of lower case letters or underscore. 
 \paragraph{Grammar}
 \begin{grammar}
-<identifier> ::= ( <lower-case-letter> | `_' )*
+<identifier> ::= ( [a-z_] )*
 \end{grammar}
 
 \subsubsection{Operators}
 
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c|c| } 
 \hline
-Operator & Type & Description \\ 
+Operator & Type & Description & Associativity \\ 
 \hline
 \hline
-\texttt{==>} & (A, A \ra B) \ra B & Right function application \\
+\texttt{==>} & (A, A \ra B) \ra B & Right function application & Left \\
 \hline
-\texttt{<==} & (A \ra B, A) \ra B & Left function application \\
+\texttt{<==} & (A \ra B, A) \ra B & Left function application & Left \\
 \hline
-\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) & Right function composition \\
+\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) & Right function composition &
+Left \\
 \hline
-\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition  \\
+\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition &
+Right \\
 \hline
-\texttt{\^} & (A)ToThe(B)Gives(C) \Ra (A, B) \ra C & General exponentiation \\
+\texttt{\^} & (A)ToThe(B)Gives(C) \Ra (A, B) \ra C & General exponentiation &
+Right \\
 \hline
-\texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C & General multiplication \\
+\texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C & General multiplication &
+Left \\
 \hline
-\texttt{/} & (A)Divides(B)To(C) \Ra (A, B) \ra C & General division \\
+\texttt{/} & (A)Divides(B)To(C) \Ra (A, B) \ra C & General division & Left \\
 \hline
-+ & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition \\ 
++ & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition & Left \\ 
 \hline
-- & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction \\
+- & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction & Left \\
 \hline
-= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
+= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators & None \\
 \hline
-\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
+\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators & None \\
 \hline
-\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
+\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators & Left \\
 \hline
 \texttt{>>=} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) &
-(Monad) right bind \\
+Monad bind & Left \\
 \hline
-\texttt{=<<} & (E)IsAnEnvironment \Ra (A \ra E(B), E(A)) \ra E(B) &
-(Monad) left bind \\
+\texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) &
+Monad then & Left \\
 \hline
 \end{tabular}
 
@@ -271,18 +275,32 @@ Int x Int -> Real
 
 A -> A
 
-(A, A) -> A
+(A -> B, B -> C) -> (A -> C)
 
 ((A, A) -> A, A, ListOf(A)s) -> A
 
 ((B, A) -> B, B, ListOf(A)s) -> B
 
-(R)IsReducable => ((B, A) -> B, B, R(A)) -> B
-
 (T)HasStringRepresantion => T -> String
 \end{verbatim}
 
 \paragraph{Description}\pend
+\begin{tabular}{ |c|c| } 
+\hline
+Examples & Description \\ 
+\hline
+\hline
+Int & \\
+Char & Base types \\
+String & \\ 
+\hline
+A \ra A &
+Polymorphic types. A, B, C ... are type variables
+\\
+(A \ra B, B \ra C) \ra (A \ra C) &
+\\ 
+\hline
+\end{tabular}
 
 \paragraph{Differences from Haskell}\pend
 \begin{tabular}{ |c|c|c| } 
@@ -295,49 +313,65 @@ A \ra A & a \ra a & Type variables for polymorphic types are  \\
 \end{tabular}
 
 \paragraph{Grammar}
-
 \begin{grammar}
+<type> ::= <type-application> | <product-type> | <function-type> \\
 
-<type> ::= <func-type> | <prod-type> | <type-app>
+<type-application> ::=
+[ <types-in-paren> ] <type-identifier> (<types-in-paren> ( [A-Za-z] )*)* [ <types-in-paren> ] 
 
-<func-type> ::= <input-types-expr> `\ ->\ ' <output-type>
+<types-in-paren> ::= `(' <type> (`, ' <type>)* `)'
 
-<prod-type> ::= <prod-sub-type> ( `\ x\ ' <prod-sub-type> )+
-
-<type-app> ::= [ <t-inputs> `==>' ] <type-name> [ `<==' <t-inputs> ]
+<type-identifier> ::= [A-Z] ( [A-Za-z] )* \\ 
  
-<input-types-expr> ::= <many-ts-in-paren> | <one-type>
+<product-type> ::= <product-subtype> ( `\ x\ ' <product-subtype> )+
 
-<output-type> ::= <prod-type> | <type-app>
+<product-subtype> ::=
+`(' ( <function-type> | <product-type> ) `)' | <type-application> \\
 
-<prod-sub-type> ::= `(' ( <func-type> | <prod-type> ) `)' | <type-app>
+<function-type> ::= <input-types-expression> `\ ->\ ' <one-type>
 
-<one-type> ::= `(' <func-type> `)' | <prod-type> | <type-app>
+<input-types-expression> ::= <one-type> | <two-or-more-types-in-paren>
 
-<t-inputs> ::= <many-ts-in-paren> | `(' <type> `)' | <type-name>
+<one-type> ::= <type-application> | <product-type> | `(' <function-type> `)'
 
-<many-ts-in-paren> ::=  `(' <type> (`, ' <type>)+ `)'
-
+<two-or-more-types-in-paren> ::=  `(' <type> (`, ' <type>)+ `)'
 \end{grammar}
+
 \subsubsection{Tuple Types}
 
-\paragraph{Examples}
+\paragraph{Definition Examples}
 
 \begin{verbatim}
+tuple_type Name
+value (first_name, last_name) : String x String
+
 tuple_type ClientInfo
-value (name, age, nationality : String, Int, String)
+value (name, age, nationality) : Name x Int x String
 
-john_info: ClientInfo
-  = ("John Doe", 42, "American")
+tuple_type Date
+value (day, month, year) : Int x Int x Int
 
-giorgos_info: ClientInfo
-  = ("Giorgos Papadopoulos", 42, "Greek")
-
-print_name_and_nationality : ClientInfo -> (Empty)WithIO
-  = ci -> print("Name: " + ci.name + "\nNationality: " + ci.nationality)
+tuple_type (A)And(B)
+value (a_value, b_value) : A x B
 
 tuple_type (ExprT)WithPosition
-value (expr, line, column : ExprT, Int, Int)
+value (expr, line, column) : ExprT x Int x Int
+\end{verbatim}
+
+\paragraph{Usage Examples}
+
+\begin{verbatim}
+giorgos_info: ClientInfo
+  = (("Giorgos", "Papadopoulos"), 42, "Greek")
+
+john_info: ClientInfo
+  = (("John", "Doe"), 42, "American")
+
+name_to_string: Name -> String
+  = fields -> "First Name: " + first_name + "\nLast Name: " + last_name
+
+print_name_and_nationality : ClientInfo -> (Empty)WithIO
+  = fields -> print(name ==> name_to_string + "\nNationality: " + nationality)
 
 print_error_in_expr : (SomeDefinedExprT)WithPosition -> (Empty)WithIO
   = ewp ->
@@ -364,6 +398,13 @@ functions:
 These functions shall be named "postfix functions" as the can just be appended to
 their argument.
 
+\paragraph{Definition Grammar}
+\begin{grammar}
+<tuple-type-definition> ::= ""\\
+`tuple_type\ ' <type-application>
+`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)* `)' `\ :\ ' <product-type>
+\end{grammar}
+
 \subsubsection{Or Types}
 
 \paragraph{Examples}
@@ -373,7 +414,7 @@ or_type Bool
 values true | false
 
 or_type Possibly(A)
-values the_value:A | nothing
+values the_value:A | no_value
 
 or_type ListOf(A)s
 values non_empty:HeadAndTailOf(A)s | empty
@@ -388,7 +429,7 @@ is_empty : ListOf(A)s -> Bool
 
 get_head : ListOf(A)s -> Possibly(A)
   = cases -> 
-    empty -> nothing
+    empty -> no_value
     non_empty:list -> the_value:list.head
 \end{verbatim}
 
@@ -426,11 +467,18 @@ heads_and_tails_to_lists : ListOf(HeadAndTailOf(A)s)s -> ListOf(ListOf(A)s)s
   = apply(non_empty:)to_each
 \end{verbatim}
 
+\paragraph{Definition Grammar}
+\begin{grammar}
+<or-type-definition> ::= ""\\
+`or_type\ ' <type-application> 
+`\\nvalues\ ' <identifier> [ `:' <type> ] ( `\ |\ ' <identifier> [ `:' <type> ])*
+\end{grammar}
+
 \subsection{Type Logic}
 
-\paragraph{Type Predicate}
+\subsubsection{Type Predicate}
 
-\paragraph{Type Theorem}
+\subsubsection{Type Theorem}
 
 \subsection{Grammar}
 \subsubsection{Tokens}
@@ -444,11 +492,6 @@ cases use_fields tuple_type or_type
 \paragraph{Value names}
 
 \paragraph{Type names}
-
-\begin{grammar}
-<type-name> ::= 
-<upper-case-letter> ( <upper-case-letter> | <lower-case-letter> )*
-\end{grammar}
 
 \subsubsection{Core Grammar}
 
@@ -624,5 +667,11 @@ is_case:
 % \end{tabular}
 
 %  \includegraphics[width=10cm, height=8cm]{../Images/image.png}
-
+\begin{syntdiag}
+<ident> ‘(’
+\begin{rep} \begin{stack} \\
+<type> \begin{stack} \\ <ident> \end{stack}
+\end{stack} \\ ‘,’ \end{rep}
+\begin{stack} \\ ‘...’ \end{stack} ‘)’
+\end{syntdiag}
 \end{document}

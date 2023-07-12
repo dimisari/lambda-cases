@@ -1,7 +1,7 @@
 \contentsline {section}{\numberline {1}Introduction}{1}{}%
 \contentsline {section}{\numberline {2}Language Description}{2}{}%
 \contentsline {paragraph}{Program example: extended euclidean alogirthm}{2}{}%
-\contentsline {subsection}{\numberline {2.1}Values}{2}{}%
+\contentsline {subsection}{\numberline {2.1}Values}{3}{}%
 \contentsline {subsubsection}{\numberline {2.1.1}Literals}{3}{}%
 \contentsline {subsubsection}{\numberline {2.1.2}Identifiers}{3}{}%
 \contentsline {paragraph}{Grammar}{3}{}%
@@ -19,33 +19,36 @@
 \contentsline {subsubsection}{\numberline {2.2.1}Type expressions}{5}{}%
 \contentsline {paragraph}{Examples}{5}{}%
 \contentsline {paragraph}{Description}{5}{}%
-\contentsline {paragraph}{Differences from Haskell}{5}{}%
+\contentsline {paragraph}{Differences from Haskell}{6}{}%
 \contentsline {paragraph}{Grammar}{6}{}%
 \contentsline {subsubsection}{\numberline {2.2.2}Tuple Types}{6}{}%
-\contentsline {paragraph}{Examples}{6}{}%
-\contentsline {paragraph}{Description}{6}{}%
+\contentsline {paragraph}{Definition Examples}{6}{}%
+\contentsline {paragraph}{Usage Examples}{6}{}%
+\contentsline {paragraph}{Description}{7}{}%
+\contentsline {paragraph}{Definition Grammar}{7}{}%
 \contentsline {subsubsection}{\numberline {2.2.3}Or Types}{7}{}%
 \contentsline {paragraph}{Examples}{7}{}%
-\contentsline {paragraph}{Description}{7}{}%
+\contentsline {paragraph}{Description}{8}{}%
+\contentsline {paragraph}{Definition Grammar}{8}{}%
 \contentsline {subsection}{\numberline {2.3}Type Logic}{8}{}%
-\contentsline {paragraph}{Type Predicate}{8}{}%
-\contentsline {paragraph}{Type Theorem}{8}{}%
+\contentsline {subsubsection}{\numberline {2.3.1}Type Predicate}{8}{}%
+\contentsline {subsubsection}{\numberline {2.3.2}Type Theorem}{8}{}%
 \contentsline {subsection}{\numberline {2.4}Grammar}{8}{}%
 \contentsline {subsubsection}{\numberline {2.4.1}Tokens}{8}{}%
 \contentsline {paragraph}{Keywords}{8}{}%
 \contentsline {paragraph}{Value names}{8}{}%
 \contentsline {paragraph}{Type names}{8}{}%
-\contentsline {subsubsection}{\numberline {2.4.2}Core Grammar}{8}{}%
-\contentsline {paragraph}{Program}{8}{}%
-\contentsline {paragraph}{Types}{8}{}%
-\contentsline {paragraph}{Value Expressions}{8}{}%
+\contentsline {subsubsection}{\numberline {2.4.2}Core Grammar}{9}{}%
+\contentsline {paragraph}{Program}{9}{}%
+\contentsline {paragraph}{Types}{9}{}%
+\contentsline {paragraph}{Value Expressions}{9}{}%
 \contentsline {section}{\numberline {3}Parser implimentation}{9}{}%
-\contentsline {subsection}{\numberline {3.1}AST Types}{9}{}%
-\contentsline {subsection}{\numberline {3.2}Parsers}{9}{}%
-\contentsline {section}{\numberline {4}Translation to Haskell}{9}{}%
-\contentsline {section}{\numberline {5}Running examples}{9}{}%
-\contentsline {section}{\numberline {6}Conclusion}{9}{}%
-\contentsline {section}{\numberline {7}To be removed or incorporated}{9}{}%
-\contentsline {paragraph}{Examples in Haskell}{9}{}%
+\contentsline {subsection}{\numberline {3.1}AST Types}{10}{}%
+\contentsline {subsection}{\numberline {3.2}Parsers}{10}{}%
+\contentsline {section}{\numberline {4}Translation to Haskell}{10}{}%
+\contentsline {section}{\numberline {5}Running examples}{10}{}%
+\contentsline {section}{\numberline {6}Conclusion}{10}{}%
+\contentsline {section}{\numberline {7}To be removed or incorporated}{10}{}%
 \contentsline {paragraph}{Examples in Haskell}{10}{}%
 \contentsline {paragraph}{Examples in Haskell}{10}{}%
+\contentsline {paragraph}{Examples in Haskell}{11}{}%
