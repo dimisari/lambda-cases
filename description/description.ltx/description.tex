@@ -101,7 +101,7 @@ main : (Empty)WithIO
     extended_euclidean(ints.1st, ints.2nd) ==> print_gcd_and_coeffs
 \end{verbatim}
 
-\subsection{Values}
+\subsection{Value Expressions}
 
 \subsubsection{Literals}
 
@@ -117,63 +117,214 @@ Examples & Type \\
 \hline
 'a', 'b', 'c', 'x', 'y', 'z', '.', ',', '\textbackslash n' & Char \\
 \hline
-[1, 2, 3], ['a', 'b', 'c'], [1.61, 2.71, 3.14 ] &
-ListOf(Int)s, ListOf(Char)s, ListOf(Real)s \\
-\hline
 "Hello World!", "What's up, doc?", "Alrighty then!" & String \\
 \hline
 \end{tabular}
+\\\\
+TODO add the grammar from the haskell report
 
 \subsubsection{Identifiers}
 
-An identifier is a string of lower case letters or underscore. 
+\paragraph{Examples}
+
+\begin{verbatim}
+x
+
+y
+
+z 
+
+_
+
+funny_identifier 
+
+unnecessarily_long_identifier
+\end{verbatim}
+
+\paragraph{Description}\pend
+An identifier is a string of lower case letters or underscore. It is used to give
+names to values when they are defined.
+\\
+QUESTION maybe shouldn't let '\_' be an identifier
+
 \paragraph{Grammar}
 \begin{grammar}
 <identifier> ::= ( [a-z_] )*
 \end{grammar}
 
+\newpage
 \subsubsection{Operators}
 
-\begin{tabular}{ |c|c|c|c| } 
+\begin{center}
+\begin{tabular}{ |c|c|c| } 
 \hline
-Operator & Type & Description & Associativity \\ 
+Operator & Type & Description \\ 
 \hline
 \hline
-\texttt{==>} & (A, A \ra B) \ra B & Right function application & Left \\
+\texttt{==>} & (A, A \ra B) \ra B & Right function application \\
 \hline
-\texttt{<==} & (A \ra B, A) \ra B & Left function application & Left \\
+\texttt{<==} & (A \ra B, A) \ra B & Left function application \\
 \hline
-\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) & Right function composition &
-Left \\
+\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) & Right function composition \\
 \hline
-\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition &
-Right \\
+\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition \\
 \hline
-\texttt{\^} & (A)ToThe(B)Gives(C) \Ra (A, B) \ra C & General exponentiation &
-Right \\
+\texttt{\^} & (A)ToThe(B)Gives(C) \Ra (A, B) \ra C & General exponentiation  \\
 \hline
-\texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C & General multiplication &
-Left \\
+\texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C & General multiplication  \\
 \hline
-\texttt{/} & (A)Divides(B)To(C) \Ra (A, B) \ra C & General division & Left \\
+\texttt{/} & (A)Divides(B)To(C) \Ra (B, A) \ra C & General division \\
 \hline
-+ & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition & Left \\ 
++ & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition \\ 
 \hline
-- & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction & Left \\
+- & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction \\
 \hline
-= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators & None \\
+= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
 \hline
-\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators & None \\
+\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
 \hline
-\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators & Left \\
+\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
 \texttt{>>=} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) &
-Monad bind & Left \\
+Monad bind \\
 \hline
 \texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) &
-Monad then & Left \\
+Monad then \\
 \hline
 \end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ |c|c|c| } 
+\hline
+Operator & Precedence & Associativity \\ 
+\hline
+\hline
+\texttt{==>} & 10 & Left \\
+\hline
+\texttt{<==} & 9 & Right \\
+\hline
+\texttt{o> <o} & 8 & Left \\
+\hline
+\texttt{\^} & 7 & Right \\
+\hline
+\texttt{* /} & 6 & Left \\
+\hline
+\texttt{+ -} & 5 & Left \\ 
+\hline
+\texttt{= /= > < >= <=} & 4 & None \\
+\hline
+\texttt{\&} & 3 & Left \\
+\hline
+\texttt{|} & 2 & Left \\
+\hline
+\texttt{>>= ;} & 1 & Left \\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{Grammar}
+\begin{grammar}
+<operator-expression> ::= <operator-argument> <operator> <operator-argument>
+
+<operator-argument> ::=
+<literal> | <identifier> | <parenthesis-function-application>
+
+<operator> ::= `\ ' <op> `\ '
+
+<op> ::= 
+`==>' |
+`<==' |
+`o>' |
+`<o' |
+`^' |
+`*' |
+`/' |
+`+' |
+`-' |
+`=' |
+`/=' |
+`>' |
+`<' |
+`>=' |
+`<=' |
+`\&' |
+`|' |
+`>>=' |
+`;'
+\end{grammar}
+
+\subsubsection{Tuples}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+(1, 2)
+
+(1, 2, 3.14)
+
+(1, 'a', "hello")
+
+(a, my_val, 1)
+
+(x -> x + 1, my_function, x -> x * 2)
+\end{verbatim}
+
+\paragraph{Description}\pend
+Tuples are used to group many values into one. The type of the tuple is either 
+the product of the types of the subvalues or a defined tuple\_type which is 
+equivalent to the afformentioned product type i.e. the product type is in the 
+definition of the tuple\_type (see "tuple\_type" section \ref{subsec:tupts}).
+
+\paragraph{Grammar}
+\begin{grammar}
+<tuple> ::= `(' <value-expression> ( `,\ ' <value-expression> )+ `)'
+\end{grammar}
+
+\subsubsection{Lists}
+
+\paragraph{Description}\pend
+Lists are used to group many values of the same type into one. 
+The type of the list is ListOf(A)s where A is the type of every value inside.
+
+\paragraph{Grammar}
+\begin{grammar}
+<list> ::= `[' [<value-expression> ( `,\ ' <value-expression> )*] `]'
+\end{grammar}
+
+\subsubsection{Function Expressions}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+a -> 17 * a + 42
+
+(x, y, z) -> (x ^ 2 + y ^ 2 + z ^ 2) ^ (1 / 2)
+\end{verbatim}
+
+\paragraph{Description}\pend
+Function expressions are used to define functions or pass anonymous functions as 
+arguments to other functions. They are comprised by their parameters and their 
+body. The parameters are either only one in which case a single identifier is used, 
+or they are many in which case many identifiers are used in parenthesis, seperated 
+by a comma. The parameters and the body are seperated by an arrow.
+The body is an operator expression.
+
+\paragraph{Grammar}
+\begin{grammar}
+<function-expression> ::= <parameters> `\ ->\ ' <operator-expression>
+
+<parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
+\end{grammar}
+
+\subsubsection{Special Function Arguments}
+
+\begin{verbatim}
+x -> body
+(x, y, z) -> body
+cases -> body
+(x, cases, z) -> body
+\end{verbatim}
 
 \subsubsection{Expressions}
 
@@ -190,13 +341,15 @@ funny_identifier
 
 "Hello world!"
 
+x ==> mod <== y
+
 1.61 * 2.71 + 3.14
 
 a -> 17 * a + 42
 
-(x, y, z) -> (x^2 + y^2 + z^2)^(1/2)
+(x, y, z) -> (x ^ 2 + y ^ 2 + z ^ 2) ^ (1 / 2)
 
-n==>(+ 1)==>(^2)==>(* 3)==>print
+n ==> +1 ==> ^2 ==> *3 ==> print
 
 f(x, y, z) + g(1, 2, 3)
 \end{verbatim}
@@ -209,7 +362,7 @@ in the beginning of the expressions with an arrow.
 
 \paragraph{Grammar}\pend
 
-\subsubsection{Definitions}
+\subsection{Value Definitions}
 
 \paragraph{Examples}
 
@@ -224,7 +377,7 @@ int1, int2, int3 : all Int
   = 1, 2, 3
 
 succ : Int -> Int
-  = x -> x + 1
+  = +1
 
 f : (Int, Int, Int) -> Int
   = (a, b, c) -> a + b * c
@@ -248,15 +401,6 @@ to all the values.
 <value-expressions> ::= <value-expression> ( `,\ ' <value-expression> )*  
 \end{grammar}
 
-
-\paragraph{Abstractions}
-
-\begin{verbatim}
-x -> body
-(x, y, z) -> body
-cases -> body
-(x, cases, z) -> body
-\end{verbatim}
 
 \subsection{Types}
 
@@ -338,6 +482,7 @@ A \ra A & a \ra a & Type variables for polymorphic types are  \\
 \end{grammar}
 
 \subsubsection{Tuple Types}
+\label{subsec:tupts}
 
 \paragraph{Definition Examples}
 
@@ -361,13 +506,13 @@ value (expr, line, column) : ExprT x Int x Int
 \paragraph{Usage Examples}
 
 \begin{verbatim}
-giorgos_info: ClientInfo
+giorgos_info : ClientInfo
   = (("Giorgos", "Papadopoulos"), 42, "Greek")
 
-john_info: ClientInfo
+john_info : ClientInfo
   = (("John", "Doe"), 42, "American")
 
-name_to_string: Name -> String
+name_to_string : Name -> String
   = fields -> "First Name: " + first_name + "\nLast Name: " + last_name
 
 print_name_and_nationality : ClientInfo -> (Empty)WithIO
@@ -651,7 +796,7 @@ is_case:
 
 %\paragraph{Description}\pend
 %desc
-%
+
 %\paragraph{Examples in \H}
 %
 %\begin{verbatim}
