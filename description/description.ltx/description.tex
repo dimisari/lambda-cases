@@ -93,10 +93,10 @@ read_two_ints : (Int x Int)WithIO
       2 -> ints ==> with_env
       ... -> io_error <== "You didn't give me 2 ints"
  
-print_gcd_and_coeffs : GcdAndCoeffs -> (Empty)WithIO
+print_gcd_and_coeffs : GcdAndCoeffs -> (EmptyValue)WithIO
   = fields -> print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
 
-main : (Empty)WithIO
+main : (EmptyValue)WithIO
   = read_two_ints >>= ints ->
     extended_euclidean(ints.1st, ints.2nd) ==> print_gcd_and_coeffs
 \end{verbatim}
@@ -134,8 +134,6 @@ y
 
 z 
 
-_
-
 funny_identifier 
 
 unnecessarily_long_identifier
@@ -143,9 +141,11 @@ unnecessarily_long_identifier
 
 \paragraph{Description}\pend
 An identifier is a string of lower case letters or underscore. It is used to give
-names to values when they are defined.
-\\
-QUESTION maybe shouldn't let '\_' be an identifier
+names to values when they are defined, so that they can later be used with that 
+name as functions or arguments in the definition of other values.
+\\\\
+QUESTION maybe shouldn't let '\_' be an identifier?  \\
+QUESTION should add numbers?
 
 \paragraph{Grammar}
 \begin{grammar}
@@ -154,6 +154,59 @@ QUESTION maybe shouldn't let '\_' be an identifier
 
 \newpage
 \subsubsection{Operators}
+
+\paragraph{Function application operators}\pend
+The function application operators "\texttt{==>}" and "\texttt{<==}" are a different
+way to apply functions to arguments than the usual parenthesis function application.
+Each one applies the function from the corresponding direction. The operators are 
+meant to look like arrows that point from the argument to the function.
+These operators are very useful for chaining many function applications without the
+clutter of having to open and close parentheses for each one of the functions.\\\\
+For example assuming we have the following functions with the behaviour suggested
+by their names and types:
+\begin{verbatim}
+apply()to_all : (A -> B, ListOf(A)s) -> ListOf(B)s
+string_length: String -> Int
+filter : (A -> Bool, ListOf(A)s) -> ListOf(A)s
+is_odd : Int -> Bool
+sum_ints : List(Int)s -> Int
+\end{verbatim}
+And a list of strings:
+\begin{verbatim}
+strings : List(String)s
+\end{verbatim}
+Here is a simple way to get the number of characters in all the strings that have 
+odd length:
+\begin{verbatim}
+chars_in_odd_length_strings : Int
+  = strings ==> apply(string_length)to_all ==> filter(is_odd) ==> sum_ints
+\end{verbatim}
+Ofcourse this can be done equivalently using the other operator:
+\begin{verbatim}
+chars_in_odd_length_strings : Int
+  = sum_ints <== filter(is_odd) <== apply(string_length)to_all <== strings
+\end{verbatim}
+These operators can also be used together to put a function between two arguments
+if that function is commonly used that way in math (or if it looks better for a
+certain function). For example the "mod" function can be used like so:
+\begin{verbatim}
+x ==> mod <== y
+\end{verbatim}
+Instead of:
+\begin{verbatim}
+mod(x, y)
+\end{verbatim}
+
+\paragraph{Function composition operators}\pend
+The function composition operators "\texttt{o>}" and "\texttt{<o}" are used to 
+compose funtions, each one in the corresponding direction. The use of the letter 'o'
+is meant to be similar to the mathematical function composition symbol: \(\circ\).
+Since, the 
+A neat example using function composition is the following:
+\begin{verbatim}
+reverse_words : String -> String
+  = split_words o> apply(reverse)to_all o> merge_words
+\end{verbatim}
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -515,10 +568,10 @@ john_info : ClientInfo
 name_to_string : Name -> String
   = fields -> "First Name: " + first_name + "\nLast Name: " + last_name
 
-print_name_and_nationality : ClientInfo -> (Empty)WithIO
+print_name_and_nationality : ClientInfo -> (EmptyValue)WithIO
   = fields -> print(name ==> name_to_string + "\nNationality: " + nationality)
 
-print_error_in_expr : (SomeDefinedExprT)WithPosition -> (Empty)WithIO
+print_error_in_expr : (SomeDefinedExprT)WithPosition -> (EmptyValue)WithIO
   = ewp ->
     print(
       "Error in the expression:" + es +
@@ -740,20 +793,20 @@ data Possibly a =
   Cwrapper a | Cnothing
 
 data ListOf_s a =
-  Cnon_empty (NonEmptyListOf_s a) | Cempty
+  Cnon_empty (NonEmptyValueListOf_s a) | Cempty
 
-data NonEmptyListOf_s a =
-  CNonEmptyListOf_s a (ListOf_s a)
+data NonEmptyValueListOf_s a =
+  CNonEmptyValueListOf_s a (ListOf_s a)
 
 is_empty :: ListOf_s a -> Bool
 is_empty = \case
   Cempty -> Ctrue
-  Cnon_empty (CNonEmptyListOf_s head tail) -> Cfalse
+  Cnon_empty (CNonEmptyValueListOf_s head tail) -> Cfalse
 
 get_head :: ListOf_s a -> Possibly a
 get_head = \case
   Cempty -> Cnothing
-  Cnon_empty (CNonEmptyListOf_s head tail) -> Cwrapper head
+  Cnon_empty (CNonEmptyValueListOf_s head tail) -> Cwrapper head
 \end{verbatim}
 
 \paragraph{Examples in \H}
