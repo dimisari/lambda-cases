@@ -61,28 +61,28 @@ be returned as a result of other functions.
 \begin{verbatim}
 // type definitions
 
-tuple_type PrevCoeffs
-value (prev_prev, prev : Int, Int)
+tuple_type Coeffs
+value (previous, current) : Int x Int
 
 tuple_type GcdAndCoeffs
-value (gcd, a, b : Int, Int, Int)
+value (gcd, a, b) : Int x Int x Int
 
 // algorithm
 
 extended_euclidean: (Int, Int) -> GcdAndCoeffs
   = (init_a_coeffs, init_b_coeffs) ==> ee_recursion
 
-init_a_coeffs, init_b_coeffs: all PrevCoeffs
+init_a_coeffs, init_b_coeffs: all Coeffs
   = (1, 0), (0, 1)
 
-ee_recursion: (PrevCoeffs, PrevCoeffs, Int, Int) -> GcdAndCoeffs
+ee_recursion: (Coeffs, Coeffs, Int, Int) -> GcdAndCoeffs
   = (a_coeffs, b_coeffs, x, cases) ->
-    0 -> (x, a_coeffs.prev_prev, b_coeffs.prev_prev)
+    0 -> (x, a_coeffs.previous, b_coeffs.previous)
     y ->
       ee_recursion(next <== a_coeffs, next <== b_coeffs, y, x ==> mod <== y)
       where
-      next: PrevCoeffs -> PrevCoeffs
-        = fields -> (prev, prev_prev - x ==> div <== y * prev)
+      next: Coeffs -> Coeffs
+        = fields -> (current, previous - x / y * current)
 
 // reading, printing and main
 
@@ -90,7 +90,7 @@ read_two_ints : (Int x Int)WithIO
   = print <== "Please give me 2 ints";
     get_line >>= split_words o> apply(from_string)to_all o> ints ->
     ints ==> length ==> cases ->
-      2 -> ints ==> with_env
+      2 -> ints ==> with_io
       ... -> io_error <== "You didn't give me 2 ints"
  
 print_gcd_and_coeffs : GcdAndCoeffs -> (EmptyValue)WithIO
@@ -153,27 +153,155 @@ QUESTION should add numbers?
 \end{grammar}
 
 \newpage
+\subsubsection{Tuples}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+(1, "What's up, doc?")
+
+(2, "Alrighty then!", 3.14)
+
+(x, y, z, w)
+
+(1, my_function, (x, y, z) -> (x ^ 2 + y ^ 2 + z ^ 2) ^ (1/2))
+\end{verbatim}
+
+\paragraph{Description}\pend
+Tuples are used to group many values (of possibly different types) into one.
+The type of the tuple can be either the product of the types of the subvalues or a
+defined tuple\_type which is equivalent to the afformentioned product type i.e.
+the product type is in the definition of the tuple\_type (see "tuple\_type"
+section \ref{subsec:tupts}). For example, the type of the second example above 
+could be:
+\begin{verbatim}
+Int x String x Real
+\end{verbatim}
+or:
+\begin{verbatim}
+MyType
+\end{verbatim}
+assuming "MyType" has been defined in similar way to the following:
+\begin{verbatim}
+tuple_type MyType
+value (my_int, my_string, my_real) : Int x String x Real
+\end{verbatim}
+
+
+\paragraph{Grammar}
+\begin{grammar}
+<tuple> ::= `(' <value-expression> ( `,\ ' <value-expression> )+ `)'
+\end{grammar}
+
+\subsubsection{Lists}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+[1, 2, 17, 42, -100]
+
+[1.61, 2.71, 3.14, -1234.567]
+
+["Hello World!", "What's up, doc?", "Alrighty then!"]
+
+[x, y, z, w]
+\end{verbatim}
+
+\paragraph{Description}\pend
+Lists are used to group many values of the same type into one. 
+The type of the list is ListOf(A)s where A is the type of every value inside.
+Therefore, the types of the first three examples are:
+\begin{verbatim}
+ListOf(Int)s
+
+ListOf(Real)s
+
+ListOf(String)s
+\end{verbatim}
+And the last list is only legal if x, y, z and w all have the same type. Assuming 
+they do and it's the type T, the type of the list is: 
+\begin{verbatim}
+ListOf(T)s
+\end{verbatim}
+
+\paragraph{Grammar}
+\begin{grammar}
+<list> ::= `[' [<value-expression> ( `,\ ' <value-expression> )*] `]'
+\end{grammar}
+
+\subsubsection{Parentheses Function Application}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+f(x)
+
+f(x, y, z)
+
+(x)to_string
+
+apply(f)to_all
+
+apply(f)to_all(l)
+\end{verbatim}
+
+\paragraph{Description}\pend
+Function application in lcases can be done in many different ways in an attempt to 
+maximize readability. In this section, we discuss the ways function application can
+be done with parentheses. In the first two examples, we have the usual mathematical
+function application which is also used in most programming languages and
+should be familiar to the reader. That is, function application is done with the 
+arguments of the function in parentheses seperated by commas and \textbf{appended}
+to the function identifier.
+\\\\
+We extend this idea by allowing the arguments to be
+\textbf{prepended} to the function identifier. Finally, it is also possible to
+to have the arguments \textbf{inside} the function identifier provided the function
+has been \textbf{defined with parentheses inside the identifier}. For example,
+below is the definition of "apply()to\_all":
+
+\begin{verbatim}
+apply()to_all: (A -> B, ListOf(A)s) -> ListOf(B)s
+  = (f, cases) ->
+    empty -> empty
+    non_empty:l -> non_empty:(f <== l.head, apply(f)to_all <== l.tail)
+\end{verbatim}
+The actual definition doesn't matter at this point, what matters is that the 
+identifier is "apply()to\_all" with the parentheses \textbf{included}. This is very
+useful for defining functions where the argument in the middle makes the function
+application look and sound more like natural language.
+\\\\
+The arguments are always inserted to the function from \textbf{left to right}.
+Therefore, when multiple parentheses pairs are present the arguments of the leftmost 
+parentheses are inserted first then the next one to the right and so on.
+
+\paragraph{Grammar}
+TODO
+\begin{grammar}
+<list> ::= `[' [<value-expression> ( `,\ ' <value-expression> )*] `]'
+\end{grammar}
+
 \subsubsection{Operators}
 
 \paragraph{Function application operators}\pend
 The function application operators "\texttt{==>}" and "\texttt{<==}" are a different
-way to apply functions to arguments than the usual parenthesis function application.
+way to apply functions to arguments than the usual parentheses function application.
 Each one applies the function from the corresponding direction. The operators are 
 meant to look like arrows that point from the argument to the function.
 These operators are very useful for chaining many function applications without the
 clutter of having to open and close parentheses for each one of the functions.\\\\
-For example assuming we have the following functions with the behaviour suggested
+For example, assuming we have the following functions with the behaviour suggested
 by their names and types:
 \begin{verbatim}
 apply()to_all : (A -> B, ListOf(A)s) -> ListOf(B)s
 string_length: String -> Int
 filter : (A -> Bool, ListOf(A)s) -> ListOf(A)s
 is_odd : Int -> Bool
-sum_ints : List(Int)s -> Int
+sum_ints : ListOf(Int)s -> Int
 \end{verbatim}
 And a list of strings:
 \begin{verbatim}
-strings : List(String)s
+strings : ListOf(String)s
 \end{verbatim}
 Here is a simple way to get the number of characters in all the strings that have 
 odd length:
@@ -200,12 +328,26 @@ mod(x, y)
 \paragraph{Function composition operators}\pend
 The function composition operators "\texttt{o>}" and "\texttt{<o}" are used to 
 compose funtions, each one in the corresponding direction. The use of the letter 'o'
-is meant to be similar to the mathematical function composition symbol: \(\circ\).
-Since, the 
-A neat example using function composition is the following:
+is meant to be similar to the mathematical function composition symbol '\(\circ\)'
+and the symbols '\texttt{>}', '\texttt{<}' are used so that the operator points from
+the function which is applied first to the function which is applied second.
+A neat example using function composition is the following. Assuming we have the
+following functions with the behaviour suggested by their names and types: 
+\begin{verbatim}
+split_words : String -> ListOf(String)s
+apply()to_all : (A -> B, ListOf(A)s) -> ListOf(B)s
+reverse_word: String -> String
+merge_words : ListOf(String)s -> String
+\end{verbatim}
+We can reverse the all the words in a string like so:
 \begin{verbatim}
 reverse_words : String -> String
-  = split_words o> apply(reverse)to_all o> merge_words
+  = split_words o> apply(reverse_word)to_all o> merge_words
+\end{verbatim}
+Ofcourse this can be done equivalently using the other operator:
+\begin{verbatim}
+reverse_words : String -> String
+  = merge_words <o apply(reverse_word)to_all <o split_words
 \end{verbatim}
 
 \begin{center}
@@ -278,71 +420,19 @@ Operator & Precedence & Associativity \\
 
 \paragraph{Grammar}
 \begin{grammar}
-<operator-expression> ::= <operator-argument> <operator> <operator-argument>
+<operator-expression> ::= <operator-argument> <operator> <right-operator-argument>
 
 <operator-argument> ::=
-<literal> | <identifier> | <parenthesis-function-application>
+<literal> | <identifier> | <parentheses-function-application> |
+<parentheses-expression>
+
+<right-operator-argument> ::= <operator-argument> | <function-expression>
 
 <operator> ::= `\ ' <op> `\ '
 
 <op> ::= 
-`==>' |
-`<==' |
-`o>' |
-`<o' |
-`^' |
-`*' |
-`/' |
-`+' |
-`-' |
-`=' |
-`/=' |
-`>' |
-`<' |
-`>=' |
-`<=' |
-`\&' |
-`|' |
-`>>=' |
-`;'
-\end{grammar}
-
-\subsubsection{Tuples}
-
-\paragraph{Examples}
-
-\begin{verbatim}
-(1, 2)
-
-(1, 2, 3.14)
-
-(1, 'a', "hello")
-
-(a, my_val, 1)
-
-(x -> x + 1, my_function, x -> x * 2)
-\end{verbatim}
-
-\paragraph{Description}\pend
-Tuples are used to group many values into one. The type of the tuple is either 
-the product of the types of the subvalues or a defined tuple\_type which is 
-equivalent to the afformentioned product type i.e. the product type is in the 
-definition of the tuple\_type (see "tuple\_type" section \ref{subsec:tupts}).
-
-\paragraph{Grammar}
-\begin{grammar}
-<tuple> ::= `(' <value-expression> ( `,\ ' <value-expression> )+ `)'
-\end{grammar}
-
-\subsubsection{Lists}
-
-\paragraph{Description}\pend
-Lists are used to group many values of the same type into one. 
-The type of the list is ListOf(A)s where A is the type of every value inside.
-
-\paragraph{Grammar}
-\begin{grammar}
-<list> ::= `[' [<value-expression> ( `,\ ' <value-expression> )*] `]'
+`==>' | `<==' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
+`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `>>=' | `;'
 \end{grammar}
 
 \subsubsection{Function Expressions}
@@ -359,7 +449,7 @@ a -> 17 * a + 42
 Function expressions are used to define functions or pass anonymous functions as 
 arguments to other functions. They are comprised by their parameters and their 
 body. The parameters are either only one in which case a single identifier is used, 
-or they are many in which case many identifiers are used in parenthesis, seperated 
+or they are many in which case many identifiers are used in parentheses, seperated 
 by a comma. The parameters and the body are seperated by an arrow.
 The body is an operator expression.
 
@@ -370,7 +460,7 @@ The body is an operator expression.
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
 \end{grammar}
 
-\subsubsection{Special Function Arguments}
+\subsubsection{Special Function Parameters}
 
 \begin{verbatim}
 x -> body
