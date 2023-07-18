@@ -15,3 +15,12 @@ we have
 - literals
 - abstractions
 - op exprs
+
+- String Literal:
+  - what type internally:
+    - hard coded String?
+    - ListOfChars ?
+
+- ManyAbstractions:
+  - what happens when multiple abstractions are "use_fields"?
+  - currently in any conflicts only the last one is in scope

@@ -21,24 +21,24 @@ type Path = String
 only_name = ( \s -> take (length s - 3) s )
   :: String -> String
 
-io_correct_names = 
+correct_names = 
   fmap (lines .> map (only_name .> ("correct/" ++)) ) $
   readCreateProcess (shell "cd lcases/correct; ls") ""
   :: IO [ String ]
 
-io_wrong_names = 
+wrong_names = 
   fmap (lines .> map (only_name .> ("wrong/" ++)) ) $
   readCreateProcess (shell "cd lcases/wrong; ls") ""
   :: IO [ String ]
 
-io_all_names =
-  (++) <$> io_correct_names <*> io_wrong_names
+all_names =
+  (++) <$> correct_names <*> wrong_names
   :: IO [ String ]
 
 -- lcases: paths
 
-io_paths =
-  fmap (map ( \s -> "lcases/" ++ s ++ ".lc" )) io_all_names
+paths =
+  fmap (map ( \s -> "lcases/" ++ s ++ ".lc" )) all_names
   :: IO [ String ]
 
 -- haskell: hs_dir, hs_paths, path_pairs, correct_hs_paths
@@ -46,16 +46,16 @@ io_paths =
 hs_dir = "runtime/haskell/"
   :: String
 
-io_hs_paths =
-  fmap (map ( \s -> hs_dir ++ s ++ ".hs" )) io_all_names
+hs_paths =
+  fmap (map ( \s -> hs_dir ++ s ++ ".hs" )) all_names
   :: IO [ String ]
 
-io_path_pairs = 
-  liftA2 zip io_paths io_hs_paths
+path_pairs = 
+  liftA2 zip paths hs_paths
   :: IO [ (Path, Path) ]
 
-io_correct_hs_paths =
-  fmap (map ( \s -> hs_dir ++ s ++ ".hs" )) io_correct_names
+correct_hs_paths =
+  fmap (map ( \s -> hs_dir ++ s ++ ".hs" )) correct_names
   :: IO [ String ]
 
 -- executables
@@ -63,17 +63,27 @@ io_correct_hs_paths =
 execs_dir = "runtime/executables/"
   :: String
 
-io_exec_paths = 
-  fmap (map ( \s -> execs_dir ++ s )) io_correct_names
+exec_paths = 
+  fmap (map ( \s -> execs_dir ++ s )) correct_names
   :: IO [ String ]
 
-io_exec_path_pairs = 
-  liftA2 zip io_correct_hs_paths io_exec_paths
+exec_path_pairs = 
+  liftA2 zip correct_hs_paths exec_paths
   :: IO [ (Path, Path) ]
+
+-- commands 
 
 exec_path_pair_to_cmd = ( \(hs_path, exec_path) -> 
   callCommand $ "ghc -o " ++ exec_path ++ " " ++ hs_path
   ) :: (Path, Path) -> IO ()
+
+clean =
+  callCommand ("rm " ++ hs_dir ++ "correct/*.hi " ++ hs_dir ++ "correct/*.o")
+  :: IO ()
+
+run_execs =
+  callCommand ("for f in " ++ execs_dir ++ "correct/*; do echo \"\n$f\n\"; $f; done")
+  :: IO ()
 
 -- header
 

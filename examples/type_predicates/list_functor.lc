@@ -1,11 +1,12 @@
-type_predicate T==>IsAFunctor
-function apply()internally: (A -> B, T<==A) -> T<==B
+type_predicate (W)IsWrapper
+function apply()internally: (A -> B, W(A)) -> W(B)
 
-type_theorem ListOf()s==>IsAFunctor
+type_theorem (ListOf()s)IsAFunctor
 proof
-  apply(f)internally = cases
-    non_empty -> (f(head), apply(f)internally(tail))==>non_empty
-    empty -> empty
+  apply()internally =
+    (f, cases) ->
+      non_empty;l -> (f(l.head), apply(f)internally(l.tail))==>non_empty
+      empty -> empty
 
 main: Empty==>WithIO
   = [ 1, 2, 3, 4 ]==>apply(is_odd)internally==>print

@@ -3,8 +3,10 @@ extended_euclidean: (Int, Int) -> Int x Int x Int
   = (1, 0)==>ee_recursion<==(0, 1)
 
 ee_recursion: (Int x Int, Int x Int, Int, Int) -> Int x Int x Int
-  = (a_coeffs, b_coeffs, x) -> cases
-    0 -> (x, a_coeffs==>first, b_coeffs==>first)
-    y -> (next<==a_coeffs, next<==b_coeffs, y, x==>mod<==y)==>ee_recursion where
+  = (a_coeffs, b_coeffs, x, cases) -> 
+    0 -> (x, a_coeffs.1st, b_coeffs.1st)
+    y ->
+      (next(a_coeffs), next(b_coeffs), y, (x)mod(y))==>ee_recursion
+      where
       next: Int x Int -> Int x Int 
-        = pair -> (pair==>second, pair==>first - x==>div<==y * pair==>second)
+        = fields -> (2nd, 1st - (x)div(y) * 2nd)

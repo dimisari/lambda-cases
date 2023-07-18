@@ -128,28 +128,21 @@ TODO add the grammar from the haskell report
 \paragraph{Examples}
 
 \begin{verbatim}
-x
-
-y
-
-z 
-
+x y z
+a1 a2 a3 
 funny_identifier 
-
 unnecessarily_long_identifier
+apply()to_all
 \end{verbatim}
 
 \paragraph{Description}\pend
 An identifier is a string of lower case letters or underscore. It is used to give
 names to values when they are defined, so that they can later be used with that 
 name as functions or arguments in the definition of other values.
-\\\\
-QUESTION maybe shouldn't let '\_' be an identifier?  \\
-QUESTION should add numbers?
 
 \paragraph{Grammar}
 \begin{grammar}
-<identifier> ::= ( [a-z_] )*
+<identifier> ::= [a-z]( [a-z_] | `()'[a-z_] )* [ [0-9] ]
 \end{grammar}
 
 \newpage
@@ -159,11 +152,8 @@ QUESTION should add numbers?
 
 \begin{verbatim}
 (1, "What's up, doc?")
-
 (2, "Alrighty then!", 3.14)
-
 (x, y, z, w)
-
 (1, my_function, (x, y, z) -> (x ^ 2 + y ^ 2 + z ^ 2) ^ (1/2))
 \end{verbatim}
 
@@ -181,7 +171,7 @@ or:
 \begin{verbatim}
 MyType
 \end{verbatim}
-assuming "MyType" has been defined in similar way to the following:
+assuming "MyType" has been defined in a similar way to the following:
 \begin{verbatim}
 tuple_type MyType
 value (my_int, my_string, my_real) : Int x String x Real
@@ -199,11 +189,8 @@ value (my_int, my_string, my_real) : Int x String x Real
 
 \begin{verbatim}
 [1, 2, 17, 42, -100]
-
 [1.61, 2.71, 3.14, -1234.567]
-
 ["Hello World!", "What's up, doc?", "Alrighty then!"]
-
 [x, y, z, w]
 \end{verbatim}
 
@@ -213,9 +200,7 @@ The type of the list is ListOf(A)s where A is the type of every value inside.
 Therefore, the types of the first three examples are:
 \begin{verbatim}
 ListOf(Int)s
-
 ListOf(Real)s
-
 ListOf(String)s
 \end{verbatim}
 And the last list is only legal if x, y, z and w all have the same type. Assuming 
@@ -235,13 +220,9 @@ ListOf(T)s
 
 \begin{verbatim}
 f(x)
-
 f(x, y, z)
-
 (x)to_string
-
 apply(f)to_all
-
 apply(f)to_all(l)
 \end{verbatim}
 
@@ -254,10 +235,10 @@ should be familiar to the reader. That is, function application is done with the
 arguments of the function in parentheses seperated by commas and \textbf{appended}
 to the function identifier.
 \\\\
-We extend this idea by allowing the arguments to be
-\textbf{prepended} to the function identifier. Finally, it is also possible to
-to have the arguments \textbf{inside} the function identifier provided the function
-has been \textbf{defined with parentheses inside the identifier}. For example,
+We extend this idea by allowing the arguments to be \textbf{prepended} to the
+function identifier (third example). Finally, it is also possible to to have
+the arguments \textbf{inside} the function identifier provided the function has
+been \textbf{defined with parentheses inside the identifier}. For example,
 below is the definition of "apply()to\_all":
 
 \begin{verbatim}
@@ -271,14 +252,26 @@ identifier is "apply()to\_all" with the parentheses \textbf{included}. This is v
 useful for defining functions where the argument in the middle makes the function
 application look and sound more like natural language.
 \\\\
-The arguments are always inserted to the function from \textbf{left to right}.
-Therefore, when multiple parentheses pairs are present the arguments of the leftmost 
-parentheses are inserted first then the next one to the right and so on.
+In is possible that many paratheses pairs are present in a single function
+applicastion (last example). The arguments are always inserted to the function
+from \textbf{left to right}.  Therefore, when multiple parentheses pairs are
+present the arguments of the leftmost parentheses are inserted first then the
+next ones to the right and so on.
 
 \paragraph{Grammar}
-TODO
 \begin{grammar}
-<list> ::= `[' [<value-expression> ( `,\ ' <value-expression> )*] `]'
+<parentheses-function-application> ::= ""\\
+<arguments> ( <identifier-with-arguments> | <identifier> )
+\alt ( <identifier-with-arguments> | <identifier> ) <arguments>
+\alt <identifier-with-arguments>
+
+<arguments> ::= `(' <value-expression> ( `,\ ' <value-expression> )* `)'
+
+<identifier-with-arguments> ::= ""\\""
+[a-z] <id-char-or-paren-id-char>* ( <arguments> [a-z_]
+<id-char-or-paren-id-char>* )+ [ [0-9] ]
+
+<id-char-or-paren-id-char> ::= [a-z_] | `()'[a-z_]
 \end{grammar}
 
 \subsubsection{Operators}

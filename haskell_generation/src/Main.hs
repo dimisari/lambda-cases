@@ -97,10 +97,7 @@ values_or_type_definition_g = ( \case
 -- main
 
 main =
-  io_path_pairs >>= mapM_ read_and_gen_example >>
-  io_exec_path_pairs >>= mapM_ exec_path_pair_to_cmd >>
-  callCommand
-    ("rm " ++ hs_dir ++ "correct/*.hi " ++ hs_dir ++ "correct/*.o") >>
-  callCommand 
-    ("for f in " ++ execs_dir ++ "correct/*; do echo \"\n$f\n\"; $f; done")
+  path_pairs >>= mapM_ read_and_gen_example >>
+  exec_path_pairs >>= mapM_ exec_path_pair_to_cmd >>
+  clean >> run_execs
   :: IO ()
