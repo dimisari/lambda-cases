@@ -88,7 +88,7 @@ ee_recursion: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
 
 read_two_ints : (Int x Int)WithIO
   = print <- "Please give me 2 ints";
-    get_line :> split_words o> apply(from_string)to_all o> ints =>
+    get_line ;> split_words o> apply(from_string)to_all o> ints =>
     ints -> length -> cases =>
       2 => ints -> with_io
       ... => io_error <- "You didn't give me 2 ints"
@@ -97,7 +97,7 @@ print_gcd_and_coeffs : GcdAndCoeffs => (EmptyValue)WithIO
   = fields => print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
 
 main : (EmptyValue)WithIO
-  = read_two_ints :> ints =>
+  = read_two_ints ;> ints =>
     extended_euclidean(ints.1st, ints.2nd) -> print_gcd_and_coeffs
 \end{verbatim}
 
@@ -120,6 +120,7 @@ main : (EmptyValue)WithIO
 We have literals for the four basic types: Int, Real, Char, String. These are the 
 usual integers, real numbes, characters and strings. The exact specification of 
 literals is the same as in the \H\ report.
+\\QUESTION integers are different?
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -243,7 +244,7 @@ way to apply functions to arguments than the usual parenthesis function applicat
 Each one applies the function from the corresponding direction. The operators are 
 meant to look like arrows that point from the argument to the function.
 These operators are very useful for chaining many function applications without the
-clutter of having to open and close parentheses for each one of the functions.\\\\
+clutter of having to open and close parentheses for each one of the functions.
 For example, assuming we have the following functions with the behaviour suggested
 by their names and types:
 \begin{verbatim}
@@ -267,6 +268,7 @@ Ofcourse this can be done equivalently using the other operator:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
   = sum_ints <- filter(is_odd) <- apply(string_length)to_all <- strings
+
 \end{verbatim}
 These operators can also be used together to put a function between two arguments
 if that function is commonly used that way in math (or if it looks better for a
@@ -317,6 +319,20 @@ reverse_words : String => String
   = merge_words <o apply(reverse_word)to_all <o split_words
 \end{verbatim}
 
+\begin{center}
+\begin{tabular}{ |c|c|c| } 
+\hline
+Operator & Type \\ 
+\hline
+\hline
+\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) \\
+\hline
+\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) \\
+\hline
+\end{tabular}
+\end{center}
+
+
 \subsubsection{Arithmetic Operators}
 
 The usual arithmetic operators work as they are expected, similarly to mathematics
@@ -361,7 +377,7 @@ Operator & Type \\
 \end{center}
 Let's analyze further the example of addition. The type can be read as such:
 the '+' operator has the type \\ (A, B) \ra C, provided that the type
-proposition (A)And(B)AddTo(C) holds. This proposition being true, means that
+statement (A)And(B)AddTo(C) holds. This statement being true, means that
 addition has been defined for these three types (see section "type logic"
 \ref{subsec:typelogic} for more on type propositions). For example, by the examples
 above we can see that the following propositions are true (in the order of the 
@@ -382,7 +398,108 @@ for new user defined types!
 
 \subsubsection{Comparison and Boolean Operators}
 
-\subsubsection{Monadic Operators}
+The comparison and boolean operators behave the same as in \H\ and very
+similarly to most programming languages. The main difference is that in lcases
+the "equals", "and" and "or" operators have the symbol once \\(\texttt{= \& |})
+rather than twice (\texttt{== \&\& ||}).
+
+\begin{center}
+\begin{tabular}{ |c|c|c| } 
+\hline
+Operator & Type & Description \\ 
+\hline
+\hline
+= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
+\hline
+\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
+\hline
+\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
+\hline
+\end{tabular}
+\end{center}
+\subsubsection{Environment Operators}
+
+\paragraph{Example program}
+
+\begin{verbatim}
+main : (EmptyValue)WithIO
+  = print_string <- "Hello! What's your name?" ; get_line ;> name =>
+    print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
+    print_string(
+      "Oh that's crazy " + name + "! I didn't expect you to be " + age + "!"
+    );
+\end{verbatim}
+The example above demonstrates the use of the environment operators in the 
+"WithIO" environment, which is how IO is done in lcases. Some light can be shed
+on how this is done, if we take a look at the types (as always!):
+\begin{verbatim}
+print_string  :  String => (EmptyValue)WithIO
+get_line  :  (String)WithIO
+
+print_string <- "Hello! ... "  :  (EmptyValue)WithIO
+print_string("Oh hi...)  :  (EmptyValue)WithIO
+print_string("Oh that's crazy...)  :  (EmptyValue)WithIO
+
+;  :  ((EmptyValue)WithIO, (String)WithIO) => (String)WithIO 
+print_string("Oh hi...) ; get_line  :  (String)WithIO
+
+age => print_string("Oh that's crazy...)  :  String => (EmptyValue)WithIO
+
+;>  :  ((String)WithIO, String => (EmptyValue)WithIO) => (EmptyValue)WithIO 
+
+print_string("Oh hi...) ; get_line ;> age => print_string("Oh that's crazy...)
+   :  (EmptyValue)WithIO
+
+name => print_string("Oh hi ... (till the end)  :  String => (EmptyValue)WithIO
+
+print_string <- "Hello..." ; get_line  :  (String)WithIO
+
+print_string <- "Hello..." ; get_line ;> name =>
+print_string("Oh hi ... (till the end)
+   :  (EmptyValue)WithIO
+
+therefore (main  :  (EmptyValue)WithIO) checks out
+\end{verbatim}
+The key here is to remember that function expressions extend to the end of the
+whole expression. Therefore, we have "\texttt{name => ... (till the end)}" and
+"\texttt{age => ... (till the end)}" as the second arguments of the two
+occurences of the "\texttt{;>}" operator. Also, the (actual/most general) types
+of the operators are show in the table below:
+
+\begin{center}
+\begin{tabular}{ |c|c|c| } 
+\hline
+Operator & Type & Equivalent in \H \\ 
+\hline
+\hline
+\texttt{;>} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) & \texttt{>>=} \\
+\hline
+\texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) & \texttt{>>} \\
+\hline
+\end{tabular}
+\end{center}
+In this particular case we have:
+
+\begin{itemize}
+
+\item
+For "\texttt{;>}":
+\begin{verbatim}
+E = WithIO
+A = String
+B = EmptyValue
+\end{verbatim}
+
+\item
+For "\texttt{;}":
+\begin{verbatim}
+E = WithIO
+A = EmptyValue
+B = String
+\end{verbatim}
+
+\item (WithIO)IsAnEnvironment is a true statement
+\end{itemize}
 
 \subsubsection{Complete Table, Precedence, Associativity and Grammar}
 
@@ -416,7 +533,7 @@ Operator & Type & Description \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
-\texttt{:>} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) &
+\texttt{;>} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) &
 Monad bind \\
 \hline
 \texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) &
@@ -449,7 +566,7 @@ Operator & Precedence & Associativity \\
 \hline
 \texttt{|} & 2 & Left \\
 \hline
-\texttt{:> ;} & 1 & Left \\
+\texttt{;> ;} & 1 & Left \\
 \hline
 \end{tabular}
 \end{center}
@@ -468,7 +585,7 @@ Operator & Precedence & Associativity \\
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `:>' | `;'
+`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'
 \end{grammar}
 
 \subsection{Functions}
@@ -866,7 +983,7 @@ heads_and_tails_to_lists : ListOf(HeadAndTailOf(A)s)s => ListOf(ListOf(A)s)s
 
 \subsubsection{Type Predicate}
 
-\subsubsection{Type Proposition}
+\subsubsection{Type Statement}
 
 \subsubsection{Type Theorem}
 
