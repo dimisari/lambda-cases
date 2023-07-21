@@ -69,11 +69,11 @@ value (gcd, a, b) : Int x Int x Int
 
 // algorithm
 
-extended_euclidean: (Int, Int) => GcdAndCoeffs
-  = (init_a_coeffs, init_b_coeffs) -> ee_recursion
-
 init_a_coeffs, init_b_coeffs: all Coeffs
   = (1, 0), (0, 1)
+
+extended_euclidean: (Int, Int) => GcdAndCoeffs
+  = ee_recursion(init_a_coeffs, init_b_coeffs)
 
 ee_recursion: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
   = (a_coeffs, b_coeffs, x, cases) =>
@@ -447,7 +447,8 @@ age => print_string("Oh that's crazy...)  :  String => (EmptyValue)WithIO
 
 ;>  :  ((String)WithIO, String => (EmptyValue)WithIO) => (EmptyValue)WithIO 
 
-print_string("Oh hi...) ; get_line ;> age => print_string("Oh that's crazy...)
+print_string("Oh hi...) ; get_line ;> age =>
+print_string("Oh that's crazy...)
    :  (EmptyValue)WithIO
 
 name => print_string("Oh hi ... (till the end)  :  String => (EmptyValue)WithIO
@@ -457,24 +458,23 @@ print_string <- "Hello..." ; get_line  :  (String)WithIO
 print_string <- "Hello..." ; get_line ;> name =>
 print_string("Oh hi ... (till the end)
    :  (EmptyValue)WithIO
-
-therefore (main  :  (EmptyValue)WithIO) checks out
 \end{verbatim}
-The key here is to remember that function expressions extend to the end of the
-whole expression. Therefore, we have "\texttt{name => ... (till the end)}" and
-"\texttt{age => ... (till the end)}" as the second arguments of the two
-occurences of the "\texttt{;>}" operator. Also, the (actual/most general) types
-of the operators are show in the table below:
+Therefore, "main\ \ : (EmptyValue)WithIO" checks out.  The key here is to remember
+that function expressions extend to the end of the whole expression. Therefore,
+we have "\texttt{name => ... (till the end)}" and "\texttt{age => ... (till the
+end)}" as the second arguments of the two occurences of the "\texttt{;>}"
+operator. Also, the (actual/most general) types of the operators are show in
+the table below:
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
-Operator & Type & Equivalent in \H \\ 
+Operator & Type \\ 
 \hline
 \hline
-\texttt{;>} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) & \texttt{>>=} \\
+\texttt{;>} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) \\
 \hline
-\texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) & \texttt{>>} \\
+\texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) \\
 \hline
 \end{tabular}
 \end{center}
@@ -503,6 +503,8 @@ B = String
 
 \subsubsection{Complete Table, Precedence, Associativity and Grammar}
 
+Below we have the complete table of lcases operators along with their types and 
+their short descriptions.
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
@@ -542,6 +544,7 @@ Monad then \\
 \end{tabular}
 \end{center}
 
+Below we have the table of precedence and associativity of the lcases operators.
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
@@ -572,20 +575,23 @@ Operator & Precedence & Associativity \\
 \end{center}
 
 \paragraph{Grammar}
+The ambiguity of the grammar is resolved by the precedence and associativity table.
 \begin{grammar}
-<operator-expression> ::= <operator-argument> <operator> <right-operator-argument>
+<operator-expression> ::=
+<operator-argument> <operator> ( <operator-argument> | <function-expression> )
 
 <operator-argument> ::=
-<literal> | <identifier> | <parentheses-function-application> |
-<parentheses-expression>
-
-<right-operator-argument> ::= <operator-argument> | <function-expression>
+<literal> | <identifier> | <tuple> | <list> | <parenthesis-function-application> |
+<parenthesis-expression>
 
 <operator> ::= `\ ' <op> `\ '
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
 `=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'
+
+<parenthesis-expression> ::=
+`(' ( <function-expression> | <operator-expression> ) `)'
 \end{grammar}
 
 \subsection{Functions}
@@ -664,18 +670,122 @@ a => 17 * a + 42
 Function expressions are used to define functions or pass anonymous functions as 
 arguments to other functions. They are comprised by their parameters and their 
 body. The parameters are either only one in which case a single identifier is used, 
-or they are many in which case many identifiers are used in parentheses, seperated 
+or they are many in which case many identifiers are used in parenthesis, seperated 
 by a comma. The parameters and the body are seperated by an arrow.
 The body is an operator expression.
 
 \paragraph{Grammar}
 \begin{grammar}
-<function-expression> ::= <parameters> `\ =>\ ' <operator-expression>
+<function-expression> ::=
+<simple-function-expression> | <cases-function-expression>\\
 
-<parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
+<simple-function-expression> ::= <parameters> `\ =>\ ' <operator-expression> 
+
+<parameters> ::= <parameter> | `(' <parameter> ( `,\ ' <parameter> )+ `)'
+
+<parameter> ::= <identifier> | `fields'\\
+
 \end{grammar}
 
-\subsubsection{Special Function Parameters}
+\subsubsection{"cases" Syntax}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+print_sentimental_bool : Bool => (EmptyValue)WithIO
+  = cases =>
+    true => print <- "It's true!! :)"
+    false => print <- "It's false... :("
+
+or_type TrafficLight
+values green | amber | red
+
+print_sentimental_traffic_light : Bool => (EmptyValue)WithIO
+  = cases =>
+    green => print <- "It's green! Let's go!!! :)"
+    amber => print <- "Go go go, fast!"
+    red => print <- "Stop right now! You're going to kill us!!"
+
+is_not_red : TrafficLight => Bool
+  = cases =>
+    green => true
+    amber => true
+    red => false
+
+is_seventeen_or_forty_two : Int => Bool
+  = cases => 
+    17 => true
+    42 => true
+    ... => false
+ 
+traffic_lights_match : (TrafficLight, TrafficLight) => Bool
+  = (cases, cases) =>
+    green, green => true
+    amber, amber => true
+    red, red => true
+    ... => false
+
+gcd : (Int, Int) => Int
+  = (x, cases) =>
+    0 => x
+    y => gcd(y, x -> mod <- y) 
+
+is_empty : ListOf(A)s => Bool
+  = cases => 
+    empty => true
+    non_empty:anything => false
+
+apply()to_all: (A => B, ListOf(A)s) => ListOf(B)s
+  = (f, cases) =>
+    empty => empty
+    non_empty:list => non_empty:(f <- list.head, apply(f)to_all <- list.tail)
+
+\end{verbatim}
+
+\paragraph{Description}\pend
+"cases" is a keyword that works as a special parameter. The difference is that 
+instead of giving the name "cases" to that parameter, it let's you 
+pattern match on the possible values of that parameter and return a different
+result for each particular case (hence the name!). 
+\\\\
+The "cases" keyword can only be used on parameters that have either one of the 
+basic types (Int, Real, Char, String) or an or\_type (e.g. Bool, ListOf(A)s).
+\\\\
+The last case can be "\texttt{... => (body of default case)}" to capture all
+remaining cases while dismissing the value (e.g.
+\texttt{is_seventeen_or_forty_two} example), or it can be
+"\texttt{some_identifier => (body of default case)}" to capture all remaining
+cases while being able to use the value with the name "\texttt{some_identifier}"
+(e.g.  "y" in \texttt{gcd} example).
+\\\\
+It is possible to use the "cases" keyword in multiple parameters to match on all
+of them. By doing that, each case represents a particular combination of values
+for the parameters involved (e.g. \texttt{traffic_lights_match} example).
+\\\\
+A function expression that uses the "cases" syntax must contain the "cases"
+keyword in at least one parameter. The number of matching expressions in 
+all cases must the same as the number of parameters with the "cases" keyword.
+
+\paragraph{Grammar}
+\begin{grammar}
+<cases-function-expression> ::= <case-parameters> `\ =>\ ' <cases> \\
+
+<case-parameters> ::=
+<case-parameter> | `(' <case-parameter> ( `,\ ' <case-parameter> )+ `)'
+
+<case-parameter> ::= <parameter> | `cases'\\
+
+<cases> ::= <case>+ [ <default-case> ]
+
+<case> ::=
+`\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>\ ' <operator-expression>
+
+<default-case> ::= `\\n' <indentation> `...\ =>\ ' <operator-expression>\\
+
+<matching> ::= <literal> | <identifier> [ `:' <identifier> ]
+\end{grammar}
+
+\subsubsection{"fields" Special Parameter}
 
 \begin{verbatim}
 x => body
@@ -684,41 +794,11 @@ cases => body
 (x, cases, z) => body
 \end{verbatim}
 
-\subsubsection{Expressions}
+\subsubsection{Predefined Functions}
 
-\paragraph{Examples}
+\subsection{"where" Expressions}
 
-\begin{verbatim}
-42
-
-x
-
-funny_identifier 
-
-[1, 2, 3]
-
-"Hello world!"
-
-x -> mod <- y
-
-1.61 * 2.71 + 3.14
-
-a => 17 * a + 42
-
-(x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1 / 2)
-
-n -> +1 -> ^2 -> *3 -> print
-
-f(x, y, z) + g(1, 2, 3)
-\end{verbatim}
-
-\paragraph{Description}\pend
-The base of expressions, are literals and identifiers, those can be combined either
-with operators, or by normal function application with mathematical notation. 
-Finally, on top of that there can be added one of more abstractions (parameters)
-in the beginning of the expressions with an arrow.
-
-\paragraph{Grammar}\pend
+\paragraph{Grammar}
 
 \subsection{Value Definitions}
 \label{subsec:valdefs}
@@ -924,7 +1004,7 @@ or_type ListOf(A)s
 values non_empty:HeadAndTailOf(A)s | empty
 
 tuple_type HeadAndTailOf(A)s
-value (head : A, tail : ListOf(A)s)
+value (head, tail) : A x ListOf(A)s
 
 is_empty : ListOf(A)s => Bool
   = cases => 
@@ -1046,7 +1126,7 @@ cases use_fields tuple_type or_type
 
 \end{grammar}
 
-\section{Notable differences from \H}
+\section{lcases vs Haskell: Similarities and Differences}
 
 \section{Parser implimentation}
 
