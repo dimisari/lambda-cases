@@ -72,14 +72,13 @@ value (gcd, a, b) : Int x Int x Int
 init_a_coeffs, init_b_coeffs: all Coeffs
   = (1, 0), (0, 1)
 
-extended_euclidean: (Int, Int) => GcdAndCoeffs
-  = ee_recursion(init_a_coeffs, init_b_coeffs)
+ext_euc: (Int, Int) => GcdAndCoeffs
+  = ext_euc_rec(init_a_coeffs, init_b_coeffs)
 
-ee_recursion: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
+ext_euc_rec: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
   = (a_coeffs, b_coeffs, x, cases) =>
     0 => (x, a_coeffs.previous, b_coeffs.previous)
-    y =>
-      ee_recursion(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
+    y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
       where
       next: Coeffs => Coeffs
         = fields => (current, previous - x / y * current)
@@ -93,12 +92,15 @@ read_two_ints : (Int x Int)WithIO
       2 => ints -> with_io
       ... => io_error <- "You didn't give me 2 ints"
  
-print_gcd_and_coeffs : GcdAndCoeffs => (EmptyValue)WithIO
-  = fields => print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
+print_gcd_equation : (Int, Int, GcdAndCoeffs) => (EmptyValue)WithIO
+  = (x, y, fields) => print("gcd = " + gcd + " = " + sum_string)
+    where
+    sum_string : String
+      = a + " * " + x + " + " + b + " * " + y
 
 main : (EmptyValue)WithIO
   = read_two_ints ;> ints =>
-    extended_euclidean(ints.1st, ints.2nd) -> print_gcd_and_coeffs
+    print_gcd_and_coeffs(ints.1st, ints.2nd, ext_euc(ints.1st, ints.2nd))
 \end{verbatim}
 
 \subsection{Basic Expressions}
@@ -196,7 +198,7 @@ value (my_int, my_string, my_real) : Int x String x Real
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <value-expression> ( `,\ ' <value-expression> )+ `)'
+<tuple> ::= `(' <simple-expression> ( `,\ ' <simple-expression> )+ `)'
 \end{grammar}
 
 \end{itemize}
@@ -230,7 +232,7 @@ ListOf(T)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [<value-expression> ( `,\ ' <value-expression> )*] `]'
+<list> ::= `[' [<simple-expression> ( `,\ ' <simple-expression> )*] `]'
 \end{grammar}
 
 \end{itemize}
@@ -250,7 +252,7 @@ by their names and types:
 \begin{verbatim}
 apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
 string_length: String => Int
-filter : (A => Bool, ListOf(A)s) => ListOf(A)s
+filter_with : (A => Bool, ListOf(A)s) => ListOf(A)s
 is_odd : Int => Bool
 sum_ints : ListOf(Int)s => Int
 \end{verbatim}
@@ -262,12 +264,12 @@ Here is a simple way to get the number of characters in all the strings that hav
 odd length:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
-  = strings -> apply(string_length)to_all -> filter(is_odd) -> sum_ints
+  = strings -> apply(string_length)to_all -> filter_with(is_odd) -> sum_ints
 \end{verbatim}
 Ofcourse this can be done equivalently using the other operator:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
-  = sum_ints <- filter(is_odd) <- apply(string_length)to_all <- strings
+  = sum_ints <- filter_with(is_odd) <- apply(string_length)to_all <- strings
 
 \end{verbatim}
 These operators can also be used together to put a function between two arguments
@@ -577,21 +579,28 @@ Operator & Precedence & Associativity \\
 \paragraph{Grammar}
 The ambiguity of the grammar is resolved by the precedence and associativity table.
 \begin{grammar}
-<operator-expression> ::=
-<operator-argument> <operator> ( <operator-argument> | <function-expression> )
+<op-expr> ::=
+<simple-op-expr> | <op-func-expr> \\
 
-<operator-argument> ::=
-<literal> | <identifier> | <tuple> | <list> | <parenthesis-function-application> |
-<parenthesis-expression>
+<simple-op-expr> ::= <op-arg> `\ ' <op> `\ ' <op-arg>
 
-<operator> ::= `\ ' <op> `\ '
+<op-func-expr> ::=
+<op-arg> `\ ' <op> `\ ' ( <op-func-expr> | <func-expr> )\\
+
+<op-arg> ::= 
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <paren-expr> |
+<simple-op-expr>
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'
+`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
 
-<parenthesis-expression> ::=
-`(' ( <function-expression> | <operator-expression> ) `)'
+
+<paren-expr> ::=  
+`(' ( <simple-op-expr> | <simple-func-expr> | <op-simple-func-expr>  ) `)'
+
+<op-simple-func-expr> ::=
+<op-arg> `\ ' <op> `\ ' ( <op-simple-func-expr> | <simple-func-expr> )
 \end{grammar}
 
 \subsection{Functions}
@@ -642,12 +651,12 @@ next ones to the right and so on.
 
 \paragraph{Grammar}
 \begin{grammar}
-<parenthesis-function-application> ::= ""\\
+<paren-func-app> ::= ""\\
 <arguments> ( <identifier-with-arguments> | <identifier> )
 \alt ( <identifier-with-arguments> | <identifier> ) <arguments>
 \alt <identifier-with-arguments>
 
-<arguments> ::= `(' <value-expression> ( `,\ ' <value-expression> )* `)'
+<arguments> ::= `(' <simple-expression> ( `,\ ' <simple-expression> )* `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] <id-char-or-paren-id-char>* ( <arguments> [a-z_]
@@ -671,15 +680,15 @@ Function expressions are used to define functions or pass anonymous functions as
 arguments to other functions. They are comprised by their parameters and their 
 body. The parameters are either only one in which case a single identifier is used, 
 or they are many in which case many identifiers are used in parenthesis, seperated 
-by a comma. The parameters and the body are seperated by an arrow.
+by a comma. The parameters and the body are seperated by an arrow (" \texttt{=>} ").
 The body is an operator expression.
 
 \paragraph{Grammar}
 \begin{grammar}
-<function-expression> ::=
-<simple-function-expression> | <cases-function-expression>\\
+<func-expr> ::=
+<simple-func-expr> | <cases-func-expr>\\
 
-<simple-function-expression> ::= <parameters> `\ =>\ ' <operator-expression> 
+<simple-func-expr> ::= <parameters> `\ =>\ ' <op-expr> 
 
 <parameters> ::= <parameter> | `(' <parameter> ( `,\ ' <parameter> )+ `)'
 
@@ -764,11 +773,11 @@ for the parameters involved (e.g. \texttt{traffic_lights_match} example).
 \\\\
 A function expression that uses the "cases" syntax must contain the "cases"
 keyword in at least one parameter. The number of matching expressions in 
-all cases must the same as the number of parameters with the "cases" keyword.
+all cases must be the same as the number of parameters with the "cases" keyword.
 
 \paragraph{Grammar}
 \begin{grammar}
-<cases-function-expression> ::= <case-parameters> `\ =>\ ' <cases> \\
+<cases-func-expr> ::= <case-parameters> `\ =>\ ' <cases> \\
 
 <case-parameters> ::=
 <case-parameter> | `(' <case-parameter> ( `,\ ' <case-parameter> )+ `)'
@@ -778,25 +787,51 @@ all cases must the same as the number of parameters with the "cases" keyword.
 <cases> ::= <case>+ [ <default-case> ]
 
 <case> ::=
-`\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>\ ' <operator-expression>
+`\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>\ ' <op-expr>
 
-<default-case> ::= `\\n' <indentation> `...\ =>\ ' <operator-expression>\\
+<default-case> ::= `\\n' <indentation> `...\ =>\ ' <op-expr>\\
 
 <matching> ::= <literal> | <identifier> [ `:' <identifier> ]
 \end{grammar}
 
 \subsubsection{"fields" Special Parameter}
 
-\begin{verbatim}
-x => body
-(x, y, z) => body
-cases => body
-(x, cases, z) => body
-\end{verbatim}
-
 \subsubsection{Predefined Functions}
 
 \subsection{"where" Expressions}
+
+\paragraph{Examples}
+\begin{verbatim}
+sort : (A)HasOrder --> ListOf(A)s => ListOf(A)s
+  = cases => 
+    empty => empty
+    non_empty:l => sort(less_l) + l.head + sort(greater_l)
+    where
+    less_l : ListOf(A)s
+      = filter_with(x => x < l.head, l.tail)
+    greater_l : ListOf(A)s
+      = filter_with(x => x >= l.head, l.tail)
+
+tuple_type Coeffs
+value (previous, current) : Int x Int
+
+tuple_type GcdAndCoeffs
+value (gcd, a, b) : Int x Int x Int
+
+ext_euc: (Int, Int) => GcdAndCoeffs
+  = ext_euc_rec((1, 0), (0, 1))
+
+ext_euc_rec: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
+  = (a_coeffs, b_coeffs, x, cases) =>
+    0 => (x, a_coeffs.previous, b_coeffs.previous)
+    y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
+    where
+    next: Coeffs => Coeffs
+      = fields => (current, previous - x / y * current)
+
+\end{verbatim}
+
+\paragraph{Description}
 
 \paragraph{Grammar}
 
