@@ -103,7 +103,7 @@ main : (EmptyValue)WithIO
     print_gcd_and_coeffs(ints.1st, ints.2nd, ext_euc(ints.1st, ints.2nd))
 \end{verbatim}
 
-\subsection{Basic Expressions}
+\subsection{Basic Value Expressions}
 
 \subsubsection{Literals and Identifiers}
 
@@ -162,7 +162,42 @@ middle of an identifier (see "parenthesis function application" section
 \end{itemize}
 
 \newpage
-\subsubsection{Tuples and Lists}
+\subsubsection{Parenthesis, Tuples and Lists}
+
+\paragraph{Parenthesis}
+
+\begin{itemize}
+
+\item \textit{Examples}
+\begin{verbatim}
+(1 + 2)
+in
+(1 + 2) * 3
+
+(x => f(x) + 1) and (s => "f(val) + 1 is: " + s)
+in
+val -> (x => f(x) + 1) -> to_string -> (s => "f(val) + 1 is: " + s)
+
+("Line is: " + line) and (get_line ;> line => print("Line is: " + line))
+in
+do(3)times <- (get_line ;> line => print("Line is: " + line))
+\end{verbatim}
+
+\item \textit{Description} \\\\
+An expression is put in parenthesis to prioritize it or isolate it in a bigger
+expression. The expressions that can be placed in parethesis are "simple"
+operator or function expressions (or a mix). In this context, "simple" means
+that the "cases" syntax does not appear anywhere in the expression (see "cases"
+syntax section \ref{subsubsec:casessyntax}).
+
+\item \textit{Grammar}
+\begin{grammar}
+<paren-expr> ::=  `(' <simple-expr> `)'
+
+<simple-expr> ::=  <simple-op-expr> | <simple-func-expr> | <simple-op-func-expr>  )
+\end{grammar}
+
+\end{itemize}
 
 \paragraph{Tuples}
 
@@ -198,7 +233,11 @@ value (my_int, my_string, my_real) : Int x String x Real
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <simple-expression> ( `,\ ' <simple-expression> )+ `)'
+<tuple> ::= `(' <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )+ `)'
+
+<basic-or-simple-expr> := <basic-expr>  | <simple-expr>
+
+<basic-expr> ::= <literal> | <identifier> | <tuple> | <list> | <paren-func-app>
 \end{grammar}
 
 \end{itemize}
@@ -212,17 +251,19 @@ value (my_int, my_string, my_real) : Int x String x Real
 [1, 2, 17, 42, -100]
 [1.61, 2.71, 3.14, -1234.567]
 ["Hello World!", "What's up, doc?", "Alrighty then!"]
+[x => x + 1, x => x + 2, x => x + 3]
 [x, y, z, w]
 \end{verbatim}
 
 \item \textit{Description} \\\\
 Lists are used to group many values of the same type into one. 
 The type of the list is ListOf(A)s where A is the type of every value inside.
-Therefore, the types of the first three examples are:
+Therefore, the types of the first four examples are:
 \begin{verbatim}
 ListOf(Int)s
 ListOf(Real)s
 ListOf(String)s
+(A)And(Int)AddTo(B) --> ListOf(A => B)s
 \end{verbatim}
 And the last list is only legal if x, y, z and w all have the same type. Assuming 
 they do and it's the type T, the type of the list is: 
@@ -232,10 +273,71 @@ ListOf(T)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [<simple-expression> ( `,\ ' <simple-expression> )*] `]'
+<list> ::= `[' [ <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )* ] `]'
 \end{grammar}
 
 \end{itemize}
+
+\subsubsection{Parenthesis Function Application}
+\label{subsec:parenfuncapp}
+
+\paragraph{Examples}
+
+\begin{verbatim}
+f(x)
+f(x, y, z)
+(x)to_string
+apply(f)to_all
+apply(f)to_all(l)
+\end{verbatim}
+
+\paragraph{Description}\pend
+Function application in lcases can be done in many different ways in an attempt to 
+maximize readability. In this section, we discuss the ways function application can
+be done with parenthesis. In the first two examples, we have the usual mathematical
+function application which is also used in most programming languages and
+should be familiar to the reader. That is, function application is done with the 
+arguments of the function in parenthesis seperated by commas and \textbf{appended}
+to the function identifier.
+\\\\
+We extend this idea by allowing the arguments to be \textbf{prepended} to the
+function identifier (third example). Finally, it is also possible to to have
+the arguments \textbf{inside} the function identifier provided the function has
+been \textbf{defined with parentheses inside the identifier}. For example,
+below is the definition of "apply()to\_all":
+
+\begin{verbatim}
+apply()to_all: (A => B, ListOf(A)s) => ListOf(B)s
+  = (f, cases) =>
+    empty => empty
+    non_empty:l => non_empty:(f <- l.head, apply(f)to_all <- l.tail)
+\end{verbatim}
+The actual definition doesn't matter at this point, what matters is that the 
+identifier is "apply()to\_all" with the parentheses \textbf{included}. This is very
+useful for defining functions where the argument in the middle makes the function
+application look and sound more like natural language.
+\\\\
+In is possible that many paratheses pairs are present in a single function
+application (last example). The arguments are always inserted to the function
+from \textbf{left to right}.  Therefore, when multiple parentheses pairs are
+present the arguments of the leftmost parentheses are inserted first then the
+next ones to the right and so on.
+
+\paragraph{Grammar}
+\begin{grammar}
+<paren-func-app> ::= ""\\
+<arguments> ( <identifier-with-arguments> | <identifier> )
+\alt ( <identifier-with-arguments> | <identifier> ) <arguments>
+\alt <identifier-with-arguments>
+
+<arguments> ::= `(' <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )* `)'
+
+<identifier-with-arguments> ::= ""\\""
+[a-z] <id-char-or-paren-id-char>* ( <arguments> [a-z_]
+<id-char-or-paren-id-char>* )+ [ [0-9] ]
+
+<id-char-or-paren-id-char> ::= [a-z_] | `()'[a-z_]
+\end{grammar}
 
 \subsection{Operators}
 
@@ -298,7 +400,7 @@ Operator & Type \\
 
 \subsubsection{Function Composition Operators}
 The function composition operators "\texttt{o>}" and "\texttt{<o}" are used to 
-compose funtions, each one in the corresponding direction. The use of the letter 'o'
+compose functions, each one in the corresponding direction. The use of the letter 'o'
 is meant to be similar to the mathematical function composition symbol '\(\circ\)'
 and the symbols '\texttt{>}', '\texttt{<}' are used so that the operator points from
 the function which is applied first to the function which is applied second.
@@ -307,18 +409,18 @@ following functions with the behaviour suggested by their names and types:
 \begin{verbatim}
 split_words : String => ListOf(String)s
 apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
-reverse_word: String => String
+reverse_string: String => String
 merge_words : ListOf(String)s => String
 \end{verbatim}
 We can reverse the all the words in a string like so:
 \begin{verbatim}
 reverse_words : String => String
-  = split_words o> apply(reverse_word)to_all o> merge_words
+  = split_words o> apply(reverse_string)to_all o> merge_words
 \end{verbatim}
 Ofcourse this can be done equivalently using the other operator:
 \begin{verbatim}
 reverse_words : String => String
-  = merge_words <o apply(reverse_word)to_all <o split_words
+  = merge_words <o apply(reverse_string)to_all <o split_words
 \end{verbatim}
 
 \begin{center}
@@ -381,8 +483,8 @@ Let's analyze further the example of addition. The type can be read as such:
 the '+' operator has the type \\ (A, B) \ra C, provided that the type
 statement (A)And(B)AddTo(C) holds. This statement being true, means that
 addition has been defined for these three types (see section "type logic"
-\ref{subsec:typelogic} for more on type propositions). For example, by the examples
-above we can see that the following propositions are true (in the order of the 
+\ref{subsec:typelogic} for more on type statements). For example, by the examples
+above we can deduce that the following propositions are true (in the order of the 
 examples):
 \begin{verbatim}
 (Int)And(Int)AddTo(Int)
@@ -408,14 +510,14 @@ rather than twice (\texttt{== \&\& ||}).
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
-Operator & Type & Description \\ 
+Operator & Type \\ 
 \hline
 \hline
-= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
+= /= & (A)HasEquality \Ra (A, A) \ra Bool \\
 \hline
-\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
+\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool \\
 \hline
-\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
+\texttt{\& |} & (Bool, Bool) \ra Bool \\
 \hline
 \end{tabular}
 \end{center}
@@ -461,12 +563,12 @@ print_string <- "Hello..." ; get_line ;> name =>
 print_string("Oh hi ... (till the end)
    :  (EmptyValue)WithIO
 \end{verbatim}
-Therefore, "main\ \ : (EmptyValue)WithIO" checks out.  The key here is to remember
-that function expressions extend to the end of the whole expression. Therefore,
-we have "\texttt{name => ... (till the end)}" and "\texttt{age => ... (till the
-end)}" as the second arguments of the two occurences of the "\texttt{;>}"
-operator. Also, the (actual/most general) types of the operators are show in
-the table below:
+Therefore, "\texttt{main\ :\ (EmptyValue)WithIO}" checks out.  The key here is
+to remember that function expressions extend to the end of the whole
+expression. Therefore, we have "\texttt{name => ... (till the end)}" and
+"\texttt{age => ... (till the end)}" as the second arguments of the two
+occurences of the "\texttt{;>}" operator. Also, the (actual/most general) types
+of the operators are show in the table below:
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -500,10 +602,67 @@ A = EmptyValue
 B = String
 \end{verbatim}
 
-\item (WithIO)IsAnEnvironment is a true statement
+\item \texttt{(WithIO)IsAnEnvironment} is a true statement
 \end{itemize}
 
-\subsubsection{Complete Table, Precedence, Associativity and Grammar}
+\subsubsection{Operator Expressions}
+
+\paragraph{Examples}
+\begin{verbatim}
+1 + 2
+1 + x * 3 ^ y
+"Hello " + "World!"
+x -> f -> g
+f o> g
+f o> x => 2 * x
+x = y
+x >= y - z & x < 2 * y
+get_line ; get_line ;> line => print("Second line: " + line)
+\end{verbatim}
+
+\paragraph{Description}\pend
+Operator expressions are expressions that use operators. Operators act like
+two-argument-functions that are placed in between their arguments. Therefore,
+they have function types and they act as it is described in their respective
+sections above this one.
+\\\\
+An operator expression might have multiple operators
+and therefore arguments between two operators. The order in which the operators
+are going to act on the arguments is explained in the next section ("Complete
+Table, Precedence and Associativity").
+\\\\
+Just like functions, the sub-expressions
+that act as arguments to an operator, must have types that match the types 
+expected by the operator.
+\\\\
+It is possible to end an operator expression with a function. This is mostly
+useful with the "\texttt{;>}" operator (see previous section "Environment
+Operators", but it is also possible with the following operators:
+"\texttt{->}", "\texttt{o>}", "\texttt{<o}".
+
+\paragraph{Grammar}
+The ambiguity of the grammar is resolved by the precedence and associativity table.
+\begin{grammar}
+<op-expr> ::=
+<simple-op-expr> | <simple-op-func-expr> | <op-cases-func-expr> \\
+
+<simple-op-expr> ::= <op-arg> `\ ' <op> `\ ' <op-arg>
+
+<simple-op-func-expr> ::=
+<op-arg> `\ ' <op> `\ ' ( <simple-op-func-expr> | <simple-func-expr> )
+
+<op-cases-func-expr> ::=
+<op-arg> `\ ' <op> `\ ' ( <op-cases-func-expr> | <cases-func-expr> )\\
+
+<op-arg> ::= <basic-expr> | <paren-expr> | <simple-op-expr>
+
+<op> ::= 
+`->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
+`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
+
+\end{grammar}
+
+\subsubsection{Complete Table, Precedence and Associativity}
 
 Below we have the complete table of lcases operators along with their types and 
 their short descriptions.
@@ -576,96 +735,8 @@ Operator & Precedence & Associativity \\
 \end{tabular}
 \end{center}
 
-\paragraph{Grammar}
-The ambiguity of the grammar is resolved by the precedence and associativity table.
-\begin{grammar}
-<op-expr> ::=
-<simple-op-expr> | <op-func-expr> \\
-
-<simple-op-expr> ::= <op-arg> `\ ' <op> `\ ' <op-arg>
-
-<op-func-expr> ::=
-<op-arg> `\ ' <op> `\ ' ( <op-func-expr> | <func-expr> )\\
-
-<op-arg> ::= 
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <paren-expr> |
-<simple-op-expr>
-
-<op> ::= 
-`->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
-
-
-<paren-expr> ::=  
-`(' ( <simple-op-expr> | <simple-func-expr> | <op-simple-func-expr>  ) `)'
-
-<op-simple-func-expr> ::=
-<op-arg> `\ ' <op> `\ ' ( <op-simple-func-expr> | <simple-func-expr> )
-\end{grammar}
-
-\subsection{Functions}
-\subsubsection{Parenthesis Function Application}
-\label{subsec:parenfuncapp}
-
-\paragraph{Examples}
-
-\begin{verbatim}
-f(x)
-f(x, y, z)
-(x)to_string
-apply(f)to_all
-apply(f)to_all(l)
-\end{verbatim}
-
-\paragraph{Description}\pend
-Function application in lcases can be done in many different ways in an attempt to 
-maximize readability. In this section, we discuss the ways function application can
-be done with parenthesis. In the first two examples, we have the usual mathematical
-function application which is also used in most programming languages and
-should be familiar to the reader. That is, function application is done with the 
-arguments of the function in parenthesis seperated by commas and \textbf{appended}
-to the function identifier.
-\\\\
-We extend this idea by allowing the arguments to be \textbf{prepended} to the
-function identifier (third example). Finally, it is also possible to to have
-the arguments \textbf{inside} the function identifier provided the function has
-been \textbf{defined with parentheses inside the identifier}. For example,
-below is the definition of "apply()to\_all":
-
-\begin{verbatim}
-apply()to_all: (A => B, ListOf(A)s) => ListOf(B)s
-  = (f, cases) =>
-    empty => empty
-    non_empty:l => non_empty:(f <- l.head, apply(f)to_all <- l.tail)
-\end{verbatim}
-The actual definition doesn't matter at this point, what matters is that the 
-identifier is "apply()to\_all" with the parentheses \textbf{included}. This is very
-useful for defining functions where the argument in the middle makes the function
-application look and sound more like natural language.
-\\\\
-In is possible that many paratheses pairs are present in a single function
-application (last example). The arguments are always inserted to the function
-from \textbf{left to right}.  Therefore, when multiple parentheses pairs are
-present the arguments of the leftmost parentheses are inserted first then the
-next ones to the right and so on.
-
-\paragraph{Grammar}
-\begin{grammar}
-<paren-func-app> ::= ""\\
-<arguments> ( <identifier-with-arguments> | <identifier> )
-\alt ( <identifier-with-arguments> | <identifier> ) <arguments>
-\alt <identifier-with-arguments>
-
-<arguments> ::= `(' <simple-expression> ( `,\ ' <simple-expression> )* `)'
-
-<identifier-with-arguments> ::= ""\\""
-[a-z] <id-char-or-paren-id-char>* ( <arguments> [a-z_]
-<id-char-or-paren-id-char>* )+ [ [0-9] ]
-
-<id-char-or-paren-id-char> ::= [a-z_] | `()'[a-z_]
-\end{grammar}
-
-\subsubsection{Function Expressions}
+\subsection{Function Expressions}
+\subsubsection{Simple Function Expressions}
 
 \paragraph{Examples}
 
@@ -685,10 +756,10 @@ The body is an operator expression.
 
 \paragraph{Grammar}
 \begin{grammar}
-<func-expr> ::=
-<simple-func-expr> | <cases-func-expr>\\
+<func-expr> ::= <simple-func-expr> | <cases-func-expr>
 
-<simple-func-expr> ::= <parameters> `\ =>\ ' <op-expr> 
+<simple-func-expr> ::=
+<parameters> `\ =>\ ' ( <simple-op-expr> | <simple-op-func-expr> )
 
 <parameters> ::= <parameter> | `(' <parameter> ( `,\ ' <parameter> )+ `)'
 
@@ -696,7 +767,10 @@ The body is an operator expression.
 
 \end{grammar}
 
+\subsubsection{"fields" Special Parameter}
+
 \subsubsection{"cases" Syntax}
+\label{subsubsec:casessyntax}
 
 \paragraph{Examples}
 
@@ -777,12 +851,12 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \paragraph{Grammar}
 \begin{grammar}
-<cases-func-expr> ::= <case-parameters> `\ =>\ ' <cases> \\
+<cases-func-expr> ::= <cases-parameters> `\ =>\ ' <cases> \\
 
-<case-parameters> ::=
-<case-parameter> | `(' <case-parameter> ( `,\ ' <case-parameter> )+ `)'
+<cases-parameters> ::=
+<cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
-<case-parameter> ::= <parameter> | `cases'\\
+<cases-parameter> ::= <parameter> | `cases'\\
 
 <cases> ::= <case>+ [ <default-case> ]
 
@@ -794,50 +868,10 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <matching> ::= <literal> | <identifier> [ `:' <identifier> ]
 \end{grammar}
 
-\subsubsection{"fields" Special Parameter}
-
-\subsubsection{Predefined Functions}
-
-\subsection{"where" Expressions}
-
-\paragraph{Examples}
-\begin{verbatim}
-sort : (A)HasOrder --> ListOf(A)s => ListOf(A)s
-  = cases => 
-    empty => empty
-    non_empty:l => sort(less_l) + l.head + sort(greater_l)
-    where
-    less_l : ListOf(A)s
-      = filter_with(x => x < l.head, l.tail)
-    greater_l : ListOf(A)s
-      = filter_with(x => x >= l.head, l.tail)
-
-tuple_type Coeffs
-value (previous, current) : Int x Int
-
-tuple_type GcdAndCoeffs
-value (gcd, a, b) : Int x Int x Int
-
-ext_euc: (Int, Int) => GcdAndCoeffs
-  = ext_euc_rec((1, 0), (0, 1))
-
-ext_euc_rec: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
-  = (a_coeffs, b_coeffs, x, cases) =>
-    0 => (x, a_coeffs.previous, b_coeffs.previous)
-    y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
-    where
-    next: Coeffs => Coeffs
-      = fields => (current, previous - x / y * current)
-
-\end{verbatim}
-
-\paragraph{Description}
-
-\paragraph{Grammar}
-
 \subsection{Value Definitions}
 \label{subsec:valdefs}
 
+\subsubsection{Basic Structure}
 \paragraph{Examples}
 
 \begin{verbatim}
@@ -875,6 +909,44 @@ to all the values.
 <value-expressions> ::= <value-expression> ( `,\ ' <value-expression> )*  
 \end{grammar}
 
+\subsubsection{"where" Expressions}
+
+\paragraph{Examples}
+\begin{verbatim}
+sort : (A)HasOrder --> ListOf(A)s => ListOf(A)s
+  = cases => 
+    empty => empty
+    non_empty:l => sort(less_l) + l.head + sort(greater_l)
+    where
+    less_l : ListOf(A)s
+      = filter_with(x => x < l.head, l.tail)
+    greater_l : ListOf(A)s
+      = filter_with(x => x >= l.head, l.tail)
+
+tuple_type Coeffs
+value (previous, current) : Int x Int
+
+tuple_type GcdAndCoeffs
+value (gcd, a, b) : Int x Int x Int
+
+ext_euc: (Int, Int) => GcdAndCoeffs
+  = ext_euc_rec((1, 0), (0, 1))
+
+ext_euc_rec: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
+  = (a_coeffs, b_coeffs, x, cases) =>
+    0 => (x, a_coeffs.previous, b_coeffs.previous)
+    y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
+    where
+    next: Coeffs => Coeffs
+      = fields => (current, previous - x / y * current)
+
+\end{verbatim}
+
+\paragraph{Description}
+
+\paragraph{Grammar}
+
+\subsubsection{"main" Value}
 
 \subsection{Types}
 
@@ -1101,6 +1173,10 @@ heads_and_tails_to_lists : ListOf(HeadAndTailOf(A)s)s => ListOf(ListOf(A)s)s
 \subsubsection{Type Statement}
 
 \subsubsection{Type Theorem}
+
+\subsection{Predefined}
+
+\subsubsection{Functions}
 
 \subsection{Grammar}
 \subsubsection{Tokens}
