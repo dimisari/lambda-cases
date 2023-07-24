@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{syntax}
 \usepackage{array}
+\usepackage{multirow}
 \usepackage[left=2cm,right=2cm,top=2cm]{geometry}
 
 \date{}
@@ -194,7 +195,9 @@ syntax section \ref{subsubsec:casessyntax}).
 \begin{grammar}
 <paren-expr> ::=  `(' <simple-expr> `)'
 
-<simple-expr> ::=  <simple-op-expr> | <simple-func-expr> | <simple-op-func-expr>  )
+<simple-expr> ::= <simple-op-expr> | <simple-func-expr>
+
+<simple-op-expr> ::=  ( <op-arg> `\ ' <op> `\ ' )+ ( <op-arg> | <simple-func-expr> )
 \end{grammar}
 
 \end{itemize}
@@ -235,7 +238,7 @@ value (my_int, my_string, my_real) : Int x String x Real
 \begin{grammar}
 <tuple> ::= `(' <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )+ `)'
 
-<basic-or-simple-expr> := <basic-expr>  | <simple-expr>
+<basic-or-simple-expr> := <basic-expr> | <simple-expr>
 
 <basic-expr> ::= <literal> | <identifier> | <tuple> | <list> | <paren-func-app>
 \end{grammar}
@@ -330,7 +333,8 @@ next ones to the right and so on.
 \alt ( <identifier-with-arguments> | <identifier> ) <arguments>
 \alt <identifier-with-arguments>
 
-<arguments> ::= `(' <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )* `)'
+<arguments> ::=
+`(' <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )* `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] <id-char-or-paren-id-char>* ( <arguments> [a-z_]
@@ -343,14 +347,25 @@ next ones to the right and so on.
 
 \subsubsection{Function Application Operators}
 
-The function application operators "\texttt{->}" and "\texttt{<-}" are a different
-way to apply functions to arguments than the usual parenthesis function application.
-Each one applies the function from the corresponding direction. The operators are 
-meant to look like arrows that point from the argument to the function.
-These operators are very useful for chaining many function applications without the
-clutter of having to open and close parentheses for each one of the functions.
-For example, assuming we have the following functions with the behaviour suggested
-by their names and types:
+\begin{center}
+\begin{tabular}{ |c|c|c| } 
+\hline
+Operator & Type \\ 
+\hline
+\hline
+\texttt{->} & (A, A \ra B) \ra B \\
+\hline
+\texttt{<-} & (A \ra B, A) \ra B \\
+\hline
+\end{tabular}
+\end{center}
+The function application operators "\texttt{->}" and "\texttt{<-}" are a
+different way to apply functions to arguments than the usual parenthesis
+function application.  They are meant to look like arrows that point from the
+argument to the function.  These operators are very useful for chaining many
+function applications without the clutter of having to open and close
+parentheses for each one of the functions.  For example, assuming we have the
+following functions with the behaviour suggested by their names and types:
 \begin{verbatim}
 apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
 string_length: String => Int
@@ -377,28 +392,27 @@ chars_in_odd_length_strings : Int
 These operators can also be used together to put a function between two arguments
 if that function is commonly used that way in math (or if it looks better for a
 certain function). For example the "mod" function can be used like so:
-\begin{verbatim}
-x -> mod <- y
-\end{verbatim}
+\begin{center}
+\texttt{x -> mod <- y}
+\end{center}
 Instead of:
-\begin{verbatim}
-mod(x, y)
-\end{verbatim}
+\begin{center}
+\texttt{mod(x, y)}
+\end{center}
+
+\subsubsection{Function Composition Operators}
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
 Operator & Type \\ 
 \hline
 \hline
-\texttt{->} & (A, A \ra B) \ra B \\
+\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) \\
 \hline
-\texttt{<-} & (A \ra B, A) \ra B \\
+\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) \\
 \hline
 \end{tabular}
 \end{center}
-
-
-\subsubsection{Function Composition Operators}
 The function composition operators "\texttt{o>}" and "\texttt{<o}" are used to 
 compose functions, each one in the corresponding direction. The use of the letter 'o'
 is meant to be similar to the mathematical function composition symbol '\(\circ\)'
@@ -423,44 +437,8 @@ reverse_words : String => String
   = merge_words <o apply(reverse_string)to_all <o split_words
 \end{verbatim}
 
-\begin{center}
-\begin{tabular}{ |c|c|c| } 
-\hline
-Operator & Type \\ 
-\hline
-\hline
-\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) \\
-\hline
-\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) \\
-\hline
-\end{tabular}
-\end{center}
-
 
 \subsubsection{Arithmetic Operators}
-
-The usual arithmetic operators work as they are expected, similarly to mathematics
-and other programming languages. However, they are generalized. The examples below 
-show their generality:
-\begin{verbatim}
->> 1 + 1
-2
->> 1 + 3.14
-4.14
->> 'a' + 'b'
-"ab"
->> 'w' + "ord"
-"word"
->> "Hello " + "World!"
-"Hello World!"
->> 5 * 'a'
-"aaaaa"
->> 5 * "hi"
-"hihihihihi"
->> "1,2,3" - ','
-"123"
-\end{verbatim}
-The generality can also be seen from their types in the table below:
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
@@ -479,6 +457,27 @@ Operator & Type \\
 \hline
 \end{tabular}
 \end{center}
+The usual arithmetic operators work as they are expected, similarly to
+mathematics and other programming languages for the usual types. However, they
+are generalized. The examples below show their generality:
+\begin{verbatim}
+>> 1 + 1
+2
+>> 1 + 3.14
+4.14
+>> 'a' + 'b'
+"ab"
+>> 'w' + "ord"
+"word"
+>> "Hello " + "World!"
+"Hello World!"
+>> 5 * 'a'
+"aaaaa"
+>> 5 * "hi"
+"hihihihihi"
+>> "1,2,3" - ','
+"123"
+\end{verbatim}
 Let's analyze further the example of addition. The type can be read as such:
 the '+' operator has the type \\ (A, B) \ra C, provided that the type
 statement (A)And(B)AddTo(C) holds. This statement being true, means that
@@ -502,11 +501,6 @@ for new user defined types!
 
 \subsubsection{Comparison and Boolean Operators}
 
-The comparison and boolean operators behave the same as in \H\ and very
-similarly to most programming languages. The main difference is that in lcases
-the "equals", "and" and "or" operators have the symbol once \\(\texttt{= \& |})
-rather than twice (\texttt{== \&\& ||}).
-
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
@@ -521,54 +515,12 @@ Operator & Type \\
 \hline
 \end{tabular}
 \end{center}
+The comparison and boolean operators behave the same as in \H\ and very
+similarly to most programming languages. The main difference is that in lcases
+the "equals", "and" and "or" operators have the symbol once \\(\texttt{= \& |})
+rather than twice (\texttt{== \&\& ||}).
+
 \subsubsection{Environment Operators}
-
-\paragraph{Example program}
-
-\begin{verbatim}
-main : (EmptyValue)WithIO
-  = print_string <- "Hello! What's your name?" ; get_line ;> name =>
-    print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
-    print_string(
-      "Oh that's crazy " + name + "! I didn't expect you to be " + age + "!"
-    );
-\end{verbatim}
-The example above demonstrates the use of the environment operators in the 
-"WithIO" environment, which is how IO is done in lcases. Some light can be shed
-on how this is done, if we take a look at the types (as always!):
-\begin{verbatim}
-print_string  :  String => (EmptyValue)WithIO
-get_line  :  (String)WithIO
-
-print_string <- "Hello! ... "  :  (EmptyValue)WithIO
-print_string("Oh hi...)  :  (EmptyValue)WithIO
-print_string("Oh that's crazy...)  :  (EmptyValue)WithIO
-
-;  :  ((EmptyValue)WithIO, (String)WithIO) => (String)WithIO 
-print_string("Oh hi...) ; get_line  :  (String)WithIO
-
-age => print_string("Oh that's crazy...)  :  String => (EmptyValue)WithIO
-
-;>  :  ((String)WithIO, String => (EmptyValue)WithIO) => (EmptyValue)WithIO 
-
-print_string("Oh hi...) ; get_line ;> age =>
-print_string("Oh that's crazy...)
-   :  (EmptyValue)WithIO
-
-name => print_string("Oh hi ... (till the end)  :  String => (EmptyValue)WithIO
-
-print_string <- "Hello..." ; get_line  :  (String)WithIO
-
-print_string <- "Hello..." ; get_line ;> name =>
-print_string("Oh hi ... (till the end)
-   :  (EmptyValue)WithIO
-\end{verbatim}
-Therefore, "\texttt{main\ :\ (EmptyValue)WithIO}" checks out.  The key here is
-to remember that function expressions extend to the end of the whole
-expression. Therefore, we have "\texttt{name => ... (till the end)}" and
-"\texttt{age => ... (till the end)}" as the second arguments of the two
-occurences of the "\texttt{;>}" operator. Also, the (actual/most general) types
-of the operators are show in the table below:
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -582,28 +534,92 @@ Operator & Type \\
 \hline
 \end{tabular}
 \end{center}
-In this particular case we have:
-
-\begin{itemize}
-
-\item
-For "\texttt{;>}":
+\paragraph{Example program}
 \begin{verbatim}
-E = WithIO
-A = String
-B = EmptyValue
+main : (EmptyValue)WithIO
+  = print_string <- "Hello! What's your name?" ; get_line ;> name =>
+    print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
+    print_string( "Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
 \end{verbatim}
-
-\item
-For "\texttt{;}":
+The example above demonstrates the use of the environment operators in the
+\texttt{WithIO} environment, which is how \texttt{IO} is done in lcases. Some light
+can be shed on how this is done, if we take a look at the types (as always!):
 \begin{verbatim}
-E = WithIO
-A = EmptyValue
-B = String
-\end{verbatim}
+print_string  :  String => (EmptyValue)WithIO
+get_line  :  (String)WithIO
 
-\item \texttt{(WithIO)IsAnEnvironment} is a true statement
-\end{itemize}
+print_string <- "Hello! ... "  :  (EmptyValue)WithIO
+print_string("Oh hi...)  :  (EmptyValue)WithIO
+print_string("Oh that's crazy...)  :  (EmptyValue)WithIO
+
+;  :  (E)IsAnEnvironment --> (E(A), E(B)) => E(B) 
+print_string("Oh hi...) ; get_line  :  (String)WithIO
+  where
+  (WithIO)IsAnEnvironment, E = WithIO, A = EmptyValue, B = String
+
+age => print_string("Oh that's crazy...)  :  String => (EmptyValue)WithIO
+
+;>  :  (E)IsAnEnvironment --> (E(A), A => E(B)) => E(B) 
+print_string("Oh hi...) ; get_line ;> age => print_string("Oh that's crazy...)  :  (EmptyValue)WithIO
+  where
+  (WithIO)IsAnEnvironment, E = WithIO, A = String, B = EmptyValue
+
+print_string <- "Hello..." ; get_line  :  (String)WithIO
+name => print_string("Oh hi ... (till the end)  :  String => (EmptyValue)WithIO
+
+print_string <- "Hello..." ; get_line ;> name =>
+print_string("Oh hi ... (till the end)
+   :  (EmptyValue)WithIO
+\end{verbatim}
+Therefore, "\texttt{main\ :\ (EmptyValue)WithIO}" checks out.  The key here is
+to remember that function expressions extend to the end of the whole
+expression. Therefore, we have "\texttt{name => ... (till the end)}" and
+"\texttt{age => ... (till the end)}" as the second arguments of the two
+occurences of the "\texttt{;>}" operator. 
+
+\paragraph{Description}\pend
+The environment operators are used to combine values that have some
+environment. Environments are also represented by types. These types take other
+types as arguments and produce new types (just like ListOf()s). The values of
+the type \texttt{E(A)} where \texttt{(E)IsAnEnvironment} have inside both a
+value of type \texttt{A} together with all the values that the environment
+\texttt{E} has. The \texttt{WithIO} environment specifically, not only has
+other values inside it (concerning IO stuff), but also does IO effects.
+\\\\
+The effect of the operator "\texttt{;}" described in words is the following:
+given a value of type \texttt{E(A)} (which is a value of type \texttt{A} in an
+environment of type \texttt{E}) and a value of type \texttt{E(B)} (which is a
+value of type \texttt{B} in an environment of type \texttt{E}), combine those
+two values and produce the value of type \texttt{B} which was inside the second
+value in a new environment of type \texttt{E} that is produced by combining the
+two environments. The overall effect produces a value of type \texttt{B} in an
+environment of type \texttt{E} and therefore the overall value is of type
+\texttt{E(B)}.
+\\\\
+Note that the value of type \texttt{A} inside the first
+value is not used anywhere. This is mostly used when \texttt{A = EmptyValue}.
+This happens because values of type \texttt{E(EmptyValue)} are used for their
+environment only (e.g. \texttt{print_string(...)\ :\ (EmptyValue)WithIO}).
+\\\\
+How the two environments of the \texttt{E(A)} and \texttt{E(B)} values are combined
+to produce the new environment is specific to the envoriment type \texttt{E}.
+When the environments are \texttt{WithIO} environments specifically, the effect
+is that the new environment does the IO of the first environment first, then does
+the IO of the second environment only if the IO of the first environment does 
+not produce an IO error.
+\\\\
+The effect of the operator "\texttt{;>}" described in words is the following:
+given a value of type \texttt{E(A)} (which is a value of type \texttt{A} in an
+environment of type \texttt{E}) and a value of type \texttt{A => E(B)} (which
+is a function from a value of type \texttt{A} to a value of type \texttt{B} in
+an environment of type \texttt{E}), combine those two values by passing the
+value of type \texttt{A} inside the first value as an argument to the second
+value. This results in a value of type \texttt{E(B)} (which is a value of type
+\texttt{B} in an environment of type \texttt{E}). Then, produce this value of
+type \texttt{B} in a new environment of type \texttt{E} that is produced by
+combining the first environment with the resulting environment.  The overall
+effect produces a value of type \texttt{B} in an environment of type \texttt{E}
+and therefore the overall value is of type \texttt{E(B)}.
 
 \subsubsection{Operator Expressions}
 
@@ -613,8 +629,7 @@ B = String
 1 + x * 3 ^ y
 "Hello " + "World!"
 x -> f -> g
-f o> g
-f o> x => 2 * x
+f o> g o> h
 x = y
 x >= y - z & x < 2 * y
 get_line ; get_line ;> line => print("Second line: " + line)
@@ -626,35 +641,24 @@ two-argument-functions that are placed in between their arguments. Therefore,
 they have function types and they act as it is described in their respective
 sections above this one.
 \\\\
-An operator expression might have multiple operators
-and therefore arguments between two operators. The order in which the operators
-are going to act on the arguments is explained in the next section ("Complete
-Table, Precedence and Associativity").
+An operator expression might have multiple operators. The order of operations
+is explained in the next section: "Complete Table, Precedence and Associativity".
 \\\\
 Just like functions, the sub-expressions
 that act as arguments to an operator, must have types that match the types 
 expected by the operator.
 \\\\
 It is possible to end an operator expression with a function. This is mostly
-useful with the "\texttt{;>}" operator (see previous section "Environment
-Operators", but it is also possible with the following operators:
+useful with the "\texttt{;>}" operator (see previous section: "Environment
+Operators"), but it is also possible with the following operators:
 "\texttt{->}", "\texttt{o>}", "\texttt{<o}".
 
 \paragraph{Grammar}
-The ambiguity of the grammar is resolved by the precedence and associativity table.
 \begin{grammar}
 <op-expr> ::=
-<simple-op-expr> | <simple-op-func-expr> | <op-cases-func-expr> \\
+( <op-arg> `\ ' <op> `\ ' )+ ( <op-arg> | <simple-func-expr> | <cases-func-expr> )
 
-<simple-op-expr> ::= <op-arg> `\ ' <op> `\ ' <op-arg>
-
-<simple-op-func-expr> ::=
-<op-arg> `\ ' <op> `\ ' ( <simple-op-func-expr> | <simple-func-expr> )
-
-<op-cases-func-expr> ::=
-<op-arg> `\ ' <op> `\ ' ( <op-cases-func-expr> | <cases-func-expr> )\\
-
-<op-arg> ::= <basic-expr> | <paren-expr> | <simple-op-expr>
+<op-arg> ::= <basic-expr> | <paren-expr>
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
@@ -736,6 +740,16 @@ Operator & Precedence & Associativity \\
 \end{center}
 
 \subsection{Function Expressions}
+
+Function expressions are either simple function expresssions or
+function expressions that use the "cases" syntax. For more details and examples of
+both see the following sections.
+
+\paragraph{Grammar}
+\begin{grammar}
+<func-expr> ::= <simple-func-expr> | <cases-func-expr>
+\end{grammar}
+
 \subsubsection{Simple Function Expressions}
 
 \paragraph{Examples}
@@ -747,36 +761,29 @@ a => 17 * a + 42
 \end{verbatim}
 
 \paragraph{Description}\pend
-Function expressions are used to define functions or pass anonymous functions as 
-arguments to other functions. They are comprised by their parameters and their 
-body. The parameters are either only one in which case a single identifier is used, 
-or they are many in which case many identifiers are used in parenthesis, seperated 
-by a comma. The parameters and the body are seperated by an arrow (" \texttt{=>} ").
-The body is an operator expression.
+Simple function expressions are used to define functions or be part of bigger
+expressions as anonymous functions. They are comprised by their parameters and
+their body. A parameter is either an identifier or the keyword "fields" (see
+next section: "fields" Special Parameter). The parameters are either only one,
+in which case there is no parenthesis, or they are many, in which case they are
+in parenthesis, seperated by commas. The parameters and the body are seperated
+by an arrow (" \texttt{=>} "). The body is a "simple" operator expression
+meaning that there is no "cases" syntax inside the operator expression.
 
-\paragraph{Grammar}
-\begin{grammar}
-<func-expr> ::= <simple-func-expr> | <cases-func-expr>
-
-<simple-func-expr> ::=
-<parameters> `\ =>\ ' ( <simple-op-expr> | <simple-op-func-expr> )
+\paragraph{Grammar} \begin{grammar} <simple-func-expr> ::= <parameters> `\ =>\
+' <simple-op-expr> 
 
 <parameters> ::= <parameter> | `(' <parameter> ( `,\ ' <parameter> )+ `)'
 
-<parameter> ::= <identifier> | `fields'\\
-
-\end{grammar}
+<parameter> ::= <identifier> | `fields'\\ \end{grammar}
 
 \subsubsection{"fields" Special Parameter}
 
-\subsubsection{"cases" Syntax}
-\label{subsubsec:casessyntax}
+\subsubsection{"cases" Syntax} \label{subsubsec:casessyntax}
 
 \paragraph{Examples}
 
-\begin{verbatim}
-print_sentimental_bool : Bool => (EmptyValue)WithIO
-  = cases =>
+\begin{verbatim} print_sentimental_bool : Bool => (EmptyValue)WithIO = cases =>
     true => print <- "It's true!! :)"
     false => print <- "It's false... :("
 
@@ -861,9 +868,9 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <cases> ::= <case>+ [ <default-case> ]
 
 <case> ::=
-`\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>\ ' <op-expr>
+`\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>\ ' <simple-op-expr>
 
-<default-case> ::= `\\n' <indentation> `...\ =>\ ' <op-expr>\\
+<default-case> ::= `\\n' <indentation> `...\ =>\ ' <simple-op-expr>\\
 
 <matching> ::= <literal> | <identifier> [ `:' <identifier> ]
 \end{grammar}
@@ -900,7 +907,7 @@ to all the values.
 \paragraph{Grammar}
 \begin{grammar}
 <value-definitions> ::=
-<identifiers> `\ :\ ' (<types> | `all' <type>) `\\n\ \ =' <value-expressions>
+<identifiers> `\ :\ ' ( <types> | `all' <type> ) `\\n\ \ =' <value-expressions>
 
 <identifiers> ::= <identifier> ( `,\ ' <identifier> )*  
 
@@ -943,6 +950,7 @@ ext_euc_rec: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
 \end{verbatim}
 
 \paragraph{Description}
+"where" expressions are used 
 
 \paragraph{Grammar}
 

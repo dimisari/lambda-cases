@@ -2,10 +2,12 @@
 a, b: all (Int)Or(Text)
   = left_val:1, right_val:"Hi!"
 
-print_int_or_text: (Int)Or(Text) -> (Empty)WithIO
-  = cases ->
-    left_val:i -> i==>(+ 1)==>to_string==>("Total after adding 1: " +)==>print
-    right_val:s -> s==>("Turns out it says: " +)==>print
+print_int_or_text: (Int)Or(Text) => (Empty)WithIO
+  = cases =>
+    left_val:i =>
+      i -> (+ 1) -> to_string -> ("Total after adding 1: " +) -> print
+    right_val:s =>
+      s -> ("Turns out it says: " +) -> print
 
 main: (Empty)WithIO
-  = a==>print_int_or_text; b==>print_int_or_text
+  = a -> print_int_or_text; b -> print_int_or_text
