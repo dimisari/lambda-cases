@@ -36,27 +36,28 @@
 
 \section{Introduction}
 
-\H\ is a delightful language. Yet, for some reason, it doesn't seem to have it's 
-rightful place in terms of popularity in industry. Why is it so?
-Is it inherently hard to learn
-and therefore only the brave enough students and corporations dare to use it, or
-could it be that the syntax is perplexing to the amateur eye? It is my belief that 
+\H\ is a delightful language. Yet, for some reason, it doesn't seem to have
+it's rightful place in terms of popularity in industry. Why is it so?  Is it
+inherently hard to learn and therefore only the brave dare to use it, or could
+it be that the syntax is perplexing to the amateur eye? It is my belief that
 with some syntax changes that give a greater familiarity to the new user, there
-would be no language more compelling than (the new) \H. In an attempt to achieve
-that familiarity, I present some new syntax, of which
-some is closer to the imperative/OOP style (to attract more already experienced
-programmers from these languages), some is closer to mathematics (in which most 
-programmers should be experienced) and some is closer to natural language
-(in which we are all already experienced). 
+would be no language more compelling than (the new) \H. In an attempt to
+achieve that familiarity, I present some (hopefully useful) new syntax, of
+which some is closer to the imperative/OOP style (to attract more already
+experienced programmers from these languages), some is closer to mathematics
+(in which most programmers should be experienced) and some is closer to natural
+language (in which we are all already experienced). 
 
 \section{Language Description}
 
-An lcases program consists of a set of value, type and predicate definitions along
-with type theorems. The "main" value determines the program's behaviour.
-Constants and functions are all considered values and they have no real distinction
-other than the fact that functions have a function type and constants don't.
-Functions (just like "values") can be passed to other functions as arguments or can
-be returned as a result of other functions. 
+An lcases program consists of a set of definitions and theorems.  Definitions
+are split into value definitions, type definitions, type predicate definitions
+and type proposition definitions. Theorems are proven type propositions.  The
+definition of the "main" value determines the program's behaviour.  Constants
+and functions are all considered values and they have no real distinction other
+than the fact that functions have a function type and constants don't.
+Functions (just like "values") can be passed to other functions as arguments or
+can be returned as a result of other functions. 
 
 \paragraph{Program example: extended euclidean alogirthm}
 \begin{verbatim}
@@ -86,20 +87,20 @@ ext_euc_rec: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
 
 // reading, printing and main
 
-read_two_ints : (Int x Int)WithIO
+read_two_ints : (Int x Int)IOAction
   = print <- "Please give me 2 ints";
     get_line ;> split_words o> apply(from_string)to_all o> ints =>
     ints -> length -> cases =>
       2 => ints -> with_io
       ... => io_error <- "You didn't give me 2 ints"
  
-print_gcd_equation : (Int, Int, GcdAndCoeffs) => (EmptyValue)WithIO
+print_gcd_equation : (Int, Int, GcdAndCoeffs) => (EmptyValue)IOAction
   = (x, y, fields) => print("gcd = " + gcd + " = " + sum_string)
     where
     sum_string : String
       = a + " * " + x + " + " + b + " * " + y
 
-main : (EmptyValue)WithIO
+main : (EmptyValue)IOAction
   = read_two_ints ;> ints =>
     print_gcd_and_coeffs(ints.1st, ints.2nd, ext_euc(ints.1st, ints.2nd))
 \end{verbatim}
@@ -123,7 +124,6 @@ main : (EmptyValue)WithIO
 We have literals for the four basic types: Int, Real, Char, String. These are the 
 usual integers, real numbes, characters and strings. The exact specification of 
 literals is the same as in the \H\ report.
-\\QUESTION integers are different?
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -219,7 +219,7 @@ Tuples are used to group many values (of possibly different types) into one.
 The type of the tuple can be either the product of the types of the subvalues or a
 defined tuple\_type which is equivalent to the afformentioned product type i.e.
 the product type is in the definition of the tuple\_type (see "tuple\_type"
-section \ref{subsec:tupts}). For example, the type of the second example above 
+section \ref{subsubsec:tupts}). For example, the type of the second example above 
 could be:
 \begin{verbatim}
 Int x String x Real
@@ -343,7 +343,7 @@ next ones to the right and so on.
 <id-char-or-paren-id-char> ::= [a-z_] | `()'[a-z_]
 \end{grammar}
 
-\subsection{Operators}
+\subsection{Value Operators}
 
 \subsubsection{Function Application Operators}
 
@@ -480,9 +480,9 @@ are generalized. The examples below show their generality:
 \end{verbatim}
 Let's analyze further the example of addition. The type can be read as such:
 the '+' operator has the type \\ (A, B) \ra C, provided that the type
-statement (A)And(B)AddTo(C) holds. This statement being true, means that
+proposition (A)And(B)AddTo(C) holds. This proposition being true, means that
 addition has been defined for these three types (see section "type logic"
-\ref{subsec:typelogic} for more on type statements). For example, by the examples
+\ref{subsec:typelogic} for more on type propositions). For example, by the examples
 above we can deduce that the following propositions are true (in the order of the 
 examples):
 \begin{verbatim}
@@ -520,7 +520,7 @@ similarly to most programming languages. The main difference is that in lcases
 the "equals", "and" and "or" operators have the symbol once \\(\texttt{= \& |})
 rather than twice (\texttt{== \&\& ||}).
 
-\subsubsection{Environment Operators}
+\subsubsection{Environment Action Operators}
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -528,98 +528,120 @@ rather than twice (\texttt{== \&\& ||}).
 Operator & Type \\ 
 \hline
 \hline
-\texttt{;>} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) \\
+\texttt{;>} & (E)IsAnEnvAction \Ra (E(A), A \ra E(B)) \ra E(B) \\
 \hline
-\texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) \\
+\texttt{;} & (E)IsAnEnvAction \Ra (E(A), E(B)) \ra E(B) \\
 \hline
 \end{tabular}
 \end{center}
+
+\paragraph{Simple Example}
+\begin{verbatim}
+print_string("I'll repeat the line.") ; get_line ;> print_string
+\end{verbatim}
+The example above demonstrates the use of the environment action operators with
+the \texttt{IOAction} environment action, which is how IO is done in
+lcases. Some light can be shed on how this is done, if we take a look at the
+types (as always!):
+\begin{verbatim}
+print_string  :  String => (EmptyValue)IOAction
+print_string("I'll repeat the line.")  : (EmptyValue)IOAction
+get_line  :  (String)IOAction
+
+;  :  (E)IsAnEnvAction --> (E(A), E(B)) => E(B) 
+print_string("I'll repeat the line.") ; get_line  :  (String)IOAction
+  where
+  (IOAction)IsAnEnvAction, E = IOAction, A = EmptyValue, B = String
+
+;>  :  (E)IsAnEnvAction --> (E(A), A => E(B)) => E(B) 
+print_string("I'll repeat the line.") ; get_line ;> print_string  :  (EmptyValue)IOAction
+  where
+  (IOAction)IsAnEnvAction, E = IOAction, A = String, B = EmptyValue
+\end{verbatim}
+
 \paragraph{Example program}
 \begin{verbatim}
-main : (EmptyValue)WithIO
+main : (EmptyValue)IOAction
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
-    print_string( "Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
+    print_string("Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
 \end{verbatim}
-The example above demonstrates the use of the environment operators in the
-\texttt{WithIO} environment, which is how \texttt{IO} is done in lcases. Some light
-can be shed on how this is done, if we take a look at the types (as always!):
+In this bigger but similar example the types are:
 \begin{verbatim}
-print_string  :  String => (EmptyValue)WithIO
-get_line  :  (String)WithIO
+print_string  :  String => (EmptyValue)IOAction
+get_line  :  (String)IOAction
 
-print_string <- "Hello! ... "  :  (EmptyValue)WithIO
-print_string("Oh hi...)  :  (EmptyValue)WithIO
-print_string("Oh that's crazy...)  :  (EmptyValue)WithIO
+print_string <- "Hello! ... "  :  (EmptyValue)IOAction
+print_string("Oh hi...)  :  (EmptyValue)IOAction
+print_string("Oh that's crazy...)  :  (EmptyValue)IOAction
 
-;  :  (E)IsAnEnvironment --> (E(A), E(B)) => E(B) 
-print_string("Oh hi...) ; get_line  :  (String)WithIO
+;  :  (E)IsAnEnvAction --> (E(A), E(B)) => E(B) 
+print_string("Oh hi...) ; get_line  :  (String)IOAction
   where
-  (WithIO)IsAnEnvironment, E = WithIO, A = EmptyValue, B = String
+  (IOAction)IsAnEnvAction, E = IOAction, A = EmptyValue, B = String
 
-age => print_string("Oh that's crazy...)  :  String => (EmptyValue)WithIO
+age => print_string("Oh that's crazy...)  :  String => (EmptyValue)IOAction
 
-;>  :  (E)IsAnEnvironment --> (E(A), A => E(B)) => E(B) 
-print_string("Oh hi...) ; get_line ;> age => print_string("Oh that's crazy...)  :  (EmptyValue)WithIO
+;>  :  (E)IsAnEnvAction --> (E(A), A => E(B)) => E(B) 
+
+print_string("Oh hi...) ; get_line ;> age =>
+print_string("Oh that's crazy...) :  (EmptyValue)IOAction
   where
-  (WithIO)IsAnEnvironment, E = WithIO, A = String, B = EmptyValue
+  (IOAction)IsAnEnvAction, E = IOAction, A = String, B = EmptyValue
 
-print_string <- "Hello..." ; get_line  :  (String)WithIO
-name => print_string("Oh hi ... (till the end)  :  String => (EmptyValue)WithIO
+print_string <- "Hello..." ; get_line  :  (String)IOAction
+name => print_string("Oh hi ... (till the end)  :  String => (EmptyValue)IOAction
 
 print_string <- "Hello..." ; get_line ;> name =>
 print_string("Oh hi ... (till the end)
-   :  (EmptyValue)WithIO
+   :  (EmptyValue)IOAction
 \end{verbatim}
-Therefore, "\texttt{main\ :\ (EmptyValue)WithIO}" checks out.  The key here is
+Therefore, "\texttt{main\ :\ (EmptyValue)IOAction}" checks out.  The key here is
 to remember that function expressions extend to the end of the whole
 expression. Therefore, we have "\texttt{name => ... (till the end)}" and
 "\texttt{age => ... (till the end)}" as the second arguments of the two
 occurences of the "\texttt{;>}" operator. 
 
 \paragraph{Description}\pend
-The environment operators are used to combine values that have some
-environment. Environments are also represented by types. These types take other
-types as arguments and produce new types (just like ListOf()s). The values of
-the type \texttt{E(A)} where \texttt{(E)IsAnEnvironment} have inside both a
-value of type \texttt{A} together with all the values that the environment
-\texttt{E} has. The \texttt{WithIO} environment specifically, not only has
-other values inside it (concerning IO stuff), but also does IO effects.
+The environment action operators are used to combine values that have some
+environment action embedded. Environment actions are also represented by
+types. These types take other types as arguments and produce new types (just
+like ListOf()s). The values of the type \texttt{E(A)} where
+\texttt{(E)IsAnEnvAction} have inside both a value of type \texttt{A}
+together with an environment action of type \texttt{E}.
 \\\\
 The effect of the operator "\texttt{;}" described in words is the following:
-given a value of type \texttt{E(A)} (which is a value of type \texttt{A} in an
-environment of type \texttt{E}) and a value of type \texttt{E(B)} (which is a
-value of type \texttt{B} in an environment of type \texttt{E}), combine those
-two values and produce the value of type \texttt{B} which was inside the second
-value in a new environment of type \texttt{E} that is produced by combining the
-two environments. The overall effect produces a value of type \texttt{B} in an
-environment of type \texttt{E} and therefore the overall value is of type
-\texttt{E(B)}.
+given a value of type \texttt{E(A)} (which is a value of type \texttt{A} with
+an environment action of type \texttt{E}) and a value of type \texttt{E(B)}
+(which is a value of type \texttt{B} with an environment action of type
+\texttt{E}), combine those two values by producing the value of type \texttt{B}
+with a new environment action of type \texttt{E} which is the combination of
+the two environment actions. The overall effect produces a value of type
+\texttt{B} with an environment action of type \texttt{E} and therefore the
+overall value is of type \texttt{E(B)}.
 \\\\
-Note that the value of type \texttt{A} inside the first
-value is not used anywhere. This is mostly used when \texttt{A = EmptyValue}.
-This happens because values of type \texttt{E(EmptyValue)} are used for their
-environment only (e.g. \texttt{print_string(...)\ :\ (EmptyValue)WithIO}).
+Note that the value of type \texttt{A} inside the first value is not used
+anywhere. This is mostly used when \texttt{A = EmptyValue}.  This happens
+because values of type \texttt{E(EmptyValue)} are used for their environment
+action only \\(e.g. \texttt{print_string(...)\ :\ (EmptyValue)IOAction}).
 \\\\
-How the two environments of the \texttt{E(A)} and \texttt{E(B)} values are combined
-to produce the new environment is specific to the envoriment type \texttt{E}.
-When the environments are \texttt{WithIO} environments specifically, the effect
-is that the new environment does the IO of the first environment first, then does
-the IO of the second environment only if the IO of the first environment does 
-not produce an IO error.
+How the two environment actions of the \texttt{E(A)} and \texttt{E(B)} values
+are combined to produce the new environment action is specific to the
+envoriment action type \texttt{E}.
 \\\\
 The effect of the operator "\texttt{;>}" described in words is the following:
-given a value of type \texttt{E(A)} (which is a value of type \texttt{A} in an
-environment of type \texttt{E}) and a value of type \texttt{A => E(B)} (which
-is a function from a value of type \texttt{A} to a value of type \texttt{B} in
-an environment of type \texttt{E}), combine those two values by passing the
-value of type \texttt{A} inside the first value as an argument to the second
-value. This results in a value of type \texttt{E(B)} (which is a value of type
-\texttt{B} in an environment of type \texttt{E}). Then, produce this value of
-type \texttt{B} in a new environment of type \texttt{E} that is produced by
-combining the first environment with the resulting environment.  The overall
-effect produces a value of type \texttt{B} in an environment of type \texttt{E}
-and therefore the overall value is of type \texttt{E(B)}.
+given a value of type \texttt{E(A)} (which is a value of type \texttt{A} with
+an environment action of type \texttt{E}) and a value of type \texttt{A =>
+E(B)} (which is a function from a value of type \texttt{A} to a value of type
+\texttt{B} with an environment action of type \texttt{E}), combine those two
+values by passing the value of type \texttt{A} inside the first value as an
+argument to the second value. This results in a value of type \texttt{E(B)}
+(which is a value of type \texttt{B} with an environment action of type
+\texttt{E}).  Then, produce this value of type \texttt{B} with a new
+environment action of type \texttt{E} that is produced by combining the first
+environment action with the resulting environment action.  The overall effect
+produces a value of type \texttt{B} with an environment action of type
+\texttt{E} and therefore the overall value is of type \texttt{E(B)}.
 
 \subsubsection{Operator Expressions}
 
@@ -642,7 +664,8 @@ they have function types and they act as it is described in their respective
 sections above this one.
 \\\\
 An operator expression might have multiple operators. The order of operations
-is explained in the next section: "Complete Table, Precedence and Associativity".
+is explained in the next section ("Complete Table, Precedence and Associativity")
+in Table \ref{table:precassoc}.
 \\\\
 Just like functions, the sub-expressions
 that act as arguments to an operator, must have types that match the types 
@@ -667,9 +690,13 @@ Operators"), but it is also possible with the following operators:
 \end{grammar}
 
 \subsubsection{Complete Table, Precedence and Associativity}
+\begin{table}[h!]
 
-Below we have the complete table of lcases operators along with their types and 
+\caption{
+The complete table of lcases operators along with their types and 
 their short descriptions.
+}
+
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
@@ -700,23 +727,35 @@ Operator & Type & Description \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
-\texttt{;>} & (E)IsAnEnvironment \Ra (E(A), A \ra E(B)) \ra E(B) &
+\texttt{;>} & (E)IsAnEnvAction \Ra (E(A), A \ra E(B)) \ra E(B) &
 Monad bind \\
 \hline
-\texttt{;} & (E)IsAnEnvironment \Ra (E(A), E(B)) \ra E(B) &
+\texttt{;} & (E)IsAnEnvAction \Ra (E(A), E(B)) \ra E(B) &
 Monad then \\
 \hline
 \end{tabular}
 \end{center}
 
-Below we have the table of precedence and associativity of the lcases operators.
+\label{table:allops}
+
+\end{table}\mbox{}\\
+The order of operations is done from highest to lowest precedence. In the same
+level of precedence the order is done from left to right if the associativity
+is "Left" and from right to left if the associativity is "Right". For the
+operators that have associativity "None" it is not allowed to place them in the
+same operator expression. The precedence and assosiativity of the operators
+is shown in the table below.
+\begin{table}[h!]
+
+\caption{ The table of precedence and associativity of the lcases operators.  }
+
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
 Operator & Precedence & Associativity \\ 
 \hline
 \hline
-\texttt{->} & 10 & Left \\
+\texttt{->} & 10 (highest) & Left \\
 \hline
 \texttt{<-} & 9 & Right \\
 \hline
@@ -739,6 +778,11 @@ Operator & Precedence & Associativity \\
 \end{tabular}
 \end{center}
 
+\label{table:precassoc}
+
+\end{table}
+
+\newpage
 \subsection{Function Expressions}
 
 Function expressions are either simple function expresssions or
@@ -767,11 +811,14 @@ their body. A parameter is either an identifier or the keyword "fields" (see
 next section: "fields" Special Parameter). The parameters are either only one,
 in which case there is no parenthesis, or they are many, in which case they are
 in parenthesis, seperated by commas. The parameters and the body are seperated
-by an arrow (" \texttt{=>} "). The body is a "simple" operator expression
-meaning that there is no "cases" syntax inside the operator expression.
+by an arrow (" \texttt{=>} "). The body is a basic expression or a "simple"
+operator expression meaning that there is no "cases" syntax inside the operator
+expression.
 
-\paragraph{Grammar} \begin{grammar} <simple-func-expr> ::= <parameters> `\ =>\
-' <simple-op-expr> 
+\paragraph{Grammar}
+\begin{grammar}
+<simple-func-expr> ::=
+<parameters> `\ =>\ ' ( <basic-expr> | <simple-op-expr> )
 
 <parameters> ::= <parameter> | `(' <parameter> ( `,\ ' <parameter> )+ `)'
 
@@ -779,18 +826,51 @@ meaning that there is no "cases" syntax inside the operator expression.
 
 \subsubsection{"fields" Special Parameter}
 
+\paragraph{Examples}
+\begin{verbatim}
+add_ints_and_print_with_string: Int x Int x String
+  = fields => print("Ints: " + (1st + 2nd) + "\nString: " + 3rd)
+
+tuple_type GcdAndCoeffs
+value (gcd, a, b) : Int x Int x Int
+
+print_gcd_equation : (Int, Int, GcdAndCoeffs) => (EmptyValue)IOAction
+  = (x, y, fields) => print("gcd = " + gcd + " = " + sum_string)
+    where
+    sum_string : String
+      = a + " * " + x + " + " + b + " * " + y
+\end{verbatim}
+
+\paragraph{Description}\pend
+The \textbf{"fields"} special parameter can be used when the parameter is of a
+\textbf{product type} (e.g. \texttt{Int x Int x String}) or of a \textbf{tuple
+type} (see "Tuple Types" section \ref{subsubsec:tupts}).  It allows the direct
+use of the \textbf{subvalues (fields)} of that parameter in the function body
+without the need to name the parameter itself. This is very useful when the
+whole parameter is not used but (some or all of) it's subvalues are.
+\\\\
+In the case where the parameter is of a \textbf{product type} the special identifiers
+"1st, 2nd, 3rd, 4th and 5th" can be used for the respective subvalues.
+Similarly, when the parameter is of a \textbf{tuple type} the identifiers used in
+the type's definition can be used for the subvalues. 
+\\\\
+The use of the \textbf{"fields"} keyword in multiple parameters is possible as
+long as it is not used in two or more parameters of the same type, to avoid 
+ambiguities.
+
 \subsubsection{"cases" Syntax} \label{subsubsec:casessyntax}
 
 \paragraph{Examples}
 
-\begin{verbatim} print_sentimental_bool : Bool => (EmptyValue)WithIO = cases =>
+\begin{verbatim} print_sentimental_bool : Bool => (EmptyValue)IOAction
+  = cases =>
     true => print <- "It's true!! :)"
     false => print <- "It's false... :("
 
 or_type TrafficLight
 values green | amber | red
 
-print_sentimental_traffic_light : Bool => (EmptyValue)WithIO
+print_sentimental_traffic_light : Bool => (EmptyValue)IOAction
   = cases =>
     green => print <- "It's green! Let's go!!! :)"
     amber => print <- "Go go go, fast!"
@@ -924,11 +1004,11 @@ sort : (A)HasOrder --> ListOf(A)s => ListOf(A)s
   = cases => 
     empty => empty
     non_empty:l => sort(less_l) + l.head + sort(greater_l)
-    where
-    less_l : ListOf(A)s
-      = filter_with(x => x < l.head, l.tail)
-    greater_l : ListOf(A)s
-      = filter_with(x => x >= l.head, l.tail)
+      where
+      less_l : ListOf(A)s
+        = filter_with(x => x < l.head, l.tail)
+      greater_l : ListOf(A)s
+        = filter_with(x => x >= l.head, l.tail)
 
 tuple_type Coeffs
 value (previous, current) : Int x Int
@@ -943,16 +1023,39 @@ ext_euc_rec: (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
   = (a_coeffs, b_coeffs, x, cases) =>
     0 => (x, a_coeffs.previous, b_coeffs.previous)
     y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
-    where
-    next: Coeffs => Coeffs
-      = fields => (current, previous - x / y * current)
+      where
+      next: Coeffs => Coeffs
+        = fields => (current, previous - x / y * current)
 
+big_string : String
+  = s1 + s2 + s3 + s4
+    where
+    s1, s2, s3, s4 : all String
+      = "Hello, my name is Struggling Programmer."
+      , "I have tried way too many times to fit a big chunk of text"
+      , "inside my program, without it hitting the half-screen mark!"
+      , "I am so glad I finally discovered lcases!!!"
 \end{verbatim}
 
-\paragraph{Description}
-"where" expressions are used 
+\paragraph{Description}\pend
+"where" expressions allow the programmer to use values inside an expression and
+define them below it. They are very useful for reusing or abbreviating
+expressions that are specific to a particular definition (i.e. they are not
+used anywhere outside that definition). In particular when the enclosing
+definition is a function definition and the expression to be reused, uses one
+or more of the function parameters, the only option is a "where" expression (in
+contrast to the situation where no parameters are used, in which case the
+definition could be moved outside as a new seperated definition).  "where"
+expressions begin by a line that only has word "where" in it and is indented so
+that itfollows the indentation rules.  The definitions are placed below the
+"where" line and must have the same indentation.
 
 \paragraph{Grammar}
+\begin{grammar}
+<where-expr> ::= `\\n' <indentation> `where\\n' <indented-value-definitions>
+
+<indented-value-definitions> ::= TODO
+\end{grammar}
 
 \subsubsection{"main" Value}
 
@@ -1036,7 +1139,7 @@ A \ra A & a \ra a & Type variables for polymorphic types are  \\
 \end{grammar}
 
 \subsubsection{Tuple Types}
-\label{subsec:tupts}
+\label{subsubsec:tupts}
 
 \paragraph{Definition Examples}
 
@@ -1069,10 +1172,10 @@ john_info : ClientInfo
 name_to_string : Name => String
   = fields => "First Name: " + first_name + "\nLast Name: " + last_name
 
-print_name_and_nationality : ClientInfo => (EmptyValue)WithIO
+print_name_and_nationality : ClientInfo => (EmptyValue)IOAction
   = fields => print(name -> name_to_string + "\nNationality: " + nationality)
 
-print_error_in_expr : (SomeDefinedExprT)WithPosition => (EmptyValue)WithIO
+print_error_in_expr : (SomeDefinedExprT)WithPosition => (EmptyValue)IOAction
   = ewp =>
     print(
       "Error in the expression:" + es +
@@ -1178,7 +1281,7 @@ heads_and_tails_to_lists : ListOf(HeadAndTailOf(A)s)s => ListOf(ListOf(A)s)s
 
 \subsubsection{Type Predicate}
 
-\subsubsection{Type Statement}
+\subsubsection{Type Proposition}
 
 \subsubsection{Type Theorem}
 
