@@ -817,7 +817,7 @@ Operators"), but it is also possible with the following operators:
 
 <last-general-op-arg> ::= 
 `\\n' <indentation> <last-op-arg> |
-`\ ' ( <op-arg> | <stretched-func-expr> | <cases-func-expr> )
+`\ ' ( <op-arg> | <general-func-expr> )
 \end{grammar}
 \end{itemize}
 
@@ -1077,23 +1077,30 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \item \textit{Grammar}
 \begin{grammar}
-<cases-func-expr> ::= <cases-parameters> `\ =>' <cases> \\
+<general-func-expr> ::=
+<cases-parameters> `\ =>' <general-func-body> 
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
-<cases-parameter> ::= <parameter> | `cases'\\
+<cases-parameter> ::= <parameter> | `cases'
 
-<cases> ::= <case>+ [ <default-case> ]
+<general-func-body> ::= ""\\
+`\ ' ( <basic-expr> | <one-line-op-expr> )
+\alt
+`\\n' <indentation>
+( <basic-expr> | <stretched-op-expr> | <case>+ <end-case> ) \\
 
-<case> ::= `\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>' <case-body>
+<case> ::= <matching> ( `,\ ' <matching> )* `\ =>' <case-body> `\\n' <indentation>
 
-<default-case> ::= `\\n' <indentation> `...\ =>' <case-body>\\
+<end-case> ::=
+( `...' | <matching> ( `,\ ' <matching> )* ) `\ =>' <case-body>\\
 
 <matching> ::= <literal> | <identifier> [ `:' <identifier> ]
 
-<case-body> ::=
-( `\ ' <one-line-op-expr> | `\\n' <indentation> <stretched-op-expr> )
+<case-body> ::= ""\\
+( `\ ' ( <basic-expr> | <one-line-op-expr> )
+| `\\n' <indentation> ( <basic-expr> | <stretched-op-expr> ) )
 [ <where-expr> ]
 \end{grammar}
 
@@ -1146,7 +1153,7 @@ System" section \ref{subsubsec:indsys}).
 <indentation> <identifier> `\ :\ ' <type> \\
 `\\n' <indentation> `=\ ' <value-expr> [ <where-expr> ]
 
-<value-expr> ::= <basic-expr> | <op-expr> | <func-expr> 
+<value-expr> ::= <basic-expr> | <general-op-expr> | <general-func-expr> 
 
 <grouped-value-defs> ::= ""\\
 <indentation> <identifier> ( `,\ ' <identifier> )+ `\ :\ '
