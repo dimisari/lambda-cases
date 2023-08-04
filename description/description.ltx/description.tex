@@ -123,7 +123,7 @@ Keyword & Section \\
 \hline
 \texttt{fields cases} & \ref{subsec:funcexprs} Function Expressions \\
 \hline
-\texttt{where all} & \ref{subsec:valdefs} Value Definitions \\
+\texttt{where all} & \ref{subsec:valdefswhere} Value Definitions \\
 \hline
 \texttt{tuple_type value or_type values} & \ref{subsec:types} Types \\
 \hline
@@ -181,7 +181,7 @@ apply()to_all
 
 \item \textit{Description} \\\\
 An identifier is a string used as the name of a value. It is first used in the
-definition of the value (see "value definition" section \ref{subsec:valdefs})
+definition of the value (see "value definition" section \ref{subsec:valdefswhere})
 and later used in the definition of other values that use that defined value.
 An identifier starts with a lower case letter and is followed by lower case
 letters or underscores. It is also possible to have pairs of parentheses in the
@@ -222,54 +222,14 @@ do(3)times <- (get_line ;> line => print("Line is: " + line))
 
 \item \textit{Description} \\\\
 An expression is put in parenthesis to prioritize it or isolate it in a bigger
-(operator) expression. The expressions inside parethesis are "simple" operator
-or function expressions, where "simple" means that the "cases"
-syntax does not appear anywhere in the expression (see "cases" syntax section
-\ref{subsubsec:casessyntax}).
-
-\item \textit{Indentation Rules} \\\\
-It is possible to stretch a (big) parenthesis expression over multiple lines.
-In that case:
-\begin{itemize}
-\item
-The beginning line must be ended after the '(' character.
-
-\item
-All the lines that contain the internal expression must be indented more than 
-the beginning line.
-
-\item
-The ')' character must be the first character of the last line.
-
-\item
-The last line must be indented exactly as mush as the first.
-
-\item
-The precise indentation rules are described in detail in the section
-"Indentation System" \ref{subsubsec:indsys}.
-\end{itemize}
-
-Example:
-\begin{verbatim}
-        1 + (
-          2 * 3 ^ 4 -
-          5 / 6
-        ) ^ 7
-\end{verbatim}
-
+(operator) expression. The expressions inside parethesis are operator
+or function expressions.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' <simple-expr> `)' 
+<paren-expr> ::= `(' <one-line-expr> `)' 
 
-<simple-expr> ::= <simple-op-expr> | <simple-func-expr>\\
-
-<stretched-paren-expr> ::= ""\\
-`(' `\\n' <indentation> ( <simple-expr> | <stretched-simple-expr> )
-`\\n' <indentation> `)'
-
-<stretched-simple-expr> ::=
-<stretched-simple-op-expr> | <stretched-simple-func-expr>
+<one-line-expr> ::= <one-line-op-expr> | <one-line-func-expr>\\
 \end{grammar}
 
 \end{itemize}
@@ -307,24 +267,23 @@ value (my_int, my_string, my_real) : Int x String x Real
 \end{verbatim}
 
 \item \textit{Indentation Rules} \\\\
-It is possible to stretch a (big) tuple expression over multiple lines.
+It is possible to stretch a (big) tuple expression over multiple lines, only in a
+seperate value definition (see "Value Definitions" \ref{subsubsec:valdefs}).
 In that case:
 \begin{itemize}
 \item
-The tuple must begin in a new indented line starting with the character '(' and 
-at least the first subvalue (unless it is also a stretched expression).
+The character '(' is after the "= " part of the value definition
+and the first subvalue must be in the same line.
 
 \item
 The tuple can split in a new line only at a ',' character. Every such line must
-be indented exactly as the first.
+be indented so that the ',' is in same column where the '(' character was in
+the first line.
 
 \item
 The tuple must be ended by a line that only contains the ')' character and is 
-indented exactly as the first.
-
-\item
-In case a stretched tuple is a subvalue of another stretched expression (tuple
-or list) it must be indented more.
+also indented so that the ')' is in same column where the '(' character was in
+the first line.
 
 \item
 The precise indentation rules are described in detail in the section
@@ -332,32 +291,29 @@ The precise indentation rules are described in detail in the section
 \end{itemize}
 Example:
 \begin{verbatim}
-      ( "Hey, I'm the first subvalue and I'm also a relatively big string."
-      , 42, 3.14, "Hey, I'm the first small string", "Hey, I'm the second small string"
-      ,
-        ( "Hey, I'm a string inside the nested tuple", 2.71, 1.61
-        , x, y, z
-        )
-      )
+my_big_tuple : String x Int x Real x String x String x (String x Real x Real)
+  = ( "Hey, I'm the first subvalue and I'm also a relatively big string."
+    , 42, 3.14, "Hey, I'm the first small string", "Hey, I'm the second small string"
+    , ("Hey, I'm a string inside the nested tuple", 2.71, 1.61)
+    )
 \end{verbatim}
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::=
-`(' <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )+ `)'
+<tuple> ::= `(' <basic-or-one-line-expr> `,\ ' <comma-sep-exprs> `)'
 
-<basic-or-simple-expr> := <basic-expr> | <simple-expr>
+<comma-sep-exprs> ::=
+<basic-or-one-line-expr> ( `,\ ' <basic-or-one-line-expr> )*
 
-<basic-expr> ::= <literal> | <identifier> | <tuple> | <list> | <paren-func-app>\\
+<basic-or-one-line-expr> := <basic-expr> | <one-line-expr>
+
+<basic-expr> ::=
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app>\\
 
 <stretched-tuple> ::= ""\\
-`\\n' <indentation> `(' <expr-in-stretched> \\
-( [ `\\n' <indentation> ] `,\ ' <expr-in-stretched> )+ \\
+`(' <basic-or-one-line-expr> [ `\\n' <indentation> ] `,\ ' <comma-sep-exprs> \\
+( `\\n' <indentation> `,' <comma-sep-exprs> )* \\
 `\\n' <indentation> `)'
-
-<expr-in-stretched> ::=
-<basic-or-simple-expr> | <stretched-tuple> | <stretched-list> |
-<stretched-simple-expr>
 \end{grammar}
 
 \end{itemize}
@@ -392,24 +348,23 @@ ListOf(T)s
 \end{verbatim}
 
 \item \textit{Indentation Rules} \\\\
-It is possible to stretch a (big) list expression over multiple lines.
+It is possible to stretch a (big) list expression over multiple lines, only in a
+seperate value definition (see "Value Definitions" \ref{subsubsec:valdefs}).
 In that case:
 \begin{itemize}
 \item
-The list must begin in a new indented line starting with the character '[' and 
-at least the first element (unless it is also a stretched expression).
+The character '[' is after the "= " part of the value definition
+and the first element must be in the same line.
 
 \item
 The list can split in a new line only at a ',' character. Every such line must
-be indented exactly as the first.
+be indented so that the ',' is in same column where the '[' character was in
+the first line.
 
 \item
-The list must be ended by a line that only contains the ']' character and is 
-indented exactly as the first.
-
-\item
-In case a stretched list is a subvalue of another stretched expression (tuple
-or list) it must be indented more.
+The tuple must be ended by a line that only contains the ']' character and is 
+also indented so that the ']' is in same column where the '[' character was in
+the first line.
 
 \item
 The precise indentation rules are described in detail in the section
@@ -417,19 +372,20 @@ The precise indentation rules are described in detail in the section
 \end{itemize}
 Example:
 \begin{verbatim}
-      [ x => print("I'm the first function and x + 1 is: " + (x + 1))
-      , x => print("I'm the second function and x + 2 is: " + (x + 2))
-      , x => print("I'm the third function and x + 3 is: " + (x + 3))
-      ]
+my_big_list : ListOf(Int => (EmptyValue)IOAction)s
+  = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
+    , x => print("I'm the second function and x + 2 is: " + (x + 2))
+    , x => print("I'm the third function and x + 3 is: " + (x + 3))
+    ]
 \end{verbatim}
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [ <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )* ] `]'
+<list> ::= `[' [ <comma-sep-exprs> ] `]'
 
 <stretched-list> ::= ""\\
-`\\n' <indentation> `[' <expr-in-stretched> \\
-( [ `\\n' <indentation> ] `,\ ' <expr-in-stretched> )* \\
+`[' <comma-sep-exprs>
+( `\\n' <indentation> `,' <comma-sep-exprs> )*
 `\\n' <indentation> `]'
 \end{grammar}
 
@@ -491,8 +447,7 @@ next ones to the right and so on.
 \alt <identifier-with-arguments> [ <arguments> ]
 \alt <identifier> <arguments>
 
-<arguments> ::=
-`(' <basic-or-simple-expr> ( `,\ ' <basic-or-simple-expr> )* `)'
+<arguments> ::= `(' <comma-sep-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] <id-char-or-paren-id-char>* ( <arguments> [a-z_]
@@ -537,7 +492,7 @@ And a list of strings:
 \begin{verbatim}
 strings : ListOf(String)s
 \end{verbatim}
-Here is a simple way to get the number of characters in all the strings that have 
+Here is a line way to get the number of characters in all the strings that have 
 odd length:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
@@ -695,7 +650,7 @@ Operator & Type \\
 \end{tabular}
 \end{center}
 
-\paragraph{Simple Example}
+\paragraph{line Example}
 \begin{verbatim}
 print_string("I'll repeat the line.") ; get_line ;> print_string
 \end{verbatim}
@@ -839,19 +794,30 @@ Operators"), but it is also possible with the following operators:
 
 \item \textit{Grammar}
 \begin{grammar}
-<op-expr> ::=
-<op-expr-start> ( <op-arg> | <func-expr> )
+<one-line-op-expr> ::= <args-ops> `\ ' <last-op-arg>
 
-<simple-op-expr> ::=  <op-expr-start> ( <op-arg> | <simple-func-expr> )
-
-<op-expr-start> ::= ( <op-arg> `\ ' <op> ( `\ ' | `\\n' <indentation> ) )+
+<args-ops> ::= <op-arg> `\ ' <op>  ( `\ ' <op-arg>  `\ ' <op> )*
 
 <op-arg> ::= <basic-expr> | <paren-expr>
+
+<last-op-arg> ::= <op-arg> | <one-line-func-expr>
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
 `=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
 
+<stretched-op-expr> ::=
+<args-ops> ( `\\n' <indentation> <args-ops> )* <stretched-last-op-arg>
+
+<stretched-last-op-arg> ::= 
+`\\n' <indentation> <last-op-arg> | `\ ' ( <op-arg> | <stretched-func-expr> )\\
+
+<general-op-expr> ::=
+<args-ops> ( `\\n' <indentation> <args-ops> )+ <last-general-op-arg>
+
+<last-general-op-arg> ::= 
+`\\n' <indentation> <last-op-arg> |
+`\ ' ( <op-arg> | <stretched-func-expr> | <cases-func-expr> )
 \end{grammar}
 \end{itemize}
 
@@ -952,15 +918,6 @@ Operator & Precedence & Associativity \\
 \subsection{Function Expressions}
 \label{subsec:funcexprs}
 
-Function expressions are either simple function expresssions or
-function expressions that use the "cases" syntax. For more details and examples of
-both see the following sections.
-
-\paragraph{Grammar}
-\begin{grammar}
-<func-expr> ::= <simple-func-expr> | <cases-func-expr>
-\end{grammar}
-
 \subsubsection{Simple Function Expressions}
 
 \begin{itemize}
@@ -979,23 +936,23 @@ their body. A parameter is either an identifier or the keyword "fields" (see
 next section: "fields" Special Parameter). The parameters are either only one,
 in which case there is no parenthesis, or they are many, in which case they are
 in parenthesis, seperated by commas. The parameters and the body are seperated
-by an arrow (" \texttt{=>} "). The body is a basic expression or a "simple"
-operator expression meaning that there is no "cases" syntax inside the operator
+by an arrow (" \texttt{=>} "). The body is a basic expression or an operator
 expression.
 
 \item \textit{Grammar}
 \begin{grammar}
-<simple-func-expr> ::=
-<parameters> `\ =>\ ' ( <basic-expr> | <simple-op-expr> )
+<one-line-func-expr> ::=
+<parameters> `\ =>\ ' ( <basic-expr> | <one-line-op-expr> )
 
 <parameters> ::= <parameter> | `(' <parameter> ( `,\ ' <parameter> )+ `)'
 
 <parameter> ::= <identifier> | `fields'\\
 
-<stretched-simple-func-expr> ::= ""\\
-<parameters> `\ =>\\n' <indentation> \\
-( <basic-expr> | <simple-op-expr> | <stretched-tuple> | <stretched-list> |
-<stretched-simple-op-expr> )
+<stretched-func-expr> ::= <parameters> `\ =>' <stretched-func-body>
+
+<stretched-func-body> ::= ""\\
+`\ ' ( <basic-expr> | <one-line-op-expr> ) | 
+`\\n' <indentation> ( <basic-expr> | <stretched-op-expr> )
 \end{grammar}
 \end{itemize}
 
@@ -1037,7 +994,7 @@ ambiguities.
 
 \end{itemize}
 
-\subsubsection{"cases" Syntax}
+\subsubsection{"cases" Function Expressions}
 \label{subsubsec:casessyntax}
 
 \begin{itemize}
@@ -1106,8 +1063,8 @@ basic types (Int, Real, Char, String) or an or\_type (e.g. Bool, ListOf(A)s).
 The last case can be "\texttt{... => (body of default case)}" to capture all
 remaining cases while dismissing the value (e.g.
 \texttt{is_seventeen_or_forty_two} example), or it can be
-"\texttt{some_identifier => (body of default case)}" to capture all remaining
-cases while being able to use the value with the name "\texttt{some_identifier}"
+"\texttt{some_id => (body of default case)}" to capture all remaining
+cases while being able to use the value with the name "\texttt{some_id}"
 (e.g.  "y" in \texttt{gcd} example).
 \\\\
 It is possible to use the "cases" keyword in multiple parameters to match on all
@@ -1129,21 +1086,24 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 <cases> ::= <case>+ [ <default-case> ]
 
-<case> ::=
-`\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>\ ' <simple-op-expr>
-[ <where-expr> ]
+<case> ::= `\\n' <indentation> <matching> ( `,\ ' <matching> )* `\ =>' <case-body>
 
-<default-case> ::= `\\n' <indentation> `...\ =>\ ' <simple-op-expr>\\
+<default-case> ::= `\\n' <indentation> `...\ =>' <case-body>\\
 
 <matching> ::= <literal> | <identifier> [ `:' <identifier> ]
+
+<case-body> ::=
+( `\ ' <one-line-op-expr> | `\\n' <indentation> <stretched-op-expr> )
+[ <where-expr> ]
 \end{grammar}
 
 \end{itemize}
 
 \subsection{Value Definitions, "where" and Indentation}
-\label{subsec:valdefs}
+\label{subsec:valdefswhere}
 
 \subsubsection{Value Definitions}
+\label{subsubsec:valdefs}
 
 \begin{itemize}
 
@@ -1192,7 +1152,7 @@ System" section \ref{subsubsec:indsys}).
 <indentation> <identifier> ( `,\ ' <identifier> )+ `\ :\ '
 ( <type> ( `,\ ' <type> )+ | `all' <type> ) \\
 `\\n' <indentation> `=\ '
-<basic-or-simple-expr> ( [ `\\n' <indentation> ] `,\ ' <basic-or-simple-expr> )+
+<basic-or-one-line-expr> ( [ `\\n' <indentation> ] `,\ ' <basic-or-one-line-expr> )+
 \end{grammar}
 
 \end{itemize}
@@ -1453,15 +1413,15 @@ get_head : ListOf(A)s => Possibly(A)
 \end{verbatim}
 
 \paragraph{Description}\pend
-Values of an or\_type are one of many cases that possibly have other values inside.
-The cases which have other values inside are followed by a semicolon and the 
-type of the internal value. The same syntax can be used for matching that particular 
-case in a fucntion using the "cases" syntax, with the difference that after the
-colon, we write the name given to the value inside. 
-Or\_types and basic types are the only types on which
-the "cases" syntax can be used. The cases of an or\_type which have a value
-inside create functions. For example, the case "non\_empty" of a list creates the
-function "non\_empty:" for which we can say:
+Values of an or\_type are one of many cases that possibly have other values
+inside.  The cases which have other values inside are followed by a semicolon
+and the type of the internal value. The same syntax can be used for matching
+that particular case in a function using the "cases" syntax, with the
+difference that after the colon, we write the name given to the value inside.
+Or\_types and basic types are the only types on which the "cases" syntax can be
+used. The cases of an or\_type which have a value inside create functions. For
+example, the case "non\_empty" of a list creates the function "non\_empty:" for
+which we can say:
 \begin{verbatim}
 non_empty: : NonEmptyListOf(A)s => ListOf(A)s
 \end{verbatim}
