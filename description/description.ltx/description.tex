@@ -91,8 +91,8 @@ read_two_ints : (Int x Int)IOAction
   = print <- "Please give me 2 ints";
     get_line ;> split_words o> apply(from_string)to_all o> ints =>
     ints -> length -> cases =>
-      2 => ints -> with_io
-      ... => io_error <- "You didn't give me 2 ints"
+    2 => ints -> with_io
+    ... => io_error <- "You didn't give me 2 ints"
  
 print_gcd_equation : (Int, Int, GcdAndCoeffs) => (EmptyValue)IOAction
   = (x, y, fields) => print("gcd = " + gcd + " = " + sum_string)
@@ -112,7 +112,7 @@ The lcases keywords are the following:
 fields cases where all tuple_type value or_type values
 type_pred function type_prop equiv type_theo proof
 \end{verbatim}
-Each keyword's funtionality is described in the respective section shown in the 
+Each keyword's functionality is described in the respective section shown in the 
 table below:
 
 \begin{center}
@@ -227,9 +227,8 @@ or function expressions.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' <one-line-expr> `)' 
-
-<one-line-expr> ::= <one-line-op-expr> | <one-line-func-expr>\\
+<paren-expr> ::=
+`(' ( <at-least-one-op-line-op-expr> | <line-func-expr> ) `)' 
 \end{grammar}
 
 \end{itemize}
@@ -266,9 +265,9 @@ tuple_type MyType
 value (my_int, my_string, my_real) : Int x String x Real
 \end{verbatim}
 
-\item \textit{Indentation Rules} \\\\
-It is possible to stretch a (big) tuple expression over multiple lines, only in a
-seperate value definition (see "Value Definitions" \ref{subsubsec:valdefs}).
+\item \textit{Big Tuples} \\\\
+It is possible to stretch a (big) tuple expression over multiple lines (only) in a
+seperate value definition.
 In that case:
 \begin{itemize}
 \item
@@ -300,18 +299,14 @@ my_big_tuple : String x Int x Real x String x String x (String x Real x Real)
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <basic-or-one-line-expr> `,\ ' <comma-sep-exprs> `)'
+<tuple> ::= `(' <line-expr> `,\ ' <comma-sep-exprs> `)'
 
-<comma-sep-exprs> ::=
-<basic-or-one-line-expr> ( `,\ ' <basic-or-one-line-expr> )*
+<comma-sep-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
 
-<basic-or-one-line-expr> := <basic-expr> | <one-line-expr>
+<line-expr> ::= <line-op-expr> | <line-func-expr>\\
 
-<basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app>\\
-
-<stretched-tuple> ::= ""\\
-`(' <basic-or-one-line-expr> [ `\\n' <indentation> ] `,\ ' <comma-sep-exprs> \\
+<lines-tuple> ::= ""\\
+`(' <line-expr> [ `\\n' <indentation> ] `,\ ' <comma-sep-exprs> \\
 ( `\\n' <indentation> `,' <comma-sep-exprs> )* \\
 `\\n' <indentation> `)'
 \end{grammar}
@@ -347,9 +342,9 @@ they do and it's the type T, the type of the list is:
 ListOf(T)s
 \end{verbatim}
 
-\item \textit{Indentation Rules} \\\\
-It is possible to stretch a (big) list expression over multiple lines, only in a
-seperate value definition (see "Value Definitions" \ref{subsubsec:valdefs}).
+\item \textit{Big Lists} \\\\
+It is possible to stretch a (big) list expression over multiple lines (only) in a
+seperate value definition.
 In that case:
 \begin{itemize}
 \item
@@ -383,7 +378,7 @@ my_big_list : ListOf(Int => (EmptyValue)IOAction)s
 \begin{grammar}
 <list> ::= `[' [ <comma-sep-exprs> ] `]'
 
-<stretched-list> ::= ""\\
+<lines-list> ::= 
 `[' <comma-sep-exprs>
 ( `\\n' <indentation> `,' <comma-sep-exprs> )*
 `\\n' <indentation> `]'
@@ -792,32 +787,53 @@ useful with the "\texttt{;>}" operator (see previous section: "Environment
 Operators"), but it is also possible with the following operators:
 "\texttt{->}", "\texttt{o>}", "\texttt{<o}".
 
+\item \textit{Big Operator Expressions}\\\\
+It is possible to stretch a (big) operator expression over multiple lines.
+In that case:
+\begin{itemize}
+\item
+The operator expression must split in a new line after an operator (not an
+argument).
+
+\item
+Every line after the first must be indented so that in begins at the column 
+where the first character of the operator expression was in the first line.
+
+\item
+The precise indentation rules are described in detail in the section
+"Indentation System" \ref{subsubsec:indsys}.
+\end{itemize}
+
 \item \textit{Grammar}
 \begin{grammar}
-<one-line-op-expr> ::= <args-ops> `\ ' <last-op-arg>
+<line-op-expr> ::= <basic-op-expr> [ `\ '  <op> `\ ' <line-func-expr> ]
 
-<args-ops> ::= <op-arg> `\ ' <op>  ( `\ ' <op-arg>  `\ ' <op> )*
+<basic-op-expr> ::= 
+  <basic-expr> ( `\ ' <op>  `\ ' <op-arg> )*
+  | <paren-expr> ( `\ ' <op>  `\ ' <op-arg> )+
 
 <op-arg> ::= <basic-expr> | <paren-expr>
 
-<last-op-arg> ::= <op-arg> | <one-line-func-expr>
+<basic-expr> ::=
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app>\\
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
 `=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
 
-<stretched-op-expr> ::=
-<args-ops> ( `\\n' <indentation> <args-ops> )* <stretched-last-op-arg>
+<at-least-one-op-line-op-expr> ::=
+  <op-arg> ( `\ ' <op>  `\ ' <op-arg> )+ [ `\ '  <op> `\ ' <line-func-expr> ]
+\\
 
-<stretched-last-op-arg> ::= 
-`\\n' <indentation> <last-op-arg> | `\ ' ( <op-arg> | <stretched-func-expr> )\\
+<lines-op-expr> ::= ""\\
+<basic-op-expr>
+( `\ ' <op> `\\n' <indentation> <basic-op-expr> )* \\""
+[ `\ ' <op> ( `\\n' <indentation> <line-func-expr> | `\ ' <lines-func-expr> ) ] \\
 
-<general-op-expr> ::=
-<args-ops> ( `\\n' <indentation> <args-ops> )+ <last-general-op-arg>
-
-<last-general-op-arg> ::= 
-`\\n' <indentation> <last-op-arg> |
-`\ ' ( <op-arg> | <general-func-expr> )
+<general-op-expr> ::= ""\\
+<basic-op-expr>
+( `\ ' <op> `\\n' <indentation> <basic-op-expr> )* \\""
+[ `\ ' <op> ( `\\n' <indentation> <line-func-expr> | `\ ' <general-func-expr> ) ]
 \end{grammar}
 \end{itemize}
 
@@ -939,20 +955,34 @@ in parenthesis, seperated by commas. The parameters and the body are seperated
 by an arrow (" \texttt{=>} "). The body is a basic expression or an operator
 expression.
 
+\item \textit{Big Function Expressions}\\\\
+It is possible to stretch a (big) function expression over multiple lines.
+In that case:
+\begin{itemize}
+\item
+The function expression must split in a new line after the arrow
+("\texttt{=>}") following the parameters.
+
+\item
+Every line after the first must be indented so that in begins at the column 
+where the first character of the parameters was in the first line.
+
+\item
+The precise indentation rules are described in detail in the section
+"Indentation System" \ref{subsubsec:indsys}.
+\end{itemize}
+
 \item \textit{Grammar}
 \begin{grammar}
-<one-line-func-expr> ::=
-<parameters> `\ =>\ ' ( <basic-expr> | <one-line-op-expr> )
+<line-func-expr> ::=
+<parameters> `\ =>\ ' <line-op-expr>
 
 <parameters> ::= <parameter> | `(' <parameter> ( `,\ ' <parameter> )+ `)'
 
 <parameter> ::= <identifier> | `fields'\\
 
-<stretched-func-expr> ::= <parameters> `\ =>' <stretched-func-body>
-
-<stretched-func-body> ::= ""\\
-`\ ' ( <basic-expr> | <one-line-op-expr> ) | 
-`\\n' <indentation> ( <basic-expr> | <stretched-op-expr> )
+<lines-func-expr> ::= <parameters> `\ =>'
+( `\ ' <line-op-expr> | `\\n' <indentation> <lines-op-expr> )
 \end{grammar}
 \end{itemize}
 
@@ -1077,19 +1107,15 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \item \textit{Grammar}
 \begin{grammar}
-<general-func-expr> ::=
-<cases-parameters> `\ =>' <general-func-body> 
+<general-func-expr> ::= ""\\
+<cases-parameters> `\ =>'
+( `\ ' <line-op-expr> |
+`\\n' <indentation> ( <lines-op-expr> | <case>+ <end-case> ) ) 
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
-<cases-parameter> ::= <parameter> | `cases'
-
-<general-func-body> ::= ""\\
-`\ ' ( <basic-expr> | <one-line-op-expr> )
-\alt
-`\\n' <indentation>
-( <basic-expr> | <stretched-op-expr> | <case>+ <end-case> ) \\
+<cases-parameter> ::= <parameter> | `cases' \\
 
 <case> ::= <matching> ( `,\ ' <matching> )* `\ =>' <case-body> `\\n' <indentation>
 
@@ -1098,9 +1124,9 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 <matching> ::= <literal> | <identifier> [ `:' <identifier> ]
 
-<case-body> ::= ""\\
-( `\ ' ( <basic-expr> | <one-line-op-expr> )
-| `\\n' <indentation> ( <basic-expr> | <stretched-op-expr> ) )
+<case-body> ::=
+( `\ ' <line-op-expr> )
+| `\\n' <indentation> <lines-op-expr> )
 [ <where-expr> ]
 \end{grammar}
 
@@ -1132,20 +1158,26 @@ f : (Int, Int, Int) => Int
 
 \item \textit{Description}\\\\
 Value definitions are the main building block of lcases programs. To define a
-new value you give it a name, a type and an expression. It is possible to group
-value definitions together by seperating the names, the types and the
-expressions with commas. This is very useful for not cluttering the program
-with many definitions for values with small expressions (e.g. constants).  When
-grouping definitions together it is also possible to use the keyword "all" to
-give the same type to all the values.
+new value you give it a name, a type and an expression.
 \\\\
 The name and the type are seperated by the string " : ". The line below is
 indented two spaces more than the "name-type" line, begins with "= " and
-continues with the expression.  The value definitions are either begining in
-the first column, in which case the can be "seen" by all other definitions, or
-they are in a "where" expression (see section below), in which case they can be
-"seen" by the expression specified by the indentation rules (see "Indentation
-System" section \ref{subsubsec:indsys}).
+continues with the expression. 
+\\\\
+A value definition is either in the first column, where it can be "seen" by all
+other value definitions, or it is in a "where" expression (see section below),
+where it can be "seen" by the expression above the "where" (see "Indentation
+System" section \ref{subsubsec:indsys} for details) and all the other
+definitions in the same "where" expression.
+\\\\
+A value definition can be followed by a "where" expression where intermediate
+values used in the value expression are defined.
+\\\\
+It is possible to group value definitions together by seperating the names, the
+types and the expressions with commas. This is very useful for not cluttering
+the program with many definitions for values with small expressions (e.g.
+constants).  When grouping definitions together it is also possible to use the
+keyword "all" to give the same type to all the values.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1153,13 +1185,14 @@ System" section \ref{subsubsec:indsys}).
 <indentation> <identifier> `\ :\ ' <type> \\
 `\\n' <indentation> `=\ ' <value-expr> [ <where-expr> ]
 
-<value-expr> ::= <basic-expr> | <general-op-expr> | <general-func-expr> 
+<value-expr> ::=
+<general-op-expr> | <general-func-expr> | <lines-tuple> | <lines-list>
 
 <grouped-value-defs> ::= ""\\
 <indentation> <identifier> ( `,\ ' <identifier> )+ `\ :\ '
 ( <type> ( `,\ ' <type> )+ | `all' <type> ) \\
 `\\n' <indentation> `=\ '
-<basic-or-one-line-expr> ( [ `\\n' <indentation> ] `,\ ' <basic-or-one-line-expr> )+
+<comma-sep-exprs> ( `\\n' <indentation> `,' <comma-sep-exprs> )*
 \end{grammar}
 
 \end{itemize}
@@ -1230,20 +1263,36 @@ indentation.
 
 The \textit{$<$indentation$>$} nonterminal in not a normal BNF nonterminal. It is a
 context sensitive construct that enforces the indentation rules of lcases.
+It depends on a integer value that shall be named "indentation level" ($il$).
+The \textit{$<$indentation$>$} nonterminal parses $2*il$ space characters.
+The indentation level follows with the rules below:
 
-\paragraph{Informal indentation rules}
+\paragraph{Indentation Rules}
 \begin{itemize}
 
 \item
-An expression inside parentheses (which extends over multiple lines)
-is indented more than the lines with
+At the beginnng: $il = 0$.
+
+\item
+At the end of the first line of a value definition: $il \leftarrow il + 1$.
+This also applies to grouped value definitions.
+
+\item
+At the end of the second line of a (single) value definition: $il \leftarrow il + 1$.
+
+\item
+At the end of a (single) value definition: $il \leftarrow il - 2$.
+
+\item
+At the end of grouped value definitions: $il \leftarrow il - 1$.
+
+\item
+After the "\texttt{=>}" arrow in a case: $il \leftarrow il + 1$.
+
+\item
+At the end of a case body: $il \leftarrow il - 1$.
 
 \end{itemize}
-
-Whenever
-the \textit{$<$indentation$>$} nonterminal appears in the grammar there must be
-2*indetation level
-
 
 \subsection{Types}
 \label{subsec:types}
