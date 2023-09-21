@@ -233,7 +233,7 @@ or function expressions.
 \item \textit{Grammar}
 \begin{grammar}
 <paren-expr> ::=
-`(' ( <at-least-one-op-line-op-expr> | <line-func-expr> ) `)' 
+`(' ( <simple-op-expr> | <op-expr-func-end> | <line-func-expr> ) `)' 
 \end{grammar}
 
 \end{itemize}
@@ -305,16 +305,16 @@ my_big_tuple
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <line-expr> `,\ ' <comma-sep-exprs> `)'
+<tuple> ::= `(' <line-expr> `,\ ' <comma-sep-line-exprs> `)'
 
-<comma-sep-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
+<comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
 
-<line-expr> ::= <line-op-expr> | <line-func-expr>\\
+<line-expr> ::= <op-expr-func-end> | <line-func-expr>\\
 
 <lines-tuple> ::= ""\\
-`(' <line-expr> [ `\\n' <indentation> ] `,\ ' <comma-sep-exprs> \\
-( `\\n' <indentation> `,' <comma-sep-exprs> )* \\
-`\\n' <indentation> `)'
+`(' <comma-sep-line-exprs> \\
+( `\\n' <indent> `,' <comma-sep-line-exprs> )* \\
+`\\n' <indent> `)'
 \end{grammar}
 
 \end{itemize}
@@ -383,12 +383,12 @@ my_big_list
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [ <comma-sep-exprs> ] `]'
+<list> ::= `[' [ <comma-sep-line-exprs> ] `]'
 
 <lines-list> ::= 
-`[' <comma-sep-exprs>
-( `\\n' <indentation> `,' <comma-sep-exprs> )*
-`\\n' <indentation> `]'
+`[' <comma-sep-line-exprs>
+( `\\n' <indent> `,' <comma-sep-line-exprs> )*
+`\\n' <indent> `]'
 \end{grammar}
 
 \end{itemize}
@@ -450,7 +450,7 @@ to the right and so on.
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <comma-sep-exprs> `)'
+<arguments> ::= `(' <comma-sep-line-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -505,7 +505,10 @@ Prefix functions always end with a colon.
 \begin{grammar}
 <pre-func> ::= <identifier> `:'
 
-<pre-func-expr> ::= <pre-func> ( <basic-expr> | <pre-func-expr> | <post-func-expr> )
+<pre-func-app> ::= <pre-func> ( <basic-expr> | <pre-func-app> | <post-func-app> )
+
+<basic-expr> ::=
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app> \\
 \end{grammar}
 
 \end{itemize}
@@ -572,7 +575,7 @@ Postfix functions always begin with a dot.
 \begin{grammar}
 <post-func> ::= `.' <identifier>
 
-<post-func-expr> ::= ( <basic-expr> | <post-func-epxr> ) <post-func>
+<post-func-app> ::= ( <basic-expr> | <post-func-epxr> ) <post-func>
 \end{grammar}
 
 \end{itemize}
@@ -957,35 +960,31 @@ The precise indentation rules are described in the section
 
 \item \textit{Grammar}
 \begin{grammar}
-<line-op-expr> ::= <basic-op-expr> [ `\ '  <op> `\ ' <line-func-expr> ]
+<op-expr> ::=
+<simple-op-expr> | <op-expr-func-end> | <lines-op-expr> | <cases-op-expr>
+\\
 
-<basic-op-expr> ::= 
-  <basic-expr> ( `\ ' <op>  `\ ' <op-arg> )*
-  | <paren-expr> ( `\ ' <op>  `\ ' <op-arg> )+
+<simple-op-expr> ::=  <op-arg> ( `\ ' <op>  `\ ' <op-arg> )+
+
+<op-expr-func-end> ::= <simple-op-expr> `\ '  <op> `\ ' <line-func-expr>
+
+<lines-op-expr> ::= ""\\""
+<simple-op-expr> `\ ' <op>
+( `\\n' <indent> <simple-op-expr> `\ ' <op> )* \\""
+`\\n' <indent> ( <basic-expr> | <simple-op-expr> | <line-func-expr> )
+  | `\ ' <lines-func-expr>
+
+<cases-op-expr> ::= ""\\""
+<simple-op-expr> `\ ' <op> 
+( `\\n' <indent> <simple-op-expr> `\ ' <op> )*  \\""
+[ ( `\\n' <indent> | `\ ' ) <cases-func-expr> ) ] 
+\\
 
 <op-arg> ::= <basic-expr> | <paren-expr>
-
-<basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <pre-func> | 
-<post-func> \\
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
 `=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
-
-<at-least-one-op-line-op-expr> ::=
-  <op-arg> ( `\ ' <op>  `\ ' <op-arg> )+ [ `\ '  <op> `\ ' <line-func-expr> ]
-\\
-
-<lines-op-expr> ::= ""\\
-<basic-op-expr>
-( `\ ' <op> `\\n' <indentation> <basic-op-expr> )* \\""
-[ `\ ' <op> ( `\\n' <indentation> <line-func-expr> | `\ ' <lines-func-expr> ) ] \\
-
-<general-op-expr> ::= ""\\
-<basic-op-expr>
-( `\ ' <op> `\\n' <indentation> <basic-op-expr> )* \\""
-[ `\ ' <op> ( `\\n' <indentation> <line-func-expr> | `\ ' <general-func-expr> ) ]
 \end{grammar}
 \end{itemize}
 
@@ -1086,6 +1085,9 @@ Operator & Precedence & Associativity \\
 \subsection{Function Expressions}
 \label{subsec:funcexprs}
 
+\begin{grammar}
+<func-expr> ::= <line-func-expr> | <lines-func-expr> | <cases-func-expr>
+\end{grammar}
 \subsubsection{Simple Function Expressions}
 
 \begin{itemize}
@@ -1125,12 +1127,15 @@ The precise indentation rules are described in the section
 \item \textit{Grammar}
 \begin{grammar}
 <line-func-expr> ::=
-<parameters> `\ =>\ ' <line-op-expr>
+<parameters> `\ =>\ ' <line-func-body>
+
+<lines-func-expr> ::=
+<parameters> `\ =>\\n' <indent> ( <line-func-body> | <lines-op-expr> )
+\\
 
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
 
-<lines-func-expr> ::= <parameters> `\ =>'
-( `\ ' <line-op-expr> | `\\n' <indentation> <lines-op-expr> )
+<line-func-body> ::= <basic-expr> | <simple-op-expr> | <op-expr-func-end>
 \end{grammar}
 \end{itemize}
 
@@ -1229,27 +1234,22 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \item \textit{Grammar}
 \begin{grammar}
-<general-func-expr> ::= ""\\
-<cases-parameters> `\ =>'
-( `\ ' <line-op-expr> |
-`\\n' <indentation> ( <lines-op-expr> | <case>+ <end-case> ) ) 
+<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ <end-case> 
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
 <cases-parameter> ::= <parameter> | `cases' \\
 
-<case> ::= <matching> ( `,\ ' <matching> )* `\ =>' <case-body> `\\n' <indentation>
+<case> ::=  `\\n' <indent> <matching> ( `,\ ' <matching> )* `\ =>' <case-body>
 
 <end-case> ::=
-( `...' | <matching> ( `,\ ' <matching> )* ) `\ =>' <case-body>\\
+`\\n' <indent> ( `...' | <matching> ( `,\ ' <matching> )* ) `\ =>' <case-body>\\
 
 <matching> ::= <literal> | <identifier> [ `:' <identifier> ]
 
 <case-body> ::=
-( `\ ' <line-op-expr> )
-| `\\n' <indentation> <lines-op-expr> )
-[ <where-expr> ]
+( `\ ' <op-expr-func-end> | `\\n' <indent> <lines-op-expr> ) [ <where-expr> ]
 \end{grammar}
 
 \end{itemize}
@@ -1309,18 +1309,18 @@ keyword "all" to give the same type to all the values.
 \item \textit{Grammar}
 \begin{grammar}
 <value-def> ::= ""\\
-<indentation> <identifier> \\
-`\\n' <indentation> `:\ ' <type> \\
-`\\n' <indentation> `=\ ' <value-expr> [ <where-expr> ]
+<indent> <identifier> \\
+`\\n' <indent> `:\ ' <type> \\
+`\\n' <indent> `=\ ' <value-expr> [ <where-expr> ]
 
 <value-expr> ::=
-<general-op-expr> | <general-func-expr> | <lines-tuple> | <lines-list>
+<basic-expr> | <op-expr> | <func-expr> | <lines-tuple> | <lines-list>
 
 <grouped-value-defs> ::= ""\\
-<indentation> <identifier> ( `,\ ' <identifier> )+ \\
-`\\n' <indentation> `:\ ' ( <type> ( `,\ ' <type> )+ | `all' <type> ) \\
-`\\n' <indentation> `=\ '
-<comma-sep-exprs> ( `\\n' <indentation> `,' <comma-sep-exprs> )*
+<indent> <identifier> ( `,\ ' <identifier> )+ \\
+`\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all' <type> ) \\
+`\\n' <indent> `=\ '
+<comma-sep-line-exprs> ( `\\n' <indent> `,' <comma-sep-line-exprs> )*
 \end{grammar}
 
 \end{itemize}
@@ -1386,7 +1386,7 @@ line and must have the same indentation.
 \item \textit{Grammar}
 \begin{grammar}
 <where-expr> ::=
-`\\n' <indentation> `where\\n' ( <value-def> | <grouped-value-defs> )+
+`\\n' <indent> `where\\n' ( <value-def> | <grouped-value-defs> )+
 \end{grammar}
 
 \end{itemize}
@@ -1700,13 +1700,135 @@ heads_and_tails_to_lists : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
 
 \subsection{Complete Grammar}
 
-\setlength{\grammarparsep}{20pt}
-\setlength{\grammarindent}{12em}
-
-\paragraph{Program}
 \begin{grammar}
 
-<program> ::= (<value-definitions> | <type-def>)+
+<literal> ::= <literal> \\
+
+<identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ] \\
+
+<paren-expr> ::= `(' <op-or-func-expr> `)'  
+
+<op-or-func-expr> ::=
+<simple-op-expr> | <op-expr-func-end> | <line-func-expr>  \\
+
+<tuple> ::= `(' <line-expr> `,\ ' <comma-sep-line-exprs> `)'
+
+<comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
+
+<line-expr> ::= <no-paren-op-arg> | <op-or-func-expr> \\
+
+<lines-tuple> ::= ""\\
+`(' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> 
+( `\\n' <indent> `,' <comma-sep-line-exprs> )* \\
+`\\n' <indent> `)' \\
+
+<list> ::= `[' [ <comma-sep-line-exprs> ] `]'
+
+<lines-list> ::= 
+`[' <comma-sep-line-exprs>
+( `\\n' <indent> `,' <comma-sep-line-exprs> )*
+`\\n' <indent> `]' \\
+
+<paren-func-app> ::= ""\\""
+[ <arguments> ] <identifier-with-arguments> [ <arguments> ]
+\alt " "<arguments> <identifier> [ <arguments> ]
+\alt " "<identifier> <arguments>
+
+<arguments> ::= `(' <comma-sep-line-exprs> `)'
+
+<identifier-with-arguments> ::= ""\\""
+[a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
+[a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
+[ [0-9] ] \\
+
+<pre-func> ::= <identifier> `:'
+
+<pre-func-app> ::= <pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> )
+
+<basic-expr> ::=
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <post-func-app> \\
+
+<post-func> ::= `.' <identifier>
+
+<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func> \\
+
+<op-expr> ::=
+<simple-op-expr> | <op-expr-func-end> | <lines-op-expr> | <cases-op-expr>
+\\
+
+<simple-op-expr> ::=  <op-arg> ( `\ ' <op>  `\ ' <op-arg> )+
+
+<op-expr-func-end> ::= <simple-op-expr> `\ '  <op> `\ ' <line-func-expr>
+
+<lines-op-expr> ::= ""\\
+<op-expr-line> ( `\\n' <indent> <op-expr-line> )* \\
+`\\n' <indent>
+( <op-arg> | <simple-op-expr> |
+  [ <op-expr-line> `\ ' ] ( <line-func-expr> | <lines-func-expr>)
+)
+
+<cases-op-expr> ::=
+<op-expr-line> ( `\\n' <indent> <op-expr-line> )*
+( `\\n' <indent> | `\ ' ) <cases-func-expr> 
+
+<op-expr-line> ::= ( <op-arg> | <simple-op-expr> ) `\ ' <op> 
+\\
+
+<op-arg> ::= <no-paren-op-arg> | <paren-expr>
+
+<no-paren-op-arg> ::= <basic-expr> | <pre-func> | <post-func> | <pre-func-app>
+
+<op> ::= 
+`->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
+`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
+
+<func-expr> ::= <line-func-expr> | <lines-func-expr> | <cases-func-expr> \\
+
+<line-func-expr> ::= <parameters> `\ =>\ ' <line-func-body>
+
+<lines-func-expr> ::=
+<parameters> `\ =>\\n' <indent> ( <line-func-body> | <lines-op-expr> )
+\\
+
+<parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
+
+<line-func-body> ::= <no-paren-op-arg> | <simple-op-expr> | <op-expr-func-end> \\
+
+<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ <end-case> 
+
+<cases-parameters> ::=
+<cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
+
+<cases-parameter> ::= <parameter> | `cases' \\
+
+<case> ::=  `\\n' <indent> <matching> ( `,\ ' <matching> )* `\ =>' <case-body>
+
+<end-case> ::=
+`\\n' <indent> ( `...' | <matching> ( `,\ ' <matching> )* ) `\ =>' <case-body>\\
+
+<matching> ::= <literal> | <identifier> [ `:' <identifier> ]
+
+<case-body> ::=
+( <line-func-body> | <lines-op-expr> ) [ <where-expr> ]\\
+
+<value-def> ::= 
+<indent> <identifier> 
+`\\n' <indent> `:\ ' <type> 
+`\\n' <indent> `=\ ' <value-expr> [ <where-expr> ]
+
+<value-expr> ::=
+<no-paren-op-arg> | <op-expr> | <func-expr> | <lines-tuple> | <lines-list>
+
+<grouped-value-defs> ::= ""\\
+<indent> <identifier> ( `,\ ' <identifier> )+ \\
+`\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all' <type> ) \\
+`\\n' <indent> `=\ '
+<comma-sep-line-exprs> ( `\\n' <indent> `,' <comma-sep-line-exprs> )* \\
+
+<where-expr> ::=
+`\\n' <indent> `where\\n' ( <value-def> | <grouped-value-defs> )+ \\
+
+<program> ::= ( <value-def> | <grouped-value-defs> | <type-def> )+
 
 \end{grammar}
 
