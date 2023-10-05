@@ -53,11 +53,9 @@ language (in which we are all already experienced).
 An lcases program consists of a set of definitions and theorems.  Definitions
 are split into value definitions, type definitions, type predicate definitions
 and type proposition definitions. Theorems are proven type propositions.  The
-definition of the "main" value determines the program's behaviour.  Constants
-and functions are all considered values and they have no real distinction other
-than the fact that functions have a function type and constants don't.
-Functions (just like "values") can be passed to other functions as arguments or
-can be returned as a result of other functions. 
+definition of the "main" value determines the program's behaviour. Functions as
+well as "Environment Actions" (see section \ref{subsec:envacts}) are also
+considered values.
 
 \paragraph{Program example: extended euclidean alogirthm}
 \begin{verbatim}
@@ -87,7 +85,7 @@ ext_euc_rec
       where
       next
         : Coeffs => Coeffs
-        = cs => (cs.current, cs.previous - x / y * cs.current)
+        = cs => (cs.current, cs.previous - x -> div <- y * cs.current)
 
 // reading, printing and main
 
@@ -96,7 +94,7 @@ read_two_ints
   = print <- "Please give me 2 ints";
     get_line ;> split_words o> apply(from_string)to_all o> ints =>
     ints -> length -> cases =>
-    2 => ints -> with_io
+    2 => ints -> io_action
     ... => io_error <- "You didn't give me 2 ints"
  
 print_gcd_equation
@@ -161,7 +159,7 @@ Identifiers" section \ref{subsubsec:litsandidents}).
 \end{verbatim}
 
 \item \textit{Description} \\\\
-We have literals for the four basic types: Int, Real, Char, String. These are the 
+There are literals for the four basic types: Int, Real, Char, String. These are the 
 usual integers, real numbes, characters and strings. The exact specification of 
 literals is the same as in the \H\ report.
 
@@ -187,9 +185,10 @@ apply()to_all
 \end{verbatim}
 
 \item \textit{Description} \\\\
-An identifier is a string used as the name of a value. It is used in the
-definition of the value (see "value definition" section
-\ref{subsec:valdefswhere}) and in expressions that use that value.
+An identifier is the name of a value or a parameter. It is used in the
+definition of a value (see "value definition" section
+\ref{subsec:valdefswhere}) and in expressions that use that value, or in the
+parameters of a function and in the body of that function.
 \\\\
 An identifier starts with a lower case letter and is followed by lower case
 letters or underscores. It is also possible to have pairs of parentheses in the
@@ -253,10 +252,9 @@ or function expressions.
 \item \textit{Description} \\\\
 Tuples are used to group many values (of possibly different types) into one.
 The type of the tuple can be either the product of the types of the fields or a
-defined tuple\_type which is equivalent to the afformentioned product type i.e.
-the product type is in the definition of the tuple\_type (see "tuple\_type"
-section \ref{subsubsec:tupts}). For example, the type of the second example above 
-could be:
+defined tuple\_type which is equivalent to the afformentioned product type (see
+"tuple\_type" section \ref{subsubsec:tupts}). For example, the type of the
+second tuple above could be:
 \begin{verbatim}
 Int x String x Real
 \end{verbatim}
@@ -437,7 +435,7 @@ identifier is "apply()to\_all" with the parentheses \textbf{included}. This is v
 useful for defining functions where the argument in the middle makes the function
 application look and sound more like natural language.
 \\\\
-It is possible to have many paratheses pairs in a single function application
+It is possible to have many parentheses pairs in a single function application
 (last example). The arguments are always inserted to the function from
 \textbf{left to right}.  Therefore, when multiple parentheses pairs are present
 the arguments of the leftmost parentheses are inserted first then the next ones
@@ -772,6 +770,7 @@ the "equals", "and" and "or" operators have the symbol once \\(\texttt{= \& |})
 rather than twice (\texttt{== \&\& ||}).
 
 \subsubsection{Environment Action Operators}
+\label{subsec:envacts}
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -804,17 +803,18 @@ get_line
   : (E)IsAnEnvAction --> (E(A), E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line
   : (String)IOAction
-  where (IOAction)IsAnEnvAction, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)IsAnEnvAction is true, E = IOAction, A = EmptyVal, B = String
 ;>
   : (E)IsAnEnvAction --> (E(A), A => E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line ;> print_string
   : (EmptyVal)IOAction
-  where (IOAction)IsAnEnvAction, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)IsAnEnvAction is true, E = IOAction, A = String, B = EmptyVal
 \end{verbatim}
 
 \paragraph{Example program}
 \begin{verbatim}
-main : (EmptyVal)IOAction
+main
+  : (EmptyVal)IOAction
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
     print_string("Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
@@ -825,29 +825,38 @@ print_string
   : String => (EmptyVal)IOAction
 get_line
   : (String)IOAction
+
 print_string <- "Hello! ... "
   : (EmptyVal)IOAction
 print_string("Oh hi...)
   : (EmptyVal)IOAction
 print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
+
 ;
   : (E)IsAnEnvAction --> (E(A), E(B)) => E(B) 
+
 print_string("Oh hi...) ; get_line
   : (String)IOAction
-  where (IOAction)IsAnEnvAction, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)IsAnEnvAction is true, E = IOAction, A = EmptyVal, B = String
+
 age => print_string("Oh that's crazy...)
   : String => (EmptyVal)IOAction
+
 ;>
   : (E)IsAnEnvAction --> (E(A), A => E(B)) => E(B) 
+
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
-  where (IOAction)IsAnEnvAction, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)IsAnEnvAction is true, E = IOAction, A = String, B = EmptyVal
+
 print_string <- "Hello..." ; get_line
   : (String)IOAction
+
 name => print_string("Oh hi ... (till the end)
   : String => (EmptyVal)IOAction
+
 print_string <- "Hello..." ; get_line ;> name =>
 print_string("Oh hi ... (till the end)
   : (EmptyVal)IOAction
@@ -1102,10 +1111,11 @@ a => 17 * a + 42
 \item \textit{Description}\\\\
 Simple function expressions are used to define functions or be part of bigger
 expressions as anonymous functions. They are comprised by their parameters and
-their body. A parameter is either an identifier. The parameters are either only one,
-in which case there is no parenthesis, or they are many, in which case they are
-in parenthesis, seperated by commas. The parameters and the body are seperated
-by an arrow (" \texttt{=>} "). The body is an operator expression.
+their body. Parameter are specified by identifiers. The parameters are either
+only one, in which case there is no parenthesis, or they are many, in which
+case they are in parenthesis, seperated by commas. The parameters and the body
+are seperated by an arrow (" \texttt{=>} "). The body is an operator
+expression.
 
 \item \textit{Big Function Expressions}\\\\
 It is possible to stretch a (big) function expression over multiple lines.
@@ -1179,9 +1189,9 @@ is_seventeen_or_forty_two
 traffic_lights_match
   : (TrafficLight, TrafficLight) => Bool
   = (cases, cases) =>
-    green, green => true
-    amber, amber => true
-    red, red => true
+    (green, green) => true
+    (amber, amber) => true
+    (red, red) => true
     ... => false
 
 gcd
@@ -1510,25 +1520,31 @@ They are written as a single capital letter.
 
 \paragraph{Grammar}
 \begin{grammar}
-<type> ::= <type-application> | <product-type> | <function-type> \\
+<type> ::=
+<type-id> | <type-app> | <prod-type> | <func-type> \\
 
-<type-application> ::=
-[ <types-in-paren> ] <type-identifier> (<types-in-paren> ( [A-Za-z] )*)* [ <types-in-paren> ] 
+<type-id> ::= [A-Z] [A-Za-z]* \\ 
+ 
+<type-id-with-args> ::= 
+<type-id> ( <types-in-paren> [A-Za-z]+ )+
+
+<type-app> ::= ""\\""
+[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
+\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
+\alt " "<type-id> <types-in-paren>
 
 <types-in-paren> ::= `(' <type> (`, ' <type>)* `)'
 
-<type-identifier> ::= [A-Z] ( [A-Za-z] )* \\ 
- 
-<product-type> ::= <product-subtype> ( `\ x\ ' <product-subtype> )+
+<prod-type> ::= <product-subtype> ( `\ x\ ' <product-subtype> )+
 
 <product-subtype> ::=
-`(' ( <function-type> | <product-type> ) `)' | <type-application> \\
+<type-id> | <type-app> | `(' ( <func-type> | <prod-type> ) `)' \\
 
-<function-type> ::= <input-types-expression> `\ =>\ ' <one-type>
+<func-type> ::= <input-types-expression> `\ =>\ ' <one-type>
 
 <input-types-expression> ::= <one-type> | <two-or-more-types-in-paren>
 
-<one-type> ::= <type-application> | <product-type> | `(' <function-type> `)'
+<one-type> ::= <type-id> | <type-app> | <prod-type> | `(' <func-type> `)'
 
 <two-or-more-types-in-paren> ::=  `(' <type> (`, ' <type>)+ `)'
 \end{grammar}
@@ -1558,23 +1574,29 @@ value (expr, line, column) : ExprT x Int x Int
 \paragraph{Usage Examples}
 
 \begin{verbatim}
-giorgos_info : ClientInfo
+giorgos_info
+  : ClientInfo
   = (("Giorgos", "Papadopoulos"), 42, "Greek")
 
-john_info : ClientInfo
+john_info
+  : ClientInfo
   = (("John", "Doe"), 42, "American")
 
-name_to_string : Name => String
+name_to_string
+  : Name => String
   = n => "First Name: " + n.first_name + "\nLast Name: " + n.last_name
 
-print_name_and_nationality : ClientInfo => (EmptyVal)IOAction
+print_name_and_nationality
+  : ClientInfo => (EmptyVal)IOAction
   = ci => print(ci.name -> name_to_string + "\nNationality: " + ci.nationality)
 
-print_error_in_expr : (SomeDefinedExprT)WithPosition => (EmptyVal)IOAction
+print_error_in_expr
+  : (SomeDefinedExprT)WithPosition => (EmptyVal)IOAction
   = ewp =>
     print("Error in the expression:" + es + "\nAt the position: (" + ls + ", " + cs + ")")
     where
-    es, ls, cs : all String
+    es, ls, cs
+      : all String
       = ewp.expr->to_string, ewp.line->to_string, ewp.column->to_string
 \end{verbatim}
 
@@ -1585,9 +1607,12 @@ projection functions for all of their fields by using a '.' before the name of
 the field. For example the ClientInfo type above generates the following 
 functions:
 \begin{verbatim}
-.name : ClientInfo => String
-.age : ClientInfo => Int
-.nationality : ClientInfo => String
+.name
+  : ClientInfo => String
+.age
+  : ClientInfo => Int
+.nationality
+  : ClientInfo => String
 \end{verbatim}
 These functions shall be named "postfix functions" as the can just be appended to
 their argument.
@@ -1595,8 +1620,8 @@ their argument.
 \paragraph{Definition Grammar}
 \begin{grammar}
 <tuple-type-definition> ::= ""\\
-`tuple_type\ ' <type-application>
-\\`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)* `)' `\ :\ ' <product-type>
+`tuple_type\ ' <type-app>
+\\`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)* `)' `\ :\ ' <prod-type>
 \end{grammar}
 
 \subsubsection{Or Types}
@@ -1624,17 +1649,20 @@ values error:A | result:B
 tuple_type NonEmptyListOf(A)s
 value (head, tail) : A x ListOf(A)s
 
-is_empty : ListOf(A)s => Bool
+is_empty
+  : ListOf(A)s => Bool
   = cases => 
     empty => true
     non_empty:anything => false
 
-get_head : ListOf(A)s => Possibly(A)
+get_head
+  : ListOf(A)s => Possibly(A)
   = cases => 
     empty => no_value
     non_empty:list => the_value:list.head
 
-print_err_or_res : Error(A)OrResult(B) => (EmptyVal)IOAction
+print_err_or_res
+  : Error(A)OrResult(B) => (EmptyVal)IOAction
   = cases => 
     error:e => print("Error occured: " + e -> to_string)
     result:r => print("All good! The result is: " + r -> to_string)
@@ -1651,33 +1679,38 @@ used. The cases of an or\_type which have a value inside create functions. For
 example, the case "non\_empty" of a list creates the function "non\_empty:" for
 which we can say:
 \begin{verbatim}
-non_empty: : NonEmptyListOf(A)s => ListOf(A)s
+non_empty:
+  : NonEmptyListOf(A)s => ListOf(A)s
 \end{verbatim}
 Similarly:
 \begin{verbatim}
-the_value: : A => Possibly(A)
+the_value:
+  : A => Possibly(A)
 \end{verbatim}
 These functions shall be named "prefix functions" as they are prepended to their
 argument.
 For example:
 \begin{verbatim}
-head_and_tail : NonEmptyListOf(Int)s
+head_and_tail
+  : NonEmptyListOf(Int)s
   = (1, [2, 3, 4])
 
-list : ListOf(Int)s
+list
+  : ListOf(Int)s
   = non_empty:head_and_tail
 \end{verbatim}
 These functions can be used like any other function as arguments to other functions.
 For example:
 \begin{verbatim}
-heads_and_tails_to_lists : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
+heads_and_tails_to_lists
+  : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
   = apply(non_empty:)to_each
 \end{verbatim}
 
 \paragraph{Definition Grammar}
 \begin{grammar}
 <or-type-definition> ::= ""\\
-`or_type\ ' <type-application> 
+`or_type\ ' <type-app> 
 \\`\\nvalues\ ' <identifier> [ `:' <type> ] ( `\ |\ ' <identifier> [ `:' <type> ])*
 \end{grammar}
 
@@ -1848,8 +1881,6 @@ The parser was implemented using the parsec library.
 
 \section{To be removed or incorporated}
 
-Functor f $=>$ (A)HasInternalFuncApp\\
-Applicative f $=>$ (A)CanApplyWrappedFuncToWrappedArg
 \paragraph{Examples in \H}
 
 \begin{verbatim}
@@ -1917,11 +1948,14 @@ f :: Int => Int => Int => Int
 f = \a b c => a + b * c
 \end{verbatim}
 
-Or Types the following have automatically generated functions:
+\begin{syntdiag}
+<ident> ‘(’
+\begin{rep} \begin{stack} \\
+<type> \begin{stack} \\ <ident> \end{stack}
+\end{stack} \\ ‘,’ \end{rep}
+\begin{stack} \\ ‘...’ \end{stack} ‘)’
+\end{syntdiag}
 
-\begin{verbatim}
-is_case:
-\end{verbatim}
 %\newpage
 
 %\paragraph{Examples}
@@ -1947,30 +1981,5 @@ is_case:
 % \end{tabular}
 
 %  \includegraphics[width=10cm, height=8cm]{../Images/image.png}
-\begin{syntdiag}
-<ident> ‘(’
-\begin{rep} \begin{stack} \\
-<type> \begin{stack} \\ <ident> \end{stack}
-\end{stack} \\ ‘,’ \end{rep}
-\begin{stack} \\ ‘...’ \end{stack} ‘)’
-\end{syntdiag}
-
-\paragraph{Hi}
-
-\begin{itemize}
-
-\item \textit{Examples}
-\begin{verbatim}
-\end{verbatim}
-
-\item \textit{Description} \\\\
-hi
-
-\item \textit{Grammar}
-\begin{grammar}
-<identifier> ::= [a-z]( [a-z_] | `()'[a-z_] )* [ [0-9] ]
-\end{grammar}
-
-\end{itemize}
 
 \end{document}
