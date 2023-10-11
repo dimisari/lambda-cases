@@ -71,45 +71,50 @@ value (gcd, a, b) : Int x Int x Int
 
 // algorithm
 
-init_a_coeffs, init_b_coeffs
-  : all Coeffs
-  = (1, 0), (0, 1)
-
 ext_euc
   : (Int, Int) => GcdAndCoeffs
   = ext_euc_rec(init_a_coeffs, init_b_coeffs)
-
-ext_euc_rec
-  : (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
-  = (a_coeffs, b_coeffs, x, cases) =>
-    0 => (x, a_coeffs.previous, b_coeffs.previous)
-    y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
-      where
-      next
-        : Coeffs => Coeffs
-        = cs => (cs.current, cs.previous - x -> div <- y * cs.current)
+    where
+    init_a_coeffs, init_b_coeffs
+      : all Coeffs
+      = (1, 0), (0, 1)
+    ext_euc_rec
+      : (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
+      = (a_coeffs, b_coeffs, x, cases) =>
+        0 => (x, a_coeffs.previous, b_coeffs.previous)
+        y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
+          where
+          next
+            : Coeffs => Coeffs
+            = cs => (cs.current, cs.previous - x -> div <- y * cs.current)
 
 // reading, printing and main
 
 read_two_ints
   : (Int x Int)IOAction
   = print <- "Please give me 2 ints";
-    get_line ;> split_words o> apply(from_string)to_all o> ints =>
-    ints -> length -> cases =>
-    2 => ints -> io_action
-    ... => io_error <- "You didn't give me 2 ints"
+    get_line ;> split_words o> apply(from_string)to_all o> cases =>
+      [x, y] => (x, y) -> io_action
+      ... => io_error <- "You didn't give me 2 ints"
  
 print_gcd_equation
   : (Int, Int, GcdAndCoeffs) => (EmptyVal)IOAction
-  = (x, y, gcd_cs) => print("gcd = " + gcd_cs.gcd + " = " + sum_string)
+  = (x, y, gcd_cs) => print("gcd = " + gcd_cs.gcd + " = " + linear_comb_string)
     where
-    sum_string
+    linear_comb_string
       : String
       = gcd_cs.a + " * " + x + " + " + gcd_cs.b + " * " + y
 
-read_two_ints ;> ints =>
-print_gcd_and_coeffs(ints.1st, ints.2nd, ext_euc(ints.1st, ints.2nd))
+main
+  : (EmptyVal)IOAction
+  = read_two_ints ;> ints =>
+    print_gcd_equation(ints.1st, ints.2nd, ext_euc(ints.1st, ints.2nd))
 \end{verbatim}
+
+\paragraph{Program grammar}
+\begin{grammar}
+<program> ::= ( <value-def> | <type-def> | <type-prop-def> )+
+\end{grammar}
 
 \subsection{Keywords}
 
@@ -146,7 +151,7 @@ Identifiers" section \ref{subsubsec:litsandidents}).
 
 \section{Language Description: Values}
 
-\subsection{Basic Value Expressions}
+\subsection{Basic Expressions}
 
 \subsubsection{Literals and Identifiers}
 \label{subsubsec:litsandidents}
@@ -587,7 +592,7 @@ Postfix functions always begin with a dot.
 
 \end{itemize}
 
-\subsection{Value Operators}
+\subsection{Operators}
 
 \subsubsection{Function Application Operators}
 
@@ -1285,7 +1290,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \end{itemize}
 
-\subsection{Value Definitions, "where" and Indentation}
+\subsection{Value Definitions and  "where" Expressions}
 \label{subsec:valdefswhere}
 
 \subsubsection{Value Definitions}
@@ -1422,14 +1427,16 @@ line and must have the same indentation.
 
 \end{itemize}
 
+\subsection{Indentation and Complete Grammar for Values}
+
 \subsubsection{Indentation System}
 \label{subsubsec:indsys}
 
-The \textit{$<$indentation$>$} nonterminal in not a normal BNF nonterminal. It is a
+The \textit{$<$indent$>$} nonterminal in not a normal BNF nonterminal. It is a
 context sensitive construct that enforces the indentation rules of lcases.
 It depends on a integer value that shall be named "indentation level" ($il$).
-The \textit{$<$indentation$>$} nonterminal parses $2*il$ space characters.
-The indentation level follows with the rules below:
+The \textit{$<$indent$>$} nonterminal corresponds to $2*il$ space characters.
+The indentation level follows the rules below:
 
 \paragraph{Indentation Rules}
 \begin{itemize}
@@ -1457,10 +1464,22 @@ After the "\texttt{=>}" arrow in a case: $il \leftarrow il + 1$.
 \item
 At the end of a case body: $il \leftarrow il - 1$.
 
+\item
+In a cases function expression which does not begin in the "=" line of a value
+definition:
+  \begin{itemize}
+
+  \item
+  After the arrow "\texttt{=>}" at the end of the paremeters: $il \leftarrow il + 1$.
+
+  \item
+  At the end of the whole cases function expression: $il \leftarrow il - 1$.
+
+  \end{itemize}
+
 \end{itemize}
 
-\subsection{Complete Grammar for Values}
-
+\subsubsection{Complete Grammar for Values}
 \begin{grammar}
 
 <literal> ::= <literal> \\
@@ -1576,7 +1595,7 @@ At the end of a case body: $il \leftarrow il - 1$.
 <list-matching> ::= `[' [ <matching> ( `,' <matching> )* [ `, ...' ] ] `]' \\
 
 <case-body> ::=
-( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]\\
+( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]\\
 
 <value-def> ::= 
 <indent> <identifier> 
@@ -1596,12 +1615,141 @@ At the end of a case body: $il \leftarrow il - 1$.
 `\\n' <indent> `where\\n' ( <value-def> | <grouped-value-defs> )+ \\
 \end{grammar}
 
+
 \section{Language Description: Types and Type Logic}
 
 \subsection{Types}
 \label{subsec:types}
 
-\subsubsection{Type expressions}
+\subsubsection{Type Expressions}
+
+\paragraph{Type Identifiers}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+Int
+Real 
+Char 
+String
+FunnyType
+MyDefinedType
+\end{verbatim}
+
+\item \textit{Description} \\\\
+A type identifier is either the name of a basic type (Int, Real, Char, String) or
+the name of some defined type that has no type parameters. It begins with a capital
+letter and is followed by one or more capital or lowercase letters.
+
+\item \textit{Grammar}
+\begin{grammar}
+<type-id> ::= [A-Z] [A-Za-z]+ \\ 
+\end{grammar}
+\end{itemize}
+
+\paragraph{Type Variables}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+A
+B
+C
+X 
+Y
+Z
+\end{verbatim}
+
+\item \textit{Examples of type variables inside bigger type expressions}
+\begin{verbatim}
+A => A
+(A => B, B => C) => (A => C)
+((A, A) => A, A, ListOf(A)s) => A
+\end{verbatim}
+
+\item \textit{Description} \\\\
+Type Variables are used inside larger type expressions of polymorphic types. A
+polymorphic type is a type where any function of that type can be used as a
+function of any type that corresponds to substituting every type variable of
+the polymorphic type with a particular type. The easiest example of a
+polymorphic type is the type of the identity function where we have:
+\begin{verbatim}
+id
+  : A => A
+  = x => x
+
+id(1)
+  : Int
+  where A is substituted by Int and id gets the type Int => Int
+
+id("Hello")
+  : String
+  where A is substituted by String and id gets the type String => String
+\end{verbatim}
+
+A type variable is a single capital letter.
+
+\item \textit{Grammar}
+\begin{grammar}
+<type-var> ::= [A-Z] \\ 
+\end{grammar}
+\end{itemize}
+
+\paragraph{Function Types}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+\end{verbatim}
+
+\item \textit{Description} \\\\
+\item \textit{Grammar}
+\begin{grammar}
+<literal> ::= <literal>
+\end{grammar}
+\end{itemize}
+
+\paragraph{Product Types}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+\end{verbatim}
+
+\item \textit{Description} \\\\
+\item \textit{Grammar}
+\begin{grammar}
+<literal> ::= <literal>
+\end{grammar}
+\end{itemize}
+
+\paragraph{Type Application Types}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+\end{verbatim}
+
+\item \textit{Description} \\\\
+\item \textit{Grammar}
+\begin{grammar}
+<literal> ::= <literal>
+\end{grammar}
+\end{itemize}
+
+\paragraph{Conditional Types}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+\end{verbatim}
+
+\item \textit{Description} \\\\
+\item \textit{Grammar}
+\begin{grammar}
+<literal> ::= <literal>
+\end{grammar}
+\end{itemize}
 
 \paragraph{Examples}
 
@@ -1629,14 +1777,6 @@ A => A
 Every value definition has a type annotation which is a type expression. 
 Type expressions are divided into 5 categories:
 \begin{itemize}
-\item \textit{Named Types}
-
-  \begin{itemize}
-  \item Basic Types: Int, Real, Char, String
-
-  \item Tuple or Or Types: Names are user defined (see following sections)
-  \end{itemize}
-
 \item \textit{Function Types}\\\\
 Function type expressions are comprised of the following:
 
@@ -1672,10 +1812,6 @@ Type application types are comprised of the following:
 
   \end{itemize}
 
-\item \textit{Type Variables}\\\\
-Type Variables are used to create expressions that are polymorphic.
-They are written as a single capital letter.
-
 \end{itemize}
 
 \paragraph{Grammar}
@@ -1709,7 +1845,7 @@ They are written as a single capital letter.
 <two-or-more-types-in-paren> ::=  `(' <type> (`, ' <type>)+ `)'
 \end{grammar}
 
-\subsubsection{Tuple Types}
+\subsubsection{Type Definitions: Tuple Types}
 \label{subsubsec:tupts}
 
 \paragraph{Definition Examples}
@@ -1784,7 +1920,7 @@ their argument.
 \\`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)* `)' `\ :\ ' <prod-type>
 \end{grammar}
 
-\subsubsection{Or Types}
+\subsubsection{Type Definitions: Or Types}
 \label{subsubsec:ortypes}
 
 \paragraph{Examples}
@@ -1881,15 +2017,15 @@ heads_and_tails_to_lists
 
 \subsubsection{Type Theorem}
 
-\subsection{Predefined}
+\section{Predefined}
 
-\subsubsection{Functions}
+\subsection{Constants}
 
-\subsection{Program}
+\subsection{Functions}
 
-\subsubsection{"main" Value}
+\subsection{Types}
 
-\section{lcases vs Haskell: Similarities and Differences}
+\subsection{Type Propositions}
 
 \section{Parser implimentation}
 
@@ -1902,83 +2038,6 @@ The parser was implemented using the parsec library.
 \section{Translation to \H}
 \section{Running examples}
 \section{Conclusion}
-
-\section{To be removed or incorporated}
-
-\paragraph{Examples in \H}
-
-\begin{verbatim}
-data ClientInfo =
-  ClientInfoC String Int String
-
-data WithPosition a = 
-  WithPositionC a Int Int
-
-data Pair a b = 
-  PairC a b
-\end{verbatim}
-
-\paragraph{Examples in \H}
-
-\begin{verbatim}
-{-# language LambdaCase #-}
-
-data Bool =
-  Ctrue | Cfalse
-
-data Possibly a =
-  Cwrapper a | Cnothing
-
-data ListOf_s a =
-  Cnon_empty (NonEmptyValListOf_s a) | Cempty
-
-data NonEmptyValListOf_s a =
-  CNonEmptyValListOf_s a (ListOf_s a)
-
-is_empty :: ListOf_s a => Bool
-is_empty = \case
-  Cempty => Ctrue
-  Cnon_empty (CNonEmptyValListOf_s head tail) => Cfalse
-
-get_head :: ListOf_s a => Possibly a
-get_head = \case
-  Cempty => Cnothing
-  Cnon_empty (CNonEmptyValListOf_s head tail) => Cwrapper head
-\end{verbatim}
-
-\paragraph{Examples in \H}
-\begin{verbatim}
-foo :: Int
-foo = 42
-
-val1 :: Int
-val1 = 42
-val2 :: Bool
-val2 = true
-val3 :: Char
-val3 = 'a'
-
-int1 :: Int
-int1 = 1
-int2 :: Int
-int2 = 2
-int3 :: Int
-int3 = 3
-
-succ :: Int => Int
-succ = \x => x + 1
-
-f :: Int => Int => Int => Int
-f = \a b c => a + b * c
-\end{verbatim}
-
-\begin{syntdiag}
-<ident> ‘(’
-\begin{rep} \begin{stack} \\
-<type> \begin{stack} \\ <ident> \end{stack}
-\end{stack} \\ ‘,’ \end{rep}
-\begin{stack} \\ ‘...’ \end{stack} ‘)’
-\end{syntdiag}
 
 %\newpage
 
