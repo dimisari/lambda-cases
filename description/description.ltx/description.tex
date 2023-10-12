@@ -1623,6 +1623,23 @@ definition:
 
 \subsubsection{Type Expressions}
 
+Type expressions are divided into the following categories:
+\begin{itemize}
+\item Type Identifiers
+\item Type Variables
+\item Function Types
+\item Product Types
+\item Type Application Types
+\item Conditional Types
+\end{itemize}
+which are described in the following paragraphs.
+The grammar of a type epxression is:
+\begin{grammar}
+<type-expr> ::= <simple-type> | <cond-type>
+
+<simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
+\end{grammar}
+
 \paragraph{Type Identifiers}
 
 \begin{itemize}
@@ -1700,12 +1717,31 @@ A type variable is a single capital letter.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
+String => String 
+Real => Int
+A => A
+Int x Int => Int
+(Real, Real, Real) => Real
+(A => B, B => C) => (A => C)
+(Int => Int) => Int
 \end{verbatim}
 
 \item \textit{Description} \\\\
+A function type expression is comprised of the expressions of the types of the
+parameters and the expression of the type of the result, seperated by the arrow
+"\texttt{=>}". If there are more than one parameters, the expressions of their
+types are inside parentheses and seperated by commas. If there is only one
+parameter, the expression of its type is put in parentheses only if it is 
+a function type. The same applies to the type of the result.
+
 \item \textit{Grammar}
 \begin{grammar}
-<literal> ::= <literal>
+<func-type> ::= <param-types-expr> `\ =>\ ' <one-type>
+
+<param-types-expr> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
+
+<one-type> ::=
+<type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
 \end{grammar}
 \end{itemize}
 
@@ -1714,12 +1750,24 @@ A type variable is a single capital letter.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
+Int x Int
+Real x Real x Real
+Int x Real x String
+(Int => Int) x (Int => Real) x (Real => String)
 \end{verbatim}
 
 \item \textit{Description} \\\\
+Product types are the types of tuples. They are comprised of the expressions of
+the types of the fields seperated by the string " x " (space 'x' space) because
+'x' is very similar the symbol used in the cartesian product. If any of the
+fields has a product or a function type then the corresponding type expression
+must be inside parentheses.
 \item \textit{Grammar}
 \begin{grammar}
-<literal> ::= <literal>
+<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
+
+<field-type> ::=
+<type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
 \end{grammar}
 \end{itemize}
 
@@ -1754,8 +1802,6 @@ A type variable is a single capital letter.
 \paragraph{Examples}
 
 \begin{verbatim}
-Int
-
 String => String 
 
 Int x Int 
@@ -1774,28 +1820,7 @@ A => A
 \end{verbatim}
 
 \paragraph{Description}\pend
-Every value definition has a type annotation which is a type expression. 
-Type expressions are divided into 5 categories:
 \begin{itemize}
-\item \textit{Function Types}\\\\
-Function type expressions are comprised of the following:
-
-  \begin{itemize}
-  \item
-  The parameter type expression(s). If the parameter type expressions are more than
-  one they are in parenthesis seperated by commas.
-
-  \item
-  The function type operator  "\texttt{ => }"
-
-  \item
-  The result type expression
-  \end{itemize}
-
-\item \textit{Product Types}\\\\
-Product type expressions are comprised by the subtype type expressions seperated
-by "\texttt{ x }".
-
 \item \textit{Type Application Types}\\\\
 Type application types are comprised of the following: 
 
@@ -1831,14 +1856,14 @@ Type application types are comprised of the following:
 
 <types-in-paren> ::= `(' <type> (`, ' <type>)* `)'
 
-<prod-type> ::= <product-subtype> ( `\ x\ ' <product-subtype> )+
+<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
 
-<product-subtype> ::=
+<field-type> ::=
 <type-id> | <type-app> | `(' ( <func-type> | <prod-type> ) `)' \\
 
-<func-type> ::= <input-types-expression> `\ =>\ ' <one-type>
+<func-type> ::= <in-types-expr> `\ =>\ ' <one-type>
 
-<input-types-expression> ::= <one-type> | <two-or-more-types-in-paren>
+<in-types-expr> ::= <one-type> | <two-or-more-types-in-paren>
 
 <one-type> ::= <type-id> | <type-app> | <prod-type> | `(' <func-type> `)'
 
@@ -2036,7 +2061,9 @@ The parser was implemented using the parsec library.
 \subsection{Parsers}
 
 \section{Translation to \H}
-\section{Running examples}
+
+\section{Running Examples}
+
 \section{Conclusion}
 
 %\newpage
