@@ -17,7 +17,7 @@
 \def\imgs{../Images}
 \def\H{Haskell}
 \def\ra{\texttt{=>}\ }
-\def\Ra{\texttt{-->}\ }
+\def\Ra{\texttt{==>}\ }
 \def\pend{\mbox{} \\\\}
 %\newcommand\_[_]{_}
 
@@ -352,7 +352,7 @@ Therefore, the types of the first four examples are:
 ListOf(Int)s
 ListOf(Real)s
 ListOf(String)s
-(A)And(Int)AddTo(B) --> ListOf(A => B)s
+(A)And(Int)AddTo(B) ==> ListOf(A => B)s
 \end{verbatim}
 And the last list is only legal if x, y, z and w all have the same type. Assuming 
 they do and it's the type T, the type of the list is: 
@@ -489,7 +489,7 @@ apply(the_value:)to_all
 
 \item \textit{Description} \\\\
 Prefix functions are automatically generated from \texttt{or_type} definitions
-(see "Or Types" section \ref{subsubsec:ortypes}). They are functions that
+(see "Or Types" section \ref{subsubsec:orts}). They are functions that
 convert a value of a particular type to a value that is a case of an
 \texttt{or_type} and has values of this type inside. For example in the
 first example above we have:
@@ -571,9 +571,9 @@ tuple.1st
 The general types of these functions are:
 \begin{verbatim}
 .1st
-  : (A)Is(B)sFirst --> B => A
+  : (A)Is(B)sFirst ==> B => A
 .2nd
-  : (A)Is(B)sSecond --> B => A
+  : (A)Is(B)sSecond ==> B => A
 ...
 \end{verbatim}
 These functions are called postfix functions because they are appended to
@@ -708,15 +708,15 @@ reverse_words
 Operator & Type \\ 
 \hline
 \hline
-\texttt{\^} & (A)ToThe(B)Gives(C) \Ra (A, B) \ra C \\
+\texttt{\^} & (A)ToThe(B)HasType(C) \Ra (A, B) \ra C \\
 \hline
 \texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C \\
 \hline
 \texttt{/} & (A)Divides(B)To(C) \Ra (B, A) \ra C \\
 \hline
-+ & (A)And(B)AddTo(C) \Ra (A, B) \ra C \\ 
+\texttt{+} & (A)And(B)AddTo(C) \Ra (A, B) \ra C \\ 
 \hline
-- & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C \\
+\texttt{-} & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C \\
 \hline
 \end{tabular}
 \end{center}
@@ -770,9 +770,11 @@ for new user defined types!
 Operator & Type \\ 
 \hline
 \hline
-= /= & (A)HasEquality \Ra (A, A) \ra Bool \\
+\texttt{= /=} & (A)HasEquality \Ra (A, A) \ra Bool \\
 \hline
-\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool \\
+\texttt{>= <=} & (A)HasOrder \Ra (A, A) \ra Bool \\
+\hline
+\texttt{> <} & (A)And(B)AreComparable \Ra (A, B) \ra Bool \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool \\
 \hline
@@ -814,12 +816,12 @@ print_string("I'll repeat the line.")
 get_line
   : (String)IOAction
 ; 
-  : (E)IsAnEnvAction --> (E(A), E(B)) => E(B) 
+  : (E)IsAnEnvAction ==> (E(A), E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line
   : (String)IOAction
   where (IOAction)IsAnEnvAction is true, E = IOAction, A = EmptyVal, B = String
 ;>
-  : (E)IsAnEnvAction --> (E(A), A => E(B)) => E(B) 
+  : (E)IsAnEnvAction ==> (E(A), A => E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line ;> print_string
   : (EmptyVal)IOAction
   where (IOAction)IsAnEnvAction is true, E = IOAction, A = String, B = EmptyVal
@@ -848,7 +850,7 @@ print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
 
 ;
-  : (E)IsAnEnvAction --> (E(A), E(B)) => E(B) 
+  : (E)IsAnEnvAction ==> (E(A), E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line
   : (String)IOAction
@@ -858,7 +860,7 @@ age => print_string("Oh that's crazy...)
   : String => (EmptyVal)IOAction
 
 ;>
-  : (E)IsAnEnvAction --> (E(A), A => E(B)) => E(B) 
+  : (E)IsAnEnvAction ==> (E(A), A => E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
@@ -1037,19 +1039,21 @@ Operator & Type & Description \\
 \hline
 \texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition \\
 \hline
-\texttt{\^} & (A)ToThe(B)Gives(C) \Ra (A, B) \ra C & General exponentiation  \\
+\texttt{\^} & (A)ToThe(B)HasType(C) \Ra (A, B) \ra C & General exponentiation  \\
 \hline
 \texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C & General multiplication  \\
 \hline
 \texttt{/} & (A)Divides(B)To(C) \Ra (B, A) \ra C & General division \\
 \hline
-+ & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition \\ 
+\texttt{+} & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition \\ 
 \hline
-- & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction \\
+\texttt{-} & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction \\
 \hline
-= /= & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
+\texttt{= /=} & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
 \hline
-\texttt{> < >= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
+\texttt{>= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
+\hline
+\texttt{> <} & (A)And(B)AreComparable \Ra (A, B) \ra Bool & Comparison operators\\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
@@ -1368,7 +1372,7 @@ keyword "all" to give the same type to all the values.
 \item \textit{Examples}
 \begin{verbatim}
 sort :
-  (A)HasOrder --> ListOf(A)s => ListOf(A)s
+  (A)HasOrder ==> ListOf(A)s => ListOf(A)s
   = cases => 
     empty => empty
     non_empty:l => sort(less_l) + l.head + sort(greater_l)
@@ -1621,8 +1625,9 @@ definition:
 \subsection{Types}
 \label{subsec:types}
 
-\subsubsection{Type Expressions}
-
+The constructs regarding types are two: \textbf{type expressions} and
+\textbf{type definitions}.
+\\\\
 Type expressions are divided into the following categories:
 \begin{itemize}
 \item Type Identifiers
@@ -1632,13 +1637,25 @@ Type expressions are divided into the following categories:
 \item Type Application Types
 \item Conditional Types
 \end{itemize}
-which are described in the following paragraphs.
-The grammar of a type epxression is:
+which are described in the following section.
+\\\\
+The grammar of a type expression is:
 \begin{grammar}
-<type-expr> ::= <simple-type> | <cond-type>
+<type> ::= [ <condition> ]  <simple-type> 
 
 <simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
+\\
 \end{grammar}
+Type definitions are divided into \texttt{tuple_type} definitions and
+\texttt{or_type} definitions which are described in the sections
+\ref{subsubsec:tupts} and \ref{subsubsec:orts} respectively.
+\\\\
+The grammar of a type definition is:
+\begin{grammar}
+<type-def> ::= <tuple-type-def> | <or-type-def>
+\end{grammar}
+
+\subsubsection{Type Expressions}
 
 \paragraph{Type Identifiers}
 
@@ -1753,7 +1770,8 @@ a function type. The same applies to the type of the result.
 Int x Int
 Real x Real x Real
 Int x Real x String
-(Int => Int) x (Int => Real) x (Real => String)
+ListOf(Int)s x (Int x ListOf(String)s)
+(Int => Int) x (Int x Real) x (Real => String)
 \end{verbatim}
 
 \item \textit{Description} \\\\
@@ -1776,12 +1794,41 @@ must be inside parentheses.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
+Possibly(Int)
+ListOf(Real)s
+TreeOf(String)s 
+Error(String)OrResult(Int)
+ListOf(Int => Int)s
+ListOf(A)s
 \end{verbatim}
 
 \item \textit{Description} \\\\
+Type application types are types that are produced by passing arguments
+to a type function generated by a \texttt{tuple_type} or an \texttt{or_type}
+definition. For example, given the definition of \texttt{ListOf(A)s}:
+\begin{verbatim}
+or_type ListOf(A)s
+values non_empty:NonEmptyListOf(A)s | empty
+\end{verbatim}
+We have that \texttt{ListOf()s} is a type function that receives one type parameter
+and returns a resulting type. For example \texttt{ListOf(Int)s} is the result
+of passing the type argument \texttt{Int} to \texttt{ListOf()s}.
+\\\\
+Type application types have the same form as the name in the
+\texttt{tuple_type} or \texttt{or_type} definition, with the difference that
+any of the type parameters can be substituted with an argument type expression.
+
 \item \textit{Grammar}
 \begin{grammar}
-<literal> ::= <literal>
+<type-app> ::= ""\\""
+[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
+\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
+\alt " "<type-id> <types-in-paren>
+
+<type-id-with-args> ::= 
+<type-id> ( <types-in-paren> [A-Za-z]+ )+
+
+<types-in-paren> ::= `(' <simple-type> ( `, ' <simple-type> )* `)'
 \end{grammar}
 \end{itemize}
 
@@ -1790,6 +1837,11 @@ must be inside parentheses.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
+(A)HasEquality ==> (A, A) => Bool
+(A)And(B)AddTo(C) ==> (A, B) => C
+(A)Is(B)sFirst ==> B => A
+(T)HasStringRepr ==> T => String
+(E)IsAnEnvAction ==> (E(A), A => E(B)) => E(B)
 \end{verbatim}
 
 \item \textit{Description} \\\\
@@ -1799,81 +1851,10 @@ must be inside parentheses.
 \end{grammar}
 \end{itemize}
 
-\paragraph{Examples}
-
-\begin{verbatim}
-String => String 
-
-Int x Int 
-
-Int x Int => Real
-
-A => A
-
-(A => B, B => C) => (A => C)
-
-((A, A) => A, A, ListOf(A)s) => A
-
-((B, A) => B, B, ListOf(A)s) => B
-
-(T)HasStringRepresantion --> T => String
-\end{verbatim}
-
-\paragraph{Description}\pend
-\begin{itemize}
-\item \textit{Type Application Types}\\\\
-Type application types are comprised of the following: 
-
-  \begin{itemize}
-  \item
-  The name of a \texttt{tuple_type} or \texttt{or_type} that is defined expecting
-  type parameters.
-
-  \item
-  The argument type expressions in parenthesis and comma seperated. Just like
-  Parenthesis Function Application (section \ref{subsec:parenfuncapp}) the 
-  arguments can be before, in the middle or after the name of the type
-  \texttt{tuple_type} or \texttt{or_type}.
-
-  \end{itemize}
-
-\end{itemize}
-
-\paragraph{Grammar}
-\begin{grammar}
-<type> ::=
-<type-id> | <type-app> | <prod-type> | <func-type> \\
-
-<type-id> ::= [A-Z] [A-Za-z]* \\ 
- 
-<type-id-with-args> ::= 
-<type-id> ( <types-in-paren> [A-Za-z]+ )+
-
-<type-app> ::= ""\\""
-[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
-\alt " "<type-id> <types-in-paren>
-
-<types-in-paren> ::= `(' <type> (`, ' <type>)* `)'
-
-<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
-
-<field-type> ::=
-<type-id> | <type-app> | `(' ( <func-type> | <prod-type> ) `)' \\
-
-<func-type> ::= <in-types-expr> `\ =>\ ' <one-type>
-
-<in-types-expr> ::= <one-type> | <two-or-more-types-in-paren>
-
-<one-type> ::= <type-id> | <type-app> | <prod-type> | `(' <func-type> `)'
-
-<two-or-more-types-in-paren> ::=  `(' <type> (`, ' <type>)+ `)'
-\end{grammar}
-
 \subsubsection{Type Definitions: Tuple Types}
 \label{subsubsec:tupts}
 
-\paragraph{Definition Examples}
+\paragraph{Example Definitions}
 
 \begin{verbatim}
 tuple_type Name
@@ -1885,11 +1866,14 @@ value (name, age, nationality) : Name x Int x String
 tuple_type Date
 value (day, month, year) : Int x Int x Int
 
-tuple_type (A)And(B)
-value (a_value, b_value) : A x B
+tuple_type TreeOf(A)s
+values (root, subtrees) : A x ListOf(TreeOf(A)s)s
 
-tuple_type (ExprT)WithPosition
-value (expr, line, column) : ExprT x Int x Int
+tuple_type Indexed(T)
+value (index, val) : Int x T
+
+tuple_type (T)WithTextPos
+value (val, line, column) : T x Int x Int
 \end{verbatim}
 
 \paragraph{Usage Examples}
@@ -1940,13 +1924,21 @@ their argument.
 
 \paragraph{Definition Grammar}
 \begin{grammar}
-<tuple-type-definition> ::= ""\\
-`tuple_type\ ' <type-app>
-\\`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)* `)' `\ :\ ' <prod-type>
+<tuple-type-def> ::= 
+`tuple_type\ ' <type-name>
+`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)* `)' `\ :\ ' <prod-type>
+
+<type-name> ::= 
+[ <params-in-paren> ] ( <type-id> | <type-id-with-params> ) [ <params-in-paren> ]
+
+<type-id-with-params> ::= 
+<type-id> ( <params-in-paren> [A-Za-z]+ )+
+
+<params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
 \end{grammar}
 
 \subsubsection{Type Definitions: Or Types}
-\label{subsubsec:ortypes}
+\label{subsubsec:orts}
 
 \paragraph{Examples}
 
@@ -1956,6 +1948,10 @@ values true | false
 
 or_type Possibly(A)
 values the_value:A | no_value
+
+// needed tuple_type for ListOf(A)s
+tuple_type NonEmptyListOf(A)s
+value (head, tail) : A x ListOf(A)s
 
 or_type ListOf(A)s
 values non_empty:NonEmptyListOf(A)s | empty
@@ -1967,9 +1963,6 @@ values error:A | result:B
 \paragraph{Usage}
 
 \begin{verbatim}
-tuple_type NonEmptyListOf(A)s
-value (head, tail) : A x ListOf(A)s
-
 is_empty
   : ListOf(A)s => Bool
   = cases => 
