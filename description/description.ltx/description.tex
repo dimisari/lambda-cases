@@ -1845,9 +1845,54 @@ any of the type parameters can be substituted with an argument type expression.
 \end{verbatim}
 
 \item \textit{Description} \\\\
-\item \textit{Grammar}
+Conditional types are the types of values that are polymorphic not because of
+their structure but because they have been defined (seperately) for many
+different combinations of types (a.k.a. ad hoc polymorphism). They are
+comprised of a condition and a "simple" type (i.e. a type without a
+condition) which are seperated by the arrow "\texttt{==>}". The condition is a
+type proposition which refers to the type variables inside the "simple" type
+and it must hold whenever the polymorphic value of that type is used. For
+example:
+\begin{verbatim}
+get_first
+  : (A)Is(B)sFirst => B => A
+\end{verbatim}
+can be used as follows:
+\begin{verbatim}
+pair, triple, list
+  : Int x String, Real x Char x Int, ListOf(String)s
+  = (42, "The answer to everything"), (3.14, 'a', 1), ["Hi!", "Hello", Heeey"]
+
+>> pair -> get_first
+  : Int
+  = 42
+>> triple -> get_first
+  : Real
+  = 3.14
+>> list -> get_first
+  : String
+  = "Hi!"
+\end{verbatim}
+and that is because the following propositions hold:
+\begin{verbatim}
+(Int)Is(Int x String)sFirst
+(Real)Is(Real x Char x Int)sFirst
+(String)Is(ListOf(String)s)sFirst
+\end{verbatim}
+which it turn means that the function \texttt{get_first} has been defined
+for these combinations of types. For more on how conditions, propositions and
+ad hoc polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic}).
+
+\item \textit{Grammar}\\\\
+As described in the beginning of this "Types" section the grammar of a type is:
 \begin{grammar}
-<literal> ::= <literal>
+<type> ::= [ <condition> ]  <simple-type> 
+
+<simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
+\end{grammar}
+And therefore here only the grammar of the condition must be written:
+\begin{grammar}
+<condition> ::= <proposition> `\ ==>\ ' 
 \end{grammar}
 \end{itemize}
 
@@ -1860,66 +1905,53 @@ any of the type parameters can be substituted with an argument type expression.
 tuple_type Name
 value (first_name, last_name) : String x String
 
-tuple_type ClientInfo
-value (name, age, nationality) : Name x Int x String
-
 tuple_type Date
 value (day, month, year) : Int x Int x Int
+
+tuple_type MathematicianInfo
+value (name, nationality, date_of_birth) : Name x String x Date
 
 tuple_type TreeOf(A)s
 values (root, subtrees) : A x ListOf(TreeOf(A)s)s
 
 tuple_type Indexed(T)
 value (index, val) : Int x T
-
-tuple_type (T)WithTextPos
-value (val, line, column) : T x Int x Int
 \end{verbatim}
 
 \paragraph{Usage Examples}
 
 \begin{verbatim}
-giorgos_info
-  : ClientInfo
-  = (("Giorgos", "Papadopoulos"), 42, "Greek")
-
-john_info
-  : ClientInfo
-  = (("John", "Doe"), 42, "American")
+euler_info
+  : MathematicianInfo
+  = (("Leonhard", "Euler"), "Swiss", (15, 4, 1707))
 
 name_to_string
   : Name => String
-  = n => "First Name: " + n.first_name + "\nLast Name: " + n.last_name
+  = n => "\nFirst Name: " + n.first_name + "\nLast Name: " + n.last_name
 
 print_name_and_nationality
   : ClientInfo => (EmptyVal)IOAction
   = ci => print(ci.name -> name_to_string + "\nNationality: " + ci.nationality)
 
-print_error_in_expr
-  : (SomeDefinedExprT)WithPosition => (EmptyVal)IOAction
-  = ewp =>
-    print("Error in the expression:" + es + "\nAt the position: (" + ls + ", " + cs + ")")
-    where
-    es, ls, cs
-      : all String
-      = ewp.expr->to_string, ewp.line->to_string, ewp.column->to_string
+sum_nodes
+  : TreeOf(Int)s => Int
+  = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
 \end{verbatim}
 
 \paragraph{Description}\pend
-Tuple types group many values into a single value. They are specified by their name,
-the names of their fields and the types of their fields. They generate 
-projection functions for all of their fields by using a '.' before the name of 
-the field. For example the ClientInfo type above generates the following 
-functions:
+A tuple type is equivalent to a product type with a new name  and names for the
+fields for convinience. A tuple type generates postfix functions for all of
+the fields by using a '.' before the name of the field. For example the
+\texttt{MathematicianInfo} type above generates the following functions:
 \begin{verbatim}
 .name
-  : ClientInfo => String
-.age
-  : ClientInfo => Int
+  : MathematicianInfo => Name
 .nationality
-  : ClientInfo => String
+  : MathematicianInfo => String
+.date_of_birth
+  : MathematicianInfo => Date
 \end{verbatim}
-These functions shall be named "postfix functions" as the can just be appended to
+These functions are named "postfix functions" because they can be appended to
 their argument.
 
 \paragraph{Definition Grammar}
@@ -1975,6 +2007,12 @@ get_head
     empty => no_value
     non_empty:list => the_value:list.head
 
+sum_list
+  : ListOf(Int)s => Int
+  = cases
+    empty => 0
+    non_empty:l => l.head + sum_list(l.tail)
+
 print_err_or_res
   : Error(A)OrResult(B) => (EmptyVal)IOAction
   = cases => 
@@ -1983,15 +2021,15 @@ print_err_or_res
 \end{verbatim}
 
 \paragraph{Description}\pend
-Values of an or\_type are one of many cases that possibly have other values
-inside.  The cases which have other values inside are followed by a semicolon
-and the type of the internal value. The same syntax can be used for matching
-that particular case in a function using the "cases" syntax, with the
+Values of an \texttt{or_type} are one of many cases. Some cases have other
+values inside.  The cases which have other values inside are followed by a
+semicolon and the type of the internal value. The same syntax can be used for
+matching that particular case in a function using the "cases" syntax, with the
 difference that after the colon, we write the name given to the value inside.
-Or\_types and basic types are the only types on which the "cases" syntax can be
-used. The cases of an or\_type which have a value inside create functions. For
-example, the case "non\_empty" of a list creates the function "non\_empty:" for
-which we can say:
+An \texttt{or_type} definition automatically creates prefix functions for each
+case with an internal value.  For example, for the case "\texttt{non_empty}" of
+a list, the function "\texttt{non_empty}:" is automatically created from the
+definition for which we can say:
 \begin{verbatim}
 non_empty:
   : NonEmptyListOf(A)s => ListOf(A)s
@@ -2001,22 +2039,21 @@ Similarly:
 the_value:
   : A => Possibly(A)
 \end{verbatim}
-These functions shall be named "prefix functions" as they are prepended to their
+These functions are called "prefix functions" because they are prepended to their
 argument.
 For example:
 \begin{verbatim}
-head_and_tail
+non_empty_l
   : NonEmptyListOf(Int)s
   = (1, [2, 3, 4])
-
-list
+l
   : ListOf(Int)s
-  = non_empty:head_and_tail
+  = non_empty:non_empty_l
 \end{verbatim}
 These functions can be used like any other function as arguments to other functions.
 For example:
 \begin{verbatim}
-heads_and_tails_to_lists
+non_empty_ls_to_ls
   : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
   = apply(non_empty:)to_each
 \end{verbatim}
@@ -2024,7 +2061,7 @@ heads_and_tails_to_lists
 \paragraph{Definition Grammar}
 \begin{grammar}
 <or-type-definition> ::= ""\\
-`or_type\ ' <type-app> 
+`or_type\ ' <type-name> 
 \\`\\nvalues\ ' <identifier> [ `:' <type> ] ( `\ |\ ' <identifier> [ `:' <type> ])*
 \end{grammar}
 
