@@ -54,10 +54,9 @@ language (in which we are all already experienced).
 
 An lcases program consists of a set of definitions and theorems.  Definitions
 are split into value definitions, type definitions and type proposition
-definitions. Theorems are proven type propositions.  The definition of the
-"main" value determines the program's behaviour. Functions as well as
+definitions. Theorems are proven type propositions. Functions as well as
 "Environment Actions" (see section \ref{subsec:envacts}) are also considered
-values.
+values. The definition of the "main" value determines the program's behaviour. 
 
 \paragraph{Program example: extended euclidean alogirthm}
 \begin{verbatim}
@@ -113,7 +112,7 @@ main
 
 \paragraph{Program grammar}
 \begin{grammar}
-<program> ::= ( <value-def> | <type-def> | <type-prop-def> )+
+<program> ::= ( <value-def> | <type-def> | <type-prop-def> | <type-theo> )+
 \end{grammar}
 
 \subsection{Keywords}
@@ -121,7 +120,7 @@ main
 The lcases keywords are the following:
 \begin{verbatim}
 cases where all tuple_type value or_type values
-type_predicate function type_proposition equivalent type_theorem proof
+type_proposition equivalent type_theorem proof
 \end{verbatim}
 Each keyword's functionality is described in the respective section shown in the 
 table below:
@@ -138,9 +137,8 @@ Keyword & Section \\
 \hline
 \texttt{tuple_type value or_type values} & \ref{subsec:types} Types \\
 \hline
-\texttt{type_predicate function type_proposition equivalent} &
-  \multirow{2}{*}{\ref{subsec:typelogic} Type Logic} \\
-\texttt{type_theorem proof} & \\
+\texttt{type_proposition function equivalent type_theorem proof} &
+{\ref{subsec:typelogic} Type Logic} \\
 \hline
 \end{tabular}
 \end{center}
@@ -571,9 +569,9 @@ tuple.1st
 The general types of these functions are:
 \begin{verbatim}
 .1st
-  : (A)Is(B)sFirst ==> B => A
+  : (A)Is(B)s1st ==> B => A
 .2nd
-  : (A)Is(B)sSecond ==> B => A
+  : (A)Is(B)s2nd ==> B => A
 ...
 \end{verbatim}
 These functions are called postfix functions because they are appended to
@@ -1049,11 +1047,17 @@ Operator & Type & Description \\
 \hline
 \texttt{-} & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction \\
 \hline
-\texttt{= /=} & (A)HasEquality \Ra (A, A) \ra Bool & Equality operators \\
+\texttt{=} & (A)HasEquality \Ra (A, A) \ra Bool & Equality \\
 \hline
-\texttt{>= <=} & (A)HasOrder \Ra (A, A) \ra Bool & Order operators \\
+\texttt{/=} & (A)HasInequality \Ra (A, A) \ra Bool & Inequality \\
 \hline
-\texttt{> <} & (A)And(B)AreComparable \Ra (A, B) \ra Bool & Comparison operators\\
+\texttt{>=} & (A)HasGreaterOrEqual \Ra (A, A) \ra Bool & Greater than or equal to \\
+\hline
+\texttt{<=} & (A)HasLessOrEqual \Ra (A, A) \ra Bool & Less than or equal to \\
+\hline
+\texttt{>} & (A)CanBeGreaterThan(B) \Ra (A, B) \ra Bool & Greater than \\
+\hline
+\texttt{<} & (A)CanBeLessThan(B) \Ra (A, B) \ra Bool & Less than \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
@@ -1850,7 +1854,7 @@ their structure but because they have been defined (seperately) for many
 different combinations of types (a.k.a. ad hoc polymorphism). They are
 comprised of a condition and a "simple" type (i.e. a type without a
 condition) which are seperated by the arrow "\texttt{==>}". The condition is a
-type proposition which refers to the type variables inside the "simple" type
+type proposition which refers to type variables inside the "simple" type
 and it must hold whenever the polymorphic value of that type is used. For
 example:
 \begin{verbatim}
@@ -1892,7 +1896,7 @@ As described in the beginning of this "Types" section the grammar of a type is:
 \end{grammar}
 And therefore here only the grammar of the condition must be written:
 \begin{grammar}
-<condition> ::= <proposition> `\ ==>\ ' 
+<condition> ::= <prop-app> `\ ==>\ ' 
 \end{grammar}
 \end{itemize}
 
@@ -2068,9 +2072,69 @@ non_empty_ls_to_ls
 \subsection{Type Logic}
 \label{subsec:typelogic}
 
-\subsubsection{Type Proposition}
+The constructs regarding type logic are two: \textbf{type propositions} and 
+\textbf{type theorems}.
+Type propositions are divided into two categories: \textbf{atomic type
+propositions} and \textbf{compound type propositions} which are described in
+the paragraphs below. The grammar of a type proposition definition is:
+\begin{grammar}
+<type-prop-def> ::= <atom-prop-def> | <comp-prop-def>
+\end{grammar}
+Type theorems are described in section \ref{subsubsec:ttheo}.
 
-\subsubsection{Type Theorem}
+\subsubsection{Proposition Definitions: Atomic Type Propositions}
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+type_proposition (T)Has_String_Represantion
+value
+  to_string : T => String
+
+type_proposition (A)Is(B)s_First
+value
+  first : B => A
+
+type_proposition (T)Has_A_Wrapper
+value
+  wrapper : A => T(A)
+
+type_proposition (T)Has_Internal_Application
+value
+  apply_internally : (A => B, T(A)) => T(B)
+
+type_proposition (T)Has_Wrapped_Internal_Application
+value
+  app_wrapped_f_internally : (T(A => B), T(A)) => T(B)
+\end{verbatim}
+
+\item \textit{Description} \\\\
+Atomic type propositions are propositions that linked to a ad hoc polymorphic
+function.
+\item \textit{Grammar}
+\begin{grammar}
+<atom-prop-def> ::=
+`type_proposition' <prop-name-expr>
+`\\nvalue\\n\ \ ' <identifier> ` : ' <simple-type>
+
+<prop-name-expr> ::= <prop-name-expr>
+\end{grammar} 
+\end{itemize}
+
+\subsubsection{Proposition Definitions: Compound Type Propositions}
+
+\begin{itemize}
+\item \textit{Examples}
+\item \textit{Description} \\\\
+\item \textit{Grammar}
+\begin{grammar}
+<grammar> ::= <grammar>
+\end{grammar} 
+\end{itemize}
+
+\subsubsection{Type Theorems}
+\label{subsubsec:ttheo}
+
+\subsection{Complete Grammar for Types and Type Logic}
 
 \section{Predefined}
 
