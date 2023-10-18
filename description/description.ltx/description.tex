@@ -1820,7 +1820,7 @@ of passing the type argument \texttt{Int} to \texttt{ListOf()s}.
 \\\\
 Type application types have the same form as the name in the
 \texttt{tuple_type} or \texttt{or_type} definition, with the difference that
-any of the type parameters can be substituted with an argument type expression.
+any of the type parameters can be substituted with a type expression argument.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1843,7 +1843,7 @@ any of the type parameters can be substituted with an argument type expression.
 \begin{verbatim}
 (A)HasEquality ==> (A, A) => Bool
 (A)And(B)AddTo(C) ==> (A, B) => C
-(A)Is(B)sFirst ==> B => A
+(A)Is(B)s_First ==> B => A
 (T)HasStringRepr ==> T => String
 (E)IsAnEnvAction ==> (E(A), A => E(B)) => E(B)
 \end{verbatim}
@@ -1858,8 +1858,8 @@ type proposition which refers to type variables inside the "simple" type
 and it must hold whenever the polymorphic value of that type is used. For
 example:
 \begin{verbatim}
-get_first
-  : (A)Is(B)sFirst => B => A
+first
+  : (A)Is(B)s_First => B => A
 \end{verbatim}
 can be used as follows:
 \begin{verbatim}
@@ -1867,23 +1867,23 @@ pair, triple, list
   : Int x String, Real x Char x Int, ListOf(String)s
   = (42, "The answer to everything"), (3.14, 'a', 1), ["Hi!", "Hello", Heeey"]
 
->> pair -> get_first
+>> pair -> first
   : Int
   = 42
->> triple -> get_first
+>> triple -> first
   : Real
   = 3.14
->> list -> get_first
+>> list -> first
   : String
   = "Hi!"
 \end{verbatim}
 and that is because the following propositions hold:
 \begin{verbatim}
-(Int)Is(Int x String)sFirst
-(Real)Is(Real x Char x Int)sFirst
-(String)Is(ListOf(String)s)sFirst
+(Int)Is(Int x String)s_First
+(Real)Is(Real x Char x Int)s_First
+(String)Is(ListOf(String)s)s_First
 \end{verbatim}
-which it turn means that the function \texttt{get_first} has been defined
+which it turn means that the function \texttt{first} has been defined
 for these combinations of types. For more on how conditions, propositions and
 ad hoc polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic}).
 
@@ -1896,7 +1896,7 @@ As described in the beginning of this "Types" section the grammar of a type is:
 \end{grammar}
 And therefore here only the grammar of the condition must be written:
 \begin{grammar}
-<condition> ::= <prop-app> `\ ==>\ ' 
+<condition> ::= <prop-expr> `\ ==>\ ' 
 \end{grammar}
 \end{itemize}
 
@@ -2086,13 +2086,13 @@ Type theorems are described in section \ref{subsubsec:ttheo}.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-type_proposition (T)Has_String_Represantion
-value
-  to_string : T => String
-
 type_proposition (A)Is(B)s_First
 value
   first : B => A
+
+type_proposition (T)Has_String_Represantion
+value
+  to_string : T => String
 
 type_proposition (T)Has_A_Wrapper
 value
@@ -2102,37 +2102,149 @@ type_proposition (T)Has_Internal_Application
 value
   apply_internally : (A => B, T(A)) => T(B)
 
-type_proposition (T)Has_Wrapped_Internal_Application
+type_proposition (T)Has_Wrapped_Internal_App
 value
-  app_wrapped_f_internally : (T(A => B), T(A)) => T(B)
+  apply_wrapped_internally : (T(A => B), T(A)) => T(B)
+\end{verbatim}
+The examples above define the following (ad hoc) polymorphic functions which
+have the respective (conditional) types:
+\begin{verbatim}
+first
+  : (A)Is(B)s_First ==> B => A
+
+to_string
+  : (T)Has_String_Represantion ==> T => String
+
+wrapper
+  : (T)Has_A_Wrapper ==> A => T(A)
+
+apply_internally
+  : (T)Has_Internal_Application ==> (A => B, T(A)) => T(B)
+
+apply_wrapped_internally
+  : (T)Has_Wrapped_Internal_App ==> (T(A => B), T(A)) => T(B)
 \end{verbatim}
 
 \item \textit{Description} \\\\
-Atomic type propositions are propositions that linked to a ad hoc polymorphic
-function.
+An atomic type proposition definition defines a polymorphic value (usually, but
+not necessarily, a function) by definining the form of the type of the value
+given some type parameters. The type proposition itself has the role of being
+true or not true for specific type arguments depending on whether the
+implementation of the function has been defined for these specific type
+arguments. The aforementioned truthvalue will determine whether the value is
+used correctly inside the program and therefore whether the program will
+typecheck. In order to add more types for which the function works, i.e.
+define the function for these types, i.e. make the type proposition true for
+these types, one must prove a type theorem. The specifics of type theorems are
+described in section \ref{subsubsec:ttheo}. For now, we'll show the example for
+everything mentioned in this paragraph for the proposition
+\texttt{(A)Is(B)s_First}:
+
+\begin{itemize}
+\item Type Proposition Definition:
+
+\begin{verbatim}
+type_proposition (A)Is(B)s_First
+value
+  first : B => A
+\end{verbatim}
+
+\item Function defined and its type:
+
+\begin{verbatim}
+first
+  : (A)Is(B)s_First ==> B => A
+\end{verbatim}
+
+\item Type theorems for specific types:
+
+\begin{verbatim}
+type_theorem (A)Is(A x B)s_First
+proof
+  first = .1st
+
+type_theorem (A)Is(NonEmptyListOf(A)s)s_First
+proof
+  first = .head
+\end{verbatim}
+
+\item Usage of the function
+\begin{verbatim}
+pair, list
+  : Int x String, ListOf(String)s
+  = (42, "The answer to everything"), ["Hi!", "Hello", Heeey"]
+
+>> pair -> first
+  : Int
+  = 42
+>> list -> first
+  : String
+  = "Hi!"
+\end{verbatim}
+\end{itemize}
+
+
 \item \textit{Grammar}
 \begin{grammar}
 <atom-prop-def> ::=
-`type_proposition' <prop-name-expr>
+`type_proposition' <prop-name>
 `\\nvalue\\n\ \ ' <identifier> ` : ' <simple-type>
 
-<prop-name-expr> ::= <prop-name-expr>
+<prop-name> ::=  ""\\
+( <name-part> <params-in-paren> )+ [ <name-part> ]
+\alt ( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+
+<name-part> ::= [A-Za-z_]+
+
+<params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
 \end{grammar} 
 \end{itemize}
 
 \subsubsection{Proposition Definitions: Compound Type Propositions}
+
+\begin{grammar}
+<compound-prop-def> ::= <conjunction> | <implication>
+\end{grammar} 
+\paragraph{Conjunction Type Propositions}
 
 \begin{itemize}
 \item \textit{Examples}
 \item \textit{Description} \\\\
 \item \textit{Grammar}
 \begin{grammar}
-<grammar> ::= <grammar>
+<conjunction> ::= 
+`type_proposition' <prop-name>
+`\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )+
+\end{grammar} 
+\end{itemize}
+
+\paragraph{Implication Type Propositions}
+
+\begin{itemize}
+\item \textit{Examples}
+\item \textit{Description} \\\\
+\item \textit{Grammar}
+\begin{grammar}
+<implication> ::= 
+`type_proposition' <prop-name>
+`\\nequivalent\\n\ \ ' <prop-name> `\ =>\ ' <prop-name>
 \end{grammar} 
 \end{itemize}
 
 \subsubsection{Type Theorems}
 \label{subsubsec:ttheo}
+
+\begin{itemize}
+\item \textit{Examples}
+\item \textit{Description} \\\\
+\item \textit{Grammar}
+\begin{grammar}
+<prop-app> ::= ""\\""
+[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
+\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
+\alt " "<type-id> <types-in-paren>
+\end{grammar} 
+\end{itemize}
 
 \subsection{Complete Grammar for Types and Type Logic}
 
