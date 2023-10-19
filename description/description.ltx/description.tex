@@ -18,7 +18,6 @@
 \def\H{Haskell}
 \def\ra{\texttt{=>}\ }
 \def\Ra{\texttt{==>}\ }
-\def\pend{\mbox{} \\\\}
 %\newcommand\_[_]{_}
 
 \renewcommand{\arraystretch}{1.5}
@@ -135,9 +134,9 @@ Keyword & Section \\
 \hline
 \texttt{where all} & \ref{subsec:valdefswhere} Value Definitions \\
 \hline
-\texttt{tuple_type value or_type values} & \ref{subsec:types} Types \\
+\texttt{tuple_type value or_type values} & \ref{subsubsec:tdefs} Type Definitions \\
 \hline
-\texttt{type_proposition function equivalent type_theorem proof} &
+\texttt{type_proposition value equivalent type_theorem proof} &
 {\ref{subsec:typelogic} Type Logic} \\
 \hline
 \end{tabular}
@@ -262,7 +261,7 @@ or function expressions.
 Tuples are used to group many values (of possibly different types) into one.
 The type of the tuple can be either the product of the types of the fields or a
 defined tuple\_type which is equivalent to the afformentioned product type (see
-"tuple\_type" section \ref{subsubsec:tupts}). For example, the type of the
+"Tuple Types" in section \ref{subsubsec:tdefs}). For example, the type of the
 second tuple above could be:
 \begin{verbatim}
 Int x String x Real
@@ -350,7 +349,7 @@ Therefore, the types of the first four examples are:
 ListOf(Int)s
 ListOf(Real)s
 ListOf(String)s
-(A)And(Int)AddTo(B) ==> ListOf(A => B)s
+(A)And(Int)Add_To(B) ==> ListOf(A => B)s
 \end{verbatim}
 And the last list is only legal if x, y, z and w all have the same type. Assuming 
 they do and it's the type T, the type of the list is: 
@@ -487,7 +486,7 @@ apply(the_value:)to_all
 
 \item \textit{Description} \\\\
 Prefix functions are automatically generated from \texttt{or_type} definitions
-(see "Or Types" section \ref{subsubsec:orts}). They are functions that
+(see "Or Types" in section \ref{subsubsec:tdefs}). They are functions that
 convert a value of a particular type to a value that is a case of an
 \texttt{or_type} and has values of this type inside. For example in the
 first example above we have:
@@ -538,7 +537,7 @@ apply(.1st)to_all
 
 \item \textit{Description} \\\\
 Postfix functions are automatically generated from \texttt{tuple_type}
-definitions (see "Tuple Types" section \ref{subsubsec:tupts}). They are
+definitions (see "Tuple Types" in section \ref{subsubsec:tdefs}). They are
 functions that take a \texttt{tuple_type} value and return a particular field
 (i.e. projection functions). For example in the first example above we have:
 \begin{verbatim}
@@ -569,9 +568,9 @@ tuple.1st
 The general types of these functions are:
 \begin{verbatim}
 .1st
-  : (A)Is(B)s1st ==> B => A
+  : (A)Is(B)s_1st ==> B => A
 .2nd
-  : (A)Is(B)s2nd ==> B => A
+  : (A)Is(B)s_2nd ==> B => A
 ...
 \end{verbatim}
 These functions are called postfix functions because they are appended to
@@ -592,7 +591,9 @@ Postfix functions always begin with a dot.
 
 \subsection{Operators}
 
-\subsubsection{Function Application Operators}
+\subsubsection{Function Application and Function Composition Operators}
+
+\paragraph{Function Application Operators}
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -655,7 +656,7 @@ Which is equivalent to:
 \texttt{mod(x, y)}
 \end{center}
 
-\subsubsection{Function Composition Operators}
+\paragraph{Function Composition Operators}
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
@@ -699,22 +700,24 @@ reverse_words
 \end{verbatim}
 
 
-\subsubsection{Arithmetic Operators}
+\subsubsection{Arithmetic, Comparison and Boolean Operators}
+
+\paragraph{Arithmetic Operators}
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
 \hline
 Operator & Type \\ 
 \hline
 \hline
-\texttt{\^} & (A)ToThe(B)HasType(C) \Ra (A, B) \ra C \\
+\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra (A, B) \ra C \\
 \hline
-\texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C \\
+\texttt{*} & (A)And(B)Multiply_To(C) \Ra (A, B) \ra C \\
 \hline
 \texttt{/} & (A)Divides(B)To(C) \Ra (B, A) \ra C \\
 \hline
-\texttt{+} & (A)And(B)AddTo(C) \Ra (A, B) \ra C \\ 
+\texttt{+} & (A)And(B)Add_To(C) \Ra (A, B) \ra C \\ 
 \hline
-\texttt{-} & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C \\
+\texttt{-} & (A)Subtracts_From(B)To(C) \Ra (B, A) \ra C \\
 \hline
 \end{tabular}
 \end{center}
@@ -741,26 +744,26 @@ are generalized. The examples below show their generality:
 \end{verbatim}
 Let's analyze further the example of addition. The type can be read as such:
 the '+' operator has the type \\ (A, B) \ra C, provided that the type
-proposition (A)And(B)AddTo(C) holds. This proposition being true, means that
+proposition (A)And(B)Add_To(C) holds. This proposition being true, means that
 addition has been defined for these three types (see section "Type Logic"
 \ref{subsec:typelogic} for more on type propositions). For example, by the examples
 above we can deduce that the following propositions are true (in the order of the 
 examples):
 \begin{verbatim}
-(Int)And(Int)AddTo(Int)
-(Int)And(Real)AddTo(Real)
-(Char)And(Char)AddTo(String)
-(Char)And(String)AddTo(String)
-(Int)And(Char)MultiplyTo(String)
-(Int)And(String)MultiplyTo(String)
-(Char)SubtractsFrom(String)To(String)
+(Int)And(Int)Add_To(Int)
+(Int)And(Real)Add_To(Real)
+(Char)And(Char)Add_To(String)
+(Char)And(String)Add_To(String)
+(Int)And(Char)Multiply_To(String)
+(Int)And(String)Multiply_To(String)
+(Char)Subtracts_From(String)To(String)
 \end{verbatim}
 This allows us to use the familiar arithmetic operators in types that are not
 necessarily numbers but it is somewhat intuitively obvious what the should do
 in those other types. Furthermore, their behaviour can be defined by the user
 for new user defined types!
 
-\subsubsection{Comparison and Boolean Operators}
+\paragraph{Comparison and Boolean Operators}
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -768,11 +771,17 @@ for new user defined types!
 Operator & Type \\ 
 \hline
 \hline
-\texttt{= /=} & (A)HasEquality \Ra (A, A) \ra Bool \\
+\texttt{=} & (A)Has_Equality \Ra (A, A) \ra Bool \\
 \hline
-\texttt{>= <=} & (A)HasOrder \Ra (A, A) \ra Bool \\
+\texttt{/=} & (A)Has_Inequality \Ra (A, A) \ra Bool \\
 \hline
-\texttt{> <} & (A)And(B)AreComparable \Ra (A, B) \ra Bool \\
+\texttt{>=} & (A)Has_Greater_Or_Equal \Ra (A, A) \ra Bool \\
+\hline
+\texttt{<=} & (A)Has_Less_Or_Equal \Ra (A, A) \ra Bool \\
+\hline
+\texttt{>} & (A)Can_Be_Greater_Than(B) \Ra (A, B) \ra Bool \\
+\hline
+\texttt{<} & (A)Can_Be_Less_Than(B) \Ra (A, B) \ra Bool \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool \\
 \hline
@@ -792,9 +801,9 @@ rather than twice (\texttt{== \&\& ||}).
 Operator & Type \\ 
 \hline
 \hline
-\texttt{;>} & (E)IsAnEnvAction \Ra (E(A), A \ra E(B)) \ra E(B) \\
+\texttt{;>} & (E)Is_An_Env_Action \Ra (E(A), A \ra E(B)) \ra E(B) \\
 \hline
-\texttt{;} & (E)IsAnEnvAction \Ra (E(A), E(B)) \ra E(B) \\
+\texttt{;} & (E)Is_An_Env_Action \Ra (E(A), E(B)) \ra E(B) \\
 \hline
 \end{tabular}
 \end{center}
@@ -814,15 +823,15 @@ print_string("I'll repeat the line.")
 get_line
   : (String)IOAction
 ; 
-  : (E)IsAnEnvAction ==> (E(A), E(B)) => E(B) 
+  : (E)Is_An_Env_Action ==> (E(A), E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line
   : (String)IOAction
-  where (IOAction)IsAnEnvAction is true, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = EmptyVal, B = String
 ;>
-  : (E)IsAnEnvAction ==> (E(A), A => E(B)) => E(B) 
+  : (E)Is_An_Env_Action ==> (E(A), A => E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line ;> print_string
   : (EmptyVal)IOAction
-  where (IOAction)IsAnEnvAction is true, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = String, B = EmptyVal
 \end{verbatim}
 
 \paragraph{Example program}
@@ -848,22 +857,22 @@ print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
 
 ;
-  : (E)IsAnEnvAction ==> (E(A), E(B)) => E(B) 
+  : (E)Is_An_Env_Action ==> (E(A), E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line
   : (String)IOAction
-  where (IOAction)IsAnEnvAction is true, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = EmptyVal, B = String
 
 age => print_string("Oh that's crazy...)
   : String => (EmptyVal)IOAction
 
 ;>
-  : (E)IsAnEnvAction ==> (E(A), A => E(B)) => E(B) 
+  : (E)Is_An_Env_Action ==> (E(A), A => E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
-  where (IOAction)IsAnEnvAction is true, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = String, B = EmptyVal
 
 print_string <- "Hello..." ; get_line
   : (String)IOAction
@@ -881,12 +890,12 @@ expression. Therefore, we have "\texttt{name => ... (till the end)}" and
 "\texttt{age => ... (till the end)}" as the second arguments of the two
 occurences of the "\texttt{;>}" operator. 
 
-\paragraph{Description}\pend
+\paragraph{Description}\mbox{} \\\\
 The environment action operators are used to combine values that do environment
 actions into values that do more complicated environment actions. Environment
 actions are also represented by types. More acurately, type constructors that
 take a type as an argument and produce a new type (just like ListOf()s). A
-value of the type \texttt{E(A)} where \texttt{(E)IsAnEnvAction} does an
+value of the type \texttt{E(A)} where \texttt{(E)Is_An_Env_Action} does an
 environment action of type \texttt{E} that produces value of type \texttt{A}.
 \\\\
 The effect of the "\texttt{;}" operator described in words is the following:
@@ -1037,34 +1046,35 @@ Operator & Type & Description \\
 \hline
 \texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition \\
 \hline
-\texttt{\^} & (A)ToThe(B)HasType(C) \Ra (A, B) \ra C & General exponentiation  \\
+\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra (A, B) \ra C & General exponentiation  \\
 \hline
-\texttt{*} & (A)And(B)MultiplyTo(C) \Ra (A, B) \ra C & General multiplication  \\
+\texttt{*} & (A)And(B)Multiply_To(C) \Ra (A, B) \ra C & General multiplication  \\
 \hline
 \texttt{/} & (A)Divides(B)To(C) \Ra (B, A) \ra C & General division \\
 \hline
-\texttt{+} & (A)And(B)AddTo(C) \Ra (A, B) \ra C & General addition \\ 
+\texttt{+} & (A)And(B)Add_To(C) \Ra (A, B) \ra C & General addition \\ 
 \hline
-\texttt{-} & (A)SubtractsFrom(B)To(C) \Ra (B, A) \ra C & General subtraction \\
+\texttt{-} & (A)Subtracts_From(B)To(C) \Ra (B, A) \ra C & General subtraction \\
 \hline
-\texttt{=} & (A)HasEquality \Ra (A, A) \ra Bool & Equality \\
+\texttt{=} & (A)Has_Equality \Ra (A, A) \ra Bool & Equality \\
 \hline
-\texttt{/=} & (A)HasInequality \Ra (A, A) \ra Bool & Inequality \\
+\texttt{/=} & (A)Has_Inequality \Ra (A, A) \ra Bool & Inequality \\
 \hline
-\texttt{>=} & (A)HasGreaterOrEqual \Ra (A, A) \ra Bool & Greater than or equal to \\
+\texttt{>=} & (A)Has_Greater_Or_Equal \Ra (A, A) \ra Bool
+& Greater than or equal to \\
 \hline
-\texttt{<=} & (A)HasLessOrEqual \Ra (A, A) \ra Bool & Less than or equal to \\
+\texttt{<=} & (A)Has_Less_Or_Equal \Ra (A, A) \ra Bool & Less than or equal to \\
 \hline
-\texttt{>} & (A)CanBeGreaterThan(B) \Ra (A, B) \ra Bool & Greater than \\
+\texttt{>} & (A)Can_Be_Greater_Than(B) \Ra (A, B) \ra Bool & Greater than \\
 \hline
-\texttt{<} & (A)CanBeLessThan(B) \Ra (A, B) \ra Bool & Less than \\
+\texttt{<} & (A)Can_Be_Less_Than(B) \Ra (A, B) \ra Bool & Less than \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
-\texttt{;>} & (E)IsAnEnvAction \Ra (E(A), A \ra E(B)) \ra E(B) &
+\texttt{;>} & (E)Is_An_Env_Action \Ra (E(A), A \ra E(B)) \ra E(B) &
 Monad bind \\
 \hline
-\texttt{;} & (E)IsAnEnvAction \Ra (E(A), E(B)) \ra E(B) &
+\texttt{;} & (E)Is_An_Env_Action \Ra (E(A), E(B)) \ra E(B) &
 Monad then \\
 \hline
 \end{tabular}
@@ -1651,8 +1661,8 @@ The grammar of a type expression is:
 \\
 \end{grammar}
 Type definitions are divided into \texttt{tuple_type} definitions and
-\texttt{or_type} definitions which are described in the sections
-\ref{subsubsec:tupts} and \ref{subsubsec:orts} respectively.
+\texttt{or_type} definitions and are described in section
+\ref{subsubsec:tdefs}.
 \\\\
 The grammar of a type definition is:
 \begin{grammar}
@@ -1841,11 +1851,11 @@ any of the type parameters can be substituted with a type expression argument.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-(A)HasEquality ==> (A, A) => Bool
-(A)And(B)AddTo(C) ==> (A, B) => C
+(A)Has_Equality ==> (A, A) => Bool
+(A)And(B)Add_To(C) ==> (A, B) => C
 (A)Is(B)s_First ==> B => A
 (T)HasStringRepr ==> T => String
-(E)IsAnEnvAction ==> (E(A), A => E(B)) => E(B)
+(E)Is_An_Env_Action ==> (E(A), A => E(B)) => E(B)
 \end{verbatim}
 
 \item \textit{Description} \\\\
@@ -1888,7 +1898,7 @@ for these combinations of types. For more on how conditions, propositions and
 ad hoc polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic}).
 
 \item \textit{Grammar}\\\\
-As described in the beginning of this "Types" section the grammar of a type is:
+As described in the beginning of this section, the grammar of a type is:
 \begin{grammar}
 <type> ::= [ <condition> ]  <simple-type> 
 
@@ -1900,10 +1910,13 @@ And therefore here only the grammar of the condition must be written:
 \end{grammar}
 \end{itemize}
 
-\subsubsection{Type Definitions: Tuple Types}
-\label{subsubsec:tupts}
+\subsubsection{Type Definitions}
+\label{subsubsec:tdefs}
 
-\paragraph{Example Definitions}
+\paragraph{Tuple Types}
+
+\begin{itemize}
+\item \textit{Definition Examples}
 
 \begin{verbatim}
 tuple_type Name
@@ -1922,7 +1935,7 @@ tuple_type Indexed(T)
 value (index, val) : Int x T
 \end{verbatim}
 
-\paragraph{Usage Examples}
+\item \textit{Usage Examples}
 
 \begin{verbatim}
 euler_info
@@ -1942,7 +1955,7 @@ sum_nodes
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
 \end{verbatim}
 
-\paragraph{Description}\pend
+\item \textit{Description} \\\\
 A tuple type is equivalent to a product type with a new name  and names for the
 fields for convinience. A tuple type generates postfix functions for all of
 the fields by using a '.' before the name of the field. For example the
@@ -1958,7 +1971,8 @@ the fields by using a '.' before the name of the field. For example the
 These functions are named "postfix functions" because they can be appended to
 their argument.
 
-\paragraph{Definition Grammar}
+\item \textit{Grammar}
+
 \begin{grammar}
 <tuple-type-def> ::= 
 `tuple_type\ ' <type-name>
@@ -1973,10 +1987,12 @@ their argument.
 <params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
 \end{grammar}
 
-\subsubsection{Type Definitions: Or Types}
-\label{subsubsec:orts}
+\end{itemize}
 
-\paragraph{Examples}
+\paragraph{Or Types}
+
+\begin{itemize}
+\item \textit{Definition Examples}
 
 \begin{verbatim}
 or_type Bool
@@ -1996,7 +2012,7 @@ or_type Error(A)OrResult(B)
 values error:A | result:B
 \end{verbatim}
 
-\paragraph{Usage}
+\item \textit{Usage Examples}
 
 \begin{verbatim}
 is_empty
@@ -2024,7 +2040,7 @@ print_err_or_res
     result:r => print("All good! The result is: " + r -> to_string)
 \end{verbatim}
 
-\paragraph{Description}\pend
+\item \textit{Description} \\\\
 Values of an \texttt{or_type} are one of many cases. Some cases have other
 values inside.  The cases which have other values inside are followed by a
 semicolon and the type of the internal value. The same syntax can be used for
@@ -2062,27 +2078,29 @@ non_empty_ls_to_ls
   = apply(non_empty:)to_each
 \end{verbatim}
 
-\paragraph{Definition Grammar}
+\item \textit{Grammar}
+
 \begin{grammar}
 <or-type-definition> ::= ""\\
 `or_type\ ' <type-name> 
 \\`\\nvalues\ ' <identifier> [ `:' <type> ] ( `\ |\ ' <identifier> [ `:' <type> ])*
 \end{grammar}
 
+\end{itemize}
+
 \subsection{Type Logic}
 \label{subsec:typelogic}
 
-The constructs regarding type logic are two: \textbf{type propositions} and 
-\textbf{type theorems}.
-Type propositions are divided into two categories: \textbf{atomic type
-propositions} and \textbf{compound type propositions} which are described in
-the paragraphs below. The grammar of a type proposition definition is:
-\begin{grammar}
-<type-prop-def> ::= <atom-prop-def> | <comp-prop-def>
-\end{grammar}
-Type theorems are described in section \ref{subsubsec:ttheo}.
+The central notion of \textbf{type logic} is the \textbf{type proposition}.
+Type propositions can either be defined or proven. Therefore, there exist the
+following constructs which accomplish the aforementioned respectively:
+\textbf{type proposition definitions} and \textbf{type theorems}. These constructs
+are described in detail in the followin sections.
 
-\subsubsection{Proposition Definitions: Atomic Type Propositions}
+\subsubsection{Type Proposition Definitions}
+
+\paragraph{Atomic Type Propositions}
+
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
@@ -2098,13 +2116,17 @@ type_proposition (T)Has_A_Wrapper
 value
   wrapper : A => T(A)
 
-type_proposition (T)Has_Internal_Application
+type_proposition (T)Is_A_Functor
 value
   apply_internally : (A => B, T(A)) => T(B)
 
-type_proposition (T)Has_Wrapped_Internal_App
+type_proposition (T)Has_Wrapd_Intern_App
 value
-  apply_wrapped_internally : (T(A => B), T(A)) => T(B)
+  apply_wrapd_intern : (T(A => B), T(A)) => T(B)
+
+type_proposition (T)Has_Bind
+value
+  bind : (T(A), A => T(B)) => T(B)
 \end{verbatim}
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
@@ -2119,10 +2141,13 @@ wrapper
   : (T)Has_A_Wrapper ==> A => T(A)
 
 apply_internally
-  : (T)Has_Internal_Application ==> (A => B, T(A)) => T(B)
+  : (T)Is_A_Functor ==> (A => B, T(A)) => T(B)
 
-apply_wrapped_internally
-  : (T)Has_Wrapped_Internal_App ==> (T(A => B), T(A)) => T(B)
+apply_wrapd_intern
+  : (T)Has_Wrapd_Intern_App ==> (T(A => B), T(A)) => T(B)
+
+bind
+  : (T)Has_Bind ==> (T(A), A => T(B)) => T(B)
 \end{verbatim}
 
 \item \textit{Description} \\\\
@@ -2130,7 +2155,7 @@ An atomic type proposition definition defines a polymorphic value (usually, but
 not necessarily, a function) by definining the form of the type of the value
 given some type parameters. The type proposition itself has the role of being
 true or not true for specific type arguments depending on whether the
-implementation of the function has been defined for these specific type
+implementation of the value has been defined for these specific type
 arguments. The aforementioned truthvalue will determine whether the value is
 used correctly inside the program and therefore whether the program will
 typecheck. In order to add more types for which the function works, i.e.
@@ -2163,9 +2188,11 @@ type_theorem (A)Is(A x B)s_First
 proof
   first = .1st
 
-type_theorem (A)Is(NonEmptyListOf(A)s)s_First
+type_theorem (A)Is(ListOf(A)s)s_First
 proof
-  first = .head
+  first = cases =>
+    empty => show_err("Tried to take the first element of an empty list")
+    non_empty:l => l.head
 \end{verbatim}
 
 \item Usage of the function
@@ -2200,21 +2227,54 @@ pair, list
 \end{grammar} 
 \end{itemize}
 
-\subsubsection{Proposition Definitions: Compound Type Propositions}
-
-\begin{grammar}
-<compound-prop-def> ::= <conjunction> | <implication>
-\end{grammar} 
 \paragraph{Conjunction Type Propositions}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+type_proposition (T)Has_Order
+equivalent
+  (T)Has_Greater_Or_Equal, (T)Has_Less_Or_Equal
+
+type_proposition (A)And(B)Are_Comparable
+equivalent
+  (A)Can_Be_Greater_Than(B), (A)Can_Be_Less_Than(B)
+
+type_proposition (T)Is_An_App_Functor
+equivalent
+  (T)Has_Wrapd_Intern_App, (T)Has_A_Wrapper
+
+type_proposition (T)Is_A_Monad
+equivalent
+  (T)Has_Bind, (T)Has_A_Wrapper
+\end{verbatim}
+
+\item \textit{Description}\\\\
+Conjuction type proposition definitions are used to abbreviate the conjuction
+of many type propositions into one new type proposition.
+
+\item \textit{Grammar}
+\begin{grammar}
+<conjunction> ::= 
+`type_proposition' <prop-name>
+`\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )+
+\end{grammar} 
+\end{itemize}
+
+\subsubsection{Type Theorems}
+\label{subsubsec:ttheo}
+
+\paragraph{Atomic Type Propositions}
 
 \begin{itemize}
 \item \textit{Examples}
 \item \textit{Description} \\\\
 \item \textit{Grammar}
 \begin{grammar}
-<conjunction> ::= 
-`type_proposition' <prop-name>
-`\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )+
+<prop-app> ::= ""\\""
+[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
+\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
+\alt " "<type-id> <types-in-paren>
 \end{grammar} 
 \end{itemize}
 
@@ -2228,21 +2288,6 @@ pair, list
 <implication> ::= 
 `type_proposition' <prop-name>
 `\\nequivalent\\n\ \ ' <prop-name> `\ =>\ ' <prop-name>
-\end{grammar} 
-\end{itemize}
-
-\subsubsection{Type Theorems}
-\label{subsubsec:ttheo}
-
-\begin{itemize}
-\item \textit{Examples}
-\item \textit{Description} \\\\
-\item \textit{Grammar}
-\begin{grammar}
-<prop-app> ::= ""\\""
-[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
-\alt " "<type-id> <types-in-paren>
 \end{grammar} 
 \end{itemize}
 
@@ -2271,31 +2316,5 @@ The parser was implemented using the parsec library.
 \section{Running Examples}
 
 \section{Conclusion}
-
-%\newpage
-
-%\paragraph{Examples}
-%
-%\begin{verbatim}
-%\end{verbatim}
-
-%\paragraph{Description}\pend
-%desc
-
-%\paragraph{Examples in \H}
-%
-%\begin{verbatim}
-%\end{verbatim}
-
-% \begin{tabular}{ |c|c| } 
-% \hline
-% 1 & 2 \\ 
-% \hline
-% \hline
-% 1.1 & 1.2 \\ 
-% \hline
-% \end{tabular}
-
-%  \includegraphics[width=10cm, height=8cm]{../Images/image.png}
 
 \end{document}
