@@ -2091,11 +2091,18 @@ non_empty_ls_to_ls
 \subsection{Type Logic}
 \label{subsec:typelogic}
 
-The central notion of \textbf{type logic} is the \textbf{type proposition}.
-Type propositions can either be defined or proven. Therefore, there exist the
-following constructs which accomplish the aforementioned respectively:
-\textbf{type proposition definitions} and \textbf{type theorems}. These constructs
-are described in detail in the followin sections.
+Type logic is the mechanism for ad hoc polymorphism in lcases. The central
+notion of \textbf{type logic} is the \textbf{type proposition}. A type
+proposition is a proposition about types (which are the proposition's type
+parameters) and represents the fact that a particular value has a type where
+the type parameters appear.  This same type proposition is true for particular
+type arguments if the value it represents is defined for these particular
+arguments.
+\\\\
+Type propositions can either be defined or proven. Therefore, the following
+constructs exist and accomplish the aforementioned respectively: \textbf{type
+proposition definitions} and \textbf{type theorems}.  These constructs are
+described in detail in the following sections.
 
 \subsubsection{Type Proposition Definitions}
 
@@ -2118,11 +2125,11 @@ value
 
 type_proposition (T)Is_A_Functor
 value
-  apply_internally : (A => B, T(A)) => T(B)
+  apply()internally : (A => B, T(A)) => T(B)
 
 type_proposition (T)Has_Wrapd_Intern_App
 value
-  apply_wrapd_intern : (T(A => B), T(A)) => T(B)
+  apply_wrapd()intern : (T(A => B), T(A)) => T(B)
 
 type_proposition (T)Has_Bind
 value
@@ -2140,10 +2147,10 @@ to_string
 wrapper
   : (T)Has_A_Wrapper ==> A => T(A)
 
-apply_internally
+apply()internally
   : (T)Is_A_Functor ==> (A => B, T(A)) => T(B)
 
-apply_wrapd_intern
+apply_wrapd()intern
   : (T)Has_Wrapd_Intern_App ==> (T(A => B), T(A)) => T(B)
 
 bind
@@ -2155,15 +2162,14 @@ An atomic type proposition definition defines a polymorphic value (usually, but
 not necessarily, a function) by definining the form of the type of the value
 given some type parameters. The type proposition itself has the role of being
 true or not true for specific type arguments depending on whether the
-implementation of the value has been defined for these specific type
-arguments. The aforementioned truthvalue will determine whether the value is
-used correctly inside the program and therefore whether the program will
-typecheck. In order to add more types for which the function works, i.e.
-define the function for these types, i.e. make the type proposition true for
-these types, one must prove a type theorem. The specifics of type theorems are
-described in section \ref{subsubsec:ttheo}. For now, we'll show the example for
-everything mentioned in this paragraph for the proposition
-\texttt{(A)Is(B)s_First}:
+implementation of the value has been defined for these specific arguments. The
+aforementioned truthvalue will determines whether the value is used correctly
+inside the program and therefore whether the program will typecheck. In order
+to add more types for which the function works, i.e.  define the function for
+these types, i.e. make the type proposition true for these types, one must
+prove a type theorem. The specifics of type theorems are described in the next
+section. For now, we'll show the example for everything mentioned in this
+paragraph for the proposition \texttt{(A)Is(B)s_First}:
 
 \begin{itemize}
 \item Type Proposition Definition:
@@ -2210,6 +2216,11 @@ pair, list
 \end{verbatim}
 \end{itemize}
 
+An atomic type proposition definition begins with the keyword
+\texttt{type_proposition} followed by the name of the proposition (including
+the type parameters) in the first line. The second line is simply the keyword
+\texttt{value}. The third line is indented once and has the identifier and the
+type expression of the value seperated by the string " \texttt{:} ".
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -2234,7 +2245,7 @@ pair, list
 \begin{verbatim}
 type_proposition (T)Has_Order
 equivalent
-  (T)Has_Greater_Or_Equal, (T)Has_Less_Or_Equal
+  (T)Has_Equality, (T)Can_Be_Greater_Than(T)
 
 type_proposition (A)And(B)Are_Comparable
 equivalent
@@ -2250,8 +2261,14 @@ equivalent
 \end{verbatim}
 
 \item \textit{Description}\\\\
-Conjuction type proposition definitions are used to abbreviate the conjuction
-of many type propositions into one new type proposition.
+A conjuction type proposition definition is used to abbreviate the conjuction
+of many type propositions (i.e. AND of all of them) into one new type proposition.
+
+A conjunction type proposition definition begins with the keyword
+\texttt{type_proposition} followed by the name of the proposition (including
+the type parameters) in the first line. The second line is simply the keyword
+\texttt{equivalent}. The third line is indented once and has the type propostions
+of the conjuction seperated by commas (where the commas essentially mean "and").
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -2268,7 +2285,62 @@ of many type propositions into one new type proposition.
 
 \begin{itemize}
 \item \textit{Examples}
+
+\begin{verbatim}
+type_theorem (Possibly())Has_A_Wrapper
+value
+  wrapper = the_value:
+
+type_theorem (ListOf()s)Has_A_Wrapper
+value
+  wrapper = x => non_empty:(x, empty)
+
+type_theorem (Possibly())Is_A_Functor
+value
+  apply(f)internally = cases =>
+    no_value => no_value
+    the_value:x => the_value:f(x)
+
+type_theorem (ListOf()s)Is_A_Functor
+value
+  apply(f)internally = cases =>
+    empty => empty
+    non_empty:l => non_empty:(f(l.head), l.tail -> apply(f)internally)
+\end{verbatim}
+
+\item \textit{Usage}
+
+\begin{verbatim} 
+a, b, l
+  : Possibly(Int), ListOf(Int)s, ListOf(Int)s
+  = wrapper(1), wrapper(1), [1, 2, 3]
+
+>> wrapper(1)
+  : (T)Has_A_Wrapper ==> T(Int)
+>> a
+  : Possibly(Int)
+  = the_value:1
+>> b
+  : ListOf(Int)s
+  = [1]
+
+>> apply(x => x + 1)internally
+  : (T)Is_A_Functor ==> T(Int) => T(Int)
+>> a -> apply(x => x + 1)internally
+  : Possibly(Int)
+  = the_value:2
+>> b -> apply(x => x + 1)internally
+  : ListOf(Int)s
+  = [2]
+>> l -> apply(x => x + 1)internally
+  : ListOf(Int)s
+  = [2, 3, 4]
+\end{verbatim}
+
 \item \textit{Description} \\\\
+
+Type theorems of atomic type propositions  
+
 \item \textit{Grammar}
 \begin{grammar}
 <prop-app> ::= ""\\""
