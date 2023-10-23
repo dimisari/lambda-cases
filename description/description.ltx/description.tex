@@ -2093,11 +2093,9 @@ non_empty_ls_to_ls
 
 Type logic is the mechanism for ad hoc polymorphism in lcases. The central
 notion of \textbf{type logic} is the \textbf{type proposition}. A type
-proposition is a proposition about types (which are the proposition's type
-parameters) and represents the fact that a particular value has a type where
-the type parameters appear.  This same type proposition is true for particular
-type arguments if the value it represents is defined for these particular
-arguments.
+proposition is a proposition about types (the proposition's type parameters)
+and the proposition either true or false when the proposition's type parameters
+are substituted by particular type arguments.
 \\\\
 Type propositions can either be defined or proven. Therefore, the following
 constructs exist and accomplish the aforementioned respectively: \textbf{type
@@ -2105,6 +2103,10 @@ proposition definitions} and \textbf{type theorems}.  These constructs are
 described in detail in the following sections.
 
 \subsubsection{Type Proposition Definitions}
+
+Type proposition definitions are split into definitions of \textbf{atomic type
+propositions} and definitions of \textbf{conjunction type propositions} which
+are described in the following paragraphs.
 
 \paragraph{Atomic Type Propositions}
 
@@ -2158,18 +2160,20 @@ bind
 \end{verbatim}
 
 \item \textit{Description} \\\\
-An atomic type proposition definition defines a polymorphic value (usually, but
-not necessarily, a function) by definining the form of the type of the value
-given some type parameters. The type proposition itself has the role of being
-true or not true for specific type arguments depending on whether the
-implementation of the value has been defined for these specific arguments. The
-aforementioned truthvalue will determines whether the value is used correctly
-inside the program and therefore whether the program will typecheck. In order
-to add more types for which the function works, i.e.  define the function for
-these types, i.e. make the type proposition true for these types, one must
-prove a type theorem. The specifics of type theorems are described in the next
-section. For now, we'll show the example for everything mentioned in this
-paragraph for the proposition \texttt{(A)Is(B)s_First}:
+An atomic type proposition definition defines simultaneously the \textbf{atomic type
+proposition} itself and a \textbf{polymorphic value} (usually, but not
+necessarily, a function), by definining the form of the type of the
+value given the type parameters of the proposition. The type proposition is
+true or not true when the type parameters are substituted by specific type
+arguments depending on whether the implementation of the value has been defined
+for these type arguments. The aforementioned truthvalue will determines
+whether the value is used correctly inside the program and therefore whether
+the program will typecheck. In order to add more types for which the function
+works, i.e.  define the function for these types, i.e. make the type
+proposition true for these types, one must prove a type theorem. The specifics
+of type theorems are described in the next section. For now, we'll show the
+example for everything mentioned in this paragraph for the proposition
+\texttt{(A)Is(B)s_First}:
 
 \begin{itemize}
 \item Type Proposition Definition:
@@ -2218,23 +2222,21 @@ pair, list
 
 An atomic type proposition definition begins with the keyword
 \texttt{type_proposition} followed by the name of the proposition (including
-the type parameters) in the first line. The second line is simply the keyword
+the type parameters) in the first line. The second line is the keyword
 \texttt{value}. The third line is indented once and has the identifier and the
 type expression of the value seperated by the string " \texttt{:} ".
 
 \item \textit{Grammar}
 \begin{grammar}
 <atom-prop-def> ::=
-`type_proposition' <prop-name>
-`\\nvalue\\n\ \ ' <identifier> ` : ' <simple-type>
+`type_proposition\ ' <prop-name>
+`\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
 
 <prop-name> ::=  ""\\
 ( <name-part> <params-in-paren> )+ [ <name-part> ]
 \alt ( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
 
-<name-part> ::= [A-Za-z_]+
-
-<params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
+<name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \end{grammar} 
 \end{itemize}
 
@@ -2263,23 +2265,28 @@ equivalent
 \item \textit{Description}\\\\
 A conjuction type proposition definition is used to abbreviate the conjuction
 of many type propositions (i.e. AND of all of them) into one new type proposition.
-
+\\\\
 A conjunction type proposition definition begins with the keyword
 \texttt{type_proposition} followed by the name of the proposition (including
-the type parameters) in the first line. The second line is simply the keyword
-\texttt{equivalent}. The third line is indented once and has the type propostions
-of the conjuction seperated by commas (where the commas essentially mean "and").
+the type parameters) in the first line. The second line is the keyword
+\texttt{equivalent}. The third line is indented once and has the type
+propostions of the conjuction seperated by commas (where the commas essentially
+mean "and").
 
 \item \textit{Grammar}
 \begin{grammar}
-<conjunction> ::= 
-`type_proposition' <prop-name>
+<conjunction> ::= ""\\ 
+`type_proposition\ ' <prop-name>
 `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )+
 \end{grammar} 
 \end{itemize}
 
 \subsubsection{Type Theorems}
 \label{subsubsec:ttheo}
+
+Type theorems are split into theorems of \textbf{atomic type propositions} and
+theorems of \textbf{implication type propositions} which are described in the
+following paragraphs.
 
 \paragraph{Atomic Type Propositions}
 
@@ -2288,22 +2295,22 @@ of the conjuction seperated by commas (where the commas essentially mean "and").
 
 \begin{verbatim}
 type_theorem (Possibly())Has_A_Wrapper
-value
+proof
   wrapper = the_value:
 
 type_theorem (ListOf()s)Has_A_Wrapper
-value
+proof
   wrapper = x => non_empty:(x, empty)
 
 type_theorem (Possibly())Is_A_Functor
-value
-  apply(f)internally = cases =>
+proof
+  apply()internally = (f, cases) =>
     no_value => no_value
     the_value:x => the_value:f(x)
 
 type_theorem (ListOf()s)Is_A_Functor
-value
-  apply(f)internally = cases =>
+proof
+  apply()internally = (f, cases) =>
     empty => empty
     non_empty:l => non_empty:(f(l.head), l.tail -> apply(f)internally)
 \end{verbatim}
@@ -2311,42 +2318,76 @@ value
 \item \textit{Usage}
 
 \begin{verbatim} 
-a, b, l
-  : Possibly(Int), ListOf(Int)s, ListOf(Int)s
-  = wrapper(1), wrapper(1), [1, 2, 3]
+a, b
+  : all Possibly(Int)
+  = wrapper(1), no_value
 
->> wrapper(1)
-  : (T)Has_A_Wrapper ==> T(Int)
+l1, l2, l3
+  : all ListOf(Int)s
+  = wrapper(1), empty, [1, 2, 3]
+
 >> a
   : Possibly(Int)
   = the_value:1
 >> b
+  : Possibly(Int)
+  = no_value
+>> l1
   : ListOf(Int)s
   = [1]
+>> l2
+  : ListOf(Int)s
+  = []
 
->> apply(x => x + 1)internally
-  : (T)Is_A_Functor ==> T(Int) => T(Int)
 >> a -> apply(x => x + 1)internally
   : Possibly(Int)
   = the_value:2
 >> b -> apply(x => x + 1)internally
+  : Possibly(Int)
+  = no_value
+>> l1 -> apply(x => x + 1)internally
   : ListOf(Int)s
   = [2]
->> l -> apply(x => x + 1)internally
+>> l2 -> apply(x => x + 1)internally
+  : ListOf(Int)s
+  = []
+>> l3 -> apply(x => x + 1)internally
   : ListOf(Int)s
   = [2, 3, 4]
 \end{verbatim}
 
 \item \textit{Description} \\\\
-
-Type theorems of atomic type propositions  
+A theorem of an atomic type proposition proves the proposition for
+specific type arguments, by implementing the value associated to the
+proposition for these type arguments. Therefore, the value associated with the
+proposition can be used with all the combinations of type arguments for which
+the type proposition is true, i.e. the combinations of type arguments for which
+the value has been implemented.
+\\\\
+A proof of a theorem of an atomic type proposition is correct when the
+implementation of the value associated with the proposition follows the form of
+the type given to the value by the definition of the proposition, i.e. the only
+difference between the type of the value in the theorem and the type of the
+value in the definition is that the type parameters of the proposition are
+substituted by the type arguments of the theorem.
+\\\\
+A theorem of an atomic type proposition begins with the keyword
+\texttt{type_theorem} followed by the name of the proposition with the type
+parameters substituted by the specific types for which the proposition will be
+proven. The second line is the keyword \texttt{proof}. The third line is
+indented once and it is the line in which the proof begins. The proof begins
+with the identifier of the value associated with the proposition and is followed
+by the string " \texttt{=} " and the value expression which implements the value.
 
 \item \textit{Grammar}
 \begin{grammar}
-<prop-app> ::= ""\\""
-[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
-\alt " "<type-id> <types-in-paren>
+<atom-prop-theo> ::=
+`type_theorem\ ' <prop-name-sub>
+`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
+
+<prop-name-sub> ::=  ""\\
+( <name-part> <types-in-paren> )+ [ <name-part> ]
+\alt ( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
 \end{grammar} 
 \end{itemize}
 
@@ -2358,8 +2399,8 @@ Type theorems of atomic type propositions
 \item \textit{Grammar}
 \begin{grammar}
 <implication> ::= 
-`type_proposition' <prop-name>
-`\\nequivalent\\n\ \ ' <prop-name> `\ =>\ ' <prop-name>
+`type_proposition' <prop-name> `\ =>\ ' <prop-name>
+`\\nproof\\n\ \ ' 
 \end{grammar} 
 \end{itemize}
 
@@ -2375,7 +2416,7 @@ Type theorems of atomic type propositions
 
 \subsection{Type Propositions}
 
-\section{Parser implimentation}
+\section{Parser implementation}
 
 The parser was implemented using the parsec library.
 
