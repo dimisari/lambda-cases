@@ -33,10 +33,11 @@
 %\setcounter{secnumdepth}{4}
 \tableofcontents
 
+\newpage
 \section{Introduction}
 
 \H\ is a delightful language. Yet, for some reason, it doesn't seem to have
-it's rightful place in terms of popularity in industry. Why is it so?  Is it
+its rightful place in terms of popularity in industry. Why is it so?  Is it
 inherently hard to learn and therefore only the brave dare to use it, or could
 it be that the syntax is perplexing to the amateur eye? It is my belief that
 with some syntax changes that give a greater familiarity to the new user, there
@@ -57,15 +58,15 @@ definitions. Theorems are proven type propositions. Functions as well as
 "Environment Actions" (see section \ref{subsec:envacts}) are also considered
 values. The definition of the "main" value determines the program's behaviour. 
 
-\paragraph{Program example: extended euclidean alogirthm}
+\paragraph{Program example: Extended Euclidean Alogirthm}
 \begin{verbatim}
 // type definitions
 
-tuple_type Coeffs
-value (previous, current) : Int x Int
-
 tuple_type GcdAndCoeffs
 value (gcd, a, b) : Int x Int x Int
+
+tuple_type Coeffs
+value (previous, current) : Int x Int
 
 // algorithm
 
@@ -164,7 +165,8 @@ Identifiers" section \ref{subsubsec:litsandidents}).
 "Hello World!"  "What's up, doc?"  "Alrighty then!"
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 There are literals for the four basic types: Int, Real, Char, String. These are the 
 usual integers, real numbes, characters and strings. The exact specification of 
 literals is the same as in the \H\ report.
@@ -190,10 +192,10 @@ unnecessarily_long_identifier
 apply()to_all
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 An identifier is the name of a value or a parameter. It is used in the
-definition of a value (see "value definition" section
-\ref{subsec:valdefswhere}) and in expressions that use that value, or in the
+definition of a value and in expressions that use that value, or in the
 parameters of a function and in the body of that function.
 \\\\
 An identifier starts with a lower case letter and is followed by lower case
@@ -222,17 +224,14 @@ by this grammar, they cannot be used as identifiers.
 \begin{verbatim}
 (1 + 2)
 (((1 + 2) * 3) ^ 4)
-(x => f(x) + 1)
-(s => "f(val) + 1 is: " + s)
 (val -> (x => f(x) + 1) -> to_string -> (s => "f(val) + 1 is: " + s))
-("Line is: " + line)
-(get_line ;> line => print("Line is: " + line))
 (do(3)times <- (get_line ;> line => print("Line is: " + line)))
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 An expression is put in parenthesis to prioritize it or isolate it in a bigger
-(operator) expression. The expressions inside parethesis are operator
+(operator) expression. The expressions inside parenthesis are operator
 or function expressions.
 
 \item \textit{Grammar}
@@ -257,9 +256,10 @@ or function expressions.
 (1, my_function, (x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1/2))
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description} 
+
 Tuples are used to group many values (of possibly different types) into one.
-The type of the tuple can be either the product of the types of the fields or a
+The type of a tuple can be either the product of the types of the fields or a
 defined tuple\_type which is equivalent to the afformentioned product type (see
 "Tuple Types" in section \ref{subsubsec:tdefs}). For example, the type of the
 second tuple above could be:
@@ -276,7 +276,8 @@ tuple_type MyType
 value (my_int, my_string, my_real) : Int x String x Real
 \end{verbatim}
 
-\item \textit{Big Tuples} \\\\
+\item \textit{Big Tuples}
+\\\\
 \textbf{Example}
 \begin{verbatim}
 my_big_tuple
@@ -287,7 +288,8 @@ my_big_tuple
     )
 \end{verbatim}
 
-\textbf{Description} \\\\
+\textbf{Description}
+
 It is possible to stretch a (big) tuple expression over multiple lines (only)
 in a seperate value definition (see "Value Definitions" section
 \ref{subsubsec:valdefs}).  In that case:
@@ -341,7 +343,8 @@ The precise indentation rules are described in the section
 [x, y, z, w]
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 Lists are used to group many values of the same type into one. 
 The type of the list is ListOf(A)s where A is the type of every value inside.
 Therefore, the types of the first four examples are:
@@ -357,38 +360,43 @@ they do and it's the type T, the type of the list is:
 ListOf(T)s
 \end{verbatim}
 
-\item \textit{Big Lists} \\\\
-It is possible to stretch a (big) list expression over multiple lines (only) in
-a seperate value definition (see "Value Definitions" section
-\ref{subsubsec:valdefs}).  In that case:
-\begin{itemize}
-\item
-The character '[' is after the "= " part of the value definition
-and the first element must be in the same line.
+\item \textit{Big Lists}
+  \\\\
+  \textbf{Example}
 
-\item
-The list can split in a new line only at a ',' character. Every such line must
-be indented so that the ',' is in same column where the '[' character was in
-the first line.
+  \begin{verbatim}
+  my_big_list
+    : ListOf(Int => (EmptyVal)IOAction)s
+    = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
+      , x => print("I'm the second function and x + 2 is: " + (x + 2))
+      , x => print("I'm the third function and x + 3 is: " + (x + 3))
+      ]
+  \end{verbatim}
 
-\item
-The tuple must be ended by a line that only contains the ']' character and is 
-also indented so that the ']' is in same column where the '[' character was in
-the first line.
+  \textbf{Description} 
 
-\item
-The precise indentation rules are described in the section
-"Indentation System" \ref{subsubsec:indsys}.
-\end{itemize}
-Example:
-\begin{verbatim}
-my_big_list
-  : ListOf(Int => (EmptyVal)IOAction)s
-  = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
-    , x => print("I'm the second function and x + 2 is: " + (x + 2))
-    , x => print("I'm the third function and x + 3 is: " + (x + 3))
-    ]
-\end{verbatim}
+  It is possible to stretch a (big) list expression over multiple lines (only) in
+  a seperate value definition (see "Value Definitions" section
+  \ref{subsubsec:valdefs}).  In that case:
+  \begin{itemize}
+  \item
+  The character '[' is after the "= " part of the value definition
+  and the first element must be in the same line.
+
+  \item
+  The list can split in a new line only at a ',' character. Every such line must
+  be indented so that the ',' is in same column where the '[' character was in
+  the first line.
+
+  \item
+  The tuple must be ended by a line that only contains the ']' character and is 
+  also indented so that the ']' is in same column where the '[' character was in
+  the first line.
+
+  \item
+  The precise indentation rules are described in the section
+  "Indentation System" \ref{subsubsec:indsys}.
+  \end{itemize}
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -417,14 +425,14 @@ apply(f)to_all(l)
 \end{verbatim}
 
 \item \textit{Description}
-\\\\
+
 Function application in lcases can be done in many different ways in an attempt to 
 maximize readability. In this section, we discuss the ways function application can
 be done with parenthesis.
 \\\\
 In the first two examples, we have the usual mathematical
 function application which is also used in most programming languages and
-should be familiar to the reader. That is, function application is done with the 
+should be familiar to the reader, i.e. function application is done with the 
 arguments of the function in parenthesis seperated by commas and \textbf{appended}
 to the function identifier.
 \\\\
@@ -438,8 +446,8 @@ below is the definition of "apply()to\_all":
 apply()to_all
   : (A => B, ListOf(A)s) => ListOf(B)s
   = (f, cases) =>
-    empty => empty
-    non_empty:l => non_empty:(f <- l.head, apply(f)to_all <- l.tail)
+    empty_l => empty_l
+    non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all <- l.tail)
 \end{verbatim}
 The actual definition doesn't matter at this point, what matters is that the 
 identifier is "apply()to\_all" with the parentheses \textbf{included}. This is very
@@ -478,13 +486,14 @@ to the right and so on.
 \item \textit{Examples}
 \begin{verbatim}
 the_value:1
-non_empty:l
+non_empty_l:l
 error:e
 result:r
 apply(the_value:)to_all
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 Prefix functions are automatically generated from \texttt{or_type} definitions
 (see "Or Types" in section \ref{subsubsec:tdefs}). They are functions that
 convert a value of a particular type to a value that is a case of an
@@ -535,7 +544,8 @@ tuple.1st
 apply(.1st)to_all
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description} 
+
 Postfix functions are automatically generated from \texttt{tuple_type}
 definitions (see "Tuple Types" in section \ref{subsubsec:tdefs}). They are
 functions that take a \texttt{tuple_type} value and return a particular field
@@ -554,8 +564,9 @@ value (first_name, last_name) : String x String
 \end{verbatim}
 And it has the type \texttt{Name => String}.
 \\\\
-There are also the following special projection functions for \textbf{product
-types}: \texttt{.1st .2nd .3rd .4th .5th}. For the 4th example above, assuming:
+There are also the following special projection functions that work on
+\textbf{all product and tuple types}:\\ \texttt{.1st .2nd .3rd .4th .5th}. For
+the 4th example above, assuming:
 \begin{verbatim}
 tuple 
   : Int x String
@@ -582,7 +593,7 @@ Postfix functions always begin with a dot.
 
 \item \textit{Grammar}
 \begin{grammar}
-<post-func> ::= `.' <identifier>
+<post-func> ::= `.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' 
 
 <post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>
 \end{grammar}
@@ -713,11 +724,11 @@ Operator & Type \\
 \hline
 \texttt{*} & (A)And(B)Multiply_To(C) \Ra (A, B) \ra C \\
 \hline
-\texttt{/} & (A)Divides(B)To(C) \Ra (B, A) \ra C \\
+\texttt{/} & (A)Divided_By(B)Has_Type(C) \Ra (A, B) \ra C \\
 \hline
 \texttt{+} & (A)And(B)Add_To(C) \Ra (A, B) \ra C \\ 
 \hline
-\texttt{-} & (A)Subtracts_From(B)To(C) \Ra (B, A) \ra C \\
+\texttt{-} & (A)Minus(B)Has_Type(C) \Ra (A, B) \ra C \\
 \hline
 \end{tabular}
 \end{center}
@@ -726,21 +737,29 @@ mathematics and other programming languages for the usual types. However, they
 are generalized. The examples below show their generality:
 \begin{verbatim}
 >> 1 + 1
-2
+ : Int
+ = 2
 >> 1 + 3.14
-4.14
+ : Real
+ = 4.14
 >> 'a' + 'b'
-"ab"
+ : String
+ = "ab"
 >> 'w' + "ord"
-"word"
+ : String
+ = "word"
 >> "Hello " + "World!"
-"Hello World!"
+ : String
+ = "Hello World!"
 >> 5 * 'a'
-"aaaaa"
+ : String
+ = "aaaaa"
 >> 5 * "hi"
-"hihihihihi"
+ : String
+ = "hihihihihi"
 >> "1,2,3" - ','
-"123"
+ : String
+ = "123"
 \end{verbatim}
 Let's analyze further the example of addition. The type can be read as such:
 the '+' operator has the type \\ (A, B) \ra C, provided that the type
@@ -756,7 +775,7 @@ examples):
 (Char)And(String)Add_To(String)
 (Int)And(Char)Multiply_To(String)
 (Int)And(String)Multiply_To(String)
-(Char)Subtracts_From(String)To(String)
+(String)Minus(Char)Has_Type(String)
 \end{verbatim}
 This allows us to use the familiar arithmetic operators in types that are not
 necessarily numbers but it is somewhat intuitively obvious what the should do
@@ -791,6 +810,8 @@ The comparison and boolean operators behave the same as in \H\ and very
 similarly to most programming languages. The main difference is that in lcases
 the "equals", "and" and "or" operators have the symbol once \\(\texttt{= \& |})
 rather than twice (\texttt{== \&\& ||}).
+\\\\
+TODO \texttt{> <} actually work differently ... allow for Real \texttt{>} Int ...
 
 \subsubsection{Environment Action Operators}
 \label{subsec:envacts}
@@ -801,9 +822,9 @@ rather than twice (\texttt{== \&\& ||}).
 Operator & Type \\ 
 \hline
 \hline
-\texttt{;>} & (E)Is_An_Env_Action \Ra (E(A), A \ra E(B)) \ra E(B) \\
+\texttt{;>} & (E)Is_An_Environemnt_Action \Ra (E(A), A \ra E(B)) \ra E(B) \\
 \hline
-\texttt{;} & (E)Is_An_Env_Action \Ra (E(A), E(B)) \ra E(B) \\
+\texttt{;} & (E)Is_An_Environemnt_Action \Ra (E(A), E(B)) \ra E(B) \\
 \hline
 \end{tabular}
 \end{center}
@@ -823,15 +844,15 @@ print_string("I'll repeat the line.")
 get_line
   : (String)IOAction
 ; 
-  : (E)Is_An_Env_Action ==> (E(A), E(B)) => E(B) 
+  : (E)Is_An_Environemnt_Action ==> (E(A), E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line
   : (String)IOAction
-  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = EmptyVal, B = String
 ;>
-  : (E)Is_An_Env_Action ==> (E(A), A => E(B)) => E(B) 
+  : (E)Is_An_Environemnt_Action ==> (E(A), A => E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line ;> print_string
   : (EmptyVal)IOAction
-  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = String, B = EmptyVal
 \end{verbatim}
 
 \paragraph{Example program}
@@ -857,22 +878,22 @@ print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
 
 ;
-  : (E)Is_An_Env_Action ==> (E(A), E(B)) => E(B) 
+  : (E)Is_An_Environemnt_Action ==> (E(A), E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line
   : (String)IOAction
-  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = EmptyVal, B = String
 
 age => print_string("Oh that's crazy...)
   : String => (EmptyVal)IOAction
 
 ;>
-  : (E)Is_An_Env_Action ==> (E(A), A => E(B)) => E(B) 
+  : (E)Is_An_Environemnt_Action ==> (E(A), A => E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
-  where (IOAction)Is_An_Env_Action is true, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = String, B = EmptyVal
 
 print_string <- "Hello..." ; get_line
   : (String)IOAction
@@ -893,10 +914,10 @@ occurences of the "\texttt{;>}" operator.
 \paragraph{Description}\mbox{} \\\\
 The environment action operators are used to combine values that do environment
 actions into values that do more complicated environment actions. Environment
-actions are also represented by types. More acurately, type constructors that
+actions are also represented by types. More acurately, type functions that
 take a type as an argument and produce a new type (just like ListOf()s). A
-value of the type \texttt{E(A)} where \texttt{(E)Is_An_Env_Action} does an
-environment action of type \texttt{E} that produces value of type \texttt{A}.
+value of the type \texttt{E(A)} where \texttt{(E)Is_An_Environemnt_Action} does an
+environment action of type \texttt{E} that produces a value of type \texttt{A}.
 \\\\
 The effect of the "\texttt{;}" operator described in words is the following:
 given a value of type \texttt{E(A)} and a value of type \texttt{E(B)} (which
@@ -935,7 +956,7 @@ action
 \item
 Perfoms the resulting action 
 \end{itemize}
-The overall effect is an environment action  of type \texttt{E} that at the end
+The overall effect is an environment action  of type \texttt{E} that in the end
 produces a value is of type \texttt{B} and therefore the new value is of type
 \texttt{E(B)}.
 
@@ -954,7 +975,8 @@ x >= y - z & x < 2 * y
 get_line ; get_line ;> line => print("Second line: " + line)
 \end{verbatim}
 
-\item \textit{Description}\\\\
+\item \textit{Description}
+
 Operator expressions are expressions that use operators. Operators act like
 two-argument-functions that are placed in between their arguments. Therefore,
 they have function types and they act as it is described in their respective
@@ -968,9 +990,9 @@ Just like functions, the sub-expressions
 that act as arguments to an operator, must have types that match the types 
 expected by the operator.
 \\\\
-It is possible to end an operator expression with a function. This is mostly
-useful with the "\texttt{;>}" operator (see previous section: "Environment
-Operators"), but it is also possible with the following operators:
+It is possible to the second argument of an operator is a function expression.
+This is mostly useful with the "\texttt{;>}" operator (see previous section:
+"Environment Operators"), but it is also possible with the following operators:
 "\texttt{->}", "\texttt{o>}", "\texttt{<o}".
 
 \item \textit{Big Operator Expressions}\\\\
@@ -983,7 +1005,7 @@ argument).
 
 \item
 Every line after the first must be indented so that in begins at the column 
-where the first character of the operator expression was in the first line.
+where the first line of the operator expression begun.
 
 \item
 The precise indentation rules are described in the section
@@ -1024,8 +1046,10 @@ The precise indentation rules are described in the section
 \end{grammar}
 \end{itemize}
 
+\newpage
 \subsubsection{Complete Table, Precedence and Associativity}
-\begin{table}[h!]
+
+\begin{table}[h]
 
 \caption{
 The complete table of lcases operators along with their types and 
@@ -1050,11 +1074,11 @@ Operator & Type & Description \\
 \hline
 \texttt{*} & (A)And(B)Multiply_To(C) \Ra (A, B) \ra C & General multiplication  \\
 \hline
-\texttt{/} & (A)Divides(B)To(C) \Ra (B, A) \ra C & General division \\
+\texttt{/} & (A)Divided_By(B)Has_Type(C) \Ra (A, B) \ra C & General division \\
 \hline
 \texttt{+} & (A)And(B)Add_To(C) \Ra (A, B) \ra C & General addition \\ 
 \hline
-\texttt{-} & (A)Subtracts_From(B)To(C) \Ra (B, A) \ra C & General subtraction \\
+\texttt{-} & (A)Minus(B)Has_Type(C) \Ra (A, B) \ra C & General subtraction \\
 \hline
 \texttt{=} & (A)Has_Equality \Ra (A, A) \ra Bool & Equality \\
 \hline
@@ -1071,25 +1095,27 @@ Operator & Type & Description \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
-\texttt{;>} & (E)Is_An_Env_Action \Ra (E(A), A \ra E(B)) \ra E(B) &
-Monad bind \\
+\texttt{;>} & (E)Is_An_Environemnt_Action \Ra (E(A), A \ra E(B)) \ra E(B) &
+Do, unwrap, apply, do \\
 \hline
-\texttt{;} & (E)Is_An_Env_Action \Ra (E(A), E(B)) \ra E(B) &
-Monad then \\
+\texttt{;} & (E)Is_An_Environemnt_Action \Ra (E(A), E(B)) \ra E(B) &
+Do then do \\
 \hline
 \end{tabular}
 \end{center}
 
 \label{table:allops}
 
-\end{table}\mbox{}\\
+\end{table}
+\newpage\noindent
 The order of operations is done from highest to lowest precedence. In the same
 level of precedence the order is done from left to right if the associativity
 is "Left" and from right to left if the associativity is "Right". For the
 operators that have associativity "None" it is not allowed to place them in the
 same operator expression. The precedence and assosiativity of the operators
 is shown in the table below.
-\begin{table}[h!]
+
+\begin{table}[h]
 
 \caption{ The table of precedence and associativity of the lcases operators.  }
 
@@ -1145,10 +1171,11 @@ a => 17 * a + 42
 (x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1 / 2)
 \end{verbatim}
 
-\item \textit{Description}\\\\
+\item \textit{Description}
+
 Regular function expressions are used to define functions or be part of bigger
 expressions as anonymous functions. They are comprised by their parameters and
-their body. Parameter are specified by identifiers. The parameters are either
+their body. A parameter has an identifier. The parameters are either
 only one, in which case there is no parenthesis, or they are many, in which
 case they are in parenthesis, seperated by commas. The parameters and the body
 are seperated by an arrow (" \texttt{=>} "). The body is an operator
@@ -1159,8 +1186,7 @@ It is possible to stretch a (big) function expression over multiple lines.
 In that case:
 \begin{itemize}
 \item
-The function expression must split in a new line after the arrow
-("\texttt{=>}") following the parameters.
+The function expression must split in a new line after the "\texttt{=>}" arrow.
 
 \item
 Every line after the first must be indented so that in begins at the column 
@@ -1240,25 +1266,23 @@ gcd
 is_empty
   : ListOf(A)s => Bool
   = cases => 
-    empty => true
-    non_empty:anything => false
+    empty_l => true
+    non_empty_l:anything => false
 
 apply()to_all
   : (A => B, ListOf(A)s) => ListOf(B)s
   = (f, cases) =>
-    empty => empty
-    non_empty:list => non_empty:(f <- list.head, apply(f)to_all <- list.tail)
+    empty_l => empty_l
+    non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
 
 \end{verbatim}
 
-\item \textit{Description}\\\\
+\item \textit{Description}
+
 "cases" is a keyword that works as a special parameter. The difference is that
 instead of giving the name "cases" to that parameter, it allows the programmer
 to pattern match on the possible values of that parameter and return a
 different result for each particular case. 
-\\\\
-The "cases" keyword can only be used on parameters that have either one of the 
-basic types (Int, Real, Char, String) or an or\_type (e.g. Bool, ListOf(A)s).
 \\\\
 The last case can be "\texttt{... => (body of default case)}" to capture all
 remaining cases while dismissing the value (e.g.
@@ -1299,7 +1323,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 <tuple-matching> ::= `(' <matching> ( `,' <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,' <matching> )* [ `, ...' ] ] `]' \\
+<list-matching> ::= `[' [ <matching> ( `,' <matching> )* ] `]' \\
 
 
 <case-body> ::=
@@ -1323,6 +1347,10 @@ foo
   : Int
   = 42
 
+f
+  : (Int, Int, Int) => Int
+  = (a, b, c) => a + b * c
+
 val1, val2, val3
   : Int, Bool, Char
   = 42, true, 'a'
@@ -1330,19 +1358,16 @@ val1, val2, val3
 int1, int2, int3
   : all Int
   = 1, 2, 3
-
-f
-  : (Int, Int, Int) => Int
-  = (a, b, c) => a + b * c
 \end{verbatim}
 
-\item \textit{Description}\\\\
+\item \textit{Description}
+
 Value definitions are the main building block of lcases programs. To define a
-new value you give it a name, a type and an expression. The name is in the
-first line. The second line is indented two spaces more and begins by ": " and
-continues with the type expression. The third line is indented as the second,
-begins by \\ "= " and continues with the value expression (which extends to as
-many lines as needed).
+new value you give it a name, a type and an expression. The name is an
+identifier in the first line. The second line is indented two spaces more and
+begins by ": " and continues with the type expression. The third line is
+indented as the second, begins by "= " and continues with the value
+expression (which extends to as many lines as needed).
 \\\\
 A value definition is either in the first column, where it can be "seen" by all
 other value definitions, or it is in a "where" expression (see section below),
@@ -1385,11 +1410,12 @@ keyword "all" to give the same type to all the values.
 
 \item \textit{Examples}
 \begin{verbatim}
+TODO find good consistent def of Has_Order
 sort :
-  (A)HasOrder ==> ListOf(A)s => ListOf(A)s
+  (A)Has_Order ==> ListOf(A)s => ListOf(A)s
   = cases => 
-    empty => empty
-    non_empty:l => sort(less_l) + l.head + sort(greater_l)
+    empty_l => empty_l
+    non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
       where
       less_l, greater_l
         : all ListOf(A)s
@@ -1426,16 +1452,17 @@ big_string
       , "I am so glad I finally discovered lcases!!!"
 \end{verbatim}
 
-\item \textit{Description}\\\\
+\item \textit{Description}
+
 "where" expressions allow the programmer to use values inside an expression and
 define them below it. They are very useful for reusing or abbreviating
 expressions that are specific to a particular definition or case.
 \\\\
 A "where" expression begins by a line that only has word "where" in it. It is
 indented as described in the "Value Definitions" (\ref{subsubsec:valdefs}) or
-"'cases' Function Expressions" (\ref{subsubsec:casessyntax}) section according
-to which of the two is above it.  The definitions are placed below the "where"
-line and must have the same indentation. 
+"'cases' Function Expressions" (\ref{subsubsec:casessyntax}) sections.  The
+definitions are placed below the "where" line and must have the same
+indentation. 
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1483,7 +1510,7 @@ After the "\texttt{=>}" arrow in a case: $il \leftarrow il + 1$.
 At the end of a case body: $il \leftarrow il - 1$.
 
 \item
-In a cases function expression which does not begin in the "=" line of a value
+In a cases function expression which does not begin at the "=" line of a value
 definition:
   \begin{itemize}
 
@@ -1500,7 +1527,7 @@ definition:
 \subsubsection{Complete Grammar for Values}
 \begin{grammar}
 
-<literal> ::= <literal> \\
+<literal> ::= TODO \\
 
 <identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ] \\
 
@@ -1684,7 +1711,8 @@ FunnyType
 MyDefinedType
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 A type identifier is either the name of a basic type (Int, Real, Char, String) or
 the name of some defined type that has no type parameters. It begins with a capital
 letter and is followed by one or more capital or lowercase letters.
@@ -1715,7 +1743,8 @@ A => A
 ((A, A) => A, A, ListOf(A)s) => A
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 Type Variables are used inside larger type expressions of polymorphic types. A
 polymorphic type is a type where any function of that type can be used as a
 function of any type that corresponds to substituting every type variable of
@@ -1757,7 +1786,8 @@ Int x Int => Int
 (Int => Int) => Int
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 A function type expression is comprised of the expressions of the types of the
 parameters and the expression of the type of the result, seperated by the arrow
 "\texttt{=>}". If there are more than one parameters, the expressions of their
@@ -1788,7 +1818,8 @@ ListOf(Int)s x (Int x ListOf(String)s)
 (Int => Int) x (Int x Real) x (Real => String)
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 Product types are the types of tuples. They are comprised of the expressions of
 the types of the fields seperated by the string " x " (space 'x' space) because
 'x' is very similar the symbol used in the cartesian product. If any of the
@@ -1816,13 +1847,14 @@ ListOf(Int => Int)s
 ListOf(A)s
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 Type application types are types that are produced by passing arguments
 to a type function generated by a \texttt{tuple_type} or an \texttt{or_type}
 definition. For example, given the definition of \texttt{ListOf(A)s}:
 \begin{verbatim}
 or_type ListOf(A)s
-values non_empty:NonEmptyListOf(A)s | empty
+values non_empty_l:NonEmptyListOf(A)s | empty_l
 \end{verbatim}
 We have that \texttt{ListOf()s} is a type function that receives one type parameter
 and returns a resulting type. For example \texttt{ListOf(Int)s} is the result
@@ -1830,7 +1862,7 @@ of passing the type argument \texttt{Int} to \texttt{ListOf()s}.
 \\\\
 Type application types have the same form as the name in the
 \texttt{tuple_type} or \texttt{or_type} definition, with the difference that
-any of the type parameters can be substituted with a type expression argument.
+type parameters are substituted by the type expressions of the arguments.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1854,14 +1886,15 @@ any of the type parameters can be substituted with a type expression argument.
 (A)Has_Equality ==> (A, A) => Bool
 (A)And(B)Add_To(C) ==> (A, B) => C
 (A)Is(B)s_First ==> B => A
-(T)HasStringRepr ==> T => String
-(E)Is_An_Env_Action ==> (E(A), A => E(B)) => E(B)
+(T)Has_String_Representation ==> T => String
+(E)Is_An_Environemnt_Action ==> (E(A), A => E(B)) => E(B)
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 Conditional types are the types of values that are polymorphic not because of
 their structure but because they have been defined (seperately) for many
-different combinations of types (a.k.a. ad hoc polymorphism). They are
+different combinations of types (i.e. they are ad hoc polymorphic). They are
 comprised of a condition and a "simple" type (i.e. a type without a
 condition) which are seperated by the arrow "\texttt{==>}". The condition is a
 type proposition which refers to type variables inside the "simple" type
@@ -1901,12 +1934,10 @@ ad hoc polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic})
 As described in the beginning of this section, the grammar of a type is:
 \begin{grammar}
 <type> ::= [ <condition> ]  <simple-type> 
-
-<simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
 \end{grammar}
 And therefore here only the grammar of the condition must be written:
 \begin{grammar}
-<condition> ::= <prop-expr> `\ ==>\ ' 
+<condition> ::= <prop-name> `\ ==>\ ' 
 \end{grammar}
 \end{itemize}
 
@@ -1947,7 +1978,7 @@ name_to_string
   = n => "\nFirst Name: " + n.first_name + "\nLast Name: " + n.last_name
 
 print_name_and_nationality
-  : ClientInfo => (EmptyVal)IOAction
+  : MathematicianInfo => (EmptyVal)IOAction
   = ci => print(ci.name -> name_to_string + "\nNationality: " + ci.nationality)
 
 sum_nodes
@@ -1955,7 +1986,8 @@ sum_nodes
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 A tuple type is equivalent to a product type with a new name  and names for the
 fields for convinience. A tuple type generates postfix functions for all of
 the fields by using a '.' before the name of the field. For example the
@@ -1976,7 +2008,7 @@ their argument.
 \begin{grammar}
 <tuple-type-def> ::= 
 `tuple_type\ ' <type-name>
-`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)* `)' `\ :\ ' <prod-type>
+`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)+ `)' `\ :\ ' <prod-type>
 
 <type-name> ::= 
 [ <params-in-paren> ] ( <type-id> | <type-id-with-params> ) [ <params-in-paren> ]
@@ -2006,7 +2038,7 @@ tuple_type NonEmptyListOf(A)s
 value (head, tail) : A x ListOf(A)s
 
 or_type ListOf(A)s
-values non_empty:NonEmptyListOf(A)s | empty
+values non_empty_l:NonEmptyListOf(A)s | empty_l
 
 or_type Error(A)OrResult(B)
 values error:A | result:B
@@ -2018,20 +2050,20 @@ values error:A | result:B
 is_empty
   : ListOf(A)s => Bool
   = cases => 
-    empty => true
-    non_empty:anything => false
+    empty_l => true
+    non_empty_l:anything => false
 
 get_head
   : ListOf(A)s => Possibly(A)
   = cases => 
-    empty => no_value
-    non_empty:list => the_value:list.head
+    empty_l => no_value
+    non_empty_l:list => the_value:list.head
 
 sum_list
   : ListOf(Int)s => Int
   = cases
-    empty => 0
-    non_empty:l => l.head + sum_list(l.tail)
+    empty_l => 0
+    non_empty_l:l => l.head + sum_list(l.tail)
 
 print_err_or_res
   : Error(A)OrResult(B) => (EmptyVal)IOAction
@@ -2040,18 +2072,19 @@ print_err_or_res
     result:r => print("All good! The result is: " + r -> to_string)
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 Values of an \texttt{or_type} are one of many cases. Some cases have other
 values inside.  The cases which have other values inside are followed by a
 semicolon and the type of the internal value. The same syntax can be used for
 matching that particular case in a function using the "cases" syntax, with the
 difference that after the colon, we write the name given to the value inside.
 An \texttt{or_type} definition automatically creates prefix functions for each
-case with an internal value.  For example, for the case "\texttt{non_empty}" of
-a list, the function "\texttt{non_empty}:" is automatically created from the
+case with an internal value.  For example, for the case "\texttt{non_empty_l}" of
+a list, the function "\texttt{non_empty_l}:" is automatically created from the
 definition for which we can say:
 \begin{verbatim}
-non_empty:
+non_empty_l:
   : NonEmptyListOf(A)s => ListOf(A)s
 \end{verbatim}
 Similarly:
@@ -2068,14 +2101,14 @@ non_empty_l
   = (1, [2, 3, 4])
 l
   : ListOf(Int)s
-  = non_empty:non_empty_l
+  = non_empty_l:non_empty_l
 \end{verbatim}
 These functions can be used like any other function as arguments to other functions.
 For example:
 \begin{verbatim}
 non_empty_ls_to_ls
   : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
-  = apply(non_empty:)to_each
+  = apply(non_empty_l:)to_each
 \end{verbatim}
 
 \item \textit{Grammar}
@@ -2117,7 +2150,7 @@ type_proposition (A)Is(B)s_First
 value
   first : B => A
 
-type_proposition (T)Has_String_Represantion
+type_proposition (T)Has_String_Representation
 value
   to_string : T => String
 
@@ -2125,7 +2158,7 @@ type_proposition (T)Has_A_Wrapper
 value
   wrapper : A => T(A)
 
-type_proposition (T)Is_A_Functor
+type_proposition (T)Has_Internal_App
 value
   apply()internally : (A => B, T(A)) => T(B)
 
@@ -2133,9 +2166,9 @@ type_proposition (T)Has_Wrapd_Intern_App
 value
   apply_wrapd()intern : (T(A => B), T(A)) => T(B)
 
-type_proposition (T)Has_Bind
+type_proposition (T)Has_Unwrap_Apply
 value
-  bind : (T(A), A => T(B)) => T(B)
+  unwrap_apply : (T(A), A => T(B)) => T(B)
 \end{verbatim}
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
@@ -2150,16 +2183,17 @@ wrapper
   : (T)Has_A_Wrapper ==> A => T(A)
 
 apply()internally
-  : (T)Is_A_Functor ==> (A => B, T(A)) => T(B)
+  : (T)Has_Internal_App ==> (A => B, T(A)) => T(B)
 
 apply_wrapd()intern
   : (T)Has_Wrapd_Intern_App ==> (T(A => B), T(A)) => T(B)
 
-bind
-  : (T)Has_Bind ==> (T(A), A => T(B)) => T(B)
+unwrap_apply
+  : (T)Has_Unwrap_Apply ==> (T(A), A => T(B)) => T(B)
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 An atomic type proposition definition defines simultaneously the \textbf{atomic type
 proposition} itself and a \textbf{polymorphic value} (usually, but not
 necessarily, a function), by definining the form of the type of the
@@ -2201,8 +2235,8 @@ proof
 type_theorem (A)Is(ListOf(A)s)s_First
 proof
   first = cases =>
-    empty => show_err("Tried to take the first element of an empty list")
-    non_empty:l => l.head
+    empty_l => show_err("Tried to take the first element of an empty_l list")
+    non_empty_l:l => l.head
 \end{verbatim}
 
 \item Usage of the function
@@ -2259,10 +2293,11 @@ equivalent
 
 type_proposition (T)Is_A_Monad
 equivalent
-  (T)Has_Bind, (T)Has_A_Wrapper
+  (T)Has_Unwrap_Apply, (T)Has_A_Wrapper
 \end{verbatim}
 
-\item \textit{Description}\\\\
+\item \textit{Description}
+
 A conjuction type proposition definition is used to abbreviate the conjuction
 of many type propositions (i.e. AND of all of them) into one new type proposition.
 \\\\
@@ -2300,19 +2335,19 @@ proof
 
 type_theorem (ListOf()s)Has_A_Wrapper
 proof
-  wrapper = x => non_empty:(x, empty)
+  wrapper = x => [x]
 
-type_theorem (Possibly())Is_A_Functor
+type_theorem (Possibly())Has_Internal_App
 proof
   apply()internally = (f, cases) =>
     no_value => no_value
     the_value:x => the_value:f(x)
 
-type_theorem (ListOf()s)Is_A_Functor
+type_theorem (ListOf()s)Has_Internal_App
 proof
   apply()internally = (f, cases) =>
-    empty => empty
-    non_empty:l => non_empty:(f(l.head), l.tail -> apply(f)internally)
+    empty_l => empty_l
+    non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
 \end{verbatim}
 
 \item \textit{Usage}
@@ -2324,7 +2359,7 @@ a, b
 
 l1, l2, l3
   : all ListOf(Int)s
-  = wrapper(1), empty, [1, 2, 3]
+  = wrapper(1), empty_l, [1, 2, 3]
 
 >> a
   : Possibly(Int)
@@ -2356,7 +2391,8 @@ l1, l2, l3
   = [2, 3, 4]
 \end{verbatim}
 
-\item \textit{Description} \\\\
+\item \textit{Description}
+
 A theorem of an atomic type proposition proves the proposition for
 specific type arguments, by implementing the value associated to the
 proposition for these type arguments. Therefore, the value associated with the
@@ -2395,18 +2431,67 @@ by the string " \texttt{=} " and the value expression which implements the value
 
 \begin{itemize}
 \item \textit{Examples}
-\item \textit{Description} \\\\
+
+\begin{verbatim}
+type_theorem (T)Has_Equality => (T)Has_Inequality
+proof
+  a \= b = not(a = b)
+
+type_theorem (T)Can_Be_Greater_Than(T) => (T)Has_Less_Or_Equal
+proof
+  a <= b = not(a > b)
+
+type_theorem (T)Has_Order => (T)Has_Greater_Or_Equal
+proof
+  a >= b = a = b | a > b
+
+type_theorem (T)Is_An_App_Functor => (T)Has_Internal_App
+proof
+  apply()internally = (f, x) => apply_wrapd(wrap(f))intern(x)
+
+type_theorem (T)Is_A_Monad => (T)Has_Wrapd_Intern_App
+proof
+  apply_wrapd()intern = (f, x) =>
+    unwrap_apply(f, f' => unwrap_apply(x, x' => wrap(f'(x'))))
+\end{verbatim}
+
+\item \textit{Description}
+
+A theorem of an implication type proposition is very similar to a theorem of an
+atomic type proposition in the sense that it also has an implementation of a
+value (in the proof). The difference is that the implementation uses another ad hoc
+polymorphic value (or many). Therefore, the implementation does not prove the
+proposition associated to the value it implements, because it assumes that the
+polymorphic value(s) used in the implementation is(are) already defined. In
+other words it proves the following: "if this(these) ad hoc polymorphic
+value(s) is(are) defined then we can also define this other one". This can be
+translated into the following implication proposition: "if the proposition
+associated to the value(s) we are using is true then the proposition associated
+to the value we are defining is true", which can be condensed to the notation
+with the "\texttt{=>}" arrow used in the examples.
+\\\\
+The proof of an implication type proposition allows the compiler to
+automatically create the definition for an ad hoc polymorphic value for a
+particular combination of types given the definitions of the ad hoc polymorphic
+values used in the implementation for this same combination of types. This
+mechanism essentially gives definitions for free, that is in the sense that
+when you define a set of ad hoc polymorphic values for a particular set of
+types you get for free all the ad hoc polymorphic values that can be defined
+using a subset of the defined ones. 
+
 \item \textit{Grammar}
+
 \begin{grammar}
-<implication> ::= 
+<implication> ::= ""\\
 `type_proposition' <prop-name> `\ =>\ ' <prop-name>
-`\\nproof\\n\ \ ' 
+`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
 \end{grammar} 
+
 \end{itemize}
 
 \subsection{Complete Grammar for Types and Type Logic}
 
-\section{Predefined}
+\section{Language Description: Predefined}
 
 \subsection{Constants}
 
