@@ -58,7 +58,7 @@ definitions. Theorems are proven type propositions. Functions as well as
 "Environment Actions" (see section \ref{subsec:envacts}) are also considered
 values. The definition of the "main" value determines the program's behaviour. 
 
-\paragraph{Program example: Euclidean Alogirthm}
+\paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
 gcd
   : (Int, Int) => Int
@@ -718,29 +718,29 @@ mathematics and other programming languages for the usual types. However, they
 are generalized. The examples below show their generality:
 \begin{verbatim}
 >> 1 + 1
- : Int
- = 2
+  : Int
+  = 2
 >> 1 + 3.14
- : Real
- = 4.14
+  : Real
+  = 4.14
 >> 'a' + 'b'
- : String
- = "ab"
+  : String
+  = "ab"
 >> 'w' + "ord"
- : String
- = "word"
+  : String
+  = "word"
 >> "Hello " + "World!"
- : String
- = "Hello World!"
+  : String
+  = "Hello World!"
 >> 5 * 'a'
- : String
- = "aaaaa"
+  : String
+  = "aaaaa"
 >> 5 * "hi"
- : String
- = "hihihihihi"
+  : String
+  = "hihihihihi"
 >> "1,2,3" - ','
- : String
- = "123"
+  : String
+  = "123"
 \end{verbatim}
 Let's analyze further the example of addition. The type can be read as such:
 the '+' operator has the type \\ (A, B) \ra C, provided that the type
@@ -787,13 +787,27 @@ Operator & Type \\
 \hline
 \end{tabular}
 \end{center}
-TODO \texttt{> <} actually work differently ... allow for Real \texttt{>} Int ...
-CORRECTION every comparison op is generalised
-\\\\
-The comparison and boolean operators behave the same as in \H\ and very
-similarly to most programming languages. The main difference is that in lcases
-the "equals", "and" and "or" operators have the symbol once \\(\texttt{= \& |})
-rather than twice (\texttt{== \&\& ||}).
+Comparison operators are also generalized. The main reason for the
+generalization is to be able to compare numbers of different types. Consider
+the following example:
+
+\begin{verbatim}
+>> 1
+  : Int
+  = 1
+>> 1.1
+  : Real
+  = 1.1
+>> 1.1 = 1
+  : Bool
+  = false
+\end{verbatim}
+In order for the example to work we need to be able to compare integers and
+reals.  Similarly, all the comparison operators need to be able to work on
+arguments of different types. Other than that, the comparison and boolean
+operators behave similarly to most programming languages. It's also worth
+noting that the "equals", "and" and "or" operators have the symbol once
+(\texttt{= \& |}) instead of twice (\texttt{== \&\& ||}).
 
 \subsubsection{Environment Action Operators}
 \label{subsec:envacts}
@@ -1393,36 +1407,26 @@ keyword "all" to give the same type to all the values.
 
 \item \textit{Examples}
 \begin{verbatim}
-TODO find good consistent def of Has_Order
 sort :
-  (A)Has_Order ==> ListOf(A)s => ListOf(A)s
+  ListOf(Int)s => ListOf(Int)s
   = cases => 
     empty_l => empty_l
     non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
       where
       less_l, greater_l
-        : all ListOf(A)s
+        : all ListOf(Int)s
         = filter_with(x => x < l.head, l.tail)
         , filter_with(x => x >= l.head, l.tail)
 
-tuple_type Coeffs
-value (previous, current) : Int x Int
-
-tuple_type GcdAndCoeffs
-value (gcd, a, b) : Int x Int x Int
-
-ext_euc
-  : (Int, Int) => GcdAndCoeffs
-  = ext_euc_rec((1, 0), (0, 1))
-
-ext_euc_rec
-  : (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
-  = (a_coeffs, b_coeffs, x, cases) =>
-    0 => (x, a_coeffs.previous, b_coeffs.previous)
-    y => ext_euc_rec(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
-      where
-      next: Coeffs => Coeffs
-        = cs => (cs.current, cs.previous - x / y * cs.current)
+sum_nodes
+  : TreeOf(Int)s => Int
+  = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
+    where
+    sum_list
+      : ListOf(Int)s => Int
+      = cases =>
+        empty_l => 0
+        non_empty_l:l => l.head + sum_list(l.tail)
 
 big_string
   : String
@@ -1432,7 +1436,7 @@ big_string
       = "Hello, my name is Struggling Programmer."
       , "I have tried way too many times to fit a big chunk of text"
       , "inside my program, without it hitting the half-screen mark!"
-      , "I am so glad I finally discovered lcases!!!"
+      , "I am so glad I finally discovered lcases!"
 \end{verbatim}
 
 \item \textit{Description}
@@ -1441,7 +1445,7 @@ big_string
 define them below it. They are very useful for reusing or abbreviating
 expressions that are specific to a particular definition or case.
 \\\\
-A "where" expression begins by a line that only has word "where" in it. It is
+A "where" expression begins by a line that only has the word "where" in it. It is
 indented as described in the "Value Definitions" (\ref{subsubsec:valdefs}) or
 "'cases' Function Expressions" (\ref{subsubsec:casessyntax}) sections.  The
 definitions are placed below the "where" line and must have the same
@@ -1649,9 +1653,11 @@ definition:
 \subsection{Types}
 \label{subsec:types}
 
-The constructs regarding types are two: \textbf{type expressions} and
-\textbf{type definitions}.
-\\\\
+The constructs regarding types are \textbf{type expressions} and
+\textbf{type definitions} and they are described in the following sections.
+
+\subsubsection{Type Expressions}
+
 Type expressions are divided into the following categories:
 \begin{itemize}
 \item Type Identifiers
@@ -1661,7 +1667,7 @@ Type expressions are divided into the following categories:
 \item Type Application Types
 \item Conditional Types
 \end{itemize}
-which are described in the following section.
+which are described in the following paragraphs.
 \\\\
 The grammar of a type expression is:
 \begin{grammar}
@@ -1670,17 +1676,6 @@ The grammar of a type expression is:
 <simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
 \\
 \end{grammar}
-Type definitions are divided into \texttt{tuple_type} definitions and
-\texttt{or_type} definitions and are described in section
-\ref{subsubsec:tdefs}.
-\\\\
-The grammar of a type definition is:
-\begin{grammar}
-<type-def> ::= <tuple-type-def> | <or-type-def>
-\end{grammar}
-
-\subsubsection{Type Expressions}
-
 \paragraph{Type Identifiers}
 
 \begin{itemize}
@@ -1927,6 +1922,14 @@ And therefore here only the grammar of the condition must be written:
 \subsubsection{Type Definitions}
 \label{subsubsec:tdefs}
 
+Type definitions are divided into \texttt{tuple_type} definitions and
+\texttt{or_type} definitions which are described in the following paragraphs.
+\\\\
+The grammar of a type definition is:
+\begin{grammar}
+<type-def> ::= <tuple-type-def> | <or-type-def>
+\end{grammar}
+
 \paragraph{Tuple Types}
 
 \begin{itemize}
@@ -2097,7 +2100,7 @@ non_empty_ls_to_ls
 \item \textit{Grammar}
 
 \begin{grammar}
-<or-type-definition> ::= ""\\
+<or-type-def> ::= ""\\
 `or_type\ ' <type-name> 
 \\`\\nvalues\ ' <identifier> [ `:' <simple-type> ]
 ( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
@@ -2230,18 +2233,6 @@ the type parameters) in the first line. The second line is the keyword
 \texttt{value}. The third line is indented once and has the identifier and the
 type expression of the value seperated by the string " \texttt{:} ".
 
-\item \textit{Grammar}
-\begin{grammar}
-<atom-prop-def> ::=
-`type_proposition\ ' <prop-name>
-`\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
-
-<prop-name> ::=  ""\\
-( <name-part> <params-in-paren> )+ [ <name-part> ]
-\alt ( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
-
-<name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
-\end{grammar} 
 \end{itemize}
 
 \paragraph{Renaming Propositions}
@@ -2274,13 +2265,27 @@ the type parameters) in the first line. The second line is the keyword
 proposition or (if it is a conjunction) many propositions  seperated by commas
 (where the commas essentially mean "and").
 
-\item \textit{Grammar}
-\begin{grammar}
-<renaming> ::= ""\\ 
-`type_proposition\ ' <prop-name>
-`\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )*
-\end{grammar}
 \end{itemize}
+
+\paragraph{Grammar for Proposition Definitions}
+
+\begin{grammar}
+<type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
+
+<atom-prop-def> ::=
+<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
+
+<renaming-prop-def> ::=
+<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )*
+
+<prop-name-line> ::= `type_proposition\ ' <prop-name>
+
+<prop-name> ::=  ""\\
+( <name-part> <params-in-paren> )+ [ <name-part> ]
+\alt ( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+
+<name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
+\end{grammar} 
 
 \subsubsection{Theorems}
 \label{subsubsec:ttheo}
@@ -2437,10 +2442,10 @@ the "\texttt{=>}" arrow.
 
 \end{itemize}
 
-\paragraph{Grammar for theorems}
+\paragraph{Grammar for Theorems}
 
 \begin{grammar}
-<theo> ::= 
+<type-theo> ::= 
 `type_theorem\ ' ( <atomic-prop> | <implication-prop> )
 `\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
 
@@ -2454,6 +2459,101 @@ the "\texttt{=>}" arrow.
 \end{grammar} 
 
 \subsection{Complete Grammar for Types and Type Logic}
+
+\begin{grammar}
+<type> ::= [ <condition> ]  <simple-type> 
+
+<simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
+\\
+
+<type-id> ::= [A-Z] [A-Za-z]+ 
+
+<type-var> ::= [A-Z]
+\\
+
+<func-type> ::= <param-types-expr> `\ =>\ ' <one-type>
+
+<param-types-expr> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
+
+<one-type> ::=
+<type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
+\\
+
+<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
+
+<field-type> ::=
+<type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
+\\
+
+<type-app> ::= ""\\""
+[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
+\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
+\alt " "<type-id> <types-in-paren>
+
+<type-id-with-args> ::= 
+<type-id> ( <types-in-paren> [A-Za-z]+ )+
+
+<types-in-paren> ::= `(' <simple-type> ( `, ' <simple-type> )* `)'
+\\
+
+<condition> ::= <prop-name> `\ ==>\ ' 
+\\
+\\
+
+<type-def> ::= <tuple-type-def> | <or-type-def>
+\\
+
+<tuple-type-def> ::= 
+`tuple_type\ ' <type-name>
+`\\nvalue\ ' `(' <identifier> (`,\ ' <identifier>)+ `)' `\ :\ ' <prod-type>
+
+<type-name> ::= 
+[ <params-in-paren> ] ( <type-id> | <type-id-with-params> ) [ <params-in-paren> ]
+
+<type-id-with-params> ::= <type-id> ( <params-in-paren> [A-Za-z]+ )+
+
+<params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
+\\
+
+<or-type-def> ::= ""\\
+`or_type\ ' <type-name> 
+`\\nvalues\ ' <identifier> [ `:' <simple-type> ]
+( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
+\\
+\\
+
+<type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
+\\
+
+<atom-prop-def> ::=
+<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
+
+<renaming-prop-def> ::=
+<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )*
+
+<prop-name-line> ::= `type_proposition\ ' <prop-name>
+
+<prop-name> ::=  ""\\
+( <name-part> <params-in-paren> )+ [ <name-part> ]
+\alt ( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+
+<name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
+\\
+\\
+
+<type-theo> ::= 
+`type_theorem\ ' ( <atomic-prop> | <implication-prop> )
+`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
+
+<atomic-prop> ::= <prop-name-sub>
+
+<implication-prop> ::= <prop-name-sub> `\ =>\ ' <prop-name-sub>
+
+<prop-name-sub> ::=  ""\\
+( <name-part> <types-in-paren> )+ [ <name-part> ]
+\alt ( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
+
+\end{grammar}
 
 \section{Language Description: Predefined}
 
