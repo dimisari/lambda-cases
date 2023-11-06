@@ -818,9 +818,9 @@ noting that the "equals", "and" and "or" operators have the symbol once
 Operator & Type \\ 
 \hline
 \hline
-\texttt{;>} & (E)Is_An_Environemnt_Action \Ra (E(A), A \ra E(B)) \ra E(B) \\
+\texttt{;>} & (E)Has_Use \Ra (E(A), A \ra E(B)) \ra E(B) \\
 \hline
-\texttt{;} & (E)Is_An_Environemnt_Action \Ra (E(A), E(B)) \ra E(B) \\
+\texttt{;} & (E)Has_Then \Ra (E(A), E(B)) \ra E(B) \\
 \hline
 \end{tabular}
 \end{center}
@@ -840,15 +840,15 @@ print_string("I'll repeat the line.")
 get_line
   : (String)IOAction
 ; 
-  : (E)Is_An_Environemnt_Action ==> (E(A), E(B)) => E(B) 
+  : (E)Has_Then ==> (E(A), E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line
   : (String)IOAction
-  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)Has_Then is true, E = IOAction, A = EmptyVal, B = String
 ;>
-  : (E)Is_An_Environemnt_Action ==> (E(A), A => E(B)) => E(B) 
+  : (E)Has_Use ==> (E(A), A => E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line ;> print_string
   : (EmptyVal)IOAction
-  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)Has_Use is true, E = IOAction, A = String, B = EmptyVal
 \end{verbatim}
 
 \paragraph{Example program}
@@ -874,22 +874,22 @@ print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
 
 ;
-  : (E)Is_An_Environemnt_Action ==> (E(A), E(B)) => E(B) 
+  : (E)Has_Then ==> (E(A), E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line
   : (String)IOAction
-  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = EmptyVal, B = String
+  where (IOAction)Has_Then is true, E = IOAction, A = EmptyVal, B = String
 
 age => print_string("Oh that's crazy...)
   : String => (EmptyVal)IOAction
 
 ;>
-  : (E)Is_An_Environemnt_Action ==> (E(A), A => E(B)) => E(B) 
+  : (E)Has_Use ==> (E(A), A => E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
   : (EmptyVal)IOAction
-  where (IOAction)Is_An_Environemnt_Action is true, E = IOAction, A = String, B = EmptyVal
+  where (IOAction)Has_Use is true, E = IOAction, A = String, B = EmptyVal
 
 print_string <- "Hello..." ; get_line
   : (String)IOAction
@@ -910,10 +910,14 @@ occurences of the "\texttt{;>}" operator.
 \paragraph{Description}\mbox{} \\\\
 The environment action operators are used to combine values that do environment
 actions into values that do more complicated environment actions. Environment
-actions are also represented by types. More acurately, type functions that
-take a type as an argument and produce a new type (just like ListOf()s). A
-value of the type \texttt{E(A)} where \texttt{(E)Is_An_Environemnt_Action} does an
-environment action of type \texttt{E} that produces a value of type \texttt{A}.
+actions are type functions that take a type argument and produce a type (just
+like ListOf()s). These type functions have the "then" operator (\texttt{;}) and
+the "use" operator (\texttt{;>}) defined for them.  A value of the type
+\texttt{E(A)} where \texttt{(E)Has_Then} does an environment action of type
+\texttt{E} that produces a value of type \texttt{A} which can then be combined
+with another one with the "then" operator. Similarly, with the "use" operator
+the produced value of an action can be used by a function that returns another
+action.
 \\\\
 The effect of the "\texttt{;}" operator described in words is the following:
 given a value of type \texttt{E(A)} and a value of type \texttt{E(B)} (which
@@ -1092,10 +1096,10 @@ Operator & Type & Description \\
 \hline
 \texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
 \hline
-\texttt{;>} & (E)Is_An_Environemnt_Action \Ra (E(A), A \ra E(B)) \ra E(B) &
+\texttt{;>} & (E)Has_Use \Ra (E(A), A \ra E(B)) \ra E(B) &
 Do, use, do \\
 \hline
-\texttt{;} & (E)Is_An_Environemnt_Action \Ra (E(A), E(B)) \ra E(B) &
+\texttt{;} & (E)Has_Then \Ra (E(A), E(B)) \ra E(B) &
 Do then do \\
 \hline
 \end{tabular}
@@ -1865,7 +1869,7 @@ type parameters are substituted by the type expressions of the arguments.
 (A)And(B)Add_To(C) ==> (A, B) => C
 (A)Is(B)s_First ==> B => A
 (T)Has_String_Representation ==> T => String
-(E)Is_An_Environemnt_Action ==> (E(A), A => E(B)) => E(B)
+(E)Has_Use ==> (E(A), A => E(B)) => E(B)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2557,9 +2561,13 @@ the "\texttt{=>}" arrow.
 
 \section{Language Description: Predefined}
 
-\subsection{Constants}
+\subsection{Values}
 
-\subsection{Functions}
+\paragraph{Constants}
+
+\begin{verbatim}
+undefined, pi
+\end{verbatim}
 
 \subsection{Types}
 
