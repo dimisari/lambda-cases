@@ -1868,7 +1868,7 @@ type parameters are substituted by the type expressions of the arguments.
 (A)And(B)Can_Be_Equal ==> (A, B) => Bool
 (A)And(B)Add_To(C) ==> (A, B) => C
 (A)Is(B)s_First ==> B => A
-(T)Has_String_Representation ==> T => String
+(T)Has_String_Repr ==> T => String
 (E)Has_Use ==> (E(A), A => E(B)) => E(B)
 \end{verbatim}
 
@@ -2142,7 +2142,7 @@ type_proposition (A)Is(B)s_First
 value
   first : B => A
 
-type_proposition (T)Has_String_Representation
+type_proposition (T)Has_String_Repr
 value
   to_string : T => String
 
@@ -2563,15 +2563,85 @@ the "\texttt{=>}" arrow.
 
 \subsection{Values}
 
-\paragraph{Constants}
-
-\begin{verbatim}
-undefined, pi
-\end{verbatim}
+\begin{itemize}
+\item Constants: \texttt{undefined, pi}
+\item Functions
+  \begin{itemize}
+  \item Miscellaneous: \texttt{not, id, show_error}
+  \item Numerical
+    \begin{itemize}
+    \item Miscellaneous: \texttt{sqrt, abs, max, min}
+    \item Trigonometric: \texttt{sin, cos, tan, asin, acos, atan}
+    \item Division related: \texttt{div, mod, gcd, lcm, even, odd}
+    \item Rounding: \texttt{truncate, round, floor, ceiling}
+    \item e and log: \texttt{exp, ln, log}
+    \end{itemize}
+  \item list:
+    \texttt{apply()to_all, filter_with, take()from, leave()from, zip, unzip,
+    zip_with, length}
+  \item IO
+    \begin{itemize}
+    \item Input: \texttt{get_char, get_line, get_input, read_file}
+    \item Output: \texttt{print, print_string, print_line_str, write_file}
+    \end{itemize}
+  \item Ad Hoc Polymorphic: \texttt{apply()internally, to_string, from_string, wrap}
+  \end{itemize}
+\end{itemize}
 
 \subsection{Types}
 
+\begin{itemize}
+\item Basic: \texttt{Int, Real, Char, String}
+\item Or Types: \texttt{EmptyVal, Bool, Possibly(), ListOf()s, Result()OrError()}
+\item Tuple Types: \texttt{NonEmptyListOf()s}
+\end{itemize}
+
 \subsection{Type Propositions}
+
+\begin{itemize}
+
+\item Operator Propositions:
+  \begin{itemize}
+  \item \texttt{(A)To_The(B)Has_Type(C)}
+  \item \texttt{(A)And(B)Multiply_To(C)}
+  \item \texttt{(A)Divided_By(B)Has_Type(C)}
+  \item \texttt{(A)And(B)Add_To(C)}
+  \item \texttt{(A)Minus(B)Has_Type(C)}
+  \item \texttt{(A)And(B)Can_Be_Equal}
+  \item \texttt{(A)And(B)Can_Be_Unequal}
+  \item \texttt{(A)Can_Be_Gr_Or_Eq_To(B)}
+  \item \texttt{(A)Can_Be_Le_Or_Eq_To(B)}
+  \item \texttt{(A)Can_Be_Greater_Than(B)}
+  \item \texttt{(A)Can_Be_Less_Than(B)}
+  \end{itemize}
+
+\item Function Propositions:
+  \begin{itemize}
+  \item \texttt{(A)Is(B)s_First, ..._Second, ..._Third, ..._Fourth, ..._Fifth}
+  \item \texttt{(T)Has_A_Wrapper}
+  \item \texttt{(T)Has_String_Repr}
+  \item \texttt{(T)Has_Internal_App}
+  \item \texttt{(T)Has_Wrapd_Intern_App}
+  \item \texttt{(T)Has_Use}
+  \item \texttt{(T)Has_Then}
+  \end{itemize}
+
+\item Renaming Propositions:
+  \begin{itemize}
+  \item \texttt{(T)Has_Exponentiation}
+  \item \texttt{(T)Has_Multiplication}
+  \item \texttt{(T)Has_Division}
+  \item \texttt{(T)Has_Addition}
+  \item \texttt{(T)Has_Subtraction}
+  \item \texttt{(T)Has_Equality}
+  \item \texttt{(T)Has_Non_Equality}
+  \item \texttt{(T)Has_Greater_Or_Equal}
+  \item \texttt{(T)Has_Less_Or_Equal}
+  \item \texttt{(T)Has_Greater}
+  \item \texttt{(T)Has_Less}
+  \end{itemize}
+
+\end{itemize}
 
 \section{Parser implementation}
 

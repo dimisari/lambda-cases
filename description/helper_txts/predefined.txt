@@ -1,0 +1,83 @@
+values:
+- constants: undefined, pi
+- functions
+  - miscellaneous: not, id, show_error
+  - numerical
+    - miscellaneous: sqrt, abs, max, min
+    - trig: sin, cos, tan, asin, acos, atan
+    - div related: div, mod, gcd, lcm, even, odd
+    - rounding: truncate, round, floor, ceiling
+    - exp: exp, ln, log
+  - list
+    - apply()to_all, filter_with, take()from, leave()from, zip, unzip, zip_with,
+      length
+  - IO
+    - input: get_char, get_line, get_input, read_file
+    - output: print, print_string, print_line_str, write_file
+  - ad hoc polymorphic: apply()internally, to_string, from_string, wrap
+
+types:
+- Basic
+  - Int, Real, Char, String
+  - Array? example: 10 * Int?
+- Or Types: EmptyVal, Bool, Possibly(), ListOf()s, Result()OrError()
+- Tuple Types: NonEmptyListOf()s
+
+type propositions:
+- Operator propositions
+ - (A)To_The(B)Has_Type(C)
+  - (A)And(B)Multiply_To(C)
+  - (A)Divided_By(B)Has_Type(C)
+  - (A)And(B)Add_To(C)
+  - (A)Minus(B)Has_Type(C)
+  - (A)And(B)Can_Be_Equal
+  - (A)And(B)Can_Be_Unequal
+  - (A)Can_Be_Gr_Or_Eq_To(B)
+  - (A)Can_Be_Le_Or_Eq_To(B)
+  - (A)Can_Be_Greater_Than(B)
+  - (A)Can_Be_Less_Than(B)
+- Function propositions
+  - (A)Is(B)s_First, ..._Second, ..._Third, ..._Fourth, ..._Fifth
+  - (T)Has_A_Wrapper
+  - (T)Has_String_Repr
+  - (T)Has_Internal_App
+  - (T)Has_Wrapd_Intern_App
+  - (T)Has_Use
+  - (T)Has_Then
+- Renaming propositions
+  - (T)Has_Exponentiation
+  - (T)Has_Multiplication
+  - (T)Has_Division
+  - (T)Has_Addition
+  - (T)Has_Subtraction
+  - (T)Has_Equality
+  - (T)Has_Non_Equality
+  - (T)Has_Greater_Or_Equal
+  - (T)Has_Less_Or_Equal
+  - (T)Has_Greater
+  - (T)Has_Less
+
+type_theorems needed for the polymorphic functions:
+- first
+  - (A)Is(A x B)s_First
+  - same for: A x B x C, A x B x C x D, A x B x C x D x E, ListOf(A)s
+- second
+  - (B)Is(A x B)s_Second
+  - same for: A x B x C, A x B x C x D, A x B x C x D x E, ListOf(B)s
+- third
+  - (C)Is(A x B x C)s_Third
+  - same for: A x B x C x D, A x B x C x D x E, ListOf(C)s
+- fourth
+  - (D)Is(A x B x C x D)s_Fourth
+  - same for: A x B x C x D x E, ListOf(D)s
+- fifth
+  - (E)Is(A x B x C x D x E)s_Fifth
+  - (A)Is(ListOf(A)s)s_Fifth
+- wrapper
+- to_string
+  - (Int)Has_String_Repr, (Char)Has_String_Repr, (Real)Has_String_Repr
+  - (A)Has_String_Repr => (ListOf(A)s)Has_String_Repr
+- apply()internally
+- wrapd_apply()intern
+- ;>
+- ;

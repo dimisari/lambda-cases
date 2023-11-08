@@ -1,12 +1,12 @@
 
-or_type LeftT==>Or<==RightT
-values left_val:LeftT | right_val:RightT
-
-or_type T==>OrNothing
-values the_value:T | nothing
-
-tuple_type HeadAndTailOf(T)s
-value (head: T, tail: ListOf(T)s)
-
 or_type ListOf(T)s
 values non_empty:HeadAndTailOf(T)s | empty
+
+tuple_type HeadAndTailOf(T)s
+value (head, tail): T x ListOf(T)s
+
+or_type Possibly(T)
+values the_value:T | no_value
+
+or_type Reslut(R)OrError(E)
+values result:R | error:E
