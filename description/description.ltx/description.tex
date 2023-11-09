@@ -545,9 +545,9 @@ value (first_name, last_name) : String x String
 \end{verbatim}
 And it has the type \texttt{Name => String}.
 \\\\
-There are also the following special projection functions that work on
-\textbf{all product and tuple types}:\\ \texttt{.1st .2nd .3rd .4th .5th}. For
-the 4th example above, assuming:
+There are also the following special projection functions that work on tuples
+(i.e. product type or tuple type values): \texttt{.1st .2nd .3rd .4th .5th}.
+For the 4th example above, assuming:
 \begin{verbatim}
 tuple 
   : Int x String
@@ -570,14 +570,86 @@ their argument. However, they can also be used as any other function.
 An illustration of the aforementioned is the last example, where the function
 \texttt{.1st} is an argument of the function \texttt{apply()to_all}.
 Postfix functions always begin with a dot.
-
+\\\\
+The are a special postfix function called "\texttt{.change}" which is described in
+the following paragraph.
 
 \item \textit{Grammar}
 \begin{grammar}
-<post-func> ::= `.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' 
+<post-func> ::=
+`.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' | <dot-change>
 
 <post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>
 \end{grammar}
+
+\end{itemize}
+
+\paragraph{The ".change" Function}
+
+\begin{itemize}
+
+\item \textit{Examples}
+
+\begin{verbatim}
+tuple.change{1st = 42, 3rd = 17}
+state.change{counter = counter + 1} 
+name.change{last_name = "Gauss"}
+point.change{x = 1.61, y = 2.71, z = 3.14}
+apply(.change{1st = 1st + 1})to_all
+\end{verbatim}
+
+\item \textit{Description} \\\\
+The "\texttt{.change}" function is a special postfix function that works an all
+tuples (i.e. product type or tuple type values). It returns a new tuple that is
+the input tuple with some fields changed. Which fields are going to change and
+to what new value is specified inside curly brackets after the
+"\texttt{.change}". The following special identifiers can be used for referring
+to the fields: \texttt{1st 2nd 3rd 4th 5th} (1st and 5th example). If the tuple
+is of a tuple type, the identifiers of the fields specified in type definition
+can be used (examples 2, 3 and 4). Therefore, we are assuming the following (or
+similar) if the examples are to type check:
+
+\begin{verbatim}
+tuple
+  : Int x ... x Int (optionally more: x ... )
+  or some equivalent tuple type
+
+tuple_type MyStateType
+value (..., counter, ...) : ... x Int x ...
+
+state
+  : MyStateType
+
+tuple_type MyNameType
+value (..., last_name, ...) : ... x String x ...
+
+name
+  : MyNameType
+
+tuple_type Point
+value (x, y, z) : Real x Real x Real
+
+point
+  : Point
+
+apply(.change{1st = 1st + 1})to_all
+  : ListOf(A)s => ListOf(A)s
+  where A must be some product or tuple type
+\end{verbatim}
+The changes of the fields have the following structure: "field = expression of
+new value" and they are seperated by commas. The input tuple's fields (i.e. the
+"old" values) can be used inside the expression of a new value and they are
+referred to by the field identifier.
+\item \textit{Grammar}
+
+\begin{grammar}
+
+<dot-change> ::= 
+`.change{' <field-change> ( `,' <field-change> )* `}'
+
+<field-change> ::=
+( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr> 
+\end{grammar} 
 
 \end{itemize}
 
@@ -2564,10 +2636,14 @@ the "\texttt{=>}" arrow.
 \subsection{Values}
 
 \begin{itemize}
+
 \item Constants: \texttt{undefined, pi}
+
 \item Functions
   \begin{itemize}
+
   \item Miscellaneous: \texttt{not, id, show_error}
+
   \item Numerical
     \begin{itemize}
     \item Miscellaneous: \texttt{sqrt, abs, max, min}
@@ -2576,22 +2652,28 @@ the "\texttt{=>}" arrow.
     \item Rounding: \texttt{truncate, round, floor, ceiling}
     \item e and log: \texttt{exp, ln, log}
     \end{itemize}
-  \item list:
-    \texttt{apply()to_all, filter_with, take()from, leave()from, zip, unzip,
-    zip_with, length}
+
+  \item List:\\
+    \texttt{length, is_in, apply()to_all, filter_with, take()from, leave()from,
+    zip, unzip,\\ zip_with}
+
   \item IO
     \begin{itemize}
     \item Input: \texttt{get_char, get_line, get_input, read_file}
     \item Output: \texttt{print, print_string, print_line_str, write_file}
     \end{itemize}
-  \item Ad Hoc Polymorphic: \texttt{apply()internally, to_string, from_string, wrap}
+
+  \item Ad Hoc Polymorphic:\\
+  \texttt{first, second, third, fourth, fifth, wrap, to_string, from_string,
+  apply()internally, \\wrapd_apply()intern}
+
   \end{itemize}
 \end{itemize}
 
 \subsection{Types}
 
 \begin{itemize}
-\item Basic: \texttt{Int, Real, Char, String}
+\item Basic: \texttt{Int, Real, Char, String}\ \ \ TODO? array: eg 10 * Int?
 \item Or Types: \texttt{EmptyVal, Bool, Possibly(), ListOf()s, Result()OrError()}
 \item Tuple Types: \texttt{NonEmptyListOf()s}
 \end{itemize}
@@ -2601,6 +2683,7 @@ the "\texttt{=>}" arrow.
 \begin{itemize}
 
 \item Operator Propositions:
+
   \begin{itemize}
   \item \texttt{(A)To_The(B)Has_Type(C)}
   \item \texttt{(A)And(B)Multiply_To(C)}
@@ -2613,20 +2696,27 @@ the "\texttt{=>}" arrow.
   \item \texttt{(A)Can_Be_Le_Or_Eq_To(B)}
   \item \texttt{(A)Can_Be_Greater_Than(B)}
   \item \texttt{(A)Can_Be_Less_Than(B)}
-  \end{itemize}
-
-\item Function Propositions:
-  \begin{itemize}
-  \item \texttt{(A)Is(B)s_First, ..._Second, ..._Third, ..._Fourth, ..._Fifth}
-  \item \texttt{(T)Has_A_Wrapper}
-  \item \texttt{(T)Has_String_Repr}
-  \item \texttt{(T)Has_Internal_App}
-  \item \texttt{(T)Has_Wrapd_Intern_App}
   \item \texttt{(T)Has_Use}
   \item \texttt{(T)Has_Then}
   \end{itemize}
 
+\item Function Propositions:
+
+  \begin{itemize}
+  \item \texttt{(A)Is(B)s_First}
+  \item \texttt{(A)Is(B)s_Second}
+  \item \texttt{(A)Is(B)s_Third}
+  \item \texttt{(A)Is(B)s_Fourth}
+  \item \texttt{(A)Is(B)s_Fifth}
+  \item \texttt{(T)Has_A_Wrapper}
+  \item \texttt{(T)Has_String_Repr}
+  \item \texttt{(T)Can_Be_Parsed}
+  \item \texttt{(T)Has_Internal_App}
+  \item \texttt{(T)Has_Wrapd_Intern_App}
+  \end{itemize}
+
 \item Renaming Propositions:
+
   \begin{itemize}
   \item \texttt{(T)Has_Exponentiation}
   \item \texttt{(T)Has_Multiplication}
@@ -2639,6 +2729,39 @@ the "\texttt{=>}" arrow.
   \item \texttt{(T)Has_Less_Or_Equal}
   \item \texttt{(T)Has_Greater}
   \item \texttt{(T)Has_Less}
+  \end{itemize}
+
+\item Theorems:
+
+  \begin{itemize}
+  \item \texttt{(A)Is(A x B)s_First}
+  \item \texttt{(A)Is(A x B x C)s_First}
+  \item \texttt{(A)Is(A x B x C x D)s_First}
+  \item \texttt{(A)Is(A x B x C x D x E)s_First}
+  \item \texttt{(A)Is(ListOf(A)s)s_First}
+  \item \texttt{(B)Is(A x B)s_Second}
+  \item \texttt{(B)Is(A x B x C)s_Second}
+  \item \texttt{(B)Is(A x B x C x D)s_Second}
+  \item \texttt{(B)Is(A x B x C x D x E)s_Second}
+  \item \texttt{(A)Is(ListOf(A)s)s_Second}
+  \item \texttt{(C)Is(A x B x C)s_Third}
+  \item \texttt{(C)Is(A x B x C x D)s_Third}
+  \item \texttt{(C)Is(A x B x C x D x E)s_Third}
+  \item \texttt{(A)Is(ListOf(A)s)s_Third}
+  \item \texttt{(D)Is(A x B x C x D)s_Fourth}
+  \item \texttt{(D)Is(A x B x C x D x E)s_Fourth}
+  \item \texttt{(A)Is(ListOf(A)s)s_Fourth}
+  \item \texttt{(E)Is(A x B x C x D x E)s_Fifth}
+  \item \texttt{(A)Is(ListOf(A)s)s_Fifth}
+  \item \texttt{TODO wrapper}
+  \item \texttt{(Int)Has_String_Repr}
+  \item \texttt{(Char)Has_String_Repr}
+  \item \texttt{(Real)Has_String_Repr}
+  \item \texttt{(A)Has_String_Repr => (ListOf(A)s)Has_String_Repr}
+  \item \texttt{TODO apply()internally}
+  \item \texttt{TODO wrapd_apply()intern}
+  \item \texttt{TODO ;>}
+  \item \texttt{TODO ;}
   \end{itemize}
 
 \end{itemize}

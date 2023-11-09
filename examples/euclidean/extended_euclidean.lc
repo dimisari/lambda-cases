@@ -1,41 +1,40 @@
 // type definitions
 
 tuple_type PrevCoeffs
-value (prev_prev, prev : Int, Int)
+value (prev, curr : Int, Int)
 
 tuple_type GcdAndCoeffs
 value (gcd, a, b : Int, Int, Int)
 
 // algorithm functions
 
-extended_euclidean: (Int, Int) -> GcdAndCoeffs
-  = (init_a_coeffs, init_b_coeffs) ==> ee_recursion
-
-init_a_coeffs, init_b_coeffs: all PrevCoeffs
-  = (1, 0), (0, 1)
-
-ee_recursion: (PrevCoeffs, PrevCoeffs, Int, Int) -> GcdAndCoeffs
-  = (a_coeffs, b_coeffs, x, cases) ->
-    0 -> (x, a_coeffs.prev_prev, b_coeffs.prev_prev)
-    y ->
-      ee_recursion(next <== a_coeffs, next <== b_coeffs, y, x ==> mod <== y)
-      where
-      next: PrevCoeffs -> PrevCoeffs
-        = fields -> (prev, prev_prev - x ==> div <== y * prev)
+extended_euclidean: (Int, Int) => GcdAndCoeffs
+  = (init_a_coeffs, init_b_coeffs) -> ee_recursion
+  where
+  init_a_coeffs, init_b_coeffs: all PrevCoeffs
+    = (1, 0), (0, 1)
+  ee_recursion: (PrevCoeffs, PrevCoeffs, Int, Int) => GcdAndCoeffs
+    = (a_coeffs, b_coeffs, x, cases) =>
+      0 => (x, a_coeffs.prev, b_coeffs.prev)
+      y =>
+        ee_recursion(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
+        where
+        next: PrevCoeffs => PrevCoeffs
+          = .change{prev = curr, curr = prev - x -> div <- y * curr}
 
 // reading, printing and main
 
 read_two_ints : (Int x Int)WithIO
-  = print <== "Please give me 2 ints";
-    get_line >>= split_words o> apply(from_string)to_all o> ints ->
-    ints ==> length ==> cases ->
-      2 -> ints ==> with_environment
-      ... -> io_error <== "You didn't give me 2 ints"
+  = print <- "Please give me 2 ints";
+    get_line ;> split_words o> apply(from_string)to_all o> ints =>
+    ints -> length -> cases =>
+      2 => ints -> with_environment
+      ... => io_error <- "You didn't give me 2 ints"
  
-print_gcd_and_coeffs : GcdAndCoeffs -> (Empty)WithIO
-  = fields ->
+print_gcd_and_coeffs : GcdAndCoeffs => IO
+  = fields =>
     print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
 
-main : (Empty)WithIO
-  = read_two_ints >>= ints ->
-    extended_euclidean(ints.1st, ints.2nd) ==> print_gcd_and_coeffs
+main : IO
+  = read_two_ints ;> ints =>
+    extended_euclidean(ints.1st, ints.2nd) -> print_gcd_and_coeffs

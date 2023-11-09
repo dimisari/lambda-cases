@@ -9,4 +9,4 @@ ee_recursion: (Int x Int, Int x Int, Int, Int) => Int x Int x Int
       ee_recursion(next <- a_coeffs), next <- b_coeffs), y, x -> mod <- y) 
       where
       next: Int x Int => Int x Int 
-        = fields => (2nd, 1st - (x)div(y) * 2nd)
+        = .change{1st = 2nd, 2nd = 1st - (x)div(y) * 2nd}
