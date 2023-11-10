@@ -52,11 +52,12 @@ language (in which we are all already experienced).
 
 \subsection{Program Structure}
 
-An lcases program consists of a set of definitions and theorems.  Definitions
-are split into value definitions, type definitions and type proposition
-definitions. Theorems are proven type propositions. Functions as well as
-"Environment Actions" (see section \ref{subsec:envacts}) are also considered
-values. The definition of the "main" value determines the program's behaviour. 
+An lcases program consists of a set of definitions, type nicknames and
+theorems.  Definitions are split into value definitions, type definitions and
+type proposition definitions. Theorems are proven type propositions. Functions
+as well as "Environment Actions" (see section \ref{subsec:envacts}) are also
+considered values. The definition of the "main" value determines the program's
+behaviour. 
 
 \paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
@@ -77,7 +78,7 @@ tuple_type NumsAndGcd
 value (x, y, gcd) : Int x Int x Int
 
 print_gcd_message
-  : NumsAndGcd => (EmptyVal)IOAction
+  : NumsAndGcd => IO
   = nums_gcd => print(message)
     where
     message
@@ -85,14 +86,15 @@ print_gcd_message
       = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " + nums_gcd.gcd
 
 main
-  : (EmptyVal)IOAction
+  : IO
   = read_two_ints ;> ints =>
     print_gcd_message((ints.1st, ints.2nd, gcd(ints.1st, ints.2nd))
 \end{verbatim}
 
 \paragraph{Program grammar}
 \begin{grammar}
-<program> ::= ( <value-def> | <type-def> | <type-prop-def> | <type-theo> )+
+<program> ::=
+( <value-def> | <type-def> | <t-nickname> | <type-prop-def> | <type-theo> )+
 \end{grammar}
 
 \subsection{Keywords}
@@ -115,7 +117,8 @@ Keyword & Section \\
 \hline
 \texttt{where all} & \ref{subsec:valdefswhere} Value Definitions \\
 \hline
-\texttt{tuple_type value or_type values} & \ref{subsubsec:tdefs} Type Definitions \\
+\texttt{tuple_type value or_type values type_nickname} &
+\ref{subsec:types} Type Definitions \\
 \hline
 \texttt{type_proposition value equivalent type_theorem proof} &
 {\ref{subsec:typelogic} Type Logic} \\
@@ -347,7 +350,7 @@ ListOf(T)s
 
   \begin{verbatim}
   my_big_list
-    : ListOf(Int => (EmptyVal)IOAction)s
+    : ListOf(Int => IO)s
     = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
       , x => print("I'm the second function and x + 2 is: " + (x + 2))
       , x => print("I'm the third function and x + 3 is: " + (x + 3))
@@ -605,9 +608,9 @@ the input tuple with some fields changed. Which fields are going to change and
 to what new value is specified inside curly brackets after the
 "\texttt{.change}". The following special identifiers can be used for referring
 to the fields: \texttt{1st 2nd 3rd 4th 5th} (1st and 5th example). If the tuple
-is of a tuple type, the identifiers of the fields specified in type definition
-can be used (examples 2, 3 and 4). Therefore, we are assuming the following (or
-similar) if the examples are to type check:
+is of a tuple type, the identifiers of the fields specified in the type
+definition can be used (examples 2, 3 and 4). Therefore, we are assuming the
+following (or similar) if the examples are to type check:
 
 \begin{verbatim}
 tuple
@@ -643,7 +646,6 @@ referred to by the field identifier.
 \item \textit{Grammar}
 
 \begin{grammar}
-
 <dot-change> ::= 
 `.change{' <field-change> ( `,' <field-change> )* `}'
 
@@ -1293,7 +1295,7 @@ The precise indentation rules are described in the section
 
 \begin{verbatim}
 print_sentimental_bool
-  : Bool => (EmptyVal)IOAction
+  : Bool => IO
   = cases =>
     true => print <- "It's true!! :)"
     false => print <- "It's false... :("
@@ -1302,7 +1304,7 @@ or_type TrafficLight
 values green | amber | red
 
 print_sentimental_traffic_light
-  : TrafficLight => (EmptyVal)IOAction
+  : TrafficLight => IO
   = cases =>
     green => print <- "It's green! Let's go!!! :)"
     amber => print <- "Go go go, fast!"
@@ -1400,12 +1402,12 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 
 <case-body> ::=
-( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]
+( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]
 \end{grammar}
 
 \end{itemize}
 
-\subsection{Value Definitions and  "where" Expressions}
+\subsection{Value Definitions and "where" Expressions}
 \label{subsec:valdefswhere}
 
 \subsubsection{Value Definitions}
@@ -1636,9 +1638,16 @@ definition:
 <basic-expr> ::=
 <literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <post-func-app> \\
 
-<post-func> ::= `.' <identifier>
+<post-func> ::=
+`.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' | <dot-change>
 
 <post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func> \\
+
+<dot-change> ::= 
+`.change{' <field-change> ( `,' <field-change> )* `}'
+
+<field-change> ::=
+( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr>  \\
 
 <op-expr> ::=
 <simple-op-expr> | <op-expr-func-end> | <big-op-expr> | <cases-op-expr>
@@ -1729,8 +1738,9 @@ definition:
 \subsection{Types}
 \label{subsec:types}
 
-The constructs regarding types are \textbf{type expressions} and
-\textbf{type definitions} and they are described in the following sections.
+The constructs regarding types are \textbf{type expressions}, \textbf{type
+definitions} and \textbf{type nicknames} and they are described in the
+following sections.
 
 \subsubsection{Type Expressions}
 
@@ -1984,15 +1994,11 @@ which it turn means that the function \texttt{first} has been defined
 for these combinations of types. For more on how conditions, propositions and
 ad hoc polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic}).
 
-\item \textit{Grammar}\\\\
-As described in the beginning of this section, the grammar of a type is:
-\begin{grammar}
-<type> ::= [ <condition> ]  <simple-type> 
-\end{grammar}
-And therefore here only the grammar of the condition must be written:
+\item \textit{Grammar}
 \begin{grammar}
 <condition> ::= <prop-name> `\ ==>\ ' 
 \end{grammar}
+
 \end{itemize}
 
 \subsubsection{Type Definitions}
@@ -2040,7 +2046,7 @@ name_to_string
   = n => "\nFirst Name: " + n.first_name + "\nLast Name: " + n.last_name
 
 print_name_and_nationality
-  : MathematicianInfo => (EmptyVal)IOAction
+  : MathematicianInfo => IO
   = ci => print(ci.name -> name_to_string + "\nNationality: " + ci.nationality)
 
 sum_nodes
@@ -2128,7 +2134,7 @@ sum_list
     non_empty_l:l => l.head + sum_list(l.tail)
 
 print_err_or_res
-  : Error(A)OrResult(B) => (EmptyVal)IOAction
+  : Error(A)OrResult(B) => IO
   = cases => 
     error:e => print("Error occured: " + e -> to_string)
     result:r => print("All good! The result is: " + r -> to_string)
@@ -2181,6 +2187,33 @@ non_empty_ls_to_ls
 \\`\\nvalues\ ' <identifier> [ `:' <simple-type> ]
 ( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
 \end{grammar}
+
+\end{itemize}
+
+\subsubsection{Type Nicknames}
+
+\begin{itemize}
+
+\item \textit{Examples}
+
+\begin{verbatim}
+type_nickname Ints = ListOf(Int)s
+type_nickname IntStringPairs = ListOf(Int x String)s
+type_nickname IO = (EmptyVal)IOAction
+type_nickname ErrOrRes(A) = Error(String)OrResult(A)
+type_nickname Parse(A)FuncT = String => A x String
+\end{verbatim}
+
+\item \textit{Description} \\\\
+Type nicknames are used to abbreviate or give a more descriptive name to a type.
+They start with the keyword "\texttt{type_nickname}", followed by the nickname, 
+then an equal sign and they end with the type to be nicknamed.
+
+\item \textit{Grammar}
+
+\begin{grammar}
+<t-nickname> ::= `type_nickname' <type-name> `\ =\ ' <simple-type>
+\end{grammar} 
 
 \end{itemize}
 
@@ -2596,7 +2629,9 @@ the "\texttt{=>}" arrow.
 `\\nvalues\ ' <identifier> [ `:' <simple-type> ]
 ( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
 \\
-\\
+
+<t-nickname> ::= `type_nickname' <type-name> `\ =\ ' <simple-type>
+\\\\
 
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
 \\
@@ -2676,6 +2711,7 @@ the "\texttt{=>}" arrow.
 \item Basic: \texttt{Int, Real, Char, String}\ \ \ TODO? array: eg 10 * Int?
 \item Or Types: \texttt{EmptyVal, Bool, Possibly(), ListOf()s, Result()OrError()}
 \item Tuple Types: \texttt{NonEmptyListOf()s}
+\item Type Nicknames: \texttt{IO}
 \end{itemize}
 
 \subsection{Type Propositions}
