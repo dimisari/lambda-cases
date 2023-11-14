@@ -1,6 +1,0 @@
-
-or_type LeftT==>Or<==RightT
-values from_left_t<==(value: LeftT) | from_right_t<==(value: RightT)
-
-a: Int==>Or<==Char
-  = from_left_t<==1

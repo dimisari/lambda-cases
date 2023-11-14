@@ -68,7 +68,7 @@ gcd
     y => gcd(y, x -> mod <- y) 
 
 read_two_ints
-  : (Int x Int)IOAction
+  : (Int x Int)FromIO
   = print <- "Please give me 2 ints";
     get_line ;> split_to_words o> cases =>
       [x, y] => io_wrapper([from_string(x), from_string(y)])
@@ -904,31 +904,31 @@ Operator & Type \\
 print_string("I'll repeat the line.") ; get_line ;> print_string
 \end{verbatim}
 The example above demonstrates the use of the environment action operators with
-the \texttt{IOAction} type, which is how IO is done in lcases. Some light can
+the \texttt{FromIO} type, which is how IO is done in lcases. Some light can
 be shed on how this is done, if we take a look at the types (as always!):
 \begin{verbatim}
 print_string
-  : String => (EmptyVal)IOAction
+  : String => (EmptyVal)FromIO
 print_string("I'll repeat the line.")
-  : (EmptyVal)IOAction
+  : (EmptyVal)FromIO
 get_line
-  : (String)IOAction
+  : (String)FromIO
 ; 
   : (E)Has_Then ==> (E(A), E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line
-  : (String)IOAction
-  where (IOAction)Has_Then is true, E = IOAction, A = EmptyVal, B = String
+  : (String)FromIO
+  where (FromIO)Has_Then is true, E = FromIO, A = EmptyVal, B = String
 ;>
   : (E)Has_Use ==> (E(A), A => E(B)) => E(B) 
 print_string("I'll repeat the line.") ; get_line ;> print_string
-  : (EmptyVal)IOAction
-  where (IOAction)Has_Use is true, E = IOAction, A = String, B = EmptyVal
+  : (EmptyVal)FromIO
+  where (FromIO)Has_Use is true, E = FromIO, A = String, B = EmptyVal
 \end{verbatim}
 
 \paragraph{Example program}
 \begin{verbatim}
 main
-  : (EmptyVal)IOAction
+  : (EmptyVal)FromIO
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
     print_string("Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
@@ -936,46 +936,46 @@ main
 In this bigger but similar example the types are:
 \begin{verbatim}
 print_string
-  : String => (EmptyVal)IOAction
+  : String => (EmptyVal)FromIO
 get_line
-  : (String)IOAction
+  : (String)FromIO
 
 print_string <- "Hello! ... "
-  : (EmptyVal)IOAction
+  : (EmptyVal)FromIO
 print_string("Oh hi...)
-  : (EmptyVal)IOAction
+  : (EmptyVal)FromIO
 print_string("Oh that's crazy...)
-  : (EmptyVal)IOAction
+  : (EmptyVal)FromIO
 
 ;
   : (E)Has_Then ==> (E(A), E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line
-  : (String)IOAction
-  where (IOAction)Has_Then is true, E = IOAction, A = EmptyVal, B = String
+  : (String)FromIO
+  where (FromIO)Has_Then is true, E = FromIO, A = EmptyVal, B = String
 
 age => print_string("Oh that's crazy...)
-  : String => (EmptyVal)IOAction
+  : String => (EmptyVal)FromIO
 
 ;>
   : (E)Has_Use ==> (E(A), A => E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
-  : (EmptyVal)IOAction
-  where (IOAction)Has_Use is true, E = IOAction, A = String, B = EmptyVal
+  : (EmptyVal)FromIO
+  where (FromIO)Has_Use is true, E = FromIO, A = String, B = EmptyVal
 
 print_string <- "Hello..." ; get_line
-  : (String)IOAction
+  : (String)FromIO
 
 name => print_string("Oh hi ... (till the end)
-  : String => (EmptyVal)IOAction
+  : String => (EmptyVal)FromIO
 
 print_string <- "Hello..." ; get_line ;> name =>
 print_string("Oh hi ... (till the end)
-  : (EmptyVal)IOAction
+  : (EmptyVal)FromIO
 \end{verbatim}
-Therefore, "\texttt{main\ :\ (EmptyVal)IOAction}" checks out.  The key here is
+Therefore, "\texttt{main\ :\ (EmptyVal)FromIO}" checks out.  The key here is
 to remember that function expressions extend to the end of the whole
 expression. Therefore, we have "\texttt{name => ... (till the end)}" and
 "\texttt{age => ... (till the end)}" as the second arguments of the two
@@ -1005,7 +1005,7 @@ action) and therefore it is of type \texttt{E(B)}.
 Note that the value of type \texttt{A} produced by the first action is not used
 anywhere. This happens mostly when \texttt{A = EmptyVal} and it is 
 because values of type \texttt{E(EmptyVal)} are used for their environment
-action only \\(e.g. \texttt{print_string(...)\ :\ (EmptyVal)IOAction}).
+action only \\(e.g. \texttt{print_string(...)\ :\ (EmptyVal)FromIO}).
 \\\\
 How the two environment actions of the \texttt{E(A)} and \texttt{E(B)} values
 are combined to produce the new environment action is specific to the
@@ -2199,7 +2199,7 @@ non_empty_ls_to_ls
 \begin{verbatim}
 type_nickname Ints = ListOf(Int)s
 type_nickname IntStringPairs = ListOf(Int x String)s
-type_nickname IO = (EmptyVal)IOAction
+type_nickname IO = (EmptyVal)FromIO
 type_nickname ErrOrRes(A) = Error(String)OrResult(A)
 type_nickname Parse(A)FuncT = String => A x String
 \end{verbatim}

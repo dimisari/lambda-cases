@@ -1,0 +1,19 @@
+type_proposition (A)Is(B)s_First
+value 
+  first : B => A
+
+type_proposition (A)Is(B)s_Second
+value 
+  second : B => A
+
+type_proposition (A)Is(B)s_Third
+value 
+  third : B => A
+
+type_proposition (A)Is(B)s_Fourth
+value 
+  fourth : B => A
+
+type_proposition (A)Is(B)s_Fifth
+value 
+  fifth : B => A
