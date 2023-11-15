@@ -1,21 +1,28 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
+import Text.Parsec hiding (parse)
+import Text.Parsec.Token 
+import Text.Parsec.Language (haskellDef)
+
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
 
 data Literal = 
-  I Int | R Double | C Char | S String 
+  Int Int | R Double | C Char | S String 
+  deriving Show
 
 type Identifier = String
 
 type ParenExpr = OpOrFuncExpr
 
 data OpOrFuncExpr = 
-  SOE SimpleOpExpr | OEFE OpExprFuncEnd | SFE SimpleFuncExpr
+  SOE1 SimpleOpExpr | OEFE1 OpExprFuncEnd | SFE1 SimpleFuncExpr
 
 type Tuple = (LineExpr, CommaSepLineExprs)
 
 type CommaSepLineExprs = (LineExpr, [LineExpr])
 
 data LineExpr = 
-  NPOA NoParenOpArg | OOFE OpOrFuncExpr
+  NPOA1 NoParenOpArg | OOFE OpOrFuncExpr
 
 type BigTuple = (LineExpr, CommaSepLineExprs, [CommaSepLineExprs])
 
@@ -45,31 +52,31 @@ type PreFunc = Identifier
 type PreFuncApp = (PreFunc, PreFuncArg)
 
 data PreFuncArg = 
-  BE BasicExpr | PE ParenExpr | PFA PreFuncApp
+  BE1 BasicExpr | PE1 ParenExpr | PFA1 PreFuncApp
 
 data BasicExpr = 
-  Lit Literal | Id Identifier | T Tuple | L List | PaFA ParenFuncApp |
+  Lit1 Literal | Id1 Identifier | T Tuple | L List | PaFA ParenFuncApp |
   PoFA PostFuncApp
 
 data PostFunc = 
-  I_ Identifier | Dot1st | Dot2nd | Dot3rd | Dot4th | Dot5th | DC DotChange
+  Id2 Identifier | Dot1st | Dot2nd | Dot3rd | Dot4th | Dot5th | DC DotChange
 
 type PostFuncApp = (PostFuncArg, PostFunc)
 
 data PostFuncArg = 
-  PE_ ParenExpr | BE_ BasicExpr
+  PE2 ParenExpr | BE2 BasicExpr
 
 type DotChange = (FieldChange, [FieldChange])
 
 type FieldChange = (Field, LineExpr)
 
 data Field =
-  I__ Identifier | First | Second | Thrid | Fourth | Fifth 
+  Id3 Identifier | First | Second | Thrid | Fourth | Fifth 
 
 -- Values: OpEpxr
 
 data OpEpxr = 
-  SOE_ SimpleOpExpr | OEFE_ OpExprFuncEnd | BOE BigOpExpr | COE CasesOpExpr
+  SOE2 SimpleOpExpr | OEFE2 OpExprFuncEnd | BOE1 BigOpExpr | COE CasesOpExpr
 
 type SimpleOpExpr = (OpArg, [(Op, OpArg)])
 
@@ -78,23 +85,23 @@ type OpExprFuncEnd = (SimpleOpExpr, Op, SimpleFuncExpr)
 type BigOpExpr = (OpExprLine, [OpExprLine], BigOpExprEnd)
 
 data BigOpExprEnd = 
-  OA OpArg | SOE__ SimpleOpExpr | BOFE (Maybe OpExprLine, BigOpFuncEnd)
+  OA1 OpArg | SOE3 SimpleOpExpr | BOFE (Maybe OpExprLine, BigOpFuncEnd)
 
 data BigOpFuncEnd = 
-  SFE_ SimpleFuncExpr | BFE BigFuncExpr
+  SFE2 SimpleFuncExpr | BFE1 BigFuncExpr
 
 type CasesOpExpr = (OpExprLine, [OpExprLine], CasesFuncExpr)
 
 type OpExprLine = (OpExprLineStart, Op)
 
 data OpExprLineStart = 
-  OA_ OpArg | SOE___ SimpleOpExpr
+  OA2 OpArg | SOE4 SimpleOpExpr
 
 data OpArg =
-  NPOA_ NoParenOpArg | PE__ ParenExpr
+  NPOA2 NoParenOpArg | PE3 ParenExpr
 
 data NoParenOpArg =
-  BE__ BasicExpr | PrF PreFunc | PoF PostFunc | PFA_ PreFuncApp
+  BE3 BasicExpr | PrF PreFunc | PoF PostFunc | PFA2 PreFuncApp
 
 data Op = 
   RightApp | LeftApp | RightComp | LeftComp | Power | Mult | Div | Plus | 
@@ -103,20 +110,20 @@ data Op =
 -- Values: FuncExpr
 
 data FuncExpr = 
-  SFE__ SimpleFuncExpr | BFE_ BigFuncExpr | CFE CasesFuncExpr
+  SFE3 SimpleFuncExpr | BFE2 BigFuncExpr | CFE CasesFuncExpr
 
 type SimpleFuncExpr = (Parameters, SimpleFuncBody)
 
 type BigFuncExpr = (Parameters, BigFuncBody)
 
 data BigFuncBody = 
-  SFB SimpleFuncBody | BOE_ BigOpExpr
+  SFB1 SimpleFuncBody | BOE2 BigOpExpr
 
 data Parameters = 
   OneParam Identifier | ManyParams (Identifier, [Identifier])
 
 data SimpleFuncBody = 
-  NPOA__ NoParenOpArg | SOE____ SimpleOpExpr | OEFE__ OpExprFuncEnd
+  NPOA3 NoParenOpArg | SOE5 SimpleOpExpr | OEFE3 OpExprFuncEnd
 
 type CasesFuncExpr = (CasesParams, [Case], EndCase)
 
@@ -124,7 +131,7 @@ data CasesParams =
   OneCParam CasesParam | ManyCParams (CasesParam, [CasesParam])
 
 data CasesParam =
-  I___ Identifier | CasesKeyword
+  Id4 Identifier | CasesKeyword
 
 type Case = (Matching, CaseBody)
 
@@ -134,7 +141,7 @@ data EndMatching =
   Dots | M Matching
 
 data Matching = 
-  Lit_ Literal | I____ Identifier | PFM (PreFunc, Matching) | TM TupleMatching |
+  Lit2 Literal | Id5 Identifier | PFM (PreFunc, Matching) | TM TupleMatching |
   LM ListMatching
 
 type TupleMatching = (Matching, [Matching])
@@ -144,14 +151,14 @@ type ListMatching = Maybe (Matching, [Matching])
 type CaseBody = (CaseBodyStart, Maybe WhereExpr)
 
 data CaseBodyStart =
-  SFB_ SimpleFuncBody | BOE__ BigOpExpr
+  SFB2 SimpleFuncBody | BOE3 BigOpExpr
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
 type ValueDef = (Identifier, Type, ValueExpr, Maybe WhereExpr)
 
 data ValueExpr = 
-  NPOA___ NoParenOpArg | OE OpEpxr | FE FuncExpr | BT BigTuple | BL BigList
+  NPOA4 NoParenOpArg | OE OpEpxr | FE FuncExpr | BT BigTuple | BL BigList
 
 type GroupedValueDefs =
   (Identifier, [Identifier], Types, CommaSepLineExprs, [CommaSepLineExprs]) 
@@ -167,7 +174,7 @@ data WhereExpr =
 type Type = (Maybe Condition, SimpleType)
 
 data SimpleType = 
-  TI TypeId | TV TypeVar | FT FuncType | PT ProdType | TA TypeApp
+  TId1 TypeId | TV1 TypeVar | FT FuncType | PT1 ProdType | TA1 TypeApp
 
 type TypeId = String
 
@@ -179,15 +186,15 @@ data ParamTypes =
   OT OneType | ManyTs (SimpleType, [SimpleType])
 
 data OneType = 
-  TI_ TypeId | TV_ TypeVar | PT_ ProdType | TA_ TypeApp | FT_ FuncType
+  TId2 TypeId | TV2 TypeVar | PT2 ProdType | TA2 TypeApp | FT1 FuncType
 
 type ProdType = (FieldType, [FieldType])
 
 data FieldType = 
-  TI__ TypeId | TV__ TypeVar | TA__ TypeApp | IPT InParenT
+  TId3 TypeId | TV3 TypeVar | TA3 TypeApp | IPT InParenT
 
 data InParenT = 
-  FT__ FuncType | PT__ ProdType
+  FT2 FuncType | PT3 ProdType
 
 data TypeApp =  
   TIWA (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |
@@ -200,5 +207,98 @@ type TypesInParen = (SimpleType, [SimpleType])
 
 type Condition = PropName
 
--- TypeDef
+-- TypeDef, TypeNickname
 
+data TypeDef =
+  TTD TupleTypeDef | OTD OrTypeDef
+
+type TupleTypeDef = (TypeName, Identifier, [Identifier], ProdType)
+
+type TypeName = (Maybe ParamsInParen, MiddleTypeName, Maybe ParamsInParen)
+
+data MiddleTypeName = 
+  TId4 TypeId | TIWP TypeIdWithParams
+   
+type TypeIdWithParams = (TypeId, [(ParamsInParen, String)])
+
+type ParamsInParen = (TypeVar, [TypeVar])
+
+type OrTypeDef =
+  (TypeName, Identifier, Maybe SimpleType, [(Identifier, Maybe SimpleType)])
+
+type TypeNickname = (TypeName, SimpleType)
+
+-- TypePropDef
+
+data TypePropDef = 
+  APD AtomPropDef | RPD RenamingPropDef
+
+type AtomPropDef = (PropNameLine, Identifier, SimpleType)
+
+type RenamingPropDef = (PropNameLine, PropName, [PropName])
+
+type PropNameLine = PropName
+
+data PropName =
+  NPStart1 ([(NamePart, ParamsInParen)], Maybe NamePart) |
+  PIPStart1 ([(ParamsInParen, NamePart)], Maybe ParamsInParen)
+
+type NamePart = String
+
+-- TypeTheo 
+
+type TypeTheo = (TypeTheoStart, Identifier, ValueExpr)
+
+data TypeTheoStart =
+  AP AtomicProp | IP ImplicationProp
+
+type AtomicProp = PropNameSub
+
+type ImplicationProp = (PropNameSub, PropNameSub)
+
+data PropNameSub = 
+  NPStart2 ([(NamePart, TypesInParen)], Maybe NamePart) |
+  PIPStart2 ([(TypesInParen, NamePart)], Maybe TypesInParen)
+
+-- Parser
+
+type Parser = Parsec String Int
+
+haskell_lexer = makeTokenParser haskellDef -- copy some haskell parsers (for tokens)
+
+-- HasParser class and instances
+
+class HasParser a where
+  parser :: Parser a
+
+instance HasParser Int where
+  parser = read <$> ((:) <$> char '-' <*> many1 digit <|> many1 digit)
+  
+instance HasParser Double where
+  parser = float haskell_lexer
+  
+instance HasParser Char where
+  parser = charLiteral haskell_lexer
+  
+instance HasParser String where
+  parser = stringLiteral haskell_lexer
+  
+instance HasParser Literal where
+  parser = R <$> try parser <|> Int <$> parser <|> S <$> try parser <|> C <$> parser
+
+-- Parse class and instance
+
+class HasParser a => Parse a where
+  parse :: String -> Either ParseError a
+  parse = runParser (parser <* eof) 0 "input"
+
+instance Parse Int
+instance Parse Double
+instance Parse Char
+instance Parse String
+instance Parse Literal
+
+main :: IO ()
+main = 
+  readFile "input" >>= \file_string ->
+  mapM_ print (map parse (lines file_string) :: [Either ParseError Literal])
