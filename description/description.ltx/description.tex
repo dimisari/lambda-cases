@@ -1385,7 +1385,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
-<cases-parameter> ::= <parameter> | `cases' \\
+<cases-parameter> ::= <identifier> | `cases' \\
 
 <case> ::=  `\\n' <indent> <matching> `\ =>' <case-body>
 
@@ -1696,7 +1696,7 @@ definition:
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
-<cases-parameter> ::= <parameter> | `cases' \\
+<cases-parameter> ::= <identifier> | `cases' \\
 
 <case> ::=  `\\n' <indent> <matching> `\ =>' <case-body>
 
@@ -1709,7 +1709,7 @@ definition:
 
 <tuple-matching> ::= `(' <matching> ( `,' <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,' <matching> )* [ `, ...' ] ] `]' \\
+<list-matching> ::= `[' [ <matching> ( `,' <matching> )* ] `]' \\
 
 <case-body> ::=
 ( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]\\
@@ -1861,9 +1861,9 @@ a function type. The same applies to the type of the result.
 
 \item \textit{Grammar}
 \begin{grammar}
-<func-type> ::= <param-types-expr> `\ =>\ ' <one-type>
+<func-type> ::= <param-types> `\ =>\ ' <one-type>
 
-<param-types-expr> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
+<param-types> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
 
 <one-type> ::=
 <type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
@@ -2580,9 +2580,9 @@ the "\texttt{=>}" arrow.
 <type-var> ::= [A-Z]
 \\
 
-<func-type> ::= <param-types-expr> `\ =>\ ' <one-type>
+<func-type> ::= <param-types> `\ =>\ ' <one-type>
 
-<param-types-expr> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
+<param-types> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
 
 <one-type> ::=
 <type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
