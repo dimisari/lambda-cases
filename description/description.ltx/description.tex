@@ -307,7 +307,7 @@ The precise indentation rules are described in the section
 
 <big-tuple> ::= ""\\
 `(' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
-( `\\n' <indent> `,' <comma-sep-line-exprs> )* \\
+( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )* \\
 `\\n' <indent> `)' \\
 
 \end{grammar}
@@ -388,7 +388,7 @@ ListOf(T)s
 
 <big-list> ::= 
 `[' <comma-sep-line-exprs>
-( `\\n' <indent> `,' <comma-sep-line-exprs> )*
+( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
 `\\n' <indent> `]'
 \end{grammar}
 
@@ -647,7 +647,7 @@ referred to by the field identifier.
 
 \begin{grammar}
 <dot-change> ::= 
-`.change{' <field-change> ( `,' <field-change> )* `}'
+`.change{' <field-change> ( `,\ ' <field-change> )* `}'
 
 <field-change> ::=
 ( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr> 
@@ -1396,9 +1396,9 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
 <list-matching>
 
-<tuple-matching> ::= `(' <matching> ( `,' <matching> )+ `)'
+<tuple-matching> ::= `(' <matching> ( `,\ ' <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,' <matching> )* ] `]' \\
+<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]' \\
 
 
 <case-body> ::=
@@ -1474,7 +1474,7 @@ keyword "all" to give the same type to all the values.
 <indent> <identifier> ( `,\ ' <identifier> )+ \\
 `\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all' <type> ) \\
 `\\n' <indent> `=\ '
-<comma-sep-line-exprs> ( `\\n' <indent> `,' <comma-sep-line-exprs> )*
+<comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
 \end{grammar}
 
 \end{itemize}
@@ -1609,14 +1609,14 @@ definition:
 
 <big-tuple> ::= ""\\
 `(' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
-( `\\n' <indent> `,' <comma-sep-line-exprs> )* \\
+( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )* \\
 `\\n' <indent> `)' \\
 
 <list> ::= `[' [ <comma-sep-line-exprs> ] `]'
 
 <big-list> ::= 
 `[' <comma-sep-line-exprs>
-( `\\n' <indent> `,' <comma-sep-line-exprs> )*
+( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
 `\\n' <indent> `]' \\
 
 <paren-func-app> ::= ""\\""
@@ -1644,7 +1644,7 @@ definition:
 <post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func> \\
 
 <dot-change> ::= 
-`.change{' <field-change> ( `,' <field-change> )* `}'
+`.change{' <field-change> ( `,\ ' <field-change> )* `}'
 
 <field-change> ::=
 ( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr>  \\
@@ -1707,9 +1707,9 @@ definition:
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
 <list-matching>
 
-<tuple-matching> ::= `(' <matching> ( `,' <matching> )+ `)'
+<tuple-matching> ::= `(' <matching> ( `,\ ' <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,' <matching> )* ] `]' \\
+<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]' \\
 
 <case-body> ::=
 ( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]\\
@@ -1726,7 +1726,7 @@ definition:
 <indent> <identifier> ( `,\ ' <identifier> )+ \\
 `\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all' <type> ) \\
 `\\n' <indent> `=\ '
-<comma-sep-line-exprs> ( `\\n' <indent> `,' <comma-sep-line-exprs> )* \\
+<comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )* \\
 
 <where-expr> ::=
 `\\n' <indent> `where\\n' ( <value-def> | <grouped-value-defs> )+ \\

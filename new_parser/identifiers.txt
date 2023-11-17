@@ -1,0 +1,14 @@
+x
+y
+z
+x1
+x2
+x3
+apply()to_all
+my_ident
+x_y_z1
+x()y()z1
+x()
+x10
+i23i
+_x
