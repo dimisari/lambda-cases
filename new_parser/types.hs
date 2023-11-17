@@ -101,9 +101,9 @@ data Field =
   Id3 Identifier | First | Second | Third | Fourth | Fifth 
   deriving Show
 
--- Values: OpEpxr
+-- Values: OpExpr
 
-data OpEpxr = 
+data OpExpr = 
   SOE2 SimpleOpExpr | OEFE2 OpExprFuncEnd | BOE1 BigOpExpr | COE1 CasesOpExpr
   deriving Show
 
@@ -216,7 +216,7 @@ newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
   deriving Show
 
 data ValueExpr = 
-  NPOA4 NoParenOpArg | OE OpEpxr | FE FuncExpr | BT1 BigTuple | BL1 BigList
+  NPOA4 NoParenOpArg | OE OpExpr | FE FuncExpr | BT1 BigTuple | BL1 BigList
   deriving Show
 
 newtype GroupedValueDefs =
@@ -414,7 +414,7 @@ instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
 
 instance HasParser OpOrFuncExpr where
-  parser = SOE1 <$> undefined <|> OEFE1 <$> undefined <|> SFE1 <$> undefined
+  parser = SOE1 <$> parser <|> OEFE1 <$> parser <|> SFE1 <$> parser
 
 instance HasParser Tuple where
   parser = 
@@ -429,7 +429,7 @@ instance HasParser CommaSepLineExprs where
     return $ CSLE (line_expr, line_exprs)
 
 instance HasParser LineExpr where
-  parser = NPOA1 <$> undefined <|> OOFE <$> parser
+  parser = NPOA1 <$> parser <|> OOFE <$> parser
 
 instance HasParser BigTuple where
   parser =
@@ -525,7 +525,7 @@ instance HasParser PostFunc where
       string "3rd" *> return Dot3rd <|>
       string "4th" *> return Dot4th <|>
       string "5th" *> return Dot5th <|>
-      DC1 <$> undefined
+      DC1 <$> parser
     )
 
 instance HasParser PostFuncApp where
@@ -559,6 +559,114 @@ instance HasParser DotChange where
       string "4th" *> return Fourth <|>
       string "5th" *> return Fifth 
 
+-- HasParser: OpExpr
+
+instance HasParser OpExpr where
+  parser = 
+    SOE2 <$> parser <|> OEFE2 <$> parser <|> BOE1 <$> parser <|>
+    COE1 <$> parser
+
+instance HasParser SimpleOpExpr where
+  parser = 
+    parser >>= \op_arg ->
+    many1 op_op_arg >>= \op_op_args ->
+    return $ SOE (op_arg, op_op_args)
+    where
+    op_op_arg :: Parser (Op, OpArg)
+    op_op_arg =
+      char ' ' *> parser >>= \op ->
+      char ' ' *> parser >>= \op_arg ->
+      return (op, op_arg)
+
+instance HasParser OpExprFuncEnd where
+  parser = 
+    parser >>= \simple_op_expr ->
+    char ' ' *> parser >>= \op ->
+    char ' ' *> parser >>= \simple_func_expr ->
+    return $ OEFE (simple_op_expr, op, simple_func_expr)
+
+instance HasParser BigOpExpr where
+  parser = 
+    parser >>= \op_expr_line ->
+    many (nl_indent *> parser) >>= \op_expr_lines ->
+    nl_indent *> big_op_expr_end_p >>= \big_op_expr_end ->
+    return $ BOE (op_expr_line, op_expr_lines, big_op_expr_end)
+    where
+    big_op_expr_end_p :: Parser BigOpExprEnd
+    big_op_expr_end_p =
+      OA1 <$> parser <|> SOE3 <$> parser <|>
+      ( optionMaybe (parser <* char ' ') >>= \maybe_op_expr_line ->
+        big_op_func_end_p >>= \big_op_func_end ->
+        return $ BOFE (maybe_op_expr_line, big_op_func_end)
+      )
+
+    big_op_func_end_p :: Parser BigOpFuncEnd
+    big_op_func_end_p = 
+      SFE2 <$> parser <|> BFE1 <$> undefined
+
+instance HasParser CasesOpExpr where
+  parser = 
+    parser >>= \op_expr_line ->
+    many (nl_indent *> parser) >>= \op_expr_lines ->
+    (nl_indent <|> char ' ' *> return ()) *> undefined >>= \cases_func_expr ->
+    return $ COE (op_expr_line, op_expr_lines, cases_func_expr)
+
+instance HasParser OpExprLine where
+  parser = 
+    op_expr_line_start_p >>= \op_expr_line_start ->
+    char ' ' *> parser >>= \op ->
+    return $ OEL (op_expr_line_start, op)
+    where
+    op_expr_line_start_p :: Parser OpExprLineStart
+    op_expr_line_start_p = 
+      OA2 <$> parser <|> SOE4 <$> parser
+
+instance HasParser OpArg where
+  parser = NPOA2 <$> parser <|> PE3 <$> parser
+
+instance HasParser NoParenOpArg where
+  parser =  
+    BE3 <$> parser <|> PrF <$> parser <|> PoF <$> parser <|> PrFA2 <$> parser
+
+instance HasParser Op where
+  parser =  
+    string "->" *> return RightApp <|>
+    string "<-" *> return LeftApp <|>
+    string "o>" *> return RightComp <|>
+    string "<o" *> return LeftComp <|>
+    string "^" *> return Power <|>
+    string "*" *> return Mult <|>
+    string "/" *> return Div <|>
+    string "+" *> return Plus <|>
+    string "-" *> return Minus <|>
+    string "=" *> return Equal <|>
+    string "/=" *> return NotEqual <|>
+    string ">" *> return Greater <|>
+    string "<" *> return Less <|>
+    string ">=" *> return GrEq <|>
+    string "<=" *> return LeEq <|>
+    string "&" *> return And <|>
+    string "|" *> return Or <|>
+    string ";>" *> return Use <|>
+    string ";" *> return Then
+
+-- HasParser: FuncExpr
+
+instance HasParser FuncExpr where
+  parser = SFE3 <$> parser <|> BFE2 <$> undefined <|> CFE1 <$> undefined
+
+instance HasParser SimpleFuncExpr where
+  parser = 
+    undefined >>= \parameters ->
+    string " => " *> undefined >>= \simple_func_body ->
+    return $ SFE (parameters, simple_func_body)
+
+-- newtype SimpleFuncExpr = SFE (Parameters, SimpleFuncBody)
+--   deriving Show
+-- 
+-- newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
+--   deriving Show
+
 -- Parse class and instance
 
 class HasParser a => Parse a where
@@ -575,6 +683,10 @@ instance Parse BigList
 instance Parse ParenFuncApp
 instance Parse PreFuncApp
 instance Parse PostFuncApp
+instance Parse OpExpr
+instance Parse SimpleOpExpr
+instance Parse BigOpExpr
+instance Parse CasesOpExpr
 
 input_file = "identifiers.txt"
 type ParseType = Identifier
