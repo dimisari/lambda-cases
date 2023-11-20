@@ -227,7 +227,10 @@ data Types =
   Ts (Type, [Type]) | All Type
   deriving Show
 
-data WhereExpr = 
+newtype WhereExpr = WE [WhereDefExpr]
+  deriving Show
+
+data WhereDefExpr = 
   VD1 ValueDef | GVD GroupedValueDefs
   deriving Show
 
@@ -368,12 +371,14 @@ class HasParser a where
 
 -- helper parsers
 
-(comma, underscore, lower_under, in_paren, nl_indent) =
+(comma, underscore, lower_under, in_paren, nl_indent, one_space) =
   (string ", ", char '_', lower <|> underscore, \a -> char '(' *> a <* char ')'
-  , char '\n' *> indent
+  , char '\n' *> indent, char ' ' *> return ()
   )
   ::
-  (Parser String, Parser Char, Parser Char, Parser a -> Parser a, Parser ()) 
+  ( Parser String, Parser Char, Parser Char, Parser a -> Parser a
+  , Parser (), Parser ()
+  ) 
 
 indent :: Parser ()
 indent = getState >>= \il -> string (concat $ replicate il "  ") >> return ()
@@ -602,13 +607,13 @@ instance HasParser BigOpExpr where
 
     big_op_func_end_p :: Parser BigOpFuncEnd
     big_op_func_end_p = 
-      SFE2 <$> parser <|> BFE1 <$> undefined
+      SFE2 <$> parser <|> BFE1 <$> parser
 
 instance HasParser CasesOpExpr where
   parser = 
     parser >>= \op_expr_line ->
     many (nl_indent *> parser) >>= \op_expr_lines ->
-    (nl_indent <|> char ' ' *> return ()) *> undefined >>= \cases_func_expr ->
+    (nl_indent <|> one_space) *> parser >>= \cases_func_expr ->
     return $ COE (op_expr_line, op_expr_lines, cases_func_expr)
 
 instance HasParser OpExprLine where
@@ -653,19 +658,143 @@ instance HasParser Op where
 -- HasParser: FuncExpr
 
 instance HasParser FuncExpr where
-  parser = SFE3 <$> parser <|> BFE2 <$> undefined <|> CFE1 <$> undefined
+  parser = SFE3 <$> parser <|> BFE2 <$> parser <|> CFE1 <$> parser
 
 instance HasParser SimpleFuncExpr where
   parser = 
-    undefined >>= \parameters ->
-    string " => " *> undefined >>= \simple_func_body ->
+    parser >>= \parameters ->
+    string " => " *> parser >>= \simple_func_body ->
     return $ SFE (parameters, simple_func_body)
 
--- newtype SimpleFuncExpr = SFE (Parameters, SimpleFuncBody)
---   deriving Show
--- 
--- newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
---   deriving Show
+instance HasParser BigFuncExpr where
+  parser = 
+    parser >>= \parameters ->
+    string " =>" *> nl_indent *> big_func_body_p >>= \big_func_body ->
+    return $ BFE (parameters, big_func_body)
+    where
+    big_func_body_p :: Parser BigFuncBody
+    big_func_body_p = SFB1 <$> parser <|> BOE2 <$> parser
+
+instance HasParser Parameters where
+  parser = 
+    OneParam <$> parser <|>
+    ( char '(' *> parser >>= \identifier ->
+      many1 (comma *> parser) <* char ')' >>= \identifiers ->
+      return $ ManyParams (identifier, identifiers)
+    )
+
+instance HasParser SimpleFuncBody where
+  parser = NPOA3 <$> parser <|> SOE5 <$> parser <|> OEFE3 <$> parser
+
+instance HasParser CasesFuncExpr where
+  parser =
+    parser >>= \cases_params ->
+    string " =>" *> many1 parser >>= \cases ->
+    parser >>= \end_case ->
+    return $ CFE (cases_params, cases, end_case)
+
+instance HasParser CasesParams where
+  parser = 
+    OneCParam <$> cases_param_p <|>
+    ( char '(' *> cases_param_p >>= \cases_param ->
+      many1 (comma *> cases_param_p) <* char ')' >>= \cases_params ->
+      return $ ManyCParams (cases_param, cases_params)
+    )
+    where
+    cases_param_p :: Parser CasesParam
+    cases_param_p = Id4 <$> parser <|> string "cases" *> return CasesKeyword
+
+instance HasParser Case where
+  parser = 
+    nl_indent *> parser >>= \matching ->
+    string " =>" *> parser >>= \case_body ->
+    return $ Ca (matching, case_body) 
+
+instance HasParser EndCase where
+  parser = 
+    nl_indent *> end_matching_p >>= \end_matching ->
+    string " =>" *> parser >>= \case_body ->
+    return $ EC (end_matching, case_body) 
+    where
+    end_matching_p :: Parser EndMatching
+    end_matching_p = string "..." *> return Dots <|> M <$> parser
+
+instance HasParser Matching where
+  parser = 
+    Lit2 <$> parser <|> Id5 <$> parser <|> PFM <$> pre_func_matching_p <|>
+    TM1 <$> parser <|> LM1 <$> parser
+    where
+    pre_func_matching_p :: Parser (PreFunc, Matching)
+    pre_func_matching_p =
+      parser >>= \pre_func ->
+      parser >>= \matching ->
+      return (pre_func, matching)
+
+instance HasParser TupleMatching where
+  parser = 
+    char '(' *> parser >>= \matching ->
+    many1 (comma *> parser) <* char ')' >>= \matchings ->
+    return $ TM (matching, matchings)
+
+instance HasParser ListMatching where
+  parser = 
+    LM <$> (char '[' *> optionMaybe inside_p <* char ']')
+    where
+    inside_p :: Parser (Matching, [Matching])
+    inside_p =
+      parser >>= \matching ->
+      many1 (comma *> parser) >>= \matchings ->
+      return (matching, matchings)
+
+instance HasParser CaseBody where
+  parser = 
+    (one_space <|> nl_indent) *> case_body_start_p >>= \case_body_start ->
+    optionMaybe parser >>= \maybe_where_expr ->
+    return $ CB (case_body_start, maybe_where_expr)
+    where
+    case_body_start_p :: Parser CaseBodyStart
+    case_body_start_p = SFB2 <$> parser <|> BOE3 <$> parser
+
+-- HasParser: ValueDef, WhereExpr
+
+instance HasParser ValueDef where
+  parser = 
+    indent *> parser >>= \identifier ->
+    nl_indent *> string ": " *> undefined >>= \type_ ->
+    nl_indent *> string "= " *> parser >>= \value_expr ->
+    optionMaybe parser >>= \maybe_where_expr ->
+    return $ VD (identifier, type_, value_expr, maybe_where_expr)
+
+instance HasParser ValueExpr where
+  parser = 
+    NPOA4 <$> parser <|> OE <$> parser <|> FE <$> parser <|> BT1 <$> parser <|>
+    BL1 <$> parser
+
+instance HasParser GroupedValueDefs where
+  parser = 
+    indent *> parser >>= \identifier ->
+    many1 (comma *> parser) >>= \identifiers -> 
+    nl_indent *> string ": " *> types_p >>= \types ->
+    nl_indent *> string "= " *> parser >>= \comma_sep_line_exprs ->
+    many (nl_indent *> comma *> parser) >>= \comma_sep_line_exprs_l ->
+    return $ GVDs
+      ( identifier, identifiers, types, comma_sep_line_exprs
+      , comma_sep_line_exprs_l
+      ) 
+    where
+    types_p :: Parser Types
+    types_p =
+      ( undefined >>= \type_ ->
+        many1 (comma *> undefined) >>= \types ->
+        return $ Ts (type_, types)
+      ) <|> All <$> (string "all " *> undefined)
+
+instance HasParser WhereExpr where
+  parser = 
+    nl_indent *> string "where\n" *> (WE <$> many1 where_def_expr_p)
+    where
+    where_def_expr_p :: Parser WhereDefExpr
+    where_def_expr_p = VD1 <$> parser <|> GVD <$> parser
 
 -- Parse class and instance
 
@@ -687,6 +816,12 @@ instance Parse OpExpr
 instance Parse SimpleOpExpr
 instance Parse BigOpExpr
 instance Parse CasesOpExpr
+instance Parse FuncExpr
+instance Parse SimpleFuncExpr
+instance Parse BigFuncExpr
+instance Parse CasesFuncExpr
+instance Parse ValueDef
+instance Parse GroupedValueDefs
 
 input_file = "identifiers.txt"
 type ParseType = Identifier
