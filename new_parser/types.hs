@@ -236,24 +236,28 @@ data WhereDefExpr =
 
 -- Type
 
-type Type = (Maybe Condition, SimpleType)
-
-data SimpleType = 
-  TId1 TypeId | TV1 TypeVar | FT FuncType | PT1 ProdType | TA1 TypeApp
+newtype Type = Ty (Maybe Condition, SimpleType)
   deriving Show
 
-type TypeId = String
+data SimpleType = 
+  TId1 TypeId | TV1 TypeVar | FT1 FuncType | PT1 ProdType | TA1 TypeApp
+  deriving Show
 
-type TypeVar = Char
+newtype TypeId = TId String
+  deriving Show
+
+newtype TypeVar = TV Char
+  deriving Show
  
-type FuncType = (ParamTypes, OneType)
+newtype FuncType = FT (ParamTypes, OneType)
+  deriving Show
 
 data ParamTypes = 
   OT OneType | ManyTs (SimpleType, [SimpleType])
   deriving Show
 
 data OneType = 
-  TId2 TypeId | TV2 TypeVar | PT2 ProdType | TA2 TypeApp | FT1 FuncType
+  TId2 TypeId | TV2 TypeVar | PT2 ProdType | TA2 TypeApp | FT2 FuncType
   deriving Show
 
 newtype ProdType = PT (FieldType, [FieldType])
@@ -264,7 +268,7 @@ data FieldType =
   deriving Show
 
 data InParenT = 
-  FT2 FuncType | PT3 ProdType
+  FT3 FuncType | PT3 ProdType
   deriving Show
 
 data TypeApp =  
@@ -331,7 +335,8 @@ data PropName =
   PIPStart1 ([(ParamsInParen, NamePart)], Maybe ParamsInParen)
   deriving Show
 
-type NamePart = String
+newtype NamePart = NP String
+  deriving Show
 
 -- TypeTheo 
 
@@ -356,9 +361,11 @@ data PropNameSub =
 -- Program
 
 newtype Program = P [ProgramPart]
+  deriving Show
 
 data ProgramPart = 
   VD2 ValueDef | TD TypeDef | TNN1 TypeNickname | TPD TypePropDef | TT1 TypeTheo
+  deriving Show
 
 ---------------------------------------Parser---------------------------------------
 
@@ -760,7 +767,7 @@ instance HasParser CaseBody where
 instance HasParser ValueDef where
   parser = 
     indent *> parser >>= \identifier ->
-    nl_indent *> string ": " *> undefined >>= \type_ ->
+    nl_indent *> string ": " *> parser >>= \type_ ->
     nl_indent *> string "= " *> parser >>= \value_expr ->
     optionMaybe parser >>= \maybe_where_expr ->
     return $ VD (identifier, type_, value_expr, maybe_where_expr)
@@ -784,10 +791,10 @@ instance HasParser GroupedValueDefs where
     where
     types_p :: Parser Types
     types_p =
-      ( undefined >>= \type_ ->
-        many1 (comma *> undefined) >>= \types ->
+      ( parser >>= \type_ ->
+        many1 (comma *> parser) >>= \types ->
         return $ Ts (type_, types)
-      ) <|> All <$> (string "all " *> undefined)
+      ) <|> All <$> (string "all " *> parser)
 
 instance HasParser WhereExpr where
   parser = 
@@ -795,6 +802,172 @@ instance HasParser WhereExpr where
     where
     where_def_expr_p :: Parser WhereDefExpr
     where_def_expr_p = VD1 <$> parser <|> GVD <$> parser
+
+-- HasParser: Type
+
+instance HasParser Type where
+  parser = 
+    optionMaybe parser >>= \maybe_condition ->
+    parser >>= \simple_type ->
+    return $ Ty (maybe_condition, simple_type)
+
+instance HasParser SimpleType where
+  parser = 
+    TId1 <$> parser <|> TV1 <$> parser <|> FT1 <$> parser <|>
+    PT1 <$> parser <|> TA1 <$> parser
+
+instance HasParser TypeId where
+  parser = 
+    upper >>= \u1 ->
+    many1 (upper <|> lower) >>= \upper_lowers ->
+    return $ TId $ u1 : upper_lowers
+
+instance HasParser TypeVar where
+  parser = TV <$> upper
+
+instance HasParser FuncType where
+  parser = 
+    parser >>= \param_types ->
+    string " => " *> parser >>= \one_type ->
+    return $ FT (param_types, one_type)
+
+instance HasParser ParamTypes where
+  parser =
+    OT <$> parser <|> ManyTs <$> many_ts_p
+    where
+    many_ts_p :: Parser (SimpleType, [SimpleType])
+    many_ts_p =
+      char '(' *> parser >>= \simple_type ->
+      many1 (comma *> parser) <* char ')' >>= \simple_types ->
+      return (simple_type, simple_types)
+
+instance HasParser OneType where
+  parser =
+    TId2 <$> parser <|> TV2 <$> parser <|> PT2 <$> parser <|>
+    TA2 <$> parser <|> FT2 <$> (char '(' *> parser <* char ')')
+
+instance HasParser ProdType where
+  parser =
+    parser >>= \field_type ->
+    many1 (string " x " *> parser) >>= \field_types ->
+    return $ PT (field_type, field_types)
+
+instance HasParser FieldType where
+  parser =
+    TId3 <$> parser <|> TV3 <$> parser <|> TA3 <$> parser <|>
+    IPT <$> in_paren_t_p
+    where
+    in_paren_t_p :: Parser InParenT
+    in_paren_t_p = char '(' *> (FT3 <$> parser <|> PT3 <$> parser) <* char ')'
+
+instance HasParser TypeApp where
+  parser =
+    TIWA1 <$> tiwa_p <|> TIPTI <$> tipti_p <|> TITIP <$> titip_p
+    where
+    tiwa_p :: Parser (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) 
+    tiwa_p =
+      optionMaybe parser >>= \maybe_types_in_paren1 ->
+      parser >>= \type_id_with_args ->
+      optionMaybe parser >>= \maybe_types_in_paren2 ->
+      return (maybe_types_in_paren1, type_id_with_args, maybe_types_in_paren2)
+
+    tipti_p :: Parser (TypesInParen, TypeId, Maybe TypesInParen)
+    tipti_p = 
+      parser >>= \types_in_paren ->
+      parser >>= \type_id ->
+      optionMaybe parser >>= \maybe_types_in_paren ->
+      return (types_in_paren, type_id, maybe_types_in_paren)
+
+    titip_p :: Parser (TypeId, TypesInParen)
+    titip_p = 
+      parser >>= \type_id ->
+      parser >>= \types_in_paren ->
+      return (type_id, types_in_paren)
+
+instance HasParser TypeIdWithArgs where
+  parser =
+    parser >>= \type_id ->
+    many1 types_in_paren_and_string_p >>= \tip_string_pairs ->
+    return $ TIWA (type_id, tip_string_pairs)
+    where
+    types_in_paren_and_string_p :: Parser (TypesInParen, String)
+    types_in_paren_and_string_p = 
+      parser >>= \types_in_paren ->
+      many1 (lower <|> upper) >>= \string ->
+      return (types_in_paren, string)
+
+instance HasParser TypesInParen where
+  parser =
+    char '(' *> parser >>= \simple_type ->
+    many (comma *> parser) <* char ')' >>= \simple_types ->
+    return $ TIP (simple_type, simple_types)
+
+instance HasParser Condition where
+  parser = Co <$> (undefined <* string " ==> ")
+
+-- HasParser: TypeDef
+
+instance HasParser TypeDef where
+  parser = TTD1 <$> parser <|> OTD1 <$> parser
+
+instance HasParser TupleTypeDef where
+  parser =
+    string "tuple_type " *> parser >>= \type_name ->
+    string "\nvalue ("  *> parser >>= \identifier ->
+    many1 (comma *> parser) >>= \identifiers ->
+    string ") : "  *> parser >>= \prod_type ->
+    return $ TTD (type_name, identifier, identifiers, prod_type)
+
+instance HasParser TypeName where
+  parser =
+    optionMaybe parser >>= \maybe_params_in_paren1 ->
+    parser >>= \middle_type_name ->
+    optionMaybe parser >>= \maybe_params_in_paren2 ->
+    return $ TN (maybe_params_in_paren1, middle_type_name, maybe_params_in_paren2)
+
+instance HasParser MiddleTypeName where
+  parser = TId4 <$> parser <|> TIWP1 <$> parser
+
+instance HasParser TypeIdWithParams where
+  parser =
+    parser >>= \type_id ->
+    many1 params_in_paren_and_string_p >>= \pip_string_pairs ->
+    return $ TIWP (type_id, pip_string_pairs)
+    where
+    params_in_paren_and_string_p :: Parser (ParamsInParen, String)
+    params_in_paren_and_string_p = 
+      parser >>= \params_in_paren ->
+      many1 (lower <|> upper) >>= \string ->
+      return (params_in_paren, string)
+
+instance HasParser ParamsInParen where
+  parser =
+    char '(' *> parser >>= \type_var ->
+    many1 (comma *> parser) <* char ')' >>= \type_vars ->
+    return $ PIP (type_var, type_vars)
+
+instance HasParser OrTypeDef where
+  parser =
+    string "or_type " *> parser >>= \type_name ->
+    string "\nvalue "  *> parser >>= \identifier ->
+    optionMaybe (char ':' *> parser) >>= \maybe_simple_type ->
+    many1 ident_maybe_simple_type_p >>= \ident_maybe_simple_types ->
+    return $
+      OTD (type_name, identifier, maybe_simple_type, ident_maybe_simple_types)
+    where
+    ident_maybe_simple_type_p :: Parser (Identifier, Maybe SimpleType)
+    ident_maybe_simple_type_p =
+      string " | " *> parser >>= \identifier ->
+      optionMaybe (char ':' *> parser) >>= \maybe_simple_type ->
+      return (identifier, maybe_simple_type)
+
+instance HasParser TypeNickname where
+  parser =
+    string "type_nickname" *> parser >>= \type_name ->
+    string " = " *> parser >>= \simple_type ->
+    return $ TNN (type_name, simple_type)
+
+-- HasParser: TypeDef
 
 -- Parse class and instance
 
@@ -822,6 +995,15 @@ instance Parse BigFuncExpr
 instance Parse CasesFuncExpr
 instance Parse ValueDef
 instance Parse GroupedValueDefs
+
+instance Parse Type
+instance Parse FuncType
+instance Parse ProdType
+instance Parse TypeApp
+instance Parse TypeDef
+instance Parse TupleTypeDef
+instance Parse OrTypeDef
+instance Parse TypeNickname
 
 input_file = "identifiers.txt"
 type ParseType = Identifier
