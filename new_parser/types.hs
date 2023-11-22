@@ -331,7 +331,7 @@ newtype PropNameLine = PNL PropName
   deriving Show
 
 data PropName =
-  NPStart1 ([(NamePart, ParamsInParen)], Maybe NamePart) |
+  NPStart1 (Char, [(NamePart, ParamsInParen)], Maybe NamePart) |
   PIPStart1 ([(ParamsInParen, NamePart)], Maybe ParamsInParen)
   deriving Show
 
@@ -354,8 +354,8 @@ newtype ImplicationProp = IP (PropNameSub, PropNameSub)
   deriving Show
 
 data PropNameSub = 
-  NPStart2 ([(NamePart, TypesInParen)], Maybe NamePart) |
-  PIPStart2 ([(TypesInParen, NamePart)], Maybe TypesInParen)
+  NPStart2 (Char, [(NamePart, TypesInParen)], Maybe NamePart) |
+  TIPStart ([(TypesInParen, NamePart)], Maybe TypesInParen)
   deriving Show
 
 -- Program
@@ -903,7 +903,7 @@ instance HasParser TypesInParen where
     return $ TIP (simple_type, simple_types)
 
 instance HasParser Condition where
-  parser = Co <$> (undefined <* string " ==> ")
+  parser = Co <$> (parser <* string " ==> ")
 
 -- HasParser: TypeDef
 
@@ -967,7 +967,114 @@ instance HasParser TypeNickname where
     string " = " *> parser >>= \simple_type ->
     return $ TNN (type_name, simple_type)
 
--- HasParser: TypeDef
+-- HasParser: TypePropDef
+
+instance HasParser TypePropDef where
+  parser = APD1 <$> parser <|> RPD1 <$> parser
+
+instance HasParser AtomPropDef where
+  parser = 
+    parser >>= \prop_name_line ->
+    string "\nvalue\n  " *> parser >>= \identifier ->
+    string " : " *> parser >>= \simple_type ->
+    return $ APD (prop_name_line, identifier, simple_type)
+
+instance HasParser RenamingPropDef where
+  parser =
+    parser >>= \prop_name_line ->
+    string "\nequivalent\n  " *> parser >>= \prop_name ->
+    many (comma *> parser) >>= \prop_names ->
+    return $ RPD (prop_name_line, prop_name, prop_names)
+
+instance HasParser PropNameLine where
+  parser = PNL <$> (string "type_proposition " *> parser)
+
+instance HasParser PropName where
+  parser =
+    NPStart1 <$> np_start_p <|> PIPStart1 <$> pip_start_p
+    where
+    np_start_p :: Parser (Char, [(NamePart, ParamsInParen)], Maybe NamePart)
+    np_start_p = 
+      upper >>= \u ->
+      many1 np_pip_p >>= \np_pips ->
+      optionMaybe parser >>= \maybe_name_part ->
+      return (u, np_pips, maybe_name_part)
+
+    np_pip_p :: Parser (NamePart, ParamsInParen)
+    np_pip_p =
+      parser >>= \name_part ->
+      parser >>= \params_in_paren ->
+      return (name_part, params_in_paren)
+
+    pip_start_p :: Parser ([(ParamsInParen, NamePart)], Maybe ParamsInParen)
+    pip_start_p = 
+      many1 pip_np_p >>= \pip_nps ->
+      optionMaybe parser >>= \maybe_params_in_paren ->
+      return (pip_nps, maybe_params_in_paren)
+
+    pip_np_p :: Parser (ParamsInParen, NamePart)
+    pip_np_p =
+      parser >>= \params_in_paren ->
+      parser >>= \name_part ->
+      return (params_in_paren, name_part)
+
+instance HasParser NamePart where
+  parser =
+    NP <$> concat <$> many1 (lower_upper <|> under_lower_upper)
+    where
+    lower_upper :: Parser String
+    lower_upper = fmap pure (lower <|> upper)
+
+    under_lower_upper :: Parser String
+    under_lower_upper = fmap (:) (char '_') <*> lower_upper
+
+instance HasParser TypeTheo where
+  parser =
+    string "type_theorem " *> type_theo_start_p >>= \type_theo_start ->
+    string "\nproof\n  " *> parser >>= \identifier ->
+    string " = " *> parser >>= \value_expr ->
+    return $ TT (type_theo_start, identifier, value_expr)
+    where
+    type_theo_start_p :: Parser TypeTheoStart
+    type_theo_start_p = AP1 <$> parser <|> IP1 <$> parser
+
+instance HasParser AtomicProp where
+  parser = AP <$> parser
+
+instance HasParser ImplicationProp where
+  parser = 
+    parser >>= \prop_name_sub1 ->
+    string " => " *> parser >>= \prop_name_sub2 ->
+    return $ IP (prop_name_sub1, prop_name_sub2)
+
+instance HasParser PropNameSub where
+  parser = 
+    NPStart2 <$> np_start_p <|> TIPStart <$> tip_start_p
+    where
+    np_start_p :: Parser (Char, [(NamePart, TypesInParen)], Maybe NamePart)
+    np_start_p = 
+      upper >>= \u ->
+      many1 np_tip_p >>= \np_tips ->
+      optionMaybe parser >>= \maybe_name_part ->
+      return (u, np_tips, maybe_name_part)
+
+    np_tip_p :: Parser (NamePart, TypesInParen)
+    np_tip_p =
+      parser >>= \name_part ->
+      parser >>= \types_in_paren ->
+      return (name_part, types_in_paren)
+
+    tip_start_p :: Parser ([(TypesInParen, NamePart)], Maybe TypesInParen)
+    tip_start_p = 
+      many1 tip_np_p >>= \tip_nps ->
+      optionMaybe parser >>= \maybe_types_in_paren ->
+      return (tip_nps, maybe_types_in_paren)
+
+    tip_np_p :: Parser (TypesInParen, NamePart)
+    tip_np_p =
+      parser >>= \types_in_paren ->
+      parser >>= \name_part ->
+      return (types_in_paren, name_part)
 
 -- Parse class and instance
 

@@ -2389,9 +2389,9 @@ proposition or (if it is a conjunction) many propositions  seperated by commas
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
-<prop-name> ::=  ""\\
-( <name-part> <params-in-paren> )+ [ <name-part> ]
-\alt ( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+<prop-name> ::=  ""\\""
+[A-Z] ( <name-part> <params-in-paren> )+ [ <name-part> ]
+\alt " "( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \end{grammar} 
@@ -2562,9 +2562,9 @@ the "\texttt{=>}" arrow.
 
 <implication-prop> ::= <prop-name-sub> `\ =>\ ' <prop-name-sub>
 
-<prop-name-sub> ::=  ""\\
-( <name-part> <types-in-paren> )+ [ <name-part> ]
-\alt ( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
+<prop-name-sub> ::=  ""\\""
+[A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
+\alt " "( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
 \end{grammar} 
 
 \subsection{Complete Grammar for Types and Type Logic}
@@ -2644,9 +2644,9 @@ the "\texttt{=>}" arrow.
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
-<prop-name> ::=  ""\\
-( <name-part> <params-in-paren> )+ [ <name-part> ]
-\alt ( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+<prop-name> ::=  ""\\""
+[A-Z] ( <name-part> <params-in-paren> )+ [ <name-part> ]
+\alt " "( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \\
@@ -2660,9 +2660,9 @@ the "\texttt{=>}" arrow.
 
 <implication-prop> ::= <prop-name-sub> `\ =>\ ' <prop-name-sub>
 
-<prop-name-sub> ::=  ""\\
-( <name-part> <types-in-paren> )+ [ <name-part> ]
-\alt ( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
+<prop-name-sub> ::=  ""\\""
+[A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
+\alt " "( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
 
 \end{grammar}
 
