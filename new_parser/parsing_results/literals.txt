@@ -1,18 +1,26 @@
-Parsed :) ==> Int 42
+Parsed :) ==>
+42
 
-Parsed :) ==> Int (-100)
+Parsed :) ==>
+-100
 
-Parsed :) ==> R 3.14
+Parsed :) ==>
+3.14
 
-Parsed :) ==> R (-1234.567)
+Parsed :) ==>
+-1234.567
 
-Parsed :) ==> Ch 'a'
+Parsed :) ==>
+'a'
 
-Parsed :) ==> Ch '\n'
+Parsed :) ==>
+'\n'
 
-Parsed :) ==> S "abcd"
+Parsed :) ==>
+"abcd"
 
-Parsed :) ==> S "Hello World!"
+Parsed :) ==>
+"Hello World!"
 
 Error :( ==>
 unexpected '.'

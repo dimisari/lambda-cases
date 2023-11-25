@@ -343,8 +343,8 @@ instance HasParser CasesFuncExpr where --TODO last indentation rule
   parser =
     parser >>= \cases_params ->
     string " =>" *> many1 parser >>= \cases ->
-    parser >>= \end_case ->
-    return $ CFE (cases_params, cases, end_case)
+    optionMaybe parser >>= \maybe_end_case ->
+    return $ CFE (cases_params, cases, maybe_end_case)
 
 instance HasParser CasesParams where
   parser = 
@@ -360,19 +360,13 @@ instance HasParser CasesParams where
 instance HasParser Case where
   parser = 
     nl_indent *> parser >>= \matching ->
-    modifyState (+ 1) >>
-    string " =>" *> parser >>= \case_body ->
+    string " =>" *> modifyState (+ 1) *> parser >>= \case_body ->
     return $ Ca (matching, case_body) 
 
 instance HasParser EndCase where
   parser = 
-    nl_indent *> end_matching_p >>= \end_matching ->
-    modifyState (+ 1) >>
-    string " =>" *> parser >>= \case_body ->
-    return $ EC (end_matching, case_body) 
-    where
-    end_matching_p :: Parser EndMatching
-    end_matching_p = string "..." *> return Dots <|> M <$> parser
+    nl_indent *> string "... =>" *> modifyState (+ 1) *> parser >>= \case_body ->
+    return $ EC case_body
 
 instance HasParser Matching where
   parser = 

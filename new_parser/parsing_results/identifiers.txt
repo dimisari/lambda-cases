@@ -1,14 +1,20 @@
-Parsed :) ==> Id "x"
+Parsed :) ==>
+Id "x"
 
-Parsed :) ==> Id "y1"
+Parsed :) ==>
+Id "y1"
 
-Parsed :) ==> Id "apply()to_all"
+Parsed :) ==>
+Id "apply()to_all"
 
-Parsed :) ==> Id "my_ident"
+Parsed :) ==>
+Id "my_ident"
 
-Parsed :) ==> Id "x_y_z1"
+Parsed :) ==>
+Id "x_y_z1"
 
-Parsed :) ==> Id "x()y()z1"
+Parsed :) ==>
+Id "x()y()z1"
 
 Error :( ==>
 unexpected end of input

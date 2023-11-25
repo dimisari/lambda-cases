@@ -1,0 +1,8 @@
+(1, "What’s up, doc?")
+#
+(2, "Alrighty then!", 3.14)
+#
+(x, y, z, w)
+#
+(1, my_function, (x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1/2))
+#

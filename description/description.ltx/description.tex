@@ -1380,7 +1380,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \item \textit{Grammar}
 \begin{grammar}
-<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ <end-case> 
+<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ [ <end-case> ]
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
@@ -1389,8 +1389,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 <case> ::=  `\\n' <indent> <matching> `\ =>' <case-body>
 
-<end-case> ::=
-`\\n' <indent> ( `...' | <matching> ) `\ =>' <case-body>\\
+<end-case> ::= `\\n' <indent> `...\ =>' <case-body>\\
 
 <matching> ::= 
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
@@ -1691,7 +1690,7 @@ definition:
 
 <simple-func-body> ::= <no-paren-op-arg> | <simple-op-expr> | <op-expr-func-end> \\
 
-<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ <end-case> 
+<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ [ <end-case> ]
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
@@ -1700,8 +1699,7 @@ definition:
 
 <case> ::=  `\\n' <indent> <matching> `\ =>' <case-body>
 
-<end-case> ::=
-`\\n' <indent> ( `...' | <matching> ) `\ =>' <case-body>\\
+<end-case> ::= `\\n' <indent> `...\ =>' <case-body>\\
 
 <matching> ::= 
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |

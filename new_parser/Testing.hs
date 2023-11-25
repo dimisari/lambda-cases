@@ -11,6 +11,7 @@ import Data.List.Split
 
 import ASTTypes
 import Parsers
+import ShowInstances
 
 -- helpers
 
@@ -61,7 +62,7 @@ class HasParser a => Parse a where
 parse_result_to_string :: Show a => Either ParseError a -> ParseResult
 parse_result_to_string = \case
   Left err -> "Error :( ==>" ++ (show err %> dropWhile (/= '\n')) ++ "\n\n"
-  Right res -> "Parsed :) ==> " ++ show res ++ "\n\n"
+  Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
 
 -- "Parse and result to string" functions for each type to be parsed
 
@@ -70,6 +71,7 @@ file_name_parse_func_pairs =
   [ ("literals.txt", parse_lit_and_ret_res_str)
   , ("identifiers.txt", parse_id_and_ret_res_str)
   , ("paren_expr.txt", parse_paren_expr_and_ret_res_str)
+  , ("tuple.txt", parse_tuple_and_ret_res_str)
   ]
 
 parse_lit_and_ret_res_str :: ParseFunc
