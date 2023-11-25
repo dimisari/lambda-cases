@@ -1,0 +1,28 @@
+Parsed :) ==> Id "x"
+
+Parsed :) ==> Id "y1"
+
+Parsed :) ==> Id "apply()to_all"
+
+Parsed :) ==> Id "my_ident"
+
+Parsed :) ==> Id "x_y_z1"
+
+Parsed :) ==> Id "x()y()z1"
+
+Error :( ==>
+unexpected end of input
+expecting lowercase letter or "_"
+
+Error :( ==>
+unexpected '0'
+expecting end of input
+
+Error :( ==>
+unexpected '3'
+expecting end of input
+
+Error :( ==>
+unexpected "_"
+expecting lowercase letter
+

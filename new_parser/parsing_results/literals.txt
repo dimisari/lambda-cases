@@ -1,0 +1,36 @@
+Parsed :) ==> Int 42
+
+Parsed :) ==> Int (-100)
+
+Parsed :) ==> R 3.14
+
+Parsed :) ==> R (-1234.567)
+
+Parsed :) ==> Ch 'a'
+
+Parsed :) ==> Ch '\n'
+
+Parsed :) ==> S "abcd"
+
+Parsed :) ==> S "Hello World!"
+
+Error :( ==>
+unexpected '.'
+expecting digit or end of input
+
+Error :( ==>
+unexpected 'a'
+expecting digit, exponent or end of input
+
+Error :( ==>
+unexpected "a"
+expecting "-", float, natural, character or literal string
+
+Error :( ==>
+unexpected "a"
+expecting "-", float, natural, character or literal string
+
+Error :( ==>
+unexpected " "
+expecting natural
+
