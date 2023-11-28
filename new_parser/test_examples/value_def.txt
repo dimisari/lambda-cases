@@ -1,0 +1,7 @@
+foo
+  : Int
+  = 42
+
+f
+  : (Int, Int, Int) => Int
+  = (a, b, c) => a + b * c

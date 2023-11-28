@@ -1,11 +1,11 @@
 Parsed :) ==>
-T (NPOA1 (BE3 (Lit1 1)),CSLE (NPOA1 (BE3 (Lit1 "What\8217s up, doc?")),[]))
+(1, "What's up, doc?")
 
 Parsed :) ==>
-T (NPOA1 (BE3 (Lit1 2)),CSLE (NPOA1 (BE3 (Lit1 "Alrighty then!")),[NPOA1 (BE3 (Lit1 3.14))]))
+(2, "Alrighty then!", 3.14)
 
 Parsed :) ==>
-T (NPOA1 (BE3 (Id1 (Id "x"))),CSLE (NPOA1 (BE3 (Id1 (Id "y"))),[NPOA1 (BE3 (Id1 (Id "z"))),NPOA1 (BE3 (Id1 (Id "w")))]))
+(x, y, z, w)
 
 Error :( ==>
 unexpected " "

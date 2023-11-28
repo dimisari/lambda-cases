@@ -1,0 +1,11 @@
+Possibly(Int)
+
+ListOf(Real)s
+
+TreeOf(String)s
+
+Error(String)OrResult(Int)
+
+ListOf(Int => Int)s
+
+ListOf(A)s

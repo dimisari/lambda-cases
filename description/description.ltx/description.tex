@@ -157,9 +157,8 @@ literals is the same as in the \H\ report.
 
 \item \textit{Grammar}
 \begin{grammar}
-<literal> ::= <literal>
+<literal> ::= <int-lit> | <real-lit> | <char-lit> | <string-lit>
 \end{grammar}
-TODO add the grammar from the haskell report
 
 \end{itemize}
 
@@ -220,10 +219,9 @@ or function expressions.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' <op-or-func-expr> `)'  
+<paren-expr> ::= `(' <simple-expr> `)'  
 
-<op-or-func-expr> ::=
-<simple-op-expr> | <op-expr-func-end> | <simple-func-expr>
+<simple-expr> ::= <simple-op-expr> | <simple-func-expr>
 \end{grammar}
 
 \end{itemize}
@@ -303,7 +301,7 @@ The precise indentation rules are described in the section
 
 <comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
 
-<line-expr> ::= <no-paren-op-arg> | <op-or-func-expr> \\
+<line-expr> ::= <no-paren-op-arg> | <simple-expr> \\
 
 <big-tuple> ::= ""\\
 `(' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
@@ -1070,6 +1068,17 @@ This is mostly useful with the "\texttt{;>}" operator (see previous section:
 "\texttt{->}", "\texttt{o>}", "\texttt{<o}".
 
 \item \textit{Big Operator Expressions}\\\\
+\textbf{Example}
+
+\begin{verbatim}
+"Hello, I'm about a big string that's going to contain multiple values from " +
+"inside the imaginary program that I'm a part of. Here they are:\n" +
+"value1 = " + value1 + ", value2 = " + value2 + ", value3 = " + value3 + 
+", value4 = " + value4 + ", value5 = " + value5
+\end{verbatim}
+
+\textbf{Description}
+
 It is possible to stretch a (big) operator expression over multiple lines.
 In that case:
 \begin{itemize}
@@ -1088,26 +1097,25 @@ The precise indentation rules are described in the section
 
 \item \textit{Grammar}
 \begin{grammar}
-<op-expr> ::=
-<simple-op-expr> | <op-expr-func-end> | <big-op-expr> | <cases-op-expr>
+<op-expr> ::= <simple-op-expr> | <big-op-expr> | <cases-op-expr>
 \\
 
-<simple-op-expr> ::=  <op-arg> ( `\ ' <op>  `\ ' <op-arg> )+
+<op-expr-start> ::= ( <op-arg> `\ ' <op> )+
 
-<op-expr-func-end> ::= <simple-op-expr> `\ '  <op> `\ ' <simple-func-expr>
+<simple-op-expr> ::= <op-expr-start> `\ ' ( <op-arg> | <simple-func-expr> )
+\\
 
-<big-op-expr> ::= ""\\
-<op-expr-line> ( `\\n' <indent> <op-expr-line> )* \\
-`\\n' <indent>
-( <op-arg> | <simple-op-expr> |
-  [ <op-expr-line> `\ ' ] ( <simple-func-expr> | <big-func-expr>)
-)
+<big-op-expr> ::= 
+( <op-expr-start> `\\n' <indent> )+ <big-op-expr-end> |
+<op-expr-start> `\ ' <big-func-expr>
+
+<big-op-expr-end> ::=
+[ <op-expr-start> `\ ' ] ( <op-arg> | <simple-func-expr> | <big-func-expr> )
+\\
 
 <cases-op-expr> ::=
-<op-expr-line> ( `\\n' <indent> <op-expr-line> )*
+<op-expr-start> ( `\\n' <indent> <op-expr-start> )*
 ( `\\n' <indent> | `\ ' ) <cases-func-expr> 
-
-<op-expr-line> ::= ( <op-arg> | <simple-op-expr> ) `\ ' <op> 
 \\
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
@@ -1231,6 +1239,10 @@ Operator & Precedence & Associativity \\
 \subsection{Function Expressions}
 \label{subsec:funcexprs}
 
+Function expressions are divided into \textbf{regular function expressions} and 
+\textbf{"cases" function expressions} which are described in the following sections.
+\\\\
+The grammar for a function expression is:
 \begin{grammar}
 <func-expr> ::= <simple-func-expr> | <big-func-expr> | <cases-func-expr>
 \end{grammar}
@@ -1257,6 +1269,17 @@ are seperated by an arrow (" \texttt{=>} "). The body is an operator
 expression.
 
 \item \textit{Big Function Expressions}\\\\
+\textbf{Example}
+
+\begin{verbatim}
+(value1, value2, value3, value4, value5, value6, value7) => 
+print_line("value1 = " + value1 + ", value2 = " + value2 + ", value3 = " + value3) ;
+print_line("value4 = " + value4 + ", value5 = " + value5 + ", value6 = " + value6) ;
+print_line("value7 = " + value7)
+\end{verbatim}
+
+\textbf{Description}
+
 It is possible to stretch a (big) function expression over multiple lines.
 In that case:
 \begin{itemize}
@@ -1283,7 +1306,7 @@ The precise indentation rules are described in the section
 
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
 
-<simple-func-body> ::= <no-paren-op-arg> | <simple-op-expr> | <op-expr-func-end>
+<simple-func-body> ::= <no-paren-op-arg> | <simple-op-expr>
 \end{grammar}
 \end{itemize}
 
@@ -1509,7 +1532,8 @@ big_string
   : String
   = s1 + s2 + s3 + s4
     where
-    s1, s2, s3, s4 : all String
+    s1, s2, s3, s4
+      : all String
       = "Hello, my name is Struggling Programmer."
       , "I have tried way too many times to fit a big chunk of text"
       , "inside my program, without it hitting the half-screen mark!"
@@ -1591,32 +1615,37 @@ definition:
 \subsubsection{Complete Grammar for Values}
 \begin{grammar}
 
-<literal> ::= TODO \\
+<literal> ::= <int-lit> | <real-lit> | <char-lit> | <string-lit>
+\\
 
-<identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ] \\
+<identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
+\\
 
-<paren-expr> ::= `(' <op-or-func-expr> `)'  
+<paren-expr> ::= `(' <simple-expr> `)'  
 
-<op-or-func-expr> ::=
-<simple-op-expr> | <op-expr-func-end> | <simple-func-expr>  \\
+<simple-expr> ::= <simple-op-expr> | <simple-func-expr>
+\\
 
 <tuple> ::= `(' <line-expr> `,\ ' <comma-sep-line-exprs> `)'
 
 <comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
 
-<line-expr> ::= <no-paren-op-arg> | <op-or-func-expr> \\
+<line-expr> ::= <no-paren-op-arg> | <simple-expr>
+\\
 
 <big-tuple> ::= ""\\
 `(' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
 ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )* \\
-`\\n' <indent> `)' \\
+`\\n' <indent> `)'
+\\
 
 <list> ::= `[' [ <comma-sep-line-exprs> ] `]'
 
 <big-list> ::= 
 `[' <comma-sep-line-exprs>
 ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
-`\\n' <indent> `]' \\
+`\\n' <indent> `]'
+\\
 
 <paren-func-app> ::= ""\\""
 [ <arguments> ] <identifier-with-arguments> [ <arguments> ]
@@ -1628,46 +1657,49 @@ definition:
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
 [a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
-[ [0-9] ] \\
+[ [0-9] ]
+\\
 
 <pre-func> ::= <identifier> `:'
 
 <pre-func-app> ::= <pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> )
 
 <basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <post-func-app> \\
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <post-func-app>
+\\
 
 <post-func> ::=
 `.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' | <dot-change>
 
-<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func> \\
+<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>
+\\
 
 <dot-change> ::= 
 `.change{' <field-change> ( `,\ ' <field-change> )* `}'
 
 <field-change> ::=
-( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr>  \\
-
-<op-expr> ::=
-<simple-op-expr> | <op-expr-func-end> | <big-op-expr> | <cases-op-expr>
+( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr>
 \\
 
-<simple-op-expr> ::=  <op-arg> ( `\ ' <op>  `\ ' <op-arg> )+
+<op-expr> ::= <simple-op-expr> | <big-op-expr> | <cases-op-expr>
+\\
 
-<op-expr-func-end> ::= <simple-op-expr> `\ '  <op> `\ ' <simple-func-expr>
+<op-expr-start> ::= ( <op-arg> `\ ' <op> )+
 
-<big-op-expr> ::= ""\\
-<op-expr-line> ( `\\n' <indent> <op-expr-line> )* \\
-`\\n' <indent>
-( <op-arg> | <simple-op-expr> |
-  [ <op-expr-line> `\ ' ] ( <simple-func-expr> | <big-func-expr>)
-)
+<simple-op-expr> ::= <op-expr-start> `\ ' ( <op-arg> | <simple-func-expr> )
+\\
+
+<big-op-expr> ::= 
+( <op-expr-start> `\\n' <indent> )+ <big-op-expr-end> |
+<op-expr-start> `\ ' <big-func-expr>
+
+<big-op-expr-end> ::=
+[ <op-expr-start> `\ ' ] ( <op-arg> | <simple-func-expr> | <big-func-expr> )
+\\
 
 <cases-op-expr> ::=
-<op-expr-line> ( `\\n' <indent> <op-expr-line> )*
+<op-expr-start> ( `\\n' <indent> <op-expr-start> )*
 ( `\\n' <indent> | `\ ' ) <cases-func-expr> 
-
-<op-expr-line> ::= ( <op-arg> | <simple-op-expr> ) `\ ' <op> 
 \\
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
@@ -1676,9 +1708,11 @@ definition:
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
+`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'
+\\
 
-<func-expr> ::= <simple-func-expr> | <big-func-expr> | <cases-func-expr> \\
+<func-expr> ::= <simple-func-expr> | <big-func-expr> | <cases-func-expr>
+\\
 
 <simple-func-expr> ::= <parameters> `\ =>\ ' <simple-func-body>
 
@@ -1688,18 +1722,21 @@ definition:
 
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
 
-<simple-func-body> ::= <no-paren-op-arg> | <simple-op-expr> | <op-expr-func-end> \\
+<simple-func-body> ::= <no-paren-op-arg> | <simple-op-expr>
+\\
 
 <cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ [ <end-case> ]
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
-<cases-parameter> ::= <identifier> | `cases' \\
+<cases-parameter> ::= <identifier> | `cases'
+\\
 
 <case> ::=  `\\n' <indent> <matching> `\ =>' <case-body>
 
-<end-case> ::= `\\n' <indent> `...\ =>' <case-body>\\
+<end-case> ::= `\\n' <indent> `...\ =>' <case-body>
+\\
 
 <matching> ::= 
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
@@ -1707,10 +1744,12 @@ definition:
 
 <tuple-matching> ::= `(' <matching> ( `,\ ' <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]' \\
+<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]'
+\\
 
 <case-body> ::=
-( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]\\
+( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]
+\\
 
 <value-def> ::= 
 <indent> <identifier> 
@@ -1724,12 +1763,12 @@ definition:
 <indent> <identifier> ( `,\ ' <identifier> )+ \\
 `\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all\ ' <type> ) \\
 `\\n' <indent> `=\ '
-<comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )* \\
+<comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
+\\
 
 <where-expr> ::=
-`\\n' <indent> `where\\n' ( <value-def> | <grouped-value-defs> )+ \\
+`\\n' <indent> `where\\n' ( <value-def> | <grouped-value-defs> )+
 \end{grammar}
-
 
 \section{Language Description: Types and Type Logic}
 
@@ -2210,7 +2249,7 @@ then an equal sign and they end with the type to be nicknamed.
 \item \textit{Grammar}
 
 \begin{grammar}
-<t-nickname> ::= `type_nickname' <type-name> `\ =\ ' <simple-type>
+<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
 \end{grammar} 
 
 \end{itemize}
@@ -2553,12 +2592,8 @@ the "\texttt{=>}" arrow.
 
 \begin{grammar}
 <type-theo> ::= 
-`type_theorem\ ' ( <atomic-prop> | <implication-prop> )
+`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ]
 `\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
-
-<atomic-prop> ::= <prop-name-sub>
-
-<implication-prop> ::= <prop-name-sub> `\ =>\ ' <prop-name-sub>
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
@@ -2628,7 +2663,7 @@ the "\texttt{=>}" arrow.
 ( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
 \\
 
-<t-nickname> ::= `type_nickname' <type-name> `\ =\ ' <simple-type>
+<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
 \\\\
 
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
@@ -2651,12 +2686,8 @@ the "\texttt{=>}" arrow.
 \\
 
 <type-theo> ::= 
-`type_theorem\ ' ( <atomic-prop> | <implication-prop> )
+`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ]
 `\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
-
-<atomic-prop> ::= <prop-name-sub>
-
-<implication-prop> ::= <prop-name-sub> `\ =>\ ' <prop-name-sub>
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
@@ -2693,7 +2724,7 @@ the "\texttt{=>}" arrow.
   \item IO
     \begin{itemize}
     \item Input: \texttt{get_char, get_line, get_input, read_file}
-    \item Output: \texttt{print, print_string, print_line_str, write_file}
+    \item Output: \texttt{print, print_string, print_line, write_file}
     \end{itemize}
 
   \item Ad Hoc Polymorphic:\\

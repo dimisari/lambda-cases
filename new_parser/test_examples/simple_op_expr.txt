@@ -1,0 +1,16 @@
+1 + 2
+
+1 + x * 3 ^ y
+
+"Hello " + "World!"
+
+x -> f -> g
+
+f o> g o> h
+
+x = y
+
+x >= y - z & x < 2 * y
+
+get_line ; get_line ;> line => print("Second line: " + line)
+

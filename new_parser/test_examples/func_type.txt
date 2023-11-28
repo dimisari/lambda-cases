@@ -1,0 +1,13 @@
+String => String
+
+Real => Int
+
+A => A
+
+Int x Int => Int
+
+(Real, Real, Real) => Real
+
+(A => B, B => C) => (A => C)
+
+(Int => Int) => Int

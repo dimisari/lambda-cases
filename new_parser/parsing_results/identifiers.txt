@@ -1,20 +1,20 @@
 Parsed :) ==>
-Id "x"
+x
 
 Parsed :) ==>
-Id "y1"
+y1
 
 Parsed :) ==>
-Id "apply()to_all"
+apply()to_all
 
 Parsed :) ==>
-Id "my_ident"
+my_ident
 
 Parsed :) ==>
-Id "x_y_z1"
+x_y_z1
 
 Parsed :) ==>
-Id "x()y()z1"
+x()y()z1
 
 Error :( ==>
 unexpected end of input

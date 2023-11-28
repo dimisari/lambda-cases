@@ -1,0 +1,16 @@
+name.first_name
+
+list.head
+
+date.year
+
+tuple.1st
+
+tuple.change{1st = 42, 3rd = 17}
+
+state.change{counter = counter + 1}
+
+name.change{last_name = "Gauss"}
+
+point.change{x = 1.61, y = 2.71, z = 3.14}
+

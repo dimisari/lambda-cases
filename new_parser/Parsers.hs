@@ -12,10 +12,13 @@ import ASTTypes
 
 type Parser = Parsec String Int
 
-haskell_lexer = makeTokenParser haskellDef -- for copying some haskell parsers 
-
 class HasParser a where
   parser :: Parser a
+
+test_parser :: Parser a -> String -> Either ParseError a
+test_parser = \p s -> runParser p 0 "test" s
+
+haskell_lexer = makeTokenParser haskellDef -- for copying some haskell parsers 
 
 -- helper parsers
 
@@ -72,8 +75,8 @@ instance HasParser Identifier where
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
 
-instance HasParser OpOrFuncExpr where
-  parser = SOE1 <$> parser <|> OEFE1 <$> parser <|> SFE1 <$> parser
+instance HasParser SimpleExpr where
+  parser = SOE1 <$> parser <|> SFE1 <$> parser
 
 instance HasParser Tuple where
   parser = 
@@ -88,7 +91,7 @@ instance HasParser CommaSepLineExprs where
     return $ CSLE (line_expr, line_exprs)
 
 instance HasParser LineExpr where
-  parser = NPOA1 <$> parser <|> OOFE <$> parser
+  parser = NPOA1 <$> parser <|> SE <$> parser
 
 instance HasParser BigTuple where
   parser =
@@ -220,64 +223,58 @@ instance HasParser DotChange where
 -- HasParser: OpExpr
 
 instance HasParser OpExpr where
+  parser = SOE2 <$> parser <|>  BOE1 <$> parser <|> COE1 <$> parser
+
+instance HasParser OpExprStart where
   parser = 
-    SOE2 <$> parser <|> OEFE2 <$> parser <|> BOE1 <$> parser <|>
-    COE1 <$> parser
+    OES <$> many1 op_arg_op_p 
+    where
+    op_arg_op_p :: Parser (OpArg, Op)
+    op_arg_op_p =
+      parser >>= \op_arg ->
+      char ' ' *> parser >>= \op ->
+      return (op_arg, op)
 
 instance HasParser SimpleOpExpr where
   parser = 
-    parser >>= \op_arg ->
-    many1 op_op_arg >>= \op_op_args ->
-    return $ SOE (op_arg, op_op_args)
-    where
-    op_op_arg :: Parser (Op, OpArg)
-    op_op_arg =
-      char ' ' *> parser >>= \op ->
-      char ' ' *> parser >>= \op_arg ->
-      return (op, op_arg)
+    parser >>= \oes ->
+    char ' ' *> parser >>= \soee ->
+    return $ SOE (oes, soee)
 
-instance HasParser OpExprFuncEnd where
-  parser = 
-    parser >>= \simple_op_expr ->
-    char ' ' *> parser >>= \op ->
-    char ' ' *> parser >>= \simple_func_expr ->
-    return $ OEFE (simple_op_expr, op, simple_func_expr)
+instance HasParser SimpleOpExprEnd where
+  parser = OA1 <$> parser <|> SFE2 <$> parser
 
 instance HasParser BigOpExpr where
+  parser = BOE_1_ <$> parser <|> BOE_2_ <$> parser
+
+instance HasParser BigOpExpr1 where
   parser = 
-    parser >>= \op_expr_line ->
-    many (nl_indent *> parser) >>= \op_expr_lines ->
-    nl_indent *> big_op_expr_end_p >>= \big_op_expr_end ->
-    return $ BOE (op_expr_line, op_expr_lines, big_op_expr_end)
+    many1 (parser <* nl_indent) >>= \oess ->
+    big_op_expr_end_p >>= \boee ->
+    return $ BOE_1 (oess, boee)
     where
     big_op_expr_end_p :: Parser BigOpExprEnd
     big_op_expr_end_p =
-      OA1 <$> parser <|> SOE3 <$> parser <|>
-      ( optionMaybe (parser <* char ' ') >>= \maybe_op_expr_line ->
-        big_op_func_end_p >>= \big_op_func_end ->
-        return $ BOFE (maybe_op_expr_line, big_op_func_end)
-      )
+      optionMaybe (parser <* char ' ') >>= \maybe_oes ->
+      big_op_expr_end_p2 >>= \soee2 ->
+      return $ BOEE (maybe_oes, soee2)
 
-    big_op_func_end_p :: Parser BigOpFuncEnd
-    big_op_func_end_p = 
-      SFE2 <$> parser <|> BFE1 <$> parser
+    big_op_expr_end_p2 :: Parser BigOpExprEnd2
+    big_op_expr_end_p2 =
+      OA2 <$> parser <|> SFE3 <$> parser <|> BFE1 <$> parser
+
+instance HasParser BigOpExpr2 where
+  parser = 
+    parser <* char ' ' >>= \oes ->
+    parser >>= \bfe ->
+    return $ BOE_2 (oes, bfe)
 
 instance HasParser CasesOpExpr where
   parser = 
-    parser >>= \op_expr_line ->
-    many (nl_indent *> parser) >>= \op_expr_lines ->
+    parser >>= \oes ->
+    many (nl_indent *> parser) >>= \oess ->
     (nl_indent <|> one_space) *> parser >>= \cases_func_expr ->
-    return $ COE (op_expr_line, op_expr_lines, cases_func_expr)
-
-instance HasParser OpExprLine where
-  parser = 
-    op_expr_line_start_p >>= \op_expr_line_start ->
-    char ' ' *> parser >>= \op ->
-    return $ OEL (op_expr_line_start, op)
-    where
-    op_expr_line_start_p :: Parser OpExprLineStart
-    op_expr_line_start_p = 
-      OA2 <$> parser <|> SOE4 <$> parser
+    return $ COE (oes, oess, cases_func_expr)
 
 instance HasParser OpArg where
   parser = NPOA2 <$> parser <|> PE3 <$> parser
@@ -311,7 +308,7 @@ instance HasParser Op where
 -- HasParser: FuncExpr
 
 instance HasParser FuncExpr where
-  parser = SFE3 <$> parser <|> BFE2 <$> parser <|> CFE1 <$> parser
+  parser = SFE4 <$> parser <|> BFE2 <$> parser <|> CFE1 <$> parser
 
 instance HasParser SimpleFuncExpr where
   parser = 
@@ -337,7 +334,7 @@ instance HasParser Parameters where
     )
 
 instance HasParser SimpleFuncBody where
-  parser = NPOA3 <$> parser <|> SOE5 <$> parser <|> OEFE3 <$> parser
+  parser = NPOA3 <$> parser <|> SOE5 <$> parser
 
 instance HasParser CasesFuncExpr where --TODO last indentation rule
   parser =
@@ -678,22 +675,11 @@ instance HasParser NamePart where
 
 instance HasParser TypeTheo where
   parser =
-    string "type_theorem " *> type_theo_start_p >>= \type_theo_start ->
-    string "\nproof\n  " *> parser >>= \identifier ->
-    string " = " *> parser >>= \value_expr ->
-    return $ TT (type_theo_start, identifier, value_expr)
-    where
-    type_theo_start_p :: Parser TypeTheoStart
-    type_theo_start_p = AP1 <$> parser <|> IP1 <$> parser
-
-instance HasParser AtomicProp where
-  parser = AP <$> parser
-
-instance HasParser ImplicationProp where
-  parser = 
-    parser >>= \prop_name_sub1 ->
-    string " => " *> parser >>= \prop_name_sub2 ->
-    return $ IP (prop_name_sub1, prop_name_sub2)
+    string "type_theorem " *> parser >>= \pps ->
+    optionMaybe (string " => " *> parser) >>= \maybe_pps ->
+    string "\nproof\n  " *> parser >>= \id ->
+    string " = " *> parser >>= \ve ->
+    return $ TT (pps, maybe_pps, id, ve)
 
 instance HasParser PropNameSub where
   parser = 

@@ -1,0 +1,11 @@
+Int
+
+Real
+
+Char
+
+String
+
+FunnyType
+
+MyDefinedType

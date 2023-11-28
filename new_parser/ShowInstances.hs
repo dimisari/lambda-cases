@@ -18,18 +18,17 @@ instance Show Literal where
     Int i -> show i
     R r -> show r
     Ch c -> show c
-    S s -> s
+    S s -> show s
 
 instance Show Identifier where
   show = \(Id s) -> s
 
 instance Show ParenExpr where
-  show = \(PE oofe) -> "(" ++ show oofe ++ ")"
+  show = \(PE se) -> "(" ++ show se ++ ")"
 
-instance Show OpOrFuncExpr where
+instance Show SimpleExpr where
   show = \case
     SOE1 soe -> show soe
-    OEFE1 oefe -> show oefe
     SFE1 sfe -> show sfe
 
 instance Show Tuple where
@@ -41,7 +40,7 @@ instance Show CommaSepLineExprs where
 instance Show LineExpr where
   show = \case
     NPOA1 npoa -> show npoa
-    OOFE oofe -> show oofe
+    SE se -> show se
 
 instance Show BigTuple where
   show = \(BT (le, csles, csles_l)) ->
@@ -156,49 +155,49 @@ instance Show Field where
 instance Show OpExpr where
   show = \case
     SOE2 soe -> show soe
-    OEFE2 oefe -> show oefe
     BOE1 boe -> show boe
     COE1 coe -> show coe
 
+instance Show OpExprStart where
+  show = \(OES op_arg_op_pairs) ->
+    concatMap (\(op_arg, op) -> show op_arg ++ " " ++ show op) op_arg_op_pairs
+
 instance Show SimpleOpExpr where
-  show = \(SOE (oa, op_oa_pairs)) ->
-    show oa ++ concatMap (\(op, oa) -> " " ++ show op ++ " " ++ show oa) op_oa_pairs
+  show = \(SOE (oes, soee)) -> show oes ++ " " ++ show soee
 
-instance Show OpExprFuncEnd where
-  show = \(OEFE (soe, op, sfe)) -> show soe ++ " " ++ show op ++ " " ++ show sfe
-
-instance Show BigOpExpr where
-  show = \(BOE (oel, oels, boee)) ->
-    show oel ++ concatMap (("\n" ++) . show) oels ++ "\n" ++ show boee
-
-instance Show BigOpExprEnd where
+instance Show SimpleOpExprEnd where
   show = \case
     OA1 oa -> show oa
-    SOE3 soe -> show soe
-    BOFE (maybe_oel, bofe) ->
-      show_maybe_oel ++ show bofe
-      where
-      show_maybe_oel =
-        case maybe_oel of
-          Nothing -> ""
-          Just oel -> show oel ++ " "
-
-instance Show BigOpFuncEnd where
-  show = \case
     SFE2 sfe -> show sfe
-    BFE1 bfe -> show bfe
 
-instance Show CasesOpExpr where
-  show = \(COE (oel, oels, cfe)) ->
-    show oel ++ concatMap (("\n" ++) . show) oels ++ show cfe
+instance Show BigOpExpr where
+  show = \case
+    BOE_1_ boe1 -> show boe1
+    BOE_2_ boe2 -> show boe2
 
-instance Show OpExprLine where
-  show = \(OEL (oels, op)) -> show oels ++ " " ++ show op
+instance Show BigOpExpr1 where
+  show = \(BOE_1 (oess, boee)) ->
+    concatMap ((++ "\n") . show) oess ++ show boee
 
-instance Show OpExprLineStart where
+instance Show BigOpExprEnd where
+  show = \(BOEE (maybe_oes, boee2)) ->
+    case maybe_oes of 
+      Nothing -> show boee2
+      Just oes -> show oes ++ " " ++ show boee2
+
+instance Show BigOpExprEnd2 where
   show = \case
     OA2 oa -> show oa
-    SOE4 soe -> show soe
+    SFE3 sfe -> show sfe
+    BFE1 bfe -> show bfe
+
+instance Show BigOpExpr2 where
+  show = \(BOE_2 (oes, bfe)) ->
+    show oes ++ " " ++ show bfe
+
+instance Show CasesOpExpr where
+  show = \(COE (oes, oess, cfe)) ->
+    show oes ++ concatMap (("\n" ++) . show) oess ++ show cfe
 
 instance Show OpArg where
   show = \case
@@ -238,7 +237,7 @@ instance Show Op where
 
 instance Show FuncExpr where
   show = \case
-    SFE3 sfe -> show sfe
+    SFE4 sfe -> show sfe
     BFE2 bfe -> show bfe
     CFE1 cfe -> show cfe
 
@@ -263,7 +262,6 @@ instance Show SimpleFuncBody where
   show = \case
     NPOA3 npoa -> show npoa
     SOE5 soe -> show soe
-    OEFE3 oefe -> show oefe
 
 instance Show CasesFuncExpr where
   show = \(CFE (cps, cs, ec)) ->
@@ -345,50 +343,183 @@ instance Show WhereDefExpr where
 
 -- Type
 
-deriving instance Show Type
-deriving instance Show SimpleType
-deriving instance Show TypeId
-deriving instance Show TypeVar
-deriving instance Show FuncType
-deriving instance Show ParamTypes
-deriving instance Show OneType
-deriving instance Show ProdType
-deriving instance Show FieldType
-deriving instance Show InParenT
-deriving instance Show TypeApp
-deriving instance Show TypeIdWithArgs
-deriving instance Show TypesInParen
-deriving instance Show Condition
+instance Show Type where
+  show = \(Ty (maybe_c, st)) -> show_maybe maybe_c ++ show st
+
+instance Show SimpleType where
+  show = \case
+    TId1 tid -> show tid
+    TV1 tv -> show tv
+    FT1 ft -> show ft
+    PT1 pt -> show pt
+    TA1 ta -> show ta
+
+instance Show TypeId where
+  show = \(TId str) -> str
+
+instance Show TypeVar where
+  show = \(TV c) -> [c]
+
+instance Show FuncType where
+  show = \(FT (pts, ot)) -> show pts ++ " => " ++ show ot
+
+instance Show ParamTypes where
+  show = \case
+    OT ot -> show ot
+    ManyTs (st, sts) -> "(" ++ show st ++ concatMap ((", " ++) . show) sts ++ ")"
+
+instance Show OneType where
+  show = \case
+    TId2 tid -> show tid
+    TV2 tv -> show tv
+    PT2 pt -> show pt
+    TA2 ta -> show ta
+    FT2 ft -> "(" ++ show ft ++ ")"
+
+instance Show ProdType where
+  show = \(PT (ft, fts)) -> show ft ++ concatMap ((" x " ++) . show) fts
+
+instance Show FieldType where
+  show = \case
+    TId3 tid -> show tid
+    TV3 tv -> show tv
+    TA3 ta -> show ta
+    IPT ipt -> show ipt
+
+instance Show InParenT where
+  show = \case
+    FT3 ft -> "(" ++ show ft ++ ")"  
+    PT3 pt -> "(" ++ show pt ++ ")"
+
+instance Show TypeApp where
+  show = \case
+    TIWA1 (maybe_tip1, tiwa, maybe_tip2) ->
+      show_maybe maybe_tip1 ++ show tiwa ++ show_maybe maybe_tip2
+    TIPTI (tip, tid, maybe_tip) ->
+      show tip ++ show tid ++ show_maybe maybe_tip
+    TITIP (tid, tip) ->
+      show tid ++ show tip
+
+instance Show TypeIdWithArgs where
+  show = \(TIWA (tid, tip_str_pairs)) ->
+    show tid ++ concatMap (\(tip, str) -> show tip ++ str) tip_str_pairs
+
+instance Show TypesInParen where
+  show = \(TIP (st, sts)) ->
+    "(" ++ show st ++ concatMap ((", " ++) . show) sts ++ ")"
+
+instance Show Condition where
+  show = \(Co pn) -> show pn ++ " ==> "
 
 -- TypeDef, TypeNickname
 
-deriving instance Show TypeDef
-deriving instance Show TupleTypeDef
-deriving instance Show TypeName
-deriving instance Show MiddleTypeName
-deriving instance Show TypeIdWithParams
-deriving instance Show ParamsInParen
-deriving instance Show OrTypeDef
-deriving instance Show TypeNickname
+instance Show TypeDef where
+  show = \case
+    TTD1 ttd -> show ttd
+    OTD1 otd -> show otd
+
+instance Show TupleTypeDef where
+  show = \(TTD (tn, id, ids, pt)) ->
+    "tuple_type " ++ show tn ++
+    "\nvalue (" ++ show id ++ concatMap ((", " ++) . show) ids ++
+    ") : " ++ show pt
+
+instance Show TypeName where
+  show = \(TN (maybe_pip1, mtn, maybe_pip2)) ->
+    show_maybe maybe_pip1 ++ show mtn ++ show_maybe maybe_pip2
+
+instance Show MiddleTypeName where
+  show = \case
+    TId4 tid -> show tid
+    TIWP1 tiwp -> show tiwp
+
+instance Show TypeIdWithParams where
+  show = \(TIWP (tid, pip_str_pairs)) ->
+    show tid ++ concatMap (\(pip, str) -> show pip ++ str) pip_str_pairs
+
+instance Show ParamsInParen where
+  show = \(PIP (tv, tvs)) ->
+    "(" ++ show tv ++ concatMap ((", " ++) . show) tvs ++ ")"
+
+instance Show OrTypeDef where
+  show =
+    \(OTD (tn, id, mst, id_mst_pairs)) ->
+    "or_type " ++ show tn ++
+    "\nvalues " ++ show id ++ show_mst mst ++
+    concatMap show_id_mst_pair id_mst_pairs
+    where
+    show_mst :: Maybe SimpleType -> String
+    show_mst = \case
+      Nothing -> ""
+      Just st -> ":" ++ show st
+
+    show_id_mst_pair :: (Identifier, Maybe SimpleType) -> String
+    show_id_mst_pair = \(id, mst) -> " | " ++ show id ++ show_mst mst
+
+instance Show TypeNickname where
+  show = \(TNN (tn, st)) -> "type_nickname " ++ show tn ++ " = " ++ show st
 
 -- TypePropDef
 
-deriving instance Show TypePropDef
-deriving instance Show AtomPropDef
-deriving instance Show RenamingPropDef
-deriving instance Show PropNameLine
-deriving instance Show PropName
-deriving instance Show NamePart
+instance Show TypePropDef where
+  show = \case
+    APD1 apd -> show apd
+    RPD1 rpd -> show rpd
+
+instance Show AtomPropDef where
+  show = \(APD (pnl, id, st)) ->
+    show pnl ++ "\nvalue\n  " ++ show id ++ " : " ++ show st
+
+instance Show RenamingPropDef where
+  show = \(RPD (pnl, pn, pns)) ->
+    show pnl ++ "\nequivalent\n  " ++ show pn ++ concatMap ((", " ++) . show) pns
+
+instance Show PropNameLine where
+  show = \(PNL pn) ->
+    "type_proposition " ++ show pn
+
+instance Show PropName where
+  show = \case
+    NPStart1 (c, np_pip_pairs, maybe_np) ->
+      [c] ++ concatMap (\(np, pip) -> show np ++ show pip) np_pip_pairs ++
+      show_maybe maybe_np
+    PIPStart1 (pip_np_pairs, maybe_pip) ->
+      concatMap (\(pip, np) -> show pip ++ show np) pip_np_pairs ++
+      show_maybe maybe_pip
+
+instance Show NamePart where
+  show = \(NP str) -> str
 
 -- TypeTheo 
 
-deriving instance Show TypeTheo
-deriving instance Show TypeTheoStart
-deriving instance Show AtomicProp
-deriving instance Show ImplicationProp
-deriving instance Show PropNameSub
+instance Show TypeTheo where
+  show = \(TT (pps, maybe_pps, id, ve)) ->
+    "type_theorem " ++ show pps ++ show_mpps maybe_pps ++
+    "\nproof\n  " ++ show id ++ " = " ++ show ve
+    where
+    show_mpps :: Maybe PropNameSub -> String
+    show_mpps = \case
+      Nothing -> ""
+      Just pps -> " => " ++ show pps
+
+instance Show PropNameSub where
+  show = \case
+    NPStart2 (c, np_tip_pairs, maybe_np) ->
+      [c] ++ concatMap (\(np, tip) -> show np ++ show tip) np_tip_pairs ++
+      show_maybe maybe_np
+    TIPStart (tip_np_pairs, maybe_tip) ->
+      concatMap (\(tip, np) -> show tip ++ show np) tip_np_pairs ++
+      show_maybe maybe_tip
 
 -- Program
 
-deriving instance Show Program
-deriving instance Show ProgramPart
+instance Show Program where
+  show = \(P pps) -> concatMap show pps
+
+instance Show ProgramPart where
+  show = \case
+    VD2 vd -> show vd
+    TD td -> show td
+    TNN1 tnn -> show tnn
+    TPD tpd -> show tpd
+    TT1 tt -> show tt
