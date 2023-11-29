@@ -304,7 +304,7 @@ The precise indentation rules are described in the section
 <line-expr> ::= <no-paren-op-arg> | <simple-expr> \\
 
 <big-tuple> ::= ""\\
-`(' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
+`(\ ' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
 ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )* \\
 `\\n' <indent> `)' \\
 
@@ -385,7 +385,7 @@ ListOf(T)s
 <list> ::= `[' [ <comma-sep-line-exprs> ] `]'
 
 <big-list> ::= 
-`[' <comma-sep-line-exprs>
+`[\ ' <comma-sep-line-exprs>
 ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
 `\\n' <indent> `]'
 \end{grammar}
@@ -505,10 +505,11 @@ Prefix functions always end with a colon.
 \begin{grammar}
 <pre-func> ::= <identifier> `:'
 
-<pre-func-app> ::= <pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> )
+<pre-func-app> ::=
+<pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> | <post-func-app> )
 
 <basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <post-func-app> 
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app> 
 \end{grammar}
 
 \end{itemize}
@@ -580,7 +581,7 @@ the following paragraph.
 <post-func> ::=
 `.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' | <dot-change>
 
-<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>
+<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>+
 \end{grammar}
 
 \end{itemize}
@@ -845,7 +846,7 @@ Operator & Type \\
 \hline
 \texttt{=} & (A)And(B)Can_Be_Equal \Ra (A, B) \ra Bool \\
 \hline
-\texttt{/=} & (A)And(B)Can_Be_Unequal \Ra (A, B) \ra Bool \\
+\texttt{!=} & (A)And(B)Can_Be_Unequal \Ra (A, B) \ra Bool \\
 \hline
 \texttt{>=} & (A)Can_Be_Gr_Or_Eq_To(B) \Ra (A, B) \ra Bool \\
 \hline
@@ -1100,7 +1101,7 @@ The precise indentation rules are described in the section
 <op-expr> ::= <simple-op-expr> | <big-op-expr> | <cases-op-expr>
 \\
 
-<op-expr-start> ::= ( <op-arg> `\ ' <op> )+
+<op-expr-start> ::= <op-arg> `\ ' <op> ( `\ ' <op-arg> `\ ' <op> )*
 
 <simple-op-expr> ::= <op-expr-start> `\ ' ( <op-arg> | <simple-func-expr> )
 \\
@@ -1120,11 +1121,12 @@ The precise indentation rules are described in the section
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
 
-<no-paren-op-arg> ::= <basic-expr> | <pre-func> | <post-func> | <pre-func-app>
+<no-paren-op-arg> ::=
+<basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
+`=' | `!=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
 \end{grammar}
 \end{itemize}
 
@@ -1164,7 +1166,7 @@ Operator & Type & Description \\
 \hline
 \texttt{=} & (A)And(B)Can_Be_Equal \Ra (A, B) \ra Bool & Equality \\
 \hline
-\texttt{/=} & (A)And(B)Can_Be_Unequal \Ra (A, B) \ra Bool & Inequality \\
+\texttt{!=} & (A)And(B)Can_Be_Unequal \Ra (A, B) \ra Bool & Inequality \\
 \hline
 \texttt{>=} & (A)Can_Be_Gr_Or_Eq_To(B) \Ra (A, B) \ra Bool
 & Greater than or equal to \\
@@ -1220,7 +1222,7 @@ Operator & Precedence & Associativity \\
 \hline
 \texttt{+ -} & 5 & Left \\ 
 \hline
-\texttt{= /= > < >= <=} & 4 & None \\
+\texttt{= != > < >= <=} & 4 & None \\
 \hline
 \texttt{\&} & 3 & Left \\
 \hline
@@ -1488,6 +1490,7 @@ keyword "all" to give the same type to all the values.
 <indent> <identifier> 
 `\\n' <indent> `:\ ' <type> 
 `\\n' <indent> `=\ ' <value-expr> [ <where-expr> ]
+`\\n\\n'
 
 <value-expr> ::=
 <no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
@@ -1497,6 +1500,7 @@ keyword "all" to give the same type to all the values.
 `\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all\ ' <type> ) \\
 `\\n' <indent> `=\ '
 <comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
+`\\n\\n'
 \end{grammar}
 
 \end{itemize}
@@ -1634,7 +1638,7 @@ definition:
 \\
 
 <big-tuple> ::= ""\\
-`(' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
+`(\ ' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
 ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )* \\
 `\\n' <indent> `)'
 \\
@@ -1642,7 +1646,7 @@ definition:
 <list> ::= `[' [ <comma-sep-line-exprs> ] `]'
 
 <big-list> ::= 
-`[' <comma-sep-line-exprs>
+`[\ ' <comma-sep-line-exprs>
 ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
 `\\n' <indent> `]'
 \\
@@ -1662,16 +1666,17 @@ definition:
 
 <pre-func> ::= <identifier> `:'
 
-<pre-func-app> ::= <pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> )
+<pre-func-app> ::=
+<pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> | <post-func-app> )
 
 <basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <post-func-app>
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app>
 \\
 
 <post-func> ::=
 `.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' | <dot-change>
 
-<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>
+<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>+
 \\
 
 <dot-change> ::= 
@@ -1684,7 +1689,7 @@ definition:
 <op-expr> ::= <simple-op-expr> | <big-op-expr> | <cases-op-expr>
 \\
 
-<op-expr-start> ::= ( <op-arg> `\ ' <op> )+
+<op-expr-start> ::= <op-arg> `\ ' <op> ( `\ ' <op-arg> `\ ' <op> )*
 
 <simple-op-expr> ::= <op-expr-start> `\ ' ( <op-arg> | <simple-func-expr> )
 \\
@@ -1704,11 +1709,12 @@ definition:
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
 
-<no-paren-op-arg> ::= <basic-expr> | <pre-func> | <post-func> | <pre-func-app>
+<no-paren-op-arg> ::=
+<basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
 
 <op> ::= 
 `->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `/=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'
+`=' | `!=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'
 \\
 
 <func-expr> ::= <simple-func-expr> | <big-func-expr> | <cases-func-expr>
@@ -1755,6 +1761,7 @@ definition:
 <indent> <identifier> 
 `\\n' <indent> `:\ ' <type> 
 `\\n' <indent> `=\ ' <value-expr> [ <where-expr> ]
+`\\n\\n'
 
 <value-expr> ::=
 <no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
@@ -1764,6 +1771,7 @@ definition:
 `\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all\ ' <type> ) \\
 `\\n' <indent> `=\ '
 <comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
+`\\n\\n'
 \\
 
 <where-expr> ::=
@@ -2113,7 +2121,7 @@ their argument.
 \begin{grammar}
 <tuple-type-def> ::= 
 `tuple_type\ ' <type-name>
-`\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type>
+`\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type> `\\n\\n'
 
 <type-name> ::= 
 [ <params-in-paren> ] ( <type-id> | <type-id-with-params> ) [ <params-in-paren> ]
@@ -2222,7 +2230,7 @@ non_empty_ls_to_ls
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> 
 \\`\\nvalues\ ' <identifier> [ `:' <simple-type> ]
-( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
+( `\ |\ ' <identifier> [ `:' <simple-type> ] )* `\\n\\n'
 \end{grammar}
 
 \end{itemize}
@@ -2249,7 +2257,7 @@ then an equal sign and they end with the type to be nicknamed.
 \item \textit{Grammar}
 
 \begin{grammar}
-<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
+<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type> `\\n\\n'
 \end{grammar} 
 
 \end{itemize}
@@ -2419,10 +2427,10 @@ proposition or (if it is a conjunction) many propositions  seperated by commas
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
 
 <atom-prop-def> ::=
-<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
+<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type> `\\n\\n'
 
 <renaming-prop-def> ::=
-<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )*
+<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )* `\\n\\n'
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2591,9 +2599,9 @@ the "\texttt{=>}" arrow.
 \paragraph{Grammar for Theorems}
 
 \begin{grammar}
-<type-theo> ::= 
+<type-theo> ::= ""\\
 `type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ]
-`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
+`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr> `\\n\\n'
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
@@ -2647,7 +2655,7 @@ the "\texttt{=>}" arrow.
 
 <tuple-type-def> ::= 
 `tuple_type\ ' <type-name>
-`\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type>
+`\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type> `\\n\\n'
 
 <type-name> ::= 
 [ <params-in-paren> ] ( <type-id> | <type-id-with-params> ) [ <params-in-paren> ]
@@ -2660,20 +2668,20 @@ the "\texttt{=>}" arrow.
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> 
 `\\nvalues\ ' <identifier> [ `:' <simple-type> ]
-( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
+( `\ |\ ' <identifier> [ `:' <simple-type> ] )* `\\n\\n'
 \\
 
-<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
+<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type> `\\n\\n'
 \\\\
 
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
 \\
 
 <atom-prop-def> ::=
-<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
+<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type> `\\n\\n'
 
 <renaming-prop-def> ::=
-<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )*
+<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )* `\\n\\n'
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2685,9 +2693,9 @@ the "\texttt{=>}" arrow.
 \\
 \\
 
-<type-theo> ::= 
+<type-theo> ::= ""\\
 `type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ]
-`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr>
+`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr> `\\n\\n'
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]

@@ -1,9 +1,10 @@
-Int x Int
+Int x Int#
 
-Real x Real x Real
+Real x Real x Real#
 
-Int x Real x String
+Int x Real x String#
 
-ListOf(Int)s x (Int x ListOf(String)s)
+ListOf(Int)s x (Int x ListOf(String)s)#
 
-(Int => Int) x (Int x Real) x (Real => String)
+(Int => Int) x (Int x Real) x (Real => String)#
+

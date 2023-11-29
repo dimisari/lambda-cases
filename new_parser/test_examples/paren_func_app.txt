@@ -1,15 +1,18 @@
-f(x)
+f(x)#
 
-f(x, y, z)
+f(x, y, z)#
 
-(x)to_string
+(x)to_string#
 
-apply(f)to_all
+apply(f)to_all#
 
-apply(f)to_all(l)
+apply(f)to_all(l)#
 
-apply(the_value:)to_all
+apply(the_value:)to_all#
 
-apply(.1st)to_all
+apply(.1st)to_all#
 
-apply(.change{1st = 1st + 1})to_all
+apply(.change{1st = 1st + 1})to_all#
+
+do(3)times#
+

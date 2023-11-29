@@ -1,0 +1,15 @@
+Parsed :) ==>
+Int x Int
+
+Parsed :) ==>
+Real x Real x Real
+
+Parsed :) ==>
+Int x Real x String
+
+Parsed :) ==>
+ListOf(Int)s x (Int x ListOf(String)s)
+
+Parsed :) ==>
+(Int => Int) x (Int x Real) x (Real => String)
+

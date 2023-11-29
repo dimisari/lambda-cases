@@ -1,11 +1,20 @@
 or_type Bool
 values true | false
 
+#
+
 or_type Possibly(A)
 values the_value:A | no_value
+
+#
 
 or_type ListOf(A)s
 values non_empty_l:NonEmptyListOf(A)s | empty_l
 
+#
+
 or_type Error(A)OrResult(B)
 values error:A | result:B
+
+#
+

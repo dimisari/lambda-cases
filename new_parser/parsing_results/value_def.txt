@@ -1,0 +1,10 @@
+Parsed :) ==>
+foo
+  : Int
+  = 42
+
+Parsed :) ==>
+f
+  : (Int, Int, Int) => Int
+  = (a, b, c) => a + b * c
+

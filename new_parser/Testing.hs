@@ -33,6 +33,8 @@ main =
 run_parse_func_for_file :: (FileName, ParseFunc) -> IO ()
 run_parse_func_for_file (file_name, parse_func) =
   readFile input_path >>= in_str_to_out_str .> writeFile output_path
+--   readFile input_path >>=
+--   file_string_to_examples .> concatMap ((++ "\n\n") . show) .> writeFile output_path
   where
   input_path :: FilePath
   input_path = "test_examples/" ++ file_name
@@ -44,7 +46,7 @@ run_parse_func_for_file (file_name, parse_func) =
   in_str_to_out_str = file_string_to_examples .> concatMap parse_func
 
   file_string_to_examples :: FileString -> [ TestExample ]
-  file_string_to_examples = endBy "\n\n"
+  file_string_to_examples = endBy "#\n\n"
 
 -- Parse class and result to string
 
@@ -54,7 +56,7 @@ class HasParser a => Parse a where
 
 parse_result_to_string :: Show a => Either ParseError a -> ParseResult
 parse_result_to_string = \case
-  Left err -> "Error :( ==>" ++ (show err %> dropWhile (/= '\n')) ++ "\n\n"
+  Left err -> "Error :( ==>" ++ (show err {- %> dropWhile (/= '\n') -}) ++ "\n\n"
   Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
 
 -- "Parse and result to string" functions for each type to be parsed

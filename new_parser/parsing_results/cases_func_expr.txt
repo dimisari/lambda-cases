@@ -1,0 +1,33 @@
+Parsed :) ==>
+cases =>
+true => print <- "It's true!! :)"
+false => print <- "It's false... :("
+
+Error :( ==>(line 2, column 1):
+unexpected " "
+expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+
+Error :( ==>(line 2, column 1):
+unexpected " "
+expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+
+Error :( ==>(line 2, column 1):
+unexpected " "
+expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+
+Error :( ==>(line 2, column 1):
+unexpected " "
+expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+
+Error :( ==>(line 2, column 1):
+unexpected " "
+expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+
+Error :( ==>(line 2, column 1):
+unexpected " "
+expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+
+Error :( ==>(line 2, column 1):
+unexpected " "
+expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+

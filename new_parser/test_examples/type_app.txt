@@ -1,11 +1,12 @@
-Possibly(Int)
+Possibly(Int)#
 
-ListOf(Real)s
+ListOf(Real)s#
 
-TreeOf(String)s
+TreeOf(String)s#
 
-Error(String)OrResult(Int)
+Error(String)OrResult(Int)#
 
-ListOf(Int => Int)s
+ListOf(Int => Int)s#
 
-ListOf(A)s
+ListOf(A)s#
+

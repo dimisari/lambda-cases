@@ -1,0 +1,15 @@
+Parsed :) ==>
+type_proposition (T)Has_Equality
+equivalent
+  (T)And(T)Can_Be_Equal
+
+Parsed :) ==>
+type_proposition (A)And(B)Are_Comparable
+equivalent
+  (A)Can_Be_Less_Than(B), (A)And(B)Can_Be_Equal, (A)Can_Be_Greater_Than(B)
+
+Parsed :) ==>
+type_proposition (T)Has_Comparison
+equivalent
+  (T)And(T)Are_Comparable
+

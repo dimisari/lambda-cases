@@ -2,14 +2,23 @@ type_proposition (A)Is(B)s_First
 value
   first : B => A
 
+#
+
 type_proposition (T)Has_String_Repr
 value
   to_string : T => String
+
+#
 
 type_proposition (T)Has_A_Wrapper
 value
   wrapper : A => T(A)
 
+#
+
 type_proposition (T)Has_Internal_App
 value
   apply()internally : (A => B, T(A)) => T(B)
+
+#
+

@@ -1,0 +1,18 @@
+Parsed :) ==>
+Possibly(Int)
+
+Parsed :) ==>
+ListOf(Real)s
+
+Parsed :) ==>
+TreeOf(String)s
+
+Parsed :) ==>
+Error(String)OrResult(Int)
+
+Parsed :) ==>
+ListOf(Int => Int)s
+
+Parsed :) ==>
+ListOf(A)s
+

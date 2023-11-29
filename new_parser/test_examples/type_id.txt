@@ -1,11 +1,12 @@
-Int
+Int#
 
-Real
+Real#
 
-Char
+Char#
 
-String
+String#
 
-FunnyType
+FunnyType#
 
-MyDefinedType
+MyDefinedType#
+

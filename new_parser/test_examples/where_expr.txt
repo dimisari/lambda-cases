@@ -1,8 +1,12 @@
+
 where
 less_l, greater_l
   : all ListOf(Int)s
   = filter_with(x => x < l.head, l.tail)
   , filter_with(x => x >= l.head, l.tail)
+
+#
+
 
 where
 sum_list
@@ -11,6 +15,9 @@ sum_list
     empty_l => 0
     non_empty_l:l => l.head + sum_list(l.tail)
 
+#
+
+
 where
 s1, s2, s3, s4
   : all String
@@ -18,3 +25,6 @@ s1, s2, s3, s4
   , "I have tried way too many times to fit a big chunk of text"
   , "inside my program, without it hitting the half-screen mark!"
   , "I am so glad I finally discovered lcases!"
+
+#
+

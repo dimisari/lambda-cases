@@ -1,7 +1,12 @@
 val1, val2, val3
   : Int, Bool, Char
-  = 42, true, ’a’
+  = 42, true, 'a'
+
+#
 
 int1, int2, int3
   : all Int
   = 1, 2, 3
+
+#
+

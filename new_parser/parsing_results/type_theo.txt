@@ -1,0 +1,28 @@
+Error :( ==>(line 1, column 23):
+unexpected "("
+expecting uppercase letter, lowercase letter, ", " or ")"
+
+Error :( ==>(line 1, column 21):
+unexpected "("
+expecting uppercase letter, lowercase letter, ", " or ")"
+
+Error :( ==>(line 1, column 23):
+unexpected "("
+expecting uppercase letter, lowercase letter, ", " or ")"
+
+Error :( ==>(line 1, column 21):
+unexpected "("
+expecting uppercase letter, lowercase letter, ", " or ")"
+
+Error :( ==>(line 3, column 4):
+unexpected "\\"
+expecting " = "
+
+Error :( ==>(line 3, column 4):
+unexpected "<"
+expecting " = "
+
+Error :( ==>(line 3, column 4):
+unexpected ">"
+expecting " = "
+

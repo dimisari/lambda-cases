@@ -22,23 +22,23 @@ Parsed :) ==>
 Parsed :) ==>
 "Hello World!"
 
-Error :( ==>
+Error :( ==>(line 1, column 2):
 unexpected '.'
 expecting digit or end of input
 
-Error :( ==>
+Error :( ==>(line 1, column 4):
 unexpected 'a'
-expecting digit, exponent or end of input
+expecting digit, "e", "E" or end of input
 
-Error :( ==>
+Error :( ==>(line 1, column 1):
 unexpected "a"
-expecting "-", float, natural, character or literal string
+expecting "-", digit, character or string literal
 
-Error :( ==>
+Error :( ==>(line 1, column 1):
 unexpected "a"
-expecting "-", float, natural, character or literal string
+expecting "-", digit, character or string literal
 
-Error :( ==>
+Error :( ==>(line 1, column 2):
 unexpected " "
-expecting natural
+expecting digit
 

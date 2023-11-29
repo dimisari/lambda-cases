@@ -7,7 +7,6 @@ Parsed :) ==>
 Parsed :) ==>
 (x, y, z, w)
 
-Error :( ==>
-unexpected " "
-expecting ", " or ")"
+Parsed :) ==>
+(1, my_function, (x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1 / 2))
 

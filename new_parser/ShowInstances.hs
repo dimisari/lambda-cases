@@ -55,7 +55,7 @@ instance Show List where
 
 instance Show BigList where
   show = \(BL (csles, csles_l)) ->
-    "[" ++ show csles ++
+    "[ " ++ show csles ++
     concatMap (("\n, " ++) . show) csles_l ++ 
     "\n]"
 
@@ -105,7 +105,8 @@ instance Show PreFuncArg where
   show = \case
     BE1 be -> show be
     PE1 pe -> show pe
-    PrFA1 pfa -> show pfa
+    PrFA1 prfa -> show prfa
+    PoFA1 pofa -> show pofa
 
 instance Show BasicExpr where
   show = \case
@@ -114,7 +115,6 @@ instance Show BasicExpr where
     T1 tuple -> show tuple
     L1 list -> show list
     PFA pfa -> show pfa
-    PoFA1 pofa -> show pofa
 
 instance Show PostFunc where
   show = \case
@@ -127,7 +127,7 @@ instance Show PostFunc where
     DC1 dc -> show dc
 
 instance Show PostFuncApp where
-  show = \(PoFA (pfa, pf)) -> show pfa ++ show pf
+  show = \(PoFA (pfa, pfs)) -> show pfa ++ concatMap show pfs
 
 instance Show PostFuncArg where
   show = \case
@@ -159,8 +159,10 @@ instance Show OpExpr where
     COE1 coe -> show coe
 
 instance Show OpExprStart where
-  show = \(OES op_arg_op_pairs) ->
-    concatMap (\(op_arg, op) -> show op_arg ++ " " ++ show op) op_arg_op_pairs
+  show = \(OES (op_arg1, op1, op_arg_op_pairs)) ->
+     show op_arg1 ++ " " ++ show op1  ++
+     concatMap
+       (\(op_arg, op) -> " " ++ show op_arg ++ " " ++ show op) op_arg_op_pairs
 
 instance Show SimpleOpExpr where
   show = \(SOE (oes, soee)) -> show oes ++ " " ++ show soee
@@ -209,7 +211,8 @@ instance Show NoParenOpArg where
     BE3 be -> show be
     PrF prf -> show prf
     PoF pof -> show pof
-    PrFA2 pfa -> show pfa
+    PrFA2 prfa -> show prfa
+    PoFA2 pofa -> show pofa
 
 instance Show Op where
   show = \case
@@ -264,8 +267,8 @@ instance Show SimpleFuncBody where
     SOE5 soe -> show soe
 
 instance Show CasesFuncExpr where
-  show = \(CFE (cps, cs, ec)) ->
-    show cps ++ " =>" ++ concatMap show cs ++ show ec
+  show = \(CFE (cps, cs, maybe_ec)) ->
+    show cps ++ " =>" ++ concatMap show cs ++ show_maybe maybe_ec
 
 instance Show CasesParams where
   show = \case
@@ -279,10 +282,10 @@ instance Show CasesParam where
     CasesKeyword -> "cases"
 
 instance Show Case where
-  show = \(Ca (m, cb)) -> "\n" ++ show m ++ " =>" ++ show cb
+  show = \(Ca (m, cb)) -> "\n" ++ show m ++ " => " ++ show cb
 
 instance Show EndCase where
-  show = \(EC cb) -> "\n... =>" ++ show cb
+  show = \(EC cb) -> "\n... => " ++ show cb
 
 instance Show Matching where
   show = \case

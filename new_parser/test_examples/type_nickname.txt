@@ -1,9 +1,20 @@
 type_nickname Ints = ListOf(Int)s
 
+#
+
 type_nickname IntStringPairs = ListOf(Int x String)s
+
+#
 
 type_nickname IO = (EmptyVal)FromIO
 
+#
+
 type_nickname ErrOrRes(A) = Error(String)OrResult(A)
 
+#
+
 type_nickname Parse(A)FuncT = String => A x String
+
+#
+

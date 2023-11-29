@@ -1,0 +1,12 @@
+Parsed :) ==>
+(1 + 2)
+
+Parsed :) ==>
+(((1 + 2) * 3) ^ 4)
+
+Parsed :) ==>
+(val -> (x => f(x) + 1) -> to_string -> (s => "f(val) + 1 is: " + s))
+
+Parsed :) ==>
+(do(3)times <- (get_line ;> line => print("Line is: " + line)))
+

@@ -3,7 +3,7 @@ module ASTTypes where
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
 
 data Literal = 
-  Int Integer | R Double | Ch Char | S String 
+  Int Int | R Double | Ch Char | S String 
 
 newtype Identifier = Id String
 
@@ -48,16 +48,15 @@ newtype PreFunc = PF Identifier
 newtype PreFuncApp = PrFA (PreFunc, PreFuncArg)
 
 data PreFuncArg = 
-  BE1 BasicExpr | PE1 ParenExpr | PrFA1 PreFuncApp
+  BE1 BasicExpr | PE1 ParenExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
 
 data BasicExpr = 
-  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp |
-  PoFA1 PostFuncApp
+  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp
 
 data PostFunc = 
   Id2 Identifier | Dot1st | Dot2nd | Dot3rd | Dot4th | Dot5th | DC1 DotChange
 
-newtype PostFuncApp = PoFA (PostFuncArg, PostFunc)
+newtype PostFuncApp = PoFA (PostFuncArg, [PostFunc])
 
 data PostFuncArg = 
   PE2 ParenExpr | BE2 BasicExpr
@@ -74,7 +73,7 @@ data Field =
 data OpExpr = 
   SOE2 SimpleOpExpr | BOE1 BigOpExpr | COE1 CasesOpExpr
 
-newtype OpExprStart = OES [(OpArg, Op)]
+newtype OpExprStart = OES (OpArg, Op, [(OpArg, Op)])
 
 newtype SimpleOpExpr = SOE (OpExprStart, SimpleOpExprEnd)
 
@@ -99,7 +98,7 @@ data OpArg =
   NPOA2 NoParenOpArg | PE3 ParenExpr
 
 data NoParenOpArg =
-  BE3 BasicExpr | PrF PreFunc | PoF PostFunc | PrFA2 PreFuncApp
+  BE3 BasicExpr | PrF PreFunc | PoF PostFunc | PrFA2 PreFuncApp | PoFA2 PostFuncApp
 
 data Op = 
   RightApp | LeftApp | RightComp | LeftComp | Power | Mult | Div | Plus | 

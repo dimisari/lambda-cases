@@ -1,16 +1,16 @@
-name.first_name
+name.first_name#
 
-list.head
+list.head#
 
-date.year
+date.year#
 
-tuple.1st
+tuple.1st#
 
-tuple.change{1st = 42, 3rd = 17}
+tuple.change{1st = 42, 3rd = 17}#
 
-state.change{counter = counter + 1}
+state.change{counter = counter + 1}#
 
-name.change{last_name = "Gauss"}
+name.change{last_name = "Gauss"}#
 
-point.change{x = 1.61, y = 2.71, z = 3.14}
+point.change{x = 1.61, y = 2.71, z = 3.14}#
 

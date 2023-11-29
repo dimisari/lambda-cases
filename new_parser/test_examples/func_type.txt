@@ -1,13 +1,14 @@
-String => String
+String => String#
 
-Real => Int
+Real => Int#
 
-A => A
+A => A#
 
-Int x Int => Int
+Int x Int => Int#
 
-(Real, Real, Real) => Real
+(Real, Real, Real) => Real#
 
-(A => B, B => C) => (A => C)
+(A => B, B => C) => (A => C)#
 
-(Int => Int) => Int
+(Int => Int) => Int#
+
