@@ -6,7 +6,16 @@ foo
 
 f
   : (Int, Int, Int) => Int
-  = (a, b, c) => a + b * c
+  = (a, b, c) =>
+    a + b * c
+
+#
+
+id_bool
+  : Bool => Bool
+  = cases =>
+    true => true
+    false => false
 
 #
 

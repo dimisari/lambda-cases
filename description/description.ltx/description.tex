@@ -1977,11 +1977,12 @@ type parameters are substituted by the type expressions of the arguments.
 \begin{grammar}
 <type-app> ::= ""\\""
 [ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
-\alt " "<type-id> <types-in-paren>
+\alt " "<types-in-paren> <type-id-or-var> [ <types-in-paren> ]
+\alt " "<type-id-or-var> <types-in-paren>
 
-<type-id-with-args> ::= 
-<type-id> ( <types-in-paren> [A-Za-z]+ )+
+<type-id-with-args> ::= [A-Z] [A-Za-z]+ ( <types-in-paren> [A-Za-z]+ )+
+
+<type-id-or-var> ::= <type-id> | <type-var>
 
 <types-in-paren> ::= `(' <simple-type> ( `, ' <simple-type> )* `)'
 \end{grammar}
@@ -2124,10 +2125,8 @@ their argument.
 `\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type> `\\n\\n'
 
 <type-name> ::= 
-[ <params-in-paren> ] ( <type-id> | <type-id-with-params> ) [ <params-in-paren> ]
-
-<type-id-with-params> ::= 
-<type-id> ( <params-in-paren> [A-Za-z]+ )+
+[ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
+[ <params-in-paren> ]
 
 <params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
 \end{grammar}
@@ -2600,12 +2599,21 @@ the "\texttt{=>}" arrow.
 
 \begin{grammar}
 <type-theo> ::= ""\\
-`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ]
-`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr> `\\n\\n'
+`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] \\
+`\\nproof\\n\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =\ ' <value-expr>
+`\\n\\n'
 
 <prop-name-sub> ::=  ""\\""
-[A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
-\alt " "( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
+[A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
+\alt " "( <param-subs-in-paren> <name-part> )+ [ <param-subs-in-paren> ]
+
+<param-subs-in-paren> ::= `(' <param-sub> ( `, ' <param-sub> )* `)'
+
+<param-sub> ::= <simple-type> | <type-func>
+
+<type-func> ::=
+[ `()' ] <type-id> ( `()' [A-Za-z]+ )+ [ `()' ] | `()' <type-id> [ `()' ] |
+<type-id> `()'
 \end{grammar} 
 
 \subsection{Complete Grammar for Types and Type Logic}
@@ -2637,11 +2645,12 @@ the "\texttt{=>}" arrow.
 
 <type-app> ::= ""\\""
 [ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id> [ <types-in-paren> ]
-\alt " "<type-id> <types-in-paren>
+\alt " "<types-in-paren> <type-id-or-var> [ <types-in-paren> ]
+\alt " "<type-id-or-var> <types-in-paren>
 
-<type-id-with-args> ::= 
-<type-id> ( <types-in-paren> [A-Za-z]+ )+
+<type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
+
+<type-id-or-var> ::= <type-id> | <type-var>
 
 <types-in-paren> ::= `(' <simple-type> ( `, ' <simple-type> )* `)'
 \\
@@ -2658,9 +2667,8 @@ the "\texttt{=>}" arrow.
 `\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type> `\\n\\n'
 
 <type-name> ::= 
-[ <params-in-paren> ] ( <type-id> | <type-id-with-params> ) [ <params-in-paren> ]
-
-<type-id-with-params> ::= <type-id> ( <params-in-paren> [A-Za-z]+ )+
+[ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
+[ <params-in-paren> ]
 
 <params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
 \\
@@ -2694,13 +2702,21 @@ the "\texttt{=>}" arrow.
 \\
 
 <type-theo> ::= ""\\
-`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ]
-`\\nproof\\n\ \ ' <identifier> `\ =\ ' <value-expr> `\\n\\n'
+`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] \\
+`\\nproof\\n\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =\ ' <value-expr>
+`\\n\\n'
 
 <prop-name-sub> ::=  ""\\""
-[A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
-\alt " "( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
+[A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
+\alt " "( <param-subs-in-paren> <name-part> )+ [ <param-subs-in-paren> ]
 
+<param-subs-in-paren> ::= `(' <param-sub> ( `, ' <param-sub> )* `)'
+
+<param-sub> ::= <simple-type> | <type-func>
+
+<type-func> ::=
+[ `()' ] <type-id> ( `()' [A-Za-z]+ )+ [ `()' ] | `()' <type-id> [ `()' ] |
+<type-id> `()'
 \end{grammar}
 
 \section{Language Description: Predefined}

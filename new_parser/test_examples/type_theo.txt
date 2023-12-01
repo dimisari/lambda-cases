@@ -28,7 +28,7 @@ proof
 
 type_theorem (A)And(B)Can_Be_Equal => (A)And(B)Can_Be_Unequal
 proof
-  a \= b = not(a = b)
+  a != b = not(a = b)
 
 #
 

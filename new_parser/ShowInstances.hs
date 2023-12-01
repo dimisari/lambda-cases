@@ -44,7 +44,7 @@ instance Show LineExpr where
 
 instance Show BigTuple where
   show = \(BT (le, csles, csles_l)) ->
-    "(" ++ show le ++ ", " ++ show csles ++
+    "( " ++ show le ++ ", " ++ show csles ++
     concatMap (("\n, " ++) . show) csles_l ++ 
     "\n)"
 
@@ -398,14 +398,19 @@ instance Show TypeApp where
   show = \case
     TIWA1 (maybe_tip1, tiwa, maybe_tip2) ->
       show_maybe maybe_tip1 ++ show tiwa ++ show_maybe maybe_tip2
-    TIPTI (tip, tid, maybe_tip) ->
-      show tip ++ show tid ++ show_maybe maybe_tip
-    TITIP (tid, tip) ->
-      show tid ++ show tip
+    TIPTI (tip, tid_or_tv, maybe_tip) ->
+      show tip ++ show tid_or_tv ++ show_maybe maybe_tip
+    TITIP (tid_or_tv, tip) ->
+      show tid_or_tv ++ show tip
 
 instance Show TypeIdWithArgs where
   show = \(TIWA (tid, tip_str_pairs)) ->
     show tid ++ concatMap (\(tip, str) -> show tip ++ str) tip_str_pairs
+
+instance Show TypeIdOrVar where
+  show = \case
+    TId4 tid -> show tid
+    TV4 tv -> show tv
 
 instance Show TypesInParen where
   show = \(TIP (st, sts)) ->
@@ -428,17 +433,10 @@ instance Show TupleTypeDef where
     ") : " ++ show pt
 
 instance Show TypeName where
-  show = \(TN (maybe_pip1, mtn, maybe_pip2)) ->
-    show_maybe maybe_pip1 ++ show mtn ++ show_maybe maybe_pip2
-
-instance Show MiddleTypeName where
-  show = \case
-    TId4 tid -> show tid
-    TIWP1 tiwp -> show tiwp
-
-instance Show TypeIdWithParams where
-  show = \(TIWP (tid, pip_str_pairs)) ->
-    show tid ++ concatMap (\(pip, str) -> show pip ++ str) pip_str_pairs
+  show = \(TN (maybe_pip1, tid, pip_str_pairs, maybe_pip2)) ->
+    show_maybe maybe_pip1 ++ show tid ++
+    concatMap (\(pip, str) -> show pip ++ str) pip_str_pairs ++
+    show_maybe maybe_pip2
 
 instance Show ParamsInParen where
   show = \(PIP (tv, tvs)) ->
@@ -496,23 +494,48 @@ instance Show NamePart where
 -- TypeTheo 
 
 instance Show TypeTheo where
-  show = \(TT (pps, maybe_pps, id, ve)) ->
+  show = \(TT (pps, maybe_pps, id, maybe_op_id, ve)) ->
     "type_theorem " ++ show pps ++ show_mpps maybe_pps ++
-    "\nproof\n  " ++ show id ++ " = " ++ show ve
+    "\nproof\n  " ++ show id ++ show_moi maybe_op_id ++ " = " ++ show ve
     where
     show_mpps :: Maybe PropNameSub -> String
     show_mpps = \case
       Nothing -> ""
       Just pps -> " => " ++ show pps
 
+    show_moi :: Maybe (Op, Identifier) -> String
+    show_moi = \case
+      Nothing -> ""
+      Just (op, id) -> " " ++ show op ++ " " ++ show id
+
 instance Show PropNameSub where
   show = \case
-    NPStart2 (c, np_tip_pairs, maybe_np) ->
-      [c] ++ concatMap (\(np, tip) -> show np ++ show tip) np_tip_pairs ++
+    NPStart2 (c, np_psip_pairs, maybe_np) ->
+      [c] ++ concatMap (\(np, psip) -> show np ++ show psip) np_psip_pairs ++
       show_maybe maybe_np
-    TIPStart (tip_np_pairs, maybe_tip) ->
-      concatMap (\(tip, np) -> show tip ++ show np) tip_np_pairs ++
-      show_maybe maybe_tip
+    PSIPStart (psip_np_pairs, maybe_psip) ->
+      concatMap (\(psip, np) -> show psip ++ show np) psip_np_pairs ++
+      show_maybe maybe_psip
+
+instance Show ParamSubsInParen where
+  show = \(PSIP (ps, pss)) ->
+    "(" ++ show ps ++ concatMap ((", " ++) . show) pss ++ ")"
+
+instance Show ParamSub where
+  show = \case
+    ST1 st -> show st
+    TF1 tf -> show tf
+
+instance Show TypeFunc where
+  show = \case
+    TF_1 (b1, tid, str, b2) -> show_bool b1 ++ show tid ++ str ++ show_bool b2
+    TF_2 (tid, b) -> "()" ++ show tid ++ show_bool b
+    TF_3 tid -> show tid ++ "()"
+    where
+    show_bool :: Bool -> String 
+    show_bool = \case
+      True -> "()"
+      False -> ""
 
 -- Program
 

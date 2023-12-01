@@ -6,9 +6,14 @@ less_l, greater_l
   = filter_with(x => x < l.head, l.tail)
   , filter_with(x => x >= l.head, l.tail)
 
-Error :( ==>(line 3, column 9):
-unexpected "\n"
-expecting lowercase letter, "_", "()", digit or ", "
+Parsed :) ==>
+
+where
+sum_list
+  : ListOf(Int)s => Int
+  = cases =>
+empty_l => 0
+non_empty_l:l => l.head + sum_list(l.tail)
 
 Parsed :) ==>
 

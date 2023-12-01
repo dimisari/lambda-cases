@@ -8,11 +8,13 @@ type_proposition (T)Has_String_Repr
 value
   to_string : T => String
 
-Error :( ==>(line 3, column 19):
-unexpected "("
-expecting "\n\n"
+Parsed :) ==>
+type_proposition (T)Has_A_Wrapper
+value
+  wrapper : A => T(A)
 
-Error :( ==>(line 3, column 33):
-unexpected "("
-expecting ", " or ")"
+Parsed :) ==>
+type_proposition (T)Has_Internal_App
+value
+  apply()internally : (A => B, T(A)) => T(B)
 

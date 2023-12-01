@@ -1,33 +1,50 @@
 Parsed :) ==>
-cases =>
+(x, cases) =>
 true => print <- "It's true!! :)"
 false => print <- "It's false... :("
 
-Error :( ==>(line 2, column 1):
-unexpected " "
-expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+Parsed :) ==>
+cases =>
+green => print <- "It's green! Let's go!!! :)"
+amber => print <- "Go go go, fast!"
+red => print <- "Stop right now! You're going to kill us!!"
 
-Error :( ==>(line 2, column 1):
-unexpected " "
-expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+Parsed :) ==>
+cases =>
+green => true
+amber => true
+red => false
 
-Error :( ==>(line 2, column 1):
-unexpected " "
-expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+Parsed :) ==>
+cases =>
+17 => true
+42 => true
+... => false
 
-Error :( ==>(line 2, column 1):
-unexpected " "
-expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+Parsed :) ==>
+(cases, cases) =>
+(green, green) => true
+(amber, amber) => true
+(red, red) => true
+... => false
 
-Error :( ==>(line 2, column 1):
-unexpected " "
-expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+Parsed :) ==>
+(x, cases) =>
+0 => x
+y => gcd(y, x -> mod <- y)
 
-Error :( ==>(line 2, column 1):
-unexpected " "
-expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+Parsed :) ==>
+cases =>
+empty_l => true
+non_empty_l:anything => false
 
-Error :( ==>(line 2, column 1):
-unexpected " "
-expecting "-", digit, character, string literal, lowercase letter, "(" or "["
+Parsed :) ==>
+(f, cases) =>
+empty_l => empty_l
+non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
+
+Parsed :) ==>
+cases =>
+true => true
+false => false
 

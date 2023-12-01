@@ -194,10 +194,13 @@ data InParenT =
 
 data TypeApp =  
   TIWA1 (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |
-  TIPTI (TypesInParen, TypeId, Maybe TypesInParen) |
-  TITIP (TypeId, TypesInParen)
+  TIPTI (TypesInParen, TypeIdOrVar, Maybe TypesInParen) |
+  TITIP (TypeIdOrVar, TypesInParen)
 
 newtype TypeIdWithArgs = TIWA (TypeId, [(TypesInParen, String)])
+
+data TypeIdOrVar =
+  TId4 TypeId | TV4 TypeVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
 
@@ -210,12 +213,8 @@ data TypeDef =
 
 newtype TupleTypeDef = TTD (TypeName, Identifier, [Identifier], ProdType)
 
-newtype TypeName = TN (Maybe ParamsInParen, MiddleTypeName, Maybe ParamsInParen)
-
-data MiddleTypeName = 
-  TId4 TypeId | TIWP1 TypeIdWithParams
-   
-newtype TypeIdWithParams = TIWP (TypeId, [(ParamsInParen, String)])
+newtype TypeName =
+  TN (Maybe ParamsInParen, TypeId, [(ParamsInParen, String)], Maybe ParamsInParen)
 
 newtype ParamsInParen = PIP (TypeVar, [TypeVar])
 
@@ -243,11 +242,20 @@ newtype NamePart = NP String
 
 -- TypeTheo 
 
-newtype TypeTheo = TT (PropNameSub, Maybe PropNameSub, Identifier, ValueExpr)
+newtype TypeTheo =
+  TT (PropNameSub, Maybe PropNameSub, Identifier, Maybe (Op, Identifier), ValueExpr)
 
 data PropNameSub = 
-  NPStart2 (Char, [(NamePart, TypesInParen)], Maybe NamePart) |
-  TIPStart ([(TypesInParen, NamePart)], Maybe TypesInParen)
+  NPStart2 (Char, [(NamePart, ParamSubsInParen)], Maybe NamePart) |
+  PSIPStart ([(ParamSubsInParen, NamePart)], Maybe ParamSubsInParen)
+
+newtype ParamSubsInParen = PSIP (ParamSub, [ParamSub])
+
+data ParamSub =
+  ST1 SimpleType | TF1 TypeFunc
+
+data TypeFunc = 
+  TF_1 (Bool, TypeId, String, Bool) | TF_2 (TypeId, Bool) | TF_3 TypeId
 
 -- Program
 

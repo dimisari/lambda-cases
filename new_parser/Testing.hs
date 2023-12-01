@@ -52,7 +52,7 @@ run_parse_func_for_file (file_name, parse_func) =
 
 class HasParser a => Parse a where
   parse :: TestExample -> Either ParseError a
-  parse = runParser (parser <* eof) 0 "" 
+  parse = runParser (parser <* eof) (0, False) "" 
 
 parse_result_to_string :: Show a => Either ParseError a -> ParseResult
 parse_result_to_string = \case

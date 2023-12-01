@@ -9,13 +9,45 @@ import Text.Parsec.Token hiding (comma, charLiteral, stringLiteral)
 import ASTTypes
 import ShowInstances
 
-type Parser = Parsec String Int
+type Parser = Parsec String ParserState
 
 class HasParser a where
   parser :: Parser a
 
 test_parser :: Parser a -> String -> Either ParseError a
-test_parser = \p s -> runParser (p <* eof) 0 "test" s
+test_parser = \p s -> runParser (p <* eof) (0, False) "test" s
+
+-- Parser State
+
+type ParserState = (Int, Bool)
+
+increase_il :: Parser ()
+increase_il = modifyState (\(il, b) -> (il + 1, b))
+
+decrease_il :: Parser ()
+decrease_il = modifyState (\(il, b) -> (il - 1, b))
+
+decrease_il_by2 :: Parser ()
+decrease_il_by2 = modifyState (\(il, b) -> (il - 2, b))
+
+in_equal_line :: Parser ()
+in_equal_line = modifyState (\(il, _) -> (il, True))
+
+not_in_equal_line :: Parser ()
+not_in_equal_line = modifyState (\(il, _) -> (il, False))
+
+are_we_in_equal_line :: Parser Bool
+are_we_in_equal_line = snd <$> getState
+
+inc_il_if_not_in_eq_line :: Bool -> Parser ()
+inc_il_if_not_in_eq_line = \case
+  True -> return ()
+  False -> increase_il
+
+dec_il_if_not_in_eq_line :: Bool -> Parser ()
+dec_il_if_not_in_eq_line = \case
+  True -> return ()
+  False -> decrease_il
 
 -- helper parsers
 
@@ -29,12 +61,16 @@ test_parser = \p s -> runParser (p <* eof) 0 "test" s
   ) 
 
 indent :: Parser ()
-indent = getState >>= \il -> string (concat $ replicate il "  ") >> return ()
+indent = getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
 
 par_lower_unders = 
   try (string "()") >>= \par ->
   many1 lower_under >>= \lowers_unders ->
   return $ par ++ lowers_unders
+
+-- helper op
+
+(%>) = flip ($)
 
 -- HasParser: Literal
 
@@ -83,7 +119,13 @@ instance HasParser Identifier where
     many lower_under >>= \lower_unders ->
     many par_lower_unders >>= \par_lower_unders_l ->
     option [] ((:[]) <$> digit) >>= \digit ->
-    return $ Id $ l1 : concat [lower_unders, concat par_lower_unders_l, digit]
+    (l1 : concat [lower_unders, concat par_lower_unders_l, digit]) %> \id_str ->
+      case elem id_str reserved of
+        True -> unexpected $ "cannot use \"" ++ id_str ++ "\" as an identifier"
+        False -> return $ Id id_str
+    where
+    reserved :: [String]
+    reserved = ["cases", "where"]
 
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
@@ -289,8 +331,8 @@ instance HasParser BigOpExpr2 where
 instance HasParser CasesOpExpr where
   parser = 
     parser >>= \oes ->
-    many (try $ nl_indent *> parser) >>= \oess ->
-    (nl_indent <|> one_space) *> parser >>= \cases_func_expr ->
+    many (try $ not_in_equal_line *> nl_indent *> parser) >>= \oess ->
+    (not_in_equal_line *> nl_indent <|> one_space) *> parser >>= \cases_func_expr ->
     return $ COE (oes, oess, cases_func_expr)
 
 instance HasParser OpArg where
@@ -360,9 +402,13 @@ instance HasParser SimpleFuncBody where
 instance HasParser CasesFuncExpr where --TODO last indentation rule
   parser =
     parser >>= \cases_params ->
-    string " =>" *> many1 parser >>= \cases ->
+    string " =>" *>
+    are_we_in_equal_line >>= \answer ->
+    inc_il_if_not_in_eq_line answer *>
+    many1 parser >>= \cases ->
     optionMaybe parser >>= \maybe_end_case ->
-    return $ CFE (cases_params, cases, maybe_end_case)
+    dec_il_if_not_in_eq_line answer *>
+    return (CFE (cases_params, cases, maybe_end_case))
 
 instance HasParser CasesParams where
   parser = 
@@ -383,7 +429,7 @@ instance HasParser Case where
 
 instance HasParser EndCase where
   parser = 
-    nl_indent *> string "... =>" *> parser >>= \case_body ->
+    try (nl_indent *> string "... =>") *> parser >>= \case_body ->
     return $ EC case_body
 
 instance HasParser Matching where
@@ -415,10 +461,10 @@ instance HasParser ListMatching where
 
 instance HasParser CaseBody where
   parser = 
-    modifyState (+ 1) >>
+    increase_il >>
     (one_space <|> nl_indent) *> case_body_start_p >>= \case_body_start ->
     optionMaybe (try parser) >>= \maybe_where_expr ->
-    modifyState (\x -> x - 1) >>
+    decrease_il >>
     return (CB (case_body_start, maybe_where_expr))
     where
     case_body_start_p :: Parser CaseBodyStart
@@ -429,11 +475,13 @@ instance HasParser CaseBody where
 instance HasParser ValueDef where
   parser = 
     indent *> parser >>= \identifier ->
-    modifyState (+1) >>
+    increase_il >>
     nl_indent *> string ": " *> parser >>= \type_ ->
-    nl_indent *> string "= " *> modifyState (+1) *> parser >>= \value_expr ->
+    nl_indent *> string "= " *> increase_il *> in_equal_line *>
+    parser >>= \value_expr ->
+    not_in_equal_line *>
     optionMaybe (try parser) >>= \maybe_where_expr ->
-    modifyState (\x -> x - 2) >>
+    decrease_il_by2 >>
     string "\n\n" >>
     return (VD (identifier, type_, value_expr, maybe_where_expr))
 
@@ -449,11 +497,11 @@ instance HasParser GroupedValueDefs where
   parser = 
     indent *> parser >>= \identifier ->
     many1 (comma *> parser) >>= \identifiers -> 
-    modifyState (+1) >>
+    increase_il >>
     nl_indent *> string ": " *> types_p >>= \types ->
     nl_indent *> string "= " *> parser >>= \comma_sep_line_exprs ->
     many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
-    modifyState (\x -> x - 1) >>
+    decrease_il >>
     string "\n\n" >>
     return (GVDs
       ( identifier, identifiers, types, comma_sep_line_exprs
@@ -542,30 +590,33 @@ instance HasParser TypeApp where
       optionMaybe parser >>= \maybe_types_in_paren2 ->
       return (maybe_types_in_paren1, type_id_with_args, maybe_types_in_paren2)
 
-    tipti_p :: Parser (TypesInParen, TypeId, Maybe TypesInParen)
+    tipti_p :: Parser (TypesInParen, TypeIdOrVar, Maybe TypesInParen)
     tipti_p = 
       parser >>= \types_in_paren ->
-      parser >>= \type_id ->
+      parser >>= \type_id_or_var ->
       optionMaybe parser >>= \maybe_types_in_paren ->
-      return (types_in_paren, type_id, maybe_types_in_paren)
+      return (types_in_paren, type_id_or_var, maybe_types_in_paren)
 
-    titip_p :: Parser (TypeId, TypesInParen)
+    titip_p :: Parser (TypeIdOrVar, TypesInParen)
     titip_p = 
-      parser >>= \type_id ->
+      parser >>= \type_id_or_var ->
       parser >>= \types_in_paren ->
-      return (type_id, types_in_paren)
+      return (type_id_or_var, types_in_paren)
 
 instance HasParser TypeIdWithArgs where
   parser =
-    parser >>= \type_id ->
+    parser >>= \tid ->
     many1 (try types_in_paren_and_string_p) >>= \tip_string_pairs ->
-    return $ TIWA (type_id, tip_string_pairs)
+    return $ TIWA (tid, tip_string_pairs)
     where
     types_in_paren_and_string_p :: Parser (TypesInParen, String)
     types_in_paren_and_string_p = 
       parser >>= \types_in_paren ->
       many1 (lower <|> upper) >>= \string ->
       return (types_in_paren, string)
+
+instance HasParser TypeIdOrVar where
+  parser = TId4 <$> try parser <|> TV4 <$> parser
 
 instance HasParser TypesInParen where
   parser =
@@ -591,19 +642,11 @@ instance HasParser TupleTypeDef where
 
 instance HasParser TypeName where
   parser =
-    optionMaybe parser >>= \maybe_params_in_paren1 ->
-    parser >>= \middle_type_name ->
-    optionMaybe parser >>= \maybe_params_in_paren2 ->
-    return $ TN (maybe_params_in_paren1, middle_type_name, maybe_params_in_paren2)
-
-instance HasParser MiddleTypeName where
-  parser = TIWP1 <$> try parser <|> TId4 <$> parser
-
-instance HasParser TypeIdWithParams where
-  parser =
-    parser >>= \type_id ->
-    many1 (try params_in_paren_and_string_p) >>= \pip_string_pairs ->
-    return $ TIWP (type_id, pip_string_pairs)
+    optionMaybe parser >>= \maybe_pip1 ->
+    parser >>= \tid ->
+    many (try params_in_paren_and_string_p) >>= \pip_string_pairs ->
+    optionMaybe parser >>= \maybe_pip2 ->
+    return $ TN (maybe_pip1, tid, pip_string_pairs, maybe_pip2)
     where
     params_in_paren_and_string_p :: Parser (ParamsInParen, String)
     params_in_paren_and_string_p = 
@@ -705,38 +748,89 @@ instance HasParser TypeTheo where
     string "type_theorem " *> parser >>= \pps ->
     optionMaybe (string " => " *> parser) >>= \maybe_pps ->
     string "\nproof\n  " *> parser >>= \id ->
-    string " = " *> parser >>= \ve ->
-    string "\n\n" *> return (TT (pps, maybe_pps, id, ve))
+    maybe_op_id_p >>= \maybe_op_id ->
+    parser >>= \ve ->
+    string "\n\n" *> return (TT (pps, maybe_pps, id, maybe_op_id, ve))
+    where
+    op_id_p :: Parser (Op, Identifier)
+    op_id_p =
+      char ' ' *> parser >>= \op ->
+      char ' ' *> parser <* notFollowedBy (char '\n') >>= \id ->
+      return (op, id)
+
+    maybe_op_id_p :: Parser (Maybe (Op, Identifier))
+    maybe_op_id_p =
+      Just <$> (try $ op_id_p <* string " = ") <|> (string " = " *> return Nothing)
+
 
 instance HasParser PropNameSub where
   parser = 
-    NPStart2 <$> np_start_p <|> TIPStart <$> tip_start_p
+    NPStart2 <$> np_start_p <|> PSIPStart <$> psip_start_p
     where
-    np_start_p :: Parser (Char, [(NamePart, TypesInParen)], Maybe NamePart)
+    np_start_p :: Parser (Char, [(NamePart, ParamSubsInParen)], Maybe NamePart)
     np_start_p = 
       upper >>= \u ->
-      many1 (try np_tip_p) >>= \np_tips ->
+      many1 (try np_psip_p) >>= \np_psips ->
       optionMaybe parser >>= \maybe_name_part ->
-      return (u, np_tips, maybe_name_part)
+      return (u, np_psips, maybe_name_part)
 
-    np_tip_p :: Parser (NamePart, TypesInParen)
-    np_tip_p =
+    np_psip_p :: Parser (NamePart, ParamSubsInParen)
+    np_psip_p =
       parser >>= \name_part ->
-      parser >>= \types_in_paren ->
-      return (name_part, types_in_paren)
+      parser >>= \param_subs_in_paren ->
+      return (name_part, param_subs_in_paren)
 
-    tip_start_p :: Parser ([(TypesInParen, NamePart)], Maybe TypesInParen)
-    tip_start_p = 
-      many1 (try tip_np_p) >>= \tip_nps ->
-      optionMaybe parser >>= \maybe_types_in_paren ->
-      return (tip_nps, maybe_types_in_paren)
+    psip_start_p :: Parser ([(ParamSubsInParen, NamePart)], Maybe ParamSubsInParen)
+    psip_start_p = 
+      many1 (try psip_np_p) >>= \psip_nps ->
+      optionMaybe parser >>= \maybe_param_subs_in_paren ->
+      return (psip_nps, maybe_param_subs_in_paren)
 
-    tip_np_p :: Parser (TypesInParen, NamePart)
-    tip_np_p =
-      parser >>= \types_in_paren ->
+    psip_np_p :: Parser (ParamSubsInParen, NamePart)
+    psip_np_p =
+      parser >>= \param_subs_in_paren ->
       parser >>= \name_part ->
-      return (types_in_paren, name_part)
- 
+      return (param_subs_in_paren, name_part)
+
+instance HasParser ParamSubsInParen where
+  parser =
+    char '(' *> parser >>= \param_sub ->
+    many (comma *> parser) <* char ')' >>= \param_subs ->
+    return $ PSIP (param_sub, param_subs)
+
+instance HasParser ParamSub where
+  parser = TF1 <$> try parser <|> ST1 <$> parser
+
+instance HasParser TypeFunc where
+  parser = TF_1 <$> try tf1_p <|> TF_2 <$> tf2_p <|> TF_3 <$> tf3_p
+    where
+    tf1_p :: Parser (Bool, TypeId, String, Bool)
+    tf1_p = 
+      bool_p >>= \b1 ->
+      parser >>= \tid ->
+      paren_lower_uppers_p >>= \str ->
+      bool_p >>= \b2 ->
+      return (b1, tid, str, b2)
+
+    tf2_p :: Parser (TypeId, Bool)
+    tf2_p = 
+      string "()" *> parser >>= \tid ->
+      bool_p >>= \b ->
+      return (tid, b)
+
+    tf3_p :: Parser TypeId
+    tf3_p = parser <* string "()" 
+
+    bool_p :: Parser Bool
+    bool_p =
+      optionMaybe (string "()") >>= \case
+        Nothing -> return False
+        Just _ -> return True
+
+    paren_lower_uppers_p :: Parser String
+    paren_lower_uppers_p = string "()" *> fmap ("()" ++) (many1 $ lower <|> upper) 
+
+
 -- for literals. Had to copy from Text.Parsec.Token source code
 -- because I didn't want spaces after the char and string literals ...
 

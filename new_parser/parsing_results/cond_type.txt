@@ -10,7 +10,6 @@ Parsed :) ==>
 Parsed :) ==>
 (T)Has_String_Repr ==> T => String
 
-Error :( ==>(line 1, column 18):
-unexpected "("
-expecting ", ", " x " or ")"
+Parsed :) ==>
+(E)Has_Use ==> (E(A), A => E(B)) => E(B)
 
