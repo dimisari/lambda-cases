@@ -1,25 +1,20 @@
 tuple_type Name
-value (first_name, last_name) : String x String
-
-#
+value
+  (first_name, last_name) : String x String#
 
 tuple_type Date
-value (day, month, year) : Int x Int x Int
-
-#
+value
+  (day, month, year) : Int x Int x Int#
 
 tuple_type MathematicianInfo
-value (name, nationality, date_of_birth) : Name x String x Date
-
-#
+value
+  (name, nationality, date_of_birth) : Name x String x Date#
 
 tuple_type TreeOf(A)s
-value (root, subtrees) : A x ListOf(TreeOf(A)s)s
-
-#
+value
+  (root, subtrees) : A x ListOf(TreeOf(A)s)s#
 
 tuple_type Indexed(T)
-value (index, val) : Int x T
-
-#
+value
+  (index, val) : Int x T#
 

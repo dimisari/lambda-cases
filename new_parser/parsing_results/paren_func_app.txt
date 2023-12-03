@@ -19,9 +19,8 @@ apply(the_value:)to_all
 Parsed :) ==>
 apply(.1st)to_all
 
-Error :( ==>(line 1, column 22):
-unexpected "s"
-expecting digit, ", " or "}"
+Parsed :) ==>
+apply(.change{1st = 1st + 1})to_all
 
 Parsed :) ==>
 do(3)times

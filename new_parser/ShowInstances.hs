@@ -93,7 +93,7 @@ instance Show EmptyParenOrArgs where
     EmptyParen -> "()"
     As1 args -> show args
 
--- Values: PreFunc, PostFunc, BasicExpr, DotChange
+-- Values: PreFunc, PostFunc, BasicExpr, Change
 
 instance Show PreFunc where
   show = \(PF id) -> show id ++ ":"
@@ -115,16 +115,21 @@ instance Show BasicExpr where
     T1 tuple -> show tuple
     L1 list -> show list
     PFA pfa -> show pfa
+    SI1 sid -> show sid
 
 instance Show PostFunc where
   show = \case
     Id2 id -> "." ++ show id
-    Dot1st -> ".1st"
-    Dot2nd -> ".2nd"
-    Dot3rd -> ".3rd"
-    Dot4th -> ".4th"
-    Dot5th -> ".5th"
-    DC1 dc -> show dc
+    SI2 sid -> "." ++ show sid
+    C1 c -> "." ++ show c
+
+instance Show SpecialId where
+  show = \case
+    First -> "1st"
+    Second -> "2nd"
+    Third -> "3rd"
+    Fourth -> "4th"
+    Fifth -> "5th"
 
 instance Show PostFuncApp where
   show = \(PoFA (pfa, pfs)) -> show pfa ++ concatMap show pfs
@@ -134,9 +139,9 @@ instance Show PostFuncArg where
     PE2 pe -> show pe
     BE2 be -> show be
 
-instance Show DotChange where
-  show = \(DC (fc, fcs)) ->
-    ".change{" ++ show fc ++ concatMap ((", " ++) . show) fcs ++ "}"
+instance Show Change where
+  show = \(C (fc, fcs)) ->
+    "change{" ++ show fc ++ concatMap ((", " ++) . show) fcs ++ "}"
 
 instance Show FieldChange where
   show = \(FC (f, le)) -> show f ++ " = " ++ show le
@@ -144,11 +149,7 @@ instance Show FieldChange where
 instance Show Field where
   show = \case
     Id3 id -> show id
-    First -> "1st"
-    Second -> "2nd"
-    Third -> "3rd"
-    Fourth -> "4th"
-    Fifth -> "5th"
+    SI3 sid -> show sid
 
 -- Values: OpExpr
 
@@ -342,7 +343,7 @@ instance Show WhereExpr where
 instance Show WhereDefExpr where
   show = \case
     VD1 vd -> show vd
-    GVD gvd -> show gvd
+    GVDs1 gvd -> show gvd
 
 -- Type
 
@@ -429,7 +430,7 @@ instance Show TypeDef where
 instance Show TupleTypeDef where
   show = \(TTD (tn, id, ids, pt)) ->
     "tuple_type " ++ show tn ++
-    "\nvalue (" ++ show id ++ concatMap ((", " ++) . show) ids ++
+    "\nvalue\n  (" ++ show id ++ concatMap ((", " ++) . show) ids ++
     ") : " ++ show pt
 
 instance Show TypeName where
@@ -446,7 +447,7 @@ instance Show OrTypeDef where
   show =
     \(OTD (tn, id, mst, id_mst_pairs)) ->
     "or_type " ++ show tn ++
-    "\nvalues " ++ show id ++ show_mst mst ++
+    "\nvalues\n  " ++ show id ++ show_mst mst ++
     concatMap show_id_mst_pair id_mst_pairs
     where
     show_mst :: Maybe SimpleType -> String
@@ -494,9 +495,9 @@ instance Show NamePart where
 -- TypeTheo 
 
 instance Show TypeTheo where
-  show = \(TT (pps, maybe_pps, id, maybe_op_id, ve)) ->
+  show = \(TT (pps, maybe_pps, id, maybe_op_id, tt_ve)) ->
     "type_theorem " ++ show pps ++ show_mpps maybe_pps ++
-    "\nproof\n  " ++ show id ++ show_moi maybe_op_id ++ " = " ++ show ve
+    "\nproof\n  " ++ show id ++ show_moi maybe_op_id ++ " = " ++ show tt_ve
     where
     show_mpps :: Maybe PropNameSub -> String
     show_mpps = \case
@@ -537,14 +538,29 @@ instance Show TypeFunc where
       True -> "()"
       False -> ""
 
+instance Show TTValueExpr where
+  show = \case
+    LE le -> show le
+    BOCE boce -> "\n    " ++ show boce
+
+instance Show BigOrCasesExpr where
+  show = \case
+    BOE4 boe -> show boe
+    COE2 coe -> show coe
+    BFE3 bfe -> show bfe
+    CFE2 cfe -> show cfe
+    BT2 bt -> show bt
+    BL2 bl -> show bl
+
 -- Program
 
 instance Show Program where
-  show = \(P pps) -> concatMap show pps
+  show = \(P (pp, pps)) -> show pp ++ concatMap (("\n\n" ++) . show) pps
 
 instance Show ProgramPart where
   show = \case
     VD2 vd -> show vd
+    GVDs2 gvds -> show gvds
     TD td -> show td
     TNN1 tnn -> show tnn
     TPD tpd -> show tpd

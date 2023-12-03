@@ -41,7 +41,7 @@ newtype IdentWithArgsStart = IWAS String
 data EmptyParenOrArgs =
   EmptyParen | As1 Arguments
 
--- Values: PreFunc, PostFunc, BasicExpr, DotChange
+-- Values: PreFunc, PostFunc, BasicExpr, Change
 
 newtype PreFunc = PF Identifier 
 
@@ -51,22 +51,26 @@ data PreFuncArg =
   BE1 BasicExpr | PE1 ParenExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
 
 data BasicExpr = 
-  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp
+  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp | 
+  SI1 SpecialId
 
 data PostFunc = 
-  Id2 Identifier | Dot1st | Dot2nd | Dot3rd | Dot4th | Dot5th | DC1 DotChange
+  Id2 Identifier | SI2 SpecialId | C1 Change
+
+data SpecialId = 
+  First | Second | Third | Fourth | Fifth
 
 newtype PostFuncApp = PoFA (PostFuncArg, [PostFunc])
 
 data PostFuncArg = 
   PE2 ParenExpr | BE2 BasicExpr
 
-newtype DotChange = DC (FieldChange, [FieldChange])
+newtype Change = C (FieldChange, [FieldChange])
 
 newtype FieldChange = FC (Field, LineExpr)
 
 data Field =
-  Id3 Identifier | First | Second | Third | Fourth | Fifth 
+  Id3 Identifier | SI3 SpecialId
 
 -- Values: OpExpr
 
@@ -163,7 +167,7 @@ data Types =
 newtype WhereExpr = WE [WhereDefExpr]
 
 data WhereDefExpr = 
-  VD1 ValueDef | GVD GroupedValueDefs
+  VD1 ValueDef | GVDs1 GroupedValueDefs
 
 -- Type
 
@@ -243,7 +247,8 @@ newtype NamePart = NP String
 -- TypeTheo 
 
 newtype TypeTheo =
-  TT (PropNameSub, Maybe PropNameSub, Identifier, Maybe (Op, Identifier), ValueExpr)
+  TT
+  (PropNameSub, Maybe PropNameSub, Identifier, Maybe (Op, Identifier), TTValueExpr)
 
 data PropNameSub = 
   NPStart2 (Char, [(NamePart, ParamSubsInParen)], Maybe NamePart) |
@@ -257,9 +262,17 @@ data ParamSub =
 data TypeFunc = 
   TF_1 (Bool, TypeId, String, Bool) | TF_2 (TypeId, Bool) | TF_3 TypeId
 
+data TTValueExpr =
+  LE LineExpr | BOCE BigOrCasesExpr
+
+data BigOrCasesExpr =
+  BOE4 BigOpExpr | COE2 CasesOpExpr | BFE3 BigFuncExpr | CFE2 CasesFuncExpr |
+  BT2 BigTuple | BL2 BigList
+
 -- Program
 
-newtype Program = P [ProgramPart]
+newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart = 
-  VD2 ValueDef | TD TypeDef | TNN1 TypeNickname | TPD TypePropDef | TT1 TypeTheo
+  VD2 ValueDef | GVDs2 GroupedValueDefs | TD TypeDef | TNN1 TypeNickname |
+  TPD TypePropDef | TT1 TypeTheo

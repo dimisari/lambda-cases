@@ -75,7 +75,8 @@ read_two_ints
       ... => show_err("You didn't give me 2 ints")
  
 tuple_type NumsAndGcd
-value (x, y, gcd) : Int x Int x Int
+value
+  (x, y, gcd) : Int x Int x Int
 
 print_gcd_message
   : NumsAndGcd => IO
@@ -94,7 +95,11 @@ main
 \paragraph{Program grammar}
 \begin{grammar}
 <program> ::=
-( <value-def> | <type-def> | <t-nickname> | <type-prop-def> | <type-theo> )+
+<program-part> ( `\\n\\n' <program-part> )*
+
+<program-part> ::=
+<value-def> | <grouped-value-defs> | <type-def> | <t-nickname> | <type-prop-def> |
+<type-theo>
 \end{grammar}
 
 \subsection{Keywords}
@@ -170,8 +175,8 @@ literals is the same as in the \H\ report.
 \begin{verbatim}
 x y z
 a1 a2 a3 
-funny_identifier 
 unnecessarily_long_identifier
+self_referencing_identifier 
 apply()to_all
 \end{verbatim}
 
@@ -219,9 +224,7 @@ or function expressions.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' <simple-expr> `)'  
-
-<simple-expr> ::= <simple-op-expr> | <simple-func-expr>
+<paren-expr> ::= `(' <simple-op-expr> | <simple-func-expr> `)'  
 \end{grammar}
 
 \end{itemize}
@@ -255,7 +258,8 @@ MyType
 assuming "MyType" has been defined in a similar way to the following:
 \begin{verbatim}
 tuple_type MyType
-value (my_int, my_string, my_real) : Int x String x Real
+value
+  (my_int, my_string, my_real) : Int x String x Real
 \end{verbatim}
 
 \item \textit{Big Tuples}
@@ -301,7 +305,8 @@ The precise indentation rules are described in the section
 
 <comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
 
-<line-expr> ::= <no-paren-op-arg> | <simple-expr> \\
+<line-expr> ::= <no-paren-op-arg> | <simple-op-expr> | <simple-func-expr>
+\\
 
 <big-tuple> ::= ""\\
 `(\ ' <line-expr> [ `\\n' <indent> ] `,\ ' <comma-sep-line-exprs> \\
@@ -491,7 +496,8 @@ Where the function \texttt{thevalue:} is automatically generated from the
 definition of the \texttt{Possibly} type:
 \begin{verbatim}
 or_type Possibly(A)
-values the_value:A | no_value
+values
+  the_value:A | no_value
 \end{verbatim}
 And it has the type \texttt{A => Possibly(A)}.
 \\\\
@@ -509,7 +515,7 @@ Prefix functions always end with a colon.
 <pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> | <post-func-app> )
 
 <basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app> 
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <special-id>
 \end{grammar}
 
 \end{itemize}
@@ -543,7 +549,8 @@ Where the function \texttt{.first_name} is automatically generated from the
 definition of the \texttt{Name} type:
 \begin{verbatim}
 tuple_type Name
-value (first_name, last_name) : String x String
+value
+  (first_name, last_name) : String x String
 \end{verbatim}
 And it has the type \texttt{Name => String}.
 \\\\
@@ -578,8 +585,9 @@ the following paragraph.
 
 \item \textit{Grammar}
 \begin{grammar}
-<post-func> ::=
-`.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' | <dot-change>
+<post-func> ::= `.' ( <identifier> | <special-id> | <change> )
+
+<special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
 <post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>+
 \end{grammar}
@@ -617,19 +625,22 @@ tuple
   or some equivalent tuple type
 
 tuple_type MyStateType
-value (..., counter, ...) : ... x Int x ...
+value
+  (..., counter, ...) : ... x Int x ...
 
 state
   : MyStateType
 
 tuple_type MyNameType
-value (..., last_name, ...) : ... x String x ...
+value
+  (..., last_name, ...) : ... x String x ...
 
 name
   : MyNameType
 
 tuple_type Point
-value (x, y, z) : Real x Real x Real
+value
+  (x, y, z) : Real x Real x Real
 
 point
   : Point
@@ -645,11 +656,9 @@ referred to by the field identifier.
 \item \textit{Grammar}
 
 \begin{grammar}
-<dot-change> ::= 
-`.change{' <field-change> ( `,\ ' <field-change> )* `}'
+<change> ::= `change{' <field-change> ( `,\ ' <field-change> )* `}'
 
-<field-change> ::=
-( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr> 
+<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-expr>
 \end{grammar} 
 
 \end{itemize}
@@ -1098,7 +1107,7 @@ The precise indentation rules are described in the section
 
 \item \textit{Grammar}
 \begin{grammar}
-<op-expr> ::= <simple-op-expr> | <big-op-expr> | <cases-op-expr>
+<op-expr> ::= <simple-op-expr> | <big-op-expr>
 \\
 
 <op-expr-start> ::= <op-arg> `\ ' <op> ( `\ ' <op-arg> `\ ' <op> )*
@@ -1107,16 +1116,14 @@ The precise indentation rules are described in the section
 \\
 
 <big-op-expr> ::= 
-( <op-expr-start> `\\n' <indent> )+ <big-op-expr-end> |
-<op-expr-start> `\ ' <big-func-expr>
+<op-expr-start> ( <op-cont> | <func-cont> )
 
-<big-op-expr-end> ::=
-[ <op-expr-start> `\ ' ] ( <op-arg> | <simple-func-expr> | <big-func-expr> )
-\\
+<op-cont> ::= 
+`\\n' <indent> ( <op-expr-start> `\\n' <indent> )* 
+[ <op-expr-start> `\ ' ] ( <op-arg> | <func-expr> )
 
-<cases-op-expr> ::=
-<op-expr-start> ( `\\n' <indent> <op-expr-start> )*
-( `\\n' <indent> | `\ ' ) <cases-func-expr> 
+<func-cont> ::= 
+`\ ' ( <big-func-expr> | <cases-func-expr> )
 \\
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
@@ -1300,15 +1307,12 @@ The precise indentation rules are described in the section
 \item \textit{Grammar}
 \begin{grammar}
 <simple-func-expr> ::=
-<parameters> `\ =>\ ' <simple-func-body>
+<parameters> `\ =>\ ' ( <no-paren-op-arg> | <simple-op-expr> )
 
 <big-func-expr> ::=
-<parameters> `\ =>\\n' <indent> ( <simple-func-body> | <big-op-expr> )
-\\
+<parameters> `\ =>\\n' <indent> ( <no-paren-op-arg> | <op-expr> )
 
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
-
-<simple-func-body> ::= <no-paren-op-arg> | <simple-op-expr>
 \end{grammar}
 \end{itemize}
 
@@ -1326,7 +1330,8 @@ print_sentimental_bool
     false => print <- "It's false... :("
 
 or_type TrafficLight
-values green | amber | red
+values
+  green | amber | red
 
 print_sentimental_traffic_light
   : TrafficLight => IO
@@ -1425,8 +1430,10 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]' \\
 
 
-<case-body> ::=
-( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]
+<case-body> ::= ""\\
+( `\ ' ( <no-paren-op-arg> | <simple-op-expr> ) |
+`\\n' <indent> ( <no-paren-op-arg> | <op-expr> ) )
+[ <where-expr> ]
 \end{grammar}
 
 \end{itemize}
@@ -1490,7 +1497,6 @@ keyword "all" to give the same type to all the values.
 <indent> <identifier> 
 `\\n' <indent> `:\ ' <type> 
 `\\n' <indent> `=\ ' <value-expr> [ <where-expr> ]
-`\\n\\n'
 
 <value-expr> ::=
 <no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
@@ -1500,7 +1506,6 @@ keyword "all" to give the same type to all the values.
 `\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all\ ' <type> ) \\
 `\\n' <indent> `=\ '
 <comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
-`\\n\\n'
 \end{grammar}
 
 \end{itemize}
@@ -1614,6 +1619,17 @@ definition:
 
   \end{itemize}
 
+\item
+In a type theorem, if the value expression is a big or cases expression: 
+  \begin{itemize}
+
+  \item
+  After "\texttt{=}" line: $il \leftarrow il + 2$.
+
+  \item
+  At the value expression: $il \leftarrow il - 2$.
+  \end{itemize}
+
 \end{itemize}
 
 \subsubsection{Complete Grammar for Values}
@@ -1625,16 +1641,14 @@ definition:
 <identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
 \\
 
-<paren-expr> ::= `(' <simple-expr> `)'  
-
-<simple-expr> ::= <simple-op-expr> | <simple-func-expr>
+<paren-expr> ::= `(' <simple-op-expr> | <simple-func-expr> `)'  
 \\
 
 <tuple> ::= `(' <line-expr> `,\ ' <comma-sep-line-exprs> `)'
 
 <comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
 
-<line-expr> ::= <no-paren-op-arg> | <simple-expr>
+<line-expr> ::= <no-paren-op-arg> | <simple-op-expr> | <simple-func-expr>
 \\
 
 <big-tuple> ::= ""\\
@@ -1670,23 +1684,22 @@ definition:
 <pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> | <post-func-app> )
 
 <basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app>
+<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <special-id>
 \\
 
-<post-func> ::=
-`.' <identifier> | `.1st' | `.2nd' | `.3rd' | `.4th' | `.5th' | <dot-change>
+<post-func> ::= `.' ( <identifier> | <special-id> | <change> )
+
+<special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
 <post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>+
 \\
 
-<dot-change> ::= 
-`.change{' <field-change> ( `,\ ' <field-change> )* `}'
+<change> ::= `change{' <field-change> ( `,\ ' <field-change> )* `}'
 
-<field-change> ::=
-( <identifier> | `1st' | `2nd' | `3rd' | `4th' | `5th' ) `\ =\ ' <line-expr>
+<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-expr>
 \\
 
-<op-expr> ::= <simple-op-expr> | <big-op-expr> | <cases-op-expr>
+<op-expr> ::= <simple-op-expr> | <big-op-expr>
 \\
 
 <op-expr-start> ::= <op-arg> `\ ' <op> ( `\ ' <op-arg> `\ ' <op> )*
@@ -1695,16 +1708,13 @@ definition:
 \\
 
 <big-op-expr> ::= 
-( <op-expr-start> `\\n' <indent> )+ <big-op-expr-end> |
-<op-expr-start> `\ ' <big-func-expr>
+<op-expr-start> ( <op-cont> | <func-cont> )
 
-<big-op-expr-end> ::=
-[ <op-expr-start> `\ ' ] ( <op-arg> | <simple-func-expr> | <big-func-expr> )
-\\
+<op-cont> ::= 
+`\\n' <indent> ( <op-expr-start> `\\n' <indent> )* 
+[ <op-expr-start> `\ ' ] ( <op-arg> | <func-expr> )
 
-<cases-op-expr> ::=
-<op-expr-start> ( `\\n' <indent> <op-expr-start> )*
-( `\\n' <indent> | `\ ' ) <cases-func-expr> 
+<func-cont> ::= `\ ' ( <big-func-expr> | <cases-func-expr> )
 \\
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
@@ -1720,15 +1730,13 @@ definition:
 <func-expr> ::= <simple-func-expr> | <big-func-expr> | <cases-func-expr>
 \\
 
-<simple-func-expr> ::= <parameters> `\ =>\ ' <simple-func-body>
+<simple-func-expr> ::=
+<parameters> `\ =>\ ' ( <no-paren-op-arg> | <simple-op-expr> )
 
 <big-func-expr> ::=
-<parameters> `\ =>\\n' <indent> ( <simple-func-body> | <big-op-expr> )
-\\
+<parameters> `\ =>\\n' <indent> ( <no-paren-op-arg> | <op-expr> )
 
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
-
-<simple-func-body> ::= <no-paren-op-arg> | <simple-op-expr>
 \\
 
 <cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ [ <end-case> ]
@@ -1753,15 +1761,16 @@ definition:
 <list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]'
 \\
 
-<case-body> ::=
-( `\ ' | `\\n' <indent> ) ( <simple-func-body> | <big-op-expr> ) [ <where-expr> ]
+<case-body> ::= ""\\
+( `\ ' ( <no-paren-op-arg> | <simple-op-expr> ) |
+`\\n' <indent> ( <no-paren-op-arg> | <op-expr> ) )
+[ <where-expr> ]
 \\
 
 <value-def> ::= 
 <indent> <identifier> 
 `\\n' <indent> `:\ ' <type> 
 `\\n' <indent> `=\ ' <value-expr> [ <where-expr> ]
-`\\n\\n'
 
 <value-expr> ::=
 <no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
@@ -1771,7 +1780,6 @@ definition:
 `\\n' <indent> `:\ ' ( <type> ( `,\ ' <type> )+ | `all\ ' <type> ) \\
 `\\n' <indent> `=\ '
 <comma-sep-line-exprs> ( `\\n' <indent> `,\ ' <comma-sep-line-exprs> )*
-`\\n\\n'
 \\
 
 <where-expr> ::=
@@ -1816,7 +1824,7 @@ Int
 Real 
 Char 
 String
-FunnyType
+SelfReferencingType
 MyDefinedType
 \end{verbatim}
 
@@ -1963,7 +1971,8 @@ to a type function generated by a \texttt{tuple_type} or an \texttt{or_type}
 definition. For example, given the definition of \texttt{ListOf(A)s}:
 \begin{verbatim}
 or_type ListOf(A)s
-values non_empty_l:NonEmptyListOf(A)s | empty_l
+values
+  non_empty_l:NonEmptyListOf(A)s | empty_l
 \end{verbatim}
 We have that \texttt{ListOf()s} is a type function that receives one type parameter
 and returns a resulting type. For example \texttt{ListOf(Int)s} is the result
@@ -2065,19 +2074,24 @@ The grammar of a type definition is:
 
 \begin{verbatim}
 tuple_type Name
-value (first_name, last_name) : String x String
+value
+  (first_name, last_name) : String x String
 
 tuple_type Date
-value (day, month, year) : Int x Int x Int
+value
+  (day, month, year) : Int x Int x Int
 
 tuple_type MathematicianInfo
-value (name, nationality, date_of_birth) : Name x String x Date
+value
+  (name, nationality, date_of_birth) : Name x String x Date
 
 tuple_type TreeOf(A)s
-values (root, subtrees) : A x ListOf(TreeOf(A)s)s
+values
+  (root, subtrees) : A x ListOf(TreeOf(A)s)s
 
 tuple_type Indexed(T)
-value (index, val) : Int x T
+value
+  (index, val) : Int x T
 \end{verbatim}
 
 \item \textit{Usage Examples}
@@ -2120,9 +2134,9 @@ their argument.
 \item \textit{Grammar}
 
 \begin{grammar}
-<tuple-type-def> ::= 
+<tuple-type-def> ::=
 `tuple_type\ ' <type-name>
-`\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type> `\\n\\n'
+`\\nvalue\\n\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type>
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
@@ -2140,20 +2154,25 @@ their argument.
 
 \begin{verbatim}
 or_type Bool
-values true | false
+values
+  true | false
 
 or_type Possibly(A)
-values the_value:A | no_value
+values
+  the_value:A | no_value
 
 // needed tuple_type for ListOf(A)s
 tuple_type NonEmptyListOf(A)s
-value (head, tail) : A x ListOf(A)s
+value
+  (head, tail) : A x ListOf(A)s
 
 or_type ListOf(A)s
-values non_empty_l:NonEmptyListOf(A)s | empty_l
+values
+  non_empty_l:NonEmptyListOf(A)s | empty_l
 
 or_type Error(A)OrResult(B)
-values error:A | result:B
+values
+  error:A | result:B
 \end{verbatim}
 
 \item \textit{Usage Examples}
@@ -2227,9 +2246,9 @@ non_empty_ls_to_ls
 
 \begin{grammar}
 <or-type-def> ::= ""\\
-`or_type\ ' <type-name> 
-\\`\\nvalues\ ' <identifier> [ `:' <simple-type> ]
-( `\ |\ ' <identifier> [ `:' <simple-type> ] )* `\\n\\n'
+`or_type\ ' <type-name>
+`\\nvalues\\n\ \ ' <identifier> [ `:' <simple-type> ]
+( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
 \end{grammar}
 
 \end{itemize}
@@ -2256,7 +2275,7 @@ then an equal sign and they end with the type to be nicknamed.
 \item \textit{Grammar}
 
 \begin{grammar}
-<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type> `\\n\\n'
+<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
 \end{grammar} 
 
 \end{itemize}
@@ -2426,10 +2445,10 @@ proposition or (if it is a conjunction) many propositions  seperated by commas
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
 
 <atom-prop-def> ::=
-<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type> `\\n\\n'
+<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
 
 <renaming-prop-def> ::=
-<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )* `\\n\\n'
+<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )*
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2463,15 +2482,17 @@ proof
 
 type_theorem (Possibly())Has_Internal_App
 proof
-  apply()internally = (f, cases) =>
-    no_value => no_value
-    the_value:x => the_value:f(x)
+  apply()internally =
+    (f, cases) =>
+      no_value => no_value
+      the_value:x => the_value:f(x)
 
 type_theorem (ListOf()s)Has_Internal_App
 proof
-  apply()internally = (f, cases) =>
-    empty_l => empty_l
-    non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
+  apply()internally =
+    (f, cases) =>
+      empty_l => empty_l
+      non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
 \end{verbatim}
 
 \item \textit{Usage}
@@ -2600,8 +2621,7 @@ the "\texttt{=>}" arrow.
 \begin{grammar}
 <type-theo> ::= ""\\
 `type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] \\
-`\\nproof\\n\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =\ ' <value-expr>
-`\\n\\n'
+`\\nproof\\n\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =' <tt-value-expr>
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
@@ -2614,6 +2634,11 @@ the "\texttt{=>}" arrow.
 <type-func> ::=
 [ `()' ] <type-id> ( `()' [A-Za-z]+ )+ [ `()' ] | `()' <type-id> [ `()' ] |
 <type-id> `()'
+
+<tt-value-expr> ::= `\ ' <line-expr> | `\\n' <indent> <big-or-cases-expr>
+
+<big-or-cases-expr> ::=
+<big-op-expr> | <big-func-expr> | <cases-func-expr> | <big-tuple> | <big-list>
 \end{grammar} 
 
 \subsection{Complete Grammar for Types and Type Logic}
@@ -2662,9 +2687,9 @@ the "\texttt{=>}" arrow.
 <type-def> ::= <tuple-type-def> | <or-type-def>
 \\
 
-<tuple-type-def> ::= 
+<tuple-type-def> ::=
 `tuple_type\ ' <type-name>
-`\\nvalue\ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type> `\\n\\n'
+`\\nvalue\\n\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type>
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
@@ -2674,22 +2699,22 @@ the "\texttt{=>}" arrow.
 \\
 
 <or-type-def> ::= ""\\
-`or_type\ ' <type-name> 
-`\\nvalues\ ' <identifier> [ `:' <simple-type> ]
-( `\ |\ ' <identifier> [ `:' <simple-type> ] )* `\\n\\n'
+`or_type\ ' <type-name>
+`\\nvalues\\n\ \ ' <identifier> [ `:' <simple-type> ]
+( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
 \\
 
-<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type> `\\n\\n'
+<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
 \\\\
 
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
 \\
 
 <atom-prop-def> ::=
-<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type> `\\n\\n'
+<prop-name-line> `\\nvalue\\n\ \ ' <identifier> `\ :\ ' <simple-type>
 
 <renaming-prop-def> ::=
-<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )* `\\n\\n'
+<prop-name-line> `\\nequivalent\\n\ \ ' <prop-name> ( `,\ ' <prop-name> )*
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2699,12 +2724,10 @@ the "\texttt{=>}" arrow.
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \\
-\\
 
 <type-theo> ::= ""\\
 `type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] \\
-`\\nproof\\n\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =\ ' <value-expr>
-`\\n\\n'
+`\\nproof\\n\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =' <tt-value-expr>
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
@@ -2717,6 +2740,12 @@ the "\texttt{=>}" arrow.
 <type-func> ::=
 [ `()' ] <type-id> ( `()' [A-Za-z]+ )+ [ `()' ] | `()' <type-id> [ `()' ] |
 <type-id> `()'
+
+<tt-value-expr> ::= `\ ' <line-expr> | `\\n' <indent> <big-or-cases-expr>
+
+<big-or-cases-expr> ::=
+<big-op-expr> | <big-func-expr> | <cases-func-expr> |
+<big-tuple> | <big-list>
 \end{grammar}
 
 \section{Language Description: Predefined}

@@ -31,4 +31,3 @@ my_parse = ( \p s -> parse p "" s )
 
 parse_add_ints = my_parse add_ints_p
   :: String -> Either ParseError AddInts
-

@@ -1,8 +1,0 @@
-
-my_gcd: (Int, Int) -> Int
-  = (x, y) -> gcd_help(x, y)==>abs
-
-gcd_help: (Int, Int) -> Int
-  = (x, cases) ->
-    0 -> x
-    y -> gcd_help(y, (x)mod(y))

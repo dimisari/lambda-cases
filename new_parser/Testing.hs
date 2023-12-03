@@ -5,8 +5,6 @@ module Testing where
 
 import Text.Parsec (runParser, eof, ParseError)
 
-import System.Directory
-import Data.List
 import Data.List.Split
 
 import ASTTypes
@@ -33,8 +31,6 @@ main =
 run_parse_func_for_file :: (FileName, ParseFunc) -> IO ()
 run_parse_func_for_file (file_name, parse_func) =
   readFile input_path >>= in_str_to_out_str .> writeFile output_path
---   readFile input_path >>=
---   file_string_to_examples .> concatMap ((++ "\n\n") . show) .> writeFile output_path
   where
   input_path :: FilePath
   input_path = "test_examples/" ++ file_name

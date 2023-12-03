@@ -1,26 +1,14 @@
-id: T -> T
-  = x -> x
-
-TypeScheme [1] (FuncType (InAndOutTs (TypeVar 1) (TypeVar 1)))
-
-i: Int
-  = 1==>id
-
-i: Int
-1: Int
-id: TypeScheme [1] (FuncType (InAndOutTs (TypeVar 1) (TypeVar 1)))
-
-we have 
-- value names
-- literals
-- abstractions
-- op exprs
-
-- String Literal:
-  - what type internally:
-    - hard coded String?
-    - ListOfChars ?
-
-- ManyAbstractions:
-  - what happens when multiple abstractions are "use_fields"?
-  - currently in any conflicts only the last one is in scope
+oe: remove coe
+boe: add cfe in 2nd
+  oc: add
+  fc: add
+boee: delete
+coe: delete
+boce: delete coe
+sfb: delete
+sfe: change sfb
+bfe: change body
+cb: change
+pe: change
+se: delete
+le: change

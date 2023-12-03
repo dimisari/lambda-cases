@@ -16,3 +16,12 @@ id_bool
 true => true
 false => false
 
+Parsed :) ==>
+extended_euclidean
+  : (Int, Int) => GcdAndCoeffs
+  = ee_recursion(init_a_coeffs, init_b_coeffs)
+where
+init_a_coeffs, init_b_coeffs
+  : all Coeffs
+  = (1, 0), (0, 1)
+

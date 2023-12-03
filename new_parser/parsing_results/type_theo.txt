@@ -8,13 +8,21 @@ type_theorem (ListOf()s)Has_A_Wrapper
 proof
   wrapper = x => [x]
 
-Error :( ==>(line 3, column 32):
-unexpected cannot use "cases" as an identifier
-expecting lowercase letter, "_", "()" or digit
+Parsed :) ==>
+type_theorem (Possibly())Has_Internal_App
+proof
+  apply()internally = 
+    (f, cases) =>
+no_value => no_value
+the_value:x => the_value:f(x)
 
-Error :( ==>(line 3, column 32):
-unexpected cannot use "cases" as an identifier
-expecting lowercase letter, "_", "()" or digit
+Parsed :) ==>
+type_theorem (ListOf()s)Has_Internal_App
+proof
+  apply()internally = 
+    (f, cases) =>
+empty_l => empty_l
+non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
 
 Parsed :) ==>
 type_theorem (A)And(B)Can_Be_Equal => (A)And(B)Can_Be_Unequal

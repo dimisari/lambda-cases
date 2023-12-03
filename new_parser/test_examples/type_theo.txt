@@ -1,46 +1,34 @@
 type_theorem (Possibly())Has_A_Wrapper
 proof
-  wrapper = the_value:
-
-#
+  wrapper = the_value:#
 
 type_theorem (ListOf()s)Has_A_Wrapper
 proof
-  wrapper = x => [x]
-
-#
+  wrapper = x => [x]#
 
 type_theorem (Possibly())Has_Internal_App
 proof
-  apply()internally = (f, cases) =>
-    no_value => no_value
-    the_value:x => the_value:f(x)
-
-#
+  apply()internally =
+    (f, cases) =>
+      no_value => no_value
+      the_value:x => the_value:f(x)#
 
 type_theorem (ListOf()s)Has_Internal_App
 proof
-  apply()internally = (f, cases) =>
-    empty_l => empty_l
-    non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
-
-#
+  apply()internally =
+    (f, cases) =>
+      empty_l => empty_l
+      non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)#
 
 type_theorem (A)And(B)Can_Be_Equal => (A)And(B)Can_Be_Unequal
 proof
-  a != b = not(a = b)
-
-#
+  a != b = not(a = b)#
 
 type_theorem (A)Can_Be_Greater_Than(B) => (A)Can_Be_Le_Or_Eq_To(B)
 proof
-  a <= b = not(a > b)
-
-#
+  a <= b = not(a > b)#
 
 type_theorem (A)And(B)Have_Eq_And_Gr => (A)Can_Be_Gr_Or_Eq_To(B)
 proof
-  a >= b = a = b | a > b
-
-#
+  a >= b = a = b | a > b#
 
