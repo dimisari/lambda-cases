@@ -49,14 +49,13 @@ dec_il_if_false = \case
 
 -- helper parsers
 
-(comma, underscore, lower_under, in_paren, nl_indent, one_space, digits) =
-  (string ", ", char '_', lower <|> underscore, \a -> char '(' *> a <* char ')'
-  , char '\n' *> indent, char ' ' *> return (), many1 digit
-  )
-  ::
-  ( Parser String, Parser Char, Parser Char, Parser a -> Parser a
-  , Parser (), Parser (), Parser String
-  ) 
+(comma, underscore, lower_under, in_paren) =
+  (string ", ", char '_', lower <|> underscore, \a -> char '(' *> a <* char ')')
+  :: (Parser String, Parser Char, Parser Char, Parser a -> Parser a) 
+
+(nl, nl_indent, digits) =
+  (many (char ' ' <|> char '\t') *> char '\n', nl *> indent, many1 digit)
+  :: (Parser Char, Parser (), Parser String) 
 
 indent :: Parser ()
 indent = getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
@@ -299,7 +298,7 @@ instance HasParser BigOpExpr where
     return $ BOE (oes, cont)
 
 instance HasParser Continuation where
-  parser = OC1 <$> parser <|> FnC <$> parser
+  parser = OC1 <$> try parser <|> FnC <$> parser
 
 instance HasParser OpContinuation where
   parser =
@@ -351,7 +350,7 @@ instance HasParser Op where
 -- HasParser: FuncExpr
 
 instance HasParser FuncExpr where
-  parser = SFE4 <$> try parser <|> BFE2 <$> try parser <|> CFE2 <$> parser
+  parser = CFE2 <$> try parser <|> BFE2 <$> try parser <|> SFE4 <$> parser
 
 instance HasParser SimpleFuncExpr where
   parser = 
@@ -448,7 +447,7 @@ instance HasParser CaseBody where
     return (CB (case_body_start, maybe_where_expr))
     where
     case_body_start_p :: Parser CaseBodyStart
-    case_body_start_p = SFB1 <$> parser <|> BFB1 <$> parser
+    case_body_start_p = BFB1 <$> try parser <|> SFB1 <$> parser
 
 -- HasParser: ValueDef, WhereExpr
 
@@ -496,7 +495,7 @@ instance HasParser GroupedValueDefs where
 
 instance HasParser WhereExpr where
   parser = 
-    nl_indent *> string "where\n" *> (WE <$> many1 where_def_expr_p)
+    nl_indent *> string "where" *> nl *> (WE <$> many1 where_def_expr_p)
     where
     where_def_expr_p :: Parser WhereDefExpr
     where_def_expr_p = VD1 <$> try parser <|> GVDs1 <$> parser
@@ -614,7 +613,7 @@ instance HasParser TypeDef where
 instance HasParser TupleTypeDef where
   parser =
     string "tuple_type " *> parser >>= \type_name ->
-    string "\nvalue\n  ("  *> parser >>= \identifier ->
+    nl *> string "value" *> nl *> string "  ("  *> parser >>= \identifier ->
     many1 (comma *> parser) >>= \identifiers ->
     string ") : " *> parser >>= \prod_type ->
     return $ TTD (type_name, identifier, identifiers, prod_type)
@@ -642,7 +641,7 @@ instance HasParser ParamsInParen where
 instance HasParser OrTypeDef where
   parser =
     string "or_type " *> parser >>= \type_name ->
-    string "\nvalues\n  "  *> parser >>= \identifier ->
+    nl *> string "values" *> nl *> string "  " *> parser >>= \identifier ->
     optionMaybe (char ':' *> parser) >>= \maybe_simple_type ->
     many1 ident_maybe_simple_type_p >>= \ident_maybe_simple_types ->
     return $
@@ -668,14 +667,14 @@ instance HasParser TypePropDef where
 instance HasParser AtomPropDef where
   parser = 
     parser >>= \prop_name_line ->
-    string "\nvalue\n  " *> parser >>= \identifier ->
+    nl *> string "value" *> nl *> string "  " *> parser >>= \identifier ->
     string " : " *> parser >>= \simple_type ->
     return $ APD (prop_name_line, identifier, simple_type)
 
 instance HasParser RenamingPropDef where
   parser =
     parser >>= \prop_name_line ->
-    string "\nequivalent\n  " *> parser >>= \prop_name ->
+    nl *> string "equivalent" *> nl *> string "  " *> parser >>= \prop_name ->
     many (comma *> parser) >>= \prop_names ->
     return $ RPD (prop_name_line, prop_name, prop_names)
 
@@ -725,23 +724,19 @@ instance HasParser TypeTheo where
   parser =
     string "type_theorem " *> parser >>= \pps ->
     optionMaybe (string " => " *> parser) >>= \maybe_pps ->
-    string "\nproof\n  " *> parser >>= \id ->
-    maybe_op_id_p >>= \maybe_op_id ->
-    parser >>= \ttve ->
+    nl *> string "proof" *> nl *> string "  " *> parser >>= \id ->
+    optionMaybe (try op_id_p) >>= \maybe_op_id ->
+    string " =" *> parser >>= \ttve ->
     return $ TT (pps, maybe_pps, id, maybe_op_id, ttve)
     where
     op_id_p :: Parser (Op, Identifier)
     op_id_p =
       char ' ' *> parser >>= \op ->
-      char ' ' *> parser <* notFollowedBy (char '\n') >>= \id ->
+      char ' ' *> parser <* followed_by_equal >>= \id ->
       return (op, id)
 
-    maybe_op_id_p :: Parser (Maybe (Op, Identifier))
-    maybe_op_id_p =
-      Just <$> (try $ op_id_p <* string " =" <* followed_by_space_or_nl) <|>
-      (string " =" *> return Nothing)
-      where
-      followed_by_space_or_nl = lookAhead (char ' ' <|> char '\n')
+    followed_by_equal :: Parser String
+    followed_by_equal = lookAhead (string " =" <* notFollowedBy (char '>'))
 
 instance HasParser PropNameSub where
   parser = 
@@ -825,7 +820,7 @@ instance HasParser BigOrCasesExpr where
 instance HasParser Program where
   parser =
     parser >>= \pp ->
-    many (try $ string "\n\n" *> parser) >>= \pps ->
+    many (try $ nl *> nl *> parser) >>= \pps ->
     spaces *> eof *> return (P (pp, pps))
 
 instance HasParser ProgramPart where

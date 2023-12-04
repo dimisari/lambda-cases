@@ -1,0 +1,24 @@
+Parsed :) ==>
+42
+
+Parsed :) ==>
+-100
+
+Parsed :) ==>
+3.14
+
+Parsed :) ==>
+-1234.567
+
+Parsed :) ==>
+'a'
+
+Parsed :) ==>
+'\n'
+
+Parsed :) ==>
+"abcd"
+
+Parsed :) ==>
+"Hello World!"
+

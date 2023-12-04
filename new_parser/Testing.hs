@@ -5,6 +5,7 @@ module Testing where
 
 import Text.Parsec (runParser, eof, ParseError)
 
+import System.Directory
 import Data.List.Split
 
 import ASTTypes
@@ -19,24 +20,30 @@ import ShowInstances
 type FileName = String
 type FileString = String
 type TestExample = String
+type ProgramStr = String
 type ParseResult = String
 type ParseFunc = TestExample -> ParseResult
+
+(programs_dir, test_exs_dir, parsing_res_dir) =
+  ("programs/", "test_examples/", "parsing_results/")
+  :: (FilePath, FilePath, FilePath)
 
 -- main
 
 main :: IO ()
 main =
+  listDirectory programs_dir >>= mapM_ read_parse_write >>
   mapM_ run_parse_func_for_file file_name_parse_func_pairs
+
+-- parse examples file
 
 run_parse_func_for_file :: (FileName, ParseFunc) -> IO ()
 run_parse_func_for_file (file_name, parse_func) =
   readFile input_path >>= in_str_to_out_str .> writeFile output_path
   where
-  input_path :: FilePath
-  input_path = "test_examples/" ++ file_name
-
-  output_path :: FilePath
-  output_path = "parsing_results/" ++ file_name
+  (input_path, output_path) =
+    (test_exs_dir ++ file_name, parsing_res_dir ++ input_path)
+    :: (FilePath, FilePath)
 
   in_str_to_out_str :: FileString -> FileString
   in_str_to_out_str = file_string_to_examples .> concatMap parse_func
@@ -44,16 +51,66 @@ run_parse_func_for_file (file_name, parse_func) =
   file_string_to_examples :: FileString -> [ TestExample ]
   file_string_to_examples = endBy "#\n\n"
 
--- Parse class and result to string
+-- parse program 
 
-class HasParser a => Parse a where
-  parse :: TestExample -> Either ParseError a
-  parse = runParser (parser <* eof) (0, False) "" 
+read_parse_write :: FileName -> IO ()
+read_parse_write file_name =
+  readFile input_path >>= parse_program .> writeFile output_path
+  where
+  (input_path, output_path) =
+    (programs_dir ++ file_name, parsing_res_dir ++ input_path)
+    :: (FilePath, FilePath)
+
+parse_program :: ProgramStr -> ParseResult
+parse_program =
+  (parse :: ProgramStr -> Either ParseError Program) .> parse_result_to_string
 
 parse_result_to_string :: Show a => Either ParseError a -> ParseResult
 parse_result_to_string = \case
-  Left err -> "Error :( ==>" ++ (show err {- %> dropWhile (/= '\n') -}) ++ "\n\n"
+  Left err -> "Error :( ==>" ++ show err ++ "\n\n"
   Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
+
+-- Parse class
+
+class HasParser a => Parse a where
+  parse :: String -> Either ParseError a
+  parse = runParser (parser <* eof) (0, False) "" 
+
+-- Parse class instances (why not automated Haskell?)
+
+instance Parse Literal
+instance Parse Identifier
+instance Parse ParenExpr
+instance Parse Tuple
+instance Parse BigTuple
+instance Parse List
+instance Parse BigList
+instance Parse ParenFuncApp
+instance Parse PreFuncApp
+instance Parse PostFuncApp
+instance Parse SimpleOpExpr
+instance Parse BigOpExpr
+instance Parse SimpleFuncExpr
+instance Parse BigFuncExpr
+instance Parse CasesFuncExpr
+instance Parse ValueDef
+instance Parse GroupedValueDefs
+instance Parse WhereExpr
+
+instance Parse TypeId
+instance Parse TypeVar
+instance Parse FuncType
+instance Parse ProdType
+instance Parse TypeApp
+instance Parse Type -- CondType
+instance Parse TupleTypeDef
+instance Parse OrTypeDef
+instance Parse TypeNickname
+instance Parse AtomPropDef
+instance Parse RenamingPropDef
+instance Parse TypeTheo
+
+instance Parse Program
 
 -- "Parse and result to string" functions for each type to be parsed
 
@@ -241,36 +298,3 @@ parse_type_theo_and_ret_res_str =
   \test_example ->
   parse_result_to_string (parse test_example :: Either ParseError TypeTheo)
 
--- Parse class instances (why not automated Haskell?)
-
-instance Parse Literal
-instance Parse Identifier
-instance Parse ParenExpr
-instance Parse Tuple
-instance Parse BigTuple
-instance Parse List
-instance Parse BigList
-instance Parse ParenFuncApp
-instance Parse PreFuncApp
-instance Parse PostFuncApp
-instance Parse SimpleOpExpr
-instance Parse BigOpExpr
-instance Parse SimpleFuncExpr
-instance Parse BigFuncExpr
-instance Parse CasesFuncExpr
-instance Parse ValueDef
-instance Parse GroupedValueDefs
-instance Parse WhereExpr
-
-instance Parse TypeId
-instance Parse TypeVar
-instance Parse FuncType
-instance Parse ProdType
-instance Parse TypeApp
-instance Parse Type -- CondType
-instance Parse TupleTypeDef
-instance Parse OrTypeDef
-instance Parse TypeNickname
-instance Parse AtomPropDef
-instance Parse RenamingPropDef
-instance Parse TypeTheo

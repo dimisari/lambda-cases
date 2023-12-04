@@ -32,3 +32,7 @@ type_theorem (A)And(B)Have_Eq_And_Gr => (A)Can_Be_Gr_Or_Eq_To(B)
 proof
   a >= b = a = b | a > b#
 
+type_theorem (A)And(B)Have_Eq_And_Gr => (A)Can_Be_Gr_Or_Eq_To(B)
+proof
+  a = b#
+
