@@ -13,16 +13,16 @@ type_theorem (Possibly())Has_Internal_App
 proof
   apply()internally = 
     (f, cases) =>
-no_value => no_value
-the_value:x => the_value:f(x)
+no_value =>  no_value
+the_value:x =>  the_value:f(x)
 
 Parsed :) ==>
 type_theorem (ListOf()s)Has_Internal_App
 proof
   apply()internally = 
     (f, cases) =>
-empty_l => empty_l
-non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
+empty_l =>  empty_l
+non_empty_l:l =>  non_empty_l:(f(l.head), l.tail -> apply(f)internally)
 
 Parsed :) ==>
 type_theorem (A)And(B)Can_Be_Equal => (A)And(B)Can_Be_Unequal

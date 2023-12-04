@@ -7,9 +7,9 @@ data Literal =
 
 newtype Identifier = Id String
 
-newtype ParenExpr = PE SimpleExpr
+newtype ParenExpr = PE ParenExprInside
 
-data SimpleExpr = 
+data ParenExprInside = 
   SOE1 SimpleOpExpr | SFE1 SimpleFuncExpr
 
 newtype Tuple = T (LineExpr, CommaSepLineExprs)
@@ -17,7 +17,7 @@ newtype Tuple = T (LineExpr, CommaSepLineExprs)
 newtype CommaSepLineExprs = CSLE (LineExpr, [LineExpr])
 
 data LineExpr = 
-  NPOA1 NoParenOpArg | SE SimpleExpr
+  NPOA1 NoParenOpArg | SOE2 SimpleOpExpr | SFE2 SimpleFuncExpr
 
 newtype BigTuple = BT (LineExpr, CommaSepLineExprs, [CommaSepLineExprs])
 
@@ -75,28 +75,27 @@ data Field =
 -- Values: OpExpr
 
 data OpExpr = 
-  SOE2 SimpleOpExpr | BOE1 BigOpExpr | COE1 CasesOpExpr
+  SOE3 SimpleOpExpr | BOE1 BigOpExpr
 
 newtype OpExprStart = OES (OpArg, Op, [(OpArg, Op)])
 
 newtype SimpleOpExpr = SOE (OpExprStart, SimpleOpExprEnd)
 
 data SimpleOpExprEnd = 
-  OA1 OpArg | SFE2 SimpleFuncExpr
+  OA1 OpArg | SFE3 SimpleFuncExpr
 
-data BigOpExpr =
-  BOE_1_ BigOpExpr1 | BOE_2_ BigOpExpr2
+newtype BigOpExpr = BOE (OpExprStart, Continuation)
 
-newtype BigOpExpr1 = BOE_1 ([OpExprStart], BigOpExprEnd)
+data Continuation =
+  OC1 OpContinuation | FnC FuncContinuation
 
-newtype BigOpExprEnd = BOEE (Maybe OpExprStart, BigOpExprEnd2)
+newtype OpContinuation = OC ([OpExprStart], Maybe OpExprStart, OpContEnd)
 
-data BigOpExprEnd2 = 
-  OA2 OpArg | SFE3 SimpleFuncExpr | BFE1 BigFuncExpr
+data OpContEnd =
+  OA2 OpArg | FE1 FuncExpr 
 
-newtype BigOpExpr2 = BOE_2 (OpExprStart, BigFuncExpr)
-
-newtype CasesOpExpr = COE (OpExprStart, [OpExprStart], CasesFuncExpr)
+data FuncContinuation =
+  BFE1 BigFuncExpr | CFE1 CasesFuncExpr
 
 data OpArg =
   NPOA2 NoParenOpArg | PE3 ParenExpr
@@ -111,20 +110,20 @@ data Op =
 -- Values: FuncExpr
 
 data FuncExpr = 
-  SFE4 SimpleFuncExpr | BFE2 BigFuncExpr | CFE1 CasesFuncExpr
+  SFE4 SimpleFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
 
 newtype SimpleFuncExpr = SFE (Parameters, SimpleFuncBody)
+
+data SimpleFuncBody = 
+  NPOA3 NoParenOpArg | SOE4 SimpleOpExpr
 
 newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
 
 data BigFuncBody = 
-  SFB1 SimpleFuncBody | BOE2 BigOpExpr
+  NPOA4 NoParenOpArg | OE1 OpExpr
 
 data Parameters = 
   OneParam Identifier | ManyParams (Identifier, [Identifier])
-
-data SimpleFuncBody = 
-  NPOA3 NoParenOpArg | SOE5 SimpleOpExpr
 
 newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
 
@@ -149,14 +148,14 @@ newtype ListMatching = LM (Maybe (Matching, [Matching]))
 newtype CaseBody = CB (CaseBodyStart, Maybe WhereExpr)
 
 data CaseBodyStart =
-  SFB2 SimpleFuncBody | BOE3 BigOpExpr
+  SFB1 SimpleFuncBody | BFB1 BigFuncBody
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
 newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
 
 data ValueExpr = 
-  NPOA4 NoParenOpArg | OE OpExpr | FE FuncExpr | BT1 BigTuple | BL1 BigList
+  NPOA5 NoParenOpArg | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
 newtype GroupedValueDefs =
   GVDs (Identifier, [Identifier], Types, CommaSepLineExprs, [CommaSepLineExprs]) 
@@ -266,8 +265,8 @@ data TTValueExpr =
   LE LineExpr | BOCE BigOrCasesExpr
 
 data BigOrCasesExpr =
-  BOE4 BigOpExpr | COE2 CasesOpExpr | BFE3 BigFuncExpr | CFE2 CasesFuncExpr |
-  BT2 BigTuple | BL2 BigList
+  BOE4 BigOpExpr | BFE3 BigFuncExpr | CFE3 CasesFuncExpr | BT2 BigTuple |
+  BL2 BigList
 
 -- Program
 

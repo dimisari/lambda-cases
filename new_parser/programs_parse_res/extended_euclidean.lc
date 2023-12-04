@@ -1,5 +1,45 @@
-Error :( ==>
-(line 32, column 9):
-unexpected ' '
-expecting "\n\n" or end of input
+Parsed :) ==>
+tuple_type Coeffs
+value
+  (prev, curr) : Int x Int
+
+tuple_type GcdAndCoeffs
+value
+  (gcd, a, b) : Int x Int x Int
+
+extended_euclidean
+  : (Int, Int) => GcdAndCoeffs
+  = ee_recursion(init_a_coeffs, init_b_coeffs)
+where
+init_a_coeffs, init_b_coeffs
+  : all Coeffs
+  = (1, 0), (0, 1)
+
+ee_recursion
+  : (Coeffs, Coeffs, Int, Int) => GcdAndCoeffs
+  = (a_coeffs, b_coeffs, x, cases) =>
+0 =>  (x, a_coeffs.prev, b_coeffs.prev)
+y => 
+ee_recursion(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
+where
+next
+  : Coeffs => Coeffs
+  = .change{prev = curr, curr = prev - x -> div <- y * curr}
+
+read_two_ints
+  : (Int x Int)FromIO
+  = print <- "Please give me 2 ints" ;
+get_line ;> split_words o> apply(from_string)to_all o> ints =>
+ints -> length -> cases =>
+2 =>  wrap(ints)
+... =>  throw_err("You didn't give me 2 ints")
+
+print_gcd_and_coeffs
+  : GcdAndCoeffs => IO
+  = fields => print("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
+
+main
+  : IO
+  = read_two_ints ;> ints =>
+print_gcd_and_coeffs <- extended_euclidean(ints.1st, ints.2nd)
 

@@ -24,9 +24,9 @@ instance Show Identifier where
   show = \(Id s) -> s
 
 instance Show ParenExpr where
-  show = \(PE se) -> "(" ++ show se ++ ")"
+  show = \(PE pei) -> "(" ++ show pei ++ ")"
 
-instance Show SimpleExpr where
+instance Show ParenExprInside where
   show = \case
     SOE1 soe -> show soe
     SFE1 sfe -> show sfe
@@ -40,7 +40,8 @@ instance Show CommaSepLineExprs where
 instance Show LineExpr where
   show = \case
     NPOA1 npoa -> show npoa
-    SE se -> show se
+    SOE2 soe -> show soe
+    SFE2 sfe -> show sfe
 
 instance Show BigTuple where
   show = \(BT (le, csles, csles_l)) ->
@@ -155,9 +156,8 @@ instance Show Field where
 
 instance Show OpExpr where
   show = \case
-    SOE2 soe -> show soe
+    SOE3 soe -> show soe
     BOE1 boe -> show boe
-    COE1 coe -> show coe
 
 instance Show OpExprStart where
   show = \(OES (op_arg1, op1, op_arg_op_pairs)) ->
@@ -171,37 +171,35 @@ instance Show SimpleOpExpr where
 instance Show SimpleOpExprEnd where
   show = \case
     OA1 oa -> show oa
-    SFE2 sfe -> show sfe
+    SFE3 sfe -> show sfe
 
 instance Show BigOpExpr where
+  show = \(BOE (oes, cont)) -> show oes ++ show cont
+
+instance Show Continuation where
   show = \case
-    BOE_1_ boe1 -> show boe1
-    BOE_2_ boe2 -> show boe2
+    OC1 oc -> show oc
+    FnC fc -> show fc
 
-instance Show BigOpExpr1 where
-  show = \(BOE_1 (oess, boee)) ->
-    concatMap ((++ "\n") . show) oess ++ show boee
+instance Show OpContinuation where
+  show = \(OC (oess, maybe_oes, oce)) ->
+    "\n" ++ concatMap ((++ "\n") . show) oess ++ show_moes maybe_oes ++ show oce
+    where
+    show_moes :: Maybe OpExprStart -> String
+    show_moes = \case
+      Just oes -> show oes ++ " "
+      _ -> ""
 
-instance Show BigOpExprEnd where
-  show = \(BOEE (maybe_oes, boee2)) ->
-    case maybe_oes of 
-      Nothing -> show boee2
-      Just oes -> show oes ++ " " ++ show boee2
-
-instance Show BigOpExprEnd2 where
+instance Show OpContEnd where
   show = \case
     OA2 oa -> show oa
-    SFE3 sfe -> show sfe
-    BFE1 bfe -> show bfe
+    FE1 fe -> show fe
 
-instance Show BigOpExpr2 where
-  show = \(BOE_2 (oes, bfe)) ->
-    show oes ++ " " ++ show bfe
-
-instance Show CasesOpExpr where
-  show = \(COE (oes, oess, cfe)) ->
-    show oes ++ concatMap (("\n" ++) . show) oess ++ show cfe
-
+instance Show FuncContinuation where
+  show = \case
+    BFE1 bfe -> " " ++ show bfe
+    CFE1 cfe -> " " ++ show cfe
+  
 instance Show OpArg where
   show = \case
     NPOA2 npoa -> show npoa
@@ -243,29 +241,29 @@ instance Show FuncExpr where
   show = \case
     SFE4 sfe -> show sfe
     BFE2 bfe -> show bfe
-    CFE1 cfe -> show cfe
+    CFE2 cfe -> show cfe
 
 instance Show SimpleFuncExpr where
-  show = \(SFE (params, sfb)) -> show params ++ " => " ++ show sfb
+  show = \(SFE (params, sfb)) -> show params ++ " =>" ++ show sfb
+
+instance Show SimpleFuncBody where
+  show = \case
+    NPOA3 npoa -> " " ++ show npoa
+    SOE4 soe -> " " ++ show soe
 
 instance Show BigFuncExpr where
-  show = \(BFE (params, bfb)) -> show params ++ " =>\n" ++ show bfb
+  show = \(BFE (params, bfb)) -> show params ++ " =>" ++ show bfb
 
 instance Show BigFuncBody where
   show = \case
-    SFB1 sfb -> show sfb
-    BOE2 boe -> show boe
+    NPOA4 npoa -> "\n" ++ show npoa
+    OE1 oe -> "\n" ++ show oe
 
 instance Show Parameters where
   show = \case
     OneParam id -> show id
     ManyParams (id, ids) ->
       "(" ++ show id ++ concatMap ((", " ++) . show) ids ++ ")"
-
-instance Show SimpleFuncBody where
-  show = \case
-    NPOA3 npoa -> show npoa
-    SOE5 soe -> show soe
 
 instance Show CasesFuncExpr where
   show = \(CFE (cps, cs, maybe_ec)) ->
@@ -309,8 +307,8 @@ instance Show CaseBody where
 
 instance Show CaseBodyStart where
   show = \case
-    SFB2 sfb -> show sfb
-    BOE3 boe -> show boe
+    SFB1 sfb -> show sfb
+    BFB1 bfb -> show bfb
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
@@ -320,9 +318,9 @@ instance Show ValueDef where
 
 instance Show ValueExpr where
   show = \case
-    NPOA4 npoa -> show npoa
-    OE oe -> show oe
-    FE fe -> show fe
+    NPOA5 npoa -> show npoa
+    OE2 oe -> show oe
+    FE2 fe -> show fe
     BT1 bt -> show bt
     BL1 bl -> show bl
 
@@ -546,9 +544,8 @@ instance Show TTValueExpr where
 instance Show BigOrCasesExpr where
   show = \case
     BOE4 boe -> show boe
-    COE2 coe -> show coe
     BFE3 bfe -> show bfe
-    CFE2 cfe -> show cfe
+    CFE3 cfe -> show cfe
     BT2 bt -> show bt
     BL2 bl -> show bl
 

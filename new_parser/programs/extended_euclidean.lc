@@ -41,3 +41,5 @@ main
   : IO
   = read_two_ints ;> ints =>
     print_gcd_and_coeffs <- extended_euclidean(ints.1st, ints.2nd)
+
+

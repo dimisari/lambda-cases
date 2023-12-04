@@ -1116,13 +1116,13 @@ The precise indentation rules are described in the section
 \\
 
 <big-op-expr> ::= 
-<op-expr-start> ( <op-cont> | <func-cont> )
+<op-expr-start> ( <op-continuation> | <func-continuation> )
 
-<op-cont> ::= 
+<op-continuation> ::= ""\\
 `\\n' <indent> ( <op-expr-start> `\\n' <indent> )* 
 [ <op-expr-start> `\ ' ] ( <op-arg> | <func-expr> )
 
-<func-cont> ::= 
+<func-continuation> ::= 
 `\ ' ( <big-func-expr> | <cases-func-expr> )
 \\
 
@@ -1708,13 +1708,13 @@ In a type theorem, if the value expression is a big or cases expression:
 \\
 
 <big-op-expr> ::= 
-<op-expr-start> ( <op-cont> | <func-cont> )
+<op-expr-start> ( <op-continuation> | <func-continuation> )
 
-<op-cont> ::= 
+<op-continuation> ::= ""\\
 `\\n' <indent> ( <op-expr-start> `\\n' <indent> )* 
 [ <op-expr-start> `\ ' ] ( <op-arg> | <func-expr> )
 
-<func-cont> ::= `\ ' ( <big-func-expr> | <cases-func-expr> )
+<func-continuation> ::= `\ ' ( <big-func-expr> | <cases-func-expr> )
 \\
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>

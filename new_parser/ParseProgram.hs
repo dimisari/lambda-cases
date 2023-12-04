@@ -40,6 +40,6 @@ read_parse_write file_name =
 
 parse_program :: ProgramStr -> ParseResult
 parse_program =
-  runParser (parser <* eof :: Parser Program) (0, False) "" .> \case
+  runParser (parser :: Parser Program) (0, False) "" .> \case
     Left err -> "Error :( ==>\n" ++ show err ++ "\n\n"
     Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"

@@ -21,3 +21,11 @@ extended_euclidean
       : all Coeffs
       = (1, 0), (0, 1)#
 
+read_two_ints
+  : (Int x Int)FromIO
+  = print <- "Please give me 2 ints" ;
+    get_line ;> split_words o> apply(from_string)to_all o> ints =>
+    ints -> length -> cases =>
+      2 => wrap(ints)
+      ... => throw_err("You didn't give me 2 ints")#
+

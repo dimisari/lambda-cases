@@ -37,13 +37,13 @@ not_in_equal_line = modifyState (\(il, _) -> (il, False))
 are_we_in_equal_line :: Parser Bool
 are_we_in_equal_line = snd <$> getState
 
-inc_il_if_not_in_eq_line :: Bool -> Parser ()
-inc_il_if_not_in_eq_line = \case
+inc_il_if_false :: Bool -> Parser ()
+inc_il_if_false = \case
   True -> return ()
   False -> increase_il 1
 
-dec_il_if_not_in_eq_line :: Bool -> Parser ()
-dec_il_if_not_in_eq_line = \case
+dec_il_if_false :: Bool -> Parser ()
+dec_il_if_false = \case
   True -> return ()
   False -> decrease_il 1
 
@@ -128,7 +128,7 @@ instance HasParser Identifier where
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
 
-instance HasParser SimpleExpr where
+instance HasParser ParenExprInside where
   parser = SOE1 <$> try parser <|> SFE1 <$> parser
 
 instance HasParser Tuple where
@@ -144,7 +144,7 @@ instance HasParser CommaSepLineExprs where
     return $ CSLE (line_expr, line_exprs)
 
 instance HasParser LineExpr where
-  parser = SE <$> try parser <|> NPOA1 <$> parser
+  parser = SFE2 <$> try parser <|> SOE2 <$> try parser <|> NPOA1 <$> parser
 
 instance HasParser BigTuple where
   parser =
@@ -268,7 +268,7 @@ instance HasParser Change where
 -- HasParser: OpExpr
 
 instance HasParser OpExpr where
-  parser = SOE2 <$> try parser <|> BOE1 <$> try parser <|> COE1 <$> parser
+  parser = BOE1 <$> try parser <|> SOE3 <$> try parser
 
 instance HasParser OpExprStart where
   parser = 
@@ -290,40 +290,31 @@ instance HasParser SimpleOpExpr where
     return $ SOE (oes, soee)
 
 instance HasParser SimpleOpExprEnd where
-  parser = SFE2 <$> try parser <|> OA1 <$> parser
+  parser = SFE3 <$> try parser <|> OA1 <$> parser
 
 instance HasParser BigOpExpr where
-  parser = BOE_1_ <$> try parser <|> BOE_2_ <$> parser
-
-instance HasParser BigOpExpr1 where
-  parser = 
-    many1 (try $ parser <* nl_indent) >>= \oess ->
-    big_op_expr_end_p >>= \boee ->
-    return $ BOE_1 (oess, boee)
-    where
-    big_op_expr_end_p :: Parser BigOpExprEnd
-    big_op_expr_end_p =
-      optionMaybe (try $ parser <* char ' ') >>= \maybe_oes ->
-      big_op_expr_end_p2 >>= \soee2 ->
-      return $ BOEE (maybe_oes, soee2)
-
-    big_op_expr_end_p2 :: Parser BigOpExprEnd2
-    big_op_expr_end_p2 =
-      BFE1 <$> try parser <|> SFE3 <$> try parser <|> OA2 <$> parser
-
-instance HasParser BigOpExpr2 where
-  parser = 
-    parser <* char ' ' >>= \oes ->
-    parser >>= \bfe ->
-    return $ BOE_2 (oes, bfe)
-
-instance HasParser CasesOpExpr where
-  parser = 
+  parser =
     parser >>= \oes ->
-    many (try $ not_in_equal_line *> nl_indent *> parser) >>= \oess ->
-    (not_in_equal_line *> nl_indent <|> one_space) *> parser >>= \cases_func_expr ->
-    return $ COE (oes, oess, cases_func_expr)
+    parser >>= \cont ->
+    return $ BOE (oes, cont)
 
+instance HasParser Continuation where
+  parser = OC1 <$> parser <|> FnC <$> parser
+
+instance HasParser OpContinuation where
+  parser =
+    not_in_equal_line >>
+    nl_indent *> many (try $ parser <* nl_indent) >>= \oess-> 
+    optionMaybe (try parser <* char ' ') >>= \maybe_oes ->
+    parser >>= \oce ->
+    return $ OC (oess, maybe_oes, oce)
+
+instance HasParser OpContEnd where
+  parser = FE1 <$> try parser <|> OA2 <$> parser
+
+instance HasParser FuncContinuation where
+  parser = char ' ' *> (BFE1 <$> try parser <|> CFE1 <$> parser)
+  
 instance HasParser OpArg where
   parser = PE3 <$> try parser <|> NPOA2 <$> parser
 
@@ -360,22 +351,25 @@ instance HasParser Op where
 -- HasParser: FuncExpr
 
 instance HasParser FuncExpr where
-  parser = SFE4 <$> try parser <|> BFE2 <$> try parser <|> CFE1 <$> parser
+  parser = SFE4 <$> try parser <|> BFE2 <$> try parser <|> CFE2 <$> parser
 
 instance HasParser SimpleFuncExpr where
   parser = 
     parser >>= \parameters ->
-    string " => " *> parser >>= \simple_func_body ->
+    string " =>" *> parser >>= \simple_func_body ->
     return $ SFE (parameters, simple_func_body)
+
+instance HasParser SimpleFuncBody where
+  parser = char ' ' *> (SOE4 <$> try parser <|> NPOA3 <$> parser)
 
 instance HasParser BigFuncExpr where
   parser = 
     parser >>= \parameters ->
-    string " =>" *> nl_indent *> big_func_body_p >>= \big_func_body ->
+    string " =>" *> parser >>= \big_func_body ->
     return $ BFE (parameters, big_func_body)
-    where
-    big_func_body_p :: Parser BigFuncBody
-    big_func_body_p = BOE2 <$> try parser <|> SFB1 <$> parser
+
+instance HasParser BigFuncBody where
+  parser = nl_indent *> (OE1 <$> try parser <|> NPOA4 <$> parser)
 
 instance HasParser Parameters where
   parser = 
@@ -385,18 +379,15 @@ instance HasParser Parameters where
       return $ ManyParams (identifier, identifiers)
     )
 
-instance HasParser SimpleFuncBody where
-  parser = SOE5 <$> try parser <|> NPOA3 <$> parser
-
-instance HasParser CasesFuncExpr where --TODO last indentation rule
+instance HasParser CasesFuncExpr where 
   parser =
     parser >>= \cases_params ->
     string " =>" *>
     are_we_in_equal_line >>= \answer ->
-    inc_il_if_not_in_eq_line answer *>
+    inc_il_if_false answer *>
     many1 parser >>= \cases ->
     optionMaybe parser >>= \maybe_end_case ->
-    dec_il_if_not_in_eq_line answer *>
+    dec_il_if_false answer *>
     return (CFE (cases_params, cases, maybe_end_case))
 
 instance HasParser CasesParams where
@@ -451,13 +442,13 @@ instance HasParser ListMatching where
 instance HasParser CaseBody where
   parser = 
     increase_il 1 >>
-    (one_space <|> nl_indent) *> case_body_start_p >>= \case_body_start ->
+    case_body_start_p >>= \case_body_start ->
     optionMaybe (try parser) >>= \maybe_where_expr ->
     decrease_il 1 >>
     return (CB (case_body_start, maybe_where_expr))
     where
     case_body_start_p :: Parser CaseBodyStart
-    case_body_start_p = BOE3 <$> try parser <|> SFB2 <$> parser
+    case_body_start_p = SFB1 <$> parser <|> BFB1 <$> parser
 
 -- HasParser: ValueDef, WhereExpr
 
@@ -466,20 +457,21 @@ instance HasParser ValueDef where
     indent *> parser >>= \identifier ->
     increase_il 1 >>
     nl_indent *> string ": " *> parser >>= \type_ ->
-    nl_indent *> string "= " *> increase_il 1 *> in_equal_line *>
+    nl_indent *> string "= " *>
+    increase_il 1 >> in_equal_line >>
     parser >>= \value_expr ->
-    not_in_equal_line *>
+    not_in_equal_line >>
     optionMaybe (try parser) >>= \maybe_where_expr ->
     decrease_il 2 >>
     return (VD (identifier, type_, value_expr, maybe_where_expr))
 
 instance HasParser ValueExpr where
   parser = 
-    OE <$> try parser <|>
-    FE <$> try parser <|>
+    OE2 <$> try parser <|>
+    FE2 <$> try parser <|>
     BT1 <$> try parser <|>
     BL1 <$> try parser <|>
-    NPOA4 <$> parser
+    NPOA5 <$> parser
 
 instance HasParser GroupedValueDefs where
   parser = 
@@ -820,21 +812,21 @@ instance HasParser TypeFunc where
 
 instance HasParser TTValueExpr where
   parser =
-    BOCE <$> (try (increase_il 2 *> nl_indent) *> parser <* decrease_il 2) <|>
+    BOCE <$> (try (increase_il 2 >> nl_indent) *> parser <* decrease_il 2) <|>
     LE <$> (char ' ' *> parser)
 
 instance HasParser BigOrCasesExpr where
   parser = 
-    BOE4 <$> try parser <|> COE2 <$> try parser <|> BFE3 <$> try parser <|>
-    CFE2 <$> try parser <|> BT2 <$> try parser <|> BL2 <$> parser
+    BOE4 <$> try parser <|> BFE3 <$> try parser <|> CFE3 <$> try parser <|>
+    BT2 <$> try parser <|> BL2 <$> parser
 
 -- Program
 
 instance HasParser Program where
   parser =
     parser >>= \pp ->
-    many (string "\n\n" *> parser) >>= \pps ->
-    return $ P (pp, pps)
+    many (try $ string "\n\n" *> parser) >>= \pps ->
+    spaces *> eof *> return (P (pp, pps))
 
 instance HasParser ProgramPart where
   parser = 
