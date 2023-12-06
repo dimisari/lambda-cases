@@ -1,0 +1,5 @@
+3 programs
+
+- find pcl compiler
+- copy 3 programs
+- edit them to lcases

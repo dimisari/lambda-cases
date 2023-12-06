@@ -163,7 +163,7 @@ newtype GroupedValueDefs =
 data Types = 
   Ts (Type, [Type]) | All Type
 
-newtype WhereExpr = WE [WhereDefExpr]
+newtype WhereExpr = WE (WhereDefExpr, [WhereDefExpr])
 
 data WhereDefExpr = 
   VD1 ValueDef | GVDs1 GroupedValueDefs

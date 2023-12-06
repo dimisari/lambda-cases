@@ -57,6 +57,9 @@ dec_il_if_false = \case
   (many (char ' ' <|> char '\t') *> char '\n', nl *> indent, many1 digit)
   :: (Parser Char, Parser (), Parser String) 
 
+nl_ind_or_one_space :: Parser ()
+nl_ind_or_one_space = try nl_indent <|> char ' ' *> return ()
+
 indent :: Parser ()
 indent = getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
 
@@ -455,7 +458,7 @@ instance HasParser ValueDef where
   parser = 
     indent *> parser >>= \identifier ->
     increase_il 1 >>
-    nl_indent *> string ": " *> parser >>= \type_ ->
+    nl_ind_or_one_space *> string ": " *> parser >>= \type_ ->
     nl_indent *> string "= " *>
     increase_il 1 >> in_equal_line >>
     parser >>= \value_expr ->
@@ -477,7 +480,7 @@ instance HasParser GroupedValueDefs where
     indent *> parser >>= \identifier ->
     many1 (comma *> parser) >>= \identifiers -> 
     increase_il 1 >>
-    nl_indent *> string ": " *> types_p >>= \types ->
+    nl_ind_or_one_space *> string ": " *> types_p >>= \types ->
     nl_indent *> string "= " *> parser >>= \comma_sep_line_exprs ->
     many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
     decrease_il 1 >>
@@ -495,7 +498,9 @@ instance HasParser GroupedValueDefs where
 
 instance HasParser WhereExpr where
   parser = 
-    nl_indent *> string "where" *> nl *> (WE <$> many1 where_def_expr_p)
+    nl_indent *> string "where" *> nl *> where_def_expr_p >>= \where_def_expr1 ->
+    many (try $ nl *> nl *> where_def_expr_p) >>= \where_def_exprs ->
+    return $ WE (where_def_expr1, where_def_exprs)
     where
     where_def_expr_p :: Parser WhereDefExpr
     where_def_expr_p = VD1 <$> try parser <|> GVDs1 <$> parser
@@ -819,7 +824,7 @@ instance HasParser BigOrCasesExpr where
 
 instance HasParser Program where
   parser =
-    parser >>= \pp ->
+    many nl *> parser >>= \pp ->
     many (try $ nl *> nl *> parser) >>= \pps ->
     spaces *> eof *> return (P (pp, pps))
 

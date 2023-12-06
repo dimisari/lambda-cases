@@ -336,7 +336,8 @@ instance Show Types where
     All t -> "all " ++ show t
 
 instance Show WhereExpr where
-  show = \(WE wdes) -> "\nwhere\n" ++ concatMap show wdes
+  show = \(WE (wde, wdes)) ->
+    "\nwhere\n" ++ show wde ++ concatMap (("\n\n" ++) . show) wdes
 
 instance Show WhereDefExpr where
   show = \case

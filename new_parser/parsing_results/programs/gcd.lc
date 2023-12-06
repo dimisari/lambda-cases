@@ -26,6 +26,5 @@ message
 
 main
   : IO
-  = read_two_ints ;> ints =>
-print_gcd_message(ints.1st, ints.2nd, gcd(ints.1st, ints.2nd))
+  = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i2))
 
