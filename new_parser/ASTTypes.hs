@@ -10,14 +10,14 @@ newtype Identifier = Id String
 newtype ParenExpr = PE ParenExprInside
 
 data ParenExprInside = 
-  SOE1 LineOpExpr | SFE1 LineFuncExpr
+  LOE1 LineOpExpr | LFE1 LineFuncExpr
 
 newtype Tuple = T (LineExpr, CommaSepLineExprs)
 
 newtype CommaSepLineExprs = CSLE (LineExpr, [LineExpr])
 
 data LineExpr = 
-  NPOA1 NoParenOpArg | SOE2 LineOpExpr | SFE2 LineFuncExpr
+  NPOA1 NoParenOpArg | LOE2 LineOpExpr | LFE2 LineFuncExpr
 
 newtype BigTuple = BT (LineExpr, CommaSepLineExprs, [CommaSepLineExprs])
 
@@ -75,14 +75,14 @@ data Field =
 -- Values: OpExpr
 
 data OpExpr = 
-  SOE3 LineOpExpr | BOE1 BigOpExpr
+  LOE3 LineOpExpr | BOE1 BigOpExpr
 
 newtype OpExprStart = OES [(OpArg, Op)]
 
-newtype LineOpExpr = SOE (OpExprStart, LineOpExprEnd)
+newtype LineOpExpr = LOE (OpExprStart, LineOpExprEnd)
 
 data LineOpExprEnd = 
-  OA1 OpArg | SFE3 LineFuncExpr
+  OA1 OpArg | LFE3 LineFuncExpr
 
 data BigOpExpr = 
   BOEOS1 BigOpExprOpSplit | BOEFS1 BigOpExprFuncSplit
@@ -118,12 +118,12 @@ data OptionalSpacesOp =
 -- Values: FuncExpr
 
 data FuncExpr = 
-  SFE4 LineFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
+  LFE4 LineFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
 
-newtype LineFuncExpr = SFE (Parameters, LineFuncBody)
+newtype LineFuncExpr = LFE (Parameters, LineFuncBody)
 
 data LineFuncBody = 
-  NPOA3 NoParenOpArg | SOE4 LineOpExpr
+  NPOA3 NoParenOpArg | LOE4 LineOpExpr
 
 newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
 
@@ -156,7 +156,7 @@ newtype ListMatching = LM (Maybe (Matching, [Matching]))
 newtype CaseBody = CB (CaseBodyStart, Maybe WhereExpr)
 
 data CaseBodyStart =
-  SFB1 LineFuncBody | BFB1 BigFuncBody
+  LFB1 LineFuncBody | BFB1 BigFuncBody
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 

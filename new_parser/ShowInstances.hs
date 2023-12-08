@@ -28,8 +28,8 @@ instance Show ParenExpr where
 
 instance Show ParenExprInside where
   show = \case
-    SOE1 soe -> show soe
-    SFE1 sfe -> show sfe
+    LOE1 soe -> show soe
+    LFE1 sfe -> show sfe
 
 instance Show Tuple where
   show = \(T (le, csles)) -> "(" ++ show le ++ ", " ++ show csles ++ ")"
@@ -40,8 +40,8 @@ instance Show CommaSepLineExprs where
 instance Show LineExpr where
   show = \case
     NPOA1 npoa -> show npoa
-    SOE2 soe -> show soe
-    SFE2 sfe -> show sfe
+    LOE2 soe -> show soe
+    LFE2 sfe -> show sfe
 
 instance Show BigTuple where
   show = \(BT (le, csles, csles_l)) ->
@@ -156,7 +156,7 @@ instance Show Field where
 
 instance Show OpExpr where
   show = \case
-    SOE3 soe -> show soe
+    LOE3 soe -> show soe
     BOE1 boe -> show boe
 
 instance Show OpExprStart where
@@ -164,12 +164,12 @@ instance Show OpExprStart where
      concatMap (\(op_arg, op) -> show op_arg ++ show op) op_arg_op_pairs
 
 instance Show LineOpExpr where
-  show = \(SOE (oes, loee)) -> show oes ++ show loee
+  show = \(LOE (oes, loee)) -> show oes ++ show loee
 
 instance Show LineOpExprEnd where
   show = \case
     OA1 oa -> show oa
-    SFE3 sfe -> show sfe
+    LFE3 sfe -> show sfe
 
 instance Show BigOpExpr where
   show = \case
@@ -249,17 +249,17 @@ instance Show OptionalSpacesOp where
 
 instance Show FuncExpr where
   show = \case
-    SFE4 sfe -> show sfe
+    LFE4 sfe -> show sfe
     BFE2 bfe -> show bfe
     CFE2 cfe -> show cfe
 
 instance Show LineFuncExpr where
-  show = \(SFE (params, sfb)) -> show params ++ " =>" ++ show sfb
+  show = \(LFE (params, sfb)) -> show params ++ " =>" ++ show sfb
 
 instance Show LineFuncBody where
   show = \case
     NPOA3 npoa -> " " ++ show npoa
-    SOE4 soe -> " " ++ show soe
+    LOE4 soe -> " " ++ show soe
 
 instance Show BigFuncExpr where
   show = \(BFE (params, bfb)) -> show params ++ " =>" ++ show bfb
@@ -317,7 +317,7 @@ instance Show CaseBody where
 
 instance Show CaseBodyStart where
   show = \case
-    SFB1 sfb -> show sfb
+    LFB1 sfb -> show sfb
     BFB1 bfb -> show bfb
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr

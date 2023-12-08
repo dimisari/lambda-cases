@@ -126,9 +126,9 @@ file_name_parse_func_pairs =
   , ("paren_func_app.txt", parse_paren_func_app_and_ret_res_str)
   , ("prefix_func_app.txt", parse_pre_func_app_and_ret_res_str)
   , ("postfix_func_app.txt", parse_post_func_app_and_ret_res_str)
-  , ("simple_op_expr.txt", parse_simple_op_expr_and_ret_res_str)
+  , ("line_op_expr.txt", parse_line_op_expr_and_ret_res_str)
   , ("big_op_expr.txt", parse_big_op_expr_and_ret_res_str)
-  , ("simple_func_expr.txt", parse_simple_func_expr_and_ret_res_str)
+  , ("line_func_expr.txt", parse_line_func_expr_and_ret_res_str)
   , ("big_func_expr.txt", parse_big_func_expr_and_ret_res_str)
   , ("cases_func_expr.txt", parse_cases_func_expr_and_ret_res_str)
   , ("value_def.txt", parse_value_def_and_ret_res_str)
@@ -198,8 +198,8 @@ parse_post_func_app_and_ret_res_str =
   \test_example ->
   parse_result_to_string (parse test_example :: Either ParseError PostFuncApp)
 
-parse_simple_op_expr_and_ret_res_str :: ParseFunc
-parse_simple_op_expr_and_ret_res_str =
+parse_line_op_expr_and_ret_res_str :: ParseFunc
+parse_line_op_expr_and_ret_res_str =
   \test_example ->
   parse_result_to_string (parse test_example :: Either ParseError LineOpExpr)
 
@@ -208,8 +208,8 @@ parse_big_op_expr_and_ret_res_str =
   \test_example ->
   parse_result_to_string (parse test_example :: Either ParseError BigOpExpr)
 
-parse_simple_func_expr_and_ret_res_str :: ParseFunc
-parse_simple_func_expr_and_ret_res_str =
+parse_line_func_expr_and_ret_res_str :: ParseFunc
+parse_line_func_expr_and_ret_res_str =
   \test_example ->
   parse_result_to_string (parse test_example :: Either ParseError LineFuncExpr)
 
