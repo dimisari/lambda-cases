@@ -88,9 +88,9 @@ instance Parse BigList
 instance Parse ParenFuncApp
 instance Parse PreFuncApp
 instance Parse PostFuncApp
-instance Parse SimpleOpExpr
+instance Parse LineOpExpr
 instance Parse BigOpExpr
-instance Parse SimpleFuncExpr
+instance Parse LineFuncExpr
 instance Parse BigFuncExpr
 instance Parse CasesFuncExpr
 instance Parse ValueDef
@@ -201,7 +201,7 @@ parse_post_func_app_and_ret_res_str =
 parse_simple_op_expr_and_ret_res_str :: ParseFunc
 parse_simple_op_expr_and_ret_res_str =
   \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError SimpleOpExpr)
+  parse_result_to_string (parse test_example :: Either ParseError LineOpExpr)
 
 parse_big_op_expr_and_ret_res_str :: ParseFunc
 parse_big_op_expr_and_ret_res_str =
@@ -211,7 +211,7 @@ parse_big_op_expr_and_ret_res_str =
 parse_simple_func_expr_and_ret_res_str :: ParseFunc
 parse_simple_func_expr_and_ret_res_str =
   \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError SimpleFuncExpr)
+  parse_result_to_string (parse test_example :: Either ParseError LineFuncExpr)
 
 parse_big_func_expr_and_ret_res_str :: ParseFunc
 parse_big_func_expr_and_ret_res_str =

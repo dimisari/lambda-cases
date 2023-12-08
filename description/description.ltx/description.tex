@@ -61,14 +61,12 @@ behaviour.
 
 \paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
-gcd
-  : (Int, Int) => Int
+gcd : (Int, Int) => Int
   = (x, cases) =>
     0 => x
     y => gcd(y, x -> mod <- y) 
 
-read_two_ints
-  : (Int x Int)FromIO
+read_two_ints : (Int x Int)FromIO
   = print <- "Please give me 2 ints";
     get_line ;> split_to_words o> cases =>
       [x, y] => wrap_with_io(from_string(x), from_string(y))
@@ -78,16 +76,13 @@ tuple_type NumsAndGcd
 value
   (x, y, gcd) : Int x Int x Int
 
-print_gcd_message
-  : NumsAndGcd => IO
+print_gcd_message : NumsAndGcd => IO
   = nums_gcd => print(message)
     where
-    message
-      : String
+    message : String
       = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " + nums_gcd.gcd
 
-main
-  : IO
+main : IO
   = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i1))
 \end{verbatim}
 
@@ -355,8 +350,7 @@ ListOf(T)s
   \textbf{Example}
 
   \begin{verbatim}
-  my_big_list
-    : ListOf(Int => IO)s
+  my_big_list : ListOf(Int => IO)s
     = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
       , x => print("I'm the second function and x + 2 is: " + (x + 2))
       , x => print("I'm the third function and x + 3 is: " + (x + 3))
@@ -433,8 +427,7 @@ been \textbf{defined with parentheses inside the identifier}. For example,
 below is the definition of "apply()to\_all":
 
 \begin{verbatim}
-apply()to_all
-  : (A => B, ListOf(A)s) => ListOf(B)s
+apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
   = (f, cases) =>
     empty_l => empty_l
     non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all <- l.tail)
@@ -490,10 +483,8 @@ convert a value of a particular type to a value that is a case of an
 \texttt{or_type} and has values of this type inside. For example in the
 first example above we have:
 \begin{verbatim}
-1 
-  : Int
-the_value:1
-  : Possibly(Int)
+1 : Int
+the_value:1 : Possibly(Int)
 \end{verbatim}
 Where the function \texttt{thevalue:} is automatically generated from the
 definition of the \texttt{Possibly} type:
@@ -545,10 +536,8 @@ definitions (see "Tuple Types" in section \ref{subsubsec:tdefs}). They are
 functions that take a \texttt{tuple_type} value and return a particular field
 (i.e. projection functions). For example in the first example above we have:
 \begin{verbatim}
-name 
-  : Name
-name.first_name
-  : String
+name : Name
+name.first_name : String
 \end{verbatim}
 Where the function \texttt{.first_name} is automatically generated from the
 definition of the \texttt{Name} type:
@@ -563,20 +552,16 @@ There are also the following special projection functions that work on tuples
 (i.e. product type or tuple type values): \texttt{.1st .2nd .3rd .4th .5th}.
 For the 4th example above, assuming:
 \begin{verbatim}
-tuple 
-  : Int x String
+tuple : Int x String
 \end{verbatim}
 We have:
 \begin{verbatim}
-tuple.1st
-  : Int
+tuple.1st : Int
 \end{verbatim}
 The general types of these functions are:
 \begin{verbatim}
-.1st
-  : (A)Is(B)s_1st ==> B => A
-.2nd
-  : (A)Is(B)s_2nd ==> B => A
+.1st : (A)Is(B)s_1st ==> B => A
+.2nd : (A)Is(B)s_2nd ==> B => A
 ...
 \end{verbatim}
 These functions are called postfix functions because they are appended to
@@ -623,34 +608,30 @@ definition can be used (examples 2, 3 and 4). Therefore, we are assuming the
 following (or similar) if the examples are to type check:
 
 \begin{verbatim}
-tuple
-  : Int x ... x Int (optionally more: x ... )
-  or some equivalent tuple type
+tuple : Int x ... x Int (optionally more: x ... ) or some equivalent tuple type
 
 tuple_type MyStateType
 value
   (..., counter, ...) : ... x Int x ...
 
-state
-  : MyStateType
+state : MyStateType
 
 tuple_type MyNameType
 value
   (..., last_name, ...) : ... x String x ...
 
-name
-  : MyNameType
+name : MyNameType
 
 tuple_type Point
 value
   (x, y, z) : Real x Real x Real
 
-point
-  : Point
+point : Point
 
 apply(.change{1st = 1st + 1})to_all
   : ListOf(A)s => ListOf(A)s
-  where A must be some product or tuple type
+  where A must be some product or tuple type where the first field can be added 
+  with an integer
 \end{verbatim}
 The changes of the fields have the following structure: "field = expression of
 new value" and they are seperated by commas. The input tuple's fields (i.e. the
@@ -692,33 +673,25 @@ function applications without the clutter of having to open and close
 parentheses for each one of the functions.  For example, assuming we have the
 following functions with the behaviour suggested by their names and types:
 \begin{verbatim}
-apply()to_all
-  : (A => B, ListOf(A)s) => ListOf(B)s
-string_length
-  : String => Int
-filter_with
-  : (A => Bool, ListOf(A)s) => ListOf(A)s
-is_odd
-  : Int => Bool
-sum_ints
-  : ListOf(Int)s => Int
+apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
+string_length : String => Int
+filter_with : (A => Bool, ListOf(A)s) => ListOf(A)s
+is_odd : Int => Bool
+sum_ints : ListOf(Int)s => Int
 \end{verbatim}
 And a list of strings:
 \begin{verbatim}
-strings
-  : ListOf(String)s
+strings : ListOf(String)s
 \end{verbatim}
 Here is a simple way to get the total number of characters in all the strings
 that have odd length:
 \begin{verbatim}
-chars_in_odd_length_strings
-  : Int
+chars_in_odd_length_strings : Int
   = strings -> apply(string_length)to_all -> filter_with(is_odd) -> sum_ints
 \end{verbatim}
 This can be done equivalently using the other operator:
 \begin{verbatim}
-chars_in_odd_length_strings
-  : Int
+chars_in_odd_length_strings : Int
   = sum_ints <- filter_with(is_odd) <- apply(string_length)to_all <- strings
 
 \end{verbatim}
@@ -754,25 +727,19 @@ the function which is applied first to the function which is applied second.
 A neat example using function composition is the following. Assuming we have the
 following functions with the behaviour suggested by their names and types: 
 \begin{verbatim}
-split_to_words
-  : String => ListOf(String)s
-apply()to_all
-  : (A => B, ListOf(A)s) => ListOf(B)s
-reverse_string
-  : String => String
-merge_words
-  : ListOf(String)s => String
+split_to_words : String => ListOf(String)s
+apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
+reverse_string : String => String
+merge_words : ListOf(String)s => String
 \end{verbatim}
 We can reverse the all the words in a string like so:
 \begin{verbatim}
-reverse_words
-  : String => String
+reverse_words : String => String
   = split_to_words o> apply(reverse_string)to_all o> merge_words
 \end{verbatim}
 This can be done equivalently using the other operator:
 \begin{verbatim}
-reverse_words
-  : String => String
+reverse_words : String => String
   = merge_words <o apply(reverse_string)to_all <o split_to_words
 \end{verbatim}
 
@@ -918,12 +885,10 @@ The example above demonstrates the use of the environment action operators with
 the \texttt{FromIO} type, which is how IO is done in lcases. Some light can
 be shed on how this is done, if we take a look at the types (as always!):
 \begin{verbatim}
-print_string
-  : String => (EmptyVal)FromIO
-print_string("I'll repeat the line.")
-  : (EmptyVal)FromIO
-get_line
-  : (String)FromIO
+print_string : String => (EmptyVal)FromIO
+print_string("I'll repeat the line.") : (EmptyVal)FromIO
+get_line : (String)FromIO
+
 ; 
   : (E)Has_Then ==> (E(A), E(B)) => E(B) 
 ;>
@@ -940,25 +905,19 @@ print_string("I'll repeat the line.") ; get_line ;> print_string
 
 \paragraph{Example program}
 \begin{verbatim}
-main
-  : (EmptyVal)FromIO
+main : (EmptyVal)FromIO
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
     print_string("Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
 \end{verbatim}
 In this bigger but similar example the types are:
 \begin{verbatim}
-print_string
-  : String => (EmptyVal)FromIO
-get_line
-  : (String)FromIO
+print_string : String => (EmptyVal)FromIO
+get_line : (String)FromIO
 
-print_string <- "Hello! ... "
-  : (EmptyVal)FromIO
-print_string("Oh hi...)
-  : (EmptyVal)FromIO
-print_string("Oh that's crazy...)
-  : (EmptyVal)FromIO
+print_string <- "Hello! ... " : (EmptyVal)FromIO
+print_string("Oh hi...) : (EmptyVal)FromIO
+print_string("Oh that's crazy...) : (EmptyVal)FromIO
 
 ;
   : (E)Has_Then ==> (E(A), E(B)) => E(B) 
@@ -1115,30 +1074,40 @@ The precise indentation rules are described in the section
 <op-expr> ::= <line-op-expr> | <big-op-expr>
 \\
 
-<op-expr-start> ::= <op-arg> `\ ' <op> ( `\ ' <op-arg> `\ ' <op> )*
+<op-expr-start> ::= ( <op-arg> <op> )+
 
-<line-op-expr> ::= <op-expr-start> `\ ' ( <op-arg> | <line-func-expr> )
+<line-op-expr> ::= <op-expr-start> ( <op-arg> | <line-func-expr> )
 \\
 
 <big-op-expr> ::= 
-<op-expr-start> ( <op-continuation> | <func-continuation> )
+<big-op-expr-op-split> | <big-op-expr-func-split>
+\\
 
-<op-continuation> ::= ""\\
-<nl> <indent> ( <op-expr-start> <nl> <indent> )* 
-[ <op-expr-start> `\ ' ] ( <op-arg> | <func-expr> )
+<big-op-expr-op-split> ::= 
+<op-split-line>+ [ <op-expr-start> ] ( <op-arg> | <func-expr> )
 
-<func-continuation> ::= 
-`\ ' ( <big-func-expr> | <cases-func-expr> )
+<op-split-line> ::=
+<op-expr-start> ( <nl> | <op-arg> <comp-op-nl> ) <indent> 
+\\
+
+<big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
 \\
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
 
 <no-paren-op-arg> ::=
 <basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
+\\
 
-<op> ::= 
-`->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `!=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'\\
+<op> ::=  
+`\ ' ( `o>' | `<o' ) `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
+
+<optional-spaces-op> ::= 
+`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' | `<=' |
+`\&' | `|' | `;>' | `;'
+\\
+
+<comp-op-nl> ::= `\ ' ( `o>' | `<o' ) `\\n'
 \end{grammar}
 \end{itemize}
 
@@ -1268,7 +1237,6 @@ The grammar for a function expression is:
 
 \begin{verbatim}
 a => 17 * a + 42
-
 (x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1 / 2)
 \end{verbatim}
 
@@ -1328,8 +1296,7 @@ The precise indentation rules are described in the section
 \item \textit{Examples}
 
 \begin{verbatim}
-print_sentimental_bool
-  : Bool => IO
+print_sentimental_bool : Bool => IO
   = cases =>
     true => print <- "It's true!! :)"
     false => print <- "It's false... :("
@@ -1338,49 +1305,42 @@ or_type TrafficLight
 values
   green | amber | red
 
-print_sentimental_traffic_light
-  : TrafficLight => IO
+print_sentimental_traffic_light : TrafficLight => IO
   = cases =>
     green => print <- "It's green! Let's go!!! :)"
     amber => print <- "Go go go, fast!"
     red => print <- "Stop right now! You're going to kill us!!"
 
-is_not_red
-  : TrafficLight => Bool
+is_not_red : TrafficLight => Bool
   = cases =>
     green => true
     amber => true
     red => false
 
-is_seventeen_or_forty_two
-  : Int => Bool
+is_seventeen_or_forty_two : Int => Bool
   = cases => 
     17 => true
     42 => true
     ... => false
- 
-traffic_lights_match
-  : (TrafficLight, TrafficLight) => Bool
+
+traffic_lights_match : (TrafficLight, TrafficLight) => Bool
   = (cases, cases) =>
     (green, green) => true
     (amber, amber) => true
     (red, red) => true
     ... => false
 
-gcd
-  : (Int, Int) => Int
+gcd : (Int, Int) => Int
   = (x, cases) =>
     0 => x
     y => gcd(y, x -> mod <- y) 
 
-is_empty
-  : ListOf(A)s => Bool
+is_empty : ListOf(A)s => Bool
   = cases => 
     empty_l => true
     non_empty_l:anything => false
 
-apply()to_all
-  : (A => B, ListOf(A)s) => ListOf(B)s
+apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
   = (f, cases) =>
     empty_l => empty_l
     non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
@@ -1454,20 +1414,16 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 \item \textit{Examples}
 
 \begin{verbatim}
-foo
-  : Int
+foo : Int
   = 42
 
-f
-  : (Int, Int, Int) => Int
+f : (Int, Int, Int) => Int
   = (a, b, c) => a + b * c
 
-val1, val2, val3
-  : Int, Bool, Char
+val1, val2, val3 : Int, Bool, Char
   = 42, true, 'a'
 
-int1, int2, int3
-  : all Int
+int1, int2, int3 : all Int
   = 1, 2, 3
 \end{verbatim}
 
@@ -1498,7 +1454,7 @@ keyword "all" to give the same type to all the values.
 
 \item \textit{Grammar}
 \begin{grammar}
-<value-def> ::= 
+<value-def> ::= ""\\
 <indent> <identifier> 
 ( ` ' | <nl> <indent> ) `:\ ' <type> 
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
@@ -1521,33 +1477,27 @@ keyword "all" to give the same type to all the values.
 
 \item \textit{Examples}
 \begin{verbatim}
-sort :
-  ListOf(Int)s => ListOf(Int)s
+sort : ListOf(Int)s => ListOf(Int)s
   = cases => 
     empty_l => empty_l
     non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
       where
-      less_l, greater_l
-        : all ListOf(Int)s
+      less_l, greater_l : all ListOf(Int)s
         = filter_with(x => x < l.head, l.tail)
         , filter_with(x => x >= l.head, l.tail)
 
-sum_nodes
-  : TreeOf(Int)s => Int
+sum_nodes : TreeOf(Int)s => Int
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
     where
-    sum_list
-      : ListOf(Int)s => Int
+    sum_list : ListOf(Int)s => Int
       = cases =>
         empty_l => 0
         non_empty_l:l => l.head + sum_list(l.tail)
 
-big_string
-  : String
+big_string : String
   = s1 + s2 + s3 + s4
     where
-    s1, s2, s3, s4
-      : all String
+    s1, s2, s3, s4 : all String
       = "Hello, my name is Struggling Programmer."
       , "I have tried way too many times to fit a big chunk of text"
       , "inside my program, without it hitting the half-screen mark!"
@@ -1710,29 +1660,40 @@ if the value expression is a big or cases expression:
 <op-expr> ::= <line-op-expr> | <big-op-expr>
 \\
 
-<op-expr-start> ::= <op-arg> `\ ' <op> ( `\ ' <op-arg> `\ ' <op> )*
+<op-expr-start> ::= ( <op-arg> <op> )+
 
-<line-op-expr> ::= <op-expr-start> `\ ' ( <op-arg> | <line-func-expr> )
+<line-op-expr> ::= <op-expr-start> ( <op-arg> | <line-func-expr> )
 \\
 
 <big-op-expr> ::= 
-<op-expr-start> ( <op-continuation> | <func-continuation> )
+<big-op-expr-op-split> | <big-op-expr-func-split>
+\\
 
-<op-continuation> ::= ""\\
-<nl> <indent> ( <op-expr-start> <nl> <indent> )* 
-[ <op-expr-start> `\ ' ] ( <op-arg> | <func-expr> )
+<big-op-expr-op-split> ::= 
+<op-split-line>+ [ <op-expr-start> ] ( <op-arg> | <func-expr> )
 
-<func-continuation> ::= `\ ' ( <big-func-expr> | <cases-func-expr> )
+<op-split-line> ::=
+<op-expr-start> ( <nl> | <op-arg> <comp-op-nl> ) <indent> 
+\\
+
+<big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
 \\
 
 <op-arg> ::= <no-paren-op-arg> | <paren-expr>
 
 <no-paren-op-arg> ::=
 <basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
+\\
 
-<op> ::= 
-`->' | `<-' | `o>' | `<o' | `^' | `*' | `/' | `+' | `-' |
-`=' | `!=' | `>' | `<' | `>=' | `<=' | `\&' | `|' | `;>' | `;'
+<op> ::=  
+`\ ' ( `o>' | `<o' ) `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
+
+<optional-spaces-op> ::= 
+`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' | `<=' |
+`\&' | `|' | `;>' | `;'
+\\
+
+<comp-op-nl> ::= `\ ' ( `o>' | `<o' ) `\\n'
 \\
 
 <func-expr> ::= <line-func-expr> | <big-func-expr> | <cases-func-expr>
@@ -1878,16 +1839,13 @@ function of any type that corresponds to substituting every type variable of
 the polymorphic type with a particular type. The easiest example of a
 polymorphic type is the type of the identity function where we have:
 \begin{verbatim}
-id
-  : A => A
+id : A => A
   = x => x
 
-id(1)
-  : Int
+id(1) : Int
   where A is substituted by Int and id gets the type Int => Int
 
-id("Hello")
-  : String
+id("Hello") : String
   where A is substituted by String and id gets the type String => String
 \end{verbatim}
 
@@ -2030,8 +1988,7 @@ type proposition which refers to type variables inside the "simple" type
 and it must hold whenever the polymorphic value of that type is used. For
 example:
 \begin{verbatim}
-first
-  : (A)Is(B)s_First => B => A
+first : (A)Is(B)s_First => B => A
 \end{verbatim}
 can be used as follows:
 \begin{verbatim}
@@ -2107,20 +2064,16 @@ value
 \item \textit{Usage Examples}
 
 \begin{verbatim}
-euler_info
-  : MathematicianInfo
+euler_info : MathematicianInfo
   = (("Leonhard", "Euler"), "Swiss", (15, 4, 1707))
 
-name_to_string
-  : Name => String
+name_to_string : Name => String
   = n => "\nFirst Name: " + n.first_name + "\nLast Name: " + n.last_name
 
-print_name_and_nationality
-  : MathematicianInfo => IO
+print_name_and_nationality : MathematicianInfo => IO
   = ci => print(ci.name -> name_to_string + "\nNationality: " + ci.nationality)
 
-sum_nodes
-  : TreeOf(Int)s => Int
+sum_nodes : TreeOf(Int)s => Int
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
 \end{verbatim}
 
@@ -2131,12 +2084,9 @@ fields for convinience. A tuple type generates postfix functions for all of
 the fields by using a '.' before the name of the field. For example the
 \texttt{MathematicianInfo} type above generates the following functions:
 \begin{verbatim}
-.name
-  : MathematicianInfo => Name
-.nationality
-  : MathematicianInfo => String
-.date_of_birth
-  : MathematicianInfo => Date
+.name : MathematicianInfo => Name
+.nationality : MathematicianInfo => String
+.date_of_birth : MathematicianInfo => Date
 \end{verbatim}
 These functions are named "postfix functions" because they can be appended to
 their argument.
@@ -2188,26 +2138,22 @@ values
 \item \textit{Usage Examples}
 
 \begin{verbatim}
-is_empty
-  : ListOf(A)s => Bool
+is_empty : ListOf(A)s => Bool
   = cases => 
     empty_l => true
     non_empty_l:anything => false
 
-get_head
-  : ListOf(A)s => Possibly(A)
+get_head : ListOf(A)s => Possibly(A)
   = cases => 
     empty_l => no_value
     non_empty_l:list => the_value:list.head
 
-sum_list
-  : ListOf(Int)s => Int
+sum_list : ListOf(Int)s => Int
   = cases
     empty_l => 0
     non_empty_l:l => l.head + sum_list(l.tail)
 
-print_err_or_res
-  : Error(A)OrResult(B) => IO
+print_err_or_res : Error(A)OrResult(B) => IO
   = cases => 
     error:e => print("Error occured: " + e -> to_string)
     result:r => print("All good! The result is: " + r -> to_string)
@@ -2237,8 +2183,7 @@ These functions are called "prefix functions" because they are prepended to thei
 argument.
 For example:
 \begin{verbatim}
-non_e_l
-  : NonEmptyListOf(Int)s
+non_e_l : NonEmptyListOf(Int)s
   = (1, [2, 3, 4])
 >> non_empty_l:non_e_l
   : ListOf(Int)s
@@ -2247,8 +2192,7 @@ non_e_l
 These functions can be used like any other function as arguments to other functions.
 For example:
 \begin{verbatim}
-non_empty_ls_to_ls
-  : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
+non_empty_ls_to_ls : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
   = apply(non_empty_l:)to_each
 \end{verbatim}
 
@@ -2335,17 +2279,13 @@ value
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
 \begin{verbatim}
-first
-  : (A)Is(B)s_First ==> B => A
+first : (A)Is(B)s_First ==> B => A
 
-to_string
-  : (T)Has_String_Represantion ==> T => String
+to_string : (T)Has_String_Represantion ==> T => String
 
-wrapper
-  : (T)Has_A_Wrapper ==> A => T(A)
+wrapper : (T)Has_A_Wrapper ==> A => T(A)
 
-apply()internally
-  : (T)Has_Internal_App ==> (A => B, T(A)) => T(B)
+apply()internally : (T)Has_Internal_App ==> (A => B, T(A)) => T(B)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2376,8 +2316,7 @@ value
 \item Function defined and its type:
 
 \begin{verbatim}
-first
-  : (A)Is(B)s_First ==> B => A
+first : (A)Is(B)s_First ==> B => A
 \end{verbatim}
 
 \item Theorems for specific types:
@@ -2389,9 +2328,10 @@ proof
 
 type_theorem (A)Is(ListOf(A)s)s_First
 proof
-  first = cases =>
-    empty_l => show_err("Tried to take the first element of an empty_l list")
-    non_empty_l:l => l.head
+  first =
+    cases =>
+      empty_l => show_err("Tried to take the first element of an empty_l list")
+      non_empty_l:l => l.head
 \end{verbatim}
 
 \item Usage of the function
@@ -2508,12 +2448,10 @@ proof
 \item \textit{Usage}
 
 \begin{verbatim} 
-a, b
-  : all Possibly(Int)
+a, b : all Possibly(Int)
   = wrapper(1), no_value
 
-l1, l2, l3
-  : all ListOf(Int)s
+l1, l2, l3 : all ListOf(Int)s
   = wrapper(1), empty_l, [1, 2, 3]
 
 >> a
@@ -2631,7 +2569,7 @@ the "\texttt{=>}" arrow.
 \begin{grammar}
 <type-theo> ::= ""\\
 `type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] <nl> \\
-`proof' <nl> `\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =' <tt-value-expr>
+`proof' <nl> `\ \ ' <identifier> [ <op> <identifier> ] `\ =' <tt-value-expr>
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
@@ -2737,7 +2675,7 @@ the "\texttt{=>}" arrow.
 
 <type-theo> ::= ""\\
 `type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] <nl> \\
-`proof' <nl> `\ \ ' <identifier> [ ` ' <op> ` ' <identifier> ] `\ =' <tt-value-expr>
+`proof' <nl> `\ \ ' <identifier> [ <op> <identifier> ] `\ =' <tt-value-expr>
 
 <prop-name-sub> ::=  ""\\""
 [A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
@@ -2754,8 +2692,7 @@ the "\texttt{=>}" arrow.
 <tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <big-or-cases-expr>
 
 <big-or-cases-expr> ::=
-<big-op-expr> | <big-func-expr> | <cases-func-expr> |
-<big-tuple> | <big-list>
+<big-op-expr> | <big-func-expr> | <cases-func-expr> | <big-tuple> | <big-list>
 \end{grammar}
 
 \section{Language Description: Predefined}

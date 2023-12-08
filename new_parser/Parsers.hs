@@ -63,10 +63,14 @@ nl_ind_or_one_space = try nl_indent <|> char ' ' *> return ()
 indent :: Parser ()
 indent = getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
 
+par_lower_unders :: Parser String
 par_lower_unders = 
   try (string "()") >>= \par ->
   many1 lower_under >>= \lowers_unders ->
   return $ par ++ lowers_unders
+
+(+++) :: Parser a -> Parser b -> Parser (a, b)
+pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
 
 -- helper op
 
@@ -220,9 +224,7 @@ instance HasParser PreFunc where
   parser = PF <$> parser <* char ':'
 
 instance HasParser PreFuncApp where
-  parser =
-    parser >>= \pre_func -> parser >>= \pre_func_arg ->
-    return $ PrFA (pre_func, pre_func_arg)
+  parser = PrFA <$> parser +++ parser
 
 instance HasParser PreFuncArg where
   parser =
@@ -245,9 +247,7 @@ instance HasParser SpecialId where
 
 instance HasParser PostFuncApp where
   parser =
-    post_func_arg_p >>= \post_func_arg ->
-    many1 parser >>= \post_funcs ->
-    return $ PoFA (post_func_arg, post_funcs)
+    PoFA <$> post_func_arg_p +++ many1 parser
     where
     post_func_arg_p :: Parser PostFuncArg
     post_func_arg_p = PE2 <$> try parser <|> BE2 <$> parser
@@ -259,10 +259,7 @@ instance HasParser Change where
     return $ C (field_change, field_changes)
     where
     field_change_p :: Parser FieldChange
-    field_change_p = 
-      field_p >>= \field ->
-      string " = " *> parser >>= \line_expr ->
-      return $ FC (field, line_expr)
+    field_change_p = FC <$> field_p +++ (string " = " *> parser)
 
     field_p :: Parser Field
     field_p = Id3 <$> parser <|> SI3 <$> parser
@@ -270,52 +267,46 @@ instance HasParser Change where
 -- HasParser: OpExpr
 
 instance HasParser OpExpr where
-  parser = BOE1 <$> try parser <|> SOE3 <$> try parser
+  parser = BOE1 <$> try parser <|> SOE3 <$> parser
 
 instance HasParser OpExprStart where
-  parser = 
-    parser >>= \op_arg1 ->
-    char ' ' *> parser >>= \op1 ->
-    many (try op_arg_op_p) >>= \op_arg_ops ->
-    return $ OES (op_arg1, op1, op_arg_ops)
-    where
-    op_arg_op_p :: Parser (OpArg, Op)
-    op_arg_op_p =
-      char ' ' *> parser >>= \op_arg ->
-      char ' ' *> parser >>= \op ->
-      return (op_arg, op)
+  parser = OES <$> many1 (try $ parser +++ parser)
 
-instance HasParser SimpleOpExpr where
-  parser = 
-    parser >>= \oes ->
-    char ' ' *> parser >>= \soee ->
-    return $ SOE (oes, soee)
+instance HasParser LineOpExpr where
+  parser = SOE <$> try parser +++ parser
 
-instance HasParser SimpleOpExprEnd where
+instance HasParser LineOpExprEnd where
   parser = SFE3 <$> try parser <|> OA1 <$> parser
 
 instance HasParser BigOpExpr where
-  parser =
-    parser >>= \oes ->
-    parser >>= \cont ->
-    return $ BOE (oes, cont)
+  parser = BOEOS1 <$> try parser <|> BOEFS1 <$> parser
 
-instance HasParser Continuation where
-  parser = OC1 <$> try parser <|> FnC <$> parser
-
-instance HasParser OpContinuation where
+instance HasParser BigOpExprOpSplit where
   parser =
+    parser >>= \osl ->
     not_in_equal_line >>
-    nl_indent *> many (try $ parser <* nl_indent) >>= \oess-> 
-    optionMaybe (try parser <* char ' ') >>= \maybe_oes ->
-    parser >>= \oce ->
-    return $ OC (oess, maybe_oes, oce)
+    many (try parser) >>= \osls ->
+    optionMaybe (try parser) >>= \maybe_oes ->
+    parser >>= \ose ->
+    return $ BOEOS (osl : osls, maybe_oes, ose)
 
-instance HasParser OpContEnd where
+instance HasParser OpSplitLine where
+  parser =
+    OSL <$> (parser +++ maybe_op_arg_comp_op <* indent)
+    where
+    maybe_op_arg_comp_op :: Parser (Maybe (OpArg, CompOp))
+    maybe_op_arg_comp_op =
+      try nl *> return Nothing <|>
+      Just <$> (parser +++ (char ' ' *> parser <* char '\n'))
+
+instance HasParser OpSplitEnd where
   parser = FE1 <$> try parser <|> OA2 <$> parser
 
-instance HasParser FuncContinuation where
-  parser = char ' ' *> (BFE1 <$> try parser <|> CFE1 <$> parser)
+instance HasParser BigOpExprFuncSplit where
+  parser = BOEFS <$> parser +++ parser
+
+instance HasParser BigOrCasesFuncExpr where
+  parser = BFE1 <$> try parser <|> CFE1 <$> parser
   
 instance HasParser OpArg where
   parser = PE3 <$> try parser <|> NPOA2 <$> parser
@@ -330,10 +321,17 @@ instance HasParser NoParenOpArg where
 
 instance HasParser Op where
   parser =  
+    CO <$> try (char ' ' *> parser <* char ' ') <|>
+    OSO <$> (optional (char ' ') *> parser <* optional (char ' '))
+
+instance HasParser CompOp where
+  parser =  
+    string "o>" *> return RightComp <|> try (string "<o") *> return LeftComp
+
+instance HasParser OptionalSpacesOp where
+  parser =  
     try (string "->") *> return RightApp <|>
     try (string "<-") *> return LeftApp <|>
-    string "o>" *> return RightComp <|>
-    try (string "<o") *> return LeftComp <|>
     string "^" *> return Power <|>
     string "*" *> return Mult <|>
     string "/" *> return Div <|>
@@ -355,13 +353,13 @@ instance HasParser Op where
 instance HasParser FuncExpr where
   parser = CFE2 <$> try parser <|> BFE2 <$> try parser <|> SFE4 <$> parser
 
-instance HasParser SimpleFuncExpr where
+instance HasParser LineFuncExpr where
   parser = 
     parser >>= \parameters ->
     string " =>" *> parser >>= \simple_func_body ->
     return $ SFE (parameters, simple_func_body)
 
-instance HasParser SimpleFuncBody where
+instance HasParser LineFuncBody where
   parser = char ' ' *> (SOE4 <$> try parser <|> NPOA3 <$> parser)
 
 instance HasParser BigFuncExpr where
@@ -735,10 +733,7 @@ instance HasParser TypeTheo where
     return $ TT (pps, maybe_pps, id, maybe_op_id, ttve)
     where
     op_id_p :: Parser (Op, Identifier)
-    op_id_p =
-      char ' ' *> parser >>= \op ->
-      char ' ' *> parser <* followed_by_equal >>= \id ->
-      return (op, id)
+    op_id_p = parser +++ (parser <* followed_by_equal)
 
     followed_by_equal :: Parser String
     followed_by_equal = lookAhead (string " =" <* notFollowedBy (char '>'))

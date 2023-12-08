@@ -1,30 +1,19 @@
-program solve;
 
-   procedure hanoi (rings : integer;
-                    var source, target, auxiliary : array of char);
+tuple_type HanoiRods
+value 
+  (source, target, auxiliary) : String x String x String
 
-      procedure move (var source, target : array of char);
-      begin
-         writeString("Move from ");
-         writeString(source);
-         writeString(" to ");
-         writeString(target);
-         writeString(".\n")
-      end;
+hanoi : Int x HanoiRods => IO
+  = (cases, rods) =>
+    0 => empty_io
+    rings =>
+      hanoi(rings - 1, (rods.source, rods.auxiliary, rods.target)) ;
+      move(rods.source, rods.target) ; 
+      hanoi(rings - 1, (rods.auxiliary, rods.target, rods.source))
+      where
+      move : String x String => IO
+        = (s, t) => print_line("Move from " + s + " to " + t)
 
-   begin
-      if rings >= 1 then
-      begin
-         hanoi(rings-1, source, auxiliary, target);
-         move(source, target);
-         hanoi(rings-1, auxiliary, target, source)
-      end
-   end;
-
-   var numberOfRings : integer;
-
-begin
-   writeString("Rings: ");
-   numberOfRings := readInteger();
-   hanoi(numberOfRings, "left", "right", "middle")
-end.
+main : IO
+  = print_line("Number of rings?") ; get_line ;> from_string o> n =>
+    hanoi(n, ("left", "right", "middle"))

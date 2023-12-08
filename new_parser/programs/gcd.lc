@@ -1,4 +1,4 @@
-gcd : (Int, Int) => Int
+gcd : Int x Int => Int
   = (x, cases) =>
     0 => x
     y => gcd(y, x -> mod <- y) 

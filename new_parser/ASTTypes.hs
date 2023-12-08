@@ -10,14 +10,14 @@ newtype Identifier = Id String
 newtype ParenExpr = PE ParenExprInside
 
 data ParenExprInside = 
-  SOE1 SimpleOpExpr | SFE1 SimpleFuncExpr
+  SOE1 LineOpExpr | SFE1 LineFuncExpr
 
 newtype Tuple = T (LineExpr, CommaSepLineExprs)
 
 newtype CommaSepLineExprs = CSLE (LineExpr, [LineExpr])
 
 data LineExpr = 
-  NPOA1 NoParenOpArg | SOE2 SimpleOpExpr | SFE2 SimpleFuncExpr
+  NPOA1 NoParenOpArg | SOE2 LineOpExpr | SFE2 LineFuncExpr
 
 newtype BigTuple = BT (LineExpr, CommaSepLineExprs, [CommaSepLineExprs])
 
@@ -75,26 +75,28 @@ data Field =
 -- Values: OpExpr
 
 data OpExpr = 
-  SOE3 SimpleOpExpr | BOE1 BigOpExpr
+  SOE3 LineOpExpr | BOE1 BigOpExpr
 
-newtype OpExprStart = OES (OpArg, Op, [(OpArg, Op)])
+newtype OpExprStart = OES [(OpArg, Op)]
 
-newtype SimpleOpExpr = SOE (OpExprStart, SimpleOpExprEnd)
+newtype LineOpExpr = SOE (OpExprStart, LineOpExprEnd)
 
-data SimpleOpExprEnd = 
-  OA1 OpArg | SFE3 SimpleFuncExpr
+data LineOpExprEnd = 
+  OA1 OpArg | SFE3 LineFuncExpr
 
-newtype BigOpExpr = BOE (OpExprStart, Continuation)
+data BigOpExpr = 
+  BOEOS1 BigOpExprOpSplit | BOEFS1 BigOpExprFuncSplit
 
-data Continuation =
-  OC1 OpContinuation | FnC FuncContinuation
+newtype BigOpExprOpSplit = BOEOS ([OpSplitLine], Maybe OpExprStart, OpSplitEnd)
 
-newtype OpContinuation = OC ([OpExprStart], Maybe OpExprStart, OpContEnd)
+newtype OpSplitLine = OSL (OpExprStart, Maybe (OpArg, CompOp)) 
 
-data OpContEnd =
+data OpSplitEnd =
   OA2 OpArg | FE1 FuncExpr 
 
-data FuncContinuation =
+newtype BigOpExprFuncSplit = BOEFS (OpExprStart, BigOrCasesFuncExpr)
+
+data BigOrCasesFuncExpr =
   BFE1 BigFuncExpr | CFE1 CasesFuncExpr
 
 data OpArg =
@@ -104,18 +106,24 @@ data NoParenOpArg =
   BE3 BasicExpr | PrF PreFunc | PoF PostFunc | PrFA2 PreFuncApp | PoFA2 PostFuncApp
 
 data Op = 
-  RightApp | LeftApp | RightComp | LeftComp | Power | Mult | Div | Plus | 
-  Minus | Equal | NotEqual | Greater | Less | GrEq | LeEq | And | Or | Use | Then
+  CO CompOp | OSO OptionalSpacesOp
+
+data CompOp =
+  RightComp | LeftComp
+
+data OptionalSpacesOp = 
+  RightApp | LeftApp | Power | Mult | Div | Plus | Minus | Equal | NotEqual |
+  Greater | Less | GrEq | LeEq | And | Or | Use | Then
 
 -- Values: FuncExpr
 
 data FuncExpr = 
-  SFE4 SimpleFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
+  SFE4 LineFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
 
-newtype SimpleFuncExpr = SFE (Parameters, SimpleFuncBody)
+newtype LineFuncExpr = SFE (Parameters, LineFuncBody)
 
-data SimpleFuncBody = 
-  NPOA3 NoParenOpArg | SOE4 SimpleOpExpr
+data LineFuncBody = 
+  NPOA3 NoParenOpArg | SOE4 LineOpExpr
 
 newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
 
@@ -148,7 +156,7 @@ newtype ListMatching = LM (Maybe (Matching, [Matching]))
 newtype CaseBody = CB (CaseBodyStart, Maybe WhereExpr)
 
 data CaseBodyStart =
-  SFB1 SimpleFuncBody | BFB1 BigFuncBody
+  SFB1 LineFuncBody | BFB1 BigFuncBody
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 

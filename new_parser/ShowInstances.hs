@@ -160,45 +160,47 @@ instance Show OpExpr where
     BOE1 boe -> show boe
 
 instance Show OpExprStart where
-  show = \(OES (op_arg1, op1, op_arg_op_pairs)) ->
-     show op_arg1 ++ " " ++ show op1  ++
-     concatMap
-       (\(op_arg, op) -> " " ++ show op_arg ++ " " ++ show op) op_arg_op_pairs
+  show = \(OES op_arg_op_pairs) ->
+     concatMap (\(op_arg, op) -> show op_arg ++ show op) op_arg_op_pairs
 
-instance Show SimpleOpExpr where
-  show = \(SOE (oes, soee)) -> show oes ++ " " ++ show soee
+instance Show LineOpExpr where
+  show = \(SOE (oes, loee)) -> show oes ++ show loee
 
-instance Show SimpleOpExprEnd where
+instance Show LineOpExprEnd where
   show = \case
     OA1 oa -> show oa
     SFE3 sfe -> show sfe
 
 instance Show BigOpExpr where
-  show = \(BOE (oes, cont)) -> show oes ++ show cont
-
-instance Show Continuation where
   show = \case
-    OC1 oc -> show oc
-    FnC fc -> show fc
+    BOEOS1 boeos -> show boeos
+    BOEFS1 boefs -> show boefs
 
-instance Show OpContinuation where
-  show = \(OC (oess, maybe_oes, oce)) ->
-    "\n" ++ concatMap ((++ "\n") . show) oess ++ show_moes maybe_oes ++ show oce
+instance Show BigOpExprOpSplit where
+  show = \(BOEOS (osls, maybe_oes, ose)) ->
+    concatMap show osls ++ show_maybe maybe_oes ++ show ose
+
+instance Show OpSplitLine where
+  show = \(OSL (oes, maybe_op_arg_comp_op)) ->
+    show oes ++ show_moaco maybe_op_arg_comp_op ++ "  "
     where
-    show_moes :: Maybe OpExprStart -> String
-    show_moes = \case
-      Just oes -> show oes ++ " "
-      _ -> ""
+    show_moaco :: Maybe (OpArg, CompOp) -> String
+    show_moaco = \case
+      Nothing -> "\n"
+      Just (op_arg, comp_op) -> show op_arg ++ " " ++  show comp_op ++ "\n"
 
-instance Show OpContEnd where
+instance Show OpSplitEnd where
   show = \case
     OA2 oa -> show oa
     FE1 fe -> show fe
 
-instance Show FuncContinuation where
+instance Show BigOpExprFuncSplit where
+  show = \(BOEFS (oes, boefs)) -> show oes ++ show boefs
+
+instance Show BigOrCasesFuncExpr where
   show = \case
-    BFE1 bfe -> " " ++ show bfe
-    CFE1 cfe -> " " ++ show cfe
+    BFE1 bfe -> show bfe
+    CFE1 cfe -> show cfe
   
 instance Show OpArg where
   show = \case
@@ -215,10 +217,18 @@ instance Show NoParenOpArg where
 
 instance Show Op where
   show = \case
-    RightApp -> "->"
-    LeftApp -> "<-"
+    CO co -> " " ++ show co ++ " "
+    OSO oso -> " " ++ show oso ++ " "
+
+instance Show CompOp where
+  show = \case
     RightComp -> "o>"
     LeftComp -> "<o"
+
+instance Show OptionalSpacesOp where
+  show = \case
+    RightApp -> "->"
+    LeftApp -> "<-"
     Power -> "^" 
     Mult -> "*" 
     Div -> "/" 
@@ -243,10 +253,10 @@ instance Show FuncExpr where
     BFE2 bfe -> show bfe
     CFE2 cfe -> show cfe
 
-instance Show SimpleFuncExpr where
+instance Show LineFuncExpr where
   show = \(SFE (params, sfb)) -> show params ++ " =>" ++ show sfb
 
-instance Show SimpleFuncBody where
+instance Show LineFuncBody where
   show = \case
     NPOA3 npoa -> " " ++ show npoa
     SOE4 soe -> " " ++ show soe
@@ -506,7 +516,7 @@ instance Show TypeTheo where
     show_moi :: Maybe (Op, Identifier) -> String
     show_moi = \case
       Nothing -> ""
-      Just (op, id) -> " " ++ show op ++ " " ++ show id
+      Just (op, id) -> show op ++ show id
 
 instance Show PropNameSub where
   show = \case

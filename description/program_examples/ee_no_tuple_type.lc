@@ -1,14 +1,14 @@
 
 extended_euclidean
-  : (Int, Int) => Int x Int x Int
+  : Int^2 => Int^3
   = (1, 0) -> ee_recursion <- (0, 1)
 
 ee_recursion
-  : (Int x Int, Int x Int, Int, Int) => Int x Int x Int
+  : Int^2 x Int^2 x Int x Int => Int^3
   = (a_coeffs, b_coeffs, x, cases) => 
     0 => (x, a_coeffs.1st, b_coeffs.1st)
     y =>
       ee_recursion(next <- a_coeffs), next <- b_coeffs), y, x -> mod <- y) 
       where
-      next: Int x Int => Int x Int 
+      next: Int^2 => Int^2
         = .change{1st = 2nd, 2nd = 1st - (x)div(y) * 2nd}

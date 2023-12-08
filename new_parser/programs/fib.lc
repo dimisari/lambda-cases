@@ -10,10 +10,10 @@ advance_fib : FibType => (FibType)FromIO
 
 print()fib_nums : Int => IO
   = n =>
-    print("Fib num 0 = 0") ; print(n - 1)fibs_init(0, 1, 1) ; only_io
+    print("Fib num 0 = 0") ; print(n-1)fibs_init(0, 1, 1) ; only_io
     where
     print()fibs_init : (Int, FibType) => (FibType)FromIO
-      = (n, fv) => advance_fib(fv) ;> print(n - 1)fibs_init_pair
+      = (n, fv) => advance_fib(fv) ;> print(n-1)fibs_init
 
 main : IO
   = get_line ;> from_string o> n => print(n)fib_nums

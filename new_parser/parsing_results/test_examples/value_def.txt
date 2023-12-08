@@ -28,8 +28,8 @@ init_a_coeffs, init_b_coeffs
 Parsed :) ==>
 read_two_ints
   : (Int x Int)FromIO
-  = print <- "Please give me 2 ints" ;
-get_line ;> split_words o> apply(from_string)to_all o> ints =>
+  = print <- "Please give me 2 ints" ; 
+  get_line ;> split_words o> apply(from_string)to_all o> ints =>
 ints -> length -> cases =>
 2 =>  wrap(ints)
 ... =>  throw_err("You didn't give me 2 ints")

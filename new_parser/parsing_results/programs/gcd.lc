@@ -1,14 +1,14 @@
 Parsed :) ==>
 gcd
-  : (Int, Int) => Int
+  : Int x Int => Int
   = (x, cases) =>
 0 =>  x
 y =>  gcd(y, x -> mod <- y)
 
 read_two_ints
   : (Int x Int)FromIO
-  = print <- "Please give me 2 ints" ;
-get_line ;> split_to_words o> cases =>
+  = print <- "Please give me 2 ints" ; 
+  get_line ;> split_to_words o> cases =>
 [x, y] =>  io_wrapper(from_str(x), from_str(y))
 ... =>  show_err("You didn\8217t give me 2 ints")
 

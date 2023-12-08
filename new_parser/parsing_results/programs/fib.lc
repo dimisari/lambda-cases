@@ -6,8 +6,8 @@ value
 advance_fib
   : FibType => (FibType)FromIO
   = fv =>
-print("Fib num " + fv.cur_idex + " = " + fv.cur) ;
-wrap_in_io(fv.cur, fv.prev + fv.cur, fv.cur_index + 1)
+print("Fib num " + fv.cur_idex + " = " + fv.cur) ; 
+  wrap_in_io(fv.cur, fv.prev + fv.cur, fv.cur_index + 1)
 
 print()fib_nums
   : Int => IO
@@ -16,7 +16,7 @@ print("Fib num 0 = 0") ; print(n - 1)fibs_init(0, 1, 1) ; only_io
 where
 print()fibs_init
   : (Int, FibType) => (FibType)FromIO
-  = (n, fv) => advance_fib(fv) ;> print(n - 1)fibs_init_pair
+  = (n, fv) => advance_fib(fv) ;> print(n - 1)fibs_init
 
 main
   : IO
