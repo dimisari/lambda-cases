@@ -61,7 +61,7 @@ behaviour.
 
 \paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
-gcd : (Int, Int) => Int
+gcd : Int x Int => Int
   = (x, cases) =>
     0 => x
     y => gcd(y, x -> mod <- y) 
@@ -427,7 +427,7 @@ been \textbf{defined with parentheses inside the identifier}. For example,
 below is the definition of "apply()to\_all":
 
 \begin{verbatim}
-apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
+apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
   = (f, cases) =>
     empty_l => empty_l
     non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all <- l.tail)
@@ -659,9 +659,9 @@ referred to by the field identifier.
 Operator & Type \\ 
 \hline
 \hline
-\texttt{->} & (A, A \ra B) \ra B \\
+\texttt{->} & A x (A \ra B) \ra B \\
 \hline
-\texttt{<-} & (A \ra B, A) \ra B \\
+\texttt{<-} & (A \ra B) x A \ra B \\
 \hline
 \end{tabular}
 \end{center}
@@ -673,9 +673,9 @@ function applications without the clutter of having to open and close
 parentheses for each one of the functions.  For example, assuming we have the
 following functions with the behaviour suggested by their names and types:
 \begin{verbatim}
-apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
+apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
 string_length : String => Int
-filter_with : (A => Bool, ListOf(A)s) => ListOf(A)s
+filter_with : (A => Bool) x ListOf(A)s => ListOf(A)s
 is_odd : Int => Bool
 sum_ints : ListOf(Int)s => Int
 \end{verbatim}
@@ -713,9 +713,9 @@ Which is equivalent to:
 Operator & Type \\ 
 \hline
 \hline
-\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) \\
+\texttt{o>} & (A \ra B) x (B \ra C) \ra (A \ra C) \\
 \hline
-\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) \\
+\texttt{<o} & (B \ra C) x (A \ra B) \ra (A \ra C) \\
 \hline
 \end{tabular}
 \end{center}
@@ -728,7 +728,7 @@ A neat example using function composition is the following. Assuming we have the
 following functions with the behaviour suggested by their names and types: 
 \begin{verbatim}
 split_to_words : String => ListOf(String)s
-apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
+apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
 reverse_string : String => String
 merge_words : ListOf(String)s => String
 \end{verbatim}
@@ -753,15 +753,15 @@ reverse_words : String => String
 Operator & Type \\ 
 \hline
 \hline
-\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra (A, B) \ra C \\
+\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra A x B \ra C \\
 \hline
-\texttt{*} & (A)And(B)Multiply_To(C) \Ra (A, B) \ra C \\
+\texttt{*} & (A)And(B)Multiply_To(C) \Ra A x B \ra C \\
 \hline
-\texttt{/} & (A)Divided_By(B)Has_Type(C) \Ra (A, B) \ra C \\
+\texttt{/} & (A)Divided_By(B)Has_Type(C) \Ra A x B \ra C \\
 \hline
-\texttt{+} & (A)And(B)Add_To(C) \Ra (A, B) \ra C \\ 
+\texttt{+} & (A)And(B)Add_To(C) \Ra A x B \ra C \\ 
 \hline
-\texttt{-} & (A)Minus(B)Has_Type(C) \Ra (A, B) \ra C \\
+\texttt{-} & (A)Minus(B)Has_Type(C) \Ra A x B \ra C \\
 \hline
 \end{tabular}
 \end{center}
@@ -795,7 +795,7 @@ are generalized. The examples below show their generality:
   = "123"
 \end{verbatim}
 Let's analyze further the example of addition. The type can be read as such:
-the '+' operator has the type \\ (A, B) \ra C, provided that the type
+the '+' operator has the type \\ A x B \ra C, provided that the type
 proposition (A)And(B)Add_To(C) holds. This proposition being true, means that
 addition has been defined for these three types (see section "Type Logic"
 \ref{subsec:typelogic} for more on type propositions). For example, by the examples
@@ -823,19 +823,19 @@ for new user defined types!
 Operator & Type \\ 
 \hline
 \hline
-\texttt{=} & (A)And(B)Can_Be_Equal \Ra (A, B) \ra Bool \\
+\texttt{=} & (A)And(B)Can_Be_Equal \Ra A x B \ra Bool \\
 \hline
-\texttt{!=} & (A)And(B)Can_Be_Unequal \Ra (A, B) \ra Bool \\
+\texttt{!=} & (A)And(B)Can_Be_Unequal \Ra A x B \ra Bool \\
 \hline
-\texttt{>=} & (A)Can_Be_Gr_Or_Eq_To(B) \Ra (A, B) \ra Bool \\
+\texttt{>=} & (A)Can_Be_Gr_Or_Eq_To(B) \Ra A x B \ra Bool \\
 \hline
-\texttt{<=} & (A)Can_Be_Le_Or_Eq_To(B) \Ra (A, B) \ra Bool \\
+\texttt{<=} & (A)Can_Be_Le_Or_Eq_To(B) \Ra A x B \ra Bool \\
 \hline
-\texttt{>} & (A)Can_Be_Greater_Than(B) \Ra (A, B) \ra Bool \\
+\texttt{>} & (A)Can_Be_Greater_Than(B) \Ra A x B \ra Bool \\
 \hline
-\texttt{<} & (A)Can_Be_Less_Than(B) \Ra (A, B) \ra Bool \\
+\texttt{<} & (A)Can_Be_Less_Than(B) \Ra A x B \ra Bool \\
 \hline
-\texttt{\& |} & (Bool, Bool) \ra Bool \\
+\texttt{\& |} & Bool x Bool \ra Bool \\
 \hline
 \end{tabular}
 \end{center}
@@ -870,9 +870,9 @@ noting that the "equals", "and" and "or" operators have the symbol once
 Operator & Type \\ 
 \hline
 \hline
-\texttt{;>} & (E)Has_Use \Ra (E(A), A \ra E(B)) \ra E(B) \\
+\texttt{;>} & (E)Has_Use \Ra E(A) x (A \ra E(B)) \ra E(B) \\
 \hline
-\texttt{;} & (E)Has_Then \Ra (E(A), E(B)) \ra E(B) \\
+\texttt{;} & (E)Has_Then \Ra E(A) x E(B) \ra E(B) \\
 \hline
 \end{tabular}
 \end{center}
@@ -890,9 +890,9 @@ print_string("I'll repeat the line.") : (EmptyVal)FromIO
 get_line : (String)FromIO
 
 ; 
-  : (E)Has_Then ==> (E(A), E(B)) => E(B) 
+  : (E)Has_Then ==> E(A) x E(B) => E(B) 
 ;>
-  : (E)Has_Use ==> (E(A), A => E(B)) => E(B) 
+  : (E)Has_Use ==> E(A) x (A => E(B)) => E(B) 
 
 print_string("I'll repeat the line.") ; get_line
   : (String)FromIO
@@ -920,7 +920,7 @@ print_string("Oh hi...) : (EmptyVal)FromIO
 print_string("Oh that's crazy...) : (EmptyVal)FromIO
 
 ;
-  : (E)Has_Then ==> (E(A), E(B)) => E(B) 
+  : (E)Has_Then ==> E(A) x E(B) => E(B) 
 
 print_string("Oh hi...) ; get_line
   : (String)FromIO
@@ -930,7 +930,7 @@ age => print_string("Oh that's crazy...)
   : String => (EmptyVal)FromIO
 
 ;>
-  : (E)Has_Use ==> (E(A), A => E(B)) => E(B) 
+  : (E)Has_Use ==> E(A) x (A => E(B)) => E(B) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
@@ -1127,44 +1127,44 @@ their short descriptions.
 Operator & Type & Description \\ 
 \hline
 \hline
-\texttt{->} & (A, A \ra B) \ra B & Right function application \\
+\texttt{->} & A x (A \ra B) \ra B & Right function application \\
 \hline
-\texttt{<-} & (A \ra B, A) \ra B & Left function application \\
+\texttt{<-} & (A \ra B) x A \ra B & Left function application \\
 \hline
-\texttt{o>} & (A \ra B, B \ra C) \ra (A \ra C) & Right function composition \\
+\texttt{o>} & (A \ra B) x (B \ra C) \ra (A \ra C) & Right function composition \\
 \hline
-\texttt{<o} & (B \ra C, A \ra B) \ra (A \ra C) & Left function composition \\
+\texttt{<o} & (B \ra C) x (A \ra B) \ra (A \ra C) & Left function composition \\
 \hline
-\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra (A, B) \ra C & General exponentiation  \\
+\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra A x B \ra C & General exponentiation  \\
 \hline
-\texttt{*} & (A)And(B)Multiply_To(C) \Ra (A, B) \ra C & General multiplication  \\
+\texttt{*} & (A)And(B)Multiply_To(C) \Ra A x B \ra C & General multiplication  \\
 \hline
-\texttt{/} & (A)Divided_By(B)Has_Type(C) \Ra (A, B) \ra C & General division \\
+\texttt{/} & (A)Divided_By(B)Has_Type(C) \Ra A x B \ra C & General division \\
 \hline
-\texttt{+} & (A)And(B)Add_To(C) \Ra (A, B) \ra C & General addition \\ 
+\texttt{+} & (A)And(B)Add_To(C) \Ra A x B \ra C & General addition \\ 
 \hline
-\texttt{-} & (A)Minus(B)Has_Type(C) \Ra (A, B) \ra C & General subtraction \\
+\texttt{-} & (A)Minus(B)Has_Type(C) \Ra A x B \ra C & General subtraction \\
 \hline
-\texttt{=} & (A)And(B)Can_Be_Equal \Ra (A, B) \ra Bool & General Equality \\
+\texttt{=} & (A)And(B)Can_Be_Equal \Ra A x B \ra Bool & General Equality \\
 \hline
-\texttt{!=} & (A)And(B)Can_Be_Unequal \Ra (A, B) \ra Bool & General Inequality \\
+\texttt{!=} & (A)And(B)Can_Be_Unequal \Ra A x B \ra Bool & General Inequality \\
 \hline
-\texttt{>=} & (A)Can_Be_Gr_Or_Eq_To(B) \Ra (A, B) \ra Bool
+\texttt{>=} & (A)Can_Be_Gr_Or_Eq_To(B) \Ra A x B \ra Bool
 & General greater than or equal to \\
 \hline
-\texttt{<=} & (A)Can_Be_Le_Or_Eq_To(B) \Ra (A, B) \ra Bool
+\texttt{<=} & (A)Can_Be_Le_Or_Eq_To(B) \Ra A x B \ra Bool
 & General less than or equal to \\
 \hline
-\texttt{>} & (A)Can_Be_Greater_Than(B) \Ra (A, B) \ra Bool & General greater than \\
+\texttt{>} & (A)Can_Be_Greater_Than(B) \Ra A x B \ra Bool & General greater than \\
 \hline
-\texttt{<} & (A)Can_Be_Less_Than(B) \Ra (A, B) \ra Bool & General less than \\
+\texttt{<} & (A)Can_Be_Less_Than(B) \Ra A x B \ra Bool & General less than \\
 \hline
-\texttt{\& |} & (Bool, Bool) \ra Bool & Boolean operators \\
+\texttt{\& |} & Bool x Bool \ra Bool & Boolean operators \\
 \hline
-\texttt{;>} & (E)Has_Use \Ra (E(A), A \ra E(B)) \ra E(B) &
+\texttt{;>} & (E)Has_Use \Ra E(A) x (A \ra E(B)) \ra E(B) &
 Do, use, do \\
 \hline
-\texttt{;} & (E)Has_Then \Ra (E(A), E(B)) \ra E(B) &
+\texttt{;} & (E)Has_Then \Ra E(A) x E(B) \ra E(B) &
 Do then do \\
 \hline
 \end{tabular}
@@ -1279,13 +1279,15 @@ The precise indentation rules are described in the section
 
 \item \textit{Grammar}
 \begin{grammar}
-<line-func-expr> ::=
-<parameters> `\ =>\ ' ( <no-paren-op-arg> | <line-op-expr> )
+<line-func-expr> ::= <parameters> `\ =>' <line-func-body>
 
-<big-func-expr> ::=
-<parameters> `\ =>' <nl> <indent> ( <no-paren-op-arg> | <op-expr> )
+<big-func-expr> ::= <parameters> `\ =>' <big-func-body>
 
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
+
+<line-func-body> ::= `\ ' ( <no-paren-op-arg> | <line-op-expr> )
+
+<big-func-body> ::= <nl> <indent> ( <no-paren-op-arg> | <op-expr> )
 \end{grammar}
 \end{itemize}
 
@@ -1323,14 +1325,14 @@ is_seventeen_or_forty_two : Int => Bool
     42 => true
     ... => false
 
-traffic_lights_match : (TrafficLight, TrafficLight) => Bool
+traffic_lights_match : TrafficLight x TrafficLight => Bool
   = (cases, cases) =>
     (green, green) => true
     (amber, amber) => true
     (red, red) => true
     ... => false
 
-gcd : (Int, Int) => Int
+gcd : Int x Int => Int
   = (x, cases) =>
     0 => x
     y => gcd(y, x -> mod <- y) 
@@ -1340,7 +1342,7 @@ is_empty : ListOf(A)s => Bool
     empty_l => true
     non_empty_l:anything => false
 
-apply()to_all : (A => B, ListOf(A)s) => ListOf(B)s
+apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
   = (f, cases) =>
     empty_l => empty_l
     non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
@@ -1380,11 +1382,13 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
 
-<cases-parameter> ::= <identifier> | `cases' \\
+<cases-parameter> ::= <identifier> | `cases'
+\\
 
 <case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
 
-<end-case> ::= <nl> <indent> `...\ =>' <case-body>\\
+<end-case> ::= <nl> <indent> `...\ =>' <case-body>
+\\
 
 <matching> ::= 
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
@@ -1392,13 +1396,10 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 <tuple-matching> ::= `(' <matching> ( `,\ ' <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]' \\
+<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]'
+\\
 
-
-<case-body> ::= ""\\""
-( `\ ' ( <no-paren-op-arg> | <line-op-expr> ) |
-<nl> <indent> ( <no-paren-op-arg> | <op-expr> ) ) \\""
-[ <where-expr> ]
+<case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
 \end{grammar}
 
 \end{itemize}
@@ -1417,7 +1418,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 foo : Int
   = 42
 
-f : (Int, Int, Int) => Int
+f : Int x Int x Int => Int
   = (a, b, c) => a + b * c
 
 val1, val2, val3 : Int, Bool, Char
@@ -1699,13 +1700,15 @@ if the value expression is a big or cases expression:
 <func-expr> ::= <line-func-expr> | <big-func-expr> | <cases-func-expr>
 \\
 
-<line-func-expr> ::=
-<parameters> `\ =>\ ' ( <no-paren-op-arg> | <line-op-expr> )
+<line-func-expr> ::= <parameters> `\ =>' <line-func-body>
 
-<big-func-expr> ::=
-<parameters> `\ =>' <nl> <indent> ( <no-paren-op-arg> | <op-expr> )
+<big-func-expr> ::= <parameters> `\ =>' <big-func-body>
 
 <parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
+
+<line-func-body> ::= `\ ' ( <no-paren-op-arg> | <line-op-expr> )
+
+<big-func-body> ::= <nl> <indent> ( <no-paren-op-arg> | <op-expr> )
 \\
 
 <cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ [ <end-case> ]
@@ -1730,10 +1733,7 @@ if the value expression is a big or cases expression:
 <list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]'
 \\
 
-<case-body> ::= ""\\
-( `\ ' ( <no-paren-op-arg> | <line-op-expr> ) |
-<nl> <indent> ( <no-paren-op-arg> | <op-expr> ) )
-[ <where-expr> ]
+<case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
 \\
 
 <value-def> ::= 
@@ -1816,19 +1816,15 @@ letter and is followed by one or more capital or lowercase letters.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-A
-B
-C
-X 
-Y
-Z
+A B C
+X Y Z
 \end{verbatim}
 
 \item \textit{Examples of type variables inside bigger type expressions}
 \begin{verbatim}
 A => A
-(A => B, B => C) => (A => C)
-((A, A) => A, A, ListOf(A)s) => A
+(A => B) x (B => C) => (A => C)
+(A x A => A) x A x ListOf(A)s => A
 \end{verbatim}
 
 \item \textit{Description}
@@ -1866,27 +1862,23 @@ String => String
 Real => Int
 A => A
 Int x Int => Int
-(Real, Real, Real) => Real
-(A => B, B => C) => (A => C)
-(Int => Int) => Int
+Real x Real x Real => Real
+(A => B) x (B => C) => (A => C)
+(Int => Int) => (Int => Int)
 \end{verbatim}
 
 \item \textit{Description}
 
-A function type expression is comprised of the expressions of the types of the
-parameters and the expression of the type of the result, seperated by the arrow
-"\texttt{=>}". If there are more than one parameters, the expressions of their
-types are inside parentheses and seperated by commas. If there is only one
-parameter, the expression of its type is put in parentheses only if it is 
-a function type. The same applies to the type of the result.
+A function type expression is comprised of the input type expression and the
+output type expression seperated by the arrow " \texttt{=>} ". The input and output
+type expressions are type expressions which are put in parentheses only if they are
+function type expressions. 
 
 \item \textit{Grammar}
 \begin{grammar}
-<func-type> ::= <param-types> `\ =>\ ' <one-type>
+<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
-<param-types> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
-
-<one-type> ::=
+<in-or-out-type> ::=
 <type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
 \end{grammar}
 \end{itemize}
@@ -1896,11 +1888,11 @@ a function type. The same applies to the type of the result.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-Int x Int
-Real x Real x Real
 Int x Real x String
-ListOf(Int)s x (Int x ListOf(String)s)
+ListOf(Int)s x Int x ListOf(String)s
 (Int => Int) x (Int x Real) x (Real => String)
+Int^2
+Real^3
 \end{verbatim}
 
 \item \textit{Description}
@@ -1908,11 +1900,16 @@ ListOf(Int)s x (Int x ListOf(String)s)
 Product types are the types of tuples. They are comprised of the expressions of
 the types of the fields seperated by the string " x " (space 'x' space) because
 'x' is very similar the symbol used in the cartesian product. If any of the
-fields has a product or a function type then the corresponding type expression
-must be inside parentheses.
+fields is of a product or a function type then the corresponding type expression
+must be inside parentheses. A product type where all the fields are of the same
+type can be abbreviated with a power type expression which is comprised of the 
+type, the power symbol '\texttt{\^}' and the number of times the type is repeated.
+
 \item \textit{Grammar}
 \begin{grammar}
 <prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
+
+<power-type> ::= <field-type> `^' <int-greater-than-one>
 
 <field-type> ::=
 <type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
@@ -1970,11 +1967,11 @@ type parameters are substituted by the type expressions of the arguments.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-(A)And(B)Can_Be_Equal ==> (A, B) => Bool
-(A)And(B)Add_To(C) ==> (A, B) => C
+(A)And(B)Can_Be_Equal ==> A x B => Bool
+(A)And(B)Add_To(C) ==> A x B => C
 (A)Is(B)s_First ==> B => A
 (T)Has_String_Repr ==> T => String
-(E)Has_Use ==> (E(A), A => E(B)) => E(B)
+(E)Has_Use ==> E(A) x (A => E(B)) => E(B)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2274,7 +2271,7 @@ value
 
 type_proposition (T)Has_Internal_App
 value
-  apply()internally : (A => B, T(A)) => T(B)
+  apply()internally : (A => B) x T(A) => T(B)
 \end{verbatim}
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
@@ -2285,7 +2282,7 @@ to_string : (T)Has_String_Represantion ==> T => String
 
 wrapper : (T)Has_A_Wrapper ==> A => T(A)
 
-apply()internally : (T)Has_Internal_App ==> (A => B, T(A)) => T(B)
+apply()internally : (T)Has_Internal_App ==> (A => B) x T(A) => T(B)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2602,11 +2599,9 @@ the "\texttt{=>}" arrow.
 <type-var> ::= [A-Z]
 \\
 
-<func-type> ::= <param-types> `\ =>\ ' <one-type>
+<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
-<param-types> ::= <one-type> | `(' <simple-type> ( `, ' <simple-type> )+ `)'
-
-<one-type> ::=
+<in-or-out-type> ::=
 <type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
 \\
 

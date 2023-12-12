@@ -12,5 +12,5 @@ value
 
 type_proposition (T)Has_Internal_App
 value
-  apply()internally : (A => B, T(A)) => T(B)#
+  apply()internally : (A => B) x T(A) => T(B)#
 

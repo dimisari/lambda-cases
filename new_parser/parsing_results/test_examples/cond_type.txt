@@ -1,8 +1,8 @@
 Parsed :) ==>
-(A)And(B)Can_Be_Equal ==> (A, B) => Bool
+(A)And(B)Can_Be_Equal ==> A x B => Bool
 
 Parsed :) ==>
-(A)And(B)Add_To(C) ==> (A, B) => C
+(A)And(B)Add_To(C) ==> A x B => C
 
 Parsed :) ==>
 (A)Is(B)s_First ==> B => A
@@ -11,5 +11,5 @@ Parsed :) ==>
 (T)Has_String_Repr ==> T => String
 
 Parsed :) ==>
-(E)Has_Use ==> (E(A), A => E(B)) => E(B)
+(E)Has_Use ==> E(A) x (A => E(B)) => E(B)
 

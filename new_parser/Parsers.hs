@@ -486,16 +486,9 @@ instance HasParser TypeVar where
 instance HasParser FuncType where
   parser = FT <$> parser +++ (string " => " *> parser)
 
-instance HasParser ParamTypes where
+instance HasParser InOrOutType where
   parser =
-    OT <$> try parser <|> ManyTs <$> many_ts_p
-    where
-    many_ts_p :: Parser (SimpleType, [SimpleType])
-    many_ts_p = (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
-
-instance HasParser OneType where
-  parser =
-    TA2 <$> try parser <|> FT2 <$> try (in_paren parser) <|> PT2 <$> try parser <|>
+    PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|> TA2 <$> try parser <|> 
     TId2 <$> try parser <|> TV2 <$> parser
 
 instance HasParser ProdType where

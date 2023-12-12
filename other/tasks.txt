@@ -1,0 +1,41 @@
+
+- group type nicknames with "all"
+
+- comments
+
+- tuple matching inside func parameters
+
+- leave empty args/fields of tuple
+
+- other spaces
+  - comma takes care of them all in parser?
+    - tuple
+    - line exprs
+    - change
+    - tuple matching
+    - list matching
+  - big tuple?
+  - field change?
+  - params arrow?
+  - cases arrow?
+
+- add element index mechanism?
+  - like arrays in most languages with a[i]?
+  - op like in haskell?
+
+- T1 ... Tn instead of A ... Z for type variables
+
+--------------------------------------------------------------later
+
+- printing tuples (json style or similar)
+
+- turn all args in paren func app into a tuple
+  - try to typecheck with the whole tuple as the first arg
+  - if it fails typecheck with the first field of the tuple as the first arg
+
+- good page changes in description pdf
+
+- isolate hs gen (am I even gonna bother to look at the old code?)
+
+- fix md files in github
+

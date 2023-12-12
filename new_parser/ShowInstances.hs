@@ -374,14 +374,9 @@ instance Show TypeVar where
   show = \(TV c) -> [c]
 
 instance Show FuncType where
-  show = \(FT (pts, ot)) -> show pts ++ " => " ++ show ot
+  show = \(FT (it, ot)) -> show it ++ " => " ++ show ot
 
-instance Show ParamTypes where
-  show = \case
-    OT ot -> show ot
-    ManyTs (st, sts) -> "(" ++ show st ++ concatMap ((", " ++) . show) sts ++ ")"
-
-instance Show OneType where
+instance Show InOrOutType where
   show = \case
     TId2 tid -> show tid
     TV2 tv -> show tv

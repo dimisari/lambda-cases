@@ -187,12 +187,9 @@ newtype TypeId = TId String
 
 newtype TypeVar = TV Char
  
-newtype FuncType = FT (ParamTypes, OneType)
+newtype FuncType = FT (InOrOutType, InOrOutType)
 
-data ParamTypes = 
-  OT OneType | ManyTs (SimpleType, [SimpleType])
-
-data OneType = 
+data InOrOutType = 
   TId2 TypeId | TV2 TypeVar | PT2 ProdType | TA2 TypeApp | FT2 FuncType
 
 newtype ProdType = PT (FieldType, [FieldType])

@@ -1,28 +1,23 @@
-foo
-  : Int
+foo : Int
   = 42#
 
-f
-  : (Int, Int, Int) => Int
+f : Int x Int x Int => Int
   = (a, b, c) =>
     a + b * c#
 
-id_bool
-  : Bool => Bool
+id_bool : Bool => Bool
   = cases =>
     true => true
     false => false#
 
-extended_euclidean
-  : (Int, Int) => GcdAndCoeffs
+extended_euclidean : Int x Int => GcdAndCoeffs
   = ee_recursion(init_a_coeffs, init_b_coeffs)
     where
     init_a_coeffs, init_b_coeffs
       : all Coeffs
       = (1, 0), (0, 1)#
 
-read_two_ints
-  : (Int x Int)FromIO
+read_two_ints : (Int x Int)FromIO
   = print <- "Please give me 2 ints" ;
     get_line ;> split_words o> apply(from_string)to_all o> ints =>
     ints -> length -> cases =>

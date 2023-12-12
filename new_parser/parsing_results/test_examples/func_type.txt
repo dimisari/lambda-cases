@@ -11,11 +11,11 @@ Parsed :) ==>
 Int x Int => Int
 
 Parsed :) ==>
-(Real, Real, Real) => Real
+Real x Real x Real => Real
 
 Parsed :) ==>
-(A => B, B => C) => (A => C)
+(A => B) x (B => C) => (A => C)
 
 Parsed :) ==>
-(Int => Int) => Int
+(Int => Int) => (Int => Int)
 

@@ -18,16 +18,16 @@ extended_euclidean
       : all Coeffs
       = (1, 0), (0, 1)
 
-  ee_recursion
-    : Coeffs x Coeffs x Int x Int => GcdAndCoeffs
-    = (a_coeffs, b_coeffs, x, cases) =>
-      0 => (x, a_coeffs.prev, b_coeffs.prev)
-      y =>
-        ee_recursion(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
-        where
-        next
-          : Coeffs => Coeffs
-          = .change{prev = curr, curr = prev - x -> div <- y * curr}
+    ee_recursion
+      : Coeffs x Coeffs x Int x Int => GcdAndCoeffs
+      = (a_coeffs, b_coeffs, x, cases) =>
+        0 => (x, a_coeffs.prev, b_coeffs.prev)
+        y =>
+          ee_recursion(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
+          where
+          next
+            : Coeffs => Coeffs
+            = .change{prev = curr, curr = prev - x -> div <- y * curr}
 
 # reading, printing and main
 
