@@ -9,14 +9,14 @@ proof
 type_theorem (Possibly())Has_Internal_App
 proof
   apply()internally =
-    (f, cases) =>
+    (f, cases)
       no_value => no_value
       the_value:x => the_value:f(x)#
 
 type_theorem (ListOf()s)Has_Internal_App
 proof
   apply()internally =
-    (f, cases) =>
+    (f, cases)
       empty_l => empty_l
       non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)#
 

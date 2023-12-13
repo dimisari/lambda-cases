@@ -7,7 +7,7 @@ less_l, greater_l : all ListOf(Int)s
 
 where
 sum_list : ListOf(Int)s => Int
-  = cases =>
+  = cases
     empty_l => 0
     non_empty_l:l => l.head + sum_list(l.tail)#
 

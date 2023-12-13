@@ -61,20 +61,20 @@ behaviour.
 
 \paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
-gcd : Int x Int => Int
-  = (x, cases) =>
+gcd : Int^2 => Int
+  = (x, cases)
     0 => x
     y => gcd(y, x -> mod <- y) 
 
-read_two_ints : (Int x Int)FromIO
+read_two_ints : (Int^2)FromIO
   = print <- "Please give me 2 ints";
-    get_line ;> split_to_words o> cases =>
+    get_line ;> split_to_words o> cases
       [x, y] => wrap_with_io(from_string(x), from_string(y))
       ... => show_err("You didn't give me 2 ints")
  
 tuple_type NumsAndGcd
 value
-  (x, y, gcd) : Int x Int x Int
+  (x, y, gcd) : Int^3
 
 print_gcd_message : NumsAndGcd => IO
   = nums_gcd => print(message)
@@ -428,7 +428,7 @@ below is the definition of "apply()to\_all":
 
 \begin{verbatim}
 apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
-  = (f, cases) =>
+  = (f, cases)
     empty_l => empty_l
     non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all <- l.tail)
 \end{verbatim}
@@ -544,7 +544,7 @@ definition of the \texttt{Name} type:
 \begin{verbatim}
 tuple_type Name
 value
-  (first_name, last_name) : String x String
+  (first_name, last_name) : String^2
 \end{verbatim}
 And it has the type \texttt{Name => String}.
 \\\\
@@ -624,7 +624,7 @@ name : MyNameType
 
 tuple_type Point
 value
-  (x, y, z) : Real x Real x Real
+  (x, y, z) : Real^3
 
 point : Point
 
@@ -835,7 +835,7 @@ Operator & Type \\
 \hline
 \texttt{<} & (A)Can_Be_Less_Than(B) \Ra A x B \ra Bool \\
 \hline
-\texttt{\& |} & Bool x Bool \ra Bool \\
+\texttt{\& |} & Bool\texttt{\^}2 \ra Bool \\
 \hline
 \end{tabular}
 \end{center}
@@ -1159,7 +1159,7 @@ Operator & Type & Description \\
 \hline
 \texttt{<} & (A)Can_Be_Less_Than(B) \Ra A x B \ra Bool & General less than \\
 \hline
-\texttt{\& |} & Bool x Bool \ra Bool & Boolean operators \\
+\texttt{\& |} & Bool\texttt{\^}2 \ra Bool & Boolean operators \\
 \hline
 \texttt{;>} & (E)Has_Use \Ra E(A) x (A \ra E(B)) \ra E(B) &
 Do, use, do \\
@@ -1299,7 +1299,7 @@ The precise indentation rules are described in the section
 
 \begin{verbatim}
 print_sentimental_bool : Bool => IO
-  = cases =>
+  = cases
     true => print <- "It's true!! :)"
     false => print <- "It's false... :("
 
@@ -1308,42 +1308,42 @@ values
   green | amber | red
 
 print_sentimental_traffic_light : TrafficLight => IO
-  = cases =>
+  = cases
     green => print <- "It's green! Let's go!!! :)"
     amber => print <- "Go go go, fast!"
     red => print <- "Stop right now! You're going to kill us!!"
 
 is_not_red : TrafficLight => Bool
-  = cases =>
+  = cases
     green => true
     amber => true
     red => false
 
 is_seventeen_or_forty_two : Int => Bool
-  = cases => 
+  = cases
     17 => true
     42 => true
     ... => false
 
-traffic_lights_match : TrafficLight x TrafficLight => Bool
-  = (cases, cases) =>
+traffic_lights_match : TrafficLight^2 => Bool
+  = (cases, cases)
     (green, green) => true
     (amber, amber) => true
     (red, red) => true
     ... => false
 
-gcd : Int x Int => Int
-  = (x, cases) =>
+gcd : Int^2 => Int
+  = (x, cases)
     0 => x
     y => gcd(y, x -> mod <- y) 
 
 is_empty : ListOf(A)s => Bool
-  = cases => 
+  = cases
     empty_l => true
     non_empty_l:anything => false
 
 apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
-  = (f, cases) =>
+  = (f, cases)
     empty_l => empty_l
     non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
 
@@ -1377,7 +1377,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \item \textit{Grammar}
 \begin{grammar}
-<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ [ <end-case> ]
+<cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
@@ -1418,7 +1418,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 foo : Int
   = 42
 
-f : Int x Int x Int => Int
+f : Int^3 => Int
   = (a, b, c) => a + b * c
 
 val1, val2, val3 : Int, Bool, Char
@@ -1479,7 +1479,7 @@ keyword "all" to give the same type to all the values.
 \item \textit{Examples}
 \begin{verbatim}
 sort : ListOf(Int)s => ListOf(Int)s
-  = cases => 
+  = cases
     empty_l => empty_l
     non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
       where
@@ -1491,7 +1491,7 @@ sum_nodes : TreeOf(Int)s => Int
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
     where
     sum_list : ListOf(Int)s => Int
-      = cases =>
+      = cases
         empty_l => 0
         non_empty_l:l => l.head + sum_list(l.tail)
 
@@ -1711,7 +1711,7 @@ if the value expression is a big or cases expression:
 <big-func-body> ::= <nl> <indent> ( <no-paren-op-arg> | <op-expr> )
 \\
 
-<cases-func-expr> ::= <cases-parameters> `\ =>' <case>+ [ <end-case> ]
+<cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
 
 <cases-parameters> ::=
 <cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
@@ -1783,7 +1783,8 @@ The grammar of a type expression is:
 \begin{grammar}
 <type> ::= [ <condition> ]  <simple-type> 
 
-<simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
+<simple-type> ::=
+<type-id> | <type-var> | <func-type> | <prod-type> | <power-type> | <type-app>
 \\
 \end{grammar}
 \paragraph{Type Identifiers}
@@ -1824,7 +1825,7 @@ X Y Z
 \begin{verbatim}
 A => A
 (A => B) x (B => C) => (A => C)
-(A x A => A) x A x ListOf(A)s => A
+(A^2 => A) x A x ListOf(A)s => A
 \end{verbatim}
 
 \item \textit{Description}
@@ -1861,8 +1862,8 @@ A type variable is a single capital letter.
 String => String 
 Real => Int
 A => A
-Int x Int => Int
-Real x Real x Real => Real
+Int^2 => Int
+Real^3 => Real
 (A => B) x (B => C) => (A => C)
 (Int => Int) => (Int => Int)
 \end{verbatim}
@@ -1879,7 +1880,8 @@ function type expressions.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
+<type-id> | <type-var> | <prod-type> | <power-type> | <type-app> |
+`(' <func-type> `)'
 \end{grammar}
 \end{itemize}
 
@@ -1909,7 +1911,7 @@ type, the power symbol '\texttt{\^}' and the number of times the type is repeate
 \begin{grammar}
 <prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
 
-<power-type> ::= <field-type> `^' <int-greater-than-one>
+<power-type> ::= <field-type> ( `^' <int-greater-than-one> )+
 
 <field-type> ::=
 <type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
@@ -2039,18 +2041,18 @@ The grammar of a type definition is:
 \begin{verbatim}
 tuple_type Name
 value
-  (first_name, last_name) : String x String
+  (first_name, last_name) : String^2
 
 tuple_type Date
 value
-  (day, month, year) : Int x Int x Int
+  (day, month, year) : Int^3
 
 tuple_type MathematicianInfo
 value
   (name, nationality, date_of_birth) : Name x String x Date
 
 tuple_type TreeOf(A)s
-values
+value
   (root, subtrees) : A x ListOf(TreeOf(A)s)s
 
 tuple_type Indexed(T)
@@ -2092,8 +2094,9 @@ their argument.
 
 \begin{grammar}
 <tuple-type-def> ::= ""\\
-`tuple_type\ ' <type-name> <nl>
-`value' <nl> `\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type>
+`tuple_type\ ' <type-name> <nl> \\
+`value' <nl> `\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ '
+( <prod-type> | <power-type> )
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
@@ -2136,12 +2139,12 @@ values
 
 \begin{verbatim}
 is_empty : ListOf(A)s => Bool
-  = cases => 
+  = cases
     empty_l => true
     non_empty_l:anything => false
 
 get_head : ListOf(A)s => Possibly(A)
-  = cases => 
+  = cases
     empty_l => no_value
     non_empty_l:list => the_value:list.head
 
@@ -2151,7 +2154,7 @@ sum_list : ListOf(Int)s => Int
     non_empty_l:l => l.head + sum_list(l.tail)
 
 print_err_or_res : Error(A)OrResult(B) => IO
-  = cases => 
+  = cases
     error:e => print("Error occured: " + e -> to_string)
     result:r => print("All good! The result is: " + r -> to_string)
 \end{verbatim}
@@ -2326,7 +2329,7 @@ proof
 type_theorem (A)Is(ListOf(A)s)s_First
 proof
   first =
-    cases =>
+    cases
       empty_l => show_err("Tried to take the first element of an empty_l list")
       non_empty_l:l => l.head
 \end{verbatim}
@@ -2430,14 +2433,14 @@ proof
 type_theorem (Possibly())Has_Internal_App
 proof
   apply()internally =
-    (f, cases) =>
+    (f, cases)
       no_value => no_value
       the_value:x => the_value:f(x)
 
 type_theorem (ListOf()s)Has_Internal_App
 proof
   apply()internally =
-    (f, cases) =>
+    (f, cases)
       empty_l => empty_l
       non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
 \end{verbatim}
@@ -2591,7 +2594,8 @@ the "\texttt{=>}" arrow.
 \begin{grammar}
 <type> ::= [ <condition> ]  <simple-type> 
 
-<simple-type> ::= <type-id> | <type-var> | <func-type> | <prod-type> | <type-app>
+<simple-type> ::=
+<type-id> | <type-var> | <func-type> | <prod-type> | <power-type> | <type-app>
 \\
 
 <type-id> ::= [A-Z] [A-Za-z]+ 
@@ -2602,10 +2606,13 @@ the "\texttt{=>}" arrow.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id> | <type-var> | <prod-type> | <type-app> | `(' <func-type> `)'
+<type-id> | <type-var> | <prod-type> | <power-type> | <type-app> |
+`(' <func-type> `)'
 \\
 
 <prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
+
+<power-type> ::= <field-type> ( `^' <int-greater-than-one> )+
 
 <field-type> ::=
 <type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
@@ -2630,9 +2637,10 @@ the "\texttt{=>}" arrow.
 <type-def> ::= <tuple-type-def> | <or-type-def>
 \\
 
-<tuple-type-def> ::=
-`tuple_type\ ' <type-name> <nl>
-`value' <nl> `\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ ' <prod-type>
+<tuple-type-def> ::= ""\\
+`tuple_type\ ' <type-name> <nl> \\
+`value' <nl> `\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ '
+( <prod-type> | <power-type> )
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*

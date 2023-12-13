@@ -1,16 +1,5 @@
 
-- power prod types
-  - pdf
-    - inside prod types paragraph
-    - power types syntax
-    - higher precedence than " x "
-      - where to add?
-        - simple-type
-        - in-or-out-type
-        - field-type
-        - tuple-type-def (prod or power)
-    - change all examples tha can be changed
-  -
+- tuple matching inside func parameters
 
-- bsort
+- leave empty args/fields of tuple
 

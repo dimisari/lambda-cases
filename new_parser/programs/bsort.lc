@@ -1,66 +1,41 @@
-program main;
 
-   procedure bsort (n : integer; var x : array of integer);
-      var i       : integer;
-          changed : boolean;
+bubble_sort_pass : ListOf(Int)s => ListOf(Int)s x Bool
+  = cases
+    [] => ([], true)
+    [x] => ([x], true)
+    l => 
+      (l.first < l.second) -> cases
+        true =>
+          add_elem(l.second)to <- not_sorted <- bubble_sort_pass(l.first + rest)
+        false =>
+          add_elem(l.first)to <- bubble_sort_pass(l.second + rest) 
+      where
+      rest : ListOf(Int)s
+        = drop(2)from(l)
 
-      procedure swap (var x, y : integer);
-         var t : integer;
-      begin
-         t := x;
-	 x := y;
-	 y := t
-      end;
+      add_elem()to : Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
+        = (elem, lb) => (elem + lb.1st, lb.2nd)
 
-   begin
-      changed := true;
-      while changed do
-      begin
-         changed := false;
-         i := 0;
-         while i < n-1 do
-         begin
-            if x[i] > x[i+1] then
-            begin
-               swap(x[i], x[i+1]);
-               changed := true
-            end;
-            i := i+1
-         end
-      end
-   end;
+      not_sorted : ListOf(Int)s x Bool => ListOf(Int)s x Bool
+        = (l, b) => (l, false)
 
-   procedure writeArray (var msg : array of char;
-                             n   : integer;
-                         var x   : array of integer);
-      var i : integer;
-   begin
-      writeString(msg);
-      i := 0;
-      while i < n do
-      begin
-         if i > 0 then
-            writeString(", ");
-         writeInteger(x[i]);
-         i := i+1
-      end;
-      writeString("\n");
-   end;
+buble_sort : ListOf(Int)s => ListOf(Int)s
+  = bubble_sort_pass o> (l, is_sorted) =>
+    is_sorted -> cases
+      true => l
+      false => buble_sort(l)
 
-   var seed : integer;
-       x    : array [16] of integer;
-       i    : integer;
+initial : ListOf(Int)s
+  = compute_list(16, 65)
+    where
+    compute_list : Int^2 => ListOf(Int)s
+      = (cases, seed)
+        0 => []
+        n => new_seed + compute_list(n - 1, new_seed)
+          where
+          new_seed : Int
+            = (seed * 137 + 236 - n) -> mod <- 101
 
-begin
-   seed := 65;
-   i := 0;
-   while i < 16 do
-   begin
-      seed := (seed * 137 + 220 + i) mod 101;
-      x[i] := seed;
-      i := i + 1
-   end;
-   writeArray("Initial array: ", 16, x);
-   bsort(16, x);
-   writeArray("Sorted array: ", 16, x)
-end.
+main : IO
+  = print_line("Initial list = " + initial);
+    print_line("Sorted list = " + buble_sort(initial))

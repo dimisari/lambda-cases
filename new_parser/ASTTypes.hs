@@ -181,7 +181,8 @@ data WhereDefExpr =
 newtype Type = Ty (Maybe Condition, SimpleType)
 
 data SimpleType = 
-  TId1 TypeId | TV1 TypeVar | FT1 FuncType | PT1 ProdType | TA1 TypeApp
+  TId1 TypeId | TV1 TypeVar | FT1 FuncType | PT1 ProdType | PoT1 PowerType | 
+  TA1 TypeApp
 
 newtype TypeId = TId String
 
@@ -190,9 +191,12 @@ newtype TypeVar = TV Char
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
 data InOrOutType = 
-  TId2 TypeId | TV2 TypeVar | PT2 ProdType | TA2 TypeApp | FT2 FuncType
+  TId2 TypeId | TV2 TypeVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp |
+  FT2 FuncType
 
 newtype ProdType = PT (FieldType, [FieldType])
+
+newtype PowerType = PoT (FieldType, [Int])
 
 data FieldType = 
   TId3 TypeId | TV3 TypeVar | TA3 TypeApp | IPT InParenT
@@ -219,7 +223,10 @@ newtype Condition = Co PropName
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
-newtype TupleTypeDef = TTD (TypeName, Identifier, [Identifier], ProdType)
+newtype TupleTypeDef = TTD (TypeName, Identifier, [Identifier], TupleTypeDefEnd)
+
+data TupleTypeDefEnd =
+  PT4 ProdType | PoT4 PowerType
 
 newtype TypeName =
   TN (Maybe ParamsInParen, TypeId, [(ParamsInParen, String)], Maybe ParamsInParen)

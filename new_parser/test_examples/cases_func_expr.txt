@@ -1,41 +1,49 @@
-(x, cases) =>
+(x, cases)
   true => print <- "It's true!! :)"
   false => print <- "It's false... :("#
 
-cases =>
+cases
   green => print <- "It's green! Let's go!!! :)"
   amber => print <- "Go go go, fast!"
   red => print <- "Stop right now! You're going to kill us!!"#
 
-cases =>
+cases
   green => true
   amber => true
   red => false#
 
-cases =>
+cases
   17 => true
   42 => true
   ... => false#
 
-(cases, cases) =>
+(cases, cases)
   (green, green) => true
   (amber, amber) => true
   (red, red) => true
   ... => false#
 
-(x, cases) =>
+(x, cases)
   0 => x
   y => gcd(y, x -> mod <- y)#
 
-cases =>
+cases
   empty_l => true
   non_empty_l:anything => false#
 
-(f, cases) =>
+(f, cases)
   empty_l => empty_l
   non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)#
 
-cases =>
+cases
   true => true
   false => false#
+
+cases
+  [] => ([], true)
+  [x] => ([x], true)
+  l => 
+    1 -> cases
+      true => 1
+      false => 1#
 

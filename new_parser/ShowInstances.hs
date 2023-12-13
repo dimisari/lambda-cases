@@ -365,6 +365,7 @@ instance Show SimpleType where
     TV1 tv -> show tv
     FT1 ft -> show ft
     PT1 pt -> show pt
+    PoT1 pt -> show pt
     TA1 ta -> show ta
 
 instance Show TypeId where
@@ -381,11 +382,15 @@ instance Show InOrOutType where
     TId2 tid -> show tid
     TV2 tv -> show tv
     PT2 pt -> show pt
+    PoT2 pt -> show pt
     TA2 ta -> show ta
     FT2 ft -> "(" ++ show ft ++ ")"
 
 instance Show ProdType where
   show = \(PT (ft, fts)) -> show ft ++ concatMap ((" x " ++) . show) fts
+
+instance Show PowerType where
+  show = \(PoT (ft, is)) -> show ft ++ concatMap (("^" ++) . show) is
 
 instance Show FieldType where
   show = \case
@@ -432,10 +437,15 @@ instance Show TypeDef where
     OTD1 otd -> show otd
 
 instance Show TupleTypeDef where
-  show = \(TTD (tn, id, ids, pt)) ->
+  show = \(TTD (tn, id, ids, ttde)) ->
     "tuple_type " ++ show tn ++
     "\nvalue\n  (" ++ show id ++ concatMap ((", " ++) . show) ids ++
-    ") : " ++ show pt
+    ") : " ++ show ttde
+
+instance Show TupleTypeDefEnd where
+  show = \case
+    PT4 pt -> show pt
+    PoT4 pt -> show pt
 
 instance Show TypeName where
   show = \(TN (maybe_pip1, tid, pip_str_pairs, maybe_pip2)) ->

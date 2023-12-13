@@ -1,12 +1,4 @@
 
-- group type nicknames with "all"
-
-- comments
-
-- tuple matching inside func parameters
-
-- leave empty args/fields of tuple
-
 - other spaces
   - comma takes care of them all in parser?
     - tuple
@@ -19,13 +11,31 @@
   - params arrow?
   - cases arrow?
 
+- T1 ... Tn instead of A ... Z for type variables
+
+- Z, R, C for number types
+
+--------------------------------------------------------------later
+
+- comments
+  - line: #
+    - can also close in the same line with second #
+  - multiline: ## and close with second ##
+
+- group type nicknames with "all"
+
+- better parser errors (with less try)?
+  - it fails no the last it tried
+    - how to mitigate that?
+
+- define arrays with power?
+  - maybe good for one dimension +
+    better with square brackets and commas (or x?) for multidimensional
+
 - add element index mechanism?
   - like arrays in most languages with a[i]?
   - op like in haskell?
-
-- T1 ... Tn instead of A ... Z for type variables
-
---------------------------------------------------------------later
+  - something with .change? (i, j) = ...?
 
 - printing tuples (json style or similar)
 

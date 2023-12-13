@@ -1,20 +1,20 @@
 
 tuple_type Coeffs
 value
-  (prev, curr) : Int x Int
+  (prev, curr) : Int^2
 
 tuple_type GcdAndCoeffs
 value
-  (gcd, a, b) : Int x Int x Int
+  (gcd, a, b) : Int^3
 
-extended_euclidean : Int x Int => GcdAndCoeffs
+extended_euclidean : Int^2 => GcdAndCoeffs
   = ee_recursion(init_a_coeffs, init_b_coeffs)
     where
     init_a_coeffs, init_b_coeffs : all Coeffs
       = (1, 0), (0, 1)
 
     ee_recursion : Coeffs x Coeffs x Int x Int => GcdAndCoeffs
-      = (a_coeffs, b_coeffs, x, cases) =>
+      = (a_coeffs, b_coeffs, x, cases)
         0 => (x, a_coeffs.prev, b_coeffs.prev)
         y =>
           ee_recursion(next <- a_coeffs, next <- b_coeffs, y, x -> mod <- y)
@@ -23,10 +23,10 @@ extended_euclidean : Int x Int => GcdAndCoeffs
             : Coeffs => Coeffs
             = .change{prev = curr, curr = prev - x -> div <- y * curr}
 
-read_two_ints : (Int x Int)FromIO
+read_two_ints : (Int^2)FromIO
   = print_line <- "Please give me 2 ints";
     get_line ;> split_words o> apply(from_string)to_all o> ints =>
-    ints -> length -> cases =>
+    ints -> length -> cases
       2 => wrap(ints)
       ... => throw_err("You didn't give me 2 ints")
 

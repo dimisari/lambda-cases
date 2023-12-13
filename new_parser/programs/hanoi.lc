@@ -1,17 +1,17 @@
 
 tuple_type HanoiRods
 value 
-  (source, target, auxiliary) : String x String x String
+  (source, target, auxiliary) : String^3
 
 hanoi : Int x HanoiRods => IO
-  = (cases, rods) =>
+  = (cases, rods)
     0 => empty_io
     rings =>
       hanoi(rings - 1, (rods.source, rods.auxiliary, rods.target)) ;
       move(rods.source, rods.target) ; 
       hanoi(rings - 1, (rods.auxiliary, rods.target, rods.source))
       where
-      move : String x String => IO
+      move : String^2 => IO
         = (s, t) => print_line("Move from " + s + " to " + t)
 
 main : IO

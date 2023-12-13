@@ -1,10 +1,10 @@
 tuple_type Name
 value
-  (first_name, last_name) : String x String#
+  (first_name, last_name) : String^2#
 
 tuple_type Date
 value
-  (day, month, year) : Int x Int x Int#
+  (day, month, year) : Int^3#
 
 tuple_type MathematicianInfo
 value

@@ -1,26 +1,26 @@
 foo : Int
   = 42#
 
-f : Int x Int x Int => Int
+f : Int^3 => Int
   = (a, b, c) =>
     a + b * c#
 
 id_bool : Bool => Bool
-  = cases =>
+  = cases
     true => true
     false => false#
 
-extended_euclidean : Int x Int => GcdAndCoeffs
+extended_euclidean : Int^2 => GcdAndCoeffs
   = ee_recursion(init_a_coeffs, init_b_coeffs)
     where
     init_a_coeffs, init_b_coeffs
       : all Coeffs
       = (1, 0), (0, 1)#
 
-read_two_ints : (Int x Int)FromIO
+read_two_ints : (Int^2)FromIO
   = print <- "Please give me 2 ints" ;
     get_line ;> split_words o> apply(from_string)to_all o> ints =>
-    ints -> length -> cases =>
+    ints -> length -> cases
       2 => wrap(ints)
       ... => throw_err("You didn't give me 2 ints")#
 

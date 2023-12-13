@@ -289,7 +289,7 @@ instance HasParser OpSplitEnd where
   parser = FE1 <$> try parser <|> OA2 <$> parser
 
 instance HasParser BigOpExprFuncSplit where
-  parser = BOEFS <$> parser +++ parser
+  parser = BOEFS <$> parser +++ (not_in_equal_line *> parser)
 
 instance HasParser BigOrCasesFuncExpr where
   parser = BFE1 <$> try parser <|> CFE1 <$> parser
@@ -362,7 +362,6 @@ instance HasParser Parameters where
 instance HasParser CasesFuncExpr where 
   parser =
     parser >>= \cases_params ->
-    string " =>" *>
     are_we_in_equal_line >>= \answer ->
     inc_il_if_false answer *>
     many1 parser >>= \cases ->
@@ -471,8 +470,8 @@ instance HasParser Type where
 
 instance HasParser SimpleType where
   parser = 
-    FT1 <$> try parser <|> PT1 <$> try parser <|> TA1 <$> try parser <|>
-    TId1 <$> try parser <|> TV1 <$> parser
+    FT1 <$> try parser <|> PT1 <$> try parser <|> PoT1 <$> try parser <|> 
+    TA1 <$> try parser <|> TId1 <$> try parser <|> TV1 <$> parser
 
 instance HasParser TypeId where
   parser = 
@@ -488,11 +487,14 @@ instance HasParser FuncType where
 
 instance HasParser InOrOutType where
   parser =
-    PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|> TA2 <$> try parser <|> 
-    TId2 <$> try parser <|> TV2 <$> parser
+    PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|> PoT2 <$> try parser <|>
+    TA2 <$> try parser <|> TId2 <$> try parser <|> TV2 <$> parser
 
 instance HasParser ProdType where
   parser = PT <$> parser +++ (many1 $ try (string " x ") *> parser)
+
+instance HasParser PowerType where
+  parser = PoT <$> parser +++ (many1 $ try (string "^") *> parser)
 
 instance HasParser FieldType where
   parser =
@@ -539,8 +541,11 @@ instance HasParser TupleTypeDef where
     string "tuple_type " *> parser >>= \type_name ->
     nl *> string "value" *> nl *> string "  ("  *> parser >>= \identifier ->
     many1 (comma *> parser) >>= \identifiers ->
-    string ") : " *> parser >>= \prod_type ->
-    return $ TTD (type_name, identifier, identifiers, prod_type)
+    string ") : " *> parser >>= \tuple_type_def_end ->
+    return $ TTD (type_name, identifier, identifiers, tuple_type_def_end)
+
+instance HasParser TupleTypeDefEnd where
+  parser = PT4 <$> try parser <|> PoT4 <$> parser
 
 instance HasParser TypeName where
   parser =
