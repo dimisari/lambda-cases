@@ -1,21 +1,30 @@
 
-- other spaces
-  - comma takes care of them all in parser?
-    - tuple
-    - line exprs
-    - change
-    - tuple matching
-    - list matching
-  - big tuple?
-  - field change?
-  - params arrow?
-  - cases arrow?
-
 - T1 ... Tn instead of A ... Z for type variables
 
 - Z, R, C for number types
 
 --------------------------------------------------------------later
+
+- spaces
+  - ?
+    - field change <- I vote no
+    - params arrow <- I vote no
+    - case arrow <- I vote no
+    - end case arrow <- I vote no
+    - value def
+      - after : <- I vote no
+      - after = <- I vote no
+    - grouped value defs
+      - after : <- I vote no
+      - after = <- I vote no
+
+    - func type <- I vote no 
+    - power type: add possibility for spaces around '^' 
+    - condition <- I vote no
+    - or type def around '|'
+    - type nickname <- I vote no
+    - atom prop def: around ':' <- I vote no
+    - type theorem <- I vote no
 
 - comments
   - line: #

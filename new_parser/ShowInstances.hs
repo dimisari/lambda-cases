@@ -34,7 +34,7 @@ instance Show ParenExprInside where
 instance Show Tuple where
   show = \(T (le, csles)) -> "(" ++ show le ++ ", " ++ show csles ++ ")"
 
-instance Show CommaSepLineExprs where
+instance Show LineExprs where
   show = \(CSLE (le, les)) -> show le ++ concatMap ((", " ++) . show) les
 
 instance Show LineExpr where
@@ -272,8 +272,11 @@ instance Show BigFuncBody where
 instance Show Parameters where
   show = \case
     OneParam id -> show id
-    ManyParams (id, ids) ->
-      "(" ++ show id ++ concatMap ((", " ++) . show) ids ++ ")"
+    ManyParams pcsis -> show pcsis
+
+instance Show ParenCommaSepIds where
+  show = \(PCSIs (id, ids)) ->
+    "(" ++ show id ++ concatMap ((", " ++) . show) ids ++ ")"
 
 instance Show CasesFuncExpr where
   show = \(CFE (cps, cs, maybe_ec)) ->
@@ -437,10 +440,8 @@ instance Show TypeDef where
     OTD1 otd -> show otd
 
 instance Show TupleTypeDef where
-  show = \(TTD (tn, id, ids, ttde)) ->
-    "tuple_type " ++ show tn ++
-    "\nvalue\n  (" ++ show id ++ concatMap ((", " ++) . show) ids ++
-    ") : " ++ show ttde
+  show = \(TTD (tn, pcsis, ttde)) ->
+    "tuple_type " ++ show tn ++ "\nvalue\n  " ++ show pcsis ++ " : " ++ show ttde
 
 instance Show TupleTypeDefEnd where
   show = \case

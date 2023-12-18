@@ -20,7 +20,8 @@ test_parser = \p s -> runParser (p <* eof) (0, False) "test" s
 -- Parser State
 
 type IndentationLevel = Int
-type ParserState = (IndentationLevel, Bool)
+type InEqualLine = Bool
+type ParserState = (IndentationLevel, InEqualLine)
 
 increase_il :: Int -> Parser ()
 increase_il = \i -> modifyState (\(il, b) -> (il + i, b))
@@ -50,8 +51,9 @@ dec_il_if_false = \case
 -- helper parsers
 
 (comma, underscore, lower_under, in_paren) =
-  (string ", ", char '_', lower <|> underscore, \a -> char '(' *> a <* char ')')
-  :: (Parser String, Parser Char, Parser Char, Parser a -> Parser a) 
+  (char ',' <* optional (char ' '), char '_', lower <|> underscore
+  , \a -> char '(' *> a <* char ')'
+  ) :: (Parser Char, Parser Char, Parser Char, Parser a -> Parser a) 
 
 (nl, nl_indent, digits) =
   (many (char ' ' <|> char '\t') *> char '\n', nl *> indent, many1 digit)
@@ -140,7 +142,7 @@ instance HasParser ParenExprInside where
 instance HasParser Tuple where
   parser = T <$> (char '(' *> parser <* comma) +++ (parser <* char ')')
 
-instance HasParser CommaSepLineExprs where
+instance HasParser LineExprs where
   parser = CSLE <$> parser +++ (many (comma *> parser))
 
 instance HasParser LineExpr where
@@ -148,7 +150,8 @@ instance HasParser LineExpr where
 
 instance HasParser BigTuple where
   parser =
-    string "( " *> parser <* optional nl_indent <* comma >>= \line_expr ->
+    char '(' *> optional (char ' ') *>
+    parser <* optional nl_indent <* comma >>= \line_expr ->
     parser >>= \comma_sep_line_exprs ->
     many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
     nl_indent *> char ')' *>
@@ -159,7 +162,7 @@ instance HasParser List where
 
 instance HasParser BigList where
   parser =
-    string "[ " *> parser >>= \comma_sep_line_exprs ->
+    char '[' *> optional (char ' ') *> parser >>= \comma_sep_line_exprs ->
     many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
     nl_indent *> char ']' *>
     (return $ BL (comma_sep_line_exprs, comma_sep_line_exprs_l))
@@ -352,12 +355,10 @@ instance HasParser BigFuncBody where
   parser = nl_indent *> (OE1 <$> try parser <|> NPOA4 <$> parser)
 
 instance HasParser Parameters where
-  parser = 
-    OneParam <$> parser <|>
-    ( char '(' *> parser >>= \identifier ->
-      many1 (comma *> parser) <* char ')' >>= \identifiers ->
-      return $ ManyParams (identifier, identifiers)
-    )
+  parser = OneParam <$> parser <|> ManyParams <$> parser
+
+instance HasParser ParenCommaSepIds where
+  parser = PCSIs <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
 
 instance HasParser CasesFuncExpr where 
   parser =
@@ -539,10 +540,9 @@ instance HasParser TypeDef where
 instance HasParser TupleTypeDef where
   parser =
     string "tuple_type " *> parser >>= \type_name ->
-    nl *> string "value" *> nl *> string "  ("  *> parser >>= \identifier ->
-    many1 (comma *> parser) >>= \identifiers ->
-    string ") : " *> parser >>= \tuple_type_def_end ->
-    return $ TTD (type_name, identifier, identifiers, tuple_type_def_end)
+    nl *> string "value" *> nl *> string "  "  *> parser >>= \paren_comma_sep_ids ->
+    string " : " *> parser >>= \tuple_type_def_end ->
+    return $ TTD (type_name, paren_comma_sep_ids, tuple_type_def_end)
 
 instance HasParser TupleTypeDefEnd where
   parser = PT4 <$> try parser <|> PoT4 <$> parser

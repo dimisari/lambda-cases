@@ -299,18 +299,19 @@ The precise indentation rules are described in the section
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <line-expr> `,\ ' <comma-sep-line-exprs> `)'
+<tuple> ::= `(' <line-expr> <comma> <line-exprs> `)'
 
-<comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
+<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
 
 <line-expr> ::= <no-paren-op-arg> | <line-op-expr> | <line-func-expr>
+
+<comma> ::= `,' [ `\ ' ]
 \\
 
 <big-tuple> ::= ""\\
-`(\ ' <line-expr> [ <nl> <indent> ] `,\ ' <comma-sep-line-exprs> \\
-( <nl> <indent> `,\ ' <comma-sep-line-exprs> )* \\
-<nl> <indent> `)' \\
-
+`(' [ `\ ' ] <line-expr> [ <nl> <indent> ] <comma> <line-exprs> \\
+( <nl> <indent> <comma> <line-exprs> )* 
+<nl> <indent> `)'
 \end{grammar}
 
 \end{itemize}
@@ -350,11 +351,11 @@ ListOf(T)s
   \textbf{Example}
 
   \begin{verbatim}
-  my_big_list : ListOf(Int => IO)s
-    = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
-      , x => print("I'm the second function and x + 2 is: " + (x + 2))
-      , x => print("I'm the third function and x + 3 is: " + (x + 3))
-      ]
+my_big_list : ListOf(Int => IO)s
+  = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
+    , x => print("I'm the second function and x + 2 is: " + (x + 2))
+    , x => print("I'm the third function and x + 3 is: " + (x + 3))
+    ]
   \end{verbatim}
 
   \textbf{Description} 
@@ -384,12 +385,10 @@ ListOf(T)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [ <comma-sep-line-exprs> ] `]'
+<list> ::= `[' [ <line-exprs> ] `]'
 
 <big-list> ::= 
-`[\ ' <comma-sep-line-exprs>
-( <nl> <indent> `,\ ' <comma-sep-line-exprs> )*
-<nl> <indent> `]'
+`[' [ `\ ' ] <line-exprs> ( <nl> <indent> <comma> <line-exprs> )* <nl> <indent> `]'
 \end{grammar}
 
 \end{itemize}
@@ -450,7 +449,7 @@ to the right and so on.
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <comma-sep-line-exprs> `)'
+<arguments> ::= `(' <line-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -640,7 +639,7 @@ referred to by the field identifier.
 \item \textit{Grammar}
 
 \begin{grammar}
-<change> ::= `change{' <field-change> ( `,\ ' <field-change> )* `}'
+<change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
 
 <field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-expr>
 \end{grammar} 
@@ -1283,7 +1282,9 @@ The precise indentation rules are described in the section
 
 <big-func-expr> ::= <parameters> `\ =>' <big-func-body>
 
-<parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
+<parameters> ::= <identifier> | <paren-comma-sep-ids>
+
+<paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 
 <line-func-body> ::= `\ ' ( <no-paren-op-arg> | <line-op-expr> )
 
@@ -1380,7 +1381,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
 
 <cases-parameters> ::=
-<cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
+<cases-parameter> | `(' <cases-parameter> ( <comma> <cases-parameter> )+ `)'
 
 <cases-parameter> ::= <identifier> | `cases'
 \\
@@ -1394,9 +1395,9 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
 <list-matching>
 
-<tuple-matching> ::= `(' <matching> ( `,\ ' <matching> )+ `)'
+<tuple-matching> ::= `(' <matching> ( <comma> <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]'
+<list-matching> ::= `[' [ <matching> ( <comma> <matching> )* ] `]'
 \\
 
 <case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
@@ -1464,10 +1465,9 @@ keyword "all" to give the same type to all the values.
 <no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
 
 <grouped-value-defs> ::= ""\\
-<indent> <identifier> ( `,\ ' <identifier> )+ \\
-( ` ' | <nl> <indent> ) `:\ ' ( <type> ( `,\ ' <type> )+ | `all\ ' <type> ) \\
-<nl> <indent> `=\ '
-<comma-sep-line-exprs> ( <nl> <indent> `,\ ' <comma-sep-line-exprs> )*
+<indent> <identifier> ( <comma> <identifier> )+ \\
+( ` ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
+<nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
 \end{grammar}
 
 \end{itemize}
@@ -1603,25 +1603,25 @@ if the value expression is a big or cases expression:
 <paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
 \\
 
-<tuple> ::= `(' <line-expr> `,\ ' <comma-sep-line-exprs> `)'
+<tuple> ::= `(' <line-expr> <comma> <line-exprs> `)'
 
-<comma-sep-line-exprs> ::= <line-expr> ( `,\ ' <line-expr> )*
+<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
 
 <line-expr> ::= <no-paren-op-arg> | <line-op-expr> | <line-func-expr>
+
+<comma> ::= `,' [ `\ ' ]
 \\
 
 <big-tuple> ::= ""\\
-`(\ ' <line-expr> [ <nl> <indent> ] `,\ ' <comma-sep-line-exprs> \\
-( <nl> <indent> `,\ ' <comma-sep-line-exprs> )* \\
+`(' [ `\ ' ] <line-expr> [ <nl> <indent> ] <comma> <line-exprs> \\
+( <nl> <indent> <comma> <line-exprs> )* 
 <nl> <indent> `)'
 \\
 
-<list> ::= `[' [ <comma-sep-line-exprs> ] `]'
+<list> ::= `[' [ <line-exprs> ] `]'
 
 <big-list> ::= 
-`[\ ' <comma-sep-line-exprs>
-( <nl> <indent> `,\ ' <comma-sep-line-exprs> )*
-<nl> <indent> `]'
+`[' [ `\ ' ] <line-exprs> ( <nl> <indent> <comma> <line-exprs> )* <nl> <indent> `]'
 \\
 
 <paren-func-app> ::= ""\\""
@@ -1629,7 +1629,7 @@ if the value expression is a big or cases expression:
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <comma-sep-line-exprs> `)'
+<arguments> ::= `(' <line-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -1653,7 +1653,7 @@ if the value expression is a big or cases expression:
 <post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>+
 \\
 
-<change> ::= `change{' <field-change> ( `,\ ' <field-change> )* `}'
+<change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
 
 <field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-expr>
 \\
@@ -1704,7 +1704,9 @@ if the value expression is a big or cases expression:
 
 <big-func-expr> ::= <parameters> `\ =>' <big-func-body>
 
-<parameters> ::= <identifier> | `(' <identifier> ( `,\ ' <identifier> )+ `)'
+<parameters> ::= <identifier> | <paren-comma-sep-ids>
+
+<paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 
 <line-func-body> ::= `\ ' ( <no-paren-op-arg> | <line-op-expr> )
 
@@ -1714,7 +1716,7 @@ if the value expression is a big or cases expression:
 <cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
 
 <cases-parameters> ::=
-<cases-parameter> | `(' <cases-parameter> ( `,\ ' <cases-parameter> )+ `)'
+<cases-parameter> | `(' <cases-parameter> ( <comma> <cases-parameter> )+ `)'
 
 <cases-parameter> ::= <identifier> | `cases'
 \\
@@ -1728,9 +1730,9 @@ if the value expression is a big or cases expression:
 <literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
 <list-matching>
 
-<tuple-matching> ::= `(' <matching> ( `,\ ' <matching> )+ `)'
+<tuple-matching> ::= `(' <matching> ( <comma> <matching> )+ `)'
 
-<list-matching> ::= `[' [ <matching> ( `,\ ' <matching> )* ] `]'
+<list-matching> ::= `[' [ <matching> ( <comma> <matching> )* ] `]'
 \\
 
 <case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
@@ -1745,10 +1747,9 @@ if the value expression is a big or cases expression:
 <no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
 
 <grouped-value-defs> ::= ""\\
-<indent> <identifier> ( `,\ ' <identifier> )+ \\
-( ` ' | <nl> <indent> ) `:\ ' ( <type> ( `,\ ' <type> )+ | `all\ ' <type> ) \\
-<nl> <indent> `=\ '
-<comma-sep-line-exprs> ( <nl> <indent> `,\ ' <comma-sep-line-exprs> )*
+<indent> <identifier> ( <comma> <identifier> )+ \\
+( ` ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
+<nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
 \\
 
 <where-expr> ::=
@@ -1956,11 +1957,11 @@ type parameters are substituted by the type expressions of the arguments.
 \alt " "<types-in-paren> <type-id-or-var> [ <types-in-paren> ]
 \alt " "<type-id-or-var> <types-in-paren>
 
-<type-id-with-args> ::= [A-Z] [A-Za-z]+ ( <types-in-paren> [A-Za-z]+ )+
+<type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
 
 <type-id-or-var> ::= <type-id> | <type-var>
 
-<types-in-paren> ::= `(' <simple-type> ( `, ' <simple-type> )* `)'
+<types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
 \end{grammar}
 \end{itemize}
 
@@ -2095,14 +2096,14 @@ their argument.
 \begin{grammar}
 <tuple-type-def> ::= ""\\
 `tuple_type\ ' <type-name> <nl> \\
-`value' <nl> `\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ '
+`value' <nl> `\ \ ' <paren-comma-sep-ids> `\ :\ '
 ( <prod-type> | <power-type> )
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
 [ <params-in-paren> ]
 
-<params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
+<params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
 \end{grammar}
 
 \end{itemize}
@@ -2393,12 +2394,13 @@ proposition or (if it is a conjunction) many propositions  seperated by commas
 
 \begin{grammar}
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
+\\
 
 <atom-prop-def> ::=
 <prop-name-line> <nl> `value' <nl> `\ \ ' <identifier> `\ :\ ' <simple-type>
 
 <renaming-prop-def> ::=
-<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( `,\ ' <prop-name> )*
+<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( <comma> <prop-name> )*
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2575,7 +2577,7 @@ the "\texttt{=>}" arrow.
 [A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
 \alt " "( <param-subs-in-paren> <name-part> )+ [ <param-subs-in-paren> ]
 
-<param-subs-in-paren> ::= `(' <param-sub> ( `, ' <param-sub> )* `)'
+<param-subs-in-paren> ::= `(' <param-sub> ( <comma> <param-sub> )* `)'
 
 <param-sub> ::= <simple-type> | <type-func>
 
@@ -2627,7 +2629,7 @@ the "\texttt{=>}" arrow.
 
 <type-id-or-var> ::= <type-id> | <type-var>
 
-<types-in-paren> ::= `(' <simple-type> ( `, ' <simple-type> )* `)'
+<types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
 \\
 
 <condition> ::= <prop-name> `\ ==>\ ' 
@@ -2639,14 +2641,14 @@ the "\texttt{=>}" arrow.
 
 <tuple-type-def> ::= ""\\
 `tuple_type\ ' <type-name> <nl> \\
-`value' <nl> `\ \ (' <identifier> (`,\ ' <identifier>)+ `)\ :\ '
+`value' <nl> `\ \ ' <paren-comma-sep-ids> `\ :\ '
 ( <prod-type> | <power-type> )
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
 [ <params-in-paren> ]
 
-<params-in-paren> ::= `(' <type-var> ( `, ' <type-var> )* `)'
+<params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
 \\
 
 <or-type-def> ::= ""\\
@@ -2665,7 +2667,7 @@ the "\texttt{=>}" arrow.
 <prop-name-line> <nl> `value' <nl> `\ \ ' <identifier> `\ :\ ' <simple-type>
 
 <renaming-prop-def> ::=
-<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( `,\ ' <prop-name> )*
+<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( <comma> <prop-name> )*
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2684,7 +2686,7 @@ the "\texttt{=>}" arrow.
 [A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
 \alt " "( <param-subs-in-paren> <name-part> )+ [ <param-subs-in-paren> ]
 
-<param-subs-in-paren> ::= `(' <param-sub> ( `, ' <param-sub> )* `)'
+<param-subs-in-paren> ::= `(' <param-sub> ( <comma> <param-sub> )* `)'
 
 <param-sub> ::= <simple-type> | <type-func>
 

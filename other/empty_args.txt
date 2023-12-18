@@ -1,0 +1,15 @@
+
+f : A x B x C => D
+
+a, b, c : A, B, C
+
+f(a,,) : B x C => D
+f(,b,) : A x C => D
+f(,,c) : A x B => D
+
+(,b,) : T1 x T2 => T1 x B x T2
+
+f(a,b,c) <==> (a,b,c) -> f
+
+f(,b,) <==> (,b,) o> f
+

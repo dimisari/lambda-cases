@@ -12,25 +12,25 @@ newtype ParenExpr = PE ParenExprInside
 data ParenExprInside = 
   LOE1 LineOpExpr | LFE1 LineFuncExpr
 
-newtype Tuple = T (LineExpr, CommaSepLineExprs)
+newtype Tuple = T (LineExpr, LineExprs)
 
-newtype CommaSepLineExprs = CSLE (LineExpr, [LineExpr])
+newtype LineExprs = CSLE (LineExpr, [LineExpr])
 
 data LineExpr = 
   NPOA1 NoParenOpArg | LOE2 LineOpExpr | LFE2 LineFuncExpr
 
-newtype BigTuple = BT (LineExpr, CommaSepLineExprs, [CommaSepLineExprs])
+newtype BigTuple = BT (LineExpr, LineExprs, [LineExprs])
 
-newtype List = L (Maybe CommaSepLineExprs)
+newtype List = L (Maybe LineExprs)
 
-newtype BigList = BL (CommaSepLineExprs, [CommaSepLineExprs])
+newtype BigList = BL (LineExprs, [LineExprs])
 
 data ParenFuncApp = 
   IWA1 (Maybe Arguments, IdentWithArgs, Maybe Arguments) |
   AI (Arguments, Identifier, Maybe Arguments) |
   IA (Identifier, Arguments)
 
-newtype Arguments = As CommaSepLineExprs
+newtype Arguments = As LineExprs
 
 newtype IdentWithArgs =
   IWA
@@ -131,7 +131,9 @@ data BigFuncBody =
   NPOA4 NoParenOpArg | OE1 OpExpr
 
 data Parameters = 
-  OneParam Identifier | ManyParams (Identifier, [Identifier])
+  OneParam Identifier | ManyParams ParenCommaSepIds
+
+newtype ParenCommaSepIds = PCSIs (Identifier, [Identifier])
 
 newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
 
@@ -166,7 +168,7 @@ data ValueExpr =
   NPOA5 NoParenOpArg | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
 newtype GroupedValueDefs =
-  GVDs (Identifier, [Identifier], Types, CommaSepLineExprs, [CommaSepLineExprs]) 
+  GVDs (Identifier, [Identifier], Types, LineExprs, [LineExprs]) 
 
 data Types = 
   Ts (Type, [Type]) | All Type
@@ -223,7 +225,7 @@ newtype Condition = Co PropName
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
-newtype TupleTypeDef = TTD (TypeName, Identifier, [Identifier], TupleTypeDefEnd)
+newtype TupleTypeDef = TTD (TypeName, ParenCommaSepIds, TupleTypeDefEnd)
 
 data TupleTypeDefEnd =
   PT4 ProdType | PoT4 PowerType

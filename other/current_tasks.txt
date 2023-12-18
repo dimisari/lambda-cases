@@ -1,5 +1,23 @@
 
-- tuple matching inside func parameters
-
 - leave empty args/fields of tuple
+  - PDF
+    - paren func app
+      - add to paragraph
+      - change grammar
+        - <line-or-empty-exprs> in args
+    - tuple
+      - add to paragraph
+      - change grammar
+        - [ <line-expr> ] <comma> <line-or-empty-exprs>
+    - <line-or-empty-exprs>
+      - same as <line-exprs> with optional line exprs
+      - need to have at least one
+      - <comma>* <line-expr> (<comma> [ <line-expr> ])* ?
+    - move <line-exprs> below <list>
+  - parser
+    - follow pdf
+
+- operator expressions with missing arg(s)
+
+- tuple matching inside func parameters
 
