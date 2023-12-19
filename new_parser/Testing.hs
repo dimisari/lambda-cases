@@ -14,9 +14,6 @@ import ShowInstances
 
 -- helpers
 
-(.>) = flip (.)
-(%>) = flip ($)
-
 type FileName = String
 type FileString = String
 type TestExample = String

@@ -74,8 +74,9 @@ par_lower_unders =
 (+++) :: Parser a -> Parser b -> Parser (a, b)
 pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
 
--- helper op
+-- helper ops
 
+(.>) = flip (.)
 (%>) = flip ($)
 
 -- HasParser: Literal
@@ -140,25 +141,32 @@ instance HasParser ParenExprInside where
   parser = LOE1 <$> try parser <|> LFE1 <$> parser
 
 instance HasParser Tuple where
-  parser = T <$> (char '(' *> parser <* comma) +++ (parser <* char ')')
+  parser = T <$> (char '(' *> optionMaybe parser <* comma) +++ (parser <* char ')')
 
-instance HasParser LineExprs where
-  parser = CSLE <$> parser +++ (many (comma *> parser))
+instance HasParser LineOrEmptyExprs where
+  parser =
+    many comma >>= length .> \num_of_commas ->
+    parser >>= \line_expr ->
+    many (comma *> optionMaybe parser) >>= \line_expr_maybes ->
+    return $ LOEE (num_of_commas, line_expr, line_expr_maybes)
 
 instance HasParser LineExpr where
   parser = LFE2 <$> try parser <|> LOE2 <$> try parser <|> NPOA1 <$> parser
 
 instance HasParser BigTuple where
   parser =
-    char '(' *> optional (char ' ') *>
-    parser <* optional nl_indent <* comma >>= \line_expr ->
-    parser >>= \comma_sep_line_exprs ->
-    many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
+    char '(' *> optional (char ' ')  *>
+    optionMaybe parser <* optional (try nl_indent) <* comma >>= \maybe_le ->
+    parser >>= \line_or_empty_exprs ->
+    many (try (nl_indent *> comma) *> parser) >>= \line_or_empty_exprs_l ->
     nl_indent *> char ')' *>
-    (return $ BT (line_expr, comma_sep_line_exprs, comma_sep_line_exprs_l))
+    return (BT (maybe_le, line_or_empty_exprs, line_or_empty_exprs_l))
 
 instance HasParser List where
   parser = L <$> (char '[' *> optionMaybe parser <* char ']')
+
+instance HasParser LineExprs where
+  parser = CSLE <$> parser +++ (many (comma *> parser))
 
 instance HasParser BigList where
   parser =

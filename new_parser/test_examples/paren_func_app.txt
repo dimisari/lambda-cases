@@ -16,3 +16,17 @@ apply(.change{1st = 1st + 1})to_all#
 
 do(3)times#
 
+f(, y, z)#
+
+f(x, , )#
+
+f(, y, )#
+
+f(, , z)#
+
+f(x)#
+
+f(, y)#
+
+f(, , z)#
+

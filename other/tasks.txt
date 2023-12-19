@@ -26,6 +26,9 @@
     - atom prop def: around ':' <- I vote no
     - type theorem <- I vote no
 
+- what to do in apply()to_all(l)?
+  - assume missing arg for every empty paren in identifier in general?
+
 - comments
   - line: #
     - can also close in the same line with second #

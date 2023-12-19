@@ -12,16 +12,18 @@ newtype ParenExpr = PE ParenExprInside
 data ParenExprInside = 
   LOE1 LineOpExpr | LFE1 LineFuncExpr
 
-newtype Tuple = T (LineExpr, LineExprs)
+newtype Tuple = T (Maybe LineExpr, LineOrEmptyExprs)
 
-newtype LineExprs = CSLE (LineExpr, [LineExpr])
+newtype LineOrEmptyExprs = LOEE (Int, LineExpr, [Maybe LineExpr])
 
 data LineExpr = 
   NPOA1 NoParenOpArg | LOE2 LineOpExpr | LFE2 LineFuncExpr
 
-newtype BigTuple = BT (LineExpr, LineExprs, [LineExprs])
+newtype BigTuple = BT (Maybe LineExpr, LineOrEmptyExprs, [LineOrEmptyExprs])
 
 newtype List = L (Maybe LineExprs)
+
+newtype LineExprs = CSLE (LineExpr, [LineExpr])
 
 newtype BigList = BL (LineExprs, [LineExprs])
 
@@ -30,7 +32,7 @@ data ParenFuncApp =
   AI (Arguments, Identifier, Maybe Arguments) |
   IA (Identifier, Arguments)
 
-newtype Arguments = As LineExprs
+newtype Arguments = As LineOrEmptyExprs
 
 newtype IdentWithArgs =
   IWA

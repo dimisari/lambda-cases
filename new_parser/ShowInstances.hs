@@ -32,10 +32,17 @@ instance Show ParenExprInside where
     LFE1 sfe -> show sfe
 
 instance Show Tuple where
-  show = \(T (le, csles)) -> "(" ++ show le ++ ", " ++ show csles ++ ")"
+  show = \(T (maybe_le, loees)) ->
+    "(" ++ show_maybe maybe_le ++ ", " ++ show loees ++ ")"
 
-instance Show LineExprs where
-  show = \(CSLE (le, les)) -> show le ++ concatMap ((", " ++) . show) les
+instance Show LineOrEmptyExprs where
+  show = \(LOEE (i, le, line_expr_maybes)) ->
+    concat (replicate i ", ") ++ show le ++ concatMap show_maybe_le line_expr_maybes
+    where
+    show_maybe_le :: Maybe LineExpr -> String
+    show_maybe_le = \case
+      Nothing -> ", "
+      Just le -> ", " ++ show le
 
 instance Show LineExpr where
   show = \case
@@ -44,15 +51,18 @@ instance Show LineExpr where
     LFE2 sfe -> show sfe
 
 instance Show BigTuple where
-  show = \(BT (le, csles, csles_l)) ->
-    "( " ++ show le ++ ", " ++ show csles ++
-    concatMap (("\n, " ++) . show) csles_l ++ 
+  show = \(BT (maybe_le, loees, loees_l)) ->
+    "( " ++ show_maybe maybe_le ++ ", " ++ show loees ++
+    concatMap (("\n, " ++) . show) loees_l ++ 
     "\n)"
 
 instance Show List where
   show = \(L maybe_csles) -> case maybe_csles of
     Nothing -> "[]"
     Just csles -> "[" ++ show csles ++ "]"
+
+instance Show LineExprs where
+  show = \(CSLE (le, les)) -> show le ++ concatMap ((", " ++) . show) les
 
 instance Show BigList where
   show = \(BL (csles, csles_l)) ->
@@ -70,7 +80,7 @@ instance Show ParenFuncApp where
       show id ++ show args
 
 instance Show Arguments where
-  show = \(As csles) -> "(" ++ show csles ++ ")"
+  show = \(As loees) -> "(" ++ show loees ++ ")"
 
 instance Show IdentWithArgs where
   show =

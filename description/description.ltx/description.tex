@@ -206,7 +206,7 @@ by this grammar, they cannot be used as identifiers.
 \item \textit{Examples}
 \begin{verbatim}
 (1 + 2)
-(((1 + 2) * 3) ^ 4)
+(((1 + 2) * 3)^4)
 (val -> (x => f(x) + 1) -> to_string -> (s => "f(val) + 1 is: " + s))
 (do(3)times <- (get_line ;> line => print("Line is: " + line)))
 \end{verbatim}
@@ -236,7 +236,7 @@ that extend of over multiple lines new values must be defined.
 (1, "What's up, doc?")
 (2, "Alrighty then!", 3.14)
 (x, y, z, w)
-(1, my_function, (x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1/2))
+(1, my_function, (x, y, z) => (x^2 + y^2 + z^2)^(1/2))
 \end{verbatim}
 
 \item \textit{Description} 
@@ -297,11 +297,46 @@ The precise indentation rules are described in the section
 "Indentation System" \ref{subsubsec:indsys}.
 \end{itemize}
 
+\item \textit{Tuples with empty fields}
+\\\\
+\textbf{Example}
+\begin{verbatim}
+(42, )
+(, 3.14, )
+(, , "Hello from 3rd field")
+\end{verbatim}
+
+\textbf{Description}\\\\
+It is possible to leave some fields empty in a tuple. This is essentially
+a function that expects the empty fields and returns the whole tuple. This is
+best demonstated by the types of the examples above:
+\begin{verbatim}
+(42, ) : A => Int x A
+(, 3.14, ) : A x B => A x Real x B
+(, , "Hello from 3rd field") : A x B => A x B x String
+\end{verbatim}
+An example in a bigger expression is the following:
+\begin{verbatim}
+questions : ListOf(String)s
+  = ["the Ultimate Question of Life", "the Universe", "Everything"]
+
+answers_to : ListOf(String)s
+  = apply("The answer to " +)to_all(questions)
+
+>> apply((42, ))to_all(answers_to)
+  : ListOf(Int x String)s
+  = [ (42, "The answer to the Ultimate Question of Life")
+    , (42, "The answer to the Universe")
+    , (42, "The answer to Everything")
+    ]
+\end{verbatim}
+
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <line-expr> <comma> <line-exprs> `)'
+<tuple> ::= `(' [ <line-expr> ] <comma> <line-or-empty-exprs> `)'
 
-<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
+<line-or-empty-exprs> ::=
+<comma>* <line-expr> (<comma> [ <line-expr> ])*
 
 <line-expr> ::= <no-paren-op-arg> | <line-op-expr> | <line-func-expr>
 
@@ -309,8 +344,8 @@ The precise indentation rules are described in the section
 \\
 
 <big-tuple> ::= ""\\
-`(' [ `\ ' ] <line-expr> [ <nl> <indent> ] <comma> <line-exprs> \\
-( <nl> <indent> <comma> <line-exprs> )* 
+`(' [ `\ ' ]  [ <line-expr> ] [ <nl> <indent> ] <comma> <line-or-empty-exprs> \\
+( <nl> <indent> <comma> <line-or-empty-exprs> )* 
 <nl> <indent> `)'
 \end{grammar}
 
@@ -387,6 +422,8 @@ my_big_list : ListOf(Int => IO)s
 \begin{grammar}
 <list> ::= `[' [ <line-exprs> ] `]'
 
+<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
+
 <big-list> ::= 
 `[' [ `\ ' ] <line-exprs> ( <nl> <indent> <comma> <line-exprs> )* <nl> <indent> `]'
 \end{grammar}
@@ -436,11 +473,40 @@ identifier is "apply()to\_all" with the parentheses \textbf{included}. This is v
 useful for defining functions where the argument in the middle makes the function
 application look and sound more like natural language.
 \\\\
-It is possible to have many parentheses pairs in a single function application
-(last example). The arguments are always inserted to the function from
-\textbf{left to right}.  Therefore, when multiple parentheses pairs are present
-the arguments of the leftmost parentheses are inserted first then the next ones
-to the right and so on.
+It is possible to have many parentheses in a single function application (last
+example). The arguments are always inserted to the function from \textbf{left
+to right}.  Therefore, when multiple parentheses are present the arguments of
+the leftmost parentheses are inserted first then the next ones to the right and
+so on.
+
+\item \textit{Empty arguments in Parenthesis Function Application}
+\\\\
+It is possible to give a function only some of the arguments and the resulting
+expression is a function that expects the rest of the arguments to return the final
+result. Let's see this in action:
+\begin{verbatim}
+f : Char x Int x Real => String
+c, i, r : Char, Int, Real
+
+f(c, i, r) : String
+
+f(, i, r) : Char => String
+f(c, , r) : Int => String
+f(c, i, ) : Real => String
+
+f(c, , ) : Int x Real => String
+f(, i, ) : Char x Real => String
+f(, , r) : Char x Int => String
+\end{verbatim}
+
+The missing arguments after the last existing argument can be omitted and therefore
+the following are equivalent to the last three above:
+
+\begin{verbatim}
+f(c) : Int x Real => String
+f(, i) : Char x Real => String
+f(, , r) : Char x Int => String
+\end{verbatim}
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -449,7 +515,7 @@ to the right and so on.
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-exprs> `)'
+<arguments> ::= `(' <line-or-empty-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -1011,7 +1077,7 @@ produces a value is of type \texttt{B} and therefore the new value is of type
 \item \textit{Examples}
 \begin{verbatim}
 1 + 2
-1 + x * 3 ^ y
+1 + x * 3^y
 "Hello " + "World!"
 x -> f -> g
 f o> g o> h
@@ -1236,7 +1302,7 @@ The grammar for a function expression is:
 
 \begin{verbatim}
 a => 17 * a + 42
-(x, y, z) => (x ^ 2 + y ^ 2 + z ^ 2) ^ (1 / 2)
+(x, y, z) => (x^2 + y^2 + z^2)^(1 / 2)
 \end{verbatim}
 
 \item \textit{Description}
@@ -1603,9 +1669,10 @@ if the value expression is a big or cases expression:
 <paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
 \\
 
-<tuple> ::= `(' <line-expr> <comma> <line-exprs> `)'
+<tuple> ::= `(' [ <line-expr> ] <comma> <line-or-empty-exprs> `)'
 
-<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
+<line-or-empty-exprs> ::=
+<comma>* <line-expr> (<comma> [ <line-expr> ])*
 
 <line-expr> ::= <no-paren-op-arg> | <line-op-expr> | <line-func-expr>
 
@@ -1613,12 +1680,14 @@ if the value expression is a big or cases expression:
 \\
 
 <big-tuple> ::= ""\\
-`(' [ `\ ' ] <line-expr> [ <nl> <indent> ] <comma> <line-exprs> \\
-( <nl> <indent> <comma> <line-exprs> )* 
+`(' [ `\ ' ]  [ <line-expr> ] [ <nl> <indent> ] <comma> <line-or-empty-exprs> \\
+( <nl> <indent> <comma> <line-or-empty-exprs> )* 
 <nl> <indent> `)'
 \\
 
 <list> ::= `[' [ <line-exprs> ] `]'
+
+<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
 
 <big-list> ::= 
 `[' [ `\ ' ] <line-exprs> ( <nl> <indent> <comma> <line-exprs> )* <nl> <indent> `]'
@@ -1629,7 +1698,7 @@ if the value expression is a big or cases expression:
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-exprs> `)'
+<arguments> ::= `(' <line-or-empty-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
