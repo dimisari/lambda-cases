@@ -11,6 +11,11 @@ show_maybe = \case
   Nothing -> ""
   Just a -> show a
 
+show_maybe_of :: Maybe (Operand, FuncCompOp) -> String
+show_maybe_of = \case
+  Nothing -> ""
+  Just (oper, fco) -> show oper ++ " " ++ show fco
+
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
 
 instance Show Literal where 
@@ -26,10 +31,30 @@ instance Show Identifier where
 instance Show ParenExpr where
   show = \(PE pei) -> "(" ++ show pei ++ ")"
 
-instance Show ParenExprInside where
+instance Show InsideParenExpr where
   show = \case
     LOE1 soe -> show soe
     LFE1 sfe -> show sfe
+    ROM1 rom -> show rom
+    LOBM1 lobm -> show lobm
+
+instance Show RightOperandMissing where
+  show = \(ROM (oes, maybe_oper_fcop)) ->
+    show oes ++ show_maybe_of maybe_oper_fcop
+
+instance Show LeftOrBothMissing where
+  show = \case
+    LOBML1 lobml -> show lobml
+    FCO1 fco -> show fco
+
+instance Show LeftOrBothMissingLong where
+  show = \(LOBML (ooco, oo_pairs, maybe_oper_fcop)) ->
+    show ooco ++ concatMap show oo_pairs ++ show_maybe_of maybe_oper_fcop
+
+instance Show OpOrCompOp where
+  show = \case
+    Op1 op -> show op
+    FCO2 fco -> show fco ++ " "
 
 instance Show Tuple where
   show = \(T (maybe_le, loees)) ->
@@ -194,7 +219,7 @@ instance Show OpSplitLine where
   show = \(OSL (oes, maybe_op_arg_comp_op)) ->
     show oes ++ show_moaco maybe_op_arg_comp_op ++ "  "
     where
-    show_moaco :: Maybe (OpArg, CompOp) -> String
+    show_moaco :: Maybe (Operand, FuncCompOp) -> String
     show_moaco = \case
       Nothing -> "\n"
       Just (op_arg, comp_op) -> show op_arg ++ " " ++  show comp_op ++ "\n"
@@ -212,12 +237,12 @@ instance Show BigOrCasesFuncExpr where
     BFE1 bfe -> show bfe
     CFE1 cfe -> show cfe
   
-instance Show OpArg where
+instance Show Operand where
   show = \case
     NPOA2 npoa -> show npoa
     PE3 pe -> show pe
 
-instance Show NoParenOpArg where
+instance Show NoParenOperand where
   show = \case
     BE3 be -> show be
     PrF prf -> show prf
@@ -227,10 +252,10 @@ instance Show NoParenOpArg where
 
 instance Show Op where
   show = \case
-    CO co -> " " ++ show co ++ " "
+    FCO3 co -> " " ++ show co ++ " "
     OSO oso -> " " ++ show oso ++ " "
 
-instance Show CompOp where
+instance Show FuncCompOp where
   show = \case
     RightComp -> "o>"
     LeftComp -> "<o"

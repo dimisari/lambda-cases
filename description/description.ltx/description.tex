@@ -207,8 +207,13 @@ by this grammar, they cannot be used as identifiers.
 \begin{verbatim}
 (1 + 2)
 (((1 + 2) * 3)^4)
-(val -> (x => f(x) + 1) -> to_string -> (s => "f(val) + 1 is: " + s))
-(do(3)times <- (get_line ;> line => print("Line is: " + line)))
+(get_line ;> line => print("Line is: " + line))
+(n => 3*n + 1)
+(2 *)
+(- 1)
+("Hello " + "it's me, " +)
+(+ "string in the middle of the arguments" +)
+(*)
 \end{verbatim}
 
 \item \textit{Description}
@@ -217,12 +222,28 @@ An expression is put in parenthesis to prioritize it or isolate it in a bigger
 (operator) expression. The expressions inside parenthesis are operator
 or function expressions.
 \\\\
+It is possible to break an operator expression inside parentheses at the
+beginning or the end (or both), in the sense that an operand is missing (or
+two). In this case, the expression becomes a function that expects the missing
+operand as an argument. If both the first and the last operands are missing 
+the function expects a tuple with the first operand in the first field
+and the last operand in the second.
+\\\\
 Parenethesis expressions cannot extend over multiple lines. For expressions
 that extend of over multiple lines new values must be defined.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
+<paren-expr> ::= `(' <inside-paren-expr> `)'  
+
+<inside-paren-expr> ::= 
+<line-op-expr> | <line-func-expr> | <right-operand-missing> | <left-or-both-missing>
+
+<right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
+
+<left-or-both-missing> ::= ""\\
+( <op> | <func-comp-op> `\ ' ) ( <operand> <op> )* [ <operand> `\ ' <func-comp-op> ]
+\alt [ `\ ' ] <func-comp-op>
 \end{grammar}
 
 \end{itemize}
@@ -338,7 +359,7 @@ answers_to : ListOf(String)s
 <line-or-empty-exprs> ::=
 <comma>* <line-expr> (<comma> [ <line-expr> ])*
 
-<line-expr> ::= <no-paren-op-arg> | <line-op-expr> | <line-func-expr>
+<line-expr> ::= <no-paren-operand> | <line-op-expr> | <line-func-expr>
 
 <comma> ::= `,' [ `\ ' ]
 \\
@@ -1139,9 +1160,9 @@ The precise indentation rules are described in the section
 <op-expr> ::= <line-op-expr> | <big-op-expr>
 \\
 
-<op-expr-start> ::= ( <op-arg> <op> )+
+<op-expr-start> ::= ( <operand> <op> )+
 
-<line-op-expr> ::= <op-expr-start> ( <op-arg> | <line-func-expr> )
+<line-op-expr> ::= <op-expr-start> ( <operand> | <line-func-expr> )
 \\
 
 <big-op-expr> ::= 
@@ -1149,30 +1170,28 @@ The precise indentation rules are described in the section
 \\
 
 <big-op-expr-op-split> ::= 
-<op-split-line>+ [ <op-expr-start> ] ( <op-arg> | <func-expr> )
+<op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
 
 <op-split-line> ::=
-<op-expr-start> ( <nl> | <op-arg> <comp-op-nl> ) <indent> 
+<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent> 
 \\
 
 <big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
 \\
 
-<op-arg> ::= <no-paren-op-arg> | <paren-expr>
+<operand> ::= <no-paren-operand> | <paren-expr>
 
-<no-paren-op-arg> ::=
+<no-paren-operand> ::=
 <basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
 \\
 
-<op> ::=  
-`\ ' ( `o>' | `<o' ) `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
+<op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
+
+<func-comp-op> ::= `o>' | `<o'
 
 <optional-spaces-op> ::= 
 `->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' | `<=' |
 `\&' | `|' | `;>' | `;'
-\\
-
-<comp-op-nl> ::= `\ ' ( `o>' | `<o' ) `\\n'
 \end{grammar}
 \end{itemize}
 
@@ -1352,9 +1371,9 @@ The precise indentation rules are described in the section
 
 <paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 
-<line-func-body> ::= `\ ' ( <no-paren-op-arg> | <line-op-expr> )
+<line-func-body> ::= `\ ' ( <no-paren-operand> | <line-op-expr> )
 
-<big-func-body> ::= <nl> <indent> ( <no-paren-op-arg> | <op-expr> )
+<big-func-body> ::= <nl> <indent> ( <no-paren-operand> | <op-expr> )
 \end{grammar}
 \end{itemize}
 
@@ -1524,15 +1543,15 @@ keyword "all" to give the same type to all the values.
 \begin{grammar}
 <value-def> ::= ""\\
 <indent> <identifier> 
-( ` ' | <nl> <indent> ) `:\ ' <type> 
+( `\ ' | <nl> <indent> ) `:\ ' <type> 
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
 <value-expr> ::=
-<no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
+<no-paren-operand> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
 
 <grouped-value-defs> ::= ""\\
 <indent> <identifier> ( <comma> <identifier> )+ \\
-( ` ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
+( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
 <nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
 \end{grammar}
 
@@ -1666,7 +1685,16 @@ if the value expression is a big or cases expression:
 <identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
 \\
 
-<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
+<paren-expr> ::= `(' <inside-paren-expr> `)'  
+
+<inside-paren-expr> ::= 
+<line-op-expr> | <line-func-expr> | <right-operand-missing> | <left-or-both-missing>
+
+<right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
+
+<left-or-both-missing> ::= ""\\
+( <op> | <func-comp-op> `\ ' ) ( <operand> <op> )* [ <operand> `\ ' <func-comp-op> ]
+\alt [ `\ ' ] <func-comp-op>
 \\
 
 <tuple> ::= `(' [ <line-expr> ] <comma> <line-or-empty-exprs> `)'
@@ -1674,7 +1702,7 @@ if the value expression is a big or cases expression:
 <line-or-empty-exprs> ::=
 <comma>* <line-expr> (<comma> [ <line-expr> ])*
 
-<line-expr> ::= <no-paren-op-arg> | <line-op-expr> | <line-func-expr>
+<line-expr> ::= <no-paren-operand> | <line-op-expr> | <line-func-expr>
 
 <comma> ::= `,' [ `\ ' ]
 \\
@@ -1730,9 +1758,9 @@ if the value expression is a big or cases expression:
 <op-expr> ::= <line-op-expr> | <big-op-expr>
 \\
 
-<op-expr-start> ::= ( <op-arg> <op> )+
+<op-expr-start> ::= ( <operand> <op> )+
 
-<line-op-expr> ::= <op-expr-start> ( <op-arg> | <line-func-expr> )
+<line-op-expr> ::= <op-expr-start> ( <operand> | <line-func-expr> )
 \\
 
 <big-op-expr> ::= 
@@ -1740,30 +1768,28 @@ if the value expression is a big or cases expression:
 \\
 
 <big-op-expr-op-split> ::= 
-<op-split-line>+ [ <op-expr-start> ] ( <op-arg> | <func-expr> )
+<op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
 
 <op-split-line> ::=
-<op-expr-start> ( <nl> | <op-arg> <comp-op-nl> ) <indent> 
+<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent> 
 \\
 
 <big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
 \\
 
-<op-arg> ::= <no-paren-op-arg> | <paren-expr>
+<operand> ::= <no-paren-operand> | <paren-expr>
 
-<no-paren-op-arg> ::=
+<no-paren-operand> ::=
 <basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
 \\
 
-<op> ::=  
-`\ ' ( `o>' | `<o' ) `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
+<op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
+
+<func-comp-op> ::= `o>' | `<o'
 
 <optional-spaces-op> ::= 
 `->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' | `<=' |
 `\&' | `|' | `;>' | `;'
-\\
-
-<comp-op-nl> ::= `\ ' ( `o>' | `<o' ) `\\n'
 \\
 
 <func-expr> ::= <line-func-expr> | <big-func-expr> | <cases-func-expr>
@@ -1777,9 +1803,9 @@ if the value expression is a big or cases expression:
 
 <paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 
-<line-func-body> ::= `\ ' ( <no-paren-op-arg> | <line-op-expr> )
+<line-func-body> ::= `\ ' ( <no-paren-operand> | <line-op-expr> )
 
-<big-func-body> ::= <nl> <indent> ( <no-paren-op-arg> | <op-expr> )
+<big-func-body> ::= <nl> <indent> ( <no-paren-operand> | <op-expr> )
 \\
 
 <cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
@@ -1809,15 +1835,15 @@ if the value expression is a big or cases expression:
 
 <value-def> ::= 
 <indent> <identifier> 
-( ` ' | <nl> <indent> ) `:\ ' <type> 
+( `\ ' | <nl> <indent> ) `:\ ' <type> 
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
 <value-expr> ::=
-<no-paren-op-arg> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
+<no-paren-operand> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
 
 <grouped-value-defs> ::= ""\\
 <indent> <identifier> ( <comma> <identifier> )+ \\
-( ` ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
+( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
 <nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
 \\
 
@@ -2920,3 +2946,4 @@ The parser was implemented using the parsec library.
 \section{Conclusion}
 
 \end{document}
+

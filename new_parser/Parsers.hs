@@ -137,8 +137,26 @@ instance HasParser Identifier where
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
 
-instance HasParser ParenExprInside where
-  parser = LOE1 <$> try parser <|> LFE1 <$> parser
+instance HasParser InsideParenExpr where
+  parser =
+    LOE1 <$> try parser <|> LFE1 <$> try parser <|> ROM1 <$> try parser <|>
+    LOBM1 <$> parser
+
+instance HasParser RightOperandMissing where
+  parser = ROM <$> parser +++ optionMaybe (parser +++ (char ' ' *> parser)) 
+
+instance HasParser LeftOrBothMissing where
+  parser = LOBML1 <$> try parser <|> FCO1 <$> (optional (char ' ') *> parser)
+
+instance HasParser LeftOrBothMissingLong where
+  parser =
+    parser >>= \op_or_comp_op ->
+    many (parser +++ parser) >>= \oper_op_pairs ->
+    optionMaybe (parser +++ (char ' ' *> parser)) >>= \maybe_oper_fco ->
+    return $ LOBML (op_or_comp_op, oper_op_pairs, maybe_oper_fco)
+
+instance HasParser OpOrCompOp where
+  parser = Op1 <$> parser <|> FCO2 <$> (parser <* char ' ')
 
 instance HasParser Tuple where
   parser = T <$> (char '(' *> optionMaybe parser <* comma) +++ (parser <* char ')')
@@ -291,7 +309,7 @@ instance HasParser OpSplitLine where
   parser =
     OSL <$> (parser +++ maybe_op_arg_comp_op <* indent)
     where
-    maybe_op_arg_comp_op :: Parser (Maybe (OpArg, CompOp))
+    maybe_op_arg_comp_op :: Parser (Maybe (Operand, FuncCompOp))
     maybe_op_arg_comp_op =
       try nl *> return Nothing <|>
       Just <$> (parser +++ (char ' ' *> parser <* char '\n'))
@@ -305,10 +323,10 @@ instance HasParser BigOpExprFuncSplit where
 instance HasParser BigOrCasesFuncExpr where
   parser = BFE1 <$> try parser <|> CFE1 <$> parser
   
-instance HasParser OpArg where
+instance HasParser Operand where
   parser = PE3 <$> try parser <|> NPOA2 <$> parser
 
-instance HasParser NoParenOpArg where
+instance HasParser NoParenOperand where
   parser =  
     PoF <$> parser <|>
     PrFA2 <$> try parser <|>
@@ -318,10 +336,10 @@ instance HasParser NoParenOpArg where
 
 instance HasParser Op where
   parser =  
-    CO <$> try (char ' ' *> parser <* char ' ') <|>
+    FCO3 <$> try (char ' ' *> parser <* char ' ') <|>
     OSO <$> (optional (char ' ') *> parser <* optional (char ' '))
 
-instance HasParser CompOp where
+instance HasParser FuncCompOp where
   parser =  
     string "o>" *> return RightComp <|> try (string "<o") *> return LeftComp
 

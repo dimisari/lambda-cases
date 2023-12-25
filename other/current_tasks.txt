@@ -1,7 +1,6 @@
 
-- operator expressions with missing arg(s)
-  - op expr start in paren expr
-  - op expr "end" in paren expr
+- operator expressions with missing operands
+  - testing
 
 - tuple matching inside func parameters
 

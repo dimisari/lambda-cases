@@ -7,17 +7,29 @@ data Literal =
 
 newtype Identifier = Id String
 
-newtype ParenExpr = PE ParenExprInside
+newtype ParenExpr = PE InsideParenExpr
 
-data ParenExprInside = 
-  LOE1 LineOpExpr | LFE1 LineFuncExpr
+data InsideParenExpr = 
+  LOE1 LineOpExpr | LFE1 LineFuncExpr | ROM1 RightOperandMissing |
+  LOBM1 LeftOrBothMissing
+
+newtype RightOperandMissing = ROM (OpExprStart, Maybe (Operand, FuncCompOp))
+
+data LeftOrBothMissing = 
+  LOBML1 LeftOrBothMissingLong | FCO1 FuncCompOp
+
+newtype LeftOrBothMissingLong =
+  LOBML (OpOrCompOp, [(Operand, Op)], Maybe (Operand, FuncCompOp))
+
+data OpOrCompOp =
+  Op1 Op | FCO2 FuncCompOp
 
 newtype Tuple = T (Maybe LineExpr, LineOrEmptyExprs)
 
 newtype LineOrEmptyExprs = LOEE (Int, LineExpr, [Maybe LineExpr])
 
 data LineExpr = 
-  NPOA1 NoParenOpArg | LOE2 LineOpExpr | LFE2 LineFuncExpr
+  NPOA1 NoParenOperand | LOE2 LineOpExpr | LFE2 LineFuncExpr
 
 newtype BigTuple = BT (Maybe LineExpr, LineOrEmptyExprs, [LineOrEmptyExprs])
 
@@ -79,38 +91,38 @@ data Field =
 data OpExpr = 
   LOE3 LineOpExpr | BOE1 BigOpExpr
 
-newtype OpExprStart = OES [(OpArg, Op)]
+newtype OpExprStart = OES [(Operand, Op)]
 
 newtype LineOpExpr = LOE (OpExprStart, LineOpExprEnd)
 
 data LineOpExprEnd = 
-  OA1 OpArg | LFE3 LineFuncExpr
+  OA1 Operand | LFE3 LineFuncExpr
 
 data BigOpExpr = 
   BOEOS1 BigOpExprOpSplit | BOEFS1 BigOpExprFuncSplit
 
 newtype BigOpExprOpSplit = BOEOS ([OpSplitLine], Maybe OpExprStart, OpSplitEnd)
 
-newtype OpSplitLine = OSL (OpExprStart, Maybe (OpArg, CompOp)) 
+newtype OpSplitLine = OSL (OpExprStart, Maybe (Operand, FuncCompOp)) 
 
 data OpSplitEnd =
-  OA2 OpArg | FE1 FuncExpr 
+  OA2 Operand | FE1 FuncExpr 
 
 newtype BigOpExprFuncSplit = BOEFS (OpExprStart, BigOrCasesFuncExpr)
 
 data BigOrCasesFuncExpr =
   BFE1 BigFuncExpr | CFE1 CasesFuncExpr
 
-data OpArg =
-  NPOA2 NoParenOpArg | PE3 ParenExpr
+data Operand =
+  NPOA2 NoParenOperand | PE3 ParenExpr
 
-data NoParenOpArg =
+data NoParenOperand =
   BE3 BasicExpr | PrF PreFunc | PoF PostFunc | PrFA2 PreFuncApp | PoFA2 PostFuncApp
 
 data Op = 
-  CO CompOp | OSO OptionalSpacesOp
+  FCO3 FuncCompOp | OSO OptionalSpacesOp
 
-data CompOp =
+data FuncCompOp =
   RightComp | LeftComp
 
 data OptionalSpacesOp = 
@@ -125,12 +137,12 @@ data FuncExpr =
 newtype LineFuncExpr = LFE (Parameters, LineFuncBody)
 
 data LineFuncBody = 
-  NPOA3 NoParenOpArg | LOE4 LineOpExpr
+  NPOA3 NoParenOperand | LOE4 LineOpExpr
 
 newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
 
 data BigFuncBody = 
-  NPOA4 NoParenOpArg | OE1 OpExpr
+  NPOA4 NoParenOperand | OE1 OpExpr
 
 data Parameters = 
   OneParam Identifier | ManyParams ParenCommaSepIds
@@ -167,7 +179,7 @@ data CaseBodyStart =
 newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
 
 data ValueExpr = 
-  NPOA5 NoParenOpArg | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
+  NPOA5 NoParenOperand | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
 newtype GroupedValueDefs =
   GVDs (Identifier, [Identifier], Types, LineExprs, [LineExprs]) 
