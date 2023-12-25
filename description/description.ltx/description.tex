@@ -71,7 +71,7 @@ read_two_ints : (Int^2)FromIO
     get_line ;> split_to_words o> cases
       [x, y] => wrap_with_io(from_string(x), from_string(y))
       ... => show_err("You didn't give me 2 ints")
- 
+
 tuple_type NumsAndGcd
 value
   (x, y, gcd) : Int^3
@@ -242,7 +242,8 @@ that extend of over multiple lines new values must be defined.
 <right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
 
 <left-or-both-missing> ::= ""\\
-( <op> | <func-comp-op> `\ ' ) ( <operand> <op> )* [ <operand> `\ ' <func-comp-op> ]
+( <op> | <func-comp-op> `\ ' )
+[ <operand> ( <op> <operand> )* [ <op> | `\ ' <func-comp-op> ] ]
 \alt [ `\ ' ] <func-comp-op>
 \end{grammar}
 
@@ -1693,7 +1694,8 @@ if the value expression is a big or cases expression:
 <right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
 
 <left-or-both-missing> ::= ""\\
-( <op> | <func-comp-op> `\ ' ) ( <operand> <op> )* [ <operand> `\ ' <func-comp-op> ]
+( <op> | <func-comp-op> `\ ' )
+[ <operand> ( <op> <operand> )* [ <op> | `\ ' <func-comp-op> ] ]
 \alt [ `\ ' ] <func-comp-op>
 \\
 

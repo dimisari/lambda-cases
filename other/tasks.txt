@@ -5,6 +5,9 @@
 
 --------------------------------------------------------------later
 
+- underscore for missing arguments? 
+  - both in op exprs and in paren func app
+
 - spaces
   - ?
     - field change <- I vote no

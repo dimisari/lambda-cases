@@ -2,7 +2,17 @@
 
 (((1 + 2) * 3) ^ 4)#
 
-(val -> (x => f(x) + 1) -> to_string -> (s => "f(val) + 1 is: " + s))#
+(get_line ;> line => print("Line is: " + line))#
 
-(do(3)times <- (get_line ;> line => print("Line is: " + line)))#
+(n => 3*n + 1)#
+
+(2 *)#
+
+(+ 1)#
+
+("Hello " + "it's me, " +)#
+
+(+ "string in the middle of the arguments" +)#
+
+(*)#
 

@@ -19,10 +19,13 @@ data LeftOrBothMissing =
   LOBML1 LeftOrBothMissingLong | FCO1 FuncCompOp
 
 newtype LeftOrBothMissingLong =
-  LOBML (OpOrCompOp, [(Operand, Op)], Maybe (Operand, FuncCompOp))
+  LOBML (OpOrCompOpStart, Maybe (Operand, [(Op, Operand)], Maybe OpOrCompOpEnd))
 
-data OpOrCompOp =
+data OpOrCompOpStart =
   Op1 Op | FCO2 FuncCompOp
+
+data OpOrCompOpEnd =
+  Op2 Op | FCO3 FuncCompOp
 
 newtype Tuple = T (Maybe LineExpr, LineOrEmptyExprs)
 
@@ -120,7 +123,7 @@ data NoParenOperand =
   BE3 BasicExpr | PrF PreFunc | PoF PostFunc | PrFA2 PreFuncApp | PoFA2 PostFuncApp
 
 data Op = 
-  FCO3 FuncCompOp | OSO OptionalSpacesOp
+  FCO4 FuncCompOp | OSO OptionalSpacesOp
 
 data FuncCompOp =
   RightComp | LeftComp

@@ -1,6 +1,3 @@
 
-- operator expressions with missing operands
-  - testing
-
 - tuple matching inside func parameters
 

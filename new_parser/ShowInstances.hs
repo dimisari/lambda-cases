@@ -11,10 +11,8 @@ show_maybe = \case
   Nothing -> ""
   Just a -> show a
 
-show_maybe_of :: Maybe (Operand, FuncCompOp) -> String
-show_maybe_of = \case
-  Nothing -> ""
-  Just (oper, fco) -> show oper ++ " " ++ show fco
+show_pair_list :: (Show a, Show b) => [(a, b)] -> String
+show_pair_list = concatMap (\(a, b) -> show a ++ show b)
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
 
@@ -41,6 +39,12 @@ instance Show InsideParenExpr where
 instance Show RightOperandMissing where
   show = \(ROM (oes, maybe_oper_fcop)) ->
     show oes ++ show_maybe_of maybe_oper_fcop
+    where
+    show_maybe_of :: Maybe (Operand, FuncCompOp) -> String
+    show_maybe_of = \case
+      Nothing -> ""
+      Just (oper, fco) -> show oper ++ " " ++ show fco
+
 
 instance Show LeftOrBothMissing where
   show = \case
@@ -48,13 +52,28 @@ instance Show LeftOrBothMissing where
     FCO1 fco -> show fco
 
 instance Show LeftOrBothMissingLong where
-  show = \(LOBML (ooco, oo_pairs, maybe_oper_fcop)) ->
-    show ooco ++ concatMap show oo_pairs ++ show_maybe_of maybe_oper_fcop
+  show = \(LOBML (oocos, maybe_rest)) ->
+    show oocos ++ show_maybe_rest maybe_rest
+    where
+    show_maybe_rest
+      :: Maybe (Operand, [(Op, Operand)], Maybe OpOrCompOpEnd) -> String
+    show_maybe_rest = \case
+      Nothing -> ""
+      Just rest -> show_rest rest
 
-instance Show OpOrCompOp where
+    show_rest :: (Operand, [(Op, Operand)], Maybe OpOrCompOpEnd) -> String
+    show_rest = \(oper, op_oper_pairs, maybe_oocoe) ->
+      show oper ++ show_pair_list op_oper_pairs ++ show_maybe maybe_oocoe
+
+instance Show OpOrCompOpStart where
   show = \case
     Op1 op -> show op
     FCO2 fco -> show fco ++ " "
+
+instance Show OpOrCompOpEnd where
+  show = \case
+    Op2 op -> show op
+    FCO3 fco -> " " ++ show fco
 
 instance Show Tuple where
   show = \(T (maybe_le, loees)) ->
@@ -195,8 +214,7 @@ instance Show OpExpr where
     BOE1 boe -> show boe
 
 instance Show OpExprStart where
-  show = \(OES op_arg_op_pairs) ->
-     concatMap (\(op_arg, op) -> show op_arg ++ show op) op_arg_op_pairs
+  show = \(OES oper_op_pairs) -> show_pair_list oper_op_pairs
 
 instance Show LineOpExpr where
   show = \(LOE (oes, loee)) -> show oes ++ show loee
@@ -252,7 +270,7 @@ instance Show NoParenOperand where
 
 instance Show Op where
   show = \case
-    FCO3 co -> " " ++ show co ++ " "
+    FCO4 co -> " " ++ show co ++ " "
     OSO oso -> " " ++ show oso ++ " "
 
 instance Show FuncCompOp where
@@ -533,11 +551,9 @@ instance Show PropNameLine where
 instance Show PropName where
   show = \case
     NPStart1 (c, np_pip_pairs, maybe_np) ->
-      [c] ++ concatMap (\(np, pip) -> show np ++ show pip) np_pip_pairs ++
-      show_maybe maybe_np
+      [c] ++ show_pair_list np_pip_pairs ++ show_maybe maybe_np
     PIPStart1 (pip_np_pairs, maybe_pip) ->
-      concatMap (\(pip, np) -> show pip ++ show np) pip_np_pairs ++
-      show_maybe maybe_pip
+      show_pair_list pip_np_pairs ++ show_maybe maybe_pip
 
 instance Show NamePart where
   show = \(NP str) -> str
@@ -562,11 +578,9 @@ instance Show TypeTheo where
 instance Show PropNameSub where
   show = \case
     NPStart2 (c, np_psip_pairs, maybe_np) ->
-      [c] ++ concatMap (\(np, psip) -> show np ++ show psip) np_psip_pairs ++
-      show_maybe maybe_np
+      [c] ++ show_pair_list np_psip_pairs ++ show_maybe maybe_np
     PSIPStart (psip_np_pairs, maybe_psip) ->
-      concatMap (\(psip, np) -> show psip ++ show np) psip_np_pairs ++
-      show_maybe maybe_psip
+      show_pair_list psip_np_pairs ++ show_maybe maybe_psip
 
 instance Show ParamSubsInParen where
   show = \(PSIP (ps, pss)) ->
