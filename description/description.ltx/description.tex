@@ -242,8 +242,8 @@ that extend of over multiple lines new values must be defined.
 <right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
 
 <left-or-both-missing> ::= ""\\
-( <op> | <func-comp-op> `\ ' )
-[ <operand> ( <op> <operand> )* [ <op> | `\ ' <func-comp-op> ] ]
+<starting-op> ( <operand> <op> )*
+[ <operand> [ `\ ' <func-comp-op> ] | <line-func-expr> ]
 \alt [ `\ ' ] <func-comp-op>
 \end{grammar}
 
@@ -1694,9 +1694,11 @@ if the value expression is a big or cases expression:
 <right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
 
 <left-or-both-missing> ::= ""\\
-( <op> | <func-comp-op> `\ ' )
-[ <operand> ( <op> <operand> )* [ <op> | `\ ' <func-comp-op> ] ]
+<starting-op> ( <operand> <op> )*
+[ <operand> [ `\ ' <func-comp-op> ] | <line-func-expr> ]
 \alt [ `\ ' ] <func-comp-op>
+
+<starting-op> ::= <op> | <func-comp-op> `\ '
 \\
 
 <tuple> ::= `(' [ <line-expr> ] <comma> <line-or-empty-exprs> `)'
@@ -1835,7 +1837,7 @@ if the value expression is a big or cases expression:
 <case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
 \\
 
-<value-def> ::= 
+<value-def> ::= ""\\
 <indent> <identifier> 
 ( `\ ' | <nl> <indent> ) `:\ ' <type> 
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]

@@ -1,3 +1,8 @@
 
+- underscore for missing arguments
+  - both in op exprs and in paren func app
+
 - tuple matching inside func parameters
+
+- T1 ... Tn instead of A ... Z for type variables
 

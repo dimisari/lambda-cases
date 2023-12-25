@@ -52,28 +52,21 @@ instance Show LeftOrBothMissing where
     FCO1 fco -> show fco
 
 instance Show LeftOrBothMissingLong where
-  show = \(LOBML (oocos, maybe_rest)) ->
-    show oocos ++ show_maybe_rest maybe_rest
-    where
-    show_maybe_rest
-      :: Maybe (Operand, [(Op, Operand)], Maybe OpOrCompOpEnd) -> String
-    show_maybe_rest = \case
-      Nothing -> ""
-      Just rest -> show_rest rest
+  show = \(LOBML (st_op, oper_op_pairs, maybe_lobmle)) ->
+    show st_op ++ show_pair_list oper_op_pairs ++ show_maybe maybe_lobmle
 
-    show_rest :: (Operand, [(Op, Operand)], Maybe OpOrCompOpEnd) -> String
-    show_rest = \(oper, op_oper_pairs, maybe_oocoe) ->
-      show oper ++ show_pair_list op_oper_pairs ++ show_maybe maybe_oocoe
+instance Show LeftOrBothMissingLongEnd where
+  show = \case
+    LOBMLE1 (oper, maybe_fco) ->
+      show oper ++ case maybe_fco of
+        Nothing -> ""
+        Just fco -> " " ++ show fco
+    LOBMLE2 lfe -> show lfe
 
-instance Show OpOrCompOpStart where
+instance Show StartingOp where
   show = \case
     Op1 op -> show op
     FCO2 fco -> show fco ++ " "
-
-instance Show OpOrCompOpEnd where
-  show = \case
-    Op2 op -> show op
-    FCO3 fco -> " " ++ show fco
 
 instance Show Tuple where
   show = \(T (maybe_le, loees)) ->
@@ -270,7 +263,7 @@ instance Show NoParenOperand where
 
 instance Show Op where
   show = \case
-    FCO4 co -> " " ++ show co ++ " "
+    FCO3 co -> " " ++ show co ++ " "
     OSO oso -> " " ++ show oso ++ " "
 
 instance Show FuncCompOp where

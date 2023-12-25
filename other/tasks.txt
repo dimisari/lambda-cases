@@ -1,12 +1,7 @@
 
-- T1 ... Tn instead of A ... Z for type variables
-
 - Z, R, C for number types
 
 --------------------------------------------------------------later
-
-- underscore for missing arguments? 
-  - both in op exprs and in paren func app
 
 - spaces
   - ?

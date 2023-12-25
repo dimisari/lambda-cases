@@ -8,11 +8,13 @@
 
 (2 *)#
 
-(+ 1)#
+(- 1)#
 
 ("Hello " + "it's me, " +)#
 
 (+ "string in the middle of the arguments" +)#
 
 (*)#
+
+( ;> line => print("Line is: " + line))#
 

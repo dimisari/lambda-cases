@@ -150,20 +150,18 @@ instance HasParser LeftOrBothMissing where
 
 instance HasParser LeftOrBothMissingLong where
   parser =
-    LOBML <$> parser +++ optionMaybe rest_parser
-    where
-    rest_parser :: Parser (Operand, [(Op, Operand)], Maybe OpOrCompOpEnd)
-    rest_parser =
-      parser >>= \operand ->
-      many (try $ parser +++ parser) >>= \op_oper_pairs ->
-      optionMaybe parser >>= \maybe_oocoe ->
-      return (operand, op_oper_pairs, maybe_oocoe)
+    parser >>= \starting_op ->
+    many (try $ parser +++ parser) >>= \oper_op_pairs ->
+    optionMaybe parser >>= \maybe_lobmle ->
+    return $ LOBML (starting_op, oper_op_pairs, maybe_lobmle)
 
-instance HasParser OpOrCompOpStart where
+instance HasParser LeftOrBothMissingLongEnd where
+  parser =
+    LOBMLE2 <$> try parser <|>
+    LOBMLE1 <$> parser +++ optionMaybe (char ' ' *> parser)
+
+instance HasParser StartingOp where
   parser = Op1 <$> try parser <|> FCO2 <$> (parser <* char ' ')
-
-instance HasParser OpOrCompOpEnd where
-  parser = Op2 <$> try parser <|> FCO3 <$> (char ' ' *> parser)
 
 instance HasParser Tuple where
   parser = T <$> (char '(' *> optionMaybe parser <* comma) +++ (parser <* char ')')
@@ -343,7 +341,7 @@ instance HasParser NoParenOperand where
 
 instance HasParser Op where
   parser =  
-    FCO4 <$> try (char ' ' *> parser <* char ' ') <|>
+    FCO3 <$> try (char ' ' *> parser <* char ' ') <|>
     OSO <$> (optional (char ' ') *> parser <* optional (char ' '))
 
 instance HasParser FuncCompOp where
