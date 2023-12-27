@@ -1,6 +1,6 @@
 type_theorem (Possibly())Has_A_Wrapper
 proof
-  wrapper = the_value:#
+  wrapper = the_value:_#
 
 type_theorem (ListOf()s)Has_A_Wrapper
 proof

@@ -8,25 +8,25 @@ apply(f)to_all#
 
 apply(f)to_all(l)#
 
-apply(the_value:)to_all#
+apply(the_value:_)to_all#
 
-apply(.1st)to_all#
+apply(_.1st)to_all#
 
-apply(.change{1st = 1st + 1})to_all#
+apply(_.change{1st = 1st + 1})to_all#
 
 do(3)times#
 
-f(, y, z)#
+f(_, y, z)#
 
-f(x, , )#
+f(x, _, _)#
 
-f(, y, )#
+f(_, y, _)#
 
-f(, , z)#
+f(_, _, z)#
 
 f(x)#
 
-f(, y)#
+f(_, y)#
 
-f(, , z)#
+f(_, _, z)#
 

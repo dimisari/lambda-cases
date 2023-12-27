@@ -11,6 +11,12 @@ show_maybe = \case
   Nothing -> ""
   Just a -> show a
 
+show_list :: Show a => [a] -> String
+show_list = concatMap show
+
+show_list_comma :: Show a => [a] -> String
+show_list_comma = concatMap ((", " ++) . show)
+
 show_pair_list :: (Show a, Show b) => [(a, b)] -> String
 show_pair_list = concatMap (\(a, b) -> show a ++ show b)
 
@@ -33,79 +39,30 @@ instance Show InsideParenExpr where
   show = \case
     LOE1 soe -> show soe
     LFE1 sfe -> show sfe
-    ROM1 rom -> show rom
-    LOBM1 lobm -> show lobm
-
-instance Show RightOperandMissing where
-  show = \(ROM (oes, maybe_oper_fcop)) ->
-    show oes ++ show_maybe_of maybe_oper_fcop
-    where
-    show_maybe_of :: Maybe (Operand, FuncCompOp) -> String
-    show_maybe_of = \case
-      Nothing -> ""
-      Just (oper, fco) -> show oper ++ " " ++ show fco
-
-
-instance Show LeftOrBothMissing where
-  show = \case
-    LOBML1 lobml -> show lobml
-    FCO1 fco -> show fco
-
-instance Show LeftOrBothMissingLong where
-  show = \(LOBML (st_op, oper_op_pairs, maybe_lobmle)) ->
-    show st_op ++ show_pair_list oper_op_pairs ++ show_maybe maybe_lobmle
-
-instance Show LeftOrBothMissingLongEnd where
-  show = \case
-    LOBMLE1 (oper, maybe_fco) ->
-      show oper ++ case maybe_fco of
-        Nothing -> ""
-        Just fco -> " " ++ show fco
-    LOBMLE2 lfe -> show lfe
-
-instance Show StartingOp where
-  show = \case
-    Op1 op -> show op
-    FCO2 fco -> show fco ++ " "
 
 instance Show Tuple where
-  show = \(T (maybe_le, loees)) ->
-    "(" ++ show_maybe maybe_le ++ ", " ++ show loees ++ ")"
+  show = \(T (loue, loues)) -> "(" ++ show loue ++ ", " ++ show loues ++ ")"
 
-instance Show LineOrEmptyExprs where
-  show = \(LOEE (i, le, line_expr_maybes)) ->
-    concat (replicate i ", ") ++ show le ++ concatMap show_maybe_le line_expr_maybes
-    where
-    show_maybe_le :: Maybe LineExpr -> String
-    show_maybe_le = \case
-      Nothing -> ", "
-      Just le -> ", " ++ show le
+instance Show LineOrUnderExprs where
+  show = \(LOUEs (loue, loues)) -> show loue ++ ", " ++ show_list_comma loues
 
-instance Show LineExpr where
+instance Show LineOrUnderExpr where
   show = \case
-    NPOA1 npoa -> show npoa
-    LOE2 soe -> show soe
-    LFE2 sfe -> show sfe
+    LE1 le -> show le
+    Underscore1 -> "_"
 
 instance Show BigTuple where
-  show = \(BT (maybe_le, loees, loees_l)) ->
-    "( " ++ show_maybe maybe_le ++ ", " ++ show loees ++
-    concatMap (("\n, " ++) . show) loees_l ++ 
+  show = \(BT (loue, loues, loues_l)) ->
+    "( " ++ show loue ++ ", " ++ show loues ++
+    concatMap (("\n, " ++) . show) loues_l ++ 
     "\n)"
 
 instance Show List where
-  show = \(L maybe_csles) -> case maybe_csles of
-    Nothing -> "[]"
-    Just csles -> "[" ++ show csles ++ "]"
-
-instance Show LineExprs where
-  show = \(CSLE (le, les)) -> show le ++ concatMap ((", " ++) . show) les
+  show = \(L maybe_loues) -> "[" ++ show_maybe maybe_loues ++ "]"
 
 instance Show BigList where
-  show = \(BL (csles, csles_l)) ->
-    "[ " ++ show csles ++
-    concatMap (("\n, " ++) . show) csles_l ++ 
-    "\n]"
+  show = \(BL (loues, loues_l)) ->
+    "[ " ++ show loues ++ concatMap (("\n, " ++) . show) loues_l ++ "\n]"
 
 instance Show ParenFuncApp where
   show = \case
@@ -117,7 +74,7 @@ instance Show ParenFuncApp where
       show id ++ show args
 
 instance Show Arguments where
-  show = \(As loees) -> "(" ++ show loees ++ ")"
+  show = \(As loues) -> "(" ++ show loues ++ ")"
 
 instance Show IdentWithArgs where
   show =
@@ -147,23 +104,7 @@ instance Show PreFunc where
   show = \(PF id) -> show id ++ ":"
 
 instance Show PreFuncApp where
-  show = \(PrFA (pf, pfa)) -> show pf ++ show pfa
-
-instance Show PreFuncArg where
-  show = \case
-    BE1 be -> show be
-    PE1 pe -> show pe
-    PrFA1 prfa -> show prfa
-    PoFA1 pofa -> show pofa
-
-instance Show BasicExpr where
-  show = \case
-    Lit1 lit -> show lit
-    Id1 id -> show id
-    T1 tuple -> show tuple
-    L1 list -> show list
-    PFA pfa -> show pfa
-    SI1 sid -> show sid
+  show = \(PrFA (pf, oper)) -> show pf ++ show oper
 
 instance Show PostFunc where
   show = \case
@@ -180,16 +121,25 @@ instance Show SpecialId where
     Fifth -> "5th"
 
 instance Show PostFuncApp where
-  show = \(PoFA (pfa, pfs)) -> show pfa ++ concatMap show pfs
+  show = \(PoFA (pfa, pfs)) -> show pfa ++ show_list pfs
 
 instance Show PostFuncArg where
   show = \case
     PE2 pe -> show pe
     BE2 be -> show be
+    Underscore2 -> "_"
+
+instance Show BasicExpr where
+  show = \case
+    Lit1 lit -> show lit
+    Id1 id -> show id
+    T1 tuple -> show tuple
+    L1 list -> show list
+    PFA pfa -> show pfa
+    SI1 sid -> show sid
 
 instance Show Change where
-  show = \(C (fc, fcs)) ->
-    "change{" ++ show fc ++ concatMap ((", " ++) . show) fcs ++ "}"
+  show = \(C (fc, fcs)) -> "change{" ++ show fc ++ show_list_comma fcs ++ "}"
 
 instance Show FieldChange where
   show = \(FC (f, le)) -> show f ++ " = " ++ show le
@@ -224,7 +174,7 @@ instance Show BigOpExpr where
 
 instance Show BigOpExprOpSplit where
   show = \(BOEOS (osls, maybe_oes, ose)) ->
-    concatMap show osls ++ show_maybe maybe_oes ++ show ose
+    show_list osls ++ show_maybe maybe_oes ++ show ose
 
 instance Show OpSplitLine where
   show = \(OSL (oes, maybe_op_arg_comp_op)) ->
@@ -250,16 +200,15 @@ instance Show BigOrCasesFuncExpr where
   
 instance Show Operand where
   show = \case
-    NPOA2 npoa -> show npoa
+    BOAE2 npoa -> show npoa
     PE3 pe -> show pe
+    Underscore3 -> "_"
 
-instance Show NoParenOperand where
+instance Show BasicOrAppExpr where
   show = \case
     BE3 be -> show be
-    PrF prf -> show prf
-    PoF pof -> show pof
-    PrFA2 prfa -> show prfa
-    PoFA2 pofa -> show pofa
+    PrFA1 prfa -> show prfa
+    PoFA1 pofa -> show pofa
 
 instance Show Op where
   show = \case
@@ -302,18 +251,8 @@ instance Show FuncExpr where
 instance Show LineFuncExpr where
   show = \(LFE (params, sfb)) -> show params ++ " =>" ++ show sfb
 
-instance Show LineFuncBody where
-  show = \case
-    NPOA3 npoa -> " " ++ show npoa
-    LOE4 soe -> " " ++ show soe
-
 instance Show BigFuncExpr where
   show = \(BFE (params, bfb)) -> show params ++ " =>" ++ show bfb
-
-instance Show BigFuncBody where
-  show = \case
-    NPOA4 npoa -> "\n" ++ show npoa
-    OE1 oe -> "\n" ++ show oe
 
 instance Show Parameters where
   show = \case
@@ -321,18 +260,26 @@ instance Show Parameters where
     ManyParams pcsis -> show pcsis
 
 instance Show ParenCommaSepIds where
-  show = \(PCSIs (id, ids)) ->
-    "(" ++ show id ++ concatMap ((", " ++) . show) ids ++ ")"
+  show = \(PCSIs (id, ids)) -> "(" ++ show id ++ show_list_comma ids ++ ")"
+
+instance Show LineFuncBody where
+  show = \case
+    BOAE3 npoa -> " " ++ show npoa
+    LOE4 soe -> " " ++ show soe
+
+instance Show BigFuncBody where
+  show = \case
+    BOAE4 npoa -> "\n" ++ show npoa
+    OE1 oe -> "\n" ++ show oe
 
 instance Show CasesFuncExpr where
   show = \(CFE (cps, cs, maybe_ec)) ->
-    show cps ++ " =>" ++ concatMap show cs ++ show_maybe maybe_ec
+    show cps ++ " =>" ++ show_list cs ++ show_maybe maybe_ec
 
 instance Show CasesParams where
   show = \case
     OneCParam cp -> show cp
-    ManyCParams (cp, cps) ->
-      "(" ++ show cp ++ concatMap ((", " ++) . show) cps ++ ")"
+    ManyCParams (cp, cps) -> "(" ++ show cp ++ show_list_comma cps ++ ")"
 
 instance Show CasesParam where
   show = \case
@@ -354,12 +301,12 @@ instance Show Matching where
     LM1 lm -> show lm
 
 instance Show TupleMatching where
-  show = \(TM (m, ms)) -> "(" ++ show m ++ concatMap ((", " ++) . show) ms ++ ")"
+  show = \(TM (m, ms)) -> "(" ++ show m ++ show_list_comma ms ++ ")"
 
 instance Show ListMatching where
   show = \(LM maybe_m_ms) -> case maybe_m_ms of
     Nothing -> "[]"
-    Just (m, ms) -> "[" ++ show m ++ concatMap ((", " ++) . show) ms ++ "]"
+    Just (m, ms) -> "[" ++ show m ++ show_list_comma ms ++ "]"
 
 instance Show CaseBody where
   show = \(CB (cbs, maybe_we)) -> show cbs ++ show_maybe maybe_we
@@ -377,7 +324,7 @@ instance Show ValueDef where
 
 instance Show ValueExpr where
   show = \case
-    NPOA5 npoa -> show npoa
+    BOAE5 npoa -> show npoa
     OE2 oe -> show oe
     FE2 fe -> show fe
     BT1 bt -> show bt
@@ -385,14 +332,23 @@ instance Show ValueExpr where
 
 instance Show GroupedValueDefs where
   show = \(GVDs (id, ids, ts, csles, csles_l)) ->
-    show id ++ concatMap ((", " ++) . show) ids ++
+    show id ++ show_list_comma ids ++
     "\n  : " ++ show ts ++
     "\n  = " ++ show csles ++ concatMap (("\n  , " ++) . show) csles_l
 
 instance Show Types where
   show = \case
-    Ts (t, ts) -> show t ++ concatMap ((", " ++) . show) ts
+    Ts (t, ts) -> show t ++ show_list_comma ts
     All t -> "all " ++ show t
+
+instance Show LineExprs where
+  show = \(CSLE (le, les)) -> show le ++ show_list_comma les
+
+instance Show LineExpr where
+  show = \case
+    BOAE1 npoa -> show npoa
+    LOE2 soe -> show soe
+    LFE2 sfe -> show sfe
 
 instance Show WhereExpr where
   show = \(WE (wde, wdes)) ->
@@ -472,8 +428,7 @@ instance Show TypeIdOrVar where
     TV4 tv -> show tv
 
 instance Show TypesInParen where
-  show = \(TIP (st, sts)) ->
-    "(" ++ show st ++ concatMap ((", " ++) . show) sts ++ ")"
+  show = \(TIP (st, sts)) -> "(" ++ show st ++ show_list_comma sts ++ ")"
 
 instance Show Condition where
   show = \(Co pn) -> show pn ++ " ==> "
@@ -489,7 +444,7 @@ instance Show TupleTypeDef where
   show = \(TTD (tn, pcsis, ttde)) ->
     "tuple_type " ++ show tn ++ "\nvalue\n  " ++ show pcsis ++ " : " ++ show ttde
 
-instance Show TupleTypeDefEnd where
+instance Show ProdOrPowerType where
   show = \case
     PT4 pt -> show pt
     PoT4 pt -> show pt
@@ -501,8 +456,7 @@ instance Show TypeName where
     show_maybe maybe_pip2
 
 instance Show ParamsInParen where
-  show = \(PIP (tv, tvs)) ->
-    "(" ++ show tv ++ concatMap ((", " ++) . show) tvs ++ ")"
+  show = \(PIP (tv, tvs)) -> "(" ++ show tv ++ show_list_comma tvs ++ ")"
 
 instance Show OrTypeDef where
   show =
@@ -535,7 +489,7 @@ instance Show AtomPropDef where
 
 instance Show RenamingPropDef where
   show = \(RPD (pnl, pn, pns)) ->
-    show pnl ++ "\nequivalent\n  " ++ show pn ++ concatMap ((", " ++) . show) pns
+    show pnl ++ "\nequivalent\n  " ++ show pn ++ show_list_comma pns
 
 instance Show PropNameLine where
   show = \(PNL pn) ->
@@ -576,8 +530,7 @@ instance Show PropNameSub where
       show_pair_list psip_np_pairs ++ show_maybe maybe_psip
 
 instance Show ParamSubsInParen where
-  show = \(PSIP (ps, pss)) ->
-    "(" ++ show ps ++ concatMap ((", " ++) . show) pss ++ ")"
+  show = \(PSIP (ps, pss)) -> "(" ++ show ps ++ show_list_comma pss ++ ")"
 
 instance Show ParamSub where
   show = \case
@@ -597,7 +550,7 @@ instance Show TypeFunc where
 
 instance Show TTValueExpr where
   show = \case
-    LE le -> show le
+    LE2 le -> show le
     BOCE boce -> "\n    " ++ show boce
 
 instance Show BigOrCasesExpr where

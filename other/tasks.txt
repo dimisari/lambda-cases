@@ -24,10 +24,9 @@
     - atom prop def: around ':' <- I vote no
     - type theorem <- I vote no
 
-- what to do in apply()to_all(l)?
-  - assume missing arg for every empty paren in identifier in general?
-
 - good page changes in description pdf
+
+- leave empty params for when not used?  
 
 - problem with func comp ops and "o" > or < ? grammar ambiguity?
 
@@ -60,5 +59,3 @@
 - isolate hs gen (am I even gonna bother to look at the old code?)
 
 - fix md files in github
-
-- any operand can be missing in a op expr inside paren! could it be useful?

@@ -145,7 +145,7 @@ Identifiers" section \ref{subsubsec:litsandidents}).
 \item \textit{Examples}
 \begin{verbatim}
 1  2  17  42  -100
-1.61  2.71  3.14  -1234.567
+1.62  2.72  3.14  -1234.567
 'a'  'b'  'c'  'x'  'y'  'z'  '.'  ','  '\n'
 "Hello World!"  "What's up, doc?"  "Alrighty then!"
 \end{verbatim}
@@ -207,13 +207,8 @@ by this grammar, they cannot be used as identifiers.
 \begin{verbatim}
 (1 + 2)
 (((1 + 2) * 3)^4)
-(get_line ;> line => print("Line is: " + line))
 (n => 3*n + 1)
-(2 *)
-(- 1)
-("Hello " + "it's me, " +)
-(+ "string in the middle of the arguments" +)
-(*)
+(get_line ;> line => print("Line is: " + line))
 \end{verbatim}
 
 \item \textit{Description}
@@ -222,29 +217,12 @@ An expression is put in parenthesis to prioritize it or isolate it in a bigger
 (operator) expression. The expressions inside parenthesis are operator
 or function expressions.
 \\\\
-It is possible to break an operator expression inside parentheses at the
-beginning or the end (or both), in the sense that an operand is missing (or
-two). In this case, the expression becomes a function that expects the missing
-operand as an argument. If both the first and the last operands are missing 
-the function expects a tuple with the first operand in the first field
-and the last operand in the second.
-\\\\
 Parenethesis expressions cannot extend over multiple lines. For expressions
 that extend of over multiple lines new values must be defined.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' <inside-paren-expr> `)'  
-
-<inside-paren-expr> ::= 
-<line-op-expr> | <line-func-expr> | <right-operand-missing> | <left-or-both-missing>
-
-<right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
-
-<left-or-both-missing> ::= ""\\
-<starting-op> ( <operand> <op> )*
-[ <operand> [ `\ ' <func-comp-op> ] | <line-func-expr> ]
-\alt [ `\ ' ] <func-comp-op>
+<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
 \end{grammar}
 
 \end{itemize}
@@ -258,7 +236,7 @@ that extend of over multiple lines new values must be defined.
 (1, "What's up, doc?")
 (2, "Alrighty then!", 3.14)
 (x, y, z, w)
-(1, my_function, (x, y, z) => (x^2 + y^2 + z^2)^(1/2))
+(1, my_function, (x, y, z) => sqrt(x^2 + y^2 + z^2))
 \end{verbatim}
 
 \item \textit{Description} 
@@ -290,7 +268,7 @@ my_big_tuple
   : String x Int x Real x String x String x (String x Real x Real)
   = ( "Hey, I'm the first field and I'm also a relatively big string."
     , 42, 3.14, "Hey, I'm the first small string", "Hey, I'm the second small string"
-    , ("Hey, I'm a string inside the nested tuple", 2.71, 1.61)
+    , ("Hey, I'm a string inside the nested tuple", 2.72, 1.62)
     )
 \end{verbatim}
 
@@ -323,19 +301,20 @@ The precise indentation rules are described in the section
 \\\\
 \textbf{Example}
 \begin{verbatim}
-(42, )
-(, 3.14, )
-(, , "Hello from 3rd field")
+(42, _)
+(_, 3.14, _)
+(_, _, "Hello from 3rd field")
 \end{verbatim}
 
 \textbf{Description}\\\\
-It is possible to leave some fields empty in a tuple. This is essentially
-a function that expects the empty fields and returns the whole tuple. This is
-best demonstated by the types of the examples above:
+It is possible to leave some fields empty in a tuple by having an underscore in
+their position. This creates a function that expects the empty fields
+and returns the whole tuple. This is best demonstated by the types of the
+examples above:
 \begin{verbatim}
-(42, ) : A => Int x A
-(, 3.14, ) : A x B => A x Real x B
-(, , "Hello from 3rd field") : A x B => A x B x String
+(42, _) : A => Int x A
+(_, 3.14, _) : A x B => A x Real x B
+(_, _, "Hello from 3rd field") : A x B => A x B x String
 \end{verbatim}
 An example in a bigger expression is the following:
 \begin{verbatim}
@@ -343,9 +322,9 @@ questions : ListOf(String)s
   = ["the Ultimate Question of Life", "the Universe", "Everything"]
 
 answers_to : ListOf(String)s
-  = apply("The answer to " +)to_all(questions)
+  = apply("The answer to " + _)to_all(questions)
 
->> apply((42, ))to_all(answers_to)
+>> apply((42, _))to_all(answers_to)
   : ListOf(Int x String)s
   = [ (42, "The answer to the Ultimate Question of Life")
     , (42, "The answer to the Universe")
@@ -355,19 +334,19 @@ answers_to : ListOf(String)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' [ <line-expr> ] <comma> <line-or-empty-exprs> `)'
+<tuple> ::= `(' <line-or-under-expr> <comma> <line-or-under-exprs> `)'
 
-<line-or-empty-exprs> ::=
-<comma>* <line-expr> (<comma> [ <line-expr> ])*
+<line-or-under-exprs> ::= <line-or-under-expr> ( <comma> <line-or-under-expr> )*
 
-<line-expr> ::= <no-paren-operand> | <line-op-expr> | <line-func-expr>
+<line-or-under-expr> ::= <line-expr> | `_'
 
 <comma> ::= `,' [ `\ ' ]
 \\
 
 <big-tuple> ::= ""\\
-`(' [ `\ ' ]  [ <line-expr> ] [ <nl> <indent> ] <comma> <line-or-empty-exprs> \\
-( <nl> <indent> <comma> <line-or-empty-exprs> )* 
+`(' [ `\ ' ] <line-or-under-expr> [ <nl> <indent> ]
+<comma> <line-or-under-exprs> \\
+( <nl> <indent> <comma> <line-or-under-exprs> )* 
 <nl> <indent> `)'
 \end{grammar}
 
@@ -380,7 +359,7 @@ answers_to : ListOf(String)s
 \item \textit{Examples}
 \begin{verbatim}
 [1, 2, 17, 42, -100]
-[1.61, 2.71, 3.14, -1234.567]
+[1.62, 2.72, 3.14, -1234.567]
 ["Hello World!", "What's up, doc?", "Alrighty then!"]
 [x => x + 1, x => x + 2, x => x + 3]
 [x, y, z, w]
@@ -442,12 +421,11 @@ my_big_list : ListOf(Int => IO)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [ <line-exprs> ] `]'
+<list> ::= `[' [ <line-or-under-exprs> ] `]'
 
-<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
-
-<big-list> ::= 
-`[' [ `\ ' ] <line-exprs> ( <nl> <indent> <comma> <line-exprs> )* <nl> <indent> `]'
+<big-list> ::= ""\\
+`[' [ `\ ' ] <line-or-under-exprs>
+( <nl> <indent> <comma> <line-or-under-exprs> )* <nl> <indent> `]'
 \end{grammar}
 
 \end{itemize}
@@ -503,22 +481,23 @@ so on.
 
 \item \textit{Empty arguments in Parenthesis Function Application}
 \\\\
-It is possible to give a function only some of the arguments and the resulting
-expression is a function that expects the rest of the arguments to return the final
-result. Let's see this in action:
+It is possible to give a function only some of the arguments by putting an
+underscore to all the missing arguments. The resulting expression is a function
+that expects the missing arguments to return the final result. Let's see
+this in action:
 \begin{verbatim}
 f : Char x Int x Real => String
 c, i, r : Char, Int, Real
 
 f(c, i, r) : String
 
-f(, i, r) : Char => String
-f(c, , r) : Int => String
-f(c, i, ) : Real => String
+f(_, i, r) : Char => String
+f(c, _, r) : Int => String
+f(c, i, _) : Real => String
 
-f(c, , ) : Int x Real => String
-f(, i, ) : Char x Real => String
-f(, , r) : Char x Int => String
+f(c, _, _) : Int x Real => String
+f(_, i, _) : Char x Real => String
+f(_, _, r) : Char x Int => String
 \end{verbatim}
 
 The missing arguments after the last existing argument can be omitted and therefore
@@ -526,8 +505,8 @@ the following are equivalent to the last three above:
 
 \begin{verbatim}
 f(c) : Int x Real => String
-f(, i) : Char x Real => String
-f(, , r) : Char x Int => String
+f(_, i) : Char x Real => String
+f(_, _, r) : Char x Int => String
 \end{verbatim}
 
 \item \textit{Grammar}
@@ -537,7 +516,7 @@ f(, , r) : Char x Int => String
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-or-empty-exprs> `)'
+<arguments> ::= `(' <line-or-under-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -559,7 +538,7 @@ the_value:1
 non_empty_l:l
 error:e
 result:r
-apply(the_value:)to_all
+apply(the_value:_)to_all
 \end{verbatim}
 
 \item \textit{Description}
@@ -573,7 +552,7 @@ first example above we have:
 1 : Int
 the_value:1 : Possibly(Int)
 \end{verbatim}
-Where the function \texttt{thevalue:} is automatically generated from the
+Where the function \texttt{thevalue:_} is automatically generated from the
 definition of the \texttt{Possibly} type:
 \begin{verbatim}
 or_type Possibly(A)
@@ -583,22 +562,16 @@ values
 And it has the type \texttt{A => Possibly(A)}.
 \\\\
 These functions are called prefix functions because they are prepended to
-their argument. However, they can also be used as any other function.
+their argument. However, they can also be used as arguments to other function
+with an underscore in their argument.
 An illustration of the aforementioned is the last example, where the function
-\texttt{the_value:} is an argument of the function \texttt{apply()to_all}.
-Prefix functions always end with a colon.
+\texttt{the_value:_} is an argument of the function \texttt{apply()to_all}.
 
 \item \textit{Grammar}
 \begin{grammar}
 <pre-func> ::= <identifier> `:'
 
-<pre-func-app> ::=
-<pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> | <post-func-app> )
-
-<basic-expr> ::=
-<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
-
-<special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
+<pre-func-app> ::= <pre-func> <operand>
 \end{grammar}
 
 \end{itemize}
@@ -613,7 +586,7 @@ name.first_name
 list.head
 date.year
 tuple.1st
-apply(.1st)to_all
+apply(_.1st)to_all
 \end{verbatim}
 
 \item \textit{Description} 
@@ -626,7 +599,7 @@ functions that take a \texttt{tuple_type} value and return a particular field
 name : Name
 name.first_name : String
 \end{verbatim}
-Where the function \texttt{.first_name} is automatically generated from the
+Where the function \texttt{_.first_name} is automatically generated from the
 definition of the \texttt{Name} type:
 \begin{verbatim}
 tuple_type Name
@@ -635,8 +608,8 @@ value
 \end{verbatim}
 And it has the type \texttt{Name => String}.
 \\\\
-There are also the following special projection functions that work on tuples
-(i.e. product type or tuple type values): \texttt{.1st .2nd .3rd .4th .5th}.
+There are also the following special projection functions that work on all tuples:
+\texttt{_.1st _.2nd _.3rd _.4th _.5th}.
 For the 4th example above, assuming:
 \begin{verbatim}
 tuple : Int x String
@@ -647,24 +620,29 @@ tuple.1st : Int
 \end{verbatim}
 The general types of these functions are:
 \begin{verbatim}
-.1st : (A)Is(B)s_1st ==> B => A
-.2nd : (A)Is(B)s_2nd ==> B => A
+_.1st : (A)Is(B)s_1st ==> B => A
+_.2nd : (A)Is(B)s_2nd ==> B => A
 ...
 \end{verbatim}
-These functions are called postfix functions because they are appended to
-their argument. However, they can also be used as any other function.
-An illustration of the aforementioned is the last example, where the function
-\texttt{.1st} is an argument of the function \texttt{apply()to_all}.
-Postfix functions always begin with a dot.
+These functions are called postfix functions because they are appended to their
+argument. However, they can also be used as arguments to other function with an
+underscore in their argument.  An illustration of the aforementioned is the
+last example, where the function \texttt{_.1st} is an argument of the function
+\texttt{apply()to_all}.
 \\\\
-The are a special postfix function called "\texttt{.change}" which is described in
+The is a special postfix function called "\texttt{_.change}" which is described in
 the following paragraph.
 
 \item \textit{Grammar}
 \begin{grammar}
 <post-func> ::= `.' ( <identifier> | <special-id> | <change> )
 
-<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>+
+<special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
+
+<post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
+
+<basic-expr> ::=
+<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
 \end{grammar}
 
 \end{itemize}
@@ -676,38 +654,34 @@ the following paragraph.
 \item \textit{Examples}
 
 \begin{verbatim}
-tuple.change{1st = 42, 3rd = 17}
 state.change{counter = counter + 1} 
-name.change{last_name = "Gauss"}
-point.change{x = 1.61, y = 2.71, z = 3.14}
-apply(.change{1st = 1st + 1})to_all
+tuple.change{1st = 42, 3rd = 17}
+point.change{x = 1.62, y = 2.72, z = 3.14}
+apply(_.change{1st = 1st + 1})to_all
+x.change{1st = _, 3rd = _}
 \end{verbatim}
 
 \item \textit{Description} \\\\
 The "\texttt{.change}" function is a special postfix function that works an all
-tuples (i.e. product type or tuple type values). It returns a new tuple that is
-the input tuple with some fields changed. Which fields are going to change and
-to what new value is specified inside curly brackets after the
-"\texttt{.change}". The following special identifiers can be used for referring
-to the fields: \texttt{1st 2nd 3rd 4th 5th} (1st and 5th example). If the tuple
-is of a tuple type, the identifiers of the fields specified in the type
-definition can be used (examples 2, 3 and 4). Therefore, we are assuming the
-following (or similar) if the examples are to type check:
+tuples. It returns a new tuple that is the same as the input tuple except for
+some fields that change. Which fields change and to what new value is specified
+inside curly brackets after the "\texttt{.change}". The following special
+identifiers can be used for referring to the fields: \texttt{1st 2nd 3rd 4th
+5th} (2nd and 4th example). If the tuple is of a tuple type, the identifiers of
+the fields specified in the type definition can be used (1st and 3rd example).
+Therefore, we are assuming the following (or similar) if the examples are to
+type check:
 
 \begin{verbatim}
-tuple : Int x ... x Int (optionally more: x ... ) or some equivalent tuple type
-
 tuple_type MyStateType
 value
   (..., counter, ...) : ... x Int x ...
 
 state : MyStateType
 
-tuple_type MyNameType
-value
-  (..., last_name, ...) : ... x String x ...
 
-name : MyNameType
+tuple : Int x ... x Int (x ...)
+
 
 tuple_type Point
 value
@@ -715,21 +689,26 @@ value
 
 point : Point
 
-apply(.change{1st = 1st + 1})to_all
-  : ListOf(A)s => ListOf(A)s
-  where A must be some product or tuple type where the first field can be added 
-  with an integer
+
+apply(_.change{1st = 1st + 1})to_all
+  : (A)And(Int)AddTo(A), (A)Is(B)s_1st ==> ListOf(B)s => ListOf(B)s
+
+
+assuming: x : Int x Real x String
+x.change{1st = _, 3rd = _} : Int x String => Int x Real x String
 \end{verbatim}
 The changes of the fields have the following structure: "field = expression of
 new value" and they are seperated by commas. The input tuple's fields (i.e. the
 "old" values) can be used inside the expression of a new value and they are
-referred to by the field identifier.
+referred to by the field identifier (1st and 4th example). Underscores can be 
+used as the expressions of some new values which makes the whole expression 
+a function that expects those new values as arguments (last example).
 \item \textit{Grammar}
 
 \begin{grammar}
 <change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
 
-<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-expr>
+<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-or-under-expr>
 \end{grammar} 
 
 \end{itemize}
@@ -762,7 +741,7 @@ following functions with the behaviour suggested by their names and types:
 \begin{verbatim}
 apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
 string_length : String => Int
-filter_with : (A => Bool) x ListOf(A)s => ListOf(A)s
+filter()with : ListOf(A)s x (A => Bool) => ListOf(A)s
 is_odd : Int => Bool
 sum_ints : ListOf(Int)s => Int
 \end{verbatim}
@@ -774,12 +753,12 @@ Here is a simple way to get the total number of characters in all the strings
 that have odd length:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
-  = strings -> apply(string_length)to_all -> filter_with(is_odd) -> sum_ints
+  = strings -> apply(string_length)to_all -> filter(_)with(is_odd) -> sum_ints
 \end{verbatim}
 This can be done equivalently using the other operator:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
-  = sum_ints <- filter_with(is_odd) <- apply(string_length)to_all <- strings
+  = sum_ints <- filter(_)with(is_odd) <- apply(string_length)to_all <- strings
 
 \end{verbatim}
 These operators can also be used together to put a function between two arguments
@@ -1106,27 +1085,43 @@ f o> g o> h
 x = y
 x >= y - z & x < 2 * y
 get_line ; get_line ;> line => print("Second line: " + line)
+2 * _
+_ - 1
+"Hello " + "it's me, " + _ 
+_ + "string in the middle of the arguments" + _
 \end{verbatim}
 
 \item \textit{Description}
 
 Operator expressions are expressions that use operators. Operators act like
-two-argument-functions that are placed in between their arguments. Therefore,
-they have function types and they act as it is described in their respective
-sections above this one.
+two-argument-functions that are placed in between their arguments (operands).
+Therefore, they have function types and they act as it is described in their
+respective sections above this one.
 \\\\
 An operator expression might have multiple operators. The order of operations
 is explained in the next section ("Complete Table, Precedence and Associativity")
 in Table \ref{table:precassoc}.
 \\\\
-Just like functions, the sub-expressions
-that act as arguments to an operator, must have types that match the types 
-expected by the operator.
+Just like functions, the operands of an operator, must have types that match
+the types expected by the operator.
 \\\\
-It is possible for the second argument of an operator to be a function expression.
+It is possible for the second operand of an operator to be a function expression.
 This is mostly useful with the "\texttt{;>}" operator (see previous section:
 "Environment Operators"), but it is also possible with the following operators:
 "\texttt{->}", "\texttt{o>}", "\texttt{<o}".
+\\\\
+It is possible to use an underscore as an operand. An operator expression with 
+underscore operands becomes a function that expects those operands as arguments.
+This is best demonstrated by the types of the last four examples: 
+
+\begin{verbatim}
+2 * _ : Int => Int
+_ - 1 : Int => Int
+"Hello " + "it's me, " + _ : String => String
+_ + "string in the middle of the arguments" + _ : String^2 => String
+\end{verbatim}
+Note: These are not the most general types for the examples but they are compatible
+and good enough for their illustration purposes.
 
 \item \textit{Big Operator Expressions}\\\\
 \textbf{Example}
@@ -1180,10 +1175,9 @@ The precise indentation rules are described in the section
 <big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
 \\
 
-<operand> ::= <no-paren-operand> | <paren-expr>
+<operand> ::= <basic-or-app-expr> | <paren-expr> | `_'
 
-<no-paren-operand> ::=
-<basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
+<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
 \\
 
 <op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
@@ -1322,7 +1316,7 @@ The grammar for a function expression is:
 
 \begin{verbatim}
 a => 17 * a + 42
-(x, y, z) => (x^2 + y^2 + z^2)^(1 / 2)
+(x, y, z) => sqrt(x^2 + y^2 + z^2)
 \end{verbatim}
 
 \item \textit{Description}
@@ -1372,9 +1366,9 @@ The precise indentation rules are described in the section
 
 <paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 
-<line-func-body> ::= `\ ' ( <no-paren-operand> | <line-op-expr> )
+<line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
 
-<big-func-body> ::= <nl> <indent> ( <no-paren-operand> | <op-expr> )
+<big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
 \end{grammar}
 \end{itemize}
 
@@ -1548,12 +1542,17 @@ keyword "all" to give the same type to all the values.
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
 <value-expr> ::=
-<no-paren-operand> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
+<basic-or-app-expr> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
+\\
 
 <grouped-value-defs> ::= ""\\
 <indent> <identifier> ( <comma> <identifier> )+ \\
 ( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
 <nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
+
+<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
+
+<line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
 \end{grammar}
 
 \end{itemize}
@@ -1570,8 +1569,7 @@ sort : ListOf(Int)s => ListOf(Int)s
     non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
       where
       less_l, greater_l : all ListOf(Int)s
-        = filter_with(x => x < l.head, l.tail)
-        , filter_with(x => x >= l.head, l.tail)
+        = filter(l.tail)with(_ < l.head), filter(l.tail)with(_ >= l.head)
 
 sum_nodes : TreeOf(Int)s => Int
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
@@ -1686,43 +1684,30 @@ if the value expression is a big or cases expression:
 <identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
 \\
 
-<paren-expr> ::= `(' <inside-paren-expr> `)'  
-
-<inside-paren-expr> ::= 
-<line-op-expr> | <line-func-expr> | <right-operand-missing> | <left-or-both-missing>
-
-<right-operand-missing> ::= <op-expr-start> [ <operand> `\ ' <func-comp-op> ]
-
-<left-or-both-missing> ::= ""\\
-<starting-op> ( <operand> <op> )*
-[ <operand> [ `\ ' <func-comp-op> ] | <line-func-expr> ]
-\alt [ `\ ' ] <func-comp-op>
-
-<starting-op> ::= <op> | <func-comp-op> `\ '
+<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
 \\
 
-<tuple> ::= `(' [ <line-expr> ] <comma> <line-or-empty-exprs> `)'
+<tuple> ::= `(' <line-or-under-expr> <comma> <line-or-under-exprs> `)'
 
-<line-or-empty-exprs> ::=
-<comma>* <line-expr> (<comma> [ <line-expr> ])*
+<line-or-under-exprs> ::= <line-or-under-expr> ( <comma> <line-or-under-expr> )*
 
-<line-expr> ::= <no-paren-operand> | <line-op-expr> | <line-func-expr>
+<line-or-under-expr> ::= <line-expr> | `_'
 
 <comma> ::= `,' [ `\ ' ]
 \\
 
 <big-tuple> ::= ""\\
-`(' [ `\ ' ]  [ <line-expr> ] [ <nl> <indent> ] <comma> <line-or-empty-exprs> \\
-( <nl> <indent> <comma> <line-or-empty-exprs> )* 
+`(' [ `\ ' ] <line-or-under-expr> [ <nl> <indent> ]
+<comma> <line-or-under-exprs> \\
+( <nl> <indent> <comma> <line-or-under-exprs> )* 
 <nl> <indent> `)'
 \\
 
-<list> ::= `[' [ <line-exprs> ] `]'
-
-<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
+<list> ::= `[' [ <line-or-under-exprs> ] `]'
 
 <big-list> ::= 
-`[' [ `\ ' ] <line-exprs> ( <nl> <indent> <comma> <line-exprs> )* <nl> <indent> `]'
+`[' [ `\ ' ] <line-or-under-exprs>
+( <nl> <indent> <comma> <line-or-under-exprs> )* <nl> <indent> `]'
 \\
 
 <paren-func-app> ::= ""\\""
@@ -1730,7 +1715,7 @@ if the value expression is a big or cases expression:
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-or-empty-exprs> `)'
+<arguments> ::= `(' <line-or-under-exprs> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -1740,23 +1725,22 @@ if the value expression is a big or cases expression:
 
 <pre-func> ::= <identifier> `:'
 
-<pre-func-app> ::=
-<pre-func> ( <basic-expr> | <paren-expr> | <pre-func-app> | <post-func-app> )
-
-<basic-expr> ::=
-<literal> | <identifier> | <tuple> | <list> | <paren-func-app> | <special-id>
+<pre-func-app> ::= <pre-func> <operand>
 \\
 
 <post-func> ::= `.' ( <identifier> | <special-id> | <change> )
 
 <special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
-<post-func-app> ::= ( <paren-expr> | <basic-expr> ) <post-func>+
+<post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
+
+<basic-expr> ::=
+<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
 \\
 
 <change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
 
-<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-expr>
+<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-or-under-expr>
 \\
 
 <op-expr> ::= <line-op-expr> | <big-op-expr>
@@ -1781,10 +1765,9 @@ if the value expression is a big or cases expression:
 <big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
 \\
 
-<operand> ::= <no-paren-operand> | <paren-expr>
+<operand> ::= <basic-or-app-expr> | <paren-expr> | `_'
 
-<no-paren-operand> ::=
-<basic-expr> | <pre-func> | <post-func> | <pre-func-app> | <post-func-app>
+<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
 \\
 
 <op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
@@ -1807,9 +1790,9 @@ if the value expression is a big or cases expression:
 
 <paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 
-<line-func-body> ::= `\ ' ( <no-paren-operand> | <line-op-expr> )
+<line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
 
-<big-func-body> ::= <nl> <indent> ( <no-paren-operand> | <op-expr> )
+<big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
 \\
 
 <cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
@@ -1843,12 +1826,17 @@ if the value expression is a big or cases expression:
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
 <value-expr> ::=
-<no-paren-operand> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
+<basic-or-app-expr> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
+\\
 
 <grouped-value-defs> ::= ""\\
 <indent> <identifier> ( <comma> <identifier> )+ \\
 ( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
 <nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
+
+<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
+
+<line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
 \\
 
 <where-expr> ::=

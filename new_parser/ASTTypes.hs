@@ -10,45 +10,27 @@ newtype Identifier = Id String
 newtype ParenExpr = PE InsideParenExpr
 
 data InsideParenExpr = 
-  LOE1 LineOpExpr | LFE1 LineFuncExpr | ROM1 RightOperandMissing |
-  LOBM1 LeftOrBothMissing
+  LOE1 LineOpExpr | LFE1 LineFuncExpr 
 
-newtype RightOperandMissing = ROM (OpExprStart, Maybe (Operand, FuncCompOp))
+newtype Tuple = T (LineOrUnderExpr, LineOrUnderExprs)
 
-data LeftOrBothMissing = 
-  LOBML1 LeftOrBothMissingLong | FCO1 FuncCompOp
+newtype LineOrUnderExprs = LOUEs (LineOrUnderExpr, [LineOrUnderExpr]) 
 
-newtype LeftOrBothMissingLong =
-  LOBML (StartingOp, [(Operand, Op)], Maybe LeftOrBothMissingLongEnd)
+data LineOrUnderExpr = 
+  LE1 LineExpr | Underscore1
 
-data LeftOrBothMissingLongEnd =
-  LOBMLE1 (Operand, Maybe FuncCompOp) |
-  LOBMLE2 LineFuncExpr
+newtype BigTuple = BT (LineOrUnderExpr, LineOrUnderExprs, [LineOrUnderExprs])
 
-data StartingOp =
-  Op1 Op | FCO2 FuncCompOp
+newtype List = L (Maybe LineOrUnderExprs)
 
-newtype Tuple = T (Maybe LineExpr, LineOrEmptyExprs)
-
-newtype LineOrEmptyExprs = LOEE (Int, LineExpr, [Maybe LineExpr])
-
-data LineExpr = 
-  NPOA1 NoParenOperand | LOE2 LineOpExpr | LFE2 LineFuncExpr
-
-newtype BigTuple = BT (Maybe LineExpr, LineOrEmptyExprs, [LineOrEmptyExprs])
-
-newtype List = L (Maybe LineExprs)
-
-newtype LineExprs = CSLE (LineExpr, [LineExpr])
-
-newtype BigList = BL (LineExprs, [LineExprs])
+newtype BigList = BL (LineOrUnderExprs, [LineOrUnderExprs])
 
 data ParenFuncApp = 
   IWA1 (Maybe Arguments, IdentWithArgs, Maybe Arguments) |
   AI (Arguments, Identifier, Maybe Arguments) |
   IA (Identifier, Arguments)
 
-newtype Arguments = As LineOrEmptyExprs
+newtype Arguments = As LineOrUnderExprs
 
 newtype IdentWithArgs =
   IWA
@@ -63,14 +45,7 @@ data EmptyParenOrArgs =
 
 newtype PreFunc = PF Identifier 
 
-newtype PreFuncApp = PrFA (PreFunc, PreFuncArg)
-
-data PreFuncArg = 
-  BE1 BasicExpr | PE1 ParenExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
-
-data BasicExpr = 
-  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp | 
-  SI1 SpecialId
+newtype PreFuncApp = PrFA (PreFunc, Operand)
 
 data PostFunc = 
   Id2 Identifier | SI2 SpecialId | C1 Change
@@ -81,11 +56,15 @@ data SpecialId =
 newtype PostFuncApp = PoFA (PostFuncArg, [PostFunc])
 
 data PostFuncArg = 
-  PE2 ParenExpr | BE2 BasicExpr
+  PE2 ParenExpr | BE2 BasicExpr | Underscore2
+
+data BasicExpr = 
+  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp | 
+  SI1 SpecialId
 
 newtype Change = C (FieldChange, [FieldChange])
 
-newtype FieldChange = FC (Field, LineExpr)
+newtype FieldChange = FC (Field, LineOrUnderExpr)
 
 data Field =
   Id3 Identifier | SI3 SpecialId
@@ -118,10 +97,10 @@ data BigOrCasesFuncExpr =
   BFE1 BigFuncExpr | CFE1 CasesFuncExpr
 
 data Operand =
-  NPOA2 NoParenOperand | PE3 ParenExpr
+  BOAE2 BasicOrAppExpr | PE3 ParenExpr | Underscore3
 
-data NoParenOperand =
-  BE3 BasicExpr | PrF PreFunc | PoF PostFunc | PrFA2 PreFuncApp | PoFA2 PostFuncApp
+data BasicOrAppExpr =
+  BE3 BasicExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
 
 data Op = 
   FCO3 FuncCompOp | OSO OptionalSpacesOp
@@ -140,18 +119,18 @@ data FuncExpr =
 
 newtype LineFuncExpr = LFE (Parameters, LineFuncBody)
 
-data LineFuncBody = 
-  NPOA3 NoParenOperand | LOE4 LineOpExpr
-
 newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
-
-data BigFuncBody = 
-  NPOA4 NoParenOperand | OE1 OpExpr
 
 data Parameters = 
   OneParam Identifier | ManyParams ParenCommaSepIds
 
 newtype ParenCommaSepIds = PCSIs (Identifier, [Identifier])
+
+data LineFuncBody = 
+  BOAE3 BasicOrAppExpr | LOE4 LineOpExpr
+
+data BigFuncBody = 
+  BOAE4 BasicOrAppExpr | OE1 OpExpr
 
 newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
 
@@ -183,13 +162,18 @@ data CaseBodyStart =
 newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
 
 data ValueExpr = 
-  NPOA5 NoParenOperand | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
+  BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
 newtype GroupedValueDefs =
   GVDs (Identifier, [Identifier], Types, LineExprs, [LineExprs]) 
 
 data Types = 
   Ts (Type, [Type]) | All Type
+
+newtype LineExprs = CSLE (LineExpr, [LineExpr])
+
+data LineExpr = 
+  BOAE1 BasicOrAppExpr | LOE2 LineOpExpr | LFE2 LineFuncExpr
 
 newtype WhereExpr = WE (WhereDefExpr, [WhereDefExpr])
 
@@ -243,9 +227,9 @@ newtype Condition = Co PropName
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
-newtype TupleTypeDef = TTD (TypeName, ParenCommaSepIds, TupleTypeDefEnd)
+newtype TupleTypeDef = TTD (TypeName, ParenCommaSepIds, ProdOrPowerType)
 
-data TupleTypeDefEnd =
+data ProdOrPowerType =
   PT4 ProdType | PoT4 PowerType
 
 newtype TypeName =
@@ -294,7 +278,7 @@ data TypeFunc =
   TF_1 (Bool, TypeId, String, Bool) | TF_2 (TypeId, Bool) | TF_3 TypeId
 
 data TTValueExpr =
-  LE LineExpr | BOCE BigOrCasesExpr
+  LE2 LineExpr | BOCE BigOrCasesExpr
 
 data BigOrCasesExpr =
   BOE4 BigOpExpr | BFE3 BigFuncExpr | CFE3 CasesFuncExpr | BT2 BigTuple |

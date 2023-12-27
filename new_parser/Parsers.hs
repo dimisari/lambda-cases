@@ -138,65 +138,34 @@ instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
 
 instance HasParser InsideParenExpr where
-  parser =
-    LOE1 <$> try parser <|> LFE1 <$> try parser <|> ROM1 <$> try parser <|>
-    LOBM1 <$> parser
-
-instance HasParser RightOperandMissing where
-  parser = ROM <$> parser +++ optionMaybe (parser +++ (char ' ' *> parser)) 
-
-instance HasParser LeftOrBothMissing where
-  parser = LOBML1 <$> try parser <|> FCO1 <$> (optional (char ' ') *> parser)
-
-instance HasParser LeftOrBothMissingLong where
-  parser =
-    parser >>= \starting_op ->
-    many (try $ parser +++ parser) >>= \oper_op_pairs ->
-    optionMaybe parser >>= \maybe_lobmle ->
-    return $ LOBML (starting_op, oper_op_pairs, maybe_lobmle)
-
-instance HasParser LeftOrBothMissingLongEnd where
-  parser =
-    LOBMLE2 <$> try parser <|>
-    LOBMLE1 <$> parser +++ optionMaybe (char ' ' *> parser)
-
-instance HasParser StartingOp where
-  parser = Op1 <$> try parser <|> FCO2 <$> (parser <* char ' ')
+  parser = LOE1 <$> try parser <|> LFE1 <$> parser 
 
 instance HasParser Tuple where
-  parser = T <$> (char '(' *> optionMaybe parser <* comma) +++ (parser <* char ')')
+  parser = T <$> (char '(' *> parser) +++ (comma *> parser <* char ')')
 
-instance HasParser LineOrEmptyExprs where
-  parser =
-    many comma >>= length .> \num_of_commas ->
-    parser >>= \line_expr ->
-    many (comma *> optionMaybe parser) >>= \line_expr_maybes ->
-    return $ LOEE (num_of_commas, line_expr, line_expr_maybes)
+instance HasParser LineOrUnderExprs where
+  parser = LOUEs <$> parser +++ many (comma *> parser)
 
-instance HasParser LineExpr where
-  parser = LFE2 <$> try parser <|> LOE2 <$> try parser <|> NPOA1 <$> parser
+instance HasParser LineOrUnderExpr where
+  parser = LE1 <$> try parser <|> underscore *> return Underscore1
 
 instance HasParser BigTuple where
   parser =
-    char '(' *> optional (char ' ')  *>
-    optionMaybe parser <* optional (try nl_indent) <* comma >>= \maybe_le ->
-    parser >>= \line_or_empty_exprs ->
-    many (try (nl_indent *> comma) *> parser) >>= \line_or_empty_exprs_l ->
+    char '(' *> optional (char ' ') *> parser >>= \line_or_under_expr ->
+    optional (try nl_indent) *> comma *> parser >>= \line_or_under_exprs ->
+    many (try (nl_indent *> comma) *> parser) >>= \line_or_under_exprs_l ->
     nl_indent *> char ')' *>
-    return (BT (maybe_le, line_or_empty_exprs, line_or_empty_exprs_l))
+    return (BT (line_or_under_expr, line_or_under_exprs, line_or_under_exprs_l))
 
 instance HasParser List where
   parser = L <$> (char '[' *> optionMaybe parser <* char ']')
 
-instance HasParser LineExprs where
-  parser = CSLE <$> parser +++ (many (comma *> parser))
-
 instance HasParser BigList where
   parser =
-    char '[' *> optional (char ' ') *> parser >>= \comma_sep_line_exprs ->
-    many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
+    char '[' *> optional (char ' ') *> parser >>= \line_or_under_exprs ->
+    many (try (nl_indent *> comma) *> parser) >>= \line_or_under_exprs_l ->
     nl_indent *> char ']' *>
-    (return $ BL (comma_sep_line_exprs, comma_sep_line_exprs_l))
+    (return $ BL (line_or_under_exprs, line_or_under_exprs_l))
 
 instance HasParser ParenFuncApp where
   parser = 
@@ -246,16 +215,6 @@ instance HasParser PreFunc where
 instance HasParser PreFuncApp where
   parser = PrFA <$> parser +++ parser
 
-instance HasParser PreFuncArg where
-  parser =
-    PrFA1 <$> try parser <|> PoFA1 <$> try parser <|> PE1 <$> try parser <|>
-    BE1 <$> parser
-
-instance HasParser BasicExpr where
-  parser =
-    PFA <$> try parser <|> SI1 <$> try parser <|> Lit1 <$> parser <|>
-    Id1 <$> parser <|> T1 <$> parser <|> L1 <$> parser
-
 instance HasParser PostFunc where
   parser = char '.' *> (C1 <$> parser <|> Id2 <$> parser <|> SI2 <$> parser)
 
@@ -270,7 +229,13 @@ instance HasParser PostFuncApp where
     PoFA <$> post_func_arg_p +++ many1 parser
     where
     post_func_arg_p :: Parser PostFuncArg
-    post_func_arg_p = PE2 <$> try parser <|> BE2 <$> parser
+    post_func_arg_p =
+      PE2 <$> try parser <|> BE2 <$> parser <|> underscore *> return Underscore2
+
+instance HasParser BasicExpr where
+  parser =
+    PFA <$> try parser <|> SI1 <$> try parser <|> Lit1 <$> parser <|>
+    Id1 <$> parser <|> T1 <$> parser <|> L1 <$> parser
 
 instance HasParser Change where
   parser = 
@@ -329,15 +294,11 @@ instance HasParser BigOrCasesFuncExpr where
   parser = BFE1 <$> try parser <|> CFE1 <$> parser
   
 instance HasParser Operand where
-  parser = PE3 <$> try parser <|> NPOA2 <$> parser
+  parser =
+    PE3 <$> try parser <|> BOAE2 <$> try parser <|> underscore *> return Underscore3
 
-instance HasParser NoParenOperand where
-  parser =  
-    PoF <$> parser <|>
-    PrFA2 <$> try parser <|>
-    PoFA2 <$> try parser <|>
-    PrF <$> try parser <|>
-    BE3 <$> parser 
+instance HasParser BasicOrAppExpr where
+  parser = PrFA1 <$> try parser <|> PoFA1 <$> try parser <|> BE3 <$> parser 
 
 instance HasParser Op where
   parser =  
@@ -376,20 +337,20 @@ instance HasParser FuncExpr where
 instance HasParser LineFuncExpr where
   parser = LFE <$> parser +++ (string " =>" *> parser)
 
-instance HasParser LineFuncBody where
-  parser = char ' ' *> (LOE4 <$> try parser <|> NPOA3 <$> parser)
-
 instance HasParser BigFuncExpr where
   parser = BFE <$> parser +++ (string " =>" *> parser)
-
-instance HasParser BigFuncBody where
-  parser = nl_indent *> (OE1 <$> try parser <|> NPOA4 <$> parser)
 
 instance HasParser Parameters where
   parser = OneParam <$> parser <|> ManyParams <$> parser
 
 instance HasParser ParenCommaSepIds where
   parser = PCSIs <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
+
+instance HasParser LineFuncBody where
+  parser = char ' ' *> (LOE4 <$> try parser <|> BOAE3 <$> parser)
+
+instance HasParser BigFuncBody where
+  parser = nl_indent *> (OE1 <$> try parser <|> BOAE4 <$> parser)
 
 instance HasParser CasesFuncExpr where 
   parser =
@@ -465,7 +426,7 @@ instance HasParser ValueExpr where
     FE2 <$> try parser <|>
     BT1 <$> try parser <|>
     BL1 <$> try parser <|>
-    NPOA5 <$> parser
+    BOAE5 <$> parser
 
 instance HasParser GroupedValueDefs where
   parser = 
@@ -485,6 +446,12 @@ instance HasParser GroupedValueDefs where
     types_p =
       Ts <$> (parser +++ (many1 $ comma *> parser)) <|>
       All <$> (string "all " *> parser)
+
+instance HasParser LineExprs where
+  parser = CSLE <$> parser +++ (many (comma *> parser))
+
+instance HasParser LineExpr where
+  parser = LFE2 <$> try parser <|> LOE2 <$> try parser <|> BOAE1 <$> parser
 
 instance HasParser WhereExpr where
   parser = 
@@ -575,7 +542,7 @@ instance HasParser TupleTypeDef where
     string " : " *> parser >>= \tuple_type_def_end ->
     return $ TTD (type_name, paren_comma_sep_ids, tuple_type_def_end)
 
-instance HasParser TupleTypeDefEnd where
+instance HasParser ProdOrPowerType where
   parser = PT4 <$> try parser <|> PoT4 <$> parser
 
 instance HasParser TypeName where
@@ -715,7 +682,7 @@ instance HasParser TypeFunc where
 instance HasParser TTValueExpr where
   parser =
     BOCE <$> (try (increase_il 2 >> nl_indent) *> parser <* decrease_il 2) <|>
-    LE <$> (char ' ' *> parser)
+    LE2 <$> (char ' ' *> parser)
 
 instance HasParser BigOrCasesExpr where
   parser = 

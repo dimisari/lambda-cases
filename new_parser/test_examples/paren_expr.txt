@@ -6,15 +6,15 @@
 
 (n => 3*n + 1)#
 
-(2 *)#
+(2 * _)#
 
-(- 1)#
+(_-1)#
 
-("Hello " + "it's me, " +)#
+("Hello " + "it's me, " + _)#
 
-(+ "string in the middle of the arguments" +)#
+(_ + "string in the middle of the arguments" + _)#
 
-(*)#
+(_ * _)#
 
-( ;> line => print("Line is: " + line))#
+(_ ;> line => print("Line is: " + line))#
 
