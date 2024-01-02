@@ -1316,18 +1316,28 @@ The grammar for a function expression is:
 
 \begin{verbatim}
 a => 17 * a + 42
+(a, b) => a + 2*b
 (x, y, z) => sqrt(x^2 + y^2 + z^2)
+_ => 42
+(x, _, z) => x + z
+((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2)
 \end{verbatim}
 
 \item \textit{Description}
 
 Regular function expressions are used to define functions or be part of bigger
 expressions as anonymous functions. They are comprised by their parameters and
-their body. A parameter has an identifier. The parameters are either
-only one, in which case there is no parenthesis, or they are many, in which
-case they are in parenthesis, seperated by commas. The parameters and the body
-are seperated by an arrow (" \texttt{=>} "). The body is an operator
-expression or an operator argument expression.
+their body.
+\\\\
+Parameters have identifiers. There is either only one parameter, in which case
+there is no parenthesis, or there are many, in which case they are in
+parentheses, seperated by commas. If a parameter is not needed it can be left
+empty by having an underscore instead of an identifier (3rd and 4th example).
+If a parameter is a tuple itself it can be matched further by using parentheses
+and giving identifiers to its fields (5th example).
+\\\\
+The parameters and the body are seperated
+by an arrow (" \texttt{=>} "). The body is an operator or operand expression.
 
 \item \textit{Big Function Expressions}\\\\
 \textbf{Example}
@@ -1362,9 +1372,7 @@ The precise indentation rules are described in the section
 
 <big-func-expr> ::= <parameters> `\ =>' <big-func-body>
 
-<parameters> ::= <identifier> | <paren-comma-sep-ids>
-
-<paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
+<parameters> ::= <identifier> | `_' | `(' <parameters> ( <comma> <parameters> )+ `)'
 
 <line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
 
@@ -1432,10 +1440,10 @@ apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
 
 \item \textit{Description}
 
-"cases" is a keyword that works as a special parameter. The difference is that
-instead of giving the name "cases" to that parameter, it allows the programmer
-to pattern match on the possible values of that parameter and return a
-different result for each particular case. 
+"cases" is a keyword that works as a special parameter.  Instead of giving the
+name "cases" to that parameter, it is used to pattern match on the possible
+values of that parameter and return a different result for each particular
+case. 
 \\\\
 The last case can be "\texttt{... => (body of default case)}" to capture all
 remaining cases while dismissing the value (e.g.
@@ -1458,12 +1466,10 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 \item \textit{Grammar}
 \begin{grammar}
-<cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
+<cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
 
-<cases-parameters> ::=
-<cases-parameter> | `(' <cases-parameter> ( <comma> <cases-parameter> )+ `)'
-
-<cases-parameter> ::= <identifier> | `cases'
+<cases-params> ::=
+<identifier> | `cases' | `_' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
 \\
 
 <case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
@@ -1786,21 +1792,17 @@ if the value expression is a big or cases expression:
 
 <big-func-expr> ::= <parameters> `\ =>' <big-func-body>
 
-<parameters> ::= <identifier> | <paren-comma-sep-ids>
-
-<paren-comma-sep-ids> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
+<parameters> ::= <identifier> | `_' | `(' <parameters> ( <comma> <parameters> )+ `)'
 
 <line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
 
 <big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
 \\
 
-<cases-func-expr> ::= <cases-parameters> <case>+ [ <end-case> ]
+<cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
 
-<cases-parameters> ::=
-<cases-parameter> | `(' <cases-parameter> ( <comma> <cases-parameter> )+ `)'
-
-<cases-parameter> ::= <identifier> | `cases'
+<cases-params> ::=
+<identifier> | `cases' | `_' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
 \\
 
 <case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
@@ -2183,14 +2185,15 @@ their argument.
 \begin{grammar}
 <tuple-type-def> ::= ""\\
 `tuple_type\ ' <type-name> <nl> \\
-`value' <nl> `\ \ ' <paren-comma-sep-ids> `\ :\ '
-( <prod-type> | <power-type> )
+`value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
 [ <params-in-paren> ]
 
 <params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
+
+<id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 \end{grammar}
 
 \end{itemize}
@@ -2728,14 +2731,15 @@ the "\texttt{=>}" arrow.
 
 <tuple-type-def> ::= ""\\
 `tuple_type\ ' <type-name> <nl> \\
-`value' <nl> `\ \ ' <paren-comma-sep-ids> `\ :\ '
-( <prod-type> | <power-type> )
+`value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
 
 <type-name> ::= 
 [ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
 [ <params-in-paren> ]
 
 <params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
+
+<id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 \\
 
 <or-type-def> ::= ""\\

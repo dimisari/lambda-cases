@@ -341,10 +341,10 @@ instance HasParser BigFuncExpr where
   parser = BFE <$> parser +++ (string " =>" *> parser)
 
 instance HasParser Parameters where
-  parser = OneParam <$> parser <|> ManyParams <$> parser
-
-instance HasParser ParenCommaSepIds where
-  parser = PCSIs <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
+  parser =
+    ParamId <$> parser <|>
+    char '_' *> return Underscore4 <|>
+    Params <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
 
 instance HasParser LineFuncBody where
   parser = char ' ' *> (LOE4 <$> try parser <|> BOAE3 <$> parser)
@@ -364,14 +364,10 @@ instance HasParser CasesFuncExpr where
 
 instance HasParser CasesParams where
   parser = 
-    OneCParam <$> cases_param_p <|>
-    ( char '(' *> cases_param_p >>= \cases_param ->
-      many1 (comma *> cases_param_p) <* char ')' >>= \cases_params ->
-      return $ ManyCParams (cases_param, cases_params)
-    )
-    where
-    cases_param_p :: Parser CasesParam
-    cases_param_p = try (string "cases") *> return CasesKeyword <|> Id4 <$> parser
+    try (string "cases") *> return CasesKeyword <|>
+    char '_' *> return Underscore5 <|>
+    CParamId <$> parser <|>
+    CParams <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
 
 instance HasParser Case where
   parser = Ca <$> (try $ nl_indent *> parser) +++ (string " =>" *> parser)
@@ -555,6 +551,9 @@ instance HasParser TypeName where
 
 instance HasParser ParamsInParen where
   parser = PIP <$> (char '(' *> parser) +++ (many (comma *> parser) <* char ')')
+
+instance HasParser IdTuple where
+  parser = PCSIs <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
 
 instance HasParser OrTypeDef where
   parser =

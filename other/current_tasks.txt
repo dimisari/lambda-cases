@@ -1,5 +1,5 @@
 
-- tuple matching inside func parameters
+- insert all examples from pdf 
 
 - T1 ... Tn instead of A ... Z for type variables
 

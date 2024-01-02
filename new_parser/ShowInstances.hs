@@ -44,7 +44,7 @@ instance Show Tuple where
   show = \(T (loue, loues)) -> "(" ++ show loue ++ ", " ++ show loues ++ ")"
 
 instance Show LineOrUnderExprs where
-  show = \(LOUEs (loue, loues)) -> show loue ++ ", " ++ show_list_comma loues
+  show = \(LOUEs (loue, loues)) -> show loue ++ show_list_comma loues
 
 instance Show LineOrUnderExpr where
   show = \case
@@ -249,18 +249,17 @@ instance Show FuncExpr where
     CFE2 cfe -> show cfe
 
 instance Show LineFuncExpr where
-  show = \(LFE (params, sfb)) -> show params ++ " =>" ++ show sfb
+  show = \(LFE (params, lfb)) -> show params ++ " =>" ++ show lfb
 
 instance Show BigFuncExpr where
   show = \(BFE (params, bfb)) -> show params ++ " =>" ++ show bfb
 
 instance Show Parameters where
   show = \case
-    OneParam id -> show id
-    ManyParams pcsis -> show pcsis
-
-instance Show ParenCommaSepIds where
-  show = \(PCSIs (id, ids)) -> "(" ++ show id ++ show_list_comma ids ++ ")"
+    ParamId id -> show id
+    Underscore4 -> "_"
+    Params (params, params_l) ->
+      "(" ++ show params ++ show_list_comma params_l ++ ")"
 
 instance Show LineFuncBody where
   show = \case
@@ -278,19 +277,16 @@ instance Show CasesFuncExpr where
 
 instance Show CasesParams where
   show = \case
-    OneCParam cp -> show cp
-    ManyCParams (cp, cps) -> "(" ++ show cp ++ show_list_comma cps ++ ")"
-
-instance Show CasesParam where
-  show = \case
-    Id4 id -> show id
+    CParamId id -> show id
     CasesKeyword -> "cases"
+    Underscore5 -> "_"
+    CParams (cps, cps_l) -> "(" ++ show cps ++ show_list_comma cps_l ++ ")"
 
 instance Show Case where
-  show = \(Ca (m, cb)) -> "\n" ++ show m ++ " => " ++ show cb
+  show = \(Ca (m, cb)) -> "\n" ++ show m ++ " =>" ++ show cb
 
 instance Show EndCase where
-  show = \(EC cb) -> "\n... => " ++ show cb
+  show = \(EC cb) -> "\n... =>" ++ show cb
 
 instance Show Matching where
   show = \case
@@ -313,7 +309,7 @@ instance Show CaseBody where
 
 instance Show CaseBodyStart where
   show = \case
-    LFB1 sfb -> show sfb
+    LFB1 lfb -> show lfb
     BFB1 bfb -> show bfb
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
@@ -457,6 +453,9 @@ instance Show TypeName where
 
 instance Show ParamsInParen where
   show = \(PIP (tv, tvs)) -> "(" ++ show tv ++ show_list_comma tvs ++ ")"
+
+instance Show IdTuple where
+  show = \(PCSIs (id, ids)) -> "(" ++ show id ++ show_list_comma ids ++ ")"
 
 instance Show OrTypeDef where
   show =

@@ -122,9 +122,7 @@ newtype LineFuncExpr = LFE (Parameters, LineFuncBody)
 newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
 
 data Parameters = 
-  OneParam Identifier | ManyParams ParenCommaSepIds
-
-newtype ParenCommaSepIds = PCSIs (Identifier, [Identifier])
+  ParamId Identifier | Underscore4 | Params (Parameters, [Parameters])
 
 data LineFuncBody = 
   BOAE3 BasicOrAppExpr | LOE4 LineOpExpr
@@ -135,10 +133,8 @@ data BigFuncBody =
 newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
 
 data CasesParams =
-  OneCParam CasesParam | ManyCParams (CasesParam, [CasesParam])
-
-data CasesParam =
-  Id4 Identifier | CasesKeyword
+  CParamId Identifier | CasesKeyword | Underscore5 |
+  CParams (CasesParams, [CasesParams])
 
 newtype Case = Ca (Matching, CaseBody)
 
@@ -227,7 +223,7 @@ newtype Condition = Co PropName
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
-newtype TupleTypeDef = TTD (TypeName, ParenCommaSepIds, ProdOrPowerType)
+newtype TupleTypeDef = TTD (TypeName, IdTuple, ProdOrPowerType)
 
 data ProdOrPowerType =
   PT4 ProdType | PoT4 PowerType
@@ -236,6 +232,8 @@ newtype TypeName =
   TN (Maybe ParamsInParen, TypeId, [(ParamsInParen, String)], Maybe ParamsInParen)
 
 newtype ParamsInParen = PIP (TypeVar, [TypeVar])
+
+newtype IdTuple = PCSIs (Identifier, [Identifier])
 
 newtype OrTypeDef =
   OTD (TypeName, Identifier, Maybe SimpleType, [(Identifier, Maybe SimpleType)])

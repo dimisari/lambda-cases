@@ -26,7 +26,7 @@
 
 - good page changes in description pdf
 
-- leave empty params for when not used?  
+- underscore in tuple matching ?
 
 - problem with func comp ops and "o" > or < ? grammar ambiguity?
 
