@@ -1,20 +1,8 @@
 (1 + 2)#
 
-(((1 + 2) * 3) ^ 4)#
-
-(get_line ;> line => print("Line is: " + line))#
+(((1 + 2) * 3)^4)#
 
 (n => 3*n + 1)#
 
-(2 * _)#
-
-(_-1)#
-
-("Hello " + "it's me, " + _)#
-
-(_ + "string in the middle of the arguments" + _)#
-
-(_ * _)#
-
-(_ ;> line => print("Line is: " + line))#
+(get_line ;> line => print("Line is: " + line))#
 

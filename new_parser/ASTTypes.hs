@@ -122,7 +122,7 @@ newtype LineFuncExpr = LFE (Parameters, LineFuncBody)
 newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
 
 data Parameters = 
-  ParamId Identifier | Underscore4 | Params (Parameters, [Parameters])
+  ParamId Identifier | Star1 | Params (Parameters, [Parameters])
 
 data LineFuncBody = 
   BOAE3 BasicOrAppExpr | LOE4 LineOpExpr
@@ -133,7 +133,7 @@ data BigFuncBody =
 newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
 
 data CasesParams =
-  CParamId Identifier | CasesKeyword | Underscore5 |
+  CParamId Identifier | CasesKeyword | Star2 |
   CParams (CasesParams, [CasesParams])
 
 newtype Case = Ca (Matching, CaseBody)
@@ -194,15 +194,18 @@ data InOrOutType =
   TId2 TypeId | TV2 TypeVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp |
   FT2 FuncType
 
-newtype ProdType = PT (FieldType, [FieldType])
+newtype ProdType = PT (FieldOrPowerType, [FieldOrPowerType])
 
-newtype PowerType = PoT (FieldType, [Int])
+data FieldOrPowerType =
+  FiT1 FieldType | PoT3 PowerType 
 
 data FieldType = 
   TId3 TypeId | TV3 TypeVar | TA3 TypeApp | IPT InParenT
 
 data InParenT = 
   FT3 FuncType | PT3 ProdType
+
+newtype PowerType = PoT (FieldType, [Int])
 
 data TypeApp =  
   TIWA1 (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |

@@ -1,8 +1,7 @@
 
 where
 less_l, greater_l : all ListOf(Int)s
-  = filter_with(x => x < l.head, l.tail)
-  , filter_with(x => x >= l.head, l.tail)#
+  = filter(l.tail)with(_ < l.head), filter(l.tail)with(_ >= l.head)#
 
 
 where

@@ -1,34 +1,31 @@
 
-- Z, R, C for number types
+- problem with func comp ops and "o" > or < ? grammar ambiguity?
 
 --------------------------------------------------------------later
 
-- spaces
-  - ?
-    - field change <- I vote no
-    - params arrow <- I vote no
-    - case arrow <- I vote no
-    - end case arrow <- I vote no
-    - value def
-      - after : <- I vote no
-      - after = <- I vote no
-    - grouped value defs
-      - after : <- I vote no
-      - after = <- I vote no
-
-    - func type <- I vote no 
-    - power type: add possibility for spaces around '^' 
-    - condition <- I vote no
-    - or type def around '|'
-    - type nickname <- I vote no
-    - atom prop def: around ':' <- I vote no
-    - type theorem <- I vote no
-
 - good page changes in description pdf
 
-- underscore in tuple matching ?
+- spaces
+  - ?
+    - change: add optional
+    - field change: make optional
+    - params arrow: make optional
+    - case arrow: make optional
+    - end case arrow: make optional
+    - value def: make optional
+      - after : 
+      - after = 
+    - grouped value defs: make optional
+      - after :
+      - after =
 
-- problem with func comp ops and "o" > or < ? grammar ambiguity?
+    - func type: make optional
+    - power type: add optional around '^' 
+    - conditio: make optional
+    - or type def: make optional around '|'
+    - type nickname: make optional
+    - atom prop def: make optional around ':'
+    - type theorem: make optional
 
 - turn all args in paren func app into a tuple
   - try to typecheck with the whole tuple as the first arg

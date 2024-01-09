@@ -6,7 +6,7 @@ Char#
 
 String#
 
-FunnyType#
+SelfReferencingType#
 
 MyDefinedType#
 

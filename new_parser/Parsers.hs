@@ -343,7 +343,7 @@ instance HasParser BigFuncExpr where
 instance HasParser Parameters where
   parser =
     ParamId <$> parser <|>
-    char '_' *> return Underscore4 <|>
+    char '*' *> return Star1 <|>
     Params <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
 
 instance HasParser LineFuncBody where
@@ -365,7 +365,7 @@ instance HasParser CasesFuncExpr where
 instance HasParser CasesParams where
   parser = 
     try (string "cases") *> return CasesKeyword <|>
-    char '_' *> return Underscore5 <|>
+    char '*' *> return Star2 <|>
     CParamId <$> parser <|>
     CParams <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
 
@@ -488,13 +488,16 @@ instance HasParser InOrOutType where
 instance HasParser ProdType where
   parser = PT <$> parser +++ (many1 $ try (string " x ") *> parser)
 
-instance HasParser PowerType where
-  parser = PoT <$> parser +++ (many1 $ try (string "^") *> parser)
+instance HasParser FieldOrPowerType where
+  parser = PoT3 <$> try parser <|> FiT1 <$> parser 
 
 instance HasParser FieldType where
   parser =
     IPT <$> try (in_paren $ FT3 <$> try parser <|> PT3 <$> parser) <|>
     TA3 <$> try parser <|> TId3 <$> try parser <|> TV3 <$> parser
+
+instance HasParser PowerType where
+  parser = PoT <$> parser +++ (many1 $ try (string "^") *> parser)
 
 instance HasParser TypeApp where
   parser =
@@ -623,8 +626,10 @@ instance HasParser TypeTheo where
     optionMaybe (string " => " *> parser) >>= \maybe_pps ->
     nl *> string "proof" *> nl *> string "  " *> parser >>= \id ->
     optionMaybe (try op_id_p) >>= \maybe_op_id ->
+    increase_il 2 *>
     string " =" *> parser >>= \ttve ->
-    return $ TT (pps, maybe_pps, id, maybe_op_id, ttve)
+    decrease_il 2 *>
+    return (TT (pps, maybe_pps, id, maybe_op_id, ttve))
     where
     op_id_p :: Parser (Op, Identifier)
     op_id_p = parser +++ (parser <* followed_by_equal)
@@ -679,9 +684,7 @@ instance HasParser TypeFunc where
     paren_lower_uppers_p = string "()" *> fmap ("()" ++) (many1 $ lower <|> upper) 
 
 instance HasParser TTValueExpr where
-  parser =
-    BOCE <$> (try (increase_il 2 >> nl_indent) *> parser <* decrease_il 2) <|>
-    LE2 <$> (char ' ' *> parser)
+  parser = BOCE <$> (try nl_indent *> parser) <|> LE2 <$> (char ' ' *> parser)
 
 instance HasParser BigOrCasesExpr where
   parser = 

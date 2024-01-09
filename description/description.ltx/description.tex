@@ -36,17 +36,17 @@
 \newpage
 \section{Introduction}
 
-\H\ is a delightful language. Yet, for some reason, it doesn't seem to have
-its rightful place in terms of popularity in industry. Why is it so?  Is it
-inherently hard to learn and therefore only the brave dare to use it, or could
-it be that the syntax is perplexing to the amateur eye? It is my belief that
-with some syntax changes that give a greater familiarity to the new user, there
-would be no language more compelling than (the new) \H. In an attempt to
-achieve that familiarity, I present some (hopefully useful) new syntax, of
-which some is closer to the imperative/OOP style (to attract more already
-experienced programmers from these languages), some is closer to mathematics
-(in which most programmers should be experienced) and some is closer to natural
-language (in which we are all already experienced). 
+\H\ is a delightful language. Yet, it doesn't seem to have its rightful place
+in terms of popularity in industry. Why is it so?  Is it inherently hard to
+learn and therefore only the brave dare to use it, or could it be that the
+syntax is perplexing to the amateur eye? It is my belief that with some syntax
+changes that give a greater familiarity to the new user, there would be no
+language more compelling than (the new) \H. In an attempt to achieve that
+familiarity, I present some (hopefully useful) new syntax, of which some is
+closer to the imperative/OOP style (to attract more already experienced
+programmers from these languages), some is closer to mathematics (in which most
+programmers should be experienced) and some is closer to natural language (in
+which we are all already experienced). 
 
 \section{Language Description: General}
 
@@ -83,13 +83,13 @@ print_gcd_message : NumsAndGcd => IO
       = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " + nums_gcd.gcd
 
 main : IO
-  = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i1))
+  = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i2))
 \end{verbatim}
 
 \paragraph{Program grammar}
 \begin{grammar}
 <program> ::=
-<nl>* <program-part> ( <nl> <nl> <program-part> )* <spaces>
+<nl>* <program-part> ( <nl> <nl> <program-part> )* <nl>*
 
 <program-part> ::=
 <value-def> | <grouped-value-defs> | <type-def> | <t-nickname> | <type-prop-def> |
@@ -114,12 +114,14 @@ table below:
 Keyword & Section \\ 
 \hline
 \hline
-\texttt{cases} & \ref{subsec:funcexprs} Function Expressions \\
+\texttt{cases} & \ref{subsubsec:casessyntax} "cases" Function Expressions \\
 \hline
-\texttt{where all} & \ref{subsec:valdefswhere} Value Definitions \\
+\texttt{all} & \ref{subsubsec:valdefs} Value Definitions \\
+\hline
+\texttt{where} & \ref{subsubsec:whereexprs} "where" Expressions \\
 \hline
 \texttt{tuple_type value or_type values type_nickname} &
-\ref{subsec:types} Type Definitions \\
+\ref{subsec:types} Types \\
 \hline
 \texttt{type_proposition value equivalent type_theorem proof} &
 {\ref{subsec:typelogic} Type Logic} \\
@@ -170,7 +172,6 @@ usual integers, real numbes, characters and strings.
 \begin{verbatim}
 x y z
 a1 a2 a3 
-unnecessarily_long_identifier
 self_referencing_identifier 
 apply()to_all
 \end{verbatim}
@@ -1318,8 +1319,8 @@ The grammar for a function expression is:
 a => 17 * a + 42
 (a, b) => a + 2*b
 (x, y, z) => sqrt(x^2 + y^2 + z^2)
-_ => 42
-(x, _, z) => x + z
+* => 42
+(x, *, z) => x + z
 ((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2)
 \end{verbatim}
 
@@ -1372,7 +1373,7 @@ The precise indentation rules are described in the section
 
 <big-func-expr> ::= <parameters> `\ =>' <big-func-body>
 
-<parameters> ::= <identifier> | `_' | `(' <parameters> ( <comma> <parameters> )+ `)'
+<parameters> ::= <identifier> | `*' | `(' <parameters> ( <comma> <parameters> )+ `)'
 
 <line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
 
@@ -1469,7 +1470,7 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
 
 <cases-params> ::=
-<identifier> | `cases' | `_' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
+<identifier> | `cases' | `*' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
 \\
 
 <case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
@@ -1564,6 +1565,7 @@ keyword "all" to give the same type to all the values.
 \end{itemize}
 
 \subsubsection{"where" Expressions}
+\label{subsubsec:whereexprs}
 
 \begin{itemize}
 
@@ -1616,236 +1618,6 @@ indentation.
 \end{grammar}
 
 \end{itemize}
-
-\subsection{Indentation and Complete Grammar for Values}
-
-\subsubsection{Indentation System}
-\label{subsubsec:indsys}
-
-The \textit{$<$indent$>$} nonterminal in not a normal BNF nonterminal. It is a
-context sensitive construct that enforces the indentation rules of lcases.
-It depends on a integer value called the "indentation level" ($il$).
-The \textit{$<$indent$>$} nonterminal corresponds to $2*il$ space characters.
-The indentation level follows the rules below:
-
-\paragraph{Indentation Rules}
-\begin{itemize}
-
-\item
-At the beginnng: $il = 0$.
-
-\item
-At the end of the first line of a value definition: $il \leftarrow il + 1$.
-This also applies to grouped value definitions.
-
-\item
-At the end of the third line ("=" line) of a (single) value definition: $il
-\leftarrow il + 1$.
-
-\item
-At the end of a (single) value definition: $il \leftarrow il - 2$.
-
-\item
-At the end of grouped value definitions: $il \leftarrow il - 1$.
-
-\item
-After the "\texttt{=>}" arrow in a case: $il \leftarrow il + 1$.
-
-\item
-At the end of a case body: $il \leftarrow il - 1$.
-
-\item
-In a cases function expression which does not begin at the "=" line of a value
-definition:
-  \begin{itemize}
-
-  \item
-  After the arrow "\texttt{=>}" at the end of the paremeters: $il \leftarrow il + 1$.
-
-  \item
-  At the end of the cases function expression: $il \leftarrow il - 1$.
-
-  \end{itemize}
-
-\item
-In a type theorem (section \ref{subsubsec:ttheo}),
-if the value expression is a big or cases expression: 
-  \begin{itemize}
-
-  \item
-  After "\texttt{=}" line: $il \leftarrow il + 2$.
-
-  \item
-  After the value expression: $il \leftarrow il - 2$.
-  \end{itemize}
-
-\end{itemize}
-
-\subsubsection{Complete Grammar for Values}
-\begin{grammar}
-
-<literal> ::= <int-lit> | <real-lit> | <char-lit> | <string-lit>
-\\
-
-<identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
-\\
-
-<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
-\\
-
-<tuple> ::= `(' <line-or-under-expr> <comma> <line-or-under-exprs> `)'
-
-<line-or-under-exprs> ::= <line-or-under-expr> ( <comma> <line-or-under-expr> )*
-
-<line-or-under-expr> ::= <line-expr> | `_'
-
-<comma> ::= `,' [ `\ ' ]
-\\
-
-<big-tuple> ::= ""\\
-`(' [ `\ ' ] <line-or-under-expr> [ <nl> <indent> ]
-<comma> <line-or-under-exprs> \\
-( <nl> <indent> <comma> <line-or-under-exprs> )* 
-<nl> <indent> `)'
-\\
-
-<list> ::= `[' [ <line-or-under-exprs> ] `]'
-
-<big-list> ::= 
-`[' [ `\ ' ] <line-or-under-exprs>
-( <nl> <indent> <comma> <line-or-under-exprs> )* <nl> <indent> `]'
-\\
-
-<paren-func-app> ::= ""\\""
-[ <arguments> ] <identifier-with-arguments> [ <arguments> ]
-\alt " "<arguments> <identifier> [ <arguments> ]
-\alt " "<identifier> <arguments>
-
-<arguments> ::= `(' <line-or-under-exprs> `)'
-
-<identifier-with-arguments> ::= ""\\""
-[a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
-[a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
-[ [0-9] ]
-\\
-
-<pre-func> ::= <identifier> `:'
-
-<pre-func-app> ::= <pre-func> <operand>
-\\
-
-<post-func> ::= `.' ( <identifier> | <special-id> | <change> )
-
-<special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
-
-<post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
-
-<basic-expr> ::=
-<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
-\\
-
-<change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
-
-<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-or-under-expr>
-\\
-
-<op-expr> ::= <line-op-expr> | <big-op-expr>
-\\
-
-<op-expr-start> ::= ( <operand> <op> )+
-
-<line-op-expr> ::= <op-expr-start> ( <operand> | <line-func-expr> )
-\\
-
-<big-op-expr> ::= 
-<big-op-expr-op-split> | <big-op-expr-func-split>
-\\
-
-<big-op-expr-op-split> ::= 
-<op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
-
-<op-split-line> ::=
-<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent> 
-\\
-
-<big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
-\\
-
-<operand> ::= <basic-or-app-expr> | <paren-expr> | `_'
-
-<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
-\\
-
-<op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
-
-<func-comp-op> ::= `o>' | `<o'
-
-<optional-spaces-op> ::= 
-`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' | `<=' |
-`\&' | `|' | `;>' | `;'
-\\
-
-<func-expr> ::= <line-func-expr> | <big-func-expr> | <cases-func-expr>
-\\
-
-<line-func-expr> ::= <parameters> `\ =>' <line-func-body>
-
-<big-func-expr> ::= <parameters> `\ =>' <big-func-body>
-
-<parameters> ::= <identifier> | `_' | `(' <parameters> ( <comma> <parameters> )+ `)'
-
-<line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
-
-<big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
-\\
-
-<cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
-
-<cases-params> ::=
-<identifier> | `cases' | `_' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
-\\
-
-<case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
-
-<end-case> ::= <nl> <indent> `...\ =>' <case-body>
-\\
-
-<matching> ::= 
-<literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
-<list-matching>
-
-<tuple-matching> ::= `(' <matching> ( <comma> <matching> )+ `)'
-
-<list-matching> ::= `[' [ <matching> ( <comma> <matching> )* ] `]'
-\\
-
-<case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
-\\
-
-<value-def> ::= ""\\
-<indent> <identifier> 
-( `\ ' | <nl> <indent> ) `:\ ' <type> 
-<nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
-
-<value-expr> ::=
-<basic-or-app-expr> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
-\\
-
-<grouped-value-defs> ::= ""\\
-<indent> <identifier> ( <comma> <identifier> )+ \\
-( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
-<nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
-
-<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
-
-<line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
-\\
-
-<where-expr> ::=
-<nl> <indent> `where' <nl> <value-def-or-defs> ( <nl> <nl> <value-def-or-defs> )*
-
-<value-def-or-defs> ::= <value-def> | <grouped-value-defs> 
-\end{grammar}
 
 \section{Language Description: Types and Type Logic}
 
@@ -1983,8 +1755,8 @@ function type expressions.
 Int x Real x String
 ListOf(Int)s x Int x ListOf(String)s
 (Int => Int) x (Int x Real) x (Real => String)
-Int^2
-Real^3
+Int^2 x Int^2
+Real^3 x Real^3
 \end{verbatim}
 
 \item \textit{Description}
@@ -1999,12 +1771,13 @@ type, the power symbol '\texttt{\^}' and the number of times the type is repeate
 
 \item \textit{Grammar}
 \begin{grammar}
-<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
-
-<power-type> ::= <field-type> ( `^' <int-greater-than-one> )+
+<prod-type> ::=
+( <field-type> | <power-type> ) ( `\ x\ ' ( <field-type> | <power-type> ) )+
 
 <field-type> ::=
 <type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
+
+<power-type> ::= <field-type> ( `^' <int-greater-than-one> )+
 \end{grammar}
 \end{itemize}
 
@@ -2259,16 +2032,14 @@ matching that particular case in a function using the "cases" syntax.  An
 \texttt{or_type} definition automatically creates prefix functions for each
 case with an internal value (which are simply conversions from the type of the
 internal value to the \texttt{or_type}).  For example, for the case
-"\texttt{non_empty_l}" of a list, the function "\texttt{non_empty_l}:" is
+"\texttt{non_empty_l}" of a list, the function "\texttt{non_empty_l}:_" is
 automatically created from the definition for which we can say:
 \begin{verbatim}
-non_empty_l:
-  : NonEmptyListOf(A)s => ListOf(A)s
+non_empty_l:_ : NonEmptyListOf(A)s => ListOf(A)s
 \end{verbatim}
 Similarly:
 \begin{verbatim}
-the_value:
-  : A => Possibly(A)
+the_value:_ : A => Possibly(A)
 \end{verbatim}
 These functions are called "prefix functions" because they are prepended to their
 argument.
@@ -2284,7 +2055,7 @@ These functions can be used like any other function as arguments to other functi
 For example:
 \begin{verbatim}
 non_empty_ls_to_ls : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
-  = apply(non_empty_l:)to_each
+  = apply(non_empty_l:_)to_each
 \end{verbatim}
 
 \item \textit{Grammar}
@@ -2516,7 +2287,7 @@ following paragraphs.
 \begin{verbatim}
 type_theorem (Possibly())Has_A_Wrapper
 proof
-  wrapper = the_value:
+  wrapper = the_value:_
 
 type_theorem (ListOf()s)Has_A_Wrapper
 proof
@@ -2681,116 +2452,6 @@ the "\texttt{=>}" arrow.
 <big-op-expr> | <big-func-expr> | <cases-func-expr> | <big-tuple> | <big-list>
 \end{grammar} 
 
-\subsection{Complete Grammar for Types and Type Logic}
-
-\begin{grammar}
-<type> ::= [ <condition> ]  <simple-type> 
-
-<simple-type> ::=
-<type-id> | <type-var> | <func-type> | <prod-type> | <power-type> | <type-app>
-\\
-
-<type-id> ::= [A-Z] [A-Za-z]+ 
-
-<type-var> ::= [A-Z]
-\\
-
-<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
-
-<in-or-out-type> ::=
-<type-id> | <type-var> | <prod-type> | <power-type> | <type-app> |
-`(' <func-type> `)'
-\\
-
-<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
-
-<power-type> ::= <field-type> ( `^' <int-greater-than-one> )+
-
-<field-type> ::=
-<type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
-\\
-
-<type-app> ::= ""\\""
-[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id-or-var> [ <types-in-paren> ]
-\alt " "<type-id-or-var> <types-in-paren>
-
-<type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
-
-<type-id-or-var> ::= <type-id> | <type-var>
-
-<types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
-\\
-
-<condition> ::= <prop-name> `\ ==>\ ' 
-\\
-\\
-
-<type-def> ::= <tuple-type-def> | <or-type-def>
-\\
-
-<tuple-type-def> ::= ""\\
-`tuple_type\ ' <type-name> <nl> \\
-`value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
-
-<type-name> ::= 
-[ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
-[ <params-in-paren> ]
-
-<params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
-
-<id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
-\\
-
-<or-type-def> ::= ""\\
-`or_type\ ' <type-name> <nl> \\
-`values' <nl> `\ \ ' <identifier> [ `:' <simple-type> ]
-( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
-\\
-
-<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
-\\\\
-
-<type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
-\\
-
-<atom-prop-def> ::=
-<prop-name-line> <nl> `value' <nl> `\ \ ' <identifier> `\ :\ ' <simple-type>
-
-<renaming-prop-def> ::=
-<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( <comma> <prop-name> )*
-
-<prop-name-line> ::= `type_proposition\ ' <prop-name>
-
-<prop-name> ::=  ""\\""
-[A-Z] ( <name-part> <params-in-paren> )+ [ <name-part> ]
-\alt " "( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
-
-<name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
-\\
-
-<type-theo> ::= ""\\
-`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] <nl> \\
-`proof' <nl> `\ \ ' <identifier> [ <op> <identifier> ] `\ =' <tt-value-expr>
-
-<prop-name-sub> ::=  ""\\""
-[A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
-\alt " "( <param-subs-in-paren> <name-part> )+ [ <param-subs-in-paren> ]
-
-<param-subs-in-paren> ::= `(' <param-sub> ( <comma> <param-sub> )* `)'
-
-<param-sub> ::= <simple-type> | <type-func>
-
-<type-func> ::=
-[ `()' ] <type-id> ( `()' [A-Za-z]+ )+ [ `()' ] | `()' <type-id> [ `()' ] |
-<type-id> `()'
-
-<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <big-or-cases-expr>
-
-<big-or-cases-expr> ::=
-<big-op-expr> | <big-func-expr> | <cases-func-expr> | <big-tuple> | <big-list>
-\end{grammar}
-
 \section{Language Description: Predefined}
 
 \subsection{Values}
@@ -2814,7 +2475,7 @@ the "\texttt{=>}" arrow.
     \end{itemize}
 
   \item List:\\
-    \texttt{length, is_in, apply()to_all, filter_with, take()from, leave()from,
+    \texttt{length, is_in, apply()to_all, filter()with, take()from, leave()from,
     zip, unzip,\\ zip_with}
 
   \item IO
@@ -2833,10 +2494,10 @@ the "\texttt{=>}" arrow.
 \subsection{Types}
 
 \begin{itemize}
-\item Basic: \texttt{Int, Real, Char, String}\ \ \ TODO? array: eg 10 * Int?
+\item Basic: \texttt{Int, Real, Char, String}
 \item Or Types: \texttt{EmptyVal, Bool, Possibly(), ListOf()s, Result()OrError()}
 \item Tuple Types: \texttt{NonEmptyListOf()s}
-\item Type Nicknames: \texttt{IO}
+\item Type Nicknames: \texttt{IO, Z, R, C}
 \end{itemize}
 
 \subsection{Type Propositions}
@@ -2927,13 +2588,367 @@ the "\texttt{=>}" arrow.
 
 \end{itemize}
 
-\section{Parser implementation}
+\section{Parser Implementation}
 
 The parser was implemented using the parsec library.
 
-\subsection{AST Types}
+\subsection{Full grammar and indentation system}
 
-\subsection{Parsers}
+\subsubsection{Full grammar}
+
+\begin{grammar}
+
+<literal> ::= <int-lit> | <real-lit> | <char-lit> | <string-lit>
+\\
+
+<identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
+\\
+
+<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
+\\
+
+<tuple> ::= `(' <line-or-under-expr> <comma> <line-or-under-exprs> `)'
+
+<line-or-under-exprs> ::= <line-or-under-expr> ( <comma> <line-or-under-expr> )*
+
+<line-or-under-expr> ::= <line-expr> | `_'
+
+<comma> ::= `,' [ `\ ' ]
+\\
+
+<big-tuple> ::= ""\\
+`(' [ `\ ' ] <line-or-under-expr> [ <nl> <indent> ]
+<comma> <line-or-under-exprs> \\
+( <nl> <indent> <comma> <line-or-under-exprs> )* 
+<nl> <indent> `)'
+\\
+
+<list> ::= `[' [ <line-or-under-exprs> ] `]'
+
+<big-list> ::= 
+`[' [ `\ ' ] <line-or-under-exprs>
+( <nl> <indent> <comma> <line-or-under-exprs> )* <nl> <indent> `]'
+\\
+
+<paren-func-app> ::= ""\\""
+[ <arguments> ] <identifier-with-arguments> [ <arguments> ]
+\alt " "<arguments> <identifier> [ <arguments> ]
+\alt " "<identifier> <arguments>
+
+<arguments> ::= `(' <line-or-under-exprs> `)'
+
+<identifier-with-arguments> ::= ""\\""
+[a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
+[a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
+[ [0-9] ]
+\\
+
+<pre-func> ::= <identifier> `:'
+
+<pre-func-app> ::= <pre-func> <operand>
+\\
+
+<post-func> ::= `.' ( <identifier> | <special-id> | <change> )
+
+<special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
+
+<post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
+
+<basic-expr> ::=
+<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
+\\
+
+<change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
+
+<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-or-under-expr>
+\\
+
+<op-expr> ::= <line-op-expr> | <big-op-expr>
+\\
+
+<op-expr-start> ::= ( <operand> <op> )+
+
+<line-op-expr> ::= <op-expr-start> ( <operand> | <line-func-expr> )
+\\
+
+<big-op-expr> ::= 
+<big-op-expr-op-split> | <big-op-expr-func-split>
+\\
+
+<big-op-expr-op-split> ::= 
+<op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
+
+<op-split-line> ::=
+<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent> 
+\\
+
+<big-op-expr-func-split> ::= <op-expr-start> ( <big-func-expr> | <cases-func-expr> )
+\\
+
+<operand> ::= <basic-or-app-expr> | <paren-expr> | `_'
+
+<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
+\\
+
+<op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
+
+<func-comp-op> ::= `o>' | `<o'
+
+<optional-spaces-op> ::= 
+`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' | `<=' |
+`\&' | `|' | `;>' | `;'
+\\
+
+<func-expr> ::= <line-func-expr> | <big-func-expr> | <cases-func-expr>
+\\
+
+<line-func-expr> ::= <parameters> `\ =>' <line-func-body>
+
+<big-func-expr> ::= <parameters> `\ =>' <big-func-body>
+
+<parameters> ::= <identifier> | `*' | `(' <parameters> ( <comma> <parameters> )+ `)'
+
+<line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
+
+<big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
+\\
+
+<cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
+
+<cases-params> ::=
+<identifier> | `cases' | `*' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
+\\
+
+<case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
+
+<end-case> ::= <nl> <indent> `...\ =>' <case-body>
+\\
+
+<matching> ::= 
+<literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
+<list-matching>
+
+<tuple-matching> ::= `(' <matching> ( <comma> <matching> )+ `)'
+
+<list-matching> ::= `[' [ <matching> ( <comma> <matching> )* ] `]'
+\\
+
+<case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
+\\
+
+<value-def> ::= ""\\
+<indent> <identifier> 
+( `\ ' | <nl> <indent> ) `:\ ' <type> 
+<nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
+
+<value-expr> ::=
+<basic-or-app-expr> | <op-expr> | <func-expr> | <big-tuple> | <big-list>
+\\
+
+<grouped-value-defs> ::= ""\\
+<indent> <identifier> ( <comma> <identifier> )+ \\
+( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
+<nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
+
+<line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
+
+<line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
+\\
+
+<where-expr> ::=
+<nl> <indent> `where' <nl> <value-def-or-defs> ( <nl> <nl> <value-def-or-defs> )*
+
+<value-def-or-defs> ::= <value-def> | <grouped-value-defs> 
+\\
+
+<type> ::= [ <condition> ]  <simple-type> 
+
+<simple-type> ::=
+<type-id> | <type-var> | <func-type> | <prod-type> | <power-type> | <type-app>
+\\
+
+<type-id> ::= [A-Z] [A-Za-z]+ 
+
+<type-var> ::= [A-Z]
+\\
+
+<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
+
+<in-or-out-type> ::=
+<type-id> | <type-var> | <prod-type> | <power-type> | <type-app> |
+`(' <func-type> `)'
+\\
+
+<prod-type> ::=
+( <field-type> | <power-type> ) ( `\ x\ ' ( <field-type> | <power-type> ) )+
+
+<field-type> ::=
+<type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
+
+<power-type> ::= <field-type> ( `^' <int-greater-than-one> )+
+\\
+
+<type-app> ::= ""\\""
+[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
+\alt " "<types-in-paren> <type-id-or-var> [ <types-in-paren> ]
+\alt " "<type-id-or-var> <types-in-paren>
+
+<type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
+
+<type-id-or-var> ::= <type-id> | <type-var>
+
+<types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
+\\
+
+<condition> ::= <prop-name> `\ ==>\ ' 
+\\
+\\
+
+<type-def> ::= <tuple-type-def> | <or-type-def>
+\\
+
+<tuple-type-def> ::= ""\\
+`tuple_type\ ' <type-name> <nl> \\
+`value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
+
+<type-name> ::= 
+[ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
+[ <params-in-paren> ]
+
+<params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
+
+<id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
+\\
+
+<or-type-def> ::= ""\\
+`or_type\ ' <type-name> <nl> \\
+`values' <nl> `\ \ ' <identifier> [ `:' <simple-type> ]
+( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
+\\
+
+<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
+\\\\
+
+<type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
+\\
+
+<atom-prop-def> ::=
+<prop-name-line> <nl> `value' <nl> `\ \ ' <identifier> `\ :\ ' <simple-type>
+
+<renaming-prop-def> ::=
+<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( <comma> <prop-name> )*
+
+<prop-name-line> ::= `type_proposition\ ' <prop-name>
+
+<prop-name> ::=  ""\\""
+[A-Z] ( <name-part> <params-in-paren> )+ [ <name-part> ]
+\alt " "( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+
+<name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
+\\
+
+<type-theo> ::= ""\\
+`type_theorem\ ' <prop-name-sub> [ `\ =>\ ' <prop-name-sub> ] <nl> \\
+`proof' <nl> `\ \ ' <identifier> [ <op> <identifier> ] `\ =' <tt-value-expr>
+
+<prop-name-sub> ::=  ""\\""
+[A-Z] ( <name-part> <param-subs-in-paren> )+ [ <name-part> ]
+\alt " "( <param-subs-in-paren> <name-part> )+ [ <param-subs-in-paren> ]
+
+<param-subs-in-paren> ::= `(' <param-sub> ( <comma> <param-sub> )* `)'
+
+<param-sub> ::= <simple-type> | <type-func>
+
+<type-func> ::=
+[ `()' ] <type-id> ( `()' [A-Za-z]+ )+ [ `()' ] | `()' <type-id> [ `()' ] |
+<type-id> `()'
+
+<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <big-or-cases-expr>
+
+<big-or-cases-expr> ::=
+<big-op-expr> | <big-func-expr> | <cases-func-expr> | <big-tuple> | <big-list>
+\end{grammar}
+\subsubsection{Indentation system}
+\label{subsubsec:indsys}
+
+The \textit{$<$indent$>$} nonterminal in not a normal BNF nonterminal. It is a
+context sensitive construct that enforces the indentation rules of lcases.
+It depends on a integer value called the "indentation level" ($il$).
+The \textit{$<$indent$>$} nonterminal corresponds to $2*il$ space characters.
+The indentation level follows the rules below:
+
+\paragraph{Indentation Rules}
+\begin{itemize}
+
+\item
+At the beginnng: $il = 0$
+
+\item
+In a single value definition:
+  \begin{itemize}
+
+  \item
+  At the end of the first line: $il \leftarrow il + 1$
+
+  \item
+  At the end of the "=" line: $il \leftarrow il + 1$
+
+  \item
+  At the end: $il \leftarrow il - 2$
+  \end{itemize}
+
+\item
+In a group of value definitions:
+  \begin{itemize}
+
+  \item
+  At the end of the first line: $il \leftarrow il + 1$
+
+  \item
+  At the end: $il \leftarrow il - 1$
+  \end{itemize}
+
+\item
+In a case (of a cases function expression):
+  \begin{itemize}
+
+  \item
+  After the arrow ("\texttt{=>}") line: $il \leftarrow il + 1$.
+
+  \item
+  At the end: $il \leftarrow il - 1$.
+  \end{itemize}
+
+\item
+In a type theorem:
+  \begin{itemize}
+
+  \item
+  After "\texttt{=}" line: $il \leftarrow il + 2$.
+
+  \item
+  At the end: $il \leftarrow il - 2$.
+  \end{itemize}
+
+\item
+In a cases function expression which does not begin at the "=" line of a value
+definition:
+  \begin{itemize}
+
+  \item
+  After the arrow "\texttt{=>}" at the end of the paremeters: $il \leftarrow il + 1$.
+
+  \item
+  At the end of the cases function expression: $il \leftarrow il - 1$.
+
+  \end{itemize}
+
+\end{itemize}
+\subsection{AST types from grammar}
+
+\subsection{Parsers from grammar}
+
+\section{Semantic Analysis}
 
 \section{Translation to \H}
 

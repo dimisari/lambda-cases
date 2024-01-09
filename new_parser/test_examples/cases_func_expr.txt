@@ -1,4 +1,4 @@
-(x, cases)
+cases
   true => print <- "It's true!! :)"
   false => print <- "It's false... :("#
 
@@ -34,16 +34,4 @@ cases
 (f, cases)
   empty_l => empty_l
   non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)#
-
-cases
-  true => true
-  false => false#
-
-cases
-  [] => ([], true)
-  [x] => ([x], true)
-  l => 
-    1 -> cases
-      true => 1
-      false => 1#
 

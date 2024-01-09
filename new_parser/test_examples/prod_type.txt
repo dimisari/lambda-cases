@@ -1,10 +1,10 @@
-Int x Int#
-
-Real x Real x Real#
-
 Int x Real x String#
 
-ListOf(Int)s x (Int x ListOf(String)s)#
+ListOf(Int)s x Int x ListOf(String)s#
 
 (Int => Int) x (Int x Real) x (Real => String)#
+
+Int^2 x Int^2#
+
+Real^3 x Real^3#
 

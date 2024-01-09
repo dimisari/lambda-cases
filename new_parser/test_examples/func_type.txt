@@ -4,9 +4,9 @@ Real => Int#
 
 A => A#
 
-Int x Int => Int#
+Int^2 => Int#
 
-Real x Real x Real => Real#
+Real^3 => Real#
 
 (A => B) x (B => C) => (A => C)#
 

@@ -1,5 +1,14 @@
 
-- insert all examples from pdf 
-
 - T1 ... Tn instead of A ... Z for type variables
+  - PDF
+    - paragraph 
+    - grammar
+    - change examples
+  - parser
+  - tests
+    - change examples
+
+- * for don't care in matching
+
+- _ for missing type argument
 

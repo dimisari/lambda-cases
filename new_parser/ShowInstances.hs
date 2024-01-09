@@ -257,7 +257,7 @@ instance Show BigFuncExpr where
 instance Show Parameters where
   show = \case
     ParamId id -> show id
-    Underscore4 -> "_"
+    Star1 -> "*"
     Params (params, params_l) ->
       "(" ++ show params ++ show_list_comma params_l ++ ")"
 
@@ -279,7 +279,7 @@ instance Show CasesParams where
   show = \case
     CParamId id -> show id
     CasesKeyword -> "cases"
-    Underscore5 -> "_"
+    Star2 -> "*"
     CParams (cps, cps_l) -> "(" ++ show cps ++ show_list_comma cps_l ++ ")"
 
 instance Show Case where
@@ -388,10 +388,12 @@ instance Show InOrOutType where
     FT2 ft -> "(" ++ show ft ++ ")"
 
 instance Show ProdType where
-  show = \(PT (ft, fts)) -> show ft ++ concatMap ((" x " ++) . show) fts
+  show = \(PT (fopt, fopts)) -> show fopt ++ concatMap ((" x " ++) . show) fopts
 
-instance Show PowerType where
-  show = \(PoT (ft, is)) -> show ft ++ concatMap (("^" ++) . show) is
+instance Show FieldOrPowerType where
+  show = \case
+    FiT1 ft -> show ft
+    PoT3 pt -> show pt
 
 instance Show FieldType where
   show = \case
@@ -404,6 +406,9 @@ instance Show InParenT where
   show = \case
     FT3 ft -> "(" ++ show ft ++ ")"  
     PT3 pt -> "(" ++ show pt ++ ")"
+
+instance Show PowerType where
+  show = \(PoT (ft, is)) -> show ft ++ concatMap (("^" ++) . show) is
 
 instance Show TypeApp where
   show = \case

@@ -1,6 +1,6 @@
 1 + 2#
 
-1 + x * 3 ^ y#
+1 + x * 3^y#
 
 "Hello " + "World!"#
 
@@ -11,4 +11,14 @@ f o> g o> h#
 x = y#
 
 x >= y - z & x < 2 * y#
+
+get_line ; get_line ;> line => print("Second line: " + line)#
+
+2 * _#
+
+_ - 1#
+
+"Hello " + "it's me, " + _#
+
+_ + "string in the middle of the arguments" + _#
 

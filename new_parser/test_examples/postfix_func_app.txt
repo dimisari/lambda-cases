@@ -6,11 +6,13 @@ date.year#
 
 tuple.1st#
 
+state.change{counter = counter + 1}#
+
 tuple.change{1st = 42, 3rd = 17}#
 
-state.change{counter = counter + 1}#
+point.change{x = 1.61, y = 2.71, z = 3.14}#
 
 name.change{last_name = "Gauss"}#
 
-point.change{x = 1.61, y = 2.71, z = 3.14}#
+x.change{1st = _, 3rd = _}#
 
