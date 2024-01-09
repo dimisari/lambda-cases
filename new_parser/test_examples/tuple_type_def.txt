@@ -10,11 +10,11 @@ tuple_type MathematicianInfo
 value
   (name, nationality, date_of_birth) : Name x String x Date#
 
-tuple_type TreeOf(A)s
+tuple_type TreeOf(T1)s
 value
-  (root, subtrees) : A x ListOf(TreeOf(A)s)s#
+  (root, subtrees) : T1 x ListOf(TreeOf(T1)s)s#
 
-tuple_type Indexed(T)
+tuple_type Indexed(T1)
 value
-  (index, val) : Int x T#
+  (index, val) : Int x T1#
 

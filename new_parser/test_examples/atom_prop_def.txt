@@ -8,9 +8,9 @@ value
 
 type_proposition (T)Has_A_Wrapper
 value
-  wrapper : A => T(A)#
+  wrapper : T1 => T(T1)#
 
 type_proposition (T)Has_Internal_App
 value
-  apply()internally : (A => B) x T(A) => T(B)#
+  apply()inside : (T1 => T2) x T(T1) => T(T2)#
 

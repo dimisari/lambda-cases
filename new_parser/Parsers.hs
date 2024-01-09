@@ -475,7 +475,13 @@ instance HasParser TypeId where
     return $ TId $ u1 : upper_lowers
 
 instance HasParser TypeVar where
-  parser = TV <$> upper
+  parser = PTV1 <$> try parser <|> AHTV1 <$> parser
+
+instance HasParser ParamTVar where
+  parser = PTV <$> (char 'T' *> fmap (\d -> read [d]) digit)
+
+instance HasParser AdHocTVar where
+  parser = AHTV <$> upper
 
 instance HasParser FuncType where
   parser = FT <$> parser +++ (string " => " *> parser)

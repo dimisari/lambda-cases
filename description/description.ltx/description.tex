@@ -313,9 +313,9 @@ their position. This creates a function that expects the empty fields
 and returns the whole tuple. This is best demonstated by the types of the
 examples above:
 \begin{verbatim}
-(42, _) : A => Int x A
-(_, 3.14, _) : A x B => A x Real x B
-(_, _, "Hello from 3rd field") : A x B => A x B x String
+(42, _) : T1 => Int x T1
+(_, 3.14, _) : T1 x T2 => T1 x Real x T2
+(_, _, "Hello from 3rd field") : T1 x T2 => T1 x T2 x String
 \end{verbatim}
 An example in a bigger expression is the following:
 \begin{verbatim}
@@ -369,7 +369,7 @@ answers_to : ListOf(String)s
 \item \textit{Description}
 
 Lists are used to group many values of the same type into one. 
-The type of the list is ListOf(A)s where A is the type of every value inside.
+The type of the list is ListOf(T1)s where T1 is the type of every value inside.
 Therefore, the types of the first four examples are:
 \begin{verbatim}
 ListOf(Int)s
@@ -464,7 +464,7 @@ been \textbf{defined with parentheses inside the identifier}. For example,
 below is the definition of "apply()to\_all":
 
 \begin{verbatim}
-apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
+apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
     empty_l => empty_l
     non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all <- l.tail)
@@ -556,11 +556,11 @@ the_value:1 : Possibly(Int)
 Where the function \texttt{thevalue:_} is automatically generated from the
 definition of the \texttt{Possibly} type:
 \begin{verbatim}
-or_type Possibly(A)
+or_type Possibly(T1)
 values
-  the_value:A | no_value
+  the_value:T1 | no_value
 \end{verbatim}
-And it has the type \texttt{A => Possibly(A)}.
+And it has the type \texttt{T1 => Possibly(T1)}.
 \\\\
 These functions are called prefix functions because they are prepended to
 their argument. However, they can also be used as arguments to other function
@@ -726,9 +726,9 @@ a function that expects those new values as arguments (last example).
 Operator & Type \\ 
 \hline
 \hline
-\texttt{->} & A x (A \ra B) \ra B \\
+\texttt{->} & T1 x (T1 \ra T2) \ra T2 \\
 \hline
-\texttt{<-} & (A \ra B) x A \ra B \\
+\texttt{<-} & (T1 \ra T2) x T1 \ra T2 \\
 \hline
 \end{tabular}
 \end{center}
@@ -740,9 +740,9 @@ function applications without the clutter of having to open and close
 parentheses for each one of the functions.  For example, assuming we have the
 following functions with the behaviour suggested by their names and types:
 \begin{verbatim}
-apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
+apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
 string_length : String => Int
-filter()with : ListOf(A)s x (A => Bool) => ListOf(A)s
+filter()with : ListOf(T1)s x (T1 => Bool) => ListOf(T1)s
 is_odd : Int => Bool
 sum_ints : ListOf(Int)s => Int
 \end{verbatim}
@@ -780,9 +780,9 @@ Which is equivalent to:
 Operator & Type \\ 
 \hline
 \hline
-\texttt{o>} & (A \ra B) x (B \ra C) \ra (A \ra C) \\
+\texttt{o>} & (T1 \ra T2) x (T2 \ra T3) \ra (T1 \ra T3) \\
 \hline
-\texttt{<o} & (B \ra C) x (A \ra B) \ra (A \ra C) \\
+\texttt{<o} & (T2 \ra T3) x (T1 \ra T2) \ra (T1 \ra T3) \\
 \hline
 \end{tabular}
 \end{center}
@@ -795,7 +795,7 @@ A neat example using function composition is the following. Assuming we have the
 following functions with the behaviour suggested by their names and types: 
 \begin{verbatim}
 split_to_words : String => ListOf(String)s
-apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
+apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
 reverse_string : String => String
 merge_words : ListOf(String)s => String
 \end{verbatim}
@@ -937,9 +937,9 @@ noting that the "equals", "and" and "or" operators have the symbol once
 Operator & Type \\ 
 \hline
 \hline
-\texttt{;>} & (E)Has_Use \Ra E(A) x (A \ra E(B)) \ra E(B) \\
+\texttt{;>} & (E)Has_Use \Ra E(T1) x (T1 \ra E(T2)) \ra E(T2) \\
 \hline
-\texttt{;} & (E)Has_Then \Ra E(A) x E(B) \ra E(B) \\
+\texttt{;} & (E)Has_Then \Ra E(T1) x E(T2) \ra E(T2) \\
 \hline
 \end{tabular}
 \end{center}
@@ -957,17 +957,17 @@ print_string("I'll repeat the line.") : (EmptyVal)FromIO
 get_line : (String)FromIO
 
 ; 
-  : (E)Has_Then ==> E(A) x E(B) => E(B) 
+  : (E)Has_Then ==> E(T1) x E(T2) => E(T2) 
 ;>
-  : (E)Has_Use ==> E(A) x (A => E(B)) => E(B) 
+  : (E)Has_Use ==> E(T1) x (T1 => E(T2)) => E(T2) 
 
 print_string("I'll repeat the line.") ; get_line
   : (String)FromIO
-  where (FromIO)Has_Then is true, E = FromIO, A = EmptyVal, B = String
+  where (FromIO)Has_Then is true, E = FromIO, T1 = EmptyVal, T2 = String
 
 print_string("I'll repeat the line.") ; get_line ;> print_string
   : (EmptyVal)FromIO
-  where (FromIO)Has_Use is true, E = FromIO, A = String, B = EmptyVal
+  where (FromIO)Has_Use is true, E = FromIO, T1 = String, T2 = EmptyVal
 \end{verbatim}
 
 \paragraph{Example program}
@@ -987,22 +987,22 @@ print_string("Oh hi...) : (EmptyVal)FromIO
 print_string("Oh that's crazy...) : (EmptyVal)FromIO
 
 ;
-  : (E)Has_Then ==> E(A) x E(B) => E(B) 
+  : (E)Has_Then ==> E(T1) x E(T2) => E(T2) 
 
 print_string("Oh hi...) ; get_line
   : (String)FromIO
-  where (FromIO)Has_Then is true, E = FromIO, A = EmptyVal, B = String
+  where (FromIO)Has_Then is true, E = FromIO, T1 = EmptyVal, T2 = String
 
 age => print_string("Oh that's crazy...)
   : String => (EmptyVal)FromIO
 
 ;>
-  : (E)Has_Use ==> E(A) x (A => E(B)) => E(B) 
+  : (E)Has_Use ==> E(T1) x (T1 => E(T2)) => E(T2) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
   : (EmptyVal)FromIO
-  where (FromIO)Has_Use is true, E = FromIO, A = String, B = EmptyVal
+  where (FromIO)Has_Use is true, E = FromIO, T1 = String, T2 = EmptyVal
 
 print_string <- "Hello..." ; get_line
   : (String)FromIO
@@ -1026,52 +1026,52 @@ actions into values that do more complicated environment actions. Environment
 actions are type functions that take a type argument and produce a type (just
 like ListOf()s). These type functions have the "then" operator (\texttt{;}) and
 the "use" operator (\texttt{;>}) defined for them.  A value of the type
-\texttt{E(A)} where \texttt{(E)Has_Then} does an environment action of type
-\texttt{E} that produces a value of type \texttt{A} which can then be combined
+\texttt{E(T1)} where \texttt{(E)Has_Then} does an environment action of type
+\texttt{E} that produces a value of type \texttt{T1} which can then be combined
 with another one with the "then" operator. Similarly, with the "use" operator
 the produced value of an action can be used by a function that returns another
 action.
 \\\\
 The effect of the "\texttt{;}" operator described in words is the following:
-given a value of type \texttt{E(A)} and a value of type \texttt{E(B)} (which
-do environment actions that produce values of type \texttt{A} and \texttt{B}
+given a value of type \texttt{E(T1)} and a value of type \texttt{E(T2)} (which
+do environment actions that produce values of type \texttt{T1} and \texttt{T2}
 respectively), create a new value the does both actions (provided the first did
 not result in an error).  The overall effect is a value that does an
 environment action of type \texttt{E} (the combination of the "smaller"
-actions) which produces a value of type \texttt{B} (the one produced by the second
-action) and therefore it is of type \texttt{E(B)}.
+actions) which produces a value of type \texttt{T2} (the one produced by the second
+action) and therefore it is of type \texttt{E(T2)}.
 \\\\
-Note that the value of type \texttt{A} produced by the first action is not used
-anywhere. This happens mostly when \texttt{A = EmptyVal} and it is 
+Note that the value of type \texttt{T1} produced by the first action is not used
+anywhere. This happens mostly when \texttt{T1 = EmptyVal} and it is 
 because values of type \texttt{E(EmptyVal)} are used for their environment
 action only \\(e.g. \texttt{print_string(...)\ :\ (EmptyVal)FromIO}).
 \\\\
-How the two environment actions of the \texttt{E(A)} and \texttt{E(B)} values
+How the two environment actions of the \texttt{E(T1)} and \texttt{E(T2)} values
 are combined to produce the new environment action is specific to the
 environment action type \texttt{E}.
 \\\\
 The effect of the "\texttt{;>}" operator described in words is the following:
-given a value of type \texttt{E(A)} (which does an environment action of type
-\texttt{E} that produces a value of type \texttt{A}) and a value of type
-\texttt{A => E(B)} (which is a function that takes a value of type \texttt{A}
+given a value of type \texttt{E(T1)} (which does an environment action of type
+\texttt{E} that produces a value of type \texttt{T1}) and a value of type
+\texttt{T1 => E(T2)} (which is a function that takes a value of type \texttt{T1}
 and returns an environment action of type \texttt{E} that produces a value
-of type \texttt{B}), combine those two values by creating a value that does the
+of type \texttt{T2}), combine those two values by creating a value that does the
 following: 
 \begin{itemize}
 \item
-Performs the first action that produces a value of type \texttt{A}
+Performs the first action that produces a value of type \texttt{T1}
 
 \item
-Takes the value of type \texttt{A} produced (provided there was no error) and
-passes it to the function of type \texttt{A => E(B)} that then returns an
+Takes the value of type \texttt{T1} produced (provided there was no error) and
+passes it to the function of type \texttt{T1 => E(T2)} that then returns an
 action
 
 \item
 Perfoms the resulting action 
 \end{itemize}
 The overall effect is an environment action  of type \texttt{E} that in the end
-produces a value is of type \texttt{B} and therefore the new value is of type
-\texttt{E(B)}.
+produces a value is of type \texttt{T2} and therefore the new value is of type
+\texttt{E(T2)}.
 
 \subsubsection{Operator Expressions}
 
@@ -1207,17 +1207,21 @@ their short descriptions.
 Operator & Type & Description \\ 
 \hline
 \hline
-\texttt{->} & A x (A \ra B) \ra B & Right function application \\
+\texttt{->} & T1 x (T1 \ra T2) \ra T2 & Right function application \\
 \hline
-\texttt{<-} & (A \ra B) x A \ra B & Left function application \\
+\texttt{<-} & (T1 \ra T2) x T1 \ra T2 & Left function application \\
 \hline
-\texttt{o>} & (A \ra B) x (B \ra C) \ra (A \ra C) & Right function composition \\
+\texttt{o>} & (T1 \ra T2) x (T2 \ra T3) \ra (T1 \ra T3) & Right function composition
+\\
 \hline
-\texttt{<o} & (B \ra C) x (A \ra B) \ra (A \ra C) & Left function composition \\
+\texttt{<o} & (T2 \ra T3) x (T1 \ra T2) \ra (T1 \ra T3) & Left function composition
+\\
 \hline
-\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra A x B \ra C & General exponentiation  \\
+\texttt{\^} & (A)To_The(B)Has_Type(C) \Ra A x B \ra C & General exponentiation
+\\
 \hline
-\texttt{*} & (A)And(B)Multiply_To(C) \Ra A x B \ra C & General multiplication  \\
+\texttt{*} & (A)And(B)Multiply_To(C) \Ra A x B \ra C & General multiplication
+\\
 \hline
 \texttt{/} & (A)Divided_By(B)Has_Type(C) \Ra A x B \ra C & General division \\
 \hline
@@ -1241,10 +1245,10 @@ Operator & Type & Description \\
 \hline
 \texttt{\& |} & Bool\texttt{\^}2 \ra Bool & Boolean operators \\
 \hline
-\texttt{;>} & (E)Has_Use \Ra E(A) x (A \ra E(B)) \ra E(B) &
+\texttt{;>} & (E)Has_Use \Ra E(T1) x (T1 \ra E(T2)) \ra E(T2) &
 Do, use, do \\
 \hline
-\texttt{;} & (E)Has_Then \Ra E(A) x E(B) \ra E(B) &
+\texttt{;} & (E)Has_Then \Ra E(T1) x E(T2) \ra E(T2) &
 Do then do \\
 \hline
 \end{tabular}
@@ -1427,12 +1431,12 @@ gcd : Int^2 => Int
     0 => x
     y => gcd(y, x -> mod <- y) 
 
-is_empty : ListOf(A)s => Bool
+is_empty : ListOf(T1)s => Bool
   = cases
     empty_l => true
     non_empty_l:anything => false
 
-apply()to_all : (A => B) x ListOf(A)s => ListOf(B)s
+apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
     empty_l => empty_l
     non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
@@ -1675,44 +1679,87 @@ letter and is followed by one or more capital or lowercase letters.
 \end{itemize}
 
 \paragraph{Type Variables}
+\mbox{}\\\\
+Type Variables are placeholders inside bigger type expressions that can be
+substituted with various types. This makes the bigger type expression an
+expression of a \textbf{polymorphic} type. The types of polymorphism that exist
+in lcases are \textbf{parametric polymorphism} and \textbf{ad hoc
+polymorphism}. Type variables for each of the two types have different syntax
+and they are described in the following paragraphs.
+\\\\
+\textit{Grammar}
+\begin{grammar}
+<type-var> ::= <param-t-var> | <ad-hoc-t-var> \\ 
+\end{grammar}
+\subparagraph{Parametric Type Variables}
 
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-A B C
-X Y Z
+T1 T2 T3 
 \end{verbatim}
 
-\item \textit{Examples of type variables inside bigger type expressions}
+\item \textit{Examples of parametric type variables inside bigger type expressions}
 \begin{verbatim}
-A => A
-(A => B) x (B => C) => (A => C)
-(A^2 => A) x A x ListOf(A)s => A
+T1 => T1
+(T1 => T2) x (T2 => T3) => (T1 => T3)
+(T1^2 => T1) x T1 x ListOf(T1)s => T1
 \end{verbatim}
 
 \item \textit{Description}
 
-Type Variables are used inside larger type expressions of polymorphic types. A
-polymorphic type is a type where any function of that type can be used as a
-function of any type that corresponds to substituting every type variable of
-the polymorphic type with a particular type. The easiest example of a
-polymorphic type is the type of the identity function where we have:
+Parametric type variables can be substituted with any type and the program will
+type check.  The simplest example of a polymorphic type with a parametric type
+variable is the type of the identity function where we have:
 \begin{verbatim}
-id : A => A
+id : T1 => T1
   = x => x
 
 id(1) : Int
-  where A is substituted by Int and id gets the type Int => Int
+  where T1 is substituted by Int and id gets the type Int => Int
 
 id("Hello") : String
-  where A is substituted by String and id gets the type String => String
+  where T1 is substituted by String and id gets the type String => String
 \end{verbatim}
 
-A type variable is a single capital letter.
+A parametric type variable is written with capital "T" followed by a digit.
 
 \item \textit{Grammar}
 \begin{grammar}
-<type-var> ::= [A-Z] \\ 
+<param-t-var> ::= `T' [0-9] \\ 
+\end{grammar}
+\end{itemize}
+
+\subparagraph{Ad Hoc Type Variables}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+A B C T
+\end{verbatim}
+
+\item \textit{Examples of ad hoc type variables inside bigger type expressions}
+\begin{verbatim}
+(T)Has_Str_Rep ==> T => String
+(A)Is(B)s_First ==> B => A
+(A)And(B)Can_Be_Equal ==> A x B => Bool
+(A)And(B)Add_To(C) ==> A x B => C
+\end{verbatim}
+
+\item \textit{Description}
+
+Ad hoc type variables are like parametric type variables with the difference
+that any type by which they are substituted must satisfy certain conditions in
+order for the program to type check. These conditions come in the form of type
+propositions (see Type Logic section \ref{subsec:typelogic}). Therefore, any ad
+hoc type variable must also appear in some condition before the "\texttt{==>}"
+arrow as shown in the examples.
+\\\\
+An ad hoc type variable is written with any capital letter.
+
+\item \textit{Grammar}
+\begin{grammar}
+<ad-hoc-t-var> ::= [A-Z] \\ 
 \end{grammar}
 \end{itemize}
 
@@ -1723,10 +1770,10 @@ A type variable is a single capital letter.
 \begin{verbatim}
 String => String 
 Real => Int
-A => A
+T1 => T1
 Int^2 => Int
 Real^3 => Real
-(A => B) x (B => C) => (A => C)
+(T1 => T2) x (T2 => T3) => (T1 => T3)
 (Int => Int) => (Int => Int)
 \end{verbatim}
 
@@ -1791,18 +1838,18 @@ ListOf(Real)s
 TreeOf(String)s 
 Error(String)OrResult(Int)
 ListOf(Int => Int)s
-ListOf(A)s
+ListOf(T1)s
 \end{verbatim}
 
 \item \textit{Description}
 
 Type application types are types that are produced by passing arguments
 to a type function generated by a \texttt{tuple_type} or an \texttt{or_type}
-definition. For example, given the definition of \texttt{ListOf(A)s}:
+definition. For example, given the definition of \texttt{ListOf(T1)s}:
 \begin{verbatim}
-or_type ListOf(A)s
+or_type ListOf(T1)s
 values
-  non_empty_l:NonEmptyListOf(A)s | empty_l
+  non_empty_l:NonEmptyListOf(T1)s | empty_l
 \end{verbatim}
 We have that \texttt{ListOf()s} is a type function that receives one type parameter
 and returns a resulting type. For example \texttt{ListOf(Int)s} is the result
@@ -1835,8 +1882,8 @@ type parameters are substituted by the type expressions of the arguments.
 (A)And(B)Can_Be_Equal ==> A x B => Bool
 (A)And(B)Add_To(C) ==> A x B => C
 (A)Is(B)s_First ==> B => A
-(T)Has_String_Repr ==> T => String
-(E)Has_Use ==> E(A) x (A => E(B)) => E(B)
+(T)Has_Str_Rep ==> T => String
+(E)Has_Use ==> E(T1) x (T1 => E(T2)) => E(T2)
 \end{verbatim}
 
 \item \textit{Description}
@@ -1914,13 +1961,13 @@ tuple_type MathematicianInfo
 value
   (name, nationality, date_of_birth) : Name x String x Date
 
-tuple_type TreeOf(A)s
+tuple_type TreeOf(T1)s
 value
-  (root, subtrees) : A x ListOf(TreeOf(A)s)s
+  (root, subtrees) : T1 x ListOf(TreeOf(T1)s)s
 
-tuple_type Indexed(T)
+tuple_type Indexed(T1)
 value
-  (index, val) : Int x T
+  (index, val) : Int x T1
 \end{verbatim}
 
 \item \textit{Usage Examples}
@@ -1981,33 +2028,33 @@ or_type Bool
 values
   true | false
 
-or_type Possibly(A)
+or_type Possibly(T1)
 values
-  the_value:A | no_value
+  the_value:T1 | no_value
 
-// needed tuple_type for ListOf(A)s
-tuple_type NonEmptyListOf(A)s
+// needed tuple_type for ListOf(T1)s
+tuple_type NonEmptyListOf(T1)s
 value
-  (head, tail) : A x ListOf(A)s
+  (head, tail) : T1 x ListOf(T1)s
 
-or_type ListOf(A)s
+or_type ListOf(T1)s
 values
-  non_empty_l:NonEmptyListOf(A)s | empty_l
+  non_empty_l:NonEmptyListOf(T1)s | empty_l
 
-or_type Error(A)OrResult(B)
+or_type Error(T1)OrResult(T2)
 values
-  error:A | result:B
+  error:T1 | result:T2
 \end{verbatim}
 
 \item \textit{Usage Examples}
 
 \begin{verbatim}
-is_empty : ListOf(A)s => Bool
+is_empty : ListOf(T1)s => Bool
   = cases
     empty_l => true
     non_empty_l:anything => false
 
-get_head : ListOf(A)s => Possibly(A)
+get_head : ListOf(T1)s => Possibly(T1)
   = cases
     empty_l => no_value
     non_empty_l:list => the_value:list.head
@@ -2017,7 +2064,7 @@ sum_list : ListOf(Int)s => Int
     empty_l => 0
     non_empty_l:l => l.head + sum_list(l.tail)
 
-print_err_or_res : Error(A)OrResult(B) => IO
+print_err_or_res : (A)Has_Str_Rep, (B)Has_Str_Rep ==> Error(A)OrResult(B) => IO
   = cases
     error:e => print("Error occured: " + e -> to_string)
     result:r => print("All good! The result is: " + r -> to_string)
@@ -2035,11 +2082,11 @@ internal value to the \texttt{or_type}).  For example, for the case
 "\texttt{non_empty_l}" of a list, the function "\texttt{non_empty_l}:_" is
 automatically created from the definition for which we can say:
 \begin{verbatim}
-non_empty_l:_ : NonEmptyListOf(A)s => ListOf(A)s
+non_empty_l:_ : NonEmptyListOf(T1)s => ListOf(T1)s
 \end{verbatim}
 Similarly:
 \begin{verbatim}
-the_value:_ : A => Possibly(A)
+the_value:_ : T1 => Possibly(T1)
 \end{verbatim}
 These functions are called "prefix functions" because they are prepended to their
 argument.
@@ -2054,7 +2101,7 @@ non_e_l : NonEmptyListOf(Int)s
 These functions can be used like any other function as arguments to other functions.
 For example:
 \begin{verbatim}
-non_empty_ls_to_ls : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
+non_empty_ls_to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
   = apply(non_empty_l:_)to_each
 \end{verbatim}
 
@@ -2079,8 +2126,8 @@ non_empty_ls_to_ls : ListOf(NonEmptyListOf(A)s)s => ListOf(ListOf(A)s)s
 type_nickname Ints = ListOf(Int)s
 type_nickname IntStringPairs = ListOf(Int x String)s
 type_nickname IO = (EmptyVal)FromIO
-type_nickname ErrOrRes(A) = Error(String)OrResult(A)
-type_nickname Parse(A)FuncT = String => A x String
+type_nickname ErrOrRes(T1) = Error(String)OrResult(T1)
+type_nickname Parse(T1)FuncT = String => T1 x String
 \end{verbatim}
 
 \item \textit{Description} \\\\
@@ -2126,28 +2173,28 @@ type_proposition (A)Is(B)s_First
 value
   first : B => A
 
-type_proposition (T)Has_String_Repr
+type_proposition (T)Has_Str_Rep
 value
   to_string : T => String
 
 type_proposition (T)Has_A_Wrapper
 value
-  wrapper : A => T(A)
+  wrapper : T1 => T(T1)
 
 type_proposition (T)Has_Internal_App
 value
-  apply()internally : (A => B) x T(A) => T(B)
+  apply()inside : (T1 => T2) x T(T1) => T(T2)
 \end{verbatim}
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
 \begin{verbatim}
 first : (A)Is(B)s_First ==> B => A
 
-to_string : (T)Has_String_Represantion ==> T => String
+to_string : (T)Has_Str_Rep ==> T => String
 
-wrapper : (T)Has_A_Wrapper ==> A => T(A)
+wrapper : (T)Has_A_Wrapper ==> T1 => T(T1)
 
-apply()internally : (T)Has_Internal_App ==> (A => B) x T(A) => T(B)
+apply()inside : (T)Has_Internal_App ==> (T1 => T2) x T(T1) => T(T2)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2186,7 +2233,7 @@ first : (A)Is(B)s_First ==> B => A
 \begin{verbatim}
 type_theorem (A)Is(A x B)s_First
 proof
-  first = .1st
+  first = _.1st
 
 type_theorem (A)Is(ListOf(A)s)s_First
 proof
@@ -2291,21 +2338,21 @@ proof
 
 type_theorem (ListOf()s)Has_A_Wrapper
 proof
-  wrapper = x => [x]
+  wrapper = [_]
 
 type_theorem (Possibly())Has_Internal_App
 proof
-  apply()internally =
+  apply()inside =
     (f, cases)
       no_value => no_value
       the_value:x => the_value:f(x)
 
 type_theorem (ListOf()s)Has_Internal_App
 proof
-  apply()internally =
+  apply()inside =
     (f, cases)
       empty_l => empty_l
-      non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)internally)
+      non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)inside)
 \end{verbatim}
 
 \item \textit{Usage}
@@ -2330,19 +2377,19 @@ l1, l2, l3 : all ListOf(Int)s
   : ListOf(Int)s
   = []
 
->> a -> apply(x => x + 1)internally
+>> a -> apply(x => x + 1)inside
   : Possibly(Int)
   = the_value:2
->> b -> apply(x => x + 1)internally
+>> b -> apply(x => x + 1)inside
   : Possibly(Int)
   = no_value
->> l1 -> apply(x => x + 1)internally
+>> l1 -> apply(x => x + 1)inside
   : ListOf(Int)s
   = [2]
->> l2 -> apply(x => x + 1)internally
+>> l2 -> apply(x => x + 1)inside
   : ListOf(Int)s
   = []
->> l3 -> apply(x => x + 1)internally
+>> l3 -> apply(x => x + 1)inside
   : ListOf(Int)s
   = [2, 3, 4]
 \end{verbatim}
@@ -2476,7 +2523,7 @@ the "\texttt{=>}" arrow.
 
   \item List:\\
     \texttt{length, is_in, apply()to_all, filter()with, take()from, leave()from,
-    zip, unzip,\\ zip_with}
+    zip, unzip,\\ zip()with}
 
   \item IO
     \begin{itemize}
@@ -2486,7 +2533,7 @@ the "\texttt{=>}" arrow.
 
   \item Ad Hoc Polymorphic:\\
   \texttt{first, second, third, fourth, fifth, wrap, to_string, from_string,
-  apply()internally, \\wrapd_apply()intern}
+  apply()inside, \\wrapd_app()inside}
 
   \end{itemize}
 \end{itemize}
@@ -2531,7 +2578,7 @@ the "\texttt{=>}" arrow.
   \item \texttt{(A)Is(B)s_Fourth}
   \item \texttt{(A)Is(B)s_Fifth}
   \item \texttt{(T)Has_A_Wrapper}
-  \item \texttt{(T)Has_String_Repr}
+  \item \texttt{(T)Has_Str_Rep}
   \item \texttt{(T)Can_Be_Parsed}
   \item \texttt{(T)Has_Internal_App}
   \item \texttt{(T)Has_Wrapd_Intern_App}
@@ -2558,30 +2605,30 @@ the "\texttt{=>}" arrow.
   \begin{itemize}
   \item \texttt{(A)Is(A x B)s_First}
   \item \texttt{(A)Is(A x B x C)s_First}
-  \item \texttt{(A)Is(A x B x C x D)s_First}
-  \item \texttt{(A)Is(A x B x C x D x E)s_First}
+  \item \texttt{(A)Is(A x B x C x T4)s_First}
+  \item \texttt{(A)Is(A x B x C x T4 x T5)s_First}
   \item \texttt{(A)Is(ListOf(A)s)s_First}
   \item \texttt{(B)Is(A x B)s_Second}
   \item \texttt{(B)Is(A x B x C)s_Second}
-  \item \texttt{(B)Is(A x B x C x D)s_Second}
-  \item \texttt{(B)Is(A x B x C x D x E)s_Second}
+  \item \texttt{(B)Is(A x B x C x T4)s_Second}
+  \item \texttt{(B)Is(A x B x C x T4 x T5)s_Second}
   \item \texttt{(A)Is(ListOf(A)s)s_Second}
   \item \texttt{(C)Is(A x B x C)s_Third}
-  \item \texttt{(C)Is(A x B x C x D)s_Third}
-  \item \texttt{(C)Is(A x B x C x D x E)s_Third}
+  \item \texttt{(C)Is(A x B x C x T4)s_Third}
+  \item \texttt{(C)Is(A x B x C x T4 x T5)s_Third}
   \item \texttt{(A)Is(ListOf(A)s)s_Third}
-  \item \texttt{(D)Is(A x B x C x D)s_Fourth}
-  \item \texttt{(D)Is(A x B x C x D x E)s_Fourth}
+  \item \texttt{(T4)Is(A x B x C x T4)s_Fourth}
+  \item \texttt{(T4)Is(A x B x C x T4 x T5)s_Fourth}
   \item \texttt{(A)Is(ListOf(A)s)s_Fourth}
-  \item \texttt{(E)Is(A x B x C x D x E)s_Fifth}
+  \item \texttt{(T5)Is(A x B x C x T4 x T5)s_Fifth}
   \item \texttt{(A)Is(ListOf(A)s)s_Fifth}
   \item \texttt{TODO wrapper}
-  \item \texttt{(Int)Has_String_Repr}
-  \item \texttt{(Char)Has_String_Repr}
-  \item \texttt{(Real)Has_String_Repr}
-  \item \texttt{(A)Has_String_Repr => (ListOf(A)s)Has_String_Repr}
-  \item \texttt{TODO apply()internally}
-  \item \texttt{TODO wrapd_apply()intern}
+  \item \texttt{(Int)Has_Str_Rep}
+  \item \texttt{(Char)Has_Str_Rep}
+  \item \texttt{(Real)Has_Str_Rep}
+  \item \texttt{(A)Has_Str_Rep => (ListOf(A)s)Has_Str_Rep}
+  \item \texttt{TODO apply()inside}
+  \item \texttt{TODO wrapd_app()inside}
   \item \texttt{TODO ;>}
   \item \texttt{TODO ;}
   \end{itemize}
@@ -2768,8 +2815,13 @@ The parser was implemented using the parsec library.
 \\
 
 <type-id> ::= [A-Z] [A-Za-z]+ 
+\\
 
-<type-var> ::= [A-Z]
+<type-var> ::= <param-t-var> | <ad-hoc-t-var> 
+
+<param-t-var> ::= `T' [0-9] 
+
+<ad-hoc-t-var> ::= [A-Z]
 \\
 
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>

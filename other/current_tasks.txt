@@ -1,12 +1,9 @@
 
-- T1 ... Tn instead of A ... Z for type variables
-  - PDF
-    - paragraph 
-    - grammar
-    - change examples
-  - parser
-  - tests
-    - change examples
+- Only allow paremetric t vars in type def?
+  + 
+  Only allow ad hoc t vars in type props?
+
+- Not A-Z for ad hoc vars because of Z, R, C?
 
 - * for don't care in matching
 

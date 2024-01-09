@@ -8,5 +8,5 @@ Error(String)OrResult(Int)#
 
 ListOf(Int => Int)s#
 
-ListOf(A)s#
+ListOf(T1)s#
 

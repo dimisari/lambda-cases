@@ -12,7 +12,7 @@ hanoi : Int x HanoiRods => IO
       hanoi(rings - 1, (rods.auxiliary, rods.target, rods.source))
       where
       move : String^2 => IO
-        = (s, t) => print_line("Move from " + s + " to " + t)
+        = ("Move from " + _ + " to " + _) o> print_line
 
 main : IO
   = print_line("Number of rings?") ; get_line ;> from_string o> n =>

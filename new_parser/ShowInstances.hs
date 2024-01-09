@@ -373,7 +373,15 @@ instance Show TypeId where
   show = \(TId str) -> str
 
 instance Show TypeVar where
-  show = \(TV c) -> [c]
+  show = \case
+    PTV1 ptv -> show ptv
+    AHTV1 ahtv -> show ahtv
+
+instance Show ParamTVar where
+  show = \(PTV i) -> "T" ++ show i
+
+instance Show AdHocTVar where
+  show = \(AHTV c) -> [c]
 
 instance Show FuncType where
   show = \(FT (it, ot)) -> show it ++ " => " ++ show ot

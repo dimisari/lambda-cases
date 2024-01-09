@@ -1,3 +1,4 @@
+
 gcd : Int^2 => Int
   = (x, cases)
     0 => x

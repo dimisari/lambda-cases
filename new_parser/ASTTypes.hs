@@ -186,8 +186,13 @@ data SimpleType =
 
 newtype TypeId = TId String
 
-newtype TypeVar = TV Char
+data TypeVar =
+  PTV1 ParamTVar | AHTV1 AdHocTVar
  
+newtype ParamTVar = PTV Int
+
+newtype AdHocTVar = AHTV Char
+
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
 data InOrOutType = 

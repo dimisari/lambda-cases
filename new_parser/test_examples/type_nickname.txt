@@ -4,7 +4,7 @@ type_nickname IntStringPairs = ListOf(Int x String)s#
 
 type_nickname IO = (EmptyVal)FromIO#
 
-type_nickname ErrOrRes(A) = Error(String)OrResult(A)#
+type_nickname ErrOrRes(T1) = Error(String)OrResult(T1)#
 
-type_nickname Parse(A)FuncT = String => A x String#
+type_nickname Parse(T1)FuncT = String => T1 x String#
 

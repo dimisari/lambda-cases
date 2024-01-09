@@ -2,13 +2,13 @@ String => String#
 
 Real => Int#
 
-A => A#
+T1 => T1#
 
 Int^2 => Int#
 
 Real^3 => Real#
 
-(A => B) x (B => C) => (A => C)#
+(T1 => T2) x (T2 => T3) => (T1 => T3)#
 
 (Int => Int) => (Int => Int)#
 

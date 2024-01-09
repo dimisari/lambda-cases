@@ -6,5 +6,5 @@
 
 (T)Has_String_Repr ==> T => String#
 
-(E)Has_Use ==> E(A) x (A => E(B)) => E(B)#
+(E)Has_Use ==> E(T1) x (T1 => E(T2)) => E(T2)#
 
