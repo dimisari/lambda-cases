@@ -552,14 +552,14 @@ instance HasParser ProdOrPowerType where
 
 instance HasParser TypeName where
   parser =
-    optionMaybe parser >>= \maybe_pip1 ->
+    optionMaybe parser >>= \maybe_pvip1 ->
     parser >>= \tid ->
-    many (try $ parser +++ (many1 $ lower <|> upper)) >>= \pip_string_pairs ->
-    optionMaybe parser >>= \maybe_pip2 ->
-    return $ TN (maybe_pip1, tid, pip_string_pairs, maybe_pip2)
+    many (try $ parser +++ (many1 $ lower <|> upper)) >>= \pvip_string_pairs ->
+    optionMaybe parser >>= \maybe_pvip2 ->
+    return $ TN (maybe_pvip1, tid, pvip_string_pairs, maybe_pvip2)
 
-instance HasParser ParamsInParen where
-  parser = PIP <$> (char '(' *> parser) +++ (many (comma *> parser) <* char ')')
+instance HasParser ParamVarsInParen where
+  parser = PVIP <$> (char '(' *> parser) +++ (many (comma *> parser) <* char ')')
 
 instance HasParser IdTuple where
   parser = PCSIs <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
@@ -604,17 +604,20 @@ instance HasParser PropNameLine where
 
 instance HasParser PropName where
   parser =
-    NPStart1 <$> np_start_p <|> PIPStart1 <$> pip_start_p
+    NPStart1 <$> np_start_p <|> AHVIPStart1 <$> ahvip_start_p
     where
-    np_start_p :: Parser (Char, [(NamePart, ParamsInParen)], Maybe NamePart)
+    np_start_p :: Parser (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart)
     np_start_p = 
       upper >>= \u ->
-      many1 (try $ parser +++ parser) >>= \np_pips ->
+      many1 (try $ parser +++ parser) >>= \np_ahvips ->
       optionMaybe parser >>= \maybe_name_part ->
-      return (u, np_pips, maybe_name_part)
+      return (u, np_ahvips, maybe_name_part)
 
-    pip_start_p :: Parser ([(ParamsInParen, NamePart)], Maybe ParamsInParen)
-    pip_start_p = (many1 $ try $ parser +++ parser) +++ optionMaybe parser
+    ahvip_start_p :: Parser ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
+    ahvip_start_p = (many1 $ try $ parser +++ parser) +++ optionMaybe parser
+
+instance HasParser AdHocVarsInParen where
+  parser = AHVIP <$> (char '(' *> parser) +++ (many (comma *> parser) <* char ')')
 
 instance HasParser NamePart where
   parser =

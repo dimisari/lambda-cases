@@ -237,9 +237,11 @@ data ProdOrPowerType =
   PT4 ProdType | PoT4 PowerType
 
 newtype TypeName =
-  TN (Maybe ParamsInParen, TypeId, [(ParamsInParen, String)], Maybe ParamsInParen)
+  TN
+    ( Maybe ParamVarsInParen, TypeId, [(ParamVarsInParen, String)]
+    , Maybe ParamVarsInParen)
 
-newtype ParamsInParen = PIP (TypeVar, [TypeVar])
+newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
 newtype IdTuple = PCSIs (Identifier, [Identifier])
 
@@ -260,8 +262,10 @@ newtype RenamingPropDef = RPD (PropNameLine, PropName, [PropName])
 newtype PropNameLine = PNL PropName
 
 data PropName =
-  NPStart1 (Char, [(NamePart, ParamsInParen)], Maybe NamePart) |
-  PIPStart1 ([(ParamsInParen, NamePart)], Maybe ParamsInParen)
+  NPStart1 (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart) |
+  AHVIPStart1 ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
+
+newtype AdHocVarsInParen = AHVIP (AdHocTVar, [AdHocTVar])
 
 newtype NamePart = NP String
 

@@ -459,13 +459,13 @@ instance Show ProdOrPowerType where
     PoT4 pt -> show pt
 
 instance Show TypeName where
-  show = \(TN (maybe_pip1, tid, pip_str_pairs, maybe_pip2)) ->
-    show_maybe maybe_pip1 ++ show tid ++
-    concatMap (\(pip, str) -> show pip ++ str) pip_str_pairs ++
-    show_maybe maybe_pip2
+  show = \(TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) ->
+    show_maybe maybe_pvip1 ++ show tid ++
+    concatMap (\(pvip, str) -> show pvip ++ str) pvip_str_pairs ++
+    show_maybe maybe_pvip2
 
-instance Show ParamsInParen where
-  show = \(PIP (tv, tvs)) -> "(" ++ show tv ++ show_list_comma tvs ++ ")"
+instance Show ParamVarsInParen where
+  show = \(PVIP (ptv, ptvs)) -> "(" ++ show ptv ++ show_list_comma ptvs ++ ")"
 
 instance Show IdTuple where
   show = \(PCSIs (id, ids)) -> "(" ++ show id ++ show_list_comma ids ++ ")"
@@ -509,10 +509,13 @@ instance Show PropNameLine where
 
 instance Show PropName where
   show = \case
-    NPStart1 (c, np_pip_pairs, maybe_np) ->
-      [c] ++ show_pair_list np_pip_pairs ++ show_maybe maybe_np
-    PIPStart1 (pip_np_pairs, maybe_pip) ->
-      show_pair_list pip_np_pairs ++ show_maybe maybe_pip
+    NPStart1 (c, np_ahvip_pairs, maybe_np) ->
+      [c] ++ show_pair_list np_ahvip_pairs ++ show_maybe maybe_np
+    AHVIPStart1 (ahvip_np_pairs, maybe_ahvip) ->
+      show_pair_list ahvip_np_pairs ++ show_maybe maybe_ahvip
+
+instance Show AdHocVarsInParen where
+  show = \(AHVIP (ahtv, ahtvs)) -> "(" ++ show ahtv ++ show_list_comma ahtvs ++ ")"
 
 instance Show NamePart where
   show = \(NP str) -> str

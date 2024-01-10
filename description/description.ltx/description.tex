@@ -1993,11 +1993,11 @@ fields for convinience. A tuple type generates postfix functions for all of
 the fields by using a '.' before the name of the field. For example the
 \texttt{MathematicianInfo} type above generates the following functions:
 \begin{verbatim}
-.name : MathematicianInfo => Name
-.nationality : MathematicianInfo => String
-.date_of_birth : MathematicianInfo => Date
+_.name : MathematicianInfo => Name
+_.nationality : MathematicianInfo => String
+_.date_of_birth : MathematicianInfo => Date
 \end{verbatim}
-These functions are named "postfix functions" because they can be appended to
+These functions are named "postfix functions" because they are appended to
 their argument.
 
 \item \textit{Grammar}
@@ -2008,10 +2008,10 @@ their argument.
 `value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
 
 <type-name> ::= 
-[ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
-[ <params-in-paren> ]
+[ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
+[ <param-vars-in-paren> ]
 
-<params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
+<param-vars-in-paren> ::= `(' <param-t-var> ( <comma> <param-t-var> )* `)'
 
 <id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 \end{grammar}
@@ -2102,7 +2102,7 @@ These functions can be used like any other function as arguments to other functi
 For example:
 \begin{verbatim}
 non_empty_ls_to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
-  = apply(non_empty_l:_)to_each
+  = apply(non_empty_l:_)to_all
 \end{verbatim}
 
 \item \textit{Grammar}
@@ -2313,8 +2313,10 @@ proposition or (if it is a conjunction) many propositions  seperated by commas
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
 <prop-name> ::=  ""\\""
-[A-Z] ( <name-part> <params-in-paren> )+ [ <name-part> ]
-\alt " "( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+[A-Z] ( <name-part> <ad-hoc-vars-in-paren> )+ [ <name-part> ]
+\alt " "( <ad-hoc-vars-in-paren> <name-part> )+ [ <ad-hoc-vars-in-paren> ]
+
+<ad-hoc-vars-in-paren> ::= `(' <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* `)'
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \end{grammar} 
@@ -2864,10 +2866,10 @@ The parser was implemented using the parsec library.
 `value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
 
 <type-name> ::= 
-[ <params-in-paren> ] <type-id> ( <params-in-paren> [A-Za-z]+ )*
-[ <params-in-paren> ]
+[ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
+[ <param-vars-in-paren> ]
 
-<params-in-paren> ::= `(' <type-var> ( <comma> <type-var> )* `)'
+<param-vars-in-paren> ::= `(' <param-t-var> ( <comma> <param-t-var> )* `)'
 
 <id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
 \\
@@ -2893,8 +2895,10 @@ The parser was implemented using the parsec library.
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
 <prop-name> ::=  ""\\""
-[A-Z] ( <name-part> <params-in-paren> )+ [ <name-part> ]
-\alt " "( <params-in-paren> <name-part> )+ [ <params-in-paren> ]
+[A-Z] ( <name-part> <ad-hoc-vars-in-paren> )+ [ <name-part> ]
+\alt " "( <ad-hoc-vars-in-paren> <name-part> )+ [ <ad-hoc-vars-in-paren> ]
+
+<ad-hoc-vars-in-paren> ::= `(' <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* `)'
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \\

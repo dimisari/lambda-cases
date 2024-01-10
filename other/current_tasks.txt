@@ -1,8 +1,4 @@
 
-- Only allow paremetric t vars in type def?
-  + 
-  Only allow ad hoc t vars in type props?
-
 - Not A-Z for ad hoc vars because of Z, R, C?
 
 - * for don't care in matching
