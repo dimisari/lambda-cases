@@ -14,8 +14,11 @@ show_maybe = \case
 show_list :: Show a => [a] -> String
 show_list = concatMap show
 
+show_list_sep :: Show a => String -> [a] -> String
+show_list_sep = \sep -> concatMap ((sep ++) . show)
+
 show_list_comma :: Show a => [a] -> String
-show_list_comma = concatMap ((", " ++) . show)
+show_list_comma = show_list_sep ", "
 
 show_pair_list :: (Show a, Show b) => [(a, b)] -> String
 show_pair_list = concatMap (\(a, b) -> show a ++ show b)
@@ -51,18 +54,22 @@ instance Show LineOrUnderExpr where
     LE1 le -> show le
     Underscore1 -> "_"
 
+instance Show LineExpr where
+  show = \case
+    BOAE1 npoa -> show npoa
+    LOE2 soe -> show soe
+    LFE2 sfe -> show sfe
+
 instance Show BigTuple where
   show = \(BT (loue, loues, loues_l)) ->
-    "( " ++ show loue ++ ", " ++ show loues ++
-    concatMap (("\n, " ++) . show) loues_l ++ 
-    "\n)"
+    "( " ++ show loue ++ ", " ++ show loues ++ show_list_sep "\n, " loues_l ++ "\n)"
 
 instance Show List where
   show = \(L maybe_loues) -> "[" ++ show_maybe maybe_loues ++ "]"
 
 instance Show BigList where
   show = \(BL (loues, loues_l)) ->
-    "[ " ++ show loues ++ concatMap (("\n, " ++) . show) loues_l ++ "\n]"
+    "[ " ++ show loues ++ show_list_sep "\n, " loues_l ++ "\n]"
 
 instance Show ParenFuncApp where
   show = \case
@@ -330,7 +337,7 @@ instance Show GroupedValueDefs where
   show = \(GVDs (id, ids, ts, csles, csles_l)) ->
     show id ++ show_list_comma ids ++
     "\n  : " ++ show ts ++
-    "\n  = " ++ show csles ++ concatMap (("\n  , " ++) . show) csles_l
+    "\n  = " ++ show csles ++ show_list_sep "\n  , " csles_l
 
 instance Show Types where
   show = \case
@@ -340,15 +347,8 @@ instance Show Types where
 instance Show LineExprs where
   show = \(CSLE (le, les)) -> show le ++ show_list_comma les
 
-instance Show LineExpr where
-  show = \case
-    BOAE1 npoa -> show npoa
-    LOE2 soe -> show soe
-    LFE2 sfe -> show sfe
-
 instance Show WhereExpr where
-  show = \(WE (wde, wdes)) ->
-    "\nwhere\n" ++ show wde ++ concatMap (("\n\n" ++) . show) wdes
+  show = \(WE (wde, wdes)) -> "\nwhere\n" ++ show wde ++ show_list_sep "\n\n" wdes
 
 instance Show WhereDefExpr where
   show = \case
@@ -396,14 +396,14 @@ instance Show InOrOutType where
     FT2 ft -> "(" ++ show ft ++ ")"
 
 instance Show ProdType where
-  show = \(PT (fopt, fopts)) -> show fopt ++ concatMap ((" x " ++) . show) fopts
-
-instance Show FieldOrPowerType where
-  show = \case
-    FiT1 ft -> show ft
-    PoT3 pt -> show pt
+  show = \(PT (fopt, fopts)) -> show fopt ++ show_list_sep " x " fopts
 
 instance Show FieldType where
+  show = \case
+    PBT1 ft -> show ft
+    PoT3 pt -> show pt
+
+instance Show PowerBaseType where
   show = \case
     TId3 tid -> show tid
     TV3 tv -> show tv
@@ -416,7 +416,7 @@ instance Show InParenT where
     PT3 pt -> "(" ++ show pt ++ ")"
 
 instance Show PowerType where
-  show = \(PoT (ft, is)) -> show ft ++ concatMap (("^" ++) . show) is
+  show = \(PoT (ft, is)) -> show ft ++ show_list_sep "^" is
 
 instance Show TypeApp where
   show = \case
@@ -527,7 +527,7 @@ instance Show TypeTheo where
     "type_theorem " ++ show pps ++ show_mpps maybe_pps ++
     "\nproof\n  " ++ show id ++ show_moi maybe_op_id ++ " = " ++ show tt_ve
     where
-    show_mpps :: Maybe PropNameSub -> String
+    show_mpps :: Maybe PropNameWithSubs -> String
     show_mpps = \case
       Nothing -> ""
       Just pps -> " => " ++ show pps
@@ -537,20 +537,69 @@ instance Show TypeTheo where
       Nothing -> ""
       Just (op, id) -> show op ++ show id
 
-instance Show PropNameSub where
+instance Show PropNameWithSubs where
   show = \case
     NPStart2 (c, np_psip_pairs, maybe_np) ->
       [c] ++ show_pair_list np_psip_pairs ++ show_maybe maybe_np
     PSIPStart (psip_np_pairs, maybe_psip) ->
       show_pair_list psip_np_pairs ++ show_maybe maybe_psip
 
-instance Show ParamSubsInParen where
+instance Show SubsInParen where
   show = \(PSIP (ps, pss)) -> "(" ++ show ps ++ show_list_comma pss ++ ")"
 
-instance Show ParamSub where
+instance Show TVarSub where
+  show = \case
+    TId5 tid -> show tid
+    TV5 tv -> show tv
+    FTS1 fts -> show fts
+    PTS1 pts -> show pts
+    PoTS1 pts -> show pts
+    TAS1 tas -> show tas
+
+instance Show FuncTypeSub where
+  show = \(FTS (ioots1, ioots2)) -> show ioots1 ++ " => " ++ show ioots2 
+
+instance Show InOrOutTypeSub where
+  show = \case
+    IOOT1 ioot -> show ioot
+    Underscore4 -> "_"
+
+instance Show ProdTypeSub where
+  show = \(PTS (fts, fts_l)) -> show fts ++ show_list_sep " x " fts_l
+
+instance Show FieldTypeSub where
+  show = \case
+    FiT1 ft -> show ft
+    Underscore5 -> "_"
+
+instance Show PowerBaseTypeSub where
+  show = \case
+    PBT2 pbt -> show pbt
+    Underscore6 -> "_"
+
+instance Show PowerTypeSub where
+  show = \(PoTS (pbts, is)) -> show pbts ++ show_list_sep "^" is
+
+instance Show TypeAppSub where
+  show = \case
+    TIWAS1 (maybe_tips1, tiwas, maybe_tips2) ->
+      show_maybe maybe_tips1 ++ show tiwas ++ show_maybe maybe_tips2
+    TIPSTI (tips, tid_or_tv, maybe_tips) ->
+      show tips ++ show tid_or_tv ++ show_maybe maybe_tips
+    TITIPS (tid_or_tv, tips) ->
+      show tid_or_tv ++ show tips
+
+instance Show TypeIdWithArgsSub where
+  show = \(TIWAS (tid, tips_str_pairs)) ->
+    show tid ++ concatMap (\(tips, str) -> show tips ++ str) tips_str_pairs
+
+instance Show TypesInParenSub where
+  show = \(TIPS (stou, stous)) -> "(" ++ show stou ++ show_list_comma stous ++ ")"
+
+instance Show SimpleTypeOrUnder where
   show = \case
     ST1 st -> show st
-    TF1 tf -> show tf
+    Underscore7 -> "_"
 
 instance Show TypeFunc where
   show = \case
@@ -579,7 +628,7 @@ instance Show BigOrCasesExpr where
 -- Program
 
 instance Show Program where
-  show = \(P (pp, pps)) -> show pp ++ concatMap (("\n\n" ++) . show) pps
+  show = \(P (pp, pps)) -> show pp ++ show_list_sep "\n\n" pps
 
 instance Show ProgramPart where
   show = \case

@@ -19,6 +19,9 @@ newtype LineOrUnderExprs = LOUEs (LineOrUnderExpr, [LineOrUnderExpr])
 data LineOrUnderExpr = 
   LE1 LineExpr | Underscore1
 
+data LineExpr = 
+  BOAE1 BasicOrAppExpr | LOE2 LineOpExpr | LFE2 LineFuncExpr
+
 newtype BigTuple = BT (LineOrUnderExpr, LineOrUnderExprs, [LineOrUnderExprs])
 
 newtype List = L (Maybe LineOrUnderExprs)
@@ -168,9 +171,6 @@ data Types =
 
 newtype LineExprs = CSLE (LineExpr, [LineExpr])
 
-data LineExpr = 
-  BOAE1 BasicOrAppExpr | LOE2 LineOpExpr | LFE2 LineFuncExpr
-
 newtype WhereExpr = WE (WhereDefExpr, [WhereDefExpr])
 
 data WhereDefExpr = 
@@ -199,18 +199,18 @@ data InOrOutType =
   TId2 TypeId | TV2 TypeVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp |
   FT2 FuncType
 
-newtype ProdType = PT (FieldOrPowerType, [FieldOrPowerType])
+newtype ProdType = PT (FieldType, [FieldType])
 
-data FieldOrPowerType =
-  FiT1 FieldType | PoT3 PowerType 
+data FieldType =
+  PBT1 PowerBaseType | PoT3 PowerType 
 
-data FieldType = 
+data PowerBaseType = 
   TId3 TypeId | TV3 TypeVar | TA3 TypeApp | IPT InParenT
 
 data InParenT = 
   FT3 FuncType | PT3 ProdType
 
-newtype PowerType = PoT (FieldType, [Int])
+newtype PowerType = PoT (PowerBaseType, [Int])
 
 data TypeApp =  
   TIWA1 (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |
@@ -273,17 +273,46 @@ newtype NamePart = NP String
 
 newtype TypeTheo =
   TT
-  (PropNameSub, Maybe PropNameSub, Identifier, Maybe (Op, Identifier), TTValueExpr)
+    (PropNameWithSubs, Maybe PropNameWithSubs, Identifier
+    , Maybe (Op, Identifier), TTValueExpr)
 
-data PropNameSub = 
-  NPStart2 (Char, [(NamePart, ParamSubsInParen)], Maybe NamePart) |
-  PSIPStart ([(ParamSubsInParen, NamePart)], Maybe ParamSubsInParen)
+data PropNameWithSubs = 
+  NPStart2 (Char, [(NamePart, SubsInParen)], Maybe NamePart) |
+  PSIPStart ([(SubsInParen, NamePart)], Maybe SubsInParen)
 
-newtype ParamSubsInParen = PSIP (ParamSub, [ParamSub])
+newtype SubsInParen = PSIP (TVarSub, [TVarSub])
 
-data ParamSub =
-  ST1 SimpleType | TF1 TypeFunc
+data TVarSub =
+  TId5 TypeId | TV5 TypeVar | FTS1 FuncTypeSub | PTS1 ProdTypeSub |
+  PoTS1 ProdTypeSub | TAS1 TypeAppSub
 
+newtype FuncTypeSub = FTS (InOrOutTypeSub, InOrOutTypeSub)
+
+data InOrOutTypeSub = 
+  IOOT1 InOrOutType | Underscore4
+
+newtype ProdTypeSub = PTS (FieldTypeSub, [FieldTypeSub])
+
+data FieldTypeSub =
+  FiT1 FieldType | Underscore5
+
+data PowerBaseTypeSub =
+  PBT2 PowerBaseType | Underscore6
+
+newtype PowerTypeSub = PoTS (PowerBaseTypeSub, [Int])
+
+data TypeAppSub =  
+  TIWAS1 (Maybe TypesInParenSub, TypeIdWithArgsSub, Maybe TypesInParenSub) |
+  TIPSTI (TypesInParenSub, TypeIdOrVar, Maybe TypesInParenSub) |
+  TITIPS (TypeIdOrVar, TypesInParenSub)
+
+newtype TypeIdWithArgsSub = TIWAS (TypeId, [(TypesInParenSub, String)])
+
+newtype TypesInParenSub = TIPS (SimpleTypeOrUnder, [SimpleTypeOrUnder])
+
+data SimpleTypeOrUnder = 
+  ST1 SimpleType | Underscore7
+ 
 data TypeFunc = 
   TF_1 (Bool, TypeId, String, Bool) | TF_2 (TypeId, Bool) | TF_3 TypeId
 
