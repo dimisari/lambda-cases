@@ -381,7 +381,7 @@ instance Show ParamTVar where
   show = \(PTV i) -> "T" ++ show i
 
 instance Show AdHocTVar where
-  show = \(AHTV c) -> [c]
+  show = \(AHTV c) -> "@" ++ [c]
 
 instance Show FuncType where
   show = \(FT (it, ot)) -> show it ++ " => " ++ show ot

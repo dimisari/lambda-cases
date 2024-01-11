@@ -1,12 +1,12 @@
-type_proposition (T)Has_Equality
+type_proposition (@T)Has_Equality
 equivalent
-  (T)And(T)Can_Be_Equal#
+  (@T)And(@T)Can_Be_Equal#
 
-type_proposition (A)And(B)Are_Comparable
+type_proposition (@A)And(@B)Are_Comparable
 equivalent
-  (A)Can_Be_Less_Than(B), (A)And(B)Can_Be_Equal, (A)Can_Be_Greater_Than(B)#
+  (@A)Can_Be_Less_Than(@B), (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)#
 
-type_proposition (T)Has_Comparison
+type_proposition (@T)Has_Comparison
 equivalent
-  (T)And(T)Are_Comparable#
+  (@T)And(@T)Are_Comparable#
 

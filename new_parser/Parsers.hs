@@ -481,7 +481,7 @@ instance HasParser ParamTVar where
   parser = PTV <$> (char 'T' *> fmap (\d -> read [d]) digit)
 
 instance HasParser AdHocTVar where
-  parser = AHTV <$> upper
+  parser = AHTV <$> (char '@' *> upper)
 
 instance HasParser FuncType where
   parser = FT <$> parser +++ (string " => " *> parser)
@@ -588,7 +588,7 @@ instance HasParser TypePropDef where
 instance HasParser AtomPropDef where
   parser = 
     parser >>= \prop_name_line ->
-    nl *> string "value" *> nl *> string "  " *> parser >>= \identifier ->
+    nl *> string "needed" *> nl *> string "  " *> parser >>= \identifier ->
     string " : " *> parser >>= \simple_type ->
     return $ APD (prop_name_line, identifier, simple_type)
 

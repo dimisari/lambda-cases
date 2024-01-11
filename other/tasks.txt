@@ -1,16 +1,6 @@
 
-- problem with func comp ops and "o" > or < ? grammar ambiguity?
-
 --------------------------------------------------------------later
 
-- group <type-id> and <type-var> everywhere as <type-id-or-var> ?
-
-- proof => implementation in ttheo
-
-- value => value_needed in tprop
-
-- is it possible to have param-t-var in type-app(-sub) ?
- 
 - good page changes in description pdf
 
 - spaces
@@ -64,3 +54,4 @@
 - isolate hs gen (am I even gonna bother to look at the old code?)
 
 - fix md files in github
+  

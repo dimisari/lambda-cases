@@ -1,6 +1,7 @@
 
-- Not A-Z for ad hoc vars because of Z, R, C?
-
 - * for don't care in matching
 
-- _ for missing type argument
+- group <type-id> and <type-var> everywhere as <type-id-or-var> ?
+
+- is it possible to have param-t-var in type-app(-sub) ?
+ 
