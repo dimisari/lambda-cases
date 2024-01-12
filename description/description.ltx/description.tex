@@ -1436,7 +1436,7 @@ gcd : Int^2 => Int
 is_empty : ListOf(T1)s => Bool
   = cases
     empty_l => true
-    non_empty_l:anything => false
+    non_empty_l:* => false
 
 apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
@@ -1485,12 +1485,14 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 \\
 
 <matching> ::= 
-<literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
+<literal> | <identifier> | <pre-func> <matching-or-star> | <tuple-matching> |
 <list-matching>
 
-<tuple-matching> ::= `(' <matching> ( <comma> <matching> )+ `)'
+<matching-or-star> ::= <matching> | `*'
 
-<list-matching> ::= `[' [ <matching> ( <comma> <matching> )* ] `]'
+<tuple-matching> ::= `(' <matching-or-star> ( <comma> <matching-or-star> )+ `)'
+
+<list-matching> ::= `[' [ <matching-or-star> ( <comma> <matching-or-star> )* ] `]'
 \\
 
 <case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
@@ -2008,7 +2010,7 @@ their argument.
 `tuple_type\ ' <type-name> <nl> \\
 `value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
 
-<type-name> ::= 
+<type-name> ::= ""\\""
 [ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
 [ <param-vars-in-paren> ]
 
@@ -2053,7 +2055,7 @@ values
 is_empty : ListOf(T1)s => Bool
   = cases
     empty_l => true
-    non_empty_l:anything => false
+    non_empty_l:* => false
 
 get_head : ListOf(T1)s => Possibly(T1)
   = cases
@@ -2801,12 +2803,14 @@ The parser was implemented using the parsec library.
 \\
 
 <matching> ::= 
-<literal> | <identifier> | <pre-func> <matching> | <tuple-matching> |
+<literal> | <identifier> | <pre-func> <matching-or-star> | <tuple-matching> |
 <list-matching>
 
-<tuple-matching> ::= `(' <matching> ( <comma> <matching> )+ `)'
+<matching-or-star> ::= <matching> | `*'
 
-<list-matching> ::= `[' [ <matching> ( <comma> <matching> )* ] `]'
+<tuple-matching> ::= `(' <matching-or-star> ( <comma> <matching-or-star> )+ `)'
+
+<list-matching> ::= `[' [ <matching-or-star> ( <comma> <matching-or-star> )* ] `]'
 \\
 
 <case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
@@ -2891,7 +2895,7 @@ The parser was implemented using the parsec library.
 `tuple_type\ ' <type-name> <nl> \\
 `value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
 
-<type-name> ::= 
+<type-name> ::= ""\\""
 [ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
 [ <param-vars-in-paren> ]
 

@@ -28,8 +28,12 @@ cases
   y => gcd(y, x -> mod <- y)#
 
 cases
+  [*] => true
+  ... => false#
+
+cases
   empty_l => true
-  non_empty_l:anything => false#
+  non_empty_l:* => false#
 
 (f, cases)
   empty_l => empty_l

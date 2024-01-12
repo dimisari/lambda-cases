@@ -299,17 +299,22 @@ instance Show Matching where
   show = \case
     Lit2 lit -> show lit
     Id5 id -> show id
-    PFM (pf, m) -> show pf ++ show m
+    PFM (pf, mos) -> show pf ++ show mos
     TM1 tm -> show tm
     LM1 lm -> show lm
 
+instance Show MatchingOrStar where
+  show = \case
+    M1 m -> show m
+    Star -> "*"
+
 instance Show TupleMatching where
-  show = \(TM (m, ms)) -> "(" ++ show m ++ show_list_comma ms ++ ")"
+  show = \(TM (mos, mos_l)) -> "(" ++ show mos ++ show_list_comma mos_l ++ ")"
 
 instance Show ListMatching where
   show = \(LM maybe_m_ms) -> case maybe_m_ms of
     Nothing -> "[]"
-    Just (m, ms) -> "[" ++ show m ++ show_list_comma ms ++ "]"
+    Just (mos, mos_l) -> "[" ++ show mos ++ show_list_comma mos_l ++ "]"
 
 instance Show CaseBody where
   show = \(CB (cbs, maybe_we)) -> show cbs ++ show_maybe maybe_we

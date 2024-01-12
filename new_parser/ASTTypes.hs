@@ -144,12 +144,15 @@ newtype Case = Ca (Matching, CaseBody)
 newtype EndCase = EC CaseBody
 
 data Matching = 
-  Lit2 Literal | Id5 Identifier | PFM (PreFunc, Matching) | TM1 TupleMatching |
-  LM1 ListMatching
+  Lit2 Literal | Id5 Identifier | PFM (PreFunc, MatchingOrStar) |
+  TM1 TupleMatching | LM1 ListMatching
 
-newtype TupleMatching = TM (Matching, [Matching])
+data MatchingOrStar = 
+  M1 Matching | Star
 
-newtype ListMatching = LM (Maybe (Matching, [Matching]))
+newtype TupleMatching = TM (MatchingOrStar, [MatchingOrStar])
+
+newtype ListMatching = LM (Maybe (MatchingOrStar, [MatchingOrStar]))
 
 newtype CaseBody = CB (CaseBodyStart, Maybe WhereExpr)
 

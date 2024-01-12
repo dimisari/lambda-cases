@@ -383,6 +383,9 @@ instance HasParser Matching where
     Lit2 <$> parser <|> PFM <$> try (parser +++ parser) <|> Id5 <$> parser <|>
     TM1 <$> parser <|> LM1 <$> parser
 
+instance HasParser MatchingOrStar where
+  parser = M1 <$> parser <|> char '*' *> return Star
+
 instance HasParser TupleMatching where
   parser = TM <$> (char '(' *> parser) +++ (many1 (comma *> parser) <* char ')')
 
@@ -390,7 +393,7 @@ instance HasParser ListMatching where
   parser = 
     LM <$> (char '[' *> optionMaybe inside_p <* char ']')
     where
-    inside_p :: Parser (Matching, [Matching])
+    inside_p :: Parser (MatchingOrStar, [MatchingOrStar])
     inside_p = parser +++ (many $ comma *> parser)
 
 instance HasParser CaseBody where
