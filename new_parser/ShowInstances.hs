@@ -436,10 +436,10 @@ instance Show TypeIdWithArgs where
   show = \(TIWA (tid, tip_str_pairs)) ->
     show tid ++ concatMap (\(tip, str) -> show tip ++ str) tip_str_pairs
 
-instance Show TypeIdOrVar where
+instance Show TIdOrAdHocTVar where
   show = \case
     TId4 tid -> show tid
-    TV4 tv -> show tv
+    AHTV2 ahtv -> show ahtv
 
 instance Show TypesInParen where
   show = \(TIP (st, sts)) -> "(" ++ show st ++ show_list_comma sts ++ ")"
@@ -555,7 +555,7 @@ instance Show SubsInParen where
 instance Show TVarSub where
   show = \case
     TId5 tid -> show tid
-    TV5 tv -> show tv
+    TV4 tv -> show tv
     FTS1 fts -> show fts
     PTS1 pts -> show pts
     PoTS1 pts -> show pts

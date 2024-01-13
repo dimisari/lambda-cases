@@ -1866,12 +1866,12 @@ type parameters are substituted by the type expressions of the arguments.
 \begin{grammar}
 <type-app> ::= ""\\""
 [ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id-or-var> [ <types-in-paren> ]
-\alt " "<type-id-or-var> <types-in-paren>
+\alt " "<types-in-paren> <t-id-or-ad-hoc-t-var> [ <types-in-paren> ]
+\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren>
 
 <type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
 
-<type-id-or-var> ::= <type-id> | <type-var>
+<t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
 
 <types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
 \end{grammar}
@@ -2511,8 +2511,8 @@ the "\texttt{=>}" arrow.
 
 <type-app-sub> ::= ""\\""
 [ <types-in-paren-sub> ] <type-id-with-args-sub> [ <types-in-paren-sub> ]
-\alt " "<types-in-paren-sub> <type-id-or-var> [ <types-in-paren-sub> ]
-\alt " "<type-id-or-var> <types-in-paren-sub>
+\alt " "<types-in-paren-sub> <t-id-or-ad-hoc-t-var> [ <types-in-paren-sub> ]
+\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren-sub>
 
 <type-id-with-args-sub> ::= <type-id> ( <types-in-paren-sub> [A-Za-z]+ )+
 
@@ -2874,12 +2874,12 @@ The parser was implemented using the parsec library.
 
 <type-app> ::= ""\\""
 [ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <type-id-or-var> [ <types-in-paren> ]
-\alt " "<type-id-or-var> <types-in-paren>
+\alt " "<types-in-paren> <t-id-or-ad-hoc-t-var> [ <types-in-paren> ]
+\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren>
 
 <type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
 
-<type-id-or-var> ::= <type-id> | <type-var>
+<t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
 
 <types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
 \\
@@ -2962,8 +2962,8 @@ The parser was implemented using the parsec library.
 
 <type-app-sub> ::= ""\\""
 [ <types-in-paren-sub> ] <type-id-with-args-sub> [ <types-in-paren-sub> ]
-\alt " "<types-in-paren-sub> <type-id-or-var> [ <types-in-paren-sub> ]
-\alt " "<type-id-or-var> <types-in-paren-sub>
+\alt " "<types-in-paren-sub> <t-id-or-ad-hoc-t-var> [ <types-in-paren-sub> ]
+\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren-sub>
 
 <type-id-with-args-sub> ::= <type-id> ( <types-in-paren-sub> [A-Za-z]+ )+
 

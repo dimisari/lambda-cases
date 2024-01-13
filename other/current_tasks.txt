@@ -1,7 +1,4 @@
 
-- is it possible to have param-t-var in type-app(-sub) ?
-  - no
- 
 - group <type-id> and <type-var> everywhere as <type-id-or-var> ?
 
 - change type ids to have single letters and end with digit 

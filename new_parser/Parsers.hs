@@ -519,7 +519,7 @@ instance HasParser TypeApp where
       optionMaybe parser >>= \maybe_types_in_paren2 ->
       return (maybe_types_in_paren1, type_id_with_args, maybe_types_in_paren2)
 
-    tipti_p :: Parser (TypesInParen, TypeIdOrVar, Maybe TypesInParen)
+    tipti_p :: Parser (TypesInParen, TIdOrAdHocTVar, Maybe TypesInParen)
     tipti_p = 
       parser >>= \types_in_paren ->
       parser >>= \type_id_or_var ->
@@ -529,8 +529,8 @@ instance HasParser TypeApp where
 instance HasParser TypeIdWithArgs where
   parser = TIWA <$> parser +++ many1 (try $ parser +++ many1 (lower <|> upper))
 
-instance HasParser TypeIdOrVar where
-  parser = TId4 <$> try parser <|> TV4 <$> parser
+instance HasParser TIdOrAdHocTVar where
+  parser = TId4 <$> try parser <|> AHTV2 <$> parser
 
 instance HasParser TypesInParen where
   parser = TIP <$> (char '(' *> parser) +++ (many (comma *> parser) <* char ')')
@@ -669,7 +669,7 @@ instance HasParser SubsInParen where
 instance HasParser TVarSub where
   parser =
     FTS1 <$> try parser <|> PTS1 <$> try parser <|> PoTS1 <$> try parser <|> 
-    TAS1 <$> try parser <|> TId5 <$> try parser <|> TV5 <$> parser
+    TAS1 <$> try parser <|> TId5 <$> try parser <|> TV4 <$> parser
 
 instance HasParser FuncTypeSub where
   parser = FTS <$> parser +++ (string " => " *> parser)
@@ -701,7 +701,7 @@ instance HasParser TypeAppSub where
       optionMaybe parser >>= \maybe_tips2 ->
       return (maybe_tips1, tiwas, maybe_tips2)
 
-    tipsti_p :: Parser (TypesInParenSub, TypeIdOrVar, Maybe TypesInParenSub)
+    tipsti_p :: Parser (TypesInParenSub, TIdOrAdHocTVar, Maybe TypesInParenSub)
     tipsti_p = 
       parser >>= \types_in_paren_sub ->
       parser >>= \type_id_or_var_sub ->

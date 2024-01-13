@@ -217,13 +217,13 @@ newtype PowerType = PoT (PowerBaseType, [Int])
 
 data TypeApp =  
   TIWA1 (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |
-  TIPTI (TypesInParen, TypeIdOrVar, Maybe TypesInParen) |
-  TITIP (TypeIdOrVar, TypesInParen)
+  TIPTI (TypesInParen, TIdOrAdHocTVar, Maybe TypesInParen) |
+  TITIP (TIdOrAdHocTVar, TypesInParen)
 
 newtype TypeIdWithArgs = TIWA (TypeId, [(TypesInParen, String)])
 
-data TypeIdOrVar =
-  TId4 TypeId | TV4 TypeVar
+data TIdOrAdHocTVar =
+  TId4 TypeId | AHTV2 AdHocTVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
 
@@ -286,7 +286,7 @@ data PropNameWithSubs =
 newtype SubsInParen = PSIP (TVarSub, [TVarSub])
 
 data TVarSub =
-  TId5 TypeId | TV5 TypeVar | FTS1 FuncTypeSub | PTS1 ProdTypeSub |
+  TId5 TypeId | TV4 TypeVar | FTS1 FuncTypeSub | PTS1 ProdTypeSub |
   PoTS1 ProdTypeSub | TAS1 TypeAppSub
 
 newtype FuncTypeSub = FTS (InOrOutTypeSub, InOrOutTypeSub)
@@ -306,8 +306,8 @@ newtype PowerTypeSub = PoTS (PowerBaseTypeSub, [Int])
 
 data TypeAppSub =  
   TIWAS1 (Maybe TypesInParenSub, TypeIdWithArgsSub, Maybe TypesInParenSub) |
-  TIPSTI (TypesInParenSub, TypeIdOrVar, Maybe TypesInParenSub) |
-  TITIPS (TypeIdOrVar, TypesInParenSub)
+  TIPSTI (TypesInParenSub, TIdOrAdHocTVar, Maybe TypesInParenSub) |
+  TITIPS (TIdOrAdHocTVar, TypesInParenSub)
 
 newtype TypeIdWithArgsSub = TIWAS (TypeId, [(TypesInParenSub, String)])
 
