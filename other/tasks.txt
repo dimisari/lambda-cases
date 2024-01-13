@@ -1,39 +1,17 @@
 
---------------------------------------------------------------later
-
-- good page changes in description pdf
-
-- spaces
-  - ?
-    - change: add optional
-    - field change: make optional
-    - params arrow: make optional
-    - case arrow: make optional
-    - end case arrow: make optional
-    - value def: make optional
-      - after : 
-      - after = 
-    - grouped value defs: make optional
-      - after :
-      - after =
-
-    - func type: make optional
-    - power type: add optional around '^' 
-    - conditio: make optional
-    - or type def: make optional around '|'
-    - type nickname: make optional
-    - atom prop def: make optional around ':'
-    - type theorem: make optional
-
-- turn all args in paren func app into a tuple
-  - try to typecheck with the whole tuple as the first arg
-  - if it fails typecheck with the first field of the tuple as the first arg
-
 - better parser errors (with less try)?
   - it fails on the last it tried
     - how to mitigate that?
 
 - group type nicknames with "all"
+
+--------------------------------------------------------------later
+
+- good page changes in description pdf
+
+- turn all args in paren func app into a tuple
+  - try to typecheck with the whole tuple as the first arg
+  - if it fails typecheck with the first field of the tuple as the first arg
 
 - printing tuples (json style or similar)
 
@@ -54,4 +32,4 @@
 - isolate hs gen (am I even gonna bother to look at the old code?)
 
 - fix md files in github
-  
+

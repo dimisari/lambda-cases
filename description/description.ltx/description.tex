@@ -1652,7 +1652,9 @@ The grammar of a type expression is:
 <type> ::= [ <condition> ]  <simple-type> 
 
 <simple-type> ::=
-<type-id> | <type-var> | <func-type> | <prod-type> | <power-type> | <type-app>
+<type-id-or-var> | <func-type> | <prod-type> | <power-type> | <type-app>
+
+<type-id-or-var> ::= <type-id> | <type-var>
 \\
 \end{grammar}
 \paragraph{Type Identifiers}
@@ -1676,7 +1678,7 @@ letter and is followed by one or more capital or lowercase letters.
 
 \item \textit{Grammar}
 \begin{grammar}
-<type-id> ::= [A-Z] [A-Za-z]+ \\ 
+<type-id> ::= [A-Z] [A-Za-z]*
 \end{grammar}
 \end{itemize}
 
@@ -1791,8 +1793,7 @@ function type expressions.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id> | <type-var> | <prod-type> | <power-type> | <type-app> |
-`(' <func-type> `)'
+<type-id-or-var> | <prod-type> | <power-type> | <type-app> | `(' <func-type> `)'
 \end{grammar}
 \end{itemize}
 
@@ -1825,7 +1826,7 @@ type, the power symbol '\texttt{\^}' and the number of times the type is repeate
 <field-type> ::= <power-base-type> | <power-type>
 
 <power-base-type> ::=
-<type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
+<type-id-or-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
 
 <power-type> ::= <power-base-type> ( `^' <int-greater-than-one> )+
 \end{grammar}
@@ -2494,7 +2495,7 @@ the "\texttt{=>}" arrow.
 \\
 
 <t-var-sub> ::=
-<type-id> | <type-var> | <func-type-sub> | <prod-type-sub> | <power-type-sub> |
+<type-id-or-var> | <func-type-sub> | <prod-type-sub> | <power-type-sub> |
 <type-app-sub>
 
 <func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
@@ -2842,10 +2843,12 @@ The parser was implemented using the parsec library.
 <type> ::= [ <condition> ]  <simple-type> 
 
 <simple-type> ::=
-<type-id> | <type-var> | <func-type> | <prod-type> | <power-type> | <type-app>
+<type-id-or-var> | <func-type> | <prod-type> | <power-type> | <type-app>
+
+<type-id-or-var> ::= <type-id> | <type-var>
 \\
 
-<type-id> ::= [A-Z] [A-Za-z]+ 
+<type-id> ::= [A-Z] [A-Za-z]*
 \\
 
 <type-var> ::= <param-t-var> | <ad-hoc-t-var> 
@@ -2858,8 +2861,7 @@ The parser was implemented using the parsec library.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id> | <type-var> | <prod-type> | <power-type> | <type-app> |
-`(' <func-type> `)'
+<type-id-or-var> | <prod-type> | <power-type> | <type-app> | `(' <func-type> `)'
 \\
 
 <prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
@@ -2867,7 +2869,7 @@ The parser was implemented using the parsec library.
 <field-type> ::= <power-base-type> | <power-type>
 
 <power-base-type> ::=
-<type-id> | <type-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
+<type-id-or-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
 
 <power-type> ::= <power-base-type> ( `^' <int-greater-than-one> )+
 \\
@@ -2945,7 +2947,7 @@ The parser was implemented using the parsec library.
 \\
 
 <t-var-sub> ::=
-<type-id> | <type-var> | <func-type-sub> | <prod-type-sub> | <power-type-sub> |
+<type-id-or-var> | <func-type-sub> | <prod-type-sub> | <power-type-sub> |
 <type-app-sub>
 
 <func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>

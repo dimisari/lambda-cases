@@ -367,12 +367,16 @@ instance Show Type where
 
 instance Show SimpleType where
   show = \case
-    TId1 tid -> show tid
-    TV1 tv -> show tv
+    TIOV1 tiov -> show tiov
     FT1 ft -> show ft
     PT1 pt -> show pt
     PoT1 pt -> show pt
     TA1 ta -> show ta
+
+instance Show TypeIdOrVar where
+  show = \case
+    TId1 tid -> show tid
+    TV1 tv -> show tv
 
 instance Show TypeId where
   show = \(TId str) -> str
@@ -393,8 +397,7 @@ instance Show FuncType where
 
 instance Show InOrOutType where
   show = \case
-    TId2 tid -> show tid
-    TV2 tv -> show tv
+    TIOV2 tiov -> show tiov
     PT2 pt -> show pt
     PoT2 pt -> show pt
     TA2 ta -> show ta
@@ -410,8 +413,7 @@ instance Show FieldType where
 
 instance Show PowerBaseType where
   show = \case
-    TId3 tid -> show tid
-    TV3 tv -> show tv
+    TIOV3 tiov -> show tiov
     TA3 ta -> show ta
     IPT ipt -> show ipt
 
@@ -554,8 +556,7 @@ instance Show SubsInParen where
 
 instance Show TVarSub where
   show = \case
-    TId5 tid -> show tid
-    TV4 tv -> show tv
+    TIOV4 tiov -> show tiov
     FTS1 fts -> show fts
     PTS1 pts -> show pts
     PoTS1 pts -> show pts

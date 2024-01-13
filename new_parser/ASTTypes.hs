@@ -184,8 +184,11 @@ data WhereDefExpr =
 newtype Type = Ty (Maybe Condition, SimpleType)
 
 data SimpleType = 
-  TId1 TypeId | TV1 TypeVar | FT1 FuncType | PT1 ProdType | PoT1 PowerType | 
+  TIOV1 TypeIdOrVar | FT1 FuncType | PT1 ProdType | PoT1 PowerType | 
   TA1 TypeApp
+
+data TypeIdOrVar =
+  TId1 TypeId | TV1 TypeVar
 
 newtype TypeId = TId String
 
@@ -199,8 +202,7 @@ newtype AdHocTVar = AHTV Char
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
 data InOrOutType = 
-  TId2 TypeId | TV2 TypeVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp |
-  FT2 FuncType
+  TIOV2 TypeIdOrVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp | FT2 FuncType
 
 newtype ProdType = PT (FieldType, [FieldType])
 
@@ -208,7 +210,7 @@ data FieldType =
   PBT1 PowerBaseType | PoT3 PowerType 
 
 data PowerBaseType = 
-  TId3 TypeId | TV3 TypeVar | TA3 TypeApp | IPT InParenT
+  TIOV3 TypeIdOrVar | TA3 TypeApp | IPT InParenT
 
 data InParenT = 
   FT3 FuncType | PT3 ProdType
@@ -286,8 +288,8 @@ data PropNameWithSubs =
 newtype SubsInParen = PSIP (TVarSub, [TVarSub])
 
 data TVarSub =
-  TId5 TypeId | TV4 TypeVar | FTS1 FuncTypeSub | PTS1 ProdTypeSub |
-  PoTS1 ProdTypeSub | TAS1 TypeAppSub
+  TIOV4 TypeIdOrVar | FTS1 FuncTypeSub | PTS1 ProdTypeSub | PoTS1 ProdTypeSub |
+  TAS1 TypeAppSub
 
 newtype FuncTypeSub = FTS (InOrOutTypeSub, InOrOutTypeSub)
 

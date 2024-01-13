@@ -1,4 +1,23 @@
 
-- group <type-id> and <type-var> everywhere as <type-id-or-var> ?
+- spaces
+  - ?
+    - change: add optional
+    - field change: make optional
+    - params arrow: make optional
+    - case arrow: make optional
+    - end case arrow: make optional
+    - value def: make optional
+      - after : 
+      - after = 
+    - grouped value defs: make optional
+      - after :
+      - after =
 
-- change type ids to have single letters and end with digit 
+    - func type: make optional
+    - power type: add optional around '^' 
+    - conditio: make optional
+    - or type def: make optional around '|'
+    - type nickname: make optional
+    - atom prop def: make optional around ':'
+    - type theorem: make optional
+

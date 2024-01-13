@@ -469,12 +469,15 @@ instance HasParser Type where
 instance HasParser SimpleType where
   parser = 
     FT1 <$> try parser <|> PT1 <$> try parser <|> PoT1 <$> try parser <|> 
-    TA1 <$> try parser <|> TId1 <$> try parser <|> TV1 <$> parser
+    TA1 <$> try parser <|> TIOV1 <$> parser
+
+instance HasParser TypeIdOrVar where
+  parser = TV1 <$> try parser <|> TId1 <$> parser
 
 instance HasParser TypeId where
   parser = 
     upper >>= \u1 ->
-    many1 (upper <|> lower) >>= \upper_lowers ->
+    many (upper <|> lower) >>= \upper_lowers ->
     return $ TId $ u1 : upper_lowers
 
 instance HasParser TypeVar where
@@ -492,7 +495,7 @@ instance HasParser FuncType where
 instance HasParser InOrOutType where
   parser =
     PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|> PoT2 <$> try parser <|>
-    TA2 <$> try parser <|> TId2 <$> try parser <|> TV2 <$> parser
+    TA2 <$> try parser <|> TIOV2 <$> parser
 
 instance HasParser ProdType where
   parser = PT <$> parser +++ (many1 $ try (string " x ") *> parser)
@@ -503,7 +506,7 @@ instance HasParser FieldType where
 instance HasParser PowerBaseType where
   parser =
     IPT <$> try (in_paren $ FT3 <$> try parser <|> PT3 <$> parser) <|>
-    TA3 <$> try parser <|> TId3 <$> try parser <|> TV3 <$> parser
+    TA3 <$> try parser <|> TIOV3 <$> parser
 
 instance HasParser PowerType where
   parser = PoT <$> parser +++ (many1 $ try (string "^") *> parser)
@@ -669,7 +672,7 @@ instance HasParser SubsInParen where
 instance HasParser TVarSub where
   parser =
     FTS1 <$> try parser <|> PTS1 <$> try parser <|> PoTS1 <$> try parser <|> 
-    TAS1 <$> try parser <|> TId5 <$> try parser <|> TV4 <$> parser
+    TAS1 <$> try parser <|> TIOV4 <$> parser
 
 instance HasParser FuncTypeSub where
   parser = FTS <$> parser +++ (string " => " *> parser)
