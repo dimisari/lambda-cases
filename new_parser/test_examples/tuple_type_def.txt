@@ -18,3 +18,12 @@ tuple_type Indexed(T1)
 value
   (index, val) : Int x T1#
 
+tuple_type Name
+value (first_name, last_name):String^2#
+
+tuple_type Date
+value (day, month, year):Int^3#
+
+tuple_type MathematicianInfo
+value (name, nationality, date_of_birth):Name x String x Date#
+

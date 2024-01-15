@@ -709,9 +709,11 @@ a function that expects those new values as arguments (last example).
 \item \textit{Grammar}
 
 \begin{grammar}
-<change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
+<change> ::=
+`change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
-<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-or-under-expr>
+<field-change> ::=
+( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-or-under-expr>
 \end{grammar} 
 
 \end{itemize}
@@ -1375,13 +1377,13 @@ The precise indentation rules are described in the section
 
 \item \textit{Grammar}
 \begin{grammar}
-<line-func-expr> ::= <parameters> `\ =>' <line-func-body>
+<line-func-expr> ::= <parameters> [ `\ ' ] `=>' <line-func-body>
 
-<big-func-expr> ::= <parameters> `\ =>' <big-func-body>
+<big-func-expr> ::= <parameters> [ `\ ' ] `=>' <big-func-body>
 
 <parameters> ::= <identifier> | `*' | `(' <parameters> ( <comma> <parameters> )+ `)'
 
-<line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
+<line-func-body> ::= [ `\ ' ] ( <basic-or-app-expr> | <line-op-expr> )
 
 <big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
 \end{grammar}
@@ -1479,9 +1481,9 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <identifier> | `cases' | `*' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
 \\
 
-<case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
+<case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
 
-<end-case> ::= <nl> <indent> `...\ =>' <case-body>
+<end-case> ::= <nl> <indent> `...' [ `\ ' ] `=>' <case-body>
 \\
 
 <matching> ::= 
@@ -1861,7 +1863,7 @@ of passing the type argument \texttt{Int} to \texttt{ListOf()s}.
 \\\\
 Type application types have the same form as the name in the
 \texttt{tuple_type} or \texttt{or_type} definition, with the difference that
-type parameters are substituted by the type expressions of the arguments.
+type parameters are substituted by the expressions of the type arguments.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1901,7 +1903,7 @@ type proposition which refers to type variables inside the "simple" type
 and it must hold whenever the polymorphic value of that type is used. For
 example:
 \begin{verbatim}
-first : (@A)Is(@B)s_First => @B => @A
+first : (@A)Is(@B)s_First ==> @B => @A
 \end{verbatim}
 can be used as follows:
 \begin{verbatim}
@@ -2009,7 +2011,8 @@ their argument.
 \begin{grammar}
 <tuple-type-def> ::= ""\\
 `tuple_type\ ' <type-name> <nl> \\
-`value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
+`value' ( `\ ' | <nl> `\ \ ' )
+<id-tuple> [ `\ ' ] `:' [ `\ ' ] ( <prod-type> | <power-type> )
 
 <type-name> ::= ""\\""
 [ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
@@ -2114,8 +2117,8 @@ non_empty_ls_to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 \begin{grammar}
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
-`values' <nl> `\ \ ' <identifier> [ `:' <simple-type> ]
-( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
+`values' ( `\ ' | <nl> `\ \ ' ) <identifier> [ `:' <simple-type> ]
+( [ `\ ' ] | [ `\ ' ] <identifier> [ `:' <simple-type> ] )*
 \end{grammar}
 
 \end{itemize}
@@ -2142,7 +2145,7 @@ then an equal sign and they end with the type to be nicknamed.
 \item \textit{Grammar}
 
 \begin{grammar}
-<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
+<t-nickname> ::= `type_nickname\ ' <type-name> [ `\ ' ] `=' [ `\ ' ] <simple-type>
 \end{grammar} 
 
 \end{itemize}
@@ -2309,10 +2312,12 @@ proposition or (if it is a conjunction) many propositions  seperated by commas
 \\
 
 <atom-prop-def> ::=
-<prop-name-line> <nl> `needed' <nl> `\ \ ' <identifier> `\ :\ ' <simple-type>
+<prop-name-line> <nl>
+`needed' ( `\ ' | <nl> `\ \ ' ) <identifier> [ `\ ' ] `:' [ `\ ' ] <simple-type>
 
-<renaming-prop-def> ::=
-<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( <comma> <prop-name> )*
+<renaming-prop-def> ::= ""\\
+<prop-name-line> <nl>
+`equivalent' ( `\ ' | <nl> `\ \ ' ) <prop-name> ( <comma> <prop-name> )*
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2483,9 +2488,9 @@ the "\texttt{=>}" arrow.
 \paragraph{Grammar for Theorems}
 
 \begin{grammar}
-<type-theo> ::= ""\\
-`type_theorem\ ' <prop-name-with-subs> [ `\ =>\ ' <prop-name-with-subs> ] <nl> \\
-`proof' <nl> `\ \ ' <identifier> [ <op> <identifier> ] `\ =' <tt-value-expr>
+<type-theo> ::= 
+`type_theorem\ ' <prop-name-with-subs> [ `\ =>\ ' <prop-name-with-subs> ] <nl> 
+`proof' <proof>
 
 <prop-name-with-subs> ::=  ""\\""
 [A-Z] ( <name-part> <subs-in-paren> )+ [ <name-part> ]
@@ -2495,38 +2500,50 @@ the "\texttt{=>}" arrow.
 \\
 
 <t-var-sub> ::=
-<type-id-or-var> | <func-type-sub> | <prod-type-sub> | <power-type-sub> |
-<type-app-sub>
+<type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+<func-type-sub> 
+\\
 
-<func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
+<type-app-sub> ::= ""\\""
+[ <subs-or-unders-in-paren> ] <type-id-with-subs> [ <subs-or-unders-in-paren> ]
+\alt
+" "<subs-or-unders-in-paren> <t-id-or-ad-hoc-t-var> [ <subs-or-unders-in-paren> ]
+\alt
+" "<t-id-or-ad-hoc-t-var> <subs-or-unders-in-paren>
 
-<in-or-out-type-sub> ::= <in-or-out-type> | `_'
+<type-id-with-subs> ::= <type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )+
+
+<subs-or-unders-in-paren> ::=
+`(' <sub-or-under> ( <comma> <sub-or-under> )* `)'
+
+<sub-or-under> ::= <t-var-sub> | `_'
+\\
+
+<power-type-sub> ::= <power-base-type-sub> `^' <int-greater-than-one>
+
+<power-base-type-sub> ::= 
+`_' | <type-id-or-var> | <type-app-sub> |
+`(' ( <prod-type-sub> | <func-type-sub> ) `)'
+\\
 
 <prod-type-sub> ::= <field-type-sub> ( `\ x\ ' <field-type-sub> )+
 
-<field-type-sub> ::= <field-type> | `_'
-
-<power-base-type-sub> ::= <power-base-type> | `_'
-
-<power-type-sub> ::= <power-base-type-sub> ( `^' <int-greater-than-one> )+
-
-<type-app-sub> ::= ""\\""
-[ <types-in-paren-sub> ] <type-id-with-args-sub> [ <types-in-paren-sub> ]
-\alt " "<types-in-paren-sub> <t-id-or-ad-hoc-t-var> [ <types-in-paren-sub> ]
-\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren-sub>
-
-<type-id-with-args-sub> ::= <type-id> ( <types-in-paren-sub> [A-Za-z]+ )+
-
-<types-in-paren-sub> ::=
-`(' <simple-type-or-under> ( <comma> <simple-type-or-under> )* `)'
-
-<simple-type-or-under> ::= <simple-type> | `_'
+<field-type-sub> ::= <power-base-type-sub> | <power-type-sub>
 \\
 
-<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <big-or-cases-expr>
+<func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
 
-<big-or-cases-expr> ::=
-<big-op-expr> | <big-func-expr> | <cases-func-expr> | <big-tuple> | <big-list>
+<in-or-out-type-sub> ::= ""\\
+`_' | <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+`(' <func-type-sub> `)'
+\\
+
+<proof> ::= 
+`\ ' <id-or-op-eq> `\ ' <line-expr> | <nl> `\ \ ' <id-or-op-eq>  <tt-value-expr>
+
+<id-or-op-eq> ::= <identifier> [ <op> <identifier> ] `\ ='
+
+<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <value-expr>
 \end{grammar} 
 
 \section{Language Description: Predefined}
@@ -2737,9 +2754,11 @@ The parser was implemented using the parsec library.
 <literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
 \\
 
-<change> ::= `change{' <field-change> ( <comma> <field-change> )* `}'
+<change> ::=
+`change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
-<field-change> ::= ( <identifier> | <special-id> ) `\ =\ ' <line-or-under-expr>
+<field-change> ::=
+( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-or-under-expr>
 \\
 
 <op-expr> ::= <line-op-expr> | <big-op-expr>
@@ -2781,13 +2800,13 @@ The parser was implemented using the parsec library.
 <func-expr> ::= <line-func-expr> | <big-func-expr> | <cases-func-expr>
 \\
 
-<line-func-expr> ::= <parameters> `\ =>' <line-func-body>
+<line-func-expr> ::= <parameters> [ `\ ' ] `=>' <line-func-body>
 
-<big-func-expr> ::= <parameters> `\ =>' <big-func-body>
+<big-func-expr> ::= <parameters> [ `\ ' ] `=>' <big-func-body>
 
 <parameters> ::= <identifier> | `*' | `(' <parameters> ( <comma> <parameters> )+ `)'
 
-<line-func-body> ::= `\ ' ( <basic-or-app-expr> | <line-op-expr> )
+<line-func-body> ::= [ `\ ' ] ( <basic-or-app-expr> | <line-op-expr> )
 
 <big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
 \\
@@ -2798,9 +2817,9 @@ The parser was implemented using the parsec library.
 <identifier> | `cases' | `*' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
 \\
 
-<case> ::=  <nl> <indent> <matching> `\ =>' <case-body>
+<case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
 
-<end-case> ::= <nl> <indent> `...\ =>' <case-body>
+<end-case> ::= <nl> <indent> `...' [ `\ ' ] `=>' <case-body>
 \\
 
 <matching> ::= 
@@ -2895,7 +2914,8 @@ The parser was implemented using the parsec library.
 
 <tuple-type-def> ::= ""\\
 `tuple_type\ ' <type-name> <nl> \\
-`value' <nl> `\ \ ' <id-tuple> `\ :\ ' ( <prod-type> | <power-type> )
+`value' ( `\ ' | <nl> `\ \ ' )
+<id-tuple> [ `\ ' ] `:' [ `\ ' ] ( <prod-type> | <power-type> )
 
 <type-name> ::= ""\\""
 [ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
@@ -2908,21 +2928,23 @@ The parser was implemented using the parsec library.
 
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
-`values' <nl> `\ \ ' <identifier> [ `:' <simple-type> ]
-( `\ |\ ' <identifier> [ `:' <simple-type> ] )*
+`values' ( `\ ' | <nl> `\ \ ' ) <identifier> [ `:' <simple-type> ]
+( [ `\ ' ] | [ `\ ' ] <identifier> [ `:' <simple-type> ] )*
 \\
 
-<t-nickname> ::= `type_nickname\ ' <type-name> `\ =\ ' <simple-type>
+<t-nickname> ::= `type_nickname\ ' <type-name> [ `\ ' ] `=' [ `\ ' ] <simple-type>
 \\\\
 
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>
 \\
 
 <atom-prop-def> ::=
-<prop-name-line> <nl> `needed' <nl> `\ \ ' <identifier> `\ :\ ' <simple-type>
+<prop-name-line> <nl>
+`needed' ( `\ ' | <nl> `\ \ ' ) <identifier> [ `\ ' ] `:' [ `\ ' ] <simple-type>
 
-<renaming-prop-def> ::=
-<prop-name-line> <nl> `equivalent' <nl> `\ \ ' <prop-name> ( <comma> <prop-name> )*
+<renaming-prop-def> ::= ""\\
+<prop-name-line> <nl>
+`equivalent' ( `\ ' | <nl> `\ \ ' ) <prop-name> ( <comma> <prop-name> )*
 
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
@@ -2935,9 +2957,9 @@ The parser was implemented using the parsec library.
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \\
 
-<type-theo> ::= ""\\
-`type_theorem\ ' <prop-name-with-subs> [ `\ =>\ ' <prop-name-with-subs> ] <nl> \\
-`proof' <nl> `\ \ ' <identifier> [ <op> <identifier> ] `\ =' <tt-value-expr>
+<type-theo> ::= 
+`type_theorem\ ' <prop-name-with-subs> [ `\ =>\ ' <prop-name-with-subs> ] <nl> 
+`proof' <proof>
 
 <prop-name-with-subs> ::=  ""\\""
 [A-Z] ( <name-part> <subs-in-paren> )+ [ <name-part> ]
@@ -2947,38 +2969,60 @@ The parser was implemented using the parsec library.
 \\
 
 <t-var-sub> ::=
-<type-id-or-var> | <func-type-sub> | <prod-type-sub> | <power-type-sub> |
-<type-app-sub>
+<type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+<func-type-sub> 
+\\
 
-<func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
+<type-app-sub> ::= ""\\""
+[ <subs-or-unders-in-paren> ] <type-id-with-subs> [ <subs-or-unders-in-paren> ]
+\alt
+" "<subs-or-unders-in-paren> <t-id-or-ad-hoc-t-var> [ <subs-or-unders-in-paren> ]
+\alt
+" "<t-id-or-ad-hoc-t-var> <subs-or-unders-in-paren>
 
-<in-or-out-type-sub> ::= <in-or-out-type> | `_'
+<type-id-with-subs> ::= <type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )+
+
+<subs-or-unders-in-paren> ::=
+`(' <sub-or-under> ( <comma> <sub-or-under> )* `)'
+
+<sub-or-under> ::= <t-var-sub> | `_'
+\\
+
+<power-type-sub> ::= <power-base-type-sub> `^' <int-greater-than-one>
+
+<power-base-type-sub> ::= 
+`_' | <type-id-or-var> | <type-app-sub> |
+`(' ( <prod-type-sub> | <func-type-sub> ) `)'
+\\
 
 <prod-type-sub> ::= <field-type-sub> ( `\ x\ ' <field-type-sub> )+
 
-<field-type-sub> ::= <field-type> | `_'
-
-<power-base-type-sub> ::= <power-base-type> | `_'
-
-<power-type-sub> ::= <power-base-type-sub> ( `^' <int-greater-than-one> )+
-
-<type-app-sub> ::= ""\\""
-[ <types-in-paren-sub> ] <type-id-with-args-sub> [ <types-in-paren-sub> ]
-\alt " "<types-in-paren-sub> <t-id-or-ad-hoc-t-var> [ <types-in-paren-sub> ]
-\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren-sub>
-
-<type-id-with-args-sub> ::= <type-id> ( <types-in-paren-sub> [A-Za-z]+ )+
-
-<types-in-paren-sub> ::=
-`(' <simple-type-or-under> ( <comma> <simple-type-or-under> )* `)'
-
-<simple-type-or-under> ::= <simple-type> | `_'
+<field-type-sub> ::= <power-base-type-sub> | <power-type-sub>
 \\
 
-<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <big-or-cases-expr>
+<func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
 
-<big-or-cases-expr> ::=
-<big-op-expr> | <big-func-expr> | <cases-func-expr> | <big-tuple> | <big-list>
+<in-or-out-type-sub> ::= ""\\
+`_' | <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+`(' <func-type-sub> `)'
+\\
+
+<proof> ::= 
+`\ ' <id-or-op-eq> `\ ' <line-expr> | <nl> `\ \ ' <id-or-op-eq>  <tt-value-expr>
+
+<id-or-op-eq> ::= <identifier> [ <op> <identifier> ] `\ ='
+
+<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <value-expr>
+\\
+
+<program> ::=
+<nl>* <program-part> ( <nl> <nl> <program-part> )* <nl>*
+
+<program-part> ::=
+<value-def> | <grouped-value-defs> | <type-def> | <t-nickname> | <type-prop-def> |
+<type-theo>
+
+<nl> :: ( `\ ' | `\\t' )* `\\n'
 \end{grammar}
 
 \subsubsection{Indentation system}

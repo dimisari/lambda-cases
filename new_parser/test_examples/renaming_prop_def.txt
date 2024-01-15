@@ -10,3 +10,9 @@ type_proposition (@T)Has_Comparison
 equivalent
   (@T)And(@T)Are_Comparable#
 
+type_proposition (@T)Has_Equality
+equivalent (@T)And(@T)Can_Be_Equal#
+
+type_proposition (@T)Has_Comparison
+equivalent (@T)And(@T)Are_Comparable#
+

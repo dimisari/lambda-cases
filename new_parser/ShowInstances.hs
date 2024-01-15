@@ -530,106 +530,107 @@ instance Show NamePart where
 -- TypeTheo 
 
 instance Show TypeTheo where
-  show = \(TT (pps, maybe_pps, id, maybe_op_id, tt_ve)) ->
-    "type_theorem " ++ show pps ++ show_mpps maybe_pps ++
-    "\nproof\n  " ++ show id ++ show_moi maybe_op_id ++ " = " ++ show tt_ve
+  show = \(TT (pnws, maybe_pnws, proof)) ->
+    "type_theorem " ++ show pnws ++ show_mpnws maybe_pnws ++
+    "\nproof" ++ show proof
     where
-    show_mpps :: Maybe PropNameWithSubs -> String
-    show_mpps = \case
+    show_mpnws :: Maybe PropNameWithSubs -> String
+    show_mpnws = \case
       Nothing -> ""
-      Just pps -> " => " ++ show pps
-
-    show_moi :: Maybe (Op, Identifier) -> String
-    show_moi = \case
-      Nothing -> ""
-      Just (op, id) -> show op ++ show id
+      Just pnws -> " => " ++ show pnws
 
 instance Show PropNameWithSubs where
   show = \case
-    NPStart2 (c, np_psip_pairs, maybe_np) ->
-      [c] ++ show_pair_list np_psip_pairs ++ show_maybe maybe_np
-    PSIPStart (psip_np_pairs, maybe_psip) ->
-      show_pair_list psip_np_pairs ++ show_maybe maybe_psip
+    NPStart2 (c, np_sip_pairs, maybe_np) ->
+      [c] ++ show_pair_list np_sip_pairs ++ show_maybe maybe_np
+    SIPStart (sip_np_pairs, maybe_sip) ->
+      show_pair_list sip_np_pairs ++ show_maybe maybe_sip
 
 instance Show SubsInParen where
-  show = \(PSIP (ps, pss)) -> "(" ++ show ps ++ show_list_comma pss ++ ")"
+  show = \(SIP (tvs, tvss)) -> "(" ++ show tvs ++ show_list_comma tvss ++ ")"
 
 instance Show TVarSub where
   show = \case
     TIOV4 tiov -> show tiov
-    FTS1 fts -> show fts
-    PTS1 pts -> show pts
-    PoTS1 pts -> show pts
     TAS1 tas -> show tas
+    PoTS1 pts -> show pts
+    PTS1 pts -> show pts
+    FTS1 fts -> show fts
 
-instance Show FuncTypeSub where
-  show = \(FTS (ioots1, ioots2)) -> show ioots1 ++ " => " ++ show ioots2 
-
-instance Show InOrOutTypeSub where
+instance Show TypeAppSub where
   show = \case
-    IOOT1 ioot -> show ioot
+    TIWS1 (maybe_souip1, tiws, maybe_souip2) ->
+      show_maybe maybe_souip1 ++ show tiws ++ show_maybe maybe_souip2
+    SOUIP_TI (souip, tid_or_tv, maybe_souip) ->
+      show souip ++ show tid_or_tv ++ show_maybe maybe_souip
+    TI_SOUIP (tid_or_tv, souip) ->
+      show tid_or_tv ++ show souip
+
+instance Show TypeIdWithSubs where
+  show = \(TIWS (tid, souip_str_pairs)) ->
+    show tid ++ concatMap (\(souip, str) -> show souip ++ str) souip_str_pairs
+
+instance Show SubsOrUndersInParen where
+  show = \(SOUIP (sou, sous)) -> "(" ++ show sou ++ show_list_comma sous ++ ")"
+
+instance Show SubOrUnder where
+  show = \case
+    TVS1 tvs -> show tvs
     Underscore4 -> "_"
+
+instance Show PowerTypeSub where
+  show = \(PoTS (pbts, i)) -> show pbts ++ "^" ++ show i
+
+instance Show PowerBaseTypeSub where
+  show = \case
+    Underscore5 -> "_"
+    TIOV5 tid_or_var -> show tid_or_var
+    TAS2 tas -> show tas
+    IPTS1 ipts -> "(" ++ show ipts ++ ")"
+
+instance Show InParenTSub where
+  show = \case
+    PTS2 pts -> show pts
+    FTS2 fts -> show fts
 
 instance Show ProdTypeSub where
   show = \(PTS (fts, fts_l)) -> show fts ++ show_list_sep " x " fts_l
 
 instance Show FieldTypeSub where
   show = \case
-    FiT1 ft -> show ft
-    Underscore5 -> "_"
+    PBTS1 pbts -> show pbts
+    PoTS2 pots -> show pots
 
-instance Show PowerBaseTypeSub where
+instance Show FuncTypeSub where
+  show = \(FTS (ioots1, ioots2)) -> show ioots1 ++ " => " ++ show ioots2 
+
+instance Show InOrOutTypeSub where
   show = \case
-    PBT2 pbt -> show pbt
     Underscore6 -> "_"
+    TIOV6 tiov -> show tiov
+    TAS3 tas -> show tas
+    PoTS3 pots -> show pots
+    PTS3 pts -> show pts
+    FTS3 fts -> show fts
 
-instance Show PowerTypeSub where
-  show = \(PoTS (pbts, is)) -> show pbts ++ show_list_sep "^" is
-
-instance Show TypeAppSub where
+instance Show Proof where
   show = \case
-    TIWAS1 (maybe_tips1, tiwas, maybe_tips2) ->
-      show_maybe maybe_tips1 ++ show tiwas ++ show_maybe maybe_tips2
-    TIPSTI (tips, tid_or_tv, maybe_tips) ->
-      show tips ++ show tid_or_tv ++ show_maybe maybe_tips
-    TITIPS (tid_or_tv, tips) ->
-      show tid_or_tv ++ show tips
+    P1 (iooe, le) -> " " ++ show iooe ++ " " ++ show le
+    P2 (iooe, ttve) -> "\n  " ++ show iooe ++ show ttve
 
-instance Show TypeIdWithArgsSub where
-  show = \(TIWAS (tid, tips_str_pairs)) ->
-    show tid ++ concatMap (\(tips, str) -> show tips ++ str) tips_str_pairs
-
-instance Show TypesInParenSub where
-  show = \(TIPS (stou, stous)) -> "(" ++ show stou ++ show_list_comma stous ++ ")"
-
-instance Show SimpleTypeOrUnder where
-  show = \case
-    ST1 st -> show st
-    Underscore7 -> "_"
-
-instance Show TypeFunc where
-  show = \case
-    TF_1 (b1, tid, str, b2) -> show_bool b1 ++ show tid ++ str ++ show_bool b2
-    TF_2 (tid, b) -> "()" ++ show tid ++ show_bool b
-    TF_3 tid -> show tid ++ "()"
+instance Show IdOrOpEq where
+  show = \(IOOE (id, maybe_op_id)) ->
+    show id ++ show_moi maybe_op_id ++ " ="
     where
-    show_bool :: Bool -> String 
-    show_bool = \case
-      True -> "()"
-      False -> ""
+    show_moi :: Maybe (Op, Identifier) -> String
+    show_moi = \case
+      Nothing -> ""
+      Just (op, id) -> show op ++ show id
 
 instance Show TTValueExpr where
   show = \case
-    LE2 le -> show le
-    BOCE boce -> "\n    " ++ show boce
-
-instance Show BigOrCasesExpr where
-  show = \case
-    BOE4 boe -> show boe
-    BFE3 bfe -> show bfe
-    CFE3 cfe -> show cfe
-    BT2 bt -> show bt
-    BL2 bl -> show bl
+    LE2 le -> " " ++ show le
+    VE1 ve -> "\n    " ++ show ve
 
 -- Program
 

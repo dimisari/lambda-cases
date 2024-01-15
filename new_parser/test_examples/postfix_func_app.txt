@@ -16,3 +16,7 @@ name.change{last_name = "Gauss"}#
 
 x.change{1st = _, 3rd = _}#
 
+x.change{ 1st = _, 3rd = _ }#
+
+x.change{ 1st=_, 3rd=_ }#
+

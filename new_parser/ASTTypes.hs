@@ -277,56 +277,56 @@ newtype NamePart = NP String
 -- TypeTheo 
 
 newtype TypeTheo =
-  TT
-    (PropNameWithSubs, Maybe PropNameWithSubs, Identifier
-    , Maybe (Op, Identifier), TTValueExpr)
+  TT (PropNameWithSubs, Maybe PropNameWithSubs, Proof)
 
 data PropNameWithSubs = 
   NPStart2 (Char, [(NamePart, SubsInParen)], Maybe NamePart) |
-  PSIPStart ([(SubsInParen, NamePart)], Maybe SubsInParen)
+  SIPStart ([(SubsInParen, NamePart)], Maybe SubsInParen)
 
-newtype SubsInParen = PSIP (TVarSub, [TVarSub])
+newtype SubsInParen = SIP (TVarSub, [TVarSub])
 
 data TVarSub =
-  TIOV4 TypeIdOrVar | FTS1 FuncTypeSub | PTS1 ProdTypeSub | PoTS1 ProdTypeSub |
-  TAS1 TypeAppSub
+  TIOV4 TypeIdOrVar | TAS1 TypeAppSub | PoTS1 PowerTypeSub | PTS1 ProdTypeSub |
+  FTS1 FuncTypeSub 
 
-newtype FuncTypeSub = FTS (InOrOutTypeSub, InOrOutTypeSub)
+data TypeAppSub =  
+  TIWS1 (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen) |
+  SOUIP_TI (SubsOrUndersInParen, TIdOrAdHocTVar, Maybe SubsOrUndersInParen) |
+  TI_SOUIP (TIdOrAdHocTVar, SubsOrUndersInParen)
 
-data InOrOutTypeSub = 
-  IOOT1 InOrOutType | Underscore4
+newtype TypeIdWithSubs = TIWS (TypeId, [(SubsOrUndersInParen, String)])
+
+newtype SubsOrUndersInParen = SOUIP (SubOrUnder, [SubOrUnder])
+
+data SubOrUnder = 
+  TVS1 TVarSub | Underscore4
+ 
+newtype PowerTypeSub = PoTS (PowerBaseTypeSub, Int)
+
+data PowerBaseTypeSub =
+  Underscore5 | TIOV5 TypeIdOrVar | TAS2 TypeAppSub | IPTS1 InParenTSub
+
+data InParenTSub = 
+  PTS2 ProdTypeSub | FTS2 FuncTypeSub
 
 newtype ProdTypeSub = PTS (FieldTypeSub, [FieldTypeSub])
 
 data FieldTypeSub =
-  FiT1 FieldType | Underscore5
+  PBTS1 PowerBaseTypeSub | PoTS2 PowerTypeSub
 
-data PowerBaseTypeSub =
-  PBT2 PowerBaseType | Underscore6
+newtype FuncTypeSub = FTS (InOrOutTypeSub, InOrOutTypeSub)
 
-newtype PowerTypeSub = PoTS (PowerBaseTypeSub, [Int])
+data InOrOutTypeSub = 
+  Underscore6 | TIOV6 TypeIdOrVar | TAS3 TypeAppSub | 
+  PoTS3 PowerTypeSub | PTS3 ProdTypeSub | FTS3 FuncTypeSub
 
-data TypeAppSub =  
-  TIWAS1 (Maybe TypesInParenSub, TypeIdWithArgsSub, Maybe TypesInParenSub) |
-  TIPSTI (TypesInParenSub, TIdOrAdHocTVar, Maybe TypesInParenSub) |
-  TITIPS (TIdOrAdHocTVar, TypesInParenSub)
+data Proof =
+  P1 (IdOrOpEq, LineExpr) | P2 (IdOrOpEq, TTValueExpr) 
 
-newtype TypeIdWithArgsSub = TIWAS (TypeId, [(TypesInParenSub, String)])
-
-newtype TypesInParenSub = TIPS (SimpleTypeOrUnder, [SimpleTypeOrUnder])
-
-data SimpleTypeOrUnder = 
-  ST1 SimpleType | Underscore7
- 
-data TypeFunc = 
-  TF_1 (Bool, TypeId, String, Bool) | TF_2 (TypeId, Bool) | TF_3 TypeId
+newtype IdOrOpEq = IOOE (Identifier, Maybe (Op, Identifier))
 
 data TTValueExpr =
-  LE2 LineExpr | BOCE BigOrCasesExpr
-
-data BigOrCasesExpr =
-  BOE4 BigOpExpr | BFE3 BigFuncExpr | CFE3 CasesFuncExpr | BT2 BigTuple |
-  BL2 BigList
+  LE2 LineExpr | VE1 ValueExpr
 
 -- Program
 

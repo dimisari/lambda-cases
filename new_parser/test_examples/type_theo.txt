@@ -11,7 +11,10 @@ proof
   apply()inside =
     (f, cases)
       no_value => no_value
-      the_value:x => the_value:f(x)#
+      the_value:x => the_value:f(x)
+        where 
+        x : Int
+          = 1#
 
 type_theorem (ListOf(_)s)Has_Internal_App
 proof
@@ -31,4 +34,12 @@ proof
 type_theorem (@A)And(@B)Have_Eq_And_Gr => (@A)Can_Be_Gr_Or_Eq_To(@B)
 proof
   a >= b = a = b | a > b#
+
+type_theorem (Possibly(_))Has_A_Wrapper
+proof wrapper = the_value:_#
+
+type_theorem (ListOf(_)s)Has_A_Wrapper
+proof
+  wrapper =
+    [_]#
 

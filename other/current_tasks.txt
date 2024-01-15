@@ -1,23 +1,7 @@
 
-- spaces
-  - ?
-    - change: add optional
-    - field change: make optional
-    - params arrow: make optional
-    - case arrow: make optional
-    - end case arrow: make optional
-    - value def: make optional
-      - after : 
-      - after = 
-    - grouped value defs: make optional
-      - after :
-      - after =
+- change arrow to --> ?
+  - type theo
+  - condition
 
-    - func type: make optional
-    - power type: add optional around '^' 
-    - conditio: make optional
-    - or type def: make optional around '|'
-    - type nickname: make optional
-    - atom prop def: make optional around ':'
-    - type theorem: make optional
-
+- ambiguous theo
+  a = b = f
