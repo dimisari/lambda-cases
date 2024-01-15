@@ -545,7 +545,7 @@ instance HasParser TypesInParen where
   parser = TIP <$> (char '(' *> parser) +++ (many (comma *> parser) <* char ')')
 
 instance HasParser Condition where
-  parser = Co <$> (parser <* string " ==> ")
+  parser = Co <$> (parser <* string " --> ")
 
 -- HasParser: TypeDef, TypeNickname
 
@@ -648,7 +648,7 @@ instance HasParser NamePart where
 instance HasParser TypeTheo where
   parser =
     string "type_theorem " *> parser >>= \pnws ->
-    optionMaybe (string " => " *> parser) >>= \maybe_pnws ->
+    optionMaybe (string " --> " *> parser) >>= \maybe_pnws ->
     nl *> string "proof" *> parser >>= \proof ->
     return $ TT (pnws, maybe_pnws, proof)
 

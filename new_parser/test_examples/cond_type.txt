@@ -1,10 +1,10 @@
-(@A)And(@B)Can_Be_Equal ==> @A x @B => Bool#
+(@A)And(@B)Can_Be_Equal --> @A x @B => Bool#
 
-(@A)And(@B)Add_To(@C) ==> @A x @B => @C#
+(@A)And(@B)Add_To(@C) --> @A x @B => @C#
 
-(@A)Is(@B)s_First ==> @B => @A#
+(@A)Is(@B)s_First --> @B => @A#
 
-(@T)Has_Str_Rep ==> @T => String#
+(@T)Has_Str_Rep --> @T => String#
 
-(@E)Has_Use ==> @E(T1) x (T1 => @E(T2)) => @E(T2)#
+(@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)#
 

@@ -1,11 +1,7 @@
 
-- better parser errors (with less try)?
-  - it fails on the last it tried
-    - how to mitigate that?
-
-- group type nicknames with "all"
-
 --------------------------------------------------------------later
+
+- ambiguous theo: a = b = true
 
 - good page changes in description pdf
 

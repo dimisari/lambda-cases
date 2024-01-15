@@ -17,7 +17,7 @@
 \def\imgs{../Images}
 \def\H{Haskell}
 \def\ra{\texttt{=>}\ }
-\def\Ra{\texttt{==>}\ }
+\def\Ra{\texttt{-->}\ }
 %\newcommand\_[_]{_}
 
 \renewcommand{\arraystretch}{1.5}
@@ -377,7 +377,7 @@ Therefore, the types of the first four examples are:
 ListOf(Int)s
 ListOf(Real)s
 ListOf(String)s
-(@A)And(Int)Add_To(@B) ==> ListOf(@A => @B)s
+(@A)And(Int)Add_To(@B) --> ListOf(@A => @B)s
 \end{verbatim}
 And the last list is only legal if x, y, z and w all have the same type. Assuming 
 they do and it's the type T, the type of the list is: 
@@ -623,8 +623,8 @@ tuple.1st : Int
 \end{verbatim}
 The general types of these functions are:
 \begin{verbatim}
-_.1st : (@A)Is(@B)s_1st ==> @B => @A
-_.2nd : (@A)Is(@B)s_2nd ==> @B => @A
+_.1st : (@A)Is(@B)s_1st --> @B => @A
+_.2nd : (@A)Is(@B)s_2nd --> @B => @A
 ...
 \end{verbatim}
 These functions are called postfix functions because they are appended to their
@@ -694,7 +694,7 @@ point : Point
 
 
 apply(_.change{1st = 1st + 1})to_all
-  : (@A)And(Int)AddTo(@A), (@A)Is(@B)s_1st ==> ListOf(@B)s => ListOf(@B)s
+  : (@A)And(Int)AddTo(@A), (@A)Is(@B)s_1st --> ListOf(@B)s => ListOf(@B)s
 
 
 assuming: x : Int x Real x String
@@ -961,9 +961,9 @@ print_string("I'll repeat the line.") : (EmptyVal)FromIO
 get_line : (String)FromIO
 
 ; 
-  : (@E)Has_Then ==> @E(T1) x @E(T2) => @E(T2) 
+  : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2) 
 ;>
-  : (@E)Has_Use ==> @E(T1) x (T1 => @E(T2)) => @E(T2) 
+  : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2) 
 
 print_string("I'll repeat the line.") ; get_line
   : (String)FromIO
@@ -991,7 +991,7 @@ print_string("Oh hi...) : (EmptyVal)FromIO
 print_string("Oh that's crazy...) : (EmptyVal)FromIO
 
 ;
-  : (@E)Has_Then ==> @E(T1) x @E(T2) => @E(T2) 
+  : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2) 
 
 print_string("Oh hi...) ; get_line
   : (String)FromIO
@@ -1001,7 +1001,7 @@ age => print_string("Oh that's crazy...)
   : String => (EmptyVal)FromIO
 
 ;>
-  : (@E)Has_Use ==> @E(T1) x (T1 => @E(T2)) => @E(T2) 
+  : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2) 
 
 print_string("Oh hi...) ; get_line ;> age =>
 print_string("Oh that's crazy...)
@@ -1746,10 +1746,10 @@ A parametric type variable is written with capital "T" followed by a digit.
 
 \item \textit{Examples of ad hoc type variables inside bigger type expressions}
 \begin{verbatim}
-(@T)Has_Str_Rep ==> @T => String
-(@A)Is(@B)s_First ==> @B => @A
-(@A)And(@B)Can_Be_Equal ==> @A x @B => Bool
-(@A)And(@B)Add_To(@C) ==> @A x @B => @C
+(@T)Has_Str_Rep --> @T => String
+(@A)Is(@B)s_First --> @B => @A
+(@A)And(@B)Can_Be_Equal --> @A x @B => Bool
+(@A)And(@B)Add_To(@C) --> @A x @B => @C
 \end{verbatim}
 
 \item \textit{Description}
@@ -1758,7 +1758,7 @@ Ad hoc type variables are like parametric type variables with the difference
 that any type by which they are substituted must satisfy certain conditions in
 order for the program to type check. These conditions come in the form of type
 propositions (see Type Logic section \ref{subsec:typelogic}). Therefore, any ad
-hoc type variable must also appear in some condition before the "\texttt{==>}"
+hoc type variable must also appear in some condition before the "\texttt{-->}"
 arrow as shown in the examples.
 \\\\
 An ad hoc type variable is written with an '@' followed by any capital letter.
@@ -1885,11 +1885,11 @@ type parameters are substituted by the expressions of the type arguments.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-(@A)And(@B)Can_Be_Equal ==> @A x @B => Bool
-(@A)And(@B)Add_To(@C) ==> @A x @B => @C
-(@A)Is(@B)s_First ==> @B => @A
-(@T)Has_Str_Rep ==> @T => String
-(@E)Has_Use ==> @E(T1) x (T1 => @E(T2)) => @E(T2)
+(@A)And(@B)Can_Be_Equal --> @A x @B => Bool
+(@A)And(@B)Add_To(@C) --> @A x @B => @C
+(@A)Is(@B)s_First --> @B => @A
+(@T)Has_Str_Rep --> @T => String
+(@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)
 \end{verbatim}
 
 \item \textit{Description}
@@ -1898,12 +1898,12 @@ Conditional types are the types of values that are polymorphic not because of
 their structure but because they have been defined (seperately) for many
 different combinations of types (i.e. they are ad hoc polymorphic). They are
 comprised of a condition and a "simple" type (i.e. a type without a
-condition) which are seperated by the arrow "\texttt{==>}". The condition is a
+condition) which are seperated by the arrow "\texttt{-->}". The condition is a
 type proposition which refers to type variables inside the "simple" type
 and it must hold whenever the polymorphic value of that type is used. For
 example:
 \begin{verbatim}
-first : (@A)Is(@B)s_First ==> @B => @A
+first : (@A)Is(@B)s_First --> @B => @A
 \end{verbatim}
 can be used as follows:
 \begin{verbatim}
@@ -1933,7 +1933,7 @@ ad hoc polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic})
 
 \item \textit{Grammar}
 \begin{grammar}
-<condition> ::= <prop-name> `\ ==>\ ' 
+<condition> ::= <prop-name> `\ -->\ ' 
 \end{grammar}
 
 \end{itemize}
@@ -2071,7 +2071,7 @@ sum_list : ListOf(Int)s => Int
     empty_l => 0
     non_empty_l:l => l.head + sum_list(l.tail)
 
-print_err_or_res : (@A)Has_Str_Rep, (@B)Has_Str_Rep ==> Error(@A)OrResult(@B) => IO
+print_err_or_res : (@A)Has_Str_Rep, (@B)Has_Str_Rep --> Error(@A)OrResult(@B) => IO
   = cases
     error:e => print("Error occured: " + e -> to_string)
     result:r => print("All good! The result is: " + r -> to_string)
@@ -2195,13 +2195,13 @@ needed
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
 \begin{verbatim}
-first : (@A)Is(@B)s_First ==> @B => @A
+first : (@A)Is(@B)s_First --> @B => @A
 
-to_string : (@T)Has_Str_Rep ==> @T => String
+to_string : (@T)Has_Str_Rep --> @T => String
 
-wrapper : (@T)Has_A_Wrapper ==> T1 => @T(T1)
+wrapper : (@T)Has_A_Wrapper --> T1 => @T(T1)
 
-apply()inside : (@T)Has_Internal_App ==> (T1 => T2) x @T(T1) => @T(T2)
+apply()inside : (@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2232,7 +2232,7 @@ needed
 \item Function defined and its type:
 
 \begin{verbatim}
-first : (@A)Is(@B)s_First ==> @B => @A
+first : (@A)Is(@B)s_First --> @B => @A
 \end{verbatim}
 
 \item Theorems for specific types:
@@ -2437,11 +2437,11 @@ by the string " \texttt{=} " and the value expression which implements the value
 \item \textit{Examples}
 
 \begin{verbatim}
-type_theorem (@A)And(@B)Can_Be_Equal => (@A)And(@B)Can_Be_Unequal
+type_theorem (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
 proof
   a \= b = not(a = b)
 
-type_theorem (@A)Can_Be_Greater_Than(@B) => (@A)Can_Be_Le_Or_Eq_To(@B)
+type_theorem (@A)Can_Be_Greater_Than(@B) --> (@A)Can_Be_Le_Or_Eq_To(@B)
 proof
   a <= b = not(a > b)
 
@@ -2449,7 +2449,7 @@ type_propositon (@A)And(@B)Have_Eq_And_Gr
 equivalent
   (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
 
-type_theorem (@A)And(@B)Have_Eq_And_Gr => (@A)Can_Be_Gr_Or_Eq_To(@B)
+type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
 proof
   a >= b = a = b | a > b
 \end{verbatim}
@@ -2467,7 +2467,7 @@ defined then we can also define this other one". This can be translated into
 the following implication proposition: "if the proposition associated to the
 value(s) we are using is true then the proposition associated to the value we
 are defining is true", which can be condensed to the notation with the
-"\texttt{=>}" arrow used in the examples.
+"\texttt{-->}" arrow used in the examples.
 \\\\
 The proof of an implication proposition allows the compiler to
 automatically create the definition for an ad hoc polymorphic value for a
@@ -2481,7 +2481,7 @@ using a subset of the defined ones.
 A theorem of an implication proposition is grammatically the same as
 a theorem of an atomic proposition with the only difference being that an 
 implication propostition is comprised by two atomic propositions seperated by
-the "\texttt{=>}" arrow.
+the "\texttt{-->}" arrow.
 
 \end{itemize}
 
@@ -2489,7 +2489,7 @@ the "\texttt{=>}" arrow.
 
 \begin{grammar}
 <type-theo> ::= 
-`type_theorem\ ' <prop-name-with-subs> [ `\ =>\ ' <prop-name-with-subs> ] <nl> 
+`type_theorem\ ' <prop-name-with-subs> [ `\ -->\ ' <prop-name-with-subs> ] <nl> 
 `proof' <proof>
 
 <prop-name-with-subs> ::=  ""\\""
@@ -2673,7 +2673,7 @@ the "\texttt{=>}" arrow.
   \item \texttt{(Int)Has_Str_Rep}
   \item \texttt{(Char)Has_Str_Rep}
   \item \texttt{(Real)Has_Str_Rep}
-  \item \texttt{(@A)Has_Str_Rep => (ListOf(@A)s)Has_Str_Rep}
+  \item \texttt{(@A)Has_Str_Rep --> (ListOf(@A)s)Has_Str_Rep}
   \item \texttt{TODO apply()inside}
   \item \texttt{TODO wrapd_app()inside}
   \item \texttt{TODO ;>}
@@ -2905,7 +2905,7 @@ The parser was implemented using the parsec library.
 <types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
 \\
 
-<condition> ::= <prop-name> `\ ==>\ ' 
+<condition> ::= <prop-name> `\ -->\ ' 
 \\
 \\
 
@@ -2958,7 +2958,7 @@ The parser was implemented using the parsec library.
 \\
 
 <type-theo> ::= 
-`type_theorem\ ' <prop-name-with-subs> [ `\ =>\ ' <prop-name-with-subs> ] <nl> 
+`type_theorem\ ' <prop-name-with-subs> [ `\ -->\ ' <prop-name-with-subs> ] <nl> 
 `proof' <proof>
 
 <prop-name-with-subs> ::=  ""\\""

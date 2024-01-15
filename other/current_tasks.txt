@@ -1,7 +1,7 @@
 
-- change arrow to --> ?
-  - type theo
-  - condition
+- better parser errors (with less try)?
+  - it fails on the last it tried
+    - how to mitigate that?
 
-- ambiguous theo
-  a = b = f
+- group type nicknames with "all"
+
