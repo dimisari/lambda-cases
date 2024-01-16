@@ -215,7 +215,7 @@ data PowerBaseType =
 data InParenT = 
   FT3 FuncType | PT3 ProdType
 
-newtype PowerType = PoT (PowerBaseType, [Int])
+newtype PowerType = PoT (PowerBaseType, Int)
 
 data TypeApp =  
   TIWA1 (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |

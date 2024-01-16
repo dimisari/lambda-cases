@@ -1,5 +1,4 @@
-{-# LANGUAGE LambdaCase,
-TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
 module Parsers where
 
@@ -65,8 +64,8 @@ dec_il_if_false = \case
   )
   :: (Parser Char, Parser (), Parser String, Parser a -> Parser a) 
 
-nl_ind_or_one_space :: Parser ()
-nl_ind_or_one_space = try nl_indent <|> char ' ' *> return ()
+before_type :: Parser String
+before_type = try nl_indent *> string ": " <|> opt_space_around (string ":")
 
 indent :: Parser ()
 indent = getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
@@ -80,6 +79,12 @@ par_lower_unders =
 (+++) :: Parser a -> Parser b -> Parser (a, b)
 pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
 
+int_greater_than_1 :: Parser Int
+int_greater_than_1 =
+  parser >>= \i -> case (i < 2) of
+    True -> unexpected "integer in power type must be greater than 1"
+    false -> return i
+ 
 -- helper ops
 
 (.>) = flip (.)
@@ -419,7 +424,7 @@ instance HasParser ValueDef where
   parser = 
     indent *> parser >>= \identifier ->
     increase_il 1 >>
-    nl_ind_or_one_space *> string ": " *> parser >>= \type_ ->
+    before_type *> parser >>= \type_ ->
     nl_indent *> string "= " *>
     increase_il 1 >> in_equal_line >>
     parser >>= \value_expr ->
@@ -441,7 +446,7 @@ instance HasParser GroupedValueDefs where
     indent *> parser >>= \identifier ->
     many1 (comma *> parser) >>= \identifiers -> 
     increase_il 1 >>
-    nl_ind_or_one_space *> string ": " *> types_p >>= \types ->
+    before_type *> types_p >>= \types ->
     nl_indent *> string "= " *> parser >>= \comma_sep_line_exprs ->
     many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
     decrease_il 1 >>
@@ -515,7 +520,7 @@ instance HasParser PowerBaseType where
     TA3 <$> try parser <|> TIOV3 <$> parser
 
 instance HasParser PowerType where
-  parser = PoT <$> parser +++ (many1 $ try (string "^") *> parser)
+  parser = PoT <$> parser +++ (string "^" *> int_greater_than_1)
 
 instance HasParser TypeApp where
   parser =
@@ -705,7 +710,7 @@ instance HasParser SubOrUnder where
   parser = TVS1 <$> try parser <|> char '_' *> return Underscore4
 
 instance HasParser PowerTypeSub where
-  parser = PoTS <$> parser +++ (string "^" *> parser)
+  parser = PoTS <$> parser +++ (string "^" *> int_greater_than_1)
 
 instance HasParser PowerBaseTypeSub where
   parser =

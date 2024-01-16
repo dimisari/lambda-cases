@@ -5,25 +5,20 @@ data AddInts =
   SimplyInt Int | AddInts AddInts Int
   deriving Show
 
-int_p =
-  read <$> ((:) <$> char '-' <*> many1 digit <|> many1 digit)
+int_p = read <$> ((:) <$> char '-' <*> many1 digit <|> many1 digit)
   :: Parser Int
 
-my_chainl = ( \first_f p op ->
-  let
-  rest x =
-    ( op >>= \f -> p >>= \y -> rest (f x y)) <|>
-    return x
-  in
-  p >>= \x -> 
-  rest (first_f x)
-  ) :: (a -> b) -> Parser a -> Parser (b -> a -> b) -> Parser b
+my_chainl :: Parser Int -> Parser (AddInts -> Int -> AddInts) -> Parser AddInts
+my_chainl pa op = pa >>= \a -> rest (SimplyInt a) pa op
 
-plus_p =
-  try (string " + ") *> return AddInts
+rest ::
+  AddInts -> Parser Int -> Parser (AddInts -> Int -> AddInts) -> Parser AddInts
+rest x pa op = ( op >>= \f -> pa >>= \y -> rest (f x y) pa op ) <|> return x
+
+plus_p = try (string " + ") *> return AddInts
   :: Parser (AddInts -> Int -> AddInts)
 
-add_ints_p = my_chainl SimplyInt int_p plus_p
+add_ints_p = my_chainl int_p plus_p
   :: Parser AddInts
 
 my_parse = ( \p s -> parse p "" s )

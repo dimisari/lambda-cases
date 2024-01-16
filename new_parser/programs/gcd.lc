@@ -1,25 +1,23 @@
 
-gcd : Int^2 => Int
+gcd: Int^2 => Int
   = (x, cases)
     0 => x
     y => gcd(y, x -> mod <- y) 
 
-read_two_ints : (Int^2)FromIO 
+read_two_ints: (Int^2)FromIO 
   = print <- "Please give me 2 ints" ; 
     get_line ;> split_to_words o> cases
       [x, y] => io_wrapper(from_str(x), from_str(y))
       ... => show_err("You didn’t give me 2 ints")
     
 tuple_type NumsAndGcd
-value
-  (x, y, gcd) : Int^3
+value (x, y, gcd):Int^3
 
-print_gcd_message : NumsAndGcd => IO 
+print_gcd_message: NumsAndGcd => IO 
   = nums_gcd => print(message) 
     where
-    message
-      : String 
+    message: String 
       = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " + nums_gcd.gcd
 
-main : IO
+main: IO
   = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i2))

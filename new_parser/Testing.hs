@@ -1,5 +1,4 @@
-{-# LANGUAGE LambdaCase,
-TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Testing where
 
@@ -263,7 +262,7 @@ parse_type_app_and_ret_res_str =
 parse_cond_type_and_ret_res_str :: ParseFunc
 parse_cond_type_and_ret_res_str =
   \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError Type )
+  parse_result_to_string (parse test_example :: Either ParseError Type)
 
 parse_tuple_type_def_and_ret_res_str :: ParseFunc
 parse_tuple_type_def_and_ret_res_str =

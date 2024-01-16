@@ -1555,7 +1555,7 @@ keyword "all" to give the same type to all the values.
 \begin{grammar}
 <value-def> ::= ""\\
 <indent> <identifier> 
-( `\ ' | <nl> <indent> ) `:\ ' <type> 
+( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' ) <type>  \\
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
 <value-expr> ::=
@@ -1564,7 +1564,8 @@ keyword "all" to give the same type to all the values.
 
 <grouped-value-defs> ::= ""\\
 <indent> <identifier> ( <comma> <identifier> )+ \\
-( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
+( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' )
+( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
 <nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
 
 <line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
@@ -1830,7 +1831,7 @@ type, the power symbol '\texttt{\^}' and the number of times the type is repeate
 <power-base-type> ::=
 <type-id-or-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
 
-<power-type> ::= <power-base-type> ( `^' <int-greater-than-one> )+
+<power-type> ::= <power-base-type> `^' <int-greater-than-one>
 \end{grammar}
 \end{itemize}
 
@@ -2838,7 +2839,7 @@ The parser was implemented using the parsec library.
 
 <value-def> ::= ""\\
 <indent> <identifier> 
-( `\ ' | <nl> <indent> ) `:\ ' <type> 
+( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' ) <type>  \\
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
 <value-expr> ::=
@@ -2847,7 +2848,8 @@ The parser was implemented using the parsec library.
 
 <grouped-value-defs> ::= ""\\
 <indent> <identifier> ( <comma> <identifier> )+ \\
-( `\ ' | <nl> <indent> ) `:\ ' ( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
+( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' )
+( <type> ( <comma> <type> )+ | `all\ ' <type> ) \\
 <nl> <indent> `=\ ' <line-exprs> ( <nl> <indent> <comma> <line-exprs> )*
 
 <line-exprs> ::= <line-expr> ( <comma> <line-expr> )*
@@ -2890,7 +2892,7 @@ The parser was implemented using the parsec library.
 <power-base-type> ::=
 <type-id-or-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
 
-<power-type> ::= <power-base-type> ( `^' <int-greater-than-one> )+
+<power-type> ::= <power-base-type> `^' <int-greater-than-one>
 \\
 
 <type-app> ::= ""\\""

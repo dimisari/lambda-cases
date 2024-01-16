@@ -1,7 +1,2 @@
 
-- better parser errors (with less try)?
-  - it fails on the last it tried
-    - how to mitigate that?
-
-- group type nicknames with "all"
-
+- to_all -> to_list ?

@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, StandaloneDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 
 module ShowInstances where
 
@@ -280,7 +280,7 @@ instance Show BigFuncBody where
 
 instance Show CasesFuncExpr where
   show = \(CFE (cps, cs, maybe_ec)) ->
-    show cps ++ " =>" ++ show_list cs ++ show_maybe maybe_ec
+    show cps ++ show_list cs ++ show_maybe maybe_ec
 
 instance Show CasesParams where
   show = \case
@@ -423,7 +423,7 @@ instance Show InParenT where
     PT3 pt -> "(" ++ show pt ++ ")"
 
 instance Show PowerType where
-  show = \(PoT (ft, is)) -> show ft ++ show_list_sep "^" is
+  show = \(PoT (ft, i)) -> show ft ++ "^" ++ show i
 
 instance Show TypeApp where
   show = \case

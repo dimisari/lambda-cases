@@ -1,11 +1,10 @@
 
 tuple_type HanoiRods
-value 
-  (source, target, auxiliary) : String^3
+value (source, target, auxiliary):String^3
 
-hanoi : Int x HanoiRods => IO
+hanoi: Int x HanoiRods => IO
   = (cases, rods)
-    0 => empty_io
+    0 => phony_io
     rings =>
       hanoi(rings - 1, (rods.source, rods.auxiliary, rods.target)) ;
       move(rods.source, rods.target) ; 
@@ -14,6 +13,6 @@ hanoi : Int x HanoiRods => IO
       move : String^2 => IO
         = ("Move from " + _ + " to " + _) o> print_line
 
-main : IO
-  = print_line("Number of rings?") ; get_line ;> from_string o> n =>
-    hanoi(n, ("left", "right", "middle"))
+main: IO
+  = print_line("Number of rings?");
+    get_line ;> from_string o> n => hanoi(n, ("left", "right", "middle"))
