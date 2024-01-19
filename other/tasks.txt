@@ -1,4 +1,6 @@
 
+- better file tree
+
 -------------------------------------------------------------- parsing
 
 - better parser errors 
@@ -41,3 +43,4 @@
     - can also close in the same line with second #
   - multiline: ## and close with second ##
 
+# current_tasks.txt

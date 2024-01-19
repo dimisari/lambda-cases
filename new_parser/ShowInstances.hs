@@ -46,10 +46,10 @@ instance Show InsideParenExpr where
 instance Show Tuple where
   show = \(T (loue, loues)) -> "(" ++ show loue ++ ", " ++ show loues ++ ")"
 
-instance Show LineOrUnderExprs where
+instance Show LineExprOrUnders where
   show = \(LOUEs (loue, loues)) -> show loue ++ show_list_comma loues
 
-instance Show LineOrUnderExpr where
+instance Show LineExprOrUnder where
   show = \case
     LE1 le -> show le
     Underscore1 -> "_"

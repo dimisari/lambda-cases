@@ -12,28 +12,28 @@ newtype ParenExpr = PE InsideParenExpr
 data InsideParenExpr = 
   LOE1 LineOpExpr | LFE1 LineFuncExpr 
 
-newtype Tuple = T (LineOrUnderExpr, LineOrUnderExprs)
+newtype Tuple = T (LineExprOrUnder, LineExprOrUnders)
 
-newtype LineOrUnderExprs = LOUEs (LineOrUnderExpr, [LineOrUnderExpr]) 
+newtype LineExprOrUnders = LOUEs (LineExprOrUnder, [LineExprOrUnder]) 
 
-data LineOrUnderExpr = 
+data LineExprOrUnder = 
   LE1 LineExpr | Underscore1
 
 data LineExpr = 
   BOAE1 BasicOrAppExpr | LOE2 LineOpExpr | LFE2 LineFuncExpr
 
-newtype BigTuple = BT (LineOrUnderExpr, LineOrUnderExprs, [LineOrUnderExprs])
+newtype BigTuple = BT (LineExprOrUnder, LineExprOrUnders, [LineExprOrUnders])
 
-newtype List = L (Maybe LineOrUnderExprs)
+newtype List = L (Maybe LineExprOrUnders)
 
-newtype BigList = BL (LineOrUnderExprs, [LineOrUnderExprs])
+newtype BigList = BL (LineExprOrUnders, [LineExprOrUnders])
 
 data ParenFuncApp = 
   IWA1 (Maybe Arguments, IdentWithArgs, Maybe Arguments) |
   AI (Arguments, Identifier, Maybe Arguments) |
   IA (Identifier, Arguments)
 
-newtype Arguments = As LineOrUnderExprs
+newtype Arguments = As LineExprOrUnders
 
 newtype IdentWithArgs =
   IWA
@@ -67,7 +67,7 @@ data BasicExpr =
 
 newtype Change = C (FieldChange, [FieldChange])
 
-newtype FieldChange = FC (Field, LineOrUnderExpr)
+newtype FieldChange = FC (Field, LineExprOrUnder)
 
 data Field =
   Id3 Identifier | SI3 SpecialId

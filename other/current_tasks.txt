@@ -1,2 +1,22 @@
 
-- to_all -> to_list ?
+- parser section
+  - 3 parsec examples
+    - structure
+      - types
+      - show
+      - parsers
+
+- review (continue at tuple types)
+  - basic-or-app-expr: move below line-expr?
+  - <list> : optional space after [ and before ]
+  - fix example program to be more clear in action ops
+  - change the order of type expressions 
+    - ids
+    - vars
+    - type app
+    - product
+    - function
+    - conditional
+
+  
+# tasks.txt

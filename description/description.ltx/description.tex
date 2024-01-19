@@ -29,8 +29,6 @@
 }
 \maketitle
 
-%\setcounter{tocdepth}{4}
-%\setcounter{secnumdepth}{4}
 \tableofcontents
 
 \newpage
@@ -61,12 +59,12 @@ behaviour.
 
 \paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
-gcd : Int^2 => Int
+gcd: Int^2 => Int
   = (x, cases)
     0 => x
     y => gcd(y, x -> mod <- y) 
 
-read_two_ints : (Int^2)FromIO
+read_two_ints: (Int^2)FromIO
   = print <- "Please give me 2 ints";
     get_line ;> split_to_words o> cases
       [x, y] => wrap_with_io(from_string(x), from_string(y))
@@ -74,15 +72,16 @@ read_two_ints : (Int^2)FromIO
 
 tuple_type NumsAndGcd
 value
-  (x, y, gcd) : Int^3
+  (x, y, gcd):Int^3
 
-print_gcd_message : NumsAndGcd => IO
-  = nums_gcd => print(message)
+print_gcd_message: NumsAndGcd => IO
+  = nums_and_gcd => print(message)
     where
-    message : String
-      = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " + nums_gcd.gcd
+    message: String
+      = "The GCD of " + nums_and_gcd.x + " and " + nums_and_gcd.y + " is = " +
+        nums_and_gcd.gcd
 
-main : IO
+main: IO
   = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i2))
 \end{verbatim}
 
@@ -102,28 +101,27 @@ main : IO
 
 The lcases keywords are the following:
 \begin{verbatim}
-cases where all tuple_type value or_type values
-type_proposition equivalent type_theorem proof
+cases all where tuple_type value or_type values
+type_proposition needed equivalent type_theorem proof
 \end{verbatim}
 Each keyword's functionality is described in the respective section shown in the 
 table below:
 
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c| } 
 \hline
 Keyword & Section \\ 
 \hline
 \hline
 \texttt{cases} & \ref{subsubsec:casessyntax} "cases" Function Expressions \\
 \hline
-\texttt{all} & \ref{subsubsec:valdefs} Value Definitions \\
-\hline
-\texttt{where} & \ref{subsubsec:whereexprs} "where" Expressions \\
+\texttt{all where} & \ref{subsec:valdefswhere}
+Value Definitions and "where" Expressions \\
 \hline
 \texttt{tuple_type value or_type values type_nickname} &
 \ref{subsec:types} Types \\
 \hline
-\texttt{type_proposition value equivalent type_theorem proof} &
+\texttt{type_proposition needed equivalent type_theorem proof} &
 {\ref{subsec:typelogic} Type Logic} \\
 \hline
 \end{tabular}
@@ -335,11 +333,11 @@ answers_to : ListOf(String)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <line-or-under-expr> <comma> <line-or-under-exprs> `)'
+<tuple> ::= `(' <line-expr-or-under> <comma> <line-expr-or-unders> `)'
 
-<line-or-under-exprs> ::= <line-or-under-expr> ( <comma> <line-or-under-expr> )*
+<line-expr-or-unders> ::= <line-expr-or-under> ( <comma> <line-expr-or-under> )*
 
-<line-or-under-expr> ::= <line-expr> | `_'
+<line-expr-or-under> ::= <line-expr> | `_'
 
 <line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
 
@@ -347,9 +345,9 @@ answers_to : ListOf(String)s
 \\
 
 <big-tuple> ::= ""\\
-`(' [ `\ ' ] <line-or-under-expr> [ <nl> <indent> ]
-<comma> <line-or-under-exprs> \\
-( <nl> <indent> <comma> <line-or-under-exprs> )* 
+`(' [ `\ ' ] <line-expr-or-under> [ <nl> <indent> ]
+<comma> <line-expr-or-unders> \\
+( <nl> <indent> <comma> <line-expr-or-unders> )* 
 <nl> <indent> `)'
 \end{grammar}
 
@@ -390,7 +388,7 @@ ListOf(T)s
   \textbf{Example}
 
   \begin{verbatim}
-my_big_list : ListOf(Int => IO)s
+my_big_list: ListOf(Int => IO)s
   = [ x => print("I'm the first function and x + 1 is: " + (x + 1))
     , x => print("I'm the second function and x + 2 is: " + (x + 2))
     , x => print("I'm the third function and x + 3 is: " + (x + 3))
@@ -413,7 +411,7 @@ my_big_list : ListOf(Int => IO)s
   the first line.
 
   \item
-  The tuple must be ended by a line that only contains the ']' character and is 
+  The list must be ended by a line that only contains the ']' character and is 
   also indented so that the ']' is in same column where the '[' character was in
   the first line.
 
@@ -424,11 +422,11 @@ my_big_list : ListOf(Int => IO)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [ <line-or-under-exprs> ] `]'
+<list> ::= `[' [ <line-expr-or-unders> ] `]'
 
 <big-list> ::= ""\\
-`[' [ `\ ' ] <line-or-under-exprs>
-( <nl> <indent> <comma> <line-or-under-exprs> )* <nl> <indent> `]'
+`[' [ `\ ' ] <line-expr-or-unders>
+( <nl> <indent> <comma> <line-expr-or-unders> )* <nl> <indent> `]'
 \end{grammar}
 
 \end{itemize}
@@ -449,9 +447,8 @@ apply(f)to_all(l)
 
 \item \textit{Description}
 
-Function application in lcases can be done in many different ways in an attempt to 
-maximize readability. In this section, we discuss the ways function application can
-be done with parenthesis.
+Function application in lcases can be done in many different ways. In this
+section, we discuss the ways function application can be done with parenthesis.
 \\\\
 In the first two examples, we have the usual mathematical
 function application which is also used in most programming languages and
@@ -519,7 +516,7 @@ f(_, _, r) : Char x Int => String
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-or-under-exprs> `)'
+<arguments> ::= `(' <line-expr-or-unders> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -606,8 +603,7 @@ Where the function \texttt{_.first_name} is automatically generated from the
 definition of the \texttt{Name} type:
 \begin{verbatim}
 tuple_type Name
-value
-  (first_name, last_name) : String^2
+value (first_name, last_name) : String^2
 \end{verbatim}
 And it has the type \texttt{Name => String}.
 \\\\
@@ -670,25 +666,23 @@ tuples. It returns a new tuple that is the same as the input tuple except for
 some fields that change. Which fields change and to what new value is specified
 inside curly brackets after the "\texttt{.change}". The following special
 identifiers can be used for referring to the fields: \texttt{1st 2nd 3rd 4th
-5th} (2nd and 4th example). If the tuple is of a tuple type, the identifiers of
-the fields specified in the type definition can be used (1st and 3rd example).
-Therefore, we are assuming the following (or similar) if the examples are to
-type check:
+5th} (2nd, 4th and 5th example). If the tuple is of a tuple type, the
+identifiers of the fields specified in the type definition can be used (1st and
+3rd example).  Therefore, we are assuming the following (or similar) if the
+examples are to type check:
 
 \begin{verbatim}
 tuple_type MyStateType
-value
-  (..., counter, ...) : ... x Int x ...
+value (..., counter, ...) : ... x Int x ...
 
 state : MyStateType
 
 
-tuple : Int x ... x Int (x ...)
+tuple : Int x SomeType x Int (x ...)
 
 
 tuple_type Point
-value
-  (x, y, z) : Real^3
+value (x, y, z) : Real^3
 
 point : Point
 
@@ -697,7 +691,7 @@ apply(_.change{1st = 1st + 1})to_all
   : (@A)And(Int)AddTo(@A), (@A)Is(@B)s_1st --> ListOf(@B)s => ListOf(@B)s
 
 
-assuming: x : Int x Real x String
+assuming  x : Int x Real x String
 x.change{1st = _, 3rd = _} : Int x String => Int x Real x String
 \end{verbatim}
 The changes of the fields have the following structure: "field = expression of
@@ -713,7 +707,7 @@ a function that expects those new values as arguments (last example).
 `change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
 <field-change> ::=
-( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-or-under-expr>
+( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
 \end{grammar} 
 
 \end{itemize}
@@ -824,15 +818,15 @@ reverse_words : String => String
 Operator & Type \\ 
 \hline
 \hline
-\texttt{\^} & (@A)To_The(@B)Has_Type(@C) \Ra @A x @B \ra @C \\
+\texttt{\^} & (@A)To_The(@B)Is(@C) \Ra @A x @B \ra @C \\
 \hline
 \texttt{*} & (@A)And(@B)Multiply_To(@C) \Ra @A x @B \ra @C \\
 \hline
-\texttt{/} & (@A)Divided_By(@B)Has_Type(@C) \Ra @A x @B \ra @C \\
+\texttt{/} & (@A)Divided_By(@B)Is(@C) \Ra @A x @B \ra @C \\
 \hline
 \texttt{+} & (@A)And(@B)Add_To(@C) \Ra @A x @B \ra @C \\ 
 \hline
-\texttt{-} & (@A)Minus(@B)Has_Type(@C) \Ra @A x @B \ra @C \\
+\texttt{-} & (@A)Minus(@B)Is(@C) \Ra @A x @B \ra @C \\
 \hline
 \end{tabular}
 \end{center}
@@ -879,10 +873,10 @@ examples):
 (Char)And(String)Add_To(String)
 (Int)And(Char)Multiply_To(String)
 (Int)And(String)Multiply_To(String)
-(String)Minus(Char)Has_Type(String)
+(String)Minus(Char)Is(String)
 \end{verbatim}
 This allows us to use the familiar arithmetic operators in types that are not
-necessarily numbers but it is somewhat intuitively obvious what the should do
+necessarily numbers but it is somewhat intuitively obvious what they should do
 in those other types. Furthermore, their behaviour can be defined by the user
 for new user defined types!
 
@@ -956,27 +950,30 @@ The example above demonstrates the use of the environment action operators with
 the \texttt{FromIO} type, which is how IO is done in lcases. Some light can
 be shed on how this is done, if we take a look at the types (as always!):
 \begin{verbatim}
-print_string : String => (EmptyVal)FromIO
-print_string("I'll repeat the line.") : (EmptyVal)FromIO
-get_line : (String)FromIO
+print_string: String => (EmptyVal)FromIO
+print_string("I'll repeat the line."): (EmptyVal)FromIO
+get_line: (String)FromIO
 
-; 
-  : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2) 
-;>
-  : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2) 
+; : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2) 
 
 print_string("I'll repeat the line.") ; get_line
   : (String)FromIO
-  where (FromIO)Has_Then is true, @E = FromIO, T1 = EmptyVal, T2 = String
+  # where in this expression we have that (FromIO)Has_Then is true
+  # and the ";"("then") operator has type
+  # (EmptyVal)FromIO x (String)FromIO => (String)FromIO 
+
+;> : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2) 
 
 print_string("I'll repeat the line.") ; get_line ;> print_string
   : (EmptyVal)FromIO
-  where (FromIO)Has_Use is true, @E = FromIO, T1 = String, T2 = EmptyVal
+  # where in this expression we have that (FromIO)Has_Then is true
+  # and the ";>"("use") operator has type
+  # (String)FromIO x (String => (EmptyVal)FromIO) => (EmptyVal)FromIO 
 \end{verbatim}
 
 \paragraph{Example program}
 \begin{verbatim}
-main : (EmptyVal)FromIO
+main: (EmptyVal)FromIO
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
     print_string("Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
@@ -1028,7 +1025,7 @@ occurences of the "\texttt{;>}" operator.
 The environment action operators are used to combine values that do environment
 actions into values that do more complicated environment actions. Environment
 actions are type functions that take a type argument and produce a type (just
-like ListOf()s). These type functions have the "then" operator (\texttt{;}) and
+like ListOf(_)s). These type functions have the "then" operator (\texttt{;}) and
 the "use" operator (\texttt{;>}) defined for them.  A value of the type
 \texttt{@E(T1)} where \texttt{(@E)Has_Then} does an environment action of type
 \texttt{@E} that produces a value of type \texttt{T1} which can then be combined
@@ -1093,7 +1090,7 @@ get_line ; get_line ;> line => print("Second line: " + line)
 2 * _
 _ - 1
 "Hello " + "it's me, " + _ 
-_ + "string in the middle of the arguments" + _
+"Hi, I am " + _ + " and I am " + _ + " years old"
 \end{verbatim}
 
 \item \textit{Description}
@@ -1123,7 +1120,7 @@ This is best demonstrated by the types of the last four examples:
 2 * _ : Int => Int
 _ - 1 : Int => Int
 "Hello " + "it's me, " + _ : String => String
-_ + "string in the middle of the arguments" + _ : String^2 => String
+"Hi, I am " + _ + " and I am " + _ + " years old" : String^2 => String
 \end{verbatim}
 Note: These are not the most general types for the examples but they are compatible
 and good enough for their illustration purposes.
@@ -1221,17 +1218,17 @@ Operator & Type & Description \\
 \texttt{<o} & (T2 \ra T3) x (T1 \ra T2) \ra (T1 \ra T3) & Left function composition
 \\
 \hline
-\texttt{\^} & (@A)To_The(@B)Has_Type(@C) \Ra @A x @B \ra @C & General exponentiation
+\texttt{\^} & (@A)To_The(@B)Is(@C) \Ra @A x @B \ra @C & General exponentiation
 \\
 \hline
 \texttt{*} & (@A)And(@B)Multiply_To(@C) \Ra @A x @B \ra @C & General multiplication
 \\
 \hline
-\texttt{/} & (@A)Divided_By(@B)Has_Type(@C) \Ra @A x @B \ra @C & General division \\
+\texttt{/} & (@A)Divided_By(@B)Is(@C) \Ra @A x @B \ra @C & General division \\
 \hline
 \texttt{+} & (@A)And(@B)Add_To(@C) \Ra @A x @B \ra @C & General addition \\ 
 \hline
-\texttt{-} & (@A)Minus(@B)Has_Type(@C) \Ra @A x @B \ra @C & General subtraction \\
+\texttt{-} & (@A)Minus(@B)Is(@C) \Ra @A x @B \ra @C & General subtraction \\
 \hline
 \texttt{=} & (@A)And(@B)Can_Be_Equal \Ra @A x @B \ra Bool & General Equality \\
 \hline
@@ -1250,10 +1247,10 @@ Operator & Type & Description \\
 \texttt{\& |} & Bool\texttt{\^}2 \ra Bool & Boolean operators \\
 \hline
 \texttt{;>} & (@E)Has_Use \Ra @E(T1) x (T1 \ra @E(T2)) \ra @E(T2) &
-Do, use, do \\
+"Use" environment action op  \\
 \hline
 \texttt{;} & (@E)Has_Then \Ra @E(T1) x @E(T2) \ra @E(T2) &
-Do then do \\
+"Then" environment action op \\
 \hline
 \end{tabular}
 \end{center}
@@ -1341,12 +1338,12 @@ their body.
 Parameters have identifiers. There is either only one parameter, in which case
 there is no parenthesis, or there are many, in which case they are in
 parentheses, seperated by commas. If a parameter is not needed it can be left
-empty by having an underscore instead of an identifier (3rd and 4th example).
+empty by having an asterisk instead of an identifier (3rd and 4th example).
 If a parameter is a tuple itself it can be matched further by using parentheses
 and giving identifiers to its fields (5th example).
 \\\\
-The parameters and the body are seperated
-by an arrow (" \texttt{=>} "). The body is an operator or operand expression.
+The parameters and the body are seperated by the funciton arrow
+("\texttt{=>}"). The body is an operator or basic expression.
 
 \item \textit{Big Function Expressions}\\\\
 \textbf{Example}
@@ -1364,7 +1361,8 @@ It is possible to stretch a (big) function expression over multiple lines.
 In that case:
 \begin{itemize}
 \item
-The function expression must split in a new line after the "\texttt{=>}" arrow.
+The function expression must split in a new line after the function arrow
+("\texttt{=>}").
 
 \item
 Every line after the first must be indented so that in begins at the column 
@@ -1396,51 +1394,50 @@ The precise indentation rules are described in the section
 \item \textit{Examples}
 
 \begin{verbatim}
-print_sentimental_bool : Bool => IO
+print_sentimental_bool: Bool => IO
   = cases
     true => print <- "It's true!! :)"
     false => print <- "It's false... :("
 
 or_type TrafficLight
-values
-  green | amber | red
+values green | amber | red
 
-print_sentimental_traffic_light : TrafficLight => IO
+print_sentimental_traffic_light: TrafficLight => IO
   = cases
     green => print <- "It's green! Let's go!!! :)"
     amber => print <- "Go go go, fast!"
     red => print <- "Stop right now! You're going to kill us!!"
 
-is_not_red : TrafficLight => Bool
+is_not_red: TrafficLight => Bool
   = cases
     green => true
     amber => true
     red => false
 
-is_seventeen_or_forty_two : Int => Bool
+is_seventeen_or_forty_two: Int => Bool
   = cases
     17 => true
     42 => true
     ... => false
 
-traffic_lights_match : TrafficLight^2 => Bool
+traffic_lights_match: TrafficLight^2 => Bool
   = (cases, cases)
     (green, green) => true
     (amber, amber) => true
     (red, red) => true
     ... => false
 
-gcd : Int^2 => Int
+gcd: Int^2 => Int
   = (x, cases)
     0 => x
     y => gcd(y, x -> mod <- y) 
 
-is_empty : ListOf(T1)s => Bool
+is_empty: ListOf(T1)s => Bool
   = cases
     empty_l => true
     non_empty_l:* => false
 
-apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
+apply()to_all: (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
     empty_l => empty_l
     non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
@@ -1513,16 +1510,16 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 \item \textit{Examples}
 
 \begin{verbatim}
-foo : Int
+foo: Int
   = 42
 
-f : Int^3 => Int
+f: Int^3 => Int
   = (a, b, c) => a + b * c
 
-val1, val2, val3 : Int, Bool, Char
+val1, val2, val3: Int, Bool, Char
   = 42, true, 'a'
 
-int1, int2, int3 : all Int
+int1, int2, int3: all Int
   = 1, 2, 3
 \end{verbatim}
 
@@ -1530,15 +1527,15 @@ int1, int2, int3 : all Int
 
 Value definitions are the main building block of lcases programs. To define a
 new value you give it a name, a type and an expression. The name is an
-identifier in the first line. The second line is indented two spaces more and
-begins by ": " and continues with the type expression. The third line is
-indented as the second, begins by "= " and continues with the value
-expression (which extends to as many lines as needed).
+identifier which is followed by the "has type" symbol (':') and the expression
+of the type of the value. The line below is indented two spaces and begins with
+the equal sign and continues with the expression of the value (which extends to
+as many lines as needed).
 \\\\
-A value definition is either in the first column, where it can be "seen" by all
-other value definitions, or it is in a "where" expression (see section below),
-where it can be "seen" by the expression above the "where" and all the other
-definitions in the same "where" expression.
+A value definition begins either in the first column, where it can be "seen" by
+all other value definitions, or it is inside a "where" expression (see section
+below), where it can be "seen" by the expression above the "where" and all the
+other definitions in the same "where" expression.
 \\\\
 A value definition can be followed by a "where" expression where intermediate
 values used in the value expression are defined. In that case, the "where"
@@ -1580,15 +1577,15 @@ keyword "all" to give the same type to all the values.
 
 \item \textit{Examples}
 \begin{verbatim}
-sort : ListOf(Int)s => ListOf(Int)s
+sort: ListOf(Int)s => ListOf(Int)s
   = cases
     empty_l => empty_l
     non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
       where
-      less_l, greater_l : all ListOf(Int)s
+      less_l, greater_l: all ListOf(Int)s
         = filter(l.tail)with(_ < l.head), filter(l.tail)with(_ >= l.head)
 
-sum_nodes : TreeOf(Int)s => Int
+sum_nodes: TreeOf(Int)s => Int
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
     where
     sum_list : ListOf(Int)s => Int
@@ -1677,7 +1674,7 @@ MyDefinedType
 
 A type identifier is either the name of a basic type (Int, Real, Char, String) or
 the name of some defined type that has no type parameters. It begins with a capital
-letter and is followed by one or more capital or lowercase letters.
+letter and is followed by capital or lowercase letters.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1719,13 +1716,13 @@ Parametric type variables can be substituted with any type and the program will
 type check.  The simplest example of a polymorphic type with a parametric type
 variable is the type of the identity function where we have:
 \begin{verbatim}
-id : T1 => T1
+id: T1 => T1
   = x => x
 
-id(1) : Int
+id(1): Int
   where T1 is substituted by Int and id gets the type Int => Int
 
-id("Hello") : String
+id("Hello"): String
   where T1 is substituted by String and id gets the type String => String
 \end{verbatim}
 
@@ -1759,8 +1756,7 @@ Ad hoc type variables are like parametric type variables with the difference
 that any type by which they are substituted must satisfy certain conditions in
 order for the program to type check. These conditions come in the form of type
 propositions (see Type Logic section \ref{subsec:typelogic}). Therefore, any ad
-hoc type variable must also appear in some condition before the "\texttt{-->}"
-arrow as shown in the examples.
+hoc type variable must also appear in the condition as shown in the examples.
 \\\\
 An ad hoc type variable is written with an '@' followed by any capital letter.
 
@@ -1787,9 +1783,9 @@ Real^3 => Real
 \item \textit{Description}
 
 A function type expression is comprised of the input type expression and the
-output type expression seperated by the arrow " \texttt{=>} ". The input and output
-type expressions are type expressions which are put in parentheses only if they are
-function type expressions. 
+output type expression seperated by the function arrow ("\texttt{=>}"). The
+input and output type expressions are type expressions which are put in
+parentheses only if they are function type expressions. 
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1843,7 +1839,7 @@ type, the power symbol '\texttt{\^}' and the number of times the type is repeate
 Possibly(Int)
 ListOf(Real)s
 TreeOf(String)s 
-Error(String)OrResult(Int)
+Result(Int)OrError(String)
 ListOf(Int => Int)s
 ListOf(T1)s
 \end{verbatim}
@@ -1855,12 +1851,11 @@ to a type function generated by a \texttt{tuple_type} or an \texttt{or_type}
 definition. For example, given the definition of \texttt{ListOf(T1)s}:
 \begin{verbatim}
 or_type ListOf(T1)s
-values
-  non_empty_l:NonEmptyListOf(T1)s | empty_l
+values non_empty_l:NonEmptyListOf(T1)s | empty_l
 \end{verbatim}
-We have that \texttt{ListOf()s} is a type function that receives one type parameter
+We have that \texttt{ListOf(_)s} is a type function that receives one type parameter
 and returns a resulting type. For example \texttt{ListOf(Int)s} is the result
-of passing the type argument \texttt{Int} to \texttt{ListOf()s}.
+of passing the type argument \texttt{Int} to \texttt{ListOf(_)s}.
 \\\\
 Type application types have the same form as the name in the
 \texttt{tuple_type} or \texttt{or_type} definition, with the difference that
@@ -1898,13 +1893,12 @@ type parameters are substituted by the expressions of the type arguments.
 Conditional types are the types of values that are polymorphic not because of
 their structure but because they have been defined (seperately) for many
 different combinations of types (i.e. they are ad hoc polymorphic). They are
-comprised of a condition and a "simple" type (i.e. a type without a
-condition) which are seperated by the arrow "\texttt{-->}". The condition is a
-type proposition which refers to type variables inside the "simple" type
-and it must hold whenever the polymorphic value of that type is used. For
-example:
+comprised of a condition and a "simple" type (i.e. a type without a condition)
+which are seperated by the condition arrow (" \texttt{-->} "). The condition is a
+type proposition which refers to type variables inside the "simple" type and it
+must hold whenever the polymorphic value of that type is used. For example:
 \begin{verbatim}
-first : (@A)Is(@B)s_First --> @B => @A
+first: (@A)Is(@B)s_First --> @B => @A
 \end{verbatim}
 can be used as follows:
 \begin{verbatim}
@@ -1957,39 +1951,34 @@ The grammar of a type definition is:
 
 \begin{verbatim}
 tuple_type Name
-value
-  (first_name, last_name) : String^2
+value (first_name, last_name) : String^2
 
 tuple_type Date
-value
-  (day, month, year) : Int^3
+value (day, month, year) : Int^3
 
 tuple_type MathematicianInfo
-value
-  (name, nationality, date_of_birth) : Name x String x Date
+value (name, nationality, date_of_birth) : Name x String x Date
 
 tuple_type TreeOf(T1)s
-value
-  (root, subtrees) : T1 x ListOf(TreeOf(T1)s)s
+value (root, subtrees) : T1 x ListOf(TreeOf(T1)s)s
 
 tuple_type Indexed(T1)
-value
-  (index, val) : Int x T1
+value (index, val) : Int x T1
 \end{verbatim}
 
 \item \textit{Usage Examples}
 
 \begin{verbatim}
-euler_info : MathematicianInfo
+euler_info: MathematicianInfo
   = (("Leonhard", "Euler"), "Swiss", (15, 4, 1707))
 
-name_to_string : Name => String
+name_to_string: Name => String
   = n => "\nFirst Name: " + n.first_name + "\nLast Name: " + n.last_name
 
-print_name_and_nationality : MathematicianInfo => IO
+print_name_and_nationality: MathematicianInfo => IO
   = ci => print(ci.name -> name_to_string + "\nNationality: " + ci.nationality)
 
-sum_nodes : TreeOf(Int)s => Int
+sum_nodes: TreeOf(Int)s => Int
   = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
 \end{verbatim}
 
@@ -2004,8 +1993,6 @@ _.name : MathematicianInfo => Name
 _.nationality : MathematicianInfo => String
 _.date_of_birth : MathematicianInfo => Date
 \end{verbatim}
-These functions are named "postfix functions" because they are appended to
-their argument.
 
 \item \textit{Grammar}
 
@@ -2033,56 +2020,51 @@ their argument.
 
 \begin{verbatim}
 or_type Bool
-values
-  true | false
+values true | false
 
 or_type Possibly(T1)
-values
-  the_value:T1 | no_value
+values the_value:T1 | no_value
 
 // needed tuple_type for ListOf(T1)s
 tuple_type NonEmptyListOf(T1)s
-value
-  (head, tail) : T1 x ListOf(T1)s
+value (head, tail) : T1 x ListOf(T1)s
 
 or_type ListOf(T1)s
-values
-  non_empty_l:NonEmptyListOf(T1)s | empty_l
+values non_empty_l:NonEmptyListOf(T1)s | empty_l
 
-or_type Error(T1)OrResult(T2)
-values
-  error:T1 | result:T2
+or_type Result(T1)OrError(T2)
+values result:T1 | error:T2
 \end{verbatim}
 
 \item \textit{Usage Examples}
 
 \begin{verbatim}
-is_empty : ListOf(T1)s => Bool
+is_empty: ListOf(T1)s => Bool
   = cases
     empty_l => true
     non_empty_l:* => false
 
-get_head : ListOf(T1)s => Possibly(T1)
+get_head: ListOf(T1)s => Possibly(T1)
   = cases
     empty_l => no_value
     non_empty_l:list => the_value:list.head
 
-sum_list : ListOf(Int)s => Int
+sum_list: ListOf(Int)s => Int
   = cases
     empty_l => 0
     non_empty_l:l => l.head + sum_list(l.tail)
 
-print_err_or_res : (@A)Has_Str_Rep, (@B)Has_Str_Rep --> Error(@A)OrResult(@B) => IO
+print_err_or_res: (@A)Has_Str_Rep --> Result(@A)OrError(String) => IO
   = cases
-    error:e => print("Error occured: " + e -> to_string)
     result:r => print("All good! The result is: " + r -> to_string)
+    error:e => print("Error occured: " + e)
 \end{verbatim}
 
 \item \textit{Description}
 
 The values of an \texttt{or_type} are split into cases. Some cases have other
 values inside.  The cases which have other values inside are followed by a
-semicolon and the type of the internal value. The same syntax can be used for
+colon and the type of the internal value. Similar syntax can be used for
 matching that particular case in a function using the "cases" syntax.  An
 \texttt{or_type} definition automatically creates prefix functions for each
 case with an internal value (which are simply conversions from the type of the
@@ -2092,12 +2074,6 @@ automatically created from the definition for which we can say:
 \begin{verbatim}
 non_empty_l:_ : NonEmptyListOf(T1)s => ListOf(T1)s
 \end{verbatim}
-Similarly:
-\begin{verbatim}
-the_value:_ : T1 => Possibly(T1)
-\end{verbatim}
-These functions are called "prefix functions" because they are prepended to their
-argument.
 For example:
 \begin{verbatim}
 non_e_l : NonEmptyListOf(Int)s
@@ -2105,6 +2081,10 @@ non_e_l : NonEmptyListOf(Int)s
 >> non_empty_l:non_e_l
   : ListOf(Int)s
   = [1, 2, 3, 4]
+\end{verbatim}
+Similarly:
+\begin{verbatim}
+the_value:_ : T1 => Possibly(T1)
 \end{verbatim}
 These functions can be used like any other function as arguments to other functions.
 For example:
@@ -2118,7 +2098,8 @@ non_empty_ls_to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 \begin{grammar}
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
-`values' ( `\ ' | <nl> `\ \ ' ) <identifier> [ `:' <simple-type> ]
+`values' ( `\ ' | <nl> `\ \ ' ) \\ 
+<identifier> [ `:' <simple-type> ]
 ( [ `\ ' ] | [ `\ ' ] <identifier> [ `:' <simple-type> ] )*
 \end{grammar}
 
@@ -2134,14 +2115,14 @@ non_empty_ls_to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 type_nickname Ints = ListOf(Int)s
 type_nickname IntStringPairs = ListOf(Int x String)s
 type_nickname IO = (EmptyVal)FromIO
-type_nickname ErrOrRes(T1) = Error(String)OrResult(T1)
-type_nickname Parse(T1)FuncT = String => T1 x String
+type_nickname Res(T1)OrErr = Result(T1)OrError(String)
 \end{verbatim}
 
 \item \textit{Description} \\\\
 Type nicknames are used to abbreviate or give a more descriptive name to a type.
 They start with the keyword "\texttt{type_nickname}", followed by the nickname, 
-then an equal sign and they end with the type to be nicknamed.
+then an equal sign and they end with the type to be nicknamed. Parametric
+type variables can be used in the nickname.
 
 \item \textit{Grammar}
 
@@ -2178,31 +2159,27 @@ described in the following paragraphs.
 \item \textit{Examples}
 \begin{verbatim}
 type_proposition (@A)Is(@B)s_First
-needed
-  first : @B => @A
+needed first: @B => @A
 
 type_proposition (@T)Has_Str_Rep
-needed
-  to_string : @T => String
+needed to_string: @T => String
 
 type_proposition (@T)Has_A_Wrapper
-needed
-  wrapper : T1 => @T(T1)
+needed wrapper: T1 => @T(T1)
 
 type_proposition (@T)Has_Internal_App
-needed
-  apply()inside : (T1 => T2) x @T(T1) => @T(T2)
+needed apply()inside : (T1 => T2) x @T(T1) => @T(T2)
 \end{verbatim}
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
 \begin{verbatim}
-first : (@A)Is(@B)s_First --> @B => @A
+first: (@A)Is(@B)s_First --> @B => @A
 
-to_string : (@T)Has_Str_Rep --> @T => String
+to_string: (@T)Has_Str_Rep --> @T => String
 
-wrapper : (@T)Has_A_Wrapper --> T1 => @T(T1)
+wrapper: (@T)Has_A_Wrapper --> T1 => @T(T1)
 
-apply()inside : (@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)
+apply()inside: (@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2226,22 +2203,20 @@ paragraph for the proposition \texttt{(@A)Is(@B)s_First}:
 
 \begin{verbatim}
 type_proposition (@A)Is(@B)s_First
-needed
-  first : @B => @A
+needed first: @B => @A
 \end{verbatim}
 
 \item Function defined and its type:
 
 \begin{verbatim}
-first : (@A)Is(@B)s_First --> @B => @A
+first: (@A)Is(@B)s_First --> @B => @A
 \end{verbatim}
 
 \item Theorems for specific types:
 
 \begin{verbatim}
 type_theorem (T1)Is(T1 x T2)s_First
-proof
-  first = _.1st
+proof first = _.1st
 
 type_theorem (T1)Is(ListOf(T1)s)s_First
 proof
@@ -2268,9 +2243,9 @@ pair, list
 
 An atomic proposition definition begins with the keyword
 \texttt{type_proposition} followed by the name of the proposition (including
-the type parameters) in the first line. The second line is the keyword
-\texttt{value}. The third line is indented once and has the identifier and the
-type expression of the value seperated by the string " \texttt{:} ".
+the type parameters) in the first line. The second line begins with the keyword
+\texttt{needed} which is followed by the identifier and the
+type expression of the value seperated by the "has type" symbol ('\texttt{:}').
 
 \end{itemize}
 
@@ -2280,16 +2255,14 @@ type expression of the value seperated by the string " \texttt{:} ".
 \item \textit{Examples}
 \begin{verbatim}
 type_proposition (@T)Has_Equality
-equivalent
-  (@T)And(@T)Can_Be_Equal
+equivalent (@T)And(@T)Can_Be_Equal
 
 type_proposition (@A)And(@B)Are_Comparable
 equivalent
   (@A)Can_Be_Less_Than(@B), (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
 
 type_proposition (@T)Has_Comparison
-equivalent
-  (@T)And(@T)Are_Comparable
+equivalent (@T)And(@T)Are_Comparable
 \end{verbatim}
 
 \item \textit{Description}
@@ -2299,10 +2272,10 @@ of many propositions (i.e. AND of all of them) into one new proposition.
 \\\\
 A renaming proposition definition begins with the keyword
 \texttt{type_proposition} followed by the name of the proposition (including
-the type parameters) in the first line. The second line is the keyword
-\texttt{equivalent}. The third line is indented once and has either one
-proposition or (if it is a conjunction) many propositions  seperated by commas
-(where the commas essentially mean "and").
+the type parameters) in the first line. The second line begins with the keyword
+\texttt{equivalent} followed by either one proposition or (if it is a
+conjunction) many propositions seperated by commas (where the commas
+essentially mean "and").
 
 \end{itemize}
 
@@ -2345,12 +2318,10 @@ following paragraphs.
 
 \begin{verbatim}
 type_theorem (Possibly(_))Has_A_Wrapper
-proof
-  wrapper = the_value:_
+proof wrapper = the_value:_
 
 type_theorem (ListOf(_)s)Has_A_Wrapper
-proof
-  wrapper = [_]
+proof wrapper = [_]
 
 type_theorem (Possibly(_))Has_Internal_App
 proof
@@ -2360,11 +2331,7 @@ proof
       the_value:x => the_value:f(x)
 
 type_theorem (ListOf(_)s)Has_Internal_App
-proof
-  apply()inside =
-    (f, cases)
-      empty_l => empty_l
-      non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)inside)
+proof apply()inside = apply()to_all
 \end{verbatim}
 
 \item \textit{Usage}
@@ -2389,19 +2356,19 @@ l1, l2, l3 : all ListOf(Int)s
   : ListOf(Int)s
   = []
 
->> a -> apply(x => x + 1)inside
+>> a -> apply(_ + 1)inside
   : Possibly(Int)
   = the_value:2
->> b -> apply(x => x + 1)inside
+>> b -> apply(_ + 1)inside
   : Possibly(Int)
   = no_value
->> l1 -> apply(x => x + 1)inside
+>> l1 -> apply(_ + 1)inside
   : ListOf(Int)s
   = [2]
->> l2 -> apply(x => x + 1)inside
+>> l2 -> apply(_ + 1)inside
   : ListOf(Int)s
   = []
->> l3 -> apply(x => x + 1)inside
+>> l3 -> apply(_ + 1)inside
   : ListOf(Int)s
   = [2, 3, 4]
 \end{verbatim}
@@ -2428,7 +2395,7 @@ parameters substituted by the specific types for which the proposition will be
 proven. The second line is the keyword \texttt{proof}. The third line is
 indented once and it is the line in which the proof begins. The proof begins
 with the identifier of the value associated with the proposition and is followed
-by the string " \texttt{=} " and the value expression which implements the value.
+by an equal sign and the value expression which implements the value.
 
 \end{itemize}
 
@@ -2439,20 +2406,16 @@ by the string " \texttt{=} " and the value expression which implements the value
 
 \begin{verbatim}
 type_theorem (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
-proof
-  a \= b = not(a = b)
+proof a \= b = not(a = b)
 
 type_theorem (@A)Can_Be_Greater_Than(@B) --> (@A)Can_Be_Le_Or_Eq_To(@B)
-proof
-  a <= b = not(a > b)
+proof a <= b = not(a > b)
 
 type_propositon (@A)And(@B)Have_Eq_And_Gr
-equivalent
-  (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
+equivalent (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
 
 type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
-proof
-  a >= b = a = b | a > b
+proof a >= b = a = b | a > b
 \end{verbatim}
 
 \item \textit{Description}
@@ -2468,7 +2431,7 @@ defined then we can also define this other one". This can be translated into
 the following implication proposition: "if the proposition associated to the
 value(s) we are using is true then the proposition associated to the value we
 are defining is true", which can be condensed to the notation with the
-"\texttt{-->}" arrow used in the examples.
+condition arrow (" \texttt{-->} ") used in the examples.
 \\\\
 The proof of an implication proposition allows the compiler to
 automatically create the definition for an ad hoc polymorphic value for a
@@ -2482,7 +2445,7 @@ using a subset of the defined ones.
 A theorem of an implication proposition is grammatically the same as
 a theorem of an atomic proposition with the only difference being that an 
 implication propostition is comprised by two atomic propositions seperated by
-the "\texttt{-->}" arrow.
+the condition arrow (" \texttt{-->} ") arrow.
 
 \end{itemize}
 
@@ -2581,7 +2544,7 @@ the "\texttt{-->}" arrow.
 
   \item Ad Hoc Polymorphic:\\
   \texttt{first, second, third, fourth, fifth, wrap, to_string, from_string,
-  apply()inside, \\wrapd_app()inside}
+  apply()inside, \\wrapd_app()inside, to_list, from_list}
 
   \end{itemize}
 \end{itemize}
@@ -2590,8 +2553,9 @@ the "\texttt{-->}" arrow.
 
 \begin{itemize}
 \item Basic: \texttt{Int, Real, Char, String}
-\item Or Types: \texttt{EmptyVal, Bool, Possibly(), ListOf()s, Result()OrError()}
-\item Tuple Types: \texttt{NonEmptyListOf()s}
+\item
+Or Types: \texttt{EmptyVal, Bool, Possibly(_), ListOf(_)s, Result(_)OrError(_)}
+\item Tuple Types: \texttt{NonEmptyListOf(_)s}
 \item Type Nicknames: \texttt{IO, Z, R, C}
 \end{itemize}
 
@@ -2602,11 +2566,11 @@ the "\texttt{-->}" arrow.
 \item Operator Propositions:
 
   \begin{itemize}
-  \item \texttt{(@A)To_The(@B)Has_Type(@C)}
+  \item \texttt{(@A)To_The(@B)Is(@C)}
   \item \texttt{(@A)And(@B)Multiply_To(@C)}
-  \item \texttt{(@A)Divided_By(@B)Has_Type(@C)}
+  \item \texttt{(@A)Divided_By(@B)Is(@C)}
   \item \texttt{(@A)And(@B)Add_To(@C)}
-  \item \texttt{(@A)Minus(@B)Has_Type(@C)}
+  \item \texttt{(@A)Minus(@B)Is(@C)}
   \item \texttt{(@A)And(@B)Can_Be_Equal}
   \item \texttt{(@A)And(@B)Can_Be_Unequal}
   \item \texttt{(@A)Can_Be_Gr_Or_Eq_To(@B)}
@@ -2702,11 +2666,11 @@ The parser was implemented using the parsec library.
 <paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
 \\
 
-<tuple> ::= `(' <line-or-under-expr> <comma> <line-or-under-exprs> `)'
+<tuple> ::= `(' <line-expr-or-under> <comma> <line-expr-or-unders> `)'
 
-<line-or-under-exprs> ::= <line-or-under-expr> ( <comma> <line-or-under-expr> )*
+<line-expr-or-unders> ::= <line-expr-or-under> ( <comma> <line-expr-or-under> )*
 
-<line-or-under-expr> ::= <line-expr> | `_'
+<line-expr-or-under> ::= <line-expr> | `_'
 
 <line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
 
@@ -2714,17 +2678,17 @@ The parser was implemented using the parsec library.
 \\
 
 <big-tuple> ::= ""\\
-`(' [ `\ ' ] <line-or-under-expr> [ <nl> <indent> ]
-<comma> <line-or-under-exprs> \\
-( <nl> <indent> <comma> <line-or-under-exprs> )* 
+`(' [ `\ ' ] <line-expr-or-under> [ <nl> <indent> ]
+<comma> <line-expr-or-unders> \\
+( <nl> <indent> <comma> <line-expr-or-unders> )* 
 <nl> <indent> `)'
 \\
 
-<list> ::= `[' [ <line-or-under-exprs> ] `]'
+<list> ::= `[' [ <line-expr-or-unders> ] `]'
 
 <big-list> ::= 
-`[' [ `\ ' ] <line-or-under-exprs>
-( <nl> <indent> <comma> <line-or-under-exprs> )* <nl> <indent> `]'
+`[' [ `\ ' ] <line-expr-or-unders>
+( <nl> <indent> <comma> <line-expr-or-unders> )* <nl> <indent> `]'
 \\
 
 <paren-func-app> ::= ""\\""
@@ -2732,7 +2696,7 @@ The parser was implemented using the parsec library.
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-or-under-exprs> `)'
+<arguments> ::= `(' <line-expr-or-unders> `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -2759,7 +2723,7 @@ The parser was implemented using the parsec library.
 `change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
 <field-change> ::=
-( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-or-under-expr>
+( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
 \\
 
 <op-expr> ::= <line-op-expr> | <big-op-expr>
@@ -2930,7 +2894,8 @@ The parser was implemented using the parsec library.
 
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
-`values' ( `\ ' | <nl> `\ \ ' ) <identifier> [ `:' <simple-type> ]
+`values' ( `\ ' | <nl> `\ \ ' ) \\ 
+<identifier> [ `:' <simple-type> ]
 ( [ `\ ' ] | [ `\ ' ] <identifier> [ `:' <simple-type> ] )*
 \\
 

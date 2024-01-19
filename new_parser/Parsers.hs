@@ -154,10 +154,10 @@ instance HasParser InsideParenExpr where
 instance HasParser Tuple where
   parser = T <$> (char '(' *> parser) +++ (comma *> parser <* char ')')
 
-instance HasParser LineOrUnderExprs where
+instance HasParser LineExprOrUnders where
   parser = LOUEs <$> parser +++ many (comma *> parser)
 
-instance HasParser LineOrUnderExpr where
+instance HasParser LineExprOrUnder where
   parser = LE1 <$> try parser <|> underscore *> return Underscore1
 
 instance HasParser LineExpr where
