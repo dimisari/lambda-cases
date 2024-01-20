@@ -22,6 +22,13 @@ data LineExprOrUnder =
 data LineExpr = 
   BOAE1 BasicOrAppExpr | LOE2 LineOpExpr | LFE2 LineFuncExpr
 
+data BasicOrAppExpr =
+  BE3 BasicExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
+
+data BasicExpr = 
+  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp | 
+  SI1 SpecialId
+
 newtype BigTuple = BT (LineExprOrUnder, LineExprOrUnders, [LineExprOrUnders])
 
 newtype List = L (Maybe LineExprOrUnders)
@@ -61,10 +68,6 @@ newtype PostFuncApp = PoFA (PostFuncArg, [PostFunc])
 data PostFuncArg = 
   PE2 ParenExpr | BE2 BasicExpr | Underscore2
 
-data BasicExpr = 
-  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp | 
-  SI1 SpecialId
-
 newtype Change = C (FieldChange, [FieldChange])
 
 newtype FieldChange = FC (Field, LineExprOrUnder)
@@ -101,9 +104,6 @@ data BigOrCasesFuncExpr =
 
 data Operand =
   BOAE2 BasicOrAppExpr | PE3 ParenExpr | Underscore3
-
-data BasicOrAppExpr =
-  BE3 BasicExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
 
 data Op = 
   FCO3 FuncCompOp | OSO OptionalSpacesOp
@@ -184,8 +184,8 @@ data WhereDefExpr =
 newtype Type = Ty (Maybe Condition, SimpleType)
 
 data SimpleType = 
-  TIOV1 TypeIdOrVar | FT1 FuncType | PT1 ProdType | PoT1 PowerType | 
-  TA1 TypeApp
+  TIOV1 TypeIdOrVar | TA1 TypeApp | PoT1 PowerType | PT1 ProdType |
+  FT1 FuncType 
 
 data TypeIdOrVar =
   TId1 TypeId | TV1 TypeVar
@@ -199,24 +199,6 @@ newtype ParamTVar = PTV Int
 
 newtype AdHocTVar = AHTV Char
 
-newtype FuncType = FT (InOrOutType, InOrOutType)
-
-data InOrOutType = 
-  TIOV2 TypeIdOrVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp | FT2 FuncType
-
-newtype ProdType = PT (FieldType, [FieldType])
-
-data FieldType =
-  PBT1 PowerBaseType | PoT3 PowerType 
-
-data PowerBaseType = 
-  TIOV3 TypeIdOrVar | TA3 TypeApp | IPT InParenT
-
-data InParenT = 
-  FT3 FuncType | PT3 ProdType
-
-newtype PowerType = PoT (PowerBaseType, Int)
-
 data TypeApp =  
   TIWA1 (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |
   TIPTI (TypesInParen, TIdOrAdHocTVar, Maybe TypesInParen) |
@@ -228,6 +210,24 @@ data TIdOrAdHocTVar =
   TId4 TypeId | AHTV2 AdHocTVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
+
+newtype ProdType = PT (FieldType, [FieldType])
+
+data FieldType =
+  PBT1 PowerBaseType | PoT3 PowerType 
+
+data PowerBaseType = 
+  TIOV3 TypeIdOrVar | TA3 TypeApp | IPT InParenT
+
+data InParenT = 
+  PT3 ProdType | FT3 FuncType
+
+newtype PowerType = PoT (PowerBaseType, Int)
+
+newtype FuncType = FT (InOrOutType, InOrOutType)
+
+data InOrOutType = 
+  TIOV2 TypeIdOrVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp | FT2 FuncType
 
 newtype Condition = Co PropName
 
@@ -335,3 +335,8 @@ newtype Program = P (ProgramPart, [ProgramPart])
 data ProgramPart = 
   VD2 ValueDef | GVDs2 GroupedValueDefs | TD TypeDef | TNN1 TypeNickname |
   TPD TypePropDef | TT1 TypeTheo
+
+-- For fast vim navigation
+-- ShowInstances.hs
+-- Parsers.hs
+-- Testing.hs

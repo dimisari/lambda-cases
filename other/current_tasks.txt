@@ -1,22 +1,23 @@
 
+- review 
+  - optional space after ( and before )
+    - <tuple> 
+    - <paren-expr> 
+    - <arguments> 
+    - <parameters>
+    - <cases-params>
+    - <tuple-matching>
+    - <types-in-paren>
+  - fix example program to be more clear in action ops
+
 - parser section
+  - parsec paragraph
   - 3 parsec examples
     - structure
       - types
       - show
       - parsers
 
-- review (continue at tuple types)
-  - basic-or-app-expr: move below line-expr?
-  - <list> : optional space after [ and before ]
-  - fix example program to be more clear in action ops
-  - change the order of type expressions 
-    - ids
-    - vars
-    - type app
-    - product
-    - function
-    - conditional
+- better file tree
 
-  
 # tasks.txt

@@ -60,6 +60,21 @@ instance Show LineExpr where
     LOE2 soe -> show soe
     LFE2 sfe -> show sfe
 
+instance Show BasicOrAppExpr where
+  show = \case
+    BE3 be -> show be
+    PrFA1 prfa -> show prfa
+    PoFA1 pofa -> show pofa
+
+instance Show BasicExpr where
+  show = \case
+    Lit1 lit -> show lit
+    Id1 id -> show id
+    T1 tuple -> show tuple
+    L1 list -> show list
+    PFA pfa -> show pfa
+    SI1 sid -> show sid
+
 instance Show BigTuple where
   show = \(BT (loue, loues, loues_l)) ->
     "( " ++ show loue ++ ", " ++ show loues ++ show_list_sep "\n, " loues_l ++ "\n)"
@@ -136,15 +151,6 @@ instance Show PostFuncArg where
     BE2 be -> show be
     Underscore2 -> "_"
 
-instance Show BasicExpr where
-  show = \case
-    Lit1 lit -> show lit
-    Id1 id -> show id
-    T1 tuple -> show tuple
-    L1 list -> show list
-    PFA pfa -> show pfa
-    SI1 sid -> show sid
-
 instance Show Change where
   show = \(C (fc, fcs)) -> "change{" ++ show fc ++ show_list_comma fcs ++ "}"
 
@@ -210,12 +216,6 @@ instance Show Operand where
     BOAE2 npoa -> show npoa
     PE3 pe -> show pe
     Underscore3 -> "_"
-
-instance Show BasicOrAppExpr where
-  show = \case
-    BE3 be -> show be
-    PrFA1 prfa -> show prfa
-    PoFA1 pofa -> show pofa
 
 instance Show Op where
   show = \case
@@ -368,10 +368,10 @@ instance Show Type where
 instance Show SimpleType where
   show = \case
     TIOV1 tiov -> show tiov
-    FT1 ft -> show ft
-    PT1 pt -> show pt
-    PoT1 pt -> show pt
     TA1 ta -> show ta
+    PoT1 pt -> show pt
+    PT1 pt -> show pt
+    FT1 ft -> show ft
 
 instance Show TypeIdOrVar where
   show = \case
@@ -391,39 +391,6 @@ instance Show ParamTVar where
 
 instance Show AdHocTVar where
   show = \(AHTV c) -> "@" ++ [c]
-
-instance Show FuncType where
-  show = \(FT (it, ot)) -> show it ++ " => " ++ show ot
-
-instance Show InOrOutType where
-  show = \case
-    TIOV2 tiov -> show tiov
-    PT2 pt -> show pt
-    PoT2 pt -> show pt
-    TA2 ta -> show ta
-    FT2 ft -> "(" ++ show ft ++ ")"
-
-instance Show ProdType where
-  show = \(PT (fopt, fopts)) -> show fopt ++ show_list_sep " x " fopts
-
-instance Show FieldType where
-  show = \case
-    PBT1 ft -> show ft
-    PoT3 pt -> show pt
-
-instance Show PowerBaseType where
-  show = \case
-    TIOV3 tiov -> show tiov
-    TA3 ta -> show ta
-    IPT ipt -> show ipt
-
-instance Show InParenT where
-  show = \case
-    FT3 ft -> "(" ++ show ft ++ ")"  
-    PT3 pt -> "(" ++ show pt ++ ")"
-
-instance Show PowerType where
-  show = \(PoT (ft, i)) -> show ft ++ "^" ++ show i
 
 instance Show TypeApp where
   show = \case
@@ -445,6 +412,39 @@ instance Show TIdOrAdHocTVar where
 
 instance Show TypesInParen where
   show = \(TIP (st, sts)) -> "(" ++ show st ++ show_list_comma sts ++ ")"
+
+instance Show ProdType where
+  show = \(PT (fopt, fopts)) -> show fopt ++ show_list_sep " x " fopts
+
+instance Show FieldType where
+  show = \case
+    PBT1 ft -> show ft
+    PoT3 pt -> show pt
+
+instance Show PowerBaseType where
+  show = \case
+    TIOV3 tiov -> show tiov
+    TA3 ta -> show ta
+    IPT ipt -> show ipt
+
+instance Show InParenT where
+  show = \case
+    PT3 pt -> "(" ++ show pt ++ ")"
+    FT3 ft -> "(" ++ show ft ++ ")"  
+
+instance Show PowerType where
+  show = \(PoT (ft, i)) -> show ft ++ "^" ++ show i
+
+instance Show FuncType where
+  show = \(FT (it, ot)) -> show it ++ " => " ++ show ot
+
+instance Show InOrOutType where
+  show = \case
+    TIOV2 tiov -> show tiov
+    TA2 ta -> show ta
+    PoT2 pt -> show pt
+    PT2 pt -> show pt
+    FT2 ft -> "(" ++ show ft ++ ")"
 
 instance Show Condition where
   show = \(Co pn) -> show pn ++ " ==> "
@@ -645,3 +645,8 @@ instance Show ProgramPart where
     TNN1 tnn -> show tnn
     TPD tpd -> show tpd
     TT1 tt -> show tt
+    
+-- For fast vim navigation
+-- Parsers.hs
+-- Testing.hs
+-- ASTTypes.hs

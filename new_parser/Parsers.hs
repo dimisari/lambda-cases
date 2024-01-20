@@ -83,7 +83,7 @@ int_greater_than_1 :: Parser Int
 int_greater_than_1 =
   parser >>= \i -> case (i < 2) of
     True -> unexpected "integer in power type must be greater than 1"
-    false -> return i
+    False -> return i
  
 -- helper ops
 
@@ -163,6 +163,14 @@ instance HasParser LineExprOrUnder where
 instance HasParser LineExpr where
   parser = LFE2 <$> try parser <|> LOE2 <$> try parser <|> BOAE1 <$> parser
 
+instance HasParser BasicOrAppExpr where
+  parser = PrFA1 <$> try parser <|> PoFA1 <$> try parser <|> BE3 <$> parser 
+
+instance HasParser BasicExpr where
+  parser =
+    PFA <$> try parser <|> SI1 <$> try parser <|> Lit1 <$> parser <|>
+    Id1 <$> parser <|> T1 <$> parser <|> L1 <$> parser
+
 instance HasParser BigTuple where
   parser =
     char '(' *> opt_space *> parser >>= \line_or_under_expr ->
@@ -172,7 +180,7 @@ instance HasParser BigTuple where
     return (BT (line_or_under_expr, line_or_under_exprs, line_or_under_exprs_l))
 
 instance HasParser List where
-  parser = L <$> (char '[' *> optionMaybe parser <* char ']')
+  parser = L <$> (char '[' *> opt_space_around (optionMaybe parser) <* char ']')
 
 instance HasParser BigList where
   parser =
@@ -246,11 +254,6 @@ instance HasParser PostFuncApp where
     post_func_arg_p =
       PE2 <$> try parser <|> BE2 <$> parser <|> underscore *> return Underscore2
 
-instance HasParser BasicExpr where
-  parser =
-    PFA <$> try parser <|> SI1 <$> try parser <|> Lit1 <$> parser <|>
-    Id1 <$> parser <|> T1 <$> parser <|> L1 <$> parser
-
 instance HasParser Change where
   parser = 
     try (string "change{") *> opt_space *> field_change_p >>= \field_change ->
@@ -311,9 +314,6 @@ instance HasParser BigOrCasesFuncExpr where
 instance HasParser Operand where
   parser =
     PE3 <$> try parser <|> BOAE2 <$> try parser <|> underscore *> return Underscore3
-
-instance HasParser BasicOrAppExpr where
-  parser = PrFA1 <$> try parser <|> PoFA1 <$> try parser <|> BE3 <$> parser 
 
 instance HasParser Op where
   parser =  
@@ -402,7 +402,7 @@ instance HasParser TupleMatching where
 
 instance HasParser ListMatching where
   parser = 
-    LM <$> (char '[' *> optionMaybe inside_p <* char ']')
+    LM <$> (char '[' *> opt_space_around (optionMaybe inside_p) <* char ']')
     where
     inside_p :: Parser (MatchingOrStar, [MatchingOrStar])
     inside_p = parser +++ (many $ comma *> parser)
@@ -500,28 +500,6 @@ instance HasParser ParamTVar where
 instance HasParser AdHocTVar where
   parser = AHTV <$> (char '@' *> upper)
 
-instance HasParser FuncType where
-  parser = FT <$> parser +++ (string " => " *> parser)
-
-instance HasParser InOrOutType where
-  parser =
-    PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|> PoT2 <$> try parser <|>
-    TA2 <$> try parser <|> TIOV2 <$> parser
-
-instance HasParser ProdType where
-  parser = PT <$> parser +++ (many1 $ try (string " x ") *> parser)
-
-instance HasParser FieldType where
-  parser = PoT3 <$> try parser <|> PBT1 <$> parser 
-
-instance HasParser PowerBaseType where
-  parser =
-    IPT <$> try (in_paren $ FT3 <$> try parser <|> PT3 <$> parser) <|>
-    TA3 <$> try parser <|> TIOV3 <$> parser
-
-instance HasParser PowerType where
-  parser = PoT <$> parser +++ (string "^" *> int_greater_than_1)
-
 instance HasParser TypeApp where
   parser =
     TIWA1 <$> try tiwa_p <|> TIPTI <$> tipti_p <|> TITIP <$> parser +++ parser
@@ -548,6 +526,28 @@ instance HasParser TIdOrAdHocTVar where
 
 instance HasParser TypesInParen where
   parser = TIP <$> (char '(' *> parser) +++ (many (comma *> parser) <* char ')')
+
+instance HasParser ProdType where
+  parser = PT <$> parser +++ (many1 $ try (string " x ") *> parser)
+
+instance HasParser FieldType where
+  parser = PoT3 <$> try parser <|> PBT1 <$> parser 
+
+instance HasParser PowerBaseType where
+  parser =
+    IPT <$> try (in_paren $ FT3 <$> try parser <|> PT3 <$> parser) <|>
+    TA3 <$> try parser <|> TIOV3 <$> parser
+
+instance HasParser PowerType where
+  parser = PoT <$> parser +++ (string "^" *> int_greater_than_1)
+
+instance HasParser FuncType where
+  parser = FT <$> parser +++ (string " => " *> parser)
+
+instance HasParser InOrOutType where
+  parser =
+    PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|> PoT2 <$> try parser <|>
+    TA2 <$> try parser <|> TIOV2 <$> parser
 
 instance HasParser Condition where
   parser = Co <$> (parser <* string " --> ")
@@ -808,3 +808,8 @@ stringChar = stringLetter <|> charEscape <?> "string character"
 
 stringLetter :: Parser Char
 stringLetter = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
+
+-- For fast vim navigation
+-- ShowInstances.hs
+-- Testing.hs
+-- ASTTypes.hs

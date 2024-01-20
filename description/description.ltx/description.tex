@@ -71,8 +71,7 @@ read_two_ints: (Int^2)FromIO
       ... => show_err("You didn't give me 2 ints")
 
 tuple_type NumsAndGcd
-value
-  (x, y, gcd):Int^3
+value (x, y, gcd):Int^3
 
 print_gcd_message: NumsAndGcd => IO
   = nums_and_gcd => print(message)
@@ -341,6 +340,11 @@ answers_to : ListOf(String)s
 
 <line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
 
+<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
+
+<basic-expr> ::=
+<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
+
 <comma> ::= `,' [ `\ ' ]
 \\
 
@@ -422,7 +426,7 @@ my_big_list: ListOf(Int => IO)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<list> ::= `[' [ <line-expr-or-unders> ] `]'
+<list> ::= `[' [ `\ ' ] [ <line-expr-or-unders> ] [ `\ ' ] `]'
 
 <big-list> ::= ""\\
 `[' [ `\ ' ] <line-expr-or-unders>
@@ -639,9 +643,6 @@ the following paragraph.
 <special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
 <post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
-
-<basic-expr> ::=
-<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
 \end{grammar}
 
 \end{itemize}
@@ -1178,8 +1179,6 @@ The precise indentation rules are described in the section
 \\
 
 <operand> ::= <basic-or-app-expr> | <paren-expr> | `_'
-
-<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
 \\
 
 <op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
@@ -1491,7 +1490,8 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 <tuple-matching> ::= `(' <matching-or-star> ( <comma> <matching-or-star> )+ `)'
 
-<list-matching> ::= `[' [ <matching-or-star> ( <comma> <matching-or-star> )* ] `]'
+<list-matching> ::=
+`[' [ `\ ' ] [ <matching-or-star> ( <comma> <matching-or-star> )* ] [ `\ ' ] `]'
 \\
 
 <case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
@@ -1640,9 +1640,9 @@ Type expressions are divided into the following categories:
 \begin{itemize}
 \item Type Identifiers
 \item Type Variables
-\item Function Types
-\item Product Types
 \item Type Application Types
+\item Product Types
+\item Function Types
 \item Conditional Types
 \end{itemize}
 which are described in the following paragraphs.
@@ -1652,7 +1652,7 @@ The grammar of a type expression is:
 <type> ::= [ <condition> ]  <simple-type> 
 
 <simple-type> ::=
-<type-id-or-var> | <func-type> | <prod-type> | <power-type> | <type-app>
+<type-id-or-var> | <type-app> | <power-type> | <prod-type> | <func-type>
 
 <type-id-or-var> ::= <type-id> | <type-var>
 \\
@@ -1766,71 +1766,6 @@ An ad hoc type variable is written with an '@' followed by any capital letter.
 \end{grammar}
 \end{itemize}
 
-\paragraph{Function Types}
-
-\begin{itemize}
-\item \textit{Examples}
-\begin{verbatim}
-String => String 
-Real => Int
-T1 => T1
-Int^2 => Int
-Real^3 => Real
-(T1 => T2) x (T2 => T3) => (T1 => T3)
-(Int => Int) => (Int => Int)
-\end{verbatim}
-
-\item \textit{Description}
-
-A function type expression is comprised of the input type expression and the
-output type expression seperated by the function arrow ("\texttt{=>}"). The
-input and output type expressions are type expressions which are put in
-parentheses only if they are function type expressions. 
-
-\item \textit{Grammar}
-\begin{grammar}
-<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
-
-<in-or-out-type> ::=
-<type-id-or-var> | <prod-type> | <power-type> | <type-app> | `(' <func-type> `)'
-\end{grammar}
-\end{itemize}
-
-\paragraph{Product Types}
-
-\begin{itemize}
-\item \textit{Examples}
-\begin{verbatim}
-Int x Real x String
-ListOf(Int)s x Int x ListOf(String)s
-(Int => Int) x (Int x Real) x (Real => String)
-Int^2 x Int^2
-Real^3 x Real^3
-\end{verbatim}
-
-\item \textit{Description}
-
-Product types are the types of tuples. They are comprised of the expressions of
-the types of the fields seperated by the string " x " (space 'x' space) because
-'x' is very similar the symbol used in the cartesian product. If any of the
-fields is of a product or a function type then the corresponding type expression
-must be inside parentheses. A product type where all the fields are of the same
-type can be abbreviated with a power type expression which is comprised of the 
-type, the power symbol '\texttt{\^}' and the number of times the type is repeated.
-
-\item \textit{Grammar}
-\begin{grammar}
-<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
-
-<field-type> ::= <power-base-type> | <power-type>
-
-<power-base-type> ::=
-<type-id-or-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
-
-<power-type> ::= <power-base-type> `^' <int-greater-than-one>
-\end{grammar}
-\end{itemize}
-
 \paragraph{Type Application Types}
 
 \begin{itemize}
@@ -1873,6 +1808,71 @@ type parameters are substituted by the expressions of the type arguments.
 <t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
 
 <types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
+\end{grammar}
+\end{itemize}
+
+\paragraph{Product Types}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+Int x Real x String
+ListOf(Int)s x Int x ListOf(String)s
+(Int => Int) x (Int x Real) x (Real => String)
+Int^2 x Int^2
+Real^3 x Real^3
+\end{verbatim}
+
+\item \textit{Description}
+
+Product types are the types of tuples. They are comprised of the expressions of
+the types of the fields seperated by the string " x " (space 'x' space) because
+'x' is very similar the symbol used in the cartesian product. If any of the
+fields is of a product or a function type then the corresponding type expression
+must be inside parentheses. A product type where all the fields are of the same
+type can be abbreviated with a power type expression which is comprised of the 
+type, the power symbol '\texttt{\^}' and the number of times the type is repeated.
+
+\item \textit{Grammar}
+\begin{grammar}
+<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
+
+<field-type> ::= <power-base-type> | <power-type>
+
+<power-base-type> ::=
+<type-id-or-var> | <type-app> | `(' ( <prod-type> | <func-type> ) `)'
+
+<power-type> ::= <power-base-type> `^' <int-greater-than-one>
+\end{grammar}
+\end{itemize}
+
+\paragraph{Function Types}
+
+\begin{itemize}
+\item \textit{Examples}
+\begin{verbatim}
+String => String 
+Real => Int
+T1 => T1
+Int^2 => Int
+Real^3 => Real
+(T1 => T2) x (T2 => T3) => (T1 => T3)
+(Int => Int) => (Int => Int)
+\end{verbatim}
+
+\item \textit{Description}
+
+A function type expression is comprised of the input type expression and the
+output type expression seperated by the function arrow ("\texttt{=>}"). The
+input and output type expressions are type expressions which are put in
+parentheses only if they are function type expressions. 
+
+\item \textit{Grammar}
+\begin{grammar}
+<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
+
+<in-or-out-type> ::=
+<type-id-or-var> | <type-app> | <power-type> | <prod-type> | `(' <func-type> `)'
 \end{grammar}
 \end{itemize}
 
@@ -2674,6 +2674,11 @@ The parser was implemented using the parsec library.
 
 <line-expr> ::= <basic-or-app-expr> | <line-op-expr> | <line-func-expr>
 
+<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
+
+<basic-expr> ::=
+<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
+
 <comma> ::= `,' [ `\ ' ]
 \\
 
@@ -2684,7 +2689,7 @@ The parser was implemented using the parsec library.
 <nl> <indent> `)'
 \\
 
-<list> ::= `[' [ <line-expr-or-unders> ] `]'
+<list> ::= `[' [ `\ ' ] [ <line-expr-or-unders> ] [ `\ ' ] `]'
 
 <big-list> ::= 
 `[' [ `\ ' ] <line-expr-or-unders>
@@ -2714,9 +2719,6 @@ The parser was implemented using the parsec library.
 <special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
 <post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
-
-<basic-expr> ::=
-<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
 \\
 
 <change> ::=
@@ -2749,8 +2751,6 @@ The parser was implemented using the parsec library.
 \\
 
 <operand> ::= <basic-or-app-expr> | <paren-expr> | `_'
-
-<basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
 \\
 
 <op> ::= `\ ' <func-comp-op> `\ ' | [ `\ ' ] <optional-spaces-op> [ `\ ' ]
@@ -2795,7 +2795,8 @@ The parser was implemented using the parsec library.
 
 <tuple-matching> ::= `(' <matching-or-star> ( <comma> <matching-or-star> )+ `)'
 
-<list-matching> ::= `[' [ <matching-or-star> ( <comma> <matching-or-star> )* ] `]'
+<list-matching> ::=
+`[' [ `\ ' ] [ <matching-or-star> ( <comma> <matching-or-star> )* ] [ `\ ' ] `]'
 \\
 
 <case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
@@ -2828,7 +2829,7 @@ The parser was implemented using the parsec library.
 <type> ::= [ <condition> ]  <simple-type> 
 
 <simple-type> ::=
-<type-id-or-var> | <func-type> | <prod-type> | <power-type> | <type-app>
+<type-id-or-var> | <type-app> | <power-type> | <prod-type> | <func-type>
 
 <type-id-or-var> ::= <type-id> | <type-var>
 \\
@@ -2843,22 +2844,6 @@ The parser was implemented using the parsec library.
 <ad-hoc-t-var> ::= `@' [A-Z] 
 \\
 
-<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
-
-<in-or-out-type> ::=
-<type-id-or-var> | <prod-type> | <power-type> | <type-app> | `(' <func-type> `)'
-\\
-
-<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
-
-<field-type> ::= <power-base-type> | <power-type>
-
-<power-base-type> ::=
-<type-id-or-var> | <type-app> | `(' ( <func-type> | <prod-type> ) `)'
-
-<power-type> ::= <power-base-type> `^' <int-greater-than-one>
-\\
-
 <type-app> ::= ""\\""
 [ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
 \alt " "<types-in-paren> <t-id-or-ad-hoc-t-var> [ <types-in-paren> ]
@@ -2869,6 +2854,22 @@ The parser was implemented using the parsec library.
 <t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
 
 <types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
+\\
+
+<prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
+
+<field-type> ::= <power-base-type> | <power-type>
+
+<power-base-type> ::=
+<type-id-or-var> | <type-app> | `(' ( <prod-type> | <func-type> ) `)'
+
+<power-type> ::= <power-base-type> `^' <int-greater-than-one>
+\\
+
+<func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
+
+<in-or-out-type> ::=
+<type-id-or-var> | <type-app> | <power-type> | <prod-type> | `(' <func-type> `)'
 \\
 
 <condition> ::= <prop-name> `\ -->\ ' 

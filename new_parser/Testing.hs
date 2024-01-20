@@ -294,3 +294,7 @@ parse_type_theo_and_ret_res_str =
   \test_example ->
   parse_result_to_string (parse test_example :: Either ParseError TypeTheo)
 
+-- For fast vim navigation
+-- Parsers.hs
+-- ShowInstances.hs
+-- ASTTypes.hs
