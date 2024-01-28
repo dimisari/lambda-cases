@@ -220,7 +220,7 @@ that extend of over multiple lines new values must be defined.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
+<paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'  
 \end{grammar}
 
 \end{itemize}
@@ -258,6 +258,7 @@ value
   (my_int, my_string, my_real) : Int x String x Real
 \end{verbatim}
 
+\newpage
 \item \textit{Big Tuples}
 \\\\
 \textbf{Example}
@@ -332,7 +333,8 @@ answers_to : ListOf(String)s
 
 \item \textit{Grammar}
 \begin{grammar}
-<tuple> ::= `(' <line-expr-or-under> <comma> <line-expr-or-unders> `)'
+<tuple> ::=
+`(' [ `\ ' ] <line-expr-or-under> <comma> <line-expr-or-unders> [ `\ ' ] `)'
 
 <line-expr-or-unders> ::= <line-expr-or-under> ( <comma> <line-expr-or-under> )*
 
@@ -387,6 +389,7 @@ they do and it's the type T, the type of the list is:
 ListOf(T)s
 \end{verbatim}
 
+\newpage
 \item \textit{Big Lists}
   \\\\
   \textbf{Example}
@@ -435,6 +438,7 @@ my_big_list: ListOf(Int => IO)s
 
 \end{itemize}
 
+\newpage
 \subsubsection{Parenthesis Function Application}
 \label{subsec:parenfuncapp}
 
@@ -483,6 +487,7 @@ to right}.  Therefore, when multiple parentheses are present the arguments of
 the leftmost parentheses are inserted first then the next ones to the right and
 so on.
 
+\newpage
 \item \textit{Empty arguments in Parenthesis Function Application}
 \\\\
 It is possible to give a function only some of the arguments by putting an
@@ -520,7 +525,7 @@ f(_, _, r) : Char x Int => String
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-expr-or-unders> `)'
+<arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -529,6 +534,8 @@ f(_, _, r) : Char x Int => String
 \end{grammar}
 
 \end{itemize}
+
+\newpage
 
 \subsubsection{Prefix and Postfix Functions}
  
@@ -580,6 +587,7 @@ An illustration of the aforementioned is the last example, where the function
 
 \end{itemize}
 
+\newpage
 \paragraph{Postfix Functions}
 
 \begin{itemize}
@@ -772,6 +780,8 @@ Which is equivalent to:
 \texttt{mod(x, y)}
 \end{center}
 
+\newpage
+
 \paragraph{Function Composition Operators}
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -809,6 +819,7 @@ reverse_words : String => String
   = merge_words <o apply(reverse_string)to_all <o split_to_words
 \end{verbatim}
 
+\newpage
 
 \subsubsection{Arithmetic, Comparison and Boolean Operators}
 
@@ -927,6 +938,8 @@ operators behave similarly to most programming languages. It's also worth
 noting that the "equals", "and" and "or" operators have the symbol once
 (\texttt{= \& |}) instead of twice (\texttt{== \&\& ||}).
 
+\newpage
+
 \subsubsection{Environment Action Operators}
 \label{subsec:envacts}
 
@@ -977,12 +990,13 @@ print_string("I'll repeat the line.") ; get_line ;> print_string
 main: (EmptyVal)FromIO
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Oh hi " + name + "! What's your age?") ; get_line ;> age =>
-    print_string("Oh that's crazy " + name + "! I didn't expect you to be " + age + "!");
+    print_string <- 
+    ("Oh that's crazy " + name + "! I didn't expect you to be " + age + "!")
 \end{verbatim}
 In this bigger but similar example the types are:
 \begin{verbatim}
-print_string : String => (EmptyVal)FromIO
-get_line : (String)FromIO
+print_string: String => (EmptyVal)FromIO
+get_line: (String)FromIO
 
 print_string <- "Hello! ... " : (EmptyVal)FromIO
 print_string("Oh hi...) : (EmptyVal)FromIO
@@ -1075,6 +1089,8 @@ The overall effect is an environment action  of type \texttt{@E} that in the end
 produces a value is of type \texttt{T2} and therefore the new value is of type
 \texttt{@E(T2)}.
 
+\newpage
+
 \subsubsection{Operator Expressions}
 
 \begin{itemize}
@@ -1125,6 +1141,8 @@ _ - 1 : Int => Int
 \end{verbatim}
 Note: These are not the most general types for the examples but they are compatible
 and good enough for their illustration purposes.
+
+\newpage
 
 \item \textit{Big Operator Expressions}\\\\
 \textbf{Example}
@@ -1308,8 +1326,6 @@ Operator & Precedence & Associativity \\
 
 Function expressions are divided into \textbf{regular function expressions} and 
 \textbf{"cases" function expressions} which are described in the following sections.
-\\\\
-The grammar for a function expression is:
 \begin{grammar}
 <func-expr> ::= <line-func-expr> | <big-func-expr> | <cases-func-expr>
 \end{grammar}
@@ -1378,7 +1394,9 @@ The precise indentation rules are described in the section
 
 <big-func-expr> ::= <parameters> [ `\ ' ] `=>' <big-func-body>
 
-<parameters> ::= <identifier> | `*' | `(' <parameters> ( <comma> <parameters> )+ `)'
+<parameters> ::=
+<identifier> | `*' |
+`(' [ `\ ' ] <parameters> ( <comma> <parameters> )+ [ `\ ' ] `)'
 
 <line-func-body> ::= [ `\ ' ] ( <basic-or-app-expr> | <line-op-expr> )
 
@@ -1443,6 +1461,8 @@ apply()to_all: (T1 => T2) x ListOf(T1)s => ListOf(T2)s
 
 \end{verbatim}
 
+\newpage
+
 \item \textit{Description}
 
 "cases" is a keyword that works as a special parameter.  Instead of giving the
@@ -1474,7 +1494,8 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 <cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
 
 <cases-params> ::=
-<identifier> | `cases' | `*' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
+<identifier> | `cases' | `*' |
+`(' [ `\ ' ] <cases-params> ( <comma> <cases-params> )+ [ `\ ' ] `)'
 \\
 
 <case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
@@ -1488,7 +1509,8 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 
 <matching-or-star> ::= <matching> | `*'
 
-<tuple-matching> ::= `(' <matching-or-star> ( <comma> <matching-or-star> )+ `)'
+<tuple-matching> ::=
+`(' [ `\ ' ] <matching-or-star> ( <comma> <matching-or-star> )+ [ `\ ' ] `)'
 
 <list-matching> ::=
 `[' [ `\ ' ] [ <matching-or-star> ( <comma> <matching-or-star> )* ] [ `\ ' ] `]'
@@ -1498,6 +1520,8 @@ all cases must be the same as the number of parameters with the "cases" keyword.
 \end{grammar}
 
 \end{itemize}
+
+\newpage
 
 \subsection{Value Definitions and "where" Expressions}
 \label{subsec:valdefswhere}
@@ -1570,6 +1594,8 @@ keyword "all" to give the same type to all the values.
 
 \end{itemize}
 
+\newpage
+
 \subsubsection{"where" Expressions}
 \label{subsubsec:whereexprs}
 
@@ -1625,6 +1651,8 @@ indentation.
 
 \end{itemize}
 
+\newpage
+
 \section{Language Description: Types and Type Logic}
 
 \subsection{Types}
@@ -1655,19 +1683,14 @@ The grammar of a type expression is:
 <type-id-or-var> | <type-app> | <power-type> | <prod-type> | <func-type>
 
 <type-id-or-var> ::= <type-id> | <type-var>
-\\
 \end{grammar}
+
 \paragraph{Type Identifiers}
 
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-Int
-Real 
-Char 
-String
-SelfReferencingType
-MyDefinedType
+Int     Real     Char     String     SelfReferencingType
 \end{verbatim}
 
 \item \textit{Description}
@@ -1700,7 +1723,7 @@ and they are described in the following paragraphs.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-T1 T2 T3 
+T1     T2     T3 
 \end{verbatim}
 
 \item \textit{Examples of parametric type variables inside bigger type expressions}
@@ -1807,9 +1830,12 @@ type parameters are substituted by the expressions of the type arguments.
 
 <t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
 
-<types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
+<types-in-paren> ::=
+`(' [ `\ ' ] <simple-type> ( <comma> <simple-type> )* [ `\ ' ] `)'
 \end{grammar}
 \end{itemize}
+
+\newpage
 
 \paragraph{Product Types}
 
@@ -1840,7 +1866,8 @@ type, the power symbol '\texttt{\^}' and the number of times the type is repeate
 <field-type> ::= <power-base-type> | <power-type>
 
 <power-base-type> ::=
-<type-id-or-var> | <type-app> | `(' ( <prod-type> | <func-type> ) `)'
+<type-id-or-var> | <type-app> |
+`(' [ `\ ' ] ( <prod-type> | <func-type> ) [ `\ ' ] `)'
 
 <power-type> ::= <power-base-type> `^' <int-greater-than-one>
 \end{grammar}
@@ -1872,9 +1899,12 @@ parentheses only if they are function type expressions.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id-or-var> | <type-app> | <power-type> | <prod-type> | `(' <func-type> `)'
+<type-id-or-var> | <type-app> | <power-type> | <prod-type> |
+`(' [ `\ ' ] <func-type>  [ `\ ' ] `)'
 \end{grammar}
 \end{itemize}
+
+\newpage
 
 \paragraph{Conditional Types}
 
@@ -1932,6 +1962,8 @@ ad hoc polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic})
 \end{grammar}
 
 \end{itemize}
+
+\newpage
 
 \subsubsection{Type Definitions}
 \label{subsubsec:tdefs}
@@ -1994,6 +2026,8 @@ _.nationality : MathematicianInfo => String
 _.date_of_birth : MathematicianInfo => Date
 \end{verbatim}
 
+\newpage
+
 \item \textit{Grammar}
 
 \begin{grammar}
@@ -2006,9 +2040,10 @@ _.date_of_birth : MathematicianInfo => Date
 [ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
 [ <param-vars-in-paren> ]
 
-<param-vars-in-paren> ::= `(' <param-t-var> ( <comma> <param-t-var> )* `)'
+<param-vars-in-paren> ::=
+`(' [ `\ ' ] <param-t-var> ( <comma> <param-t-var> )* [ `\ ' ] `)'
 
-<id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
+<id-tuple> ::= `(' [ `\ ' ] <identifier> ( <comma> <identifier> )+ [ `\ ' ] `)'
 \end{grammar}
 
 \end{itemize}
@@ -2182,6 +2217,8 @@ wrapper: (@T)Has_A_Wrapper --> T1 => @T(T1)
 apply()inside: (@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)
 \end{verbatim}
 
+\newpage
+
 \item \textit{Description}
 
 An atomic proposition definition defines simultaneously the \textbf{atomic
@@ -2249,6 +2286,8 @@ type expression of the value seperated by the "has type" symbol ('\texttt{:}').
 
 \end{itemize}
 
+\newpage
+
 \paragraph{Renaming Propositions}
 
 \begin{itemize}
@@ -2299,10 +2338,13 @@ essentially mean "and").
 [A-Z] ( <name-part> <ad-hoc-vars-in-paren> )+ [ <name-part> ]
 \alt " "( <ad-hoc-vars-in-paren> <name-part> )+ [ <ad-hoc-vars-in-paren> ]
 
-<ad-hoc-vars-in-paren> ::= `(' <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* `)'
+<ad-hoc-vars-in-paren> ::=
+`(' [ `\ ' ] <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* [ `\ ' ] `)'
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \end{grammar} 
+
+\newpage
 
 \subsubsection{Theorems}
 \label{subsubsec:ttheo}
@@ -2355,7 +2397,9 @@ l1, l2, l3 : all ListOf(Int)s
 >> l2
   : ListOf(Int)s
   = []
-
+\end{verbatim}
+\newpage
+\begin{verbatim} 
 >> a -> apply(_ + 1)inside
   : Possibly(Int)
   = the_value:2
@@ -2398,6 +2442,8 @@ with the identifier of the value associated with the proposition and is followed
 by an equal sign and the value expression which implements the value.
 
 \end{itemize}
+
+\newpage
 
 \paragraph{Implication Propositions}
 
@@ -2449,6 +2495,8 @@ the condition arrow (" \texttt{-->} ") arrow.
 
 \end{itemize}
 
+\newpage
+
 \paragraph{Grammar for Theorems}
 
 \begin{grammar}
@@ -2460,7 +2508,7 @@ the condition arrow (" \texttt{-->} ") arrow.
 [A-Z] ( <name-part> <subs-in-paren> )+ [ <name-part> ]
 \alt " "( <subs-in-paren> <name-part> )+ [ <subs-in-paren> ]
 
-<subs-in-paren> ::= `(' <t-var-sub> ( <comma> <t-var-sub> )* `)'
+<subs-in-paren> ::= `(' [ `\ ' ] <t-var-sub> ( <comma> <t-var-sub> )* [ `\ ' ] `)'
 \\
 
 <t-var-sub> ::=
@@ -2478,7 +2526,7 @@ the condition arrow (" \texttt{-->} ") arrow.
 <type-id-with-subs> ::= <type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )+
 
 <subs-or-unders-in-paren> ::=
-`(' <sub-or-under> ( <comma> <sub-or-under> )* `)'
+`(' [ `\ ' ] <sub-or-under> ( <comma> <sub-or-under> )* [ `\ ' ] `)'
 
 <sub-or-under> ::= <t-var-sub> | `_'
 \\
@@ -2487,7 +2535,7 @@ the condition arrow (" \texttt{-->} ") arrow.
 
 <power-base-type-sub> ::= 
 `_' | <type-id-or-var> | <type-app-sub> |
-`(' ( <prod-type-sub> | <func-type-sub> ) `)'
+`(' [ `\ ' ] ( <prod-type-sub> | <func-type-sub> ) [ `\ ' ] `)'
 \\
 
 <prod-type-sub> ::= <field-type-sub> ( `\ x\ ' <field-type-sub> )+
@@ -2499,7 +2547,7 @@ the condition arrow (" \texttt{-->} ") arrow.
 
 <in-or-out-type-sub> ::= ""\\
 `_' | <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
-`(' <func-type-sub> `)'
+`(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
 <proof> ::= 
@@ -2509,6 +2557,8 @@ the condition arrow (" \texttt{-->} ") arrow.
 
 <tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <value-expr>
 \end{grammar} 
+
+\newpage
 
 \section{Language Description: Predefined}
 
@@ -2558,6 +2608,8 @@ Or Types: \texttt{EmptyVal, Bool, Possibly(_), ListOf(_)s, Result(_)OrError(_)}
 \item Tuple Types: \texttt{NonEmptyListOf(_)s}
 \item Type Nicknames: \texttt{IO, Z, R, C}
 \end{itemize}
+
+\newpage
 
 \subsection{Type Propositions}
 
@@ -2647,6 +2699,8 @@ Or Types: \texttt{EmptyVal, Bool, Possibly(_), ListOf(_)s, Result(_)OrError(_)}
 
 \end{itemize}
 
+\newpage
+
 \section{Parser Implementation}
 
 The parser was implemented using the parsec library.
@@ -2663,10 +2717,11 @@ The parser was implemented using the parsec library.
 <identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
 \\
 
-<paren-expr> ::= `(' <line-op-expr> | <line-func-expr> `)'  
+<paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'  
 \\
 
-<tuple> ::= `(' <line-expr-or-under> <comma> <line-expr-or-unders> `)'
+<tuple> ::=
+`(' [ `\ ' ] <line-expr-or-under> <comma> <line-expr-or-unders> [ `\ ' ] `)'
 
 <line-expr-or-unders> ::= <line-expr-or-under> ( <comma> <line-expr-or-under> )*
 
@@ -2701,7 +2756,7 @@ The parser was implemented using the parsec library.
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<identifier> <arguments>
 
-<arguments> ::= `(' <line-expr-or-unders> `)'
+<arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
 
 <identifier-with-arguments> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
@@ -2769,7 +2824,9 @@ The parser was implemented using the parsec library.
 
 <big-func-expr> ::= <parameters> [ `\ ' ] `=>' <big-func-body>
 
-<parameters> ::= <identifier> | `*' | `(' <parameters> ( <comma> <parameters> )+ `)'
+<parameters> ::=
+<identifier> | `*' |
+`(' [ `\ ' ] <parameters> ( <comma> <parameters> )+ [ `\ ' ] `)'
 
 <line-func-body> ::= [ `\ ' ] ( <basic-or-app-expr> | <line-op-expr> )
 
@@ -2779,7 +2836,8 @@ The parser was implemented using the parsec library.
 <cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
 
 <cases-params> ::=
-<identifier> | `cases' | `*' | `(' <cases-params> ( <comma> <cases-params> )+ `)'
+<identifier> | `cases' | `*' |
+`(' [ `\ ' ] <cases-params> ( <comma> <cases-params> )+ [ `\ ' ] `)'
 \\
 
 <case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
@@ -2793,7 +2851,8 @@ The parser was implemented using the parsec library.
 
 <matching-or-star> ::= <matching> | `*'
 
-<tuple-matching> ::= `(' <matching-or-star> ( <comma> <matching-or-star> )+ `)'
+<tuple-matching> ::=
+`(' [ `\ ' ] <matching-or-star> ( <comma> <matching-or-star> )+ [ `\ ' ] `)'
 
 <list-matching> ::=
 `[' [ `\ ' ] [ <matching-or-star> ( <comma> <matching-or-star> )* ] [ `\ ' ] `]'
@@ -2853,7 +2912,8 @@ The parser was implemented using the parsec library.
 
 <t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
 
-<types-in-paren> ::= `(' <simple-type> ( <comma> <simple-type> )* `)'
+<types-in-paren> ::=
+`(' [ `\ ' ] <simple-type> ( <comma> <simple-type> )* [ `\ ' ] `)'
 \\
 
 <prod-type> ::= <field-type> ( `\ x\ ' <field-type> )+
@@ -2861,7 +2921,8 @@ The parser was implemented using the parsec library.
 <field-type> ::= <power-base-type> | <power-type>
 
 <power-base-type> ::=
-<type-id-or-var> | <type-app> | `(' ( <prod-type> | <func-type> ) `)'
+<type-id-or-var> | <type-app> |
+`(' [ `\ ' ] ( <prod-type> | <func-type> ) [ `\ ' ] `)'
 
 <power-type> ::= <power-base-type> `^' <int-greater-than-one>
 \\
@@ -2869,7 +2930,8 @@ The parser was implemented using the parsec library.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id-or-var> | <type-app> | <power-type> | <prod-type> | `(' <func-type> `)'
+<type-id-or-var> | <type-app> | <power-type> | <prod-type> |
+`(' [ `\ ' ] <func-type>  [ `\ ' ] `)'
 \\
 
 <condition> ::= <prop-name> `\ -->\ ' 
@@ -2888,9 +2950,10 @@ The parser was implemented using the parsec library.
 [ <param-vars-in-paren> ] <type-id> ( <param-vars-in-paren> [A-Za-z]+ )*
 [ <param-vars-in-paren> ]
 
-<param-vars-in-paren> ::= `(' <param-t-var> ( <comma> <param-t-var> )* `)'
+<param-vars-in-paren> ::=
+`(' [ `\ ' ] <param-t-var> ( <comma> <param-t-var> )* [ `\ ' ] `)'
 
-<id-tuple> ::= `(' <identifier> ( <comma> <identifier> )+ `)'
+<id-tuple> ::= `(' [ `\ ' ] <identifier> ( <comma> <identifier> )+ [ `\ ' ] `)'
 \\
 
 <or-type-def> ::= ""\\
@@ -2920,7 +2983,8 @@ The parser was implemented using the parsec library.
 [A-Z] ( <name-part> <ad-hoc-vars-in-paren> )+ [ <name-part> ]
 \alt " "( <ad-hoc-vars-in-paren> <name-part> )+ [ <ad-hoc-vars-in-paren> ]
 
-<ad-hoc-vars-in-paren> ::= `(' <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* `)'
+<ad-hoc-vars-in-paren> ::=
+`(' [ `\ ' ] <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* [ `\ ' ] `)'
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \\
@@ -2933,7 +2997,7 @@ The parser was implemented using the parsec library.
 [A-Z] ( <name-part> <subs-in-paren> )+ [ <name-part> ]
 \alt " "( <subs-in-paren> <name-part> )+ [ <subs-in-paren> ]
 
-<subs-in-paren> ::= `(' <t-var-sub> ( <comma> <t-var-sub> )* `)'
+<subs-in-paren> ::= `(' [ `\ ' ] <t-var-sub> ( <comma> <t-var-sub> )* [ `\ ' ] `)'
 \\
 
 <t-var-sub> ::=
@@ -2951,7 +3015,7 @@ The parser was implemented using the parsec library.
 <type-id-with-subs> ::= <type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )+
 
 <subs-or-unders-in-paren> ::=
-`(' <sub-or-under> ( <comma> <sub-or-under> )* `)'
+`(' [ `\ ' ] <sub-or-under> ( <comma> <sub-or-under> )* [ `\ ' ] `)'
 
 <sub-or-under> ::= <t-var-sub> | `_'
 \\
@@ -2960,7 +3024,7 @@ The parser was implemented using the parsec library.
 
 <power-base-type-sub> ::= 
 `_' | <type-id-or-var> | <type-app-sub> |
-`(' ( <prod-type-sub> | <func-type-sub> ) `)'
+`(' [ `\ ' ] ( <prod-type-sub> | <func-type-sub> ) [ `\ ' ] `)'
 \\
 
 <prod-type-sub> ::= <field-type-sub> ( `\ x\ ' <field-type-sub> )+
@@ -2972,7 +3036,7 @@ The parser was implemented using the parsec library.
 
 <in-or-out-type-sub> ::= ""\\
 `_' | <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
-`(' <func-type-sub> `)'
+`(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
 <proof> ::= 
@@ -2992,6 +3056,8 @@ The parser was implemented using the parsec library.
 
 <nl> :: ( `\ ' | `\\t' )* `\\n'
 \end{grammar}
+
+\newpage
 
 \subsubsection{Indentation system}
 \label{subsubsec:indsys}
@@ -3069,13 +3135,32 @@ definition:
   \end{itemize}
 
 \end{itemize}
+
 \subsection{AST types from grammar}
+
+\subsubsection{Example 1}
+
+\subsubsection{Example 2}
+
+\subsubsection{Example 3}
 
 \subsection{Parsers from grammar}
 
+\subsubsection{Example 1}
+
+\subsubsection{Example 2}
+
+\subsubsection{Example 3}
+
 \section{Semantic Analysis}
 
+\subsection{Type checking}
+
+\subsection{Error messages}
+
 \section{Translation to \H}
+
+\subsection{All correspondances: what is every lcases construct in haskell}
 
 \section{Running Examples}
 

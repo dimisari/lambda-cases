@@ -1,4 +1,14 @@
 
+- fix example program to be more clear in action ops
+  - in what way?
+
+- better file tree
+  - in what way?
+
+- ambiguous IdOrOpEq with two equal signs 
+
+- condense repetitive functions in Testing.hs (bottom)
+
 -------------------------------------------------------------- parsing
 
 - better parser errors 
@@ -6,8 +16,6 @@
   - with <?>? what does it do?
 
 -------------------------------------------------------------- pdf
-
-- good page changes in description pdf
 
 -------------------------------------------------------------- semantic analysis
 

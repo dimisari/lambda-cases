@@ -645,7 +645,7 @@ instance Show ProgramPart where
     TNN1 tnn -> show tnn
     TPD tpd -> show tpd
     TT1 tt -> show tt
-    
+
 -- For fast vim navigation
 -- Parsers.hs
 -- Testing.hs

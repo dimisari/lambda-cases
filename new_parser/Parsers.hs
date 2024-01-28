@@ -56,14 +56,6 @@ dec_il_if_false = \case
     ]
   :: [Parser ()]
 
-indent =
-  getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
-  :: Parser ()
-
-before_type
-  = (try nl_indent *> string ": " <|> opt_space_around (string ":")) *> return ()
-  :: Parser ()
-
 [underscore, lower_under]
   = [char '_', lower <|> underscore]
   :: [Parser Char]
@@ -72,6 +64,13 @@ before_type
   = [many1 digit, opt_space *> string "=>"]
   :: [Parser String]
 
+indent :: Parser ()
+indent = getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
+
+before_type :: Parser ()
+before_type =
+  (try nl_indent *> string ": " <|> opt_space_around (string ":")) *> return ()
+
 opt_space_around :: Parser a -> Parser a
 opt_space_around = \a -> opt_space *> a <* opt_space
 
@@ -79,54 +78,45 @@ in_paren :: Parser a -> Parser a
 in_paren = \a -> char '(' *> opt_space_around a <* char ')'
 
 par_lower_unders :: Parser String
-par_lower_unders = 
-  try (string "()") >>= \par ->
-  many1 lower_under >>= \lowers_unders ->
-  return $ par ++ lowers_unders
-
-(+++) :: Parser a -> Parser b -> Parser (a, b)
-pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
+par_lower_unders = (try $ string "()") >++< many1 lower_under
 
 int_greater_than_1 :: Parser Int
 int_greater_than_1 =
   parser >>= \i -> case (i < 2) of
     True -> unexpected "integer in power type must be greater than 1"
     False -> return i
- 
--- helper ops
+
+combine_str :: Parser String -> Parser String -> Parser String
+combine_str ps1 ps2 = mapf (ps1 +++ ps2) (uncurry (++)) 
+
+(+++) :: Parser a -> Parser b -> Parser (a, b)
+pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
+
+(++<) :: Parser (a, b) -> Parser c -> Parser (a, b, c)
+pab ++< pc = pab >>= \(a, b) -> pc >>= \c -> return (a, b, c)
+
+(>++<) = combine_str
+
+-- other helpers
 
 (.>) = flip (.)
 (%>) = flip ($)
+mapf = flip fmap
 
 -- HasParser: Literal
 
 instance HasParser Int where
-  parser = 
-    optionMaybe (char '-') >>= \case
-      Nothing -> read <$> digits
-      Just _ -> ((0 -) . read) <$> digits
-  
+  parser = read <$> option "" (string "-") >++< digits   
+
 instance HasParser Double where
   parser =
-    optionMaybe (string "-") >>= \maybe_minus ->
-    digits >>= \integer_part -> 
-    char '.' *> digits >>= \decimal_part -> 
-    optionMaybe exponent_p >>= \maybe_exponent ->
-    return $ read $
-      maybe_str maybe_minus ++ integer_part ++ "." ++ decimal_part ++ 
-      maybe_str maybe_exponent
+    read <$> int_p >++< string "." >++< digits >++< option "" exponent_p
     where
-    maybe_str :: Maybe String -> String
-    maybe_str = \case
-      Nothing -> ""
-      Just str -> str
+    int_p :: Parser String
+    int_p = mapf (parser :: Parser Int) show
 
     exponent_p :: Parser String
-    exponent_p =
-      (char 'e' <|> char 'E') >>= \e ->
-      optionMaybe (string "-") >>= \maybe_minus ->
-      digits >>= \power_digits -> 
-      return $ e : (maybe_str maybe_minus ++ power_digits)
+    exponent_p = mapf (char 'e' <|> char 'E') (:) <*> int_p
 
 instance HasParser Char where
   parser = charLiteral
@@ -141,17 +131,14 @@ instance HasParser Literal where
 
 instance HasParser Identifier where
   parser =
-    lower >>= \l1 ->
-    many lower_under >>= \lower_unders ->
-    many par_lower_unders >>= \par_lower_unders_l ->
-    option [] ((:[]) <$> digit) >>= \digit ->
-    (l1 : concat [lower_unders, concat par_lower_unders_l, digit]) %> \id_str ->
-      case elem id_str reserved of
-        True -> unexpected $ "cannot use \"" ++ id_str ++ "\" as an identifier"
-        False -> return $ Id id_str
+    to_str lower >++< many lower_under >++< (concat <$> many par_lower_unders) >++<
+    option "" (to_str digit) >>= \id_str ->
+    case elem id_str ["cases", "where"] of
+      True -> unexpected $ "cannot use \"" ++ id_str ++ "\" as an identifier"
+      False -> return $ Id id_str
     where
-    reserved :: [String]
-    reserved = ["cases", "where"]
+    to_str :: Parser Char -> Parser String
+    to_str = fmap (:[])
 
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
@@ -181,36 +168,35 @@ instance HasParser BasicExpr where
 
 instance HasParser BigTuple where
   parser =
-    char '(' *> opt_space *> parser >>= \line_or_under_expr ->
-    optional (try nl_indent) *> comma *> parser >>= \line_or_under_exprs ->
-    many (try (nl_indent *> comma) *> parser) >>= \line_or_under_exprs_l ->
-    nl_indent *> char ')' *>
-    return (BT (line_or_under_expr, line_or_under_exprs, line_or_under_exprs_l))
+    BT <$>
+    line_expr_or_under_p +++ line_expr_or_unders_p ++< line_expr_or_unders_l_p
+    where
+    line_expr_or_under_p :: Parser LineExprOrUnder
+    line_expr_or_under_p = char '(' *> opt_space *> parser
+
+    line_expr_or_unders_p :: Parser LineExprOrUnders
+    line_expr_or_unders_p = (optional (try nl_indent) *> comma *> parser) 
+
+    line_expr_or_unders_l_p :: Parser [LineExprOrUnders]
+    line_expr_or_unders_l_p =
+      many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ')'
+
 
 instance HasParser List where
   parser = L <$> (char '[' *> opt_space_around (optionMaybe parser) <* char ']')
 
 instance HasParser BigList where
   parser =
-    char '[' *> opt_space *> parser >>= \line_or_under_exprs ->
-    many (try (nl_indent *> comma) *> parser) >>= \line_or_under_exprs_l ->
-    nl_indent *> char ']' *>
-    (return $ BL (line_or_under_exprs, line_or_under_exprs_l))
+    BL <$>
+    (char '[' *> opt_space *> parser) +++
+    many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ']'
 
 instance HasParser ParenFuncApp where
   parser = 
     try iwa_parser <|> ai_parser <|> ia_parser
     where
-    iwa_parser =
-      optionMaybe parser >>= \maybe_args1 ->
-      parser >>= \ident_with_args ->
-      optionMaybe parser >>= \maybe_args2 ->
-      return $ IWA1 (maybe_args1, ident_with_args, maybe_args2)
-    ai_parser =
-      parser >>= \args1 ->
-      parser >>= \identifier ->
-      optionMaybe parser >>= \maybe_args2 ->
-      return $ AI (args1, identifier, maybe_args2)
+    iwa_parser = IWA1 <$> optionMaybe parser +++ parser ++< optionMaybe parser
+    ai_parser = AI <$> parser +++ parser ++< optionMaybe parser
     ia_parser = IA <$> parser +++ parser
 
 instance HasParser Arguments where
@@ -503,13 +489,13 @@ instance HasParser TypeIdOrVar where
   parser = TV1 <$> try parser <|> TId1 <$> parser
 
 instance HasParser TypeId where
-  parser = TId <$> (flip fmap upper (:) <*> many (upper <|> lower))
+  parser = TId <$> (mapf upper (:) <*> many (upper <|> lower))
 
 instance HasParser TypeVar where
   parser = PTV1 <$> try parser <|> AHTV1 <$> parser
 
 instance HasParser ParamTVar where
-  parser = PTV <$> (char 'T' *> flip fmap digit (\d -> read [d]))
+  parser = PTV <$> (char 'T' *> mapf digit (\d -> read [d]))
 
 instance HasParser AdHocTVar where
   parser = AHTV <$> (char '@' *> upper)
@@ -662,7 +648,7 @@ instance HasParser NamePart where
     lower_upper = fmap pure (lower <|> upper)
 
     under_lower_upper :: Parser String
-    under_lower_upper = flip fmap underscore (:) <*> lower_upper
+    under_lower_upper = mapf underscore (:) <*> lower_upper
 
 -- HasParser: TypeTheo
 
