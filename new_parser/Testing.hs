@@ -11,34 +11,51 @@ import ASTTypes
 import Parsers
 import ShowInstances
 
--- helpers
-
+-- types
 type FileName = String
-type FileString = String
-type TestExample = String
-type ProgramStr = String
 type ParseResult = String
+
+type ProgramFileName = FileName
+type ProgramStr = String
+
 type ParseFunc = TestExample -> ParseResult
 
-(programs_dir, test_exs_dir, parsing_res_dir) =
+type FileString = String
+type TestExample = String
+
+type ParseToString a = TestExample -> ResultString a
+newtype ResultString a = RS ParseResult
+
+-- paths
+(progs_dir, test_exs_dir, res_dir) =
   ("programs/", "test_examples/", "parsing_results/")
   :: (FilePath, FilePath, FilePath)
 
 -- main
-
 main :: IO ()
 main =
-  listDirectory programs_dir >>= mapM_ read_parse_write >>
+  listDirectory progs_dir >>= mapM_ read_parse_prog_write_res >>
   mapM_ run_parse_func_for_file file_name_parse_func_pairs
 
--- parse examples file
+-- read_parse_prog_write_res 
+read_parse_prog_write_res :: ProgramFileName -> IO ()
+read_parse_prog_write_res pfn =
+  readFile in_path >>= parse_program .> writeFile out_path
+  where
+  (in_path, out_path) =
+    (progs_dir ++ pfn, res_dir ++ in_path)
+    :: (FilePath, FilePath)
 
+  parse_program :: ParseFunc
+  parse_program = (parse_and_ret_res_str :: ParseToString Program) .> extract_res_str
+
+-- run_parse_func_for_file
 run_parse_func_for_file :: (FileName, ParseFunc) -> IO ()
 run_parse_func_for_file (file_name, parse_func) =
-  readFile input_path >>= in_str_to_out_str .> writeFile output_path
+  readFile in_path >>= in_str_to_out_str .> writeFile out_path
   where
-  (input_path, output_path) =
-    (test_exs_dir ++ file_name, parsing_res_dir ++ input_path)
+  (in_path, out_path) =
+    (test_exs_dir ++ file_name, res_dir ++ in_path)
     :: (FilePath, FilePath)
 
   in_str_to_out_str :: FileString -> FileString
@@ -47,33 +64,121 @@ run_parse_func_for_file (file_name, parse_func) =
   file_string_to_examples :: FileString -> [ TestExample ]
   file_string_to_examples = endBy "#\n\n"
 
--- parse program 
-
-read_parse_write :: FileName -> IO ()
-read_parse_write file_name =
-  readFile input_path >>= parse_program .> writeFile output_path
-  where
-  (input_path, output_path) =
-    (programs_dir ++ file_name, parsing_res_dir ++ input_path)
-    :: (FilePath, FilePath)
-
-parse_program :: ProgramStr -> ParseResult
-parse_program =
-  (parse :: ProgramStr -> Either ParseError Program) .> parse_result_to_string
-
-parse_result_to_string :: Show a => Either ParseError a -> ParseResult
-parse_result_to_string = \case
-  Left err -> "Error :( ==>" ++ show err ++ "\n\n"
-  Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
-
 -- Parse class
-
 class HasParser a => Parse a where
   parse :: String -> Either ParseError a
   parse = runParser (parser <* eof) (0, False) "" 
 
--- Parse class instances (why not automated Haskell?)
+-- Parse_To_String class
+class (Parse a, Show a) => Parse_To_String a where
+  parse_and_ret_res_str :: ParseToString a
+  parse_and_ret_res_str =
+    parse .> res_to_str
+    where
+    res_to_str :: Show a => Either ParseError a -> ResultString a
+    res_to_str = RS <$> \case
+      Left err -> "Error :( ==>" ++ show err ++ "\n\n"
+      Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
 
+-- file_name_parse_func_pairs
+extract_res_str :: ResultString a -> ParseResult
+extract_res_str = \(RS s) -> s
+
+file_name_parse_func_pairs :: [(FileName, ParseFunc)]
+file_name_parse_func_pairs =
+  [ ( "literals.txt"
+    , (parse_and_ret_res_str :: ParseToString Literal) .> extract_res_str
+    )
+  , ( "identifiers.txt"
+    , (parse_and_ret_res_str :: ParseToString Identifier) .> extract_res_str
+    )
+  , ( "paren_expr.txt"
+    , (parse_and_ret_res_str :: ParseToString ParenExpr) .> extract_res_str
+    )
+  , ( "tuple.txt"
+    , (parse_and_ret_res_str :: ParseToString Tuple) .> extract_res_str
+    )
+  , ( "big_tuple.txt"
+    , (parse_and_ret_res_str :: ParseToString BigTuple) .> extract_res_str
+    )
+  , ( "list.txt"
+    , (parse_and_ret_res_str :: ParseToString List) .> extract_res_str
+    )
+  , ( "big_list.txt"
+    , (parse_and_ret_res_str :: ParseToString BigList) .> extract_res_str
+    )
+  , ( "paren_func_app.txt"
+    , (parse_and_ret_res_str :: ParseToString ParenFuncApp) .> extract_res_str
+    )
+  , ( "prefix_func_app.txt"
+    , (parse_and_ret_res_str :: ParseToString PreFuncApp) .> extract_res_str
+    )
+  , ( "postfix_func_app.txt"
+    , (parse_and_ret_res_str :: ParseToString PostFuncApp) .> extract_res_str
+    )
+  , ( "line_op_expr.txt"
+    , (parse_and_ret_res_str :: ParseToString LineOpExpr) .> extract_res_str
+    )
+  , ( "big_op_expr.txt"
+    , (parse_and_ret_res_str :: ParseToString BigOpExpr) .> extract_res_str
+    )
+  , ( "line_func_expr.txt"
+    , (parse_and_ret_res_str :: ParseToString LineFuncExpr) .> extract_res_str
+    )
+  , ( "big_func_expr.txt"
+    , (parse_and_ret_res_str :: ParseToString BigFuncExpr) .> extract_res_str
+    )
+  , ( "cases_func_expr.txt"
+    , (parse_and_ret_res_str :: ParseToString CasesFuncExpr) .> extract_res_str
+    )
+  , ( "value_def.txt"
+    , (parse_and_ret_res_str :: ParseToString ValueDef) .> extract_res_str
+    )
+  , ( "grouped_val_defs.txt"
+    , (parse_and_ret_res_str :: ParseToString GroupedValueDefs) .> extract_res_str
+    )
+  , ( "where_expr.txt"
+    , (parse_and_ret_res_str :: ParseToString WhereExpr) .> extract_res_str
+    )
+  , ( "type_id.txt"
+    , (parse_and_ret_res_str :: ParseToString TypeId) .> extract_res_str
+    )
+  , ( "type_var.txt"
+    , (parse_and_ret_res_str :: ParseToString TypeVar) .> extract_res_str
+    )
+  , ( "func_type.txt"
+    , (parse_and_ret_res_str :: ParseToString FuncType) .> extract_res_str
+    )
+  , ( "prod_type.txt"
+    , (parse_and_ret_res_str :: ParseToString ProdType) .> extract_res_str
+    )
+  , ( "type_app.txt"
+    , (parse_and_ret_res_str :: ParseToString TypeApp) .> extract_res_str
+    )
+  , ( "cond_type.txt"
+    , (parse_and_ret_res_str :: ParseToString Type) .> extract_res_str
+    )
+  , ( "tuple_type_def.txt"
+    , (parse_and_ret_res_str :: ParseToString TupleTypeDef) .> extract_res_str
+    )
+  , ( "or_type_def.txt"
+    , (parse_and_ret_res_str :: ParseToString OrTypeDef) .> extract_res_str
+    )
+  , ( "type_nickname.txt"
+    , (parse_and_ret_res_str :: ParseToString TypeNickname) .> extract_res_str
+    )
+  , ( "atom_prop_def.txt"
+    , (parse_and_ret_res_str :: ParseToString AtomPropDef) .> extract_res_str
+    )
+  , ( "renaming_prop_def.txt"
+    , (parse_and_ret_res_str :: ParseToString RenamingPropDef) .> extract_res_str
+    )
+  , ( "type_theo.txt"
+    , (parse_and_ret_res_str :: ParseToString TypeTheo) .> extract_res_str
+    )
+  ]
+
+-- instances. why not automated Haskell? (they use the default implementations above)
 instance Parse Literal
 instance Parse Identifier
 instance Parse ParenExpr
@@ -108,191 +213,39 @@ instance Parse TypeTheo
 
 instance Parse Program
 
--- "Parse and result to string" functions for each type to be parsed
+instance Parse_To_String Literal
+instance Parse_To_String Identifier
+instance Parse_To_String ParenExpr
+instance Parse_To_String Tuple
+instance Parse_To_String BigTuple
+instance Parse_To_String List
+instance Parse_To_String BigList
+instance Parse_To_String ParenFuncApp
+instance Parse_To_String PreFuncApp
+instance Parse_To_String PostFuncApp
+instance Parse_To_String LineOpExpr
+instance Parse_To_String BigOpExpr
+instance Parse_To_String LineFuncExpr
+instance Parse_To_String BigFuncExpr
+instance Parse_To_String CasesFuncExpr
+instance Parse_To_String ValueDef
+instance Parse_To_String GroupedValueDefs
+instance Parse_To_String WhereExpr
 
-file_name_parse_func_pairs :: [(FileName, ParseFunc)]
-file_name_parse_func_pairs =
-  [ ("literals.txt", parse_lit_and_ret_res_str)
-  , ("identifiers.txt", parse_id_and_ret_res_str)
-  , ("paren_expr.txt", parse_paren_expr_and_ret_res_str)
-  , ("tuple.txt", parse_tuple_and_ret_res_str)
-  , ("big_tuple.txt", parse_big_tuple_and_ret_res_str)
-  , ("list.txt", parse_list_and_ret_res_str)
-  , ("big_list.txt", parse_big_list_and_ret_res_str)
-  , ("paren_func_app.txt", parse_paren_func_app_and_ret_res_str)
-  , ("prefix_func_app.txt", parse_pre_func_app_and_ret_res_str)
-  , ("postfix_func_app.txt", parse_post_func_app_and_ret_res_str)
-  , ("line_op_expr.txt", parse_line_op_expr_and_ret_res_str)
-  , ("big_op_expr.txt", parse_big_op_expr_and_ret_res_str)
-  , ("line_func_expr.txt", parse_line_func_expr_and_ret_res_str)
-  , ("big_func_expr.txt", parse_big_func_expr_and_ret_res_str)
-  , ("cases_func_expr.txt", parse_cases_func_expr_and_ret_res_str)
-  , ("value_def.txt", parse_value_def_and_ret_res_str)
-  , ("grouped_val_defs.txt", parse_grouped_val_defs_and_ret_res_str)
-  , ("where_expr.txt", parse_where_expr_and_ret_res_str)
-  , ("type_id.txt", parse_type_id_and_ret_res_str)
-  , ("type_var.txt", parse_type_var_and_ret_res_str)
-  , ("func_type.txt", parse_func_type_and_ret_res_str)
-  , ("prod_type.txt", parse_prod_type_and_ret_res_str)
-  , ("type_app.txt", parse_type_app_and_ret_res_str)
-  , ("cond_type.txt", parse_cond_type_and_ret_res_str)
-  , ("tuple_type_def.txt", parse_tuple_type_def_and_ret_res_str)
-  , ("or_type_def.txt", parse_or_type_def_and_ret_res_str)
-  , ("type_nickname.txt", parse_type_nickname_and_ret_res_str)
-  , ("atom_prop_def.txt", parse_atom_prop_def_and_ret_res_str)
-  , ("renaming_prop_def.txt", parse_renaming_prop_def_and_ret_res_str)
-  , ("type_theo.txt", parse_type_theo_and_ret_res_str)
-  ]
+instance Parse_To_String TypeId
+instance Parse_To_String TypeVar
+instance Parse_To_String FuncType
+instance Parse_To_String ProdType
+instance Parse_To_String TypeApp
+instance Parse_To_String Type -- CondType
+instance Parse_To_String TupleTypeDef
+instance Parse_To_String OrTypeDef
+instance Parse_To_String TypeNickname
+instance Parse_To_String AtomPropDef
+instance Parse_To_String RenamingPropDef
+instance Parse_To_String TypeTheo
 
-parse_lit_and_ret_res_str :: ParseFunc
-parse_lit_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError Literal)
-
-parse_id_and_ret_res_str :: ParseFunc
-parse_id_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError Identifier)
-
-parse_paren_expr_and_ret_res_str :: ParseFunc
-parse_paren_expr_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError ParenExpr)
-
-parse_tuple_and_ret_res_str :: ParseFunc
-parse_tuple_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError Tuple)
-
-parse_big_tuple_and_ret_res_str :: ParseFunc
-parse_big_tuple_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError BigTuple)
-
-parse_list_and_ret_res_str :: ParseFunc
-parse_list_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError List)
-
-parse_big_list_and_ret_res_str :: ParseFunc
-parse_big_list_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError BigList)
-
-parse_paren_func_app_and_ret_res_str :: ParseFunc
-parse_paren_func_app_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError ParenFuncApp)
-
-parse_pre_func_app_and_ret_res_str :: ParseFunc
-parse_pre_func_app_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError PreFuncApp)
-
-parse_post_func_app_and_ret_res_str :: ParseFunc
-parse_post_func_app_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError PostFuncApp)
-
-parse_line_op_expr_and_ret_res_str :: ParseFunc
-parse_line_op_expr_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError LineOpExpr)
-
-parse_big_op_expr_and_ret_res_str :: ParseFunc
-parse_big_op_expr_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError BigOpExpr)
-
-parse_line_func_expr_and_ret_res_str :: ParseFunc
-parse_line_func_expr_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError LineFuncExpr)
-
-parse_big_func_expr_and_ret_res_str :: ParseFunc
-parse_big_func_expr_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError BigFuncExpr)
-
-parse_cases_func_expr_and_ret_res_str :: ParseFunc
-parse_cases_func_expr_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError CasesFuncExpr)
-
-parse_value_def_and_ret_res_str :: ParseFunc
-parse_value_def_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError ValueDef)
-
-parse_grouped_val_defs_and_ret_res_str :: ParseFunc
-parse_grouped_val_defs_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError GroupedValueDefs)
-
-parse_where_expr_and_ret_res_str :: ParseFunc
-parse_where_expr_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError WhereExpr)
-
-parse_type_id_and_ret_res_str :: ParseFunc
-parse_type_id_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError TypeId)
-
-parse_type_var_and_ret_res_str :: ParseFunc
-parse_type_var_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError TypeVar)
-
-parse_func_type_and_ret_res_str :: ParseFunc
-parse_func_type_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError FuncType)
-
-parse_prod_type_and_ret_res_str :: ParseFunc
-parse_prod_type_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError ProdType)
-
-parse_type_app_and_ret_res_str :: ParseFunc
-parse_type_app_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError TypeApp)
-
-parse_cond_type_and_ret_res_str :: ParseFunc
-parse_cond_type_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError Type)
-
-parse_tuple_type_def_and_ret_res_str :: ParseFunc
-parse_tuple_type_def_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError TupleTypeDef)
-
-parse_or_type_def_and_ret_res_str :: ParseFunc
-parse_or_type_def_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError OrTypeDef)
-
-parse_type_nickname_and_ret_res_str :: ParseFunc
-parse_type_nickname_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError TypeNickname)
-
-parse_atom_prop_def_and_ret_res_str :: ParseFunc
-parse_atom_prop_def_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError AtomPropDef)
-
-parse_renaming_prop_def_and_ret_res_str :: ParseFunc
-parse_renaming_prop_def_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError RenamingPropDef)
-
-parse_type_theo_and_ret_res_str :: ParseFunc
-parse_type_theo_and_ret_res_str =
-  \test_example ->
-  parse_result_to_string (parse test_example :: Either ParseError TypeTheo)
+instance Parse_To_String Program
 
 -- For fast vim navigation
 -- Parsers.hs

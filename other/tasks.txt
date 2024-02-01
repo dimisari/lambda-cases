@@ -5,23 +5,25 @@
 - better file tree
   - in what way?
 
-- ambiguous IdOrOpEq with two equal signs 
-
-- condense repetitive functions in Testing.hs (bottom)
+- list index
 
 -------------------------------------------------------------- parsing
 
 - better parser errors 
   - with less try? it fails on the last it tried how to mitigate that?
-  - with <?>? what does it do?
+  - with <?> ?
+    - what does it do?
+    - seems to throw the same error msg for all the failed grammar rules
+    - yeah not bad
 
 -------------------------------------------------------------- pdf
 
 -------------------------------------------------------------- semantic analysis
 
-- turn all args in paren func app into a tuple
-  - try to typecheck with the whole tuple as the first arg
-  - if it fails typecheck with the first field of the tuple as the first arg
+- one tuple is the parameter tuple + another tuple is the argument tuple
+  - check if the same tuple
+  - if not -> - check if either is the first field of the other tuple
+  - if not -> - start checking fields one by one
 
 -------------------------------------------------------------- github
 

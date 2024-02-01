@@ -1,4 +1,6 @@
 
+- ambiguous IdOrOpEq with two equal signs 
+
 - parser section
   - parsec paragraph
   - 3 parsec examples
