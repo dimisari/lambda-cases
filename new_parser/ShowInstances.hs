@@ -5,7 +5,6 @@ module ShowInstances where
 import ASTTypes
 
 -- helpers
-
 show_maybe :: Show a => Maybe a -> String
 show_maybe = \case
   Nothing -> ""
@@ -24,7 +23,6 @@ show_pair_list :: (Show a, Show b) => [(a, b)] -> String
 show_pair_list = concatMap (\(a, b) -> show a ++ show b)
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
-
 instance Show Literal where 
   show = \case
     Int i -> show i
@@ -121,7 +119,6 @@ instance Show EmptyParenOrArgs where
     As1 args -> show args
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
-
 instance Show PreFunc where
   show = \(PF id) -> show id ++ ":"
 
@@ -163,7 +160,6 @@ instance Show Field where
     SI3 sid -> show sid
 
 -- Values: OpExpr
-
 instance Show OpExpr where
   show = \case
     LOE3 soe -> show soe
@@ -248,7 +244,6 @@ instance Show OptionalSpacesOp where
     Then -> ";" 
 
 -- Values: FuncExpr
-
 instance Show FuncExpr where
   show = \case
     LFE4 sfe -> show sfe
@@ -325,7 +320,6 @@ instance Show CaseBodyStart where
     BFB1 bfb -> show bfb
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
-
 instance Show ValueDef where
   show = \(VD (id, t, ve, maybe_we)) ->
     show id ++ "\n  : " ++ show t ++ "\n  = " ++ show ve ++ show_maybe maybe_we
@@ -361,7 +355,6 @@ instance Show WhereDefExpr where
     GVDs1 gvd -> show gvd
 
 -- Type
-
 instance Show Type where
   show = \(Ty (maybe_c, st)) -> show_maybe maybe_c ++ show st
 
@@ -450,7 +443,6 @@ instance Show Condition where
   show = \(Co pn) -> show pn ++ " ==> "
 
 -- TypeDef, TypeNickname
-
 instance Show TypeDef where
   show = \case
     TTD1 ttd -> show ttd
@@ -496,7 +488,6 @@ instance Show TypeNickname where
   show = \(TNN (tn, st)) -> "type_nickname " ++ show tn ++ " = " ++ show st
 
 -- TypePropDef
-
 instance Show TypePropDef where
   show = \case
     APD1 apd -> show apd
@@ -528,7 +519,6 @@ instance Show NamePart where
   show = \(NP str) -> str
 
 -- TypeTheo 
-
 instance Show TypeTheo where
   show = \(TT (pnws, maybe_pnws, proof)) ->
     "type_theorem " ++ show pnws ++ show_mpnws maybe_pnws ++
@@ -633,7 +623,6 @@ instance Show TTValueExpr where
     VE1 ve -> "\n    " ++ show ve
 
 -- Program
-
 instance Show Program where
   show = \(P (pp, pps)) -> show pp ++ show_list_sep "\n\n" pps
 

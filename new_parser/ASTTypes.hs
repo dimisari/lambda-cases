@@ -1,7 +1,6 @@
 module ASTTypes where
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
-
 data Literal = 
   Int Int | R Double | Ch Char | S String 
 
@@ -52,7 +51,6 @@ data EmptyParenOrArgs =
   EmptyParen | As1 Arguments
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
-
 newtype PreFunc = PF Identifier 
 
 newtype PreFuncApp = PrFA (PreFunc, Operand)
@@ -76,7 +74,6 @@ data Field =
   Id3 Identifier | SI3 SpecialId
 
 -- Values: OpExpr
-
 data OpExpr = 
   LOE3 LineOpExpr | BOE1 BigOpExpr
 
@@ -116,7 +113,6 @@ data OptionalSpacesOp =
   Greater | Less | GrEq | LeEq | And | Or | Use | Then
 
 -- Values: FuncExpr
-
 data FuncExpr = 
   LFE4 LineFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
 
@@ -160,7 +156,6 @@ data CaseBodyStart =
   LFB1 LineFuncBody | BFB1 BigFuncBody
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
-
 newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
 
 data ValueExpr = 
@@ -180,7 +175,6 @@ data WhereDefExpr =
   VD1 ValueDef | GVDs1 GroupedValueDefs
 
 -- Type
-
 newtype Type = Ty (Maybe Condition, SimpleType)
 
 data SimpleType = 
@@ -232,7 +226,6 @@ data InOrOutType =
 newtype Condition = Co PropName
 
 -- TypeDef, TypeNickname
-
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
@@ -256,7 +249,6 @@ newtype OrTypeDef =
 newtype TypeNickname = TNN (TypeName, SimpleType)
 
 -- TypePropDef
-
 data TypePropDef = 
   APD1 AtomPropDef | RPD1 RenamingPropDef
 
@@ -275,7 +267,6 @@ newtype AdHocVarsInParen = AHVIP (AdHocTVar, [AdHocTVar])
 newtype NamePart = NP String
 
 -- TypeTheo 
-
 newtype TypeTheo =
   TT (PropNameWithSubs, Maybe PropNameWithSubs, Proof)
 
@@ -329,7 +320,6 @@ data TTValueExpr =
   LE2 LineExpr | VE1 ValueExpr
 
 -- Program
-
 newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart = 

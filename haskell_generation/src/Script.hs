@@ -12,11 +12,7 @@ import Helpers ((.>))
 type Path = String 
 
 -- names:
--- correct_names, wrong_names, all_names
-
--- hs_paths, path_pairs, 
-
--- in_out_path_pairs, haskell_header
+-- only_name, correct_names, wrong_names, all_names
 
 only_name = ( \s -> take (length s - 3) s )
   :: String -> String
@@ -85,7 +81,7 @@ run_execs =
   callCommand ("for f in " ++ execs_dir ++ "correct/*; do echo \"\n$f\n\"; $f; done")
   :: IO ()
 
--- header
+-- haskell_header
 
 haskell_header =
   "runtime/header.hs"

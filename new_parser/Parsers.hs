@@ -2,7 +2,7 @@
 
 module Parsers where
 
-import Text.Parsec hiding (parse)
+import Text.Parsec 
 import Text.Parsec.Token hiding (comma, charLiteral, stringLiteral)
 
 import ASTTypes
@@ -10,29 +10,25 @@ import ShowInstances
 
 type Parser = Parsec String ParserState
 
-class HasParser a where
-  parser :: Parser a
-
 test_parser :: Parser a -> String -> Either ParseError a
 test_parser = \p s -> runParser (p <* eof) (0, False) "test" s
 
 -- Parser State
-
 type IndentationLevel = Int
 type InEqualLine = Bool
 type ParserState = (IndentationLevel, InEqualLine)
 
-increase_il :: Int -> Parser ()
-increase_il = \i -> modifyState (\(il, b) -> (il + i, b))
+increase_il_by :: Int -> Parser ()
+increase_il_by = \i -> modifyState (\(il, b) -> (il + i, b))
 
-decrease_il :: Int -> Parser ()
-decrease_il = \i -> modifyState (\(il, b) -> (il - i, b))
+decrease_il_by :: Int -> Parser ()
+decrease_il_by = \i -> modifyState (\(il, b) -> (il - i, b))
 
-in_equal_line :: Parser ()
-in_equal_line = modifyState (\(il, _) -> (il, True))
+we_are_in_equal_line :: Parser ()
+we_are_in_equal_line = modifyState (\(il, _) -> (il, True))
 
-not_in_equal_line :: Parser ()
-not_in_equal_line = modifyState (\(il, _) -> (il, False))
+we_are_not_in_equal_line :: Parser ()
+we_are_not_in_equal_line = modifyState (\(il, _) -> (il, False))
 
 are_we_in_equal_line :: Parser Bool
 are_we_in_equal_line = snd <$> getState
@@ -40,18 +36,19 @@ are_we_in_equal_line = snd <$> getState
 inc_il_if_false :: Bool -> Parser ()
 inc_il_if_false = \case
   True -> return ()
-  False -> increase_il 1
+  False -> increase_il_by 1
 
 dec_il_if_false :: Bool -> Parser ()
 dec_il_if_false = \case
   True -> return ()
-  False -> decrease_il 1
+  False -> decrease_il_by 1
 
 -- helper parsers
-
 [nl, nl_indent, space_or_nl, opt_space, comma]
-  = [ many (char ' ' <|> char '\t') *> char '\n' *> return (), nl *> indent
-    , (try (nl *> string "  ") <|> string " ") *> return (), optional (char ' ')
+  = [ many (char ' ' <|> char '\t') *> char '\n' *> return ()
+    , nl *> indent
+    , (try (nl *> string "  ") <|> string " ") *> return ()
+    , optional (char ' ')
     , char ',' *> opt_space
     ]
   :: [Parser ()]
@@ -65,10 +62,11 @@ dec_il_if_false = \case
   :: [Parser String]
 
 indent :: Parser ()
-indent = getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
+indent =
+  getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
 
-before_type :: Parser ()
-before_type =
+type_symbol :: Parser ()
+type_symbol =
   (try nl_indent *> string ": " <|> opt_space_around (string ":")) *> return ()
 
 opt_space_around :: Parser a -> Parser a
@@ -86,25 +84,25 @@ int_greater_than_1 =
     True -> unexpected "integer in power type must be greater than 1"
     False -> return i
 
-combine_str :: Parser String -> Parser String -> Parser String
-combine_str ps1 ps2 = mapf (ps1 +++ ps2) (uncurry (++)) 
-
 (+++) :: Parser a -> Parser b -> Parser (a, b)
 pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
 
 (++<) :: Parser (a, b) -> Parser c -> Parser (a, b, c)
 pab ++< pc = pab >>= \(a, b) -> pc >>= \c -> return (a, b, c)
 
-(>++<) = combine_str
+(>++<) :: Parser String -> Parser String -> Parser String
+ps1 >++< ps2 = mapf (ps1 +++ ps2) (uncurry (++)) 
 
 -- other helpers
-
 (.>) = flip (.)
 (%>) = flip ($)
 mapf = flip fmap
 
--- HasParser: Literal
+-- HasParser class
+class HasParser a where
+  parser :: Parser a
 
+-- HasParser: Literal
 instance HasParser Int where
   parser = read <$> option "" (string "-") >++< digits   
 
@@ -125,18 +123,23 @@ instance HasParser String where
   parser = stringLiteral
 
 instance HasParser Literal where
-  parser = R <$> try parser <|> Int <$> parser <|> Ch <$> parser <|> S <$> parser
+  parser =
+    R <$> try parser <|> Int <$> parser <|> Ch <$> parser <|> S <$> parser <?>
+    "Literal"
 
 -- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncApp
-
 instance HasParser Identifier where
   parser =
-    to_str lower >++< many lower_under >++< (concat <$> many par_lower_unders) >++<
-    option "" (to_str digit) >>= \id_str ->
+    id_str_p >>= \id_str ->
     case elem id_str ["cases", "where"] of
       True -> unexpected $ "cannot use \"" ++ id_str ++ "\" as an identifier"
       False -> return $ Id id_str
     where
+    id_str_p :: Parser String
+    id_str_p = 
+      to_str lower >++< many lower_under >++<
+      (concat <$> many par_lower_unders) >++< option "" (to_str digit)
+
     to_str :: Parser Char -> Parser String
     to_str = fmap (:[])
 
@@ -164,7 +167,12 @@ instance HasParser BasicOrAppExpr where
 instance HasParser BasicExpr where
   parser =
     PFA <$> try parser <|> SI1 <$> try parser <|> Lit1 <$> parser <|>
-    Id1 <$> parser <|> T1 <$> parser <|> L1 <$> parser
+    Id1 <$> parser <|> T1 <$> parser <|> L1 <$> parser <?> expecting_msg
+    where
+    expecting_msg :: String
+    expecting_msg = 
+      "Basic expression: Literal, Identifier, Tuple, List, " ++
+      "Parenthesis Function Application, SpecialId"
 
 instance HasParser BigTuple where
   parser =
@@ -183,7 +191,8 @@ instance HasParser BigTuple where
 
 
 instance HasParser List where
-  parser = L <$> (char '[' *> opt_space_around (optionMaybe parser) <* char ']')
+  parser =
+    L <$> (char '[' *> opt_space_around (optionMaybe parser) <* char ']')
 
 instance HasParser BigList where
   parser =
@@ -193,7 +202,8 @@ instance HasParser BigList where
 
 instance HasParser ParenFuncApp where
   parser = 
-    try iwa_parser <|> ai_parser <|> ia_parser
+    try iwa_parser <|> ai_parser <|> ia_parser <?>
+    "parenthesis function application"
     where
     iwa_parser = IWA1 <$> optionMaybe parser +++ parser ++< optionMaybe parser
     ai_parser = AI <$> parser +++ parser ++< optionMaybe parser
@@ -224,7 +234,6 @@ instance HasParser IdentWithArgs where
       
 
 -- HasParser: PreFunc, PostFunc, BasicExpr, Change
-
 instance HasParser PreFunc where
   parser = PF <$> parser <* char ':'
 
@@ -262,7 +271,6 @@ instance HasParser Change where
     field_p = Id3 <$> parser <|> SI3 <$> parser
 
 -- HasParser: OpExpr
-
 instance HasParser OpExpr where
   parser = BOE1 <$> try parser <|> LOE3 <$> parser
 
@@ -281,7 +289,7 @@ instance HasParser BigOpExpr where
 instance HasParser BigOpExprOpSplit where
   parser =
     parser >>= \osl ->
-    not_in_equal_line >>
+    we_are_not_in_equal_line >>
     many (try parser) >>= \osls ->
     optionMaybe (try parser) >>= \maybe_oes ->
     parser >>= \ose ->
@@ -300,7 +308,7 @@ instance HasParser OpSplitEnd where
   parser = FE1 <$> try parser <|> OA2 <$> parser
 
 instance HasParser BigOpExprFuncSplit where
-  parser = BOEFS <$> parser +++ (not_in_equal_line *> parser)
+  parser = BOEFS <$> parser +++ (we_are_not_in_equal_line *> parser)
 
 instance HasParser BigOrCasesFuncExpr where
   parser = BFE1 <$> try parser <|> CFE1 <$> parser
@@ -339,7 +347,6 @@ instance HasParser OptionalSpacesOp where
     string ";" *> return Then
 
 -- HasParser: FuncExpr
-
 instance HasParser FuncExpr where
   parser = CFE2 <$> try parser <|> BFE2 <$> try parser <|> LFE4 <$> parser
 
@@ -406,55 +413,54 @@ instance HasParser ListMatching where
 
 instance HasParser CaseBody where
   parser = 
-    increase_il 1 >>
+    increase_il_by 1 >>
 
     (BFB1 <$> try parser <|> LFB1 <$> parser) >>= \case_body_start ->
     optionMaybe (try parser) >>= \maybe_where_expr ->
 
-    decrease_il 1 >>
+    decrease_il_by 1 >>
 
     return (CB (case_body_start, maybe_where_expr))
 
 -- HasParser: ValueDef, WhereExpr
-
 instance HasParser ValueDef where
   parser = 
     indent *> parser >>= \identifier ->
 
-    increase_il 1 >>
+    increase_il_by 1 >>
 
-    before_type *> parser >>= \type_ ->
+    type_symbol *> parser >>= \type_ ->
     nl_indent *> string "= " *>
 
-    increase_il 1 >> in_equal_line >>
+    increase_il_by 1 >> we_are_in_equal_line >>
 
     parser >>= \value_expr ->
 
-    not_in_equal_line >>
+    we_are_not_in_equal_line >>
 
     optionMaybe (try parser) >>= \maybe_where_expr ->
 
-    decrease_il 2 >>
+    decrease_il_by 2 >>
 
     return (VD (identifier, type_, value_expr, maybe_where_expr))
 
 instance HasParser ValueExpr where
   parser = 
     OE2 <$> try parser <|> FE2 <$> try parser <|> BT1 <$> try parser <|>
-    BL1 <$> try parser <|> BOAE5 <$> parser
+    BL1 <$> try parser <|> BOAE5 <$> parser <?> "value expression"
 
 instance HasParser GroupedValueDefs where
   parser = 
     indent *> parser >>= \id ->
     many1 (comma *> parser) >>= \ids -> 
 
-    increase_il 1 >>
+    increase_il_by 1 >>
 
-    before_type *> types_p >>= \types ->
+    type_symbol *> types_p >>= \types ->
     nl_indent *> string "= " *> parser >>= \comma_sep_line_exprs ->
     many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
 
-    decrease_il 1 >>
+    decrease_il_by 1 >>
 
     return (GVDs (id, ids, types, comma_sep_line_exprs, comma_sep_line_exprs_l)) 
     where
@@ -476,7 +482,6 @@ instance HasParser WhereExpr where
     where_def_expr_p = VD1 <$> try parser <|> GVDs1 <$> parser
 
 -- HasParser: Type
-
 instance HasParser Type where
   parser = Ty <$> (optionMaybe $ try parser) +++ parser
 
@@ -553,7 +558,6 @@ instance HasParser Condition where
   parser = Co <$> (parser <* string " --> ")
 
 -- HasParser: TypeDef, TypeNickname
-
 instance HasParser TypeDef where
   parser = TTD1 <$> parser <|> OTD1 <$> parser
 
@@ -602,7 +606,6 @@ instance HasParser TypeNickname where
       (opt_space_around (string "=") *> parser)
 
 -- HasParser: TypePropDef
-
 instance HasParser TypePropDef where
   parser = APD1 <$> try parser <|> RPD1 <$> parser
 
@@ -651,7 +654,6 @@ instance HasParser NamePart where
     under_lower_upper = mapf underscore (:) <*> lower_upper
 
 -- HasParser: TypeTheo
-
 instance HasParser TypeTheo where
   parser =
     string "type_theorem " *> parser >>= \pnws ->
@@ -754,11 +756,10 @@ instance HasParser IdOrOpEq where
 
 instance HasParser TTValueExpr where
   parser =
-    VE1 <$> (increase_il 2 *> try nl_indent *> parser <* decrease_il 2) <|>
+    VE1 <$> (increase_il_by 2 *> try nl_indent *> parser <* decrease_il_by 2) <|>
     LE2 <$> (char ' ' *> parser)
 
 -- HasParser: Program
-
 instance HasParser Program where
   parser =
     many nl *> parser >>= \pp ->
@@ -776,7 +777,6 @@ instance HasParser ProgramPart where
 -- (this could have been way faster)
 
 -- char literal
-
 charLiteral :: Parser Char
 charLiteral =
   (between (char '\'') (char '\'' <?> "end of character") characterChar)
@@ -799,7 +799,6 @@ charEsc =
   escMap = zip ("ntr0\\\"\'") ("\n\t\r\0\\\"\'")
 
 -- string literal
-
 stringLiteral :: Parser String
 stringLiteral =
   between (char '"') (char '"' <?> "end of string") (many stringChar)

@@ -13,18 +13,18 @@ import ShowInstances
 
 -- types
 type FileName = String
-type ParseResult = String
+type ParseResultString = String
 
 type ProgramFileName = FileName
 type ProgramStr = String
 
-type ParseFunc = TestExample -> ParseResult
+type ParseFunc = TestExample -> ParseResultString
 
 type FileString = String
 type TestExample = String
 
 type ParseToString a = TestExample -> ResultString a
-newtype ResultString a = RS ParseResult
+newtype ResultString a = RS ParseResultString
 
 -- paths
 (progs_dir, test_exs_dir, res_dir) =
@@ -34,12 +34,12 @@ newtype ResultString a = RS ParseResult
 -- main
 main :: IO ()
 main =
-  listDirectory progs_dir >>= mapM_ read_parse_prog_write_res >>
-  mapM_ run_parse_func_for_file file_name_parse_func_pairs
+  listDirectory progs_dir >>= mapM_ read_prog_parse_write_res >>
+  mapM_ run_parse_func_for_test_exs_file test_exs_file_name_parse_func_pairs
 
--- read_parse_prog_write_res 
-read_parse_prog_write_res :: ProgramFileName -> IO ()
-read_parse_prog_write_res pfn =
+-- read_prog_parse_write_res 
+read_prog_parse_write_res :: ProgramFileName -> IO ()
+read_prog_parse_write_res pfn =
   readFile in_path >>= parse_program .> writeFile out_path
   where
   (in_path, out_path) =
@@ -47,11 +47,12 @@ read_parse_prog_write_res pfn =
     :: (FilePath, FilePath)
 
   parse_program :: ParseFunc
-  parse_program = (parse_and_ret_res_str :: ParseToString Program) .> extract_res_str
+  parse_program =
+    (parse_and_ret_res_str :: ParseToString Program) .> extract_res_str
 
--- run_parse_func_for_file
-run_parse_func_for_file :: (FileName, ParseFunc) -> IO ()
-run_parse_func_for_file (file_name, parse_func) =
+-- run_parse_func_for_test_exs_file
+run_parse_func_for_test_exs_file :: (FileName, ParseFunc) -> IO ()
+run_parse_func_for_test_exs_file (file_name, parse_func) =
   readFile in_path >>= in_str_to_out_str .> writeFile out_path
   where
   (in_path, out_path) =
@@ -80,12 +81,12 @@ class (Parse a, Show a) => Parse_To_String a where
       Left err -> "Error :( ==>" ++ show err ++ "\n\n"
       Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
 
--- file_name_parse_func_pairs
-extract_res_str :: ResultString a -> ParseResult
+-- test_exs_file_name_parse_func_pairs
+extract_res_str :: ResultString a -> ParseResultString
 extract_res_str = \(RS s) -> s
 
-file_name_parse_func_pairs :: [(FileName, ParseFunc)]
-file_name_parse_func_pairs =
+test_exs_file_name_parse_func_pairs :: [(FileName, ParseFunc)]
+test_exs_file_name_parse_func_pairs =
   [ ( "literals.txt"
     , (parse_and_ret_res_str :: ParseToString Literal) .> extract_res_str
     )
@@ -178,7 +179,8 @@ file_name_parse_func_pairs =
     )
   ]
 
--- instances. why not automated Haskell? (they use the default implementations above)
+-- instances. they use the default implementations above
+-- why not automated Haskell?
 instance Parse Literal
 instance Parse Identifier
 instance Parse ParenExpr

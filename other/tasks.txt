@@ -1,10 +1,4 @@
 
-- fix example program to be more clear in action ops
-  - in what way?
-
-- better file tree
-  - in what way?
-
 - list index
 
 -------------------------------------------------------------- parsing
