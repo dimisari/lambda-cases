@@ -43,7 +43,9 @@ newtype Arguments = As LineExprOrUnders
 
 newtype IdentWithArgs =
   IWA
-  (IdentWithArgsStart, Arguments, String, [(EmptyParenOrArgs, String)], Maybe Char)
+    ( IdentWithArgsStart, Arguments, String, [(EmptyParenOrArgs, String)]
+    , Maybe Char
+    )
 
 newtype IdentWithArgsStart = IWAS String
 
@@ -221,7 +223,8 @@ newtype PowerType = PoT (PowerBaseType, Int)
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
 data InOrOutType = 
-  TIOV2 TypeIdOrVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp | FT2 FuncType
+  TIOV2 TypeIdOrVar | PT2 ProdType | PoT2 PowerType | TA2 TypeApp |
+  FT2 FuncType
 
 newtype Condition = Co PropName
 
@@ -244,7 +247,8 @@ newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 newtype IdTuple = PCSIs (Identifier, [Identifier])
 
 newtype OrTypeDef =
-  OTD (TypeName, Identifier, Maybe SimpleType, [(Identifier, Maybe SimpleType)])
+  OTD
+    (TypeName, Identifier, Maybe SimpleType, [(Identifier, Maybe SimpleType)])
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 
@@ -281,7 +285,8 @@ data TVarSub =
   FTS1 FuncTypeSub 
 
 data TypeAppSub =  
-  TIWS1 (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen) |
+  TIWS1
+    (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen) |
   SOUIP_TI (SubsOrUndersInParen, TIdOrAdHocTVar, Maybe SubsOrUndersInParen) |
   TI_SOUIP (TIdOrAdHocTVar, SubsOrUndersInParen)
 

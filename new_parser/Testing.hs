@@ -136,7 +136,8 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: ParseToString ValueDef) .> extract_res_str
     )
   , ( "grouped_val_defs.txt"
-    , (parse_and_ret_res_str :: ParseToString GroupedValueDefs) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToString GroupedValueDefs) .>
+      extract_res_str
     )
   , ( "where_expr.txt"
     , (parse_and_ret_res_str :: ParseToString WhereExpr) .> extract_res_str
@@ -172,7 +173,8 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: ParseToString AtomPropDef) .> extract_res_str
     )
   , ( "renaming_prop_def.txt"
-    , (parse_and_ret_res_str :: ParseToString RenamingPropDef) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToString RenamingPropDef) .>
+      extract_res_str
     )
   , ( "type_theo.txt"
     , (parse_and_ret_res_str :: ParseToString TypeTheo) .> extract_res_str

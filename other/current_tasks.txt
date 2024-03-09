@@ -1,13 +1,4 @@
 
-- parsec paragraph
-  - 3 parsec examples
-    - choose examples
-      - one with state changes
-    - structure
-      - types
-      - show
-      - parsers
-
 - ambiguous IdOrOpEq with two equal signs 
   - what to do?
     - it seems to choose one
@@ -15,5 +6,7 @@
 
 - better file tree
   - in what way?
+
+- list index
 
 # tasks.txt

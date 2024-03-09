@@ -75,7 +75,8 @@ instance Show BasicExpr where
 
 instance Show BigTuple where
   show = \(BT (loue, loues, loues_l)) ->
-    "( " ++ show loue ++ ", " ++ show loues ++ show_list_sep "\n, " loues_l ++ "\n)"
+    "( " ++ show loue ++ ", " ++ show loues ++ show_list_sep "\n, " loues_l ++
+    "\n)"
 
 instance Show List where
   show = \(L maybe_loues) -> "[" ++ show_maybe maybe_loues ++ "]"
@@ -98,7 +99,9 @@ instance Show Arguments where
 
 instance Show IdentWithArgs where
   show =
-    \(IWA (id_with_args_start, args, str, empty_par_or_args_str_pairs, maybe_ch)) ->
+    \(IWA
+      (id_with_args_start, args, str, empty_par_or_args_str_pairs, maybe_ch)
+     ) ->
     show id_with_args_start ++ show args ++ str ++
     concatMap show_pair empty_par_or_args_str_pairs ++ show_maybe_char maybe_ch
     where
@@ -347,7 +350,8 @@ instance Show LineExprs where
   show = \(CSLE (le, les)) -> show le ++ show_list_comma les
 
 instance Show WhereExpr where
-  show = \(WE (wde, wdes)) -> "\nwhere\n" ++ show wde ++ show_list_sep "\n\n" wdes
+  show =
+    \(WE (wde, wdes)) -> "\nwhere\n" ++ show wde ++ show_list_sep "\n\n" wdes
 
 instance Show WhereDefExpr where
   show = \case
@@ -450,7 +454,8 @@ instance Show TypeDef where
 
 instance Show TupleTypeDef where
   show = \(TTD (tn, pcsis, ttde)) ->
-    "tuple_type " ++ show tn ++ "\nvalue\n  " ++ show pcsis ++ " : " ++ show ttde
+    "tuple_type " ++ show tn ++ "\nvalue\n  " ++ show pcsis ++ " : " ++
+    show ttde
 
 instance Show ProdOrPowerType where
   show = \case
@@ -513,7 +518,8 @@ instance Show PropName where
       show_pair_list ahvip_np_pairs ++ show_maybe maybe_ahvip
 
 instance Show AdHocVarsInParen where
-  show = \(AHVIP (ahtv, ahtvs)) -> "(" ++ show ahtv ++ show_list_comma ahtvs ++ ")"
+  show =
+    \(AHVIP (ahtv, ahtvs)) -> "(" ++ show ahtv ++ show_list_comma ahtvs ++ ")"
 
 instance Show NamePart where
   show = \(NP str) -> str

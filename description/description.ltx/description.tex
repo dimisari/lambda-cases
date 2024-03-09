@@ -3174,14 +3174,14 @@ The \textit{$<$indent$>$} nonterminal corresponds to $2*il$ space characters.
 The indentation level follows the rules below:
 
 \paragraph{Indentation Rules}
-\begin{itemize}
+\begin{enumerate}
 
 \item
 At the beginnng: $il = 0$
 
 \item
 In a single value definition:
-  \begin{itemize}
+  \begin{enumerate}
 
   \item
   At the end of the first line: $il \leftarrow il + 1$
@@ -3191,45 +3191,45 @@ In a single value definition:
 
   \item
   At the end: $il \leftarrow il - 2$
-  \end{itemize}
+  \end{enumerate}
 
 \item
 In a group of value definitions:
-  \begin{itemize}
+  \begin{enumerate}
 
   \item
   At the end of the first line: $il \leftarrow il + 1$
 
   \item
   At the end: $il \leftarrow il - 1$
-  \end{itemize}
+  \end{enumerate}
 
 \item
 In a case (of a cases function expression):
-  \begin{itemize}
+  \begin{enumerate}
 
   \item
   After the arrow ("\texttt{=>}") line: $il \leftarrow il + 1$.
 
   \item
   At the end: $il \leftarrow il - 1$.
-  \end{itemize}
+  \end{enumerate}
 
 \item
 In a type theorem:
-  \begin{itemize}
+  \begin{enumerate}
 
   \item
   After "\texttt{=}" line: $il \leftarrow il + 2$.
 
   \item
   At the end: $il \leftarrow il - 2$.
-  \end{itemize}
+  \end{enumerate}
 
 \item
 In a cases function expression which does not begin at the "=" line of a value
 definition:
-  \begin{itemize}
+  \begin{enumerate}
 
   \item
   After the arrow "\texttt{=>}" at the end of the paremeters: $il \leftarrow il
@@ -3238,9 +3238,9 @@ definition:
   \item
   At the end of the cases function expression: $il \leftarrow il - 1$.
 
-  \end{itemize}
+  \end{enumerate}
 
-\end{itemize}
+\end{enumerate}
 
 \newpage
 \subsection{High level structure}
@@ -3336,7 +3336,7 @@ type Parser = Parsec String ParserState
 \end{verbatim}
 We create the polymorphic value "parser" with the "HasParser" class
 so that all the parsers have the name "parser" irrespective of the particular 
-type we are parsing:
+type they are parsing:
 \begin{verbatim}
 class HasParser a where
   parser :: Parser a
@@ -3353,9 +3353,9 @@ data Literal =
   Int Int | R Double | Ch Char | S String 
 
 \end{verbatim}
-And here is the parser for the literal which is ofcourse an instance of the 
-HasParser class. Inside we use the parsers for each particular literal which
-are defined seperately:
+And here is the parser for the literal which is defined as an instance of
+the HasParser class. Inside we use the parsers for each particular literal
+which are defined seperately:
 \begin{verbatim}
 instance HasParser Literal where
   parser =
@@ -3364,25 +3364,137 @@ instance HasParser Literal where
 
 \end{verbatim}
 The Parser type is a Functor so the "\texttt{<\$>}" (fmap) operator passes each 
-constructor inside the partricular parser and the "\texttt{<|>}" operator means
+constructor inside the particular parser and the "\texttt{<|>}" operator means
 "this parser or that parser". Finally, the "\texttt{<?>}" operator means "if
-all the parsers fail show this in error message".
+all the parsers fail show this in the error message".
 
+\newpage
 \subsubsection{Example 1: List}
 
-\paragraph{Grammar Rule}
-
+The grammar rule for the list is the following:
 \begin{grammar}
-<list> ::= `[' [ `\ ' ] [ <line-expr-or-unders> ] [ `\ ' ] `]'
+<list> ::= `[' [ `\ ' ] [ <line-expr-or-unders> ] [ `\ ' ] `]' \\
 \end{grammar}
+The AST type for the list is:
+\begin{verbatim}
+newtype List = L (Maybe LineExprOrUnders)
 
-\paragraph{AST types from grammar}
+\end{verbatim}
+And the parser for the list is:
+\begin{verbatim}
+instance HasParser List where
+  parser =
+    L <$> (char '[' *> opt_space_around (optionMaybe parser) <* char ']')
 
-\paragraph{Parsers from grammar}
+\end{verbatim}
+Here we use the "\texttt{*>}" and "\texttt{<*}" operators which parse both of
+the parsers that they have as operands (from left to right) but only keep the
+result of the parser that the "point" to. "opt_space_around" parses one space
+optionally on each side of the text parsed by the argument parser and returns
+what was parsed by the argument parser.  "optionMaybe" is defined in the
+library and it optionally parses what its argument parser parses. If the
+argument parser succeeds at parsing the it returns a Just $<$whatever was
+parsed$>$, whereas if it fails it returns Nothing.
 
 \subsubsection{Example 2: Change}
 
+The grammar rule for the "change" expression is the following:
+\begin{grammar}
+<change> ::=
+`change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
+\\
+\end{grammar}
+The AST type for the "change" expression is:
+\begin{verbatim}
+newtype Change = C (FieldChange, [FieldChange])
+
+\end{verbatim}
+And the parser for the "change" expression is:
+\begin{verbatim}
+instance HasParser Change where
+  parser = 
+    C <$>
+      (try (string "change{") *> opt_space_around field_changes_p <* char '}')
+    where
+    field_changes_p :: Parser (FieldChange, [FieldChange])
+    field_changes_p = field_change_p +++ many (comma *> field_change_p)
+
+\end{verbatim}
+Here we use the "\texttt{+++}" operator which is defined in the parser. It
+takes two parsers as operands and creates a parser that uses them sequentially
+and puts the two results in a tuple. "field_change_p" parses a single field
+change. "many" is defined in the library and it is self explanatory, it parses
+with the argument parser as many times as possible and puts the results in a
+list, the equivalent of the Kleene star in the parser world.  Lastly, we also
+use the "try" parser combinator (defined in the library) which is used to avoid
+comsuming any input if the parser fails. For example if the input was
+"\texttt{change }", the parser would fail because we have a space instead of an
+opening bracket.  Without the "try" combinator it would consume the
+"\texttt{change}" part and leave only the space after failing. This would
+result in the PostFunc alternative parsers below failing as well (the parser
+after "\texttt{C1 <\$>}" is the Change parser). Whereas with the "try"
+combinator we avoid this problem and the parser after "\texttt{Id2 <\$>}"
+successfully parses "change" as an identifier (and leaves the space to be
+parsed by whatever parser comes next).
+
+\begin{verbatim}
+instance HasParser PostFunc where
+  parser = char '.' *> (C1 <$> parser <|> Id2 <$> parser <|> SI2 <$> parser)
+\end{verbatim}
+
+
 \subsubsection{Example 3: Value Definition}
+
+The grammar rule for the value definition is the following:
+\begin{grammar}
+<value-def> ::= ""\\
+<indent> <identifier> 
+( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' ) <type>  \\
+<nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
+\\
+\end{grammar}
+The AST type for the value definition is:
+\begin{verbatim}
+newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
+
+\end{verbatim}
+And the parser for the value definition is:
+\begin{verbatim}
+instance HasParser ValueDef where
+  parser = 
+    indent *> parser >>= \identifier ->
+
+    increase_il_by 1 >>
+
+    has_type_symbol *> parser >>= \type_ ->
+    nl_indent *> string "= " *>
+
+    increase_il_by 1 >> we_are_in_equal_line >>
+
+    parser >>= \value_expr ->
+
+    we_are_not_in_equal_line >>
+
+    optionMaybe (try parser) >>= \maybe_where_expr ->
+
+    decrease_il_by 2 >>
+
+    return (VD (identifier, type_, value_expr, maybe_where_expr))
+
+\end{verbatim}
+In this example we see how the state of the parser is used to enforce the
+indentation rules. The "indent" parser parses $<$2 * the indentation level$>$
+spaces, getting the indentation level from the state (see Indentation System
+\ref{subsubsec:indsys}).  "increase_il_by" and "decrease_il_by" have a Parser
+type but they don't actually parse anything, they are "parsers" that only
+update the indentation level (but can also be combined with other parsers).
+They are used as described in rule 2 of the Indentation System
+(\ref{subsubsec:indsys}). "has_type_symbol" parses the following part of 
+the grammar rule:
+( [ \lit{\ } ] \lit{:} [ \lit{\ } ]
+\texttt{|} \synt{nl} \synt{indent} \lit{:\ }).
+"we_are_in_equal_line" and "we_are_not_in_equal_line" change the state 
+to enforce rule 6 of the Indentation System.
 
 \section{Semantic Analysis}
 

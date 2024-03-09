@@ -65,8 +65,8 @@ indent :: Parser ()
 indent =
   getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
 
-type_symbol :: Parser ()
-type_symbol =
+has_type_symbol :: Parser ()
+has_type_symbol =
   (try nl_indent *> string ": " <|> opt_space_around (string ":")) *> return ()
 
 opt_space_around :: Parser a -> Parser a
@@ -219,7 +219,8 @@ instance HasParser IdentWithArgs where
     many1 lower_under >>= \string ->
     many (try $ empty_paren_or_args_p +++ many1 lower_under) >>= \pairs ->
     optionMaybe digit >>= \maybe_digit ->
-    return $ IWA $ (ident_with_args_start, arguments, string, pairs, maybe_digit)
+    return $
+      IWA $ (ident_with_args_start, arguments, string, pairs, maybe_digit)
     where
     ident_with_args_start_p :: Parser IdentWithArgsStart
     ident_with_args_start_p =
@@ -255,17 +256,20 @@ instance HasParser PostFuncApp where
     where
     post_func_arg_p :: Parser PostFuncArg
     post_func_arg_p =
-      PE2 <$> try parser <|> BE2 <$> parser <|> underscore *> return Underscore2
+      PE2 <$> try parser <|> BE2 <$> parser <|>
+      underscore *> return Underscore2
 
 instance HasParser Change where
   parser = 
-    C <$> (try (string "change{") *> opt_space_around field_changes_p <* char '}')
+    C <$>
+      (try (string "change{") *> opt_space_around field_changes_p <* char '}')
     where
     field_changes_p :: Parser (FieldChange, [FieldChange])
     field_changes_p = field_change_p +++ many (comma *> field_change_p)
 
     field_change_p :: Parser FieldChange
-    field_change_p = FC <$> field_p +++ (opt_space_around (string "=") *> parser)
+    field_change_p =
+      FC <$> field_p +++ (opt_space_around (string "=") *> parser)
 
     field_p :: Parser Field
     field_p = Id3 <$> parser <|> SI3 <$> parser
@@ -324,7 +328,8 @@ instance HasParser Op where
     OSO <$> opt_space_around parser
 
 instance HasParser FuncCompOp where
-  parser = string "o>" *> return RightComp <|> try (string "<o") *> return LeftComp
+  parser =
+    string "o>" *> return RightComp <|> try (string "<o") *> return LeftComp
 
 instance HasParser OptionalSpacesOp where
   parser =  
@@ -383,8 +388,8 @@ instance HasParser CasesFuncExpr where
 
 instance HasParser CasesParams where
   parser = 
-    try (string "cases") *> return CasesKeyword <|> char '*' *> return Star2 <|>
-    CParamId <$> parser <|>
+    try (string "cases") *> return CasesKeyword <|>
+    char '*' *> return Star2 <|> CParamId <$> parser <|>
     CParams <$> in_paren (parser +++ many1 (comma *> parser))
 
 instance HasParser Case where
@@ -429,7 +434,7 @@ instance HasParser ValueDef where
 
     increase_il_by 1 >>
 
-    type_symbol *> parser >>= \type_ ->
+    has_type_symbol *> parser >>= \type_ ->
     nl_indent *> string "= " *>
 
     increase_il_by 1 >> we_are_in_equal_line >>
@@ -456,13 +461,14 @@ instance HasParser GroupedValueDefs where
 
     increase_il_by 1 >>
 
-    type_symbol *> types_p >>= \types ->
+    has_type_symbol *> types_p >>= \types ->
     nl_indent *> string "= " *> parser >>= \comma_sep_line_exprs ->
     many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
 
     decrease_il_by 1 >>
 
-    return (GVDs (id, ids, types, comma_sep_line_exprs, comma_sep_line_exprs_l)) 
+    return
+      (GVDs (id, ids, types, comma_sep_line_exprs, comma_sep_line_exprs_l)) 
     where
     types_p :: Parser Types
     types_p =
@@ -474,7 +480,8 @@ instance HasParser LineExprs where
 
 instance HasParser WhereExpr where
   parser = 
-    nl_indent *> string "where" *> nl *> where_def_expr_p >>= \where_def_expr1 ->
+    nl_indent *> string "where" *>
+    nl *> where_def_expr_p >>= \where_def_expr1 ->
     many (try $ nl *> nl *> where_def_expr_p) >>= \where_def_exprs ->
     return $ WE (where_def_expr1, where_def_exprs)
     where
@@ -637,7 +644,8 @@ instance HasParser PropName where
       optionMaybe parser >>= \maybe_name_part ->
       return (u, np_ahvips, maybe_name_part)
 
-    ahvip_start_p :: Parser ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
+    ahvip_start_p
+      :: Parser ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
     ahvip_start_p = (many1 $ try $ parser +++ parser) +++ optionMaybe parser
 
 instance HasParser AdHocVarsInParen where
@@ -689,7 +697,8 @@ instance HasParser TypeAppSub where
     TI_SOUIP <$> parser +++ parser
     where
     tiws_p ::
-      Parser (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen) 
+      Parser
+        (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen) 
     tiws_p =
       optionMaybe parser >>= \maybe_souip1 ->
       parser >>= \tiws ->
@@ -756,8 +765,11 @@ instance HasParser IdOrOpEq where
 
 instance HasParser TTValueExpr where
   parser =
-    VE1 <$> (increase_il_by 2 *> try nl_indent *> parser <* decrease_il_by 2) <|>
-    LE2 <$> (char ' ' *> parser)
+    VE1 <$> value_expr_p <|> LE2 <$> (char ' ' *> parser)
+    where
+    value_expr_p :: Parser ValueExpr
+    value_expr_p =
+      increase_il_by 2 *> try nl_indent *> parser <* decrease_il_by 2
 
 -- HasParser: Program
 instance HasParser Program where
