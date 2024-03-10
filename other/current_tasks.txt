@@ -5,7 +5,7 @@
       - maybe just let it choose?
 
 - better file tree
-  - in what way?
+  - parsing_inputs dir
 
 - list index
 

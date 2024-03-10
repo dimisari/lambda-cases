@@ -27,14 +27,14 @@ type ParseToString a = TestExample -> ResultString a
 newtype ResultString a = RS ParseResultString
 
 -- paths
-(progs_dir, test_exs_dir, res_dir) =
-  ("programs/", "test_examples/", "parsing_results/")
-  :: (FilePath, FilePath, FilePath)
+[progs_dir, test_exs_dir, in_dir, res_dir] =
+  ["programs/", "test_examples/", "parsing_inputs/", "parsing_results/"]
+  :: [FilePath]
 
 -- main
 main :: IO ()
 main =
-  listDirectory progs_dir >>= mapM_ read_prog_parse_write_res >>
+  listDirectory (in_dir ++ progs_dir) >>= mapM_ read_prog_parse_write_res >>
   mapM_ run_parse_func_for_test_exs_file test_exs_file_name_parse_func_pairs
 
 -- read_prog_parse_write_res 
@@ -43,7 +43,7 @@ read_prog_parse_write_res pfn =
   readFile in_path >>= parse_program .> writeFile out_path
   where
   (in_path, out_path) =
-    (progs_dir ++ pfn, res_dir ++ in_path)
+    (in_dir ++ progs_dir ++ pfn, res_dir ++ progs_dir ++ pfn)
     :: (FilePath, FilePath)
 
   parse_program :: ParseFunc
@@ -56,7 +56,7 @@ run_parse_func_for_test_exs_file (file_name, parse_func) =
   readFile in_path >>= in_str_to_out_str .> writeFile out_path
   where
   (in_path, out_path) =
-    (test_exs_dir ++ file_name, res_dir ++ in_path)
+    (in_dir ++ test_exs_dir ++ file_name, res_dir ++ test_exs_dir ++ file_name)
     :: (FilePath, FilePath)
 
   in_str_to_out_str :: FileString -> FileString
