@@ -22,13 +22,13 @@ proof
       non_empty_l:l => non_empty_l:(f(l.head), l.tail -> apply(f)inside)#
 
 type_theorem (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
-proof a != b = not(a = b)#
+proof a != b = not(a == b)#
 
 type_theorem (@A)Can_Be_Greater_Than(@B) --> (@A)Can_Be_Le_Or_Eq_To(@B)
 proof a <= b = not(a > b)#
 
 type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
-proof a >= b = a = b | a > b#
+proof a >= b = a == b | a > b#
 
 type_theorem (Possibly(_))Has_A_Wrapper
 proof
@@ -38,8 +38,4 @@ type_theorem (ListOf(_)s)Has_A_Wrapper
 proof
   wrapper =
     [_]#
-
-type_theorem (Int)And(Int)Can_Be_Equal
-proof
-  a = b = true#
 

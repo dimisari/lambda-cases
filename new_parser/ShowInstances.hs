@@ -235,7 +235,7 @@ instance Show OptionalSpacesOp where
     Div -> "/" 
     Plus -> "+" 
     Minus -> "-" 
-    Equal -> "=" 
+    Equal -> "==" 
     NotEqual -> "/="
     Greater -> ">" 
     Less -> "<" 

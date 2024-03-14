@@ -933,7 +933,7 @@ Operator & Type
 \\ 
 \hline
 \hline
-\texttt{=} & (@A)And(@B)Can_Be_Equal \Ra @A x @B \ra Bool
+\texttt{==} & (@A)And(@B)Can_Be_Equal \Ra @A x @B \ra Bool
 \\
 \hline
 \texttt{!=} & (@A)And(@B)Can_Be_Unequal \Ra @A x @B \ra Bool
@@ -967,7 +967,7 @@ the following example:
 >> 1.1
   : Real
   = 1.1
->> 1.1 = 1
+>> 1.1 == 1
   : Bool
   = false
 \end{verbatim}
@@ -975,8 +975,8 @@ In order for the example to work we need to be able to compare integers and
 reals.  Similarly, all the comparison operators need to be able to work on
 arguments of different types. Other than that, the comparison and boolean
 operators behave similarly to most programming languages. It's also worth
-noting that the "equals", "and" and "or" operators have the symbol once
-(\texttt{= \& |}) instead of twice (\texttt{== \&\& ||}).
+noting that the "and" and "or" operators have the symbol once
+(\texttt{\& |}) instead of twice (\texttt{\&\& ||}).
 
 \newpage
 
@@ -1153,7 +1153,7 @@ a value is of type \texttt{T2} and therefore the new value is of type
 "Hello " + "World!"
 x -> f -> g
 f o> g o> h
-x = y
+x == y
 x >= y - z & x < 2 * y
 get_line ; get_line ;> line => print("Second line: " + line)
 2 * _
@@ -1257,7 +1257,7 @@ The precise indentation rules are described in the section
 <func-comp-op> ::= `o>' | `<o'
 
 <optional-spaces-op> ::= 
-`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' |
+`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `==' | `!=' | `>' | `<' | `>=' |
 `<=' | `\&' | `|' | `;>' | `;'
 \end{grammar}
 \end{itemize}
@@ -1309,7 +1309,7 @@ General multiplication
 \texttt{-} & (@A)Minus(@B)Is(@C) \Ra @A x @B \ra @C & General subtraction
 \\
 \hline
-\texttt{=} & (@A)And(@B)Can_Be_Equal \Ra @A x @B \ra Bool & General Equality
+\texttt{==} & (@A)And(@B)Can_Be_Equal \Ra @A x @B \ra Bool & General Equality
 \\
 \hline
 \texttt{!=} & (@A)And(@B)Can_Be_Unequal \Ra @A x @B \ra Bool &
@@ -1385,7 +1385,7 @@ Operator & Precedence & Associativity
 \texttt{+ -} & 5 & Left
 \\ 
 \hline
-\texttt{= != > < >= <=} & 4 & None
+\texttt{== != > < >= <=} & 4 & None
 \\
 \hline
 \texttt{\&} & 3 & Left
@@ -2543,7 +2543,7 @@ followed by an equal sign and the value expression which implements the value.
 
 \begin{verbatim}
 type_theorem (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
-proof a \= b = not(a = b)
+proof a \= b = not(a == b)
 
 type_theorem (@A)Can_Be_Greater_Than(@B) --> (@A)Can_Be_Le_Or_Eq_To(@B)
 proof a <= b = not(a > b)
@@ -2552,7 +2552,7 @@ type_propositon (@A)And(@B)Have_Eq_And_Gr
 equivalent (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
 
 type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
-proof a >= b = a = b | a > b
+proof a >= b = a == b | a > b
 \end{verbatim}
 
 \item \textit{Description}
@@ -2910,7 +2910,7 @@ the condition arrow (" \texttt{-->} ") arrow.
 <func-comp-op> ::= `o>' | `<o'
 
 <optional-spaces-op> ::= 
-`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `=' | `!=' | `>' | `<' | `>=' |
+`->' | `<-' | `^' | `*' | `/' | `+' | `-' | `==' | `!=' | `>' | `<' | `>=' |
 `<=' | `\&' | `|' | `;>' | `;'
 \\
 

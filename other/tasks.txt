@@ -1,4 +1,8 @@
 
+- finish predefined
+
+- also & | polymorphic?
+  - (A)Has_And | Has_Or
 
 -------------------------------------------------------------- parsing
 

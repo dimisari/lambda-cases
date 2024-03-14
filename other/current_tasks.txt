@@ -1,12 +1,7 @@
 
-- ambiguous IdOrOpEq with two equal signs 
-  - what to do?
-    - it seems to choose one
-      - maybe just let it choose?
-
-- better file tree
-  - parsing_inputs dir
-
 - list index
+
+- repl examples
+  - substitute "=" with "==>" ?
 
 # tasks.txt

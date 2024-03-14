@@ -340,7 +340,7 @@ instance HasParser OptionalSpacesOp where
     string "/" *> return Div <|>
     string "+" *> return Plus <|>
     string "-" *> return Minus <|>
-    string "=" *> notFollowedBy (char '>') *> return Equal <|>
+    string "==" *> return Equal <|>
     string "!=" *> return NotEqual <|>
     try (string ">=") *> return GrEq <|>
     try (string "<=") *> return LeEq <|>
@@ -755,13 +755,7 @@ instance HasParser Proof where
 
 instance HasParser IdOrOpEq where
   parser =
-    IOOE <$> parser +++ optionMaybe (try op_id_p) <* string " ="
-    where
-    op_id_p :: Parser (Op, Identifier)
-    op_id_p = parser +++ (parser <* followed_by_equal)
-
-    followed_by_equal :: Parser String
-    followed_by_equal = lookAhead (string " =" <* notFollowedBy (char '>'))
+    IOOE <$> parser +++ optionMaybe (try $ parser +++ parser) <* string " ="
 
 instance HasParser TTValueExpr where
   parser =

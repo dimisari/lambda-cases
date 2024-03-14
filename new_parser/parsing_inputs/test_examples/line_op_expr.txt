@@ -8,7 +8,7 @@ x -> f -> g#
 
 f o> g o> h#
 
-x = y#
+x == y#
 
 x >= y - z & x < 2 * y#
 
