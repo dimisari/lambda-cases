@@ -1,7 +1,4 @@
 
-- list index
-
-- repl examples
-  - substitute "=" with "==>" ?
+- no identifiers with paren in parameters
 
 # tasks.txt

@@ -5,7 +5,7 @@ import System.Process (callCommand, readCreateProcess, shell)
 
 import Helpers ((.>))
 
--- All: Path, Constants, Types, Parsing, Generating Haskell, main
+-- All: Path, names, lcases, haskell, executables, commands, haskell_header
 
 -- Path: Path
  
@@ -19,12 +19,12 @@ only_name = ( \s -> take (length s - 3) s )
 
 correct_names = 
   fmap (lines .> map (only_name .> ("correct/" ++)) ) $
-  readCreateProcess (shell "cd lcases/correct; ls") ""
+  readCreateProcess (shell "cd ../lcases/correct; ls") ""
   :: IO [ String ]
 
 wrong_names = 
   fmap (lines .> map (only_name .> ("wrong/" ++)) ) $
-  readCreateProcess (shell "cd lcases/wrong; ls") ""
+  readCreateProcess (shell "cd ../lcases/wrong; ls") ""
   :: IO [ String ]
 
 all_names =
@@ -34,12 +34,12 @@ all_names =
 -- lcases: paths
 
 paths =
-  fmap (map ( \s -> "lcases/" ++ s ++ ".lc" )) all_names
+  fmap (map ( \s -> "../lcases/" ++ s ++ ".lc" )) all_names
   :: IO [ String ]
 
 -- haskell: hs_dir, hs_paths, path_pairs, correct_hs_paths
 
-hs_dir = "runtime/haskell/"
+hs_dir = "../runtime/haskell/"
   :: String
 
 hs_paths =
@@ -56,7 +56,7 @@ correct_hs_paths =
 
 -- executables
 
-execs_dir = "runtime/executables/"
+execs_dir = "../runtime/executables/"
   :: String
 
 exec_paths = 
@@ -84,5 +84,5 @@ run_execs =
 -- haskell_header
 
 haskell_header =
-  "runtime/header.hs"
+  "../runtime/header.hs"
   :: Path

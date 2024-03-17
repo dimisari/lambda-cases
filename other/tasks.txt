@@ -1,21 +1,12 @@
 
-- finish predefined
-
-- also & | polymorphic?
-  - (A)Has_And | Has_Or
-
 -------------------------------------------------------------- parsing
 
-- better parser errors 
+- better parser errors with <?>
   - with less try? it fails on the last it tried how to mitigate that?
-  - with <?> ?
-    - what does it do?
-    - seems to throw the same error msg for all the failed grammar rules
-    - yeah not bad
 
 -------------------------------------------------------------- pdf
 
--------------------------------------------------------------- semantic analysis
+-------------------------------------------------------------- semantics
 
 - one tuple is the parameter tuple + another tuple is the argument tuple
   - check if the same tuple
@@ -28,10 +19,15 @@
 
 -------------------------------------------------------------- later
 
-- add element index mechanism?
-  - like arrays in most languages with a[i]?
-  - op like in haskell?
-  - something with .change? (i, j) = ...?
+- finish predefined
+
+- also & | polymorphic?
+  - (A)Has_And | Has_Or
+
+- add element index mechanism
+  - .<int-lit> for element
+  - .change for changing
+    - (i, j) = ...
 
 - printing tuples (json style or similar)
 
