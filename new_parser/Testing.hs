@@ -1,4 +1,6 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE
+  LambdaCase, FlexibleInstances, UndecidableInstances, MonoLocalBinds
+#-}
 
 module Testing where
 
@@ -65,21 +67,18 @@ run_parse_func_for_test_exs_file (file_name, parse_func) =
   file_string_to_examples :: FileString -> [ TestExample ]
   file_string_to_examples = endBy "#\n\n"
 
--- Parse class
-class HasParser a => Parse a where
-  parse :: String -> Either ParseError a
-  parse = runParser (parser <* eof) (0, False) "" 
+-- parse, parse_and_ret_res_str
+parse :: HasParser a => String -> Either ParseError a
+parse = runParser (parser <* eof) (0, False) "" 
 
--- Parse_To_String class
-class (Parse a, Show a) => Parse_To_String a where
-  parse_and_ret_res_str :: ParseToString a
-  parse_and_ret_res_str =
-    parse .> res_to_str
-    where
-    res_to_str :: Show a => Either ParseError a -> ResultString a
-    res_to_str = RS <$> \case
-      Left err -> "Error :( ==>" ++ show err ++ "\n\n"
-      Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
+parse_and_ret_res_str :: (HasParser a, Show a) => ParseToString a
+parse_and_ret_res_str =
+  parse .> res_to_str
+  where
+  res_to_str :: Show a => Either ParseError a -> ResultString a
+  res_to_str = RS <$> \case
+    Left err -> "Error :( ==>" ++ show err ++ "\n\n"
+    Right res -> "Parsed :) ==>\n" ++ show res ++ "\n\n"
 
 -- test_exs_file_name_parse_func_pairs
 extract_res_str :: ResultString a -> ParseResultString
@@ -180,76 +179,6 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: ParseToString TypeTheo) .> extract_res_str
     )
   ]
-
--- instances. they use the default implementations above
--- why not automated Haskell?
-instance Parse Literal
-instance Parse Identifier
-instance Parse ParenExpr
-instance Parse Tuple
-instance Parse BigTuple
-instance Parse List
-instance Parse BigList
-instance Parse ParenFuncApp
-instance Parse PreFuncApp
-instance Parse PostFuncApp
-instance Parse LineOpExpr
-instance Parse BigOpExpr
-instance Parse LineFuncExpr
-instance Parse BigFuncExpr
-instance Parse CasesFuncExpr
-instance Parse ValueDef
-instance Parse GroupedValueDefs
-instance Parse WhereExpr
-
-instance Parse TypeId
-instance Parse TypeVar
-instance Parse FuncType
-instance Parse ProdType
-instance Parse TypeApp
-instance Parse Type -- CondType
-instance Parse TupleTypeDef
-instance Parse OrTypeDef
-instance Parse TypeNickname
-instance Parse AtomPropDef
-instance Parse RenamingPropDef
-instance Parse TypeTheo
-
-instance Parse Program
-
-instance Parse_To_String Literal
-instance Parse_To_String Identifier
-instance Parse_To_String ParenExpr
-instance Parse_To_String Tuple
-instance Parse_To_String BigTuple
-instance Parse_To_String List
-instance Parse_To_String BigList
-instance Parse_To_String ParenFuncApp
-instance Parse_To_String PreFuncApp
-instance Parse_To_String PostFuncApp
-instance Parse_To_String LineOpExpr
-instance Parse_To_String BigOpExpr
-instance Parse_To_String LineFuncExpr
-instance Parse_To_String BigFuncExpr
-instance Parse_To_String CasesFuncExpr
-instance Parse_To_String ValueDef
-instance Parse_To_String GroupedValueDefs
-instance Parse_To_String WhereExpr
-
-instance Parse_To_String TypeId
-instance Parse_To_String TypeVar
-instance Parse_To_String FuncType
-instance Parse_To_String ProdType
-instance Parse_To_String TypeApp
-instance Parse_To_String Type -- CondType
-instance Parse_To_String TupleTypeDef
-instance Parse_To_String OrTypeDef
-instance Parse_To_String TypeNickname
-instance Parse_To_String AtomPropDef
-instance Parse_To_String RenamingPropDef
-instance Parse_To_String TypeTheo
-
-instance Parse_To_String Program
 
 -- For fast vim navigation
 -- Parsers.hs
