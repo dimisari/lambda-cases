@@ -4,7 +4,7 @@ module ASTTypes where
 data Literal = 
   Int Int | R Double | Ch Char | S String 
 
-newtype Identifier = Id String
+newtype Identifier = Id ([String], Maybe Char)
 
 newtype ParenExpr = PE InsideParenExpr
 

@@ -3,6 +3,7 @@
 module ShowInstances where
 
 import ASTTypes
+import Data.List
 
 -- helpers
 show_maybe :: Show a => Maybe a -> String
@@ -31,7 +32,8 @@ instance Show Literal where
     S s -> show s
 
 instance Show Identifier where
-  show = \(Id s) -> s
+  show = \(Id (strs, maybe_digit)) ->
+    intercalate "()" strs ++ show_maybe maybe_digit
 
 instance Show ParenExpr where
   show = \(PE pei) -> "(" ++ show pei ++ ")"

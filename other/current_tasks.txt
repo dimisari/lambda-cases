@@ -1,4 +1,4 @@
 
-- no identifiers with paren in parameters
+- change param identifiers to <param-idents>
 
 # tasks.txt

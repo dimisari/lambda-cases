@@ -93,7 +93,8 @@ instance ToHaskell BigList where
 instance ToHaskell ParenFuncApp where
   to_haskell = \case
     IWA1 (maybe_args1, id_with_args, maybe_args2) ->
-      show_maybe maybe_args1 ++ to_haskell id_with_args ++ show_maybe maybe_args2
+      show_maybe maybe_args1 ++ to_haskell id_with_args ++
+      show_maybe maybe_args2
     AI (args, id, maybe_args) ->
       to_haskell args ++ to_haskell id ++ show_maybe maybe_args
     IA (id, args) ->
@@ -362,8 +363,8 @@ instance ToHaskell LineExprs where
   to_haskell = \(CSLE (le, les)) -> to_haskell le ++ show_list_comma les
 
 instance ToHaskell WhereExpr where
-  to_haskell =
-    \(WE (wde, wdes)) -> "\nwhere\n" ++ to_haskell wde ++ show_list_sep "\n\n" wdes
+  to_haskell = \(WE (wde, wdes)) ->
+    "\nwhere\n" ++ to_haskell wde ++ show_list_sep "\n\n" wdes
 
 instance ToHaskell WhereDefExpr where
   to_haskell = \case
@@ -412,7 +413,8 @@ instance ToHaskell TypeApp where
 
 instance ToHaskell TypeIdWithArgs where
   to_haskell = \(TIWA (tid, tip_str_pairs)) ->
-    to_haskell tid ++ concatMap (\(tip, str) -> to_haskell tip ++ str) tip_str_pairs
+    to_haskell tid ++
+    concatMap (\(tip, str) -> to_haskell tip ++ str) tip_str_pairs
 
 instance ToHaskell TIdOrAdHocTVar where
   to_haskell = \case
@@ -420,10 +422,12 @@ instance ToHaskell TIdOrAdHocTVar where
     AHTV2 ahtv -> to_haskell ahtv
 
 instance ToHaskell TypesInParen where
-  to_haskell = \(TIP (st, sts)) -> "(" ++ to_haskell st ++ show_list_comma sts ++ ")"
+  to_haskell = \(TIP (st, sts)) ->
+    "(" ++ to_haskell st ++ show_list_comma sts ++ ")"
 
 instance ToHaskell ProdType where
-  to_haskell = \(PT (fopt, fopts)) -> to_haskell fopt ++ show_list_sep " x " fopts
+  to_haskell = \(PT (fopt, fopts)) ->
+    to_haskell fopt ++ show_list_sep " x " fopts
 
 instance ToHaskell FieldType where
   to_haskell = \case
@@ -466,8 +470,8 @@ instance ToHaskell TypeDef where
 
 instance ToHaskell TupleTypeDef where
   to_haskell = \(TTD (tn, pcsis, ttde)) ->
-    "tuple_type " ++ to_haskell tn ++ "\nvalue\n  " ++ to_haskell pcsis ++ " : " ++
-    to_haskell ttde
+    "tuple_type " ++ to_haskell tn ++ "\nvalue\n  " ++ to_haskell pcsis ++
+    " : " ++ to_haskell ttde
 
 instance ToHaskell ProdOrPowerType where
   to_haskell = \case
@@ -481,10 +485,12 @@ instance ToHaskell TypeName where
     show_maybe maybe_pvip2
 
 instance ToHaskell ParamVarsInParen where
-  to_haskell = \(PVIP (ptv, ptvs)) -> "(" ++ to_haskell ptv ++ show_list_comma ptvs ++ ")"
+  to_haskell = \(PVIP (ptv, ptvs)) ->
+    "(" ++ to_haskell ptv ++ show_list_comma ptvs ++ ")"
 
 instance ToHaskell IdTuple where
-  to_haskell = \(PCSIs (id, ids)) -> "(" ++ to_haskell id ++ show_list_comma ids ++ ")"
+  to_haskell = \(PCSIs (id, ids)) ->
+    "(" ++ to_haskell id ++ show_list_comma ids ++ ")"
 
 instance ToHaskell OrTypeDef where
   to_haskell =
@@ -502,7 +508,8 @@ instance ToHaskell OrTypeDef where
     show_id_mst_pair = \(id, mst) -> " | " ++ to_haskell id ++ show_mst mst
 
 instance ToHaskell TypeNickname where
-  to_haskell = \(TNN (tn, st)) -> "type_nickname " ++ to_haskell tn ++ " = " ++ to_haskell st
+  to_haskell = \(TNN (tn, st)) ->
+    "type_nickname " ++ to_haskell tn ++ " = " ++ to_haskell st
 
 -- TypePropDef
 instance ToHaskell TypePropDef where
@@ -516,11 +523,11 @@ instance ToHaskell AtomPropDef where
 
 instance ToHaskell RenamingPropDef where
   to_haskell = \(RPD (pnl, pn, pns)) ->
-    to_haskell pnl ++ "\nequivalent\n  " ++ to_haskell pn ++ show_list_comma pns
+    to_haskell pnl ++ "\nequivalent\n  " ++ to_haskell pn ++
+    show_list_comma pns
 
 instance ToHaskell PropNameLine where
-  to_haskell = \(PNL pn) ->
-    "type_proposition " ++ to_haskell pn
+  to_haskell = \(PNL pn) -> "type_proposition " ++ to_haskell pn
 
 instance ToHaskell PropName where
   to_haskell = \case
@@ -530,8 +537,8 @@ instance ToHaskell PropName where
       show_pair_list ahvip_np_pairs ++ show_maybe maybe_ahvip
 
 instance ToHaskell AdHocVarsInParen where
-  to_haskell =
-    \(AHVIP (ahtv, ahtvs)) -> "(" ++ to_haskell ahtv ++ show_list_comma ahtvs ++ ")"
+  to_haskell = \(AHVIP (ahtv, ahtvs)) ->
+    "(" ++ to_haskell ahtv ++ show_list_comma ahtvs ++ ")"
 
 instance ToHaskell NamePart where
   to_haskell = \(NP str) -> str
@@ -555,7 +562,8 @@ instance ToHaskell PropNameWithSubs where
       show_pair_list sip_np_pairs ++ show_maybe maybe_sip
 
 instance ToHaskell SubsInParen where
-  to_haskell = \(SIP (tvs, tvss)) -> "(" ++ to_haskell tvs ++ show_list_comma tvss ++ ")"
+  to_haskell = \(SIP (tvs, tvss)) ->
+    "(" ++ to_haskell tvs ++ show_list_comma tvss ++ ")"
 
 instance ToHaskell TVarSub where
   to_haskell = \case
@@ -576,10 +584,12 @@ instance ToHaskell TypeAppSub where
 
 instance ToHaskell TypeIdWithSubs where
   to_haskell = \(TIWS (tid, souip_str_pairs)) ->
-    to_haskell tid ++ concatMap (\(souip, str) -> to_haskell souip ++ str) souip_str_pairs
+    to_haskell tid ++
+    concatMap (\(souip, str) -> to_haskell souip ++ str) souip_str_pairs
 
 instance ToHaskell SubsOrUndersInParen where
-  to_haskell = \(SOUIP (sou, sous)) -> "(" ++ to_haskell sou ++ show_list_comma sous ++ ")"
+  to_haskell = \(SOUIP (sou, sous)) ->
+    "(" ++ to_haskell sou ++ show_list_comma sous ++ ")"
 
 instance ToHaskell SubOrUnder where
   to_haskell = \case
@@ -602,7 +612,8 @@ instance ToHaskell InParenTSub where
     FTS2 fts -> to_haskell fts
 
 instance ToHaskell ProdTypeSub where
-  to_haskell = \(PTS (fts, fts_l)) -> to_haskell fts ++ show_list_sep " x " fts_l
+  to_haskell = \(PTS (fts, fts_l)) ->
+    to_haskell fts ++ show_list_sep " x " fts_l
 
 instance ToHaskell FieldTypeSub where
   to_haskell = \case
@@ -610,7 +621,8 @@ instance ToHaskell FieldTypeSub where
     PoTS2 pots -> to_haskell pots
 
 instance ToHaskell FuncTypeSub where
-  to_haskell = \(FTS (ioots1, ioots2)) -> to_haskell ioots1 ++ " => " ++ to_haskell ioots2 
+  to_haskell = \(FTS (ioots1, ioots2)) ->
+    to_haskell ioots1 ++ " => " ++ to_haskell ioots2 
 
 instance ToHaskell InOrOutTypeSub where
   to_haskell = \case

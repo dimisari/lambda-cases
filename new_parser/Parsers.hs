@@ -130,18 +130,23 @@ instance HasParser Literal where
 -- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncApp
 instance HasParser Identifier where
   parser =
-    id_str_p >>= \id_str ->
-    case elem id_str ["cases", "where"] of
-      True -> unexpected $ "cannot use \"" ++ id_str ++ "\" as an identifier"
-      False -> return $ Id id_str
+    id_p >>= \id@(Id (strs, maybe_digit)) ->
+    case maybe_digit == Nothing && (strs == ["cases"] || strs == ["where"]) of
+      True ->
+        unexpected $ "cannot use \"" ++ head strs ++ "\" as an identifier"
+      False -> return id
     where
-    id_str_p :: Parser String
-    id_str_p = 
-      to_str lower >++< many lower_under >++<
-      (concat <$> many par_lower_unders) >++< option "" (to_str digit)
+    id_p :: Parser Identifier
+    id_p = Id <$> strs_p +++ optionMaybe digit
 
-    to_str :: Parser Char -> Parser String
-    to_str = fmap (:[])
+    strs_p :: Parser [String]
+    strs_p = mapf before_paren_str_p (:) <*> paren_strs_p
+
+    before_paren_str_p :: Parser String
+    before_paren_str_p = mapf lower (:) <*> many lower_under
+
+    paren_strs_p :: Parser [String]
+    paren_strs_p = many par_lower_unders
 
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
