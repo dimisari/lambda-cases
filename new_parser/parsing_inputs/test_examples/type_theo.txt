@@ -9,7 +9,8 @@ proof
   apply()inside =
     (f, cases)
       no_value => no_value
-      the_value:x => the_value:f(x)
+      the_value:x =>
+        the_value:f(x)
         where 
         x : Int
           = 1#
@@ -38,4 +39,12 @@ type_theorem (ListOf(_)s)Has_A_Wrapper
 proof
   wrapper =
     [_]#
+
+type_theorem (ListOf(_)s)Has_A_Wrapper
+proof
+  wrapper =
+    a
+    where
+    a : Int
+      = b#
 

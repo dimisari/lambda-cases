@@ -20,7 +20,11 @@ cases
 (cases, cases)
   (green, green) => true
   (amber, amber) => true
-  (red, red) => true
+  (red, red) =>
+    a
+    where 
+    a : Bool
+      = true
   ... => false#
 
 (x, cases)

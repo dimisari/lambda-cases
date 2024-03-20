@@ -35,6 +35,9 @@ instance Show Identifier where
   show = \(Id (strs, maybe_digit)) ->
     intercalate "()" strs ++ show_maybe maybe_digit
 
+instance Show SimpleId where
+  show = \(SId str) -> str
+
 instance Show ParenExpr where
   show = \(PE pei) -> "(" ++ show pei ++ ")"
 
@@ -93,8 +96,7 @@ instance Show ParenFuncApp where
       show_maybe maybe_args1 ++ show id_with_args ++ show_maybe maybe_args2
     AI (args, id, maybe_args) ->
       show args ++ show id ++ show_maybe maybe_args
-    IA (id, args) ->
-      show id ++ show args
+    IA (sid, args) -> show sid ++ show args
 
 instance Show Arguments where
   show = \(As loues) -> "(" ++ show loues ++ ")"
@@ -125,14 +127,14 @@ instance Show EmptyParenOrArgs where
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance Show PreFunc where
-  show = \(PF id) -> show id ++ ":"
+  show = \(PF sid) -> show sid ++ ":"
 
 instance Show PreFuncApp where
   show = \(PrFA (pf, oper)) -> show pf ++ show oper
 
 instance Show PostFunc where
   show = \case
-    Id2 id -> "." ++ show id
+    SId1 sid -> "." ++ show sid
     SI2 sid -> "." ++ show sid
     C1 c -> "." ++ show c
 
@@ -161,7 +163,7 @@ instance Show FieldChange where
 
 instance Show Field where
   show = \case
-    Id3 id -> show id
+    SId2 sid -> show sid
     SI3 sid -> show sid
 
 -- Values: OpExpr
@@ -293,19 +295,25 @@ instance Show Case where
   show = \(Ca (m, cb)) -> "\n" ++ show m ++ " =>" ++ show cb
 
 instance Show EndCase where
-  show = \(EC cb) -> "\n... =>" ++ show cb
+  show = \(EC (ecp, cb)) -> "\n" ++ show ecp ++ " =>" ++ show cb
+
+instance Show EndCaseParam where
+  show = \case
+    IWP1 id_with_paren -> show id_with_paren
+    Ellipsis -> "..."
 
 instance Show Matching where
   show = \case
     Lit2 lit -> show lit
-    Id5 id -> show id
+    SId3 sid -> show sid
     PFM (pf, mos) -> show pf ++ show mos
     TM1 tm -> show tm
     LM1 lm -> show lm
 
-instance Show MatchingOrStar where
+instance Show InnerMatching where
   show = \case
     M1 m -> show m
+    IWP2 iwp -> show iwp
     Star -> "*"
 
 instance Show TupleMatching where
@@ -316,13 +324,13 @@ instance Show ListMatching where
     Nothing -> "[]"
     Just (mos, mos_l) -> "[" ++ show mos ++ show_list_comma mos_l ++ "]"
 
-instance Show CaseBody where
-  show = \(CB (cbs, maybe_we)) -> show cbs ++ show_maybe maybe_we
+instance Show IdWithParen where
+  show = \(IWP iwp) -> show (Id iwp)
 
-instance Show CaseBodyStart where
+instance Show CaseBody where
   show = \case
     LFB1 lfb -> show lfb
-    BFB1 bfb -> show bfb
+    BFB1 (bfb, maybe_we) -> show bfb ++ show_maybe maybe_we
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 instance Show ValueDef where
@@ -406,7 +414,7 @@ instance Show TypeIdWithArgs where
 
 instance Show TIdOrAdHocTVar where
   show = \case
-    TId4 tid -> show tid
+    TId2 tid -> show tid
     AHTV2 ahtv -> show ahtv
 
 instance Show TypesInParen where
@@ -474,13 +482,13 @@ instance Show ParamVarsInParen where
   show = \(PVIP (ptv, ptvs)) -> "(" ++ show ptv ++ show_list_comma ptvs ++ ")"
 
 instance Show IdTuple where
-  show = \(PCSIs (id, ids)) -> "(" ++ show id ++ show_list_comma ids ++ ")"
+  show = \(PCSIs (sid, sids)) -> "(" ++ show sid ++ show_list_comma sids ++ ")"
 
 instance Show OrTypeDef where
   show =
-    \(OTD (tn, id, mst, id_mst_pairs)) ->
+    \(OTD (tn, sid, mst, id_mst_pairs)) ->
     "or_type " ++ show tn ++
-    "\nvalues\n  " ++ show id ++ show_mst mst ++
+    "\nvalues\n  " ++ show sid ++ show_mst mst ++
     concatMap show_id_mst_pair id_mst_pairs
     where
     show_mst :: Maybe SimpleType -> String
@@ -488,8 +496,8 @@ instance Show OrTypeDef where
       Nothing -> ""
       Just st -> ":" ++ show st
 
-    show_id_mst_pair :: (Identifier, Maybe SimpleType) -> String
-    show_id_mst_pair = \(id, mst) -> " | " ++ show id ++ show_mst mst
+    show_id_mst_pair :: (SimpleId, Maybe SimpleType) -> String
+    show_id_mst_pair = \(sid, mst) -> " | " ++ show sid ++ show_mst mst
 
 instance Show TypeNickname where
   show = \(TNN (tn, st)) -> "type_nickname " ++ show tn ++ " = " ++ show st
@@ -628,7 +636,7 @@ instance Show IdOrOpEq where
 instance Show TTValueExpr where
   show = \case
     LE2 le -> " " ++ show le
-    VE1 ve -> "\n    " ++ show ve
+    VEMWE (ve, mwe) -> "\n    " ++ show ve ++ show_maybe mwe
 
 -- Program
 instance Show Program where

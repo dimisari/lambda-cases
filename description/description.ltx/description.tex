@@ -198,13 +198,19 @@ letters or underscores. It is also possible to have pairs of parentheses in the
 middle of an identifier (see "Parenthesis Function Application" section
 \ref{subsec:parenfuncapp} for why this can be useful).  Finally, an identifier
 can be ended with a digit.
+\\\\
+A simple identifier is an identifier without any parentheses in the middle.
+It used in expressions where parentheses in the middle don't make sense 
+(e.g. "Prefix and Postfix Functions" \ref{subsubsec:prefixpostfix}).
 
 \item \textit{Grammar}
 \begin{grammar}
 <identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
+
+<simple-id> ::= [a-z] [a-z_]* [ [0-9] ]
 \end{grammar}
 Even though the "\verb|cases|" and "\verb|where|" keywords can be generated
-by this grammar, they cannot be used as identifiers.
+by these grammar rules, they cannot be used as identifiers.
 
 \end{itemize}
 
@@ -538,7 +544,7 @@ f(_, _, r) : Char x Int => String
 <paren-func-app> ::= ""\\""
 [ <arguments> ] <identifier-with-arguments> [ <arguments> ]
 \alt " "<arguments> <identifier> [ <arguments> ]
-\alt " "<identifier> <arguments>
+\alt " "<simple-id> <arguments>
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
 
@@ -553,6 +559,7 @@ f(_, _, r) : Char x Int => String
 \newpage
 
 \subsubsection{Prefix and Postfix Functions}
+\label{subsubsec:prefixpostfix}
  
 \paragraph{Prefix Functions}
 
@@ -595,7 +602,7 @@ An illustration of the aforementioned is the last example, where the function
 
 \item \textit{Grammar}
 \begin{grammar}
-<pre-func> ::= <identifier> `:'
+<pre-func> ::= <simple-id> `:'
 
 <pre-func-app> ::= <pre-func> <operand>
 \end{grammar}
@@ -663,7 +670,7 @@ in the following paragraph.
 
 \item \textit{Grammar}
 \begin{grammar}
-<post-func> ::= `.' ( <identifier> | <special-id> | <change> )
+<post-func> ::= `.' ( <simple-id> | <special-id> | <change> )
 
 <special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
@@ -736,7 +743,7 @@ a function that expects those new values as arguments (last example).
 `change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
 <field-change> ::=
-( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
+( <simple-id> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
 \end{grammar} 
 
 \end{itemize}
@@ -1589,24 +1596,28 @@ expressions in all cases must be the same as the number of parameters with the
 
 <case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
 
-<end-case> ::= <nl> <indent> `...' [ `\ ' ] `=>' <case-body>
+<end-case> ::=
+<nl> <indent> (`...' | <id-with-paren>) [ `\ ' ] `=>' <case-body>
 \\
 
 <matching> ::= 
-<literal> | <identifier> | <pre-func> <matching-or-star> | <tuple-matching> |
+<literal> | <simple-id> | <pre-func> <inner-matching> | <tuple-matching> |
 <list-matching>
 
-<matching-or-star> ::= <matching> | `*'
+<inner-matching> ::= <matching> | `*' | <id-with-paren>
 
 <tuple-matching> ::=
-`(' [ `\ ' ] <matching-or-star> ( <comma> <matching-or-star> )+ [ `\ ' ] `)'
+`(' [ `\ ' ] <inner-matching> ( <comma> <inner-matching> )+ [ `\ ' ] `)'
 
 <list-matching> ::=
-`[' [ `\ ' ] [ <matching-or-star> ( <comma> <matching-or-star> )* ] [ `\ ' ]
+`[' [ `\ ' ] [ <inner-matching> ( <comma> <inner-matching> )* ] [ `\ ' ]
 `]'
 \\
 
-<case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
+<id-with-paren> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )+ [ [0-9] ]
+\\
+
+<case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]
 \end{grammar}
 
 \end{itemize}
@@ -2137,7 +2148,7 @@ _.date_of_birth : MathematicianInfo => Date
 <param-vars-in-paren> ::=
 `(' [ `\ ' ] <param-t-var> ( <comma> <param-t-var> )* [ `\ ' ] `)'
 
-<id-tuple> ::= `(' [ `\ ' ] <identifier> ( <comma> <identifier> )+ [ `\ ' ] `)'
+<id-tuple> ::= `(' [ `\ ' ] <simple-id> ( <comma> <simple-id> )+ [ `\ ' ] `)'
 \end{grammar}
 
 \end{itemize}
@@ -2228,8 +2239,8 @@ non_empty_ls_to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
 `values' ( `\ ' | <nl> `\ \ ' ) \\ 
-<identifier> [ `:' <simple-type> ]
-( [ `\ ' ] | [ `\ ' ] <identifier> [ `:' <simple-type> ] )*
+<simple-id> [ `:' <simple-type> ]
+( [ `\ ' ] | [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
 \end{grammar}
 
 \end{itemize}
@@ -2652,7 +2663,8 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <id-or-op-eq> ::= <identifier> [ <op> <identifier> ] `\ ='
 
-<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <value-expr>
+<tt-value-expr> ::=
+`\ ' <line-expr> | <nl> <indent> <value-expr> [ <where-expr> ]
 \end{grammar} 
 
 \newpage
@@ -2817,6 +2829,8 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
+
+<simple-id> ::= [a-z] [a-z_]* [ [0-9] ]
 \\
 
 <paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'  
@@ -2857,7 +2871,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <paren-func-app> ::= ""\\""
 [ <arguments> ] <identifier-with-arguments> [ <arguments> ]
 \alt " "<arguments> <identifier> [ <arguments> ]
-\alt " "<identifier> <arguments>
+\alt " "<simple-id> <arguments>
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
 
@@ -2868,12 +2882,12 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 \newpage
-<pre-func> ::= <identifier> `:'
+<pre-func> ::= <simple-id> `:'
 
 <pre-func-app> ::= <pre-func> <operand>
 \\
 
-<post-func> ::= `.' ( <identifier> | <special-id> | <change> )
+<post-func> ::= `.' ( <simple-id> | <special-id> | <change> )
 
 <special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
@@ -2884,7 +2898,7 @@ the condition arrow (" \verb|-->| ") arrow.
 `change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
 <field-change> ::=
-( <identifier> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
+( <simple-id> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
 \\
 
 <op-expr> ::= <line-op-expr> | <big-op-expr>
@@ -2948,24 +2962,28 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
 
-<end-case> ::= <nl> <indent> `...' [ `\ ' ] `=>' <case-body>
+<end-case> ::=
+<nl> <indent> (`...' | <id-with-paren>) [ `\ ' ] `=>' <case-body>
 \\
 
 <matching> ::= 
-<literal> | <identifier> | <pre-func> <matching-or-star> | <tuple-matching> |
+<literal> | <simple-id> | <pre-func> <inner-matching> | <tuple-matching> |
 <list-matching>
 
-<matching-or-star> ::= <matching> | `*'
+<inner-matching> ::= <matching> | `*' | <id-with-paren>
 
 <tuple-matching> ::=
-`(' [ `\ ' ] <matching-or-star> ( <comma> <matching-or-star> )+ [ `\ ' ] `)'
+`(' [ `\ ' ] <inner-matching> ( <comma> <inner-matching> )+ [ `\ ' ] `)'
 
 <list-matching> ::=
-`[' [ `\ ' ] [ <matching-or-star> ( <comma> <matching-or-star> )* ] [ `\ ' ]
+`[' [ `\ ' ] [ <inner-matching> ( <comma> <inner-matching> )* ] [ `\ ' ]
 `]'
 \\
 
-<case-body> ::= ( <line-func-body> | <big-func-body> ) [ <where-expr> ]
+<id-with-paren> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )+ [ [0-9] ]
+\\
+
+<case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]
 \\
 
 <value-def> ::= ""\\
@@ -3062,14 +3080,14 @@ the condition arrow (" \verb|-->| ") arrow.
 <param-vars-in-paren> ::=
 `(' [ `\ ' ] <param-t-var> ( <comma> <param-t-var> )* [ `\ ' ] `)'
 
-<id-tuple> ::= `(' [ `\ ' ] <identifier> ( <comma> <identifier> )+ [ `\ ' ] `)'
+<id-tuple> ::= `(' [ `\ ' ] <simple-id> ( <comma> <simple-id> )+ [ `\ ' ] `)'
 \\
 
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
 `values' ( `\ ' | <nl> `\ \ ' ) \\ 
-<identifier> [ `:' <simple-type> ]
-( [ `\ ' ] | [ `\ ' ] <identifier> [ `:' <simple-type> ] )*
+<simple-id> [ `:' <simple-type> ]
+( [ `\ ' ] | [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
 \\
 
 <t-nickname> ::=
@@ -3157,7 +3175,8 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <id-or-op-eq> ::= <identifier> [ <op> <identifier> ] `\ ='
 
-<tt-value-expr> ::= `\ ' <line-expr> | <nl> <indent> <value-expr>
+<tt-value-expr> ::=
+`\ ' <line-expr> | <nl> <indent> <value-expr> [ <where-expr> ]
 \\
 
 <program> ::=
@@ -3240,8 +3259,7 @@ definition:
   \begin{enumerate}
 
   \item
-  After the arrow "\verb|=>|" at the end of the paremeters: $il \leftarrow il
-  + 1$.
+  After the the paremeters line: $il \leftarrow il + 1$.
 
   \item
   At the end of the cases function expression: $il \leftarrow il - 1$.

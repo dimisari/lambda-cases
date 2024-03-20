@@ -32,7 +32,8 @@ initial: ListOf(Int)s
     compute_list: Int^2 => ListOf(Int)s
       = (cases, seed)
         0 => []
-        n => new_seed + compute_list(n - 1, new_seed)
+        n =>
+          new_seed + compute_list(n - 1, new_seed)
           where
           new_seed: Int
             = (seed * 137 + 236 - n) -> mod <- 101

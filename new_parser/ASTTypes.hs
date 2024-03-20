@@ -6,6 +6,8 @@ data Literal =
 
 newtype Identifier = Id ([String], Maybe Char)
 
+newtype SimpleId = SId String
+
 newtype ParenExpr = PE InsideParenExpr
 
 data InsideParenExpr = 
@@ -37,7 +39,7 @@ newtype BigList = BL (LineExprOrUnders, [LineExprOrUnders])
 data ParenFuncApp = 
   IWA1 (Maybe Arguments, IdentWithArgs, Maybe Arguments) |
   AI (Arguments, Identifier, Maybe Arguments) |
-  IA (Identifier, Arguments)
+  IA (SimpleId, Arguments)
 
 newtype Arguments = As LineExprOrUnders
 
@@ -53,12 +55,12 @@ data EmptyParenOrArgs =
   EmptyParen | As1 Arguments
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
-newtype PreFunc = PF Identifier 
+newtype PreFunc = PF SimpleId
 
 newtype PreFuncApp = PrFA (PreFunc, Operand)
 
 data PostFunc = 
-  Id2 Identifier | SI2 SpecialId | C1 Change
+  SId1 SimpleId | SI2 SpecialId | C1 Change
 
 data SpecialId = 
   First | Second | Third | Fourth | Fifth
@@ -73,7 +75,7 @@ newtype Change = C (FieldChange, [FieldChange])
 newtype FieldChange = FC (Field, LineExprOrUnder)
 
 data Field =
-  Id3 Identifier | SI3 SpecialId
+  SId2 SimpleId | SI3 SpecialId
 
 -- Values: OpExpr
 data OpExpr = 
@@ -139,23 +141,26 @@ data CasesParams =
 
 newtype Case = Ca (Matching, CaseBody)
 
-newtype EndCase = EC CaseBody
+newtype EndCase = EC (EndCaseParam, CaseBody)
+
+data EndCaseParam =
+  IWP1 IdWithParen | Ellipsis
 
 data Matching = 
-  Lit2 Literal | Id5 Identifier | PFM (PreFunc, MatchingOrStar) |
+  Lit2 Literal | SId3 SimpleId | PFM (PreFunc, InnerMatching) |
   TM1 TupleMatching | LM1 ListMatching
 
-data MatchingOrStar = 
-  M1 Matching | Star
+data InnerMatching = 
+  M1 Matching | IWP2 IdWithParen | Star
 
-newtype TupleMatching = TM (MatchingOrStar, [MatchingOrStar])
+newtype TupleMatching = TM (InnerMatching, [InnerMatching])
 
-newtype ListMatching = LM (Maybe (MatchingOrStar, [MatchingOrStar]))
+newtype ListMatching = LM (Maybe (InnerMatching, [InnerMatching]))
 
-newtype CaseBody = CB (CaseBodyStart, Maybe WhereExpr)
+newtype IdWithParen = IWP ([String], Maybe Char)
 
-data CaseBodyStart =
-  LFB1 LineFuncBody | BFB1 BigFuncBody
+data CaseBody = 
+  LFB1 LineFuncBody | BFB1 (BigFuncBody, Maybe WhereExpr)
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
@@ -203,7 +208,7 @@ data TypeApp =
 newtype TypeIdWithArgs = TIWA (TypeId, [(TypesInParen, String)])
 
 data TIdOrAdHocTVar =
-  TId4 TypeId | AHTV2 AdHocTVar
+  TId2 TypeId | AHTV2 AdHocTVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
 
@@ -244,11 +249,11 @@ newtype TypeName =
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
-newtype IdTuple = PCSIs (Identifier, [Identifier])
+newtype IdTuple = PCSIs (SimpleId, [SimpleId])
 
 newtype OrTypeDef =
   OTD
-    (TypeName, Identifier, Maybe SimpleType, [(Identifier, Maybe SimpleType)])
+    (TypeName, SimpleId, Maybe SimpleType, [(SimpleId, Maybe SimpleType)])
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 
@@ -322,7 +327,7 @@ data Proof =
 newtype IdOrOpEq = IOOE (Identifier, Maybe (Op, Identifier))
 
 data TTValueExpr =
-  LE2 LineExpr | VE1 ValueExpr
+  LE2 LineExpr | VEMWE (ValueExpr, Maybe WhereExpr)
 
 -- Program
 newtype Program = P (ProgramPart, [ProgramPart])

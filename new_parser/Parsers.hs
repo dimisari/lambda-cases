@@ -90,12 +90,13 @@ pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
 (++<) :: Parser (a, b) -> Parser c -> Parser (a, b, c)
 pab ++< pc = pab >>= \(a, b) -> pc >>= \c -> return (a, b, c)
 
-(>++<) :: Parser String -> Parser String -> Parser String
+(>++<) :: Parser [a] -> Parser [a] -> Parser [a]
 ps1 >++< ps2 = mapf (ps1 +++ ps2) (uncurry (++)) 
 
+(>:<) :: Parser a -> Parser [a] -> Parser [a]
+a >:< as = mapf a (:) <*> as
+
 -- other helpers
-(.>) = flip (.)
-(%>) = flip ($)
 mapf = flip fmap
 
 -- HasParser class
@@ -114,7 +115,7 @@ instance HasParser Double where
     int_p = mapf (parser :: Parser Int) show
 
     exponent_p :: Parser String
-    exponent_p = mapf (char 'e' <|> char 'E') (:) <*> int_p
+    exponent_p = (char 'e' <|> char 'E') >:< int_p
 
 instance HasParser Char where
   parser = charLiteral
@@ -140,13 +141,26 @@ instance HasParser Identifier where
     id_p = Id <$> strs_p +++ optionMaybe digit
 
     strs_p :: Parser [String]
-    strs_p = mapf before_paren_str_p (:) <*> paren_strs_p
+    strs_p = before_paren_str_p >:< paren_strs_p
 
     before_paren_str_p :: Parser String
-    before_paren_str_p = mapf lower (:) <*> many lower_under
+    before_paren_str_p = lower >:< many lower_under
 
     paren_strs_p :: Parser [String]
     paren_strs_p = many par_lower_unders
+
+instance HasParser SimpleId where
+  parser =
+    id_str_p >>= \id_str ->
+    case elem id_str ["cases", "where"] of
+      True -> unexpected $ "cannot use \"" ++ id_str ++ "\" as an identifier"
+      False -> return $ SId id_str
+    where
+    id_str_p :: Parser String
+    id_str_p = lower >:< many lower_under >++< option "" str_digit
+
+    str_digit :: Parser String
+    str_digit = mapf digit (:[])
 
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
@@ -247,7 +261,7 @@ instance HasParser PreFuncApp where
   parser = PrFA <$> parser +++ parser
 
 instance HasParser PostFunc where
-  parser = char '.' *> (C1 <$> parser <|> Id2 <$> parser <|> SI2 <$> parser)
+  parser = char '.' *> (C1 <$> parser <|> SId1 <$> parser <|> SI2 <$> parser)
 
 instance HasParser SpecialId where
   parser =
@@ -277,7 +291,7 @@ instance HasParser Change where
       FC <$> field_p +++ (opt_space_around (string "=") *> parser)
 
     field_p :: Parser Field
-    field_p = Id3 <$> parser <|> SI3 <$> parser
+    field_p = SId2 <$> parser <|> SI3 <$> parser
 
 -- HasParser: OpExpr
 instance HasParser OpExpr where
@@ -398,18 +412,21 @@ instance HasParser CasesParams where
     CParams <$> in_paren (parser +++ many1 (comma *> parser))
 
 instance HasParser Case where
-  parser = Ca <$> (try $ nl_indent *> parser) +++ (func_arr *> parser)
+  parser = Ca <$> try (nl_indent *> parser) +++ (func_arr *> parser)
 
 instance HasParser EndCase where
-  parser = EC <$> (try (nl_indent *> string "...") *> func_arr *> parser)
+  parser = EC <$> try (nl_indent *> parser) +++ (func_arr *> parser)
+
+instance HasParser EndCaseParam where
+  parser = IWP1 <$> parser <|> string "..." *> return Ellipsis
 
 instance HasParser Matching where
   parser = 
-    Lit2 <$> parser <|> PFM <$> try (parser +++ parser) <|> Id5 <$> parser <|>
+    Lit2 <$> parser <|> PFM <$> try (parser +++ parser) <|> SId3 <$> parser <|>
     TM1 <$> parser <|> LM1 <$> parser
 
-instance HasParser MatchingOrStar where
-  parser = M1 <$> parser <|> char '*' *> return Star
+instance HasParser InnerMatching where
+  parser = IWP2 <$> try parser <|> M1 <$> parser <|> char '*' *> return Star
 
 instance HasParser TupleMatching where
   parser = TM <$> in_paren (parser +++ many1 (comma *> parser))
@@ -418,19 +435,27 @@ instance HasParser ListMatching where
   parser = 
     LM <$> (char '[' *> opt_space_around (optionMaybe inside_p) <* char ']')
     where
-    inside_p :: Parser (MatchingOrStar, [MatchingOrStar])
+    inside_p :: Parser (InnerMatching, [InnerMatching])
     inside_p = parser +++ (many $ comma *> parser)
+
+instance HasParser IdWithParen where
+  parser = 
+    IWP <$> strs_p +++ optionMaybe digit
+    where
+    strs_p :: Parser [String]
+    strs_p = before_paren_str_p >:< paren_strs_p
+
+    before_paren_str_p :: Parser String
+    before_paren_str_p = lower >:< many lower_under
+
+    paren_strs_p :: Parser [String]
+    paren_strs_p = many1 par_lower_unders
 
 instance HasParser CaseBody where
   parser = 
-    increase_il_by 1 >>
-
-    (BFB1 <$> try parser <|> LFB1 <$> parser) >>= \case_body_start ->
-    optionMaybe (try parser) >>= \maybe_where_expr ->
-
-    decrease_il_by 1 >>
-
-    return (CB (case_body_start, maybe_where_expr))
+    increase_il_by 1 *>
+    (BFB1 <$> try parser +++ optionMaybe (try parser) <|> LFB1 <$> parser) <*
+    decrease_il_by 1
 
 -- HasParser: ValueDef, WhereExpr
 instance HasParser ValueDef where
@@ -506,7 +531,7 @@ instance HasParser TypeIdOrVar where
   parser = TV1 <$> try parser <|> TId1 <$> parser
 
 instance HasParser TypeId where
-  parser = TId <$> (mapf upper (:) <*> many (upper <|> lower))
+  parser = TId <$> upper >:< many (upper <|> lower)
 
 instance HasParser TypeVar where
   parser = PTV1 <$> try parser <|> AHTV1 <$> parser
@@ -539,7 +564,7 @@ instance HasParser TypeIdWithArgs where
   parser = TIWA <$> parser +++ many1 (try $ parser +++ many1 (lower <|> upper))
 
 instance HasParser TIdOrAdHocTVar where
-  parser = TId4 <$> try parser <|> AHTV2 <$> parser
+  parser = TId2 <$> try parser <|> AHTV2 <$> parser
 
 instance HasParser TypesInParen where
   parser = TIP <$> in_paren (parser +++ many (comma *> parser))
@@ -600,13 +625,13 @@ instance HasParser IdTuple where
 instance HasParser OrTypeDef where
   parser =
     string "or_type " *> parser >>= \type_name ->
-    nl *> string "values" *> space_or_nl *> parser >>= \identifier ->
+    nl *> string "values" *> space_or_nl *> parser >>= \simple_id ->
     optionMaybe (char ':' *> parser) >>= \maybe_simple_type ->
     many1 ident_maybe_simple_type_p >>= \ident_maybe_simple_types ->
     return $
-      OTD (type_name, identifier, maybe_simple_type, ident_maybe_simple_types)
+      OTD (type_name, simple_id, maybe_simple_type, ident_maybe_simple_types)
     where
-    ident_maybe_simple_type_p :: Parser (Identifier, Maybe SimpleType)
+    ident_maybe_simple_type_p :: Parser (SimpleId, Maybe SimpleType)
     ident_maybe_simple_type_p =
       (opt_space_around (string "|") *> parser) +++
       (optionMaybe $ char ':' *> parser)
@@ -664,7 +689,7 @@ instance HasParser NamePart where
     lower_upper = fmap pure (lower <|> upper)
 
     under_lower_upper :: Parser String
-    under_lower_upper = mapf underscore (:) <*> lower_upper
+    under_lower_upper = underscore >:< lower_upper
 
 -- HasParser: TypeTheo
 instance HasParser TypeTheo where
@@ -764,11 +789,12 @@ instance HasParser IdOrOpEq where
 
 instance HasParser TTValueExpr where
   parser =
-    VE1 <$> value_expr_p <|> LE2 <$> (char ' ' *> parser)
+    VEMWE <$> vemwe_p <|> LE2 <$> (char ' ' *> parser)
     where
-    value_expr_p :: Parser ValueExpr
-    value_expr_p =
-      increase_il_by 2 *> try nl_indent *> parser <* decrease_il_by 2
+    vemwe_p :: Parser (ValueExpr, Maybe WhereExpr)
+    vemwe_p =
+      increase_il_by 2 *> try nl_indent *> parser +++ optionMaybe parser <*
+      decrease_il_by 2
 
 -- HasParser: Program
 instance HasParser Program where

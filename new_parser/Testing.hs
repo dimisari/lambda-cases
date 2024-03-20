@@ -25,13 +25,16 @@ type ParseFunc = TestExample -> ParseResultString
 type FileString = String
 type TestExample = String
 
-type ParseToString a = TestExample -> ResultString a
+type ParseToResStr a = TestExample -> ResultString a
 newtype ResultString a = RS ParseResultString
 
 -- paths
 [progs_dir, test_exs_dir, in_dir, res_dir] =
   ["programs/", "test_examples/", "parsing_inputs/", "parsing_results/"]
   :: [FilePath]
+
+-- helpers
+(.>) = flip (.)
 
 -- main
 main :: IO ()
@@ -50,7 +53,7 @@ read_prog_parse_write_res pfn =
 
   parse_program :: ParseFunc
   parse_program =
-    (parse_and_ret_res_str :: ParseToString Program) .> extract_res_str
+    (parse_and_ret_res_str :: ParseToResStr Program) .> extract_res_str
 
 -- run_parse_func_for_test_exs_file
 run_parse_func_for_test_exs_file :: (FileName, ParseFunc) -> IO ()
@@ -71,7 +74,7 @@ run_parse_func_for_test_exs_file (file_name, parse_func) =
 parse :: HasParser a => String -> Either ParseError a
 parse = runParser (parser <* eof) (0, False) "" 
 
-parse_and_ret_res_str :: (HasParser a, Show a) => ParseToString a
+parse_and_ret_res_str :: (HasParser a, Show a) => ParseToResStr a
 parse_and_ret_res_str =
   parse .> res_to_str
   where
@@ -87,96 +90,96 @@ extract_res_str = \(RS s) -> s
 test_exs_file_name_parse_func_pairs :: [(FileName, ParseFunc)]
 test_exs_file_name_parse_func_pairs =
   [ ( "literals.txt"
-    , (parse_and_ret_res_str :: ParseToString Literal) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr Literal) .> extract_res_str
     )
   , ( "identifiers.txt"
-    , (parse_and_ret_res_str :: ParseToString Identifier) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr Identifier) .> extract_res_str
     )
   , ( "paren_expr.txt"
-    , (parse_and_ret_res_str :: ParseToString ParenExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr ParenExpr) .> extract_res_str
     )
   , ( "tuple.txt"
-    , (parse_and_ret_res_str :: ParseToString Tuple) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr Tuple) .> extract_res_str
     )
   , ( "big_tuple.txt"
-    , (parse_and_ret_res_str :: ParseToString BigTuple) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr BigTuple) .> extract_res_str
     )
   , ( "list.txt"
-    , (parse_and_ret_res_str :: ParseToString List) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr List) .> extract_res_str
     )
   , ( "big_list.txt"
-    , (parse_and_ret_res_str :: ParseToString BigList) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr BigList) .> extract_res_str
     )
   , ( "paren_func_app.txt"
-    , (parse_and_ret_res_str :: ParseToString ParenFuncApp) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr ParenFuncApp) .> extract_res_str
     )
   , ( "prefix_func_app.txt"
-    , (parse_and_ret_res_str :: ParseToString PreFuncApp) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr PreFuncApp) .> extract_res_str
     )
   , ( "postfix_func_app.txt"
-    , (parse_and_ret_res_str :: ParseToString PostFuncApp) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr PostFuncApp) .> extract_res_str
     )
   , ( "line_op_expr.txt"
-    , (parse_and_ret_res_str :: ParseToString LineOpExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr LineOpExpr) .> extract_res_str
     )
   , ( "big_op_expr.txt"
-    , (parse_and_ret_res_str :: ParseToString BigOpExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr BigOpExpr) .> extract_res_str
     )
   , ( "line_func_expr.txt"
-    , (parse_and_ret_res_str :: ParseToString LineFuncExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr LineFuncExpr) .> extract_res_str
     )
   , ( "big_func_expr.txt"
-    , (parse_and_ret_res_str :: ParseToString BigFuncExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr BigFuncExpr) .> extract_res_str
     )
   , ( "cases_func_expr.txt"
-    , (parse_and_ret_res_str :: ParseToString CasesFuncExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr CasesFuncExpr) .> extract_res_str
     )
   , ( "value_def.txt"
-    , (parse_and_ret_res_str :: ParseToString ValueDef) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr ValueDef) .> extract_res_str
     )
   , ( "grouped_val_defs.txt"
-    , (parse_and_ret_res_str :: ParseToString GroupedValueDefs) .>
+    , (parse_and_ret_res_str :: ParseToResStr GroupedValueDefs) .>
       extract_res_str
     )
   , ( "where_expr.txt"
-    , (parse_and_ret_res_str :: ParseToString WhereExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr WhereExpr) .> extract_res_str
     )
   , ( "type_id.txt"
-    , (parse_and_ret_res_str :: ParseToString TypeId) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr TypeId) .> extract_res_str
     )
   , ( "type_var.txt"
-    , (parse_and_ret_res_str :: ParseToString TypeVar) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr TypeVar) .> extract_res_str
     )
   , ( "func_type.txt"
-    , (parse_and_ret_res_str :: ParseToString FuncType) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr FuncType) .> extract_res_str
     )
   , ( "prod_type.txt"
-    , (parse_and_ret_res_str :: ParseToString ProdType) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr ProdType) .> extract_res_str
     )
   , ( "type_app.txt"
-    , (parse_and_ret_res_str :: ParseToString TypeApp) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr TypeApp) .> extract_res_str
     )
   , ( "cond_type.txt"
-    , (parse_and_ret_res_str :: ParseToString Type) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr Type) .> extract_res_str
     )
   , ( "tuple_type_def.txt"
-    , (parse_and_ret_res_str :: ParseToString TupleTypeDef) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr TupleTypeDef) .> extract_res_str
     )
   , ( "or_type_def.txt"
-    , (parse_and_ret_res_str :: ParseToString OrTypeDef) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr OrTypeDef) .> extract_res_str
     )
   , ( "type_nickname.txt"
-    , (parse_and_ret_res_str :: ParseToString TypeNickname) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr TypeNickname) .> extract_res_str
     )
   , ( "atom_prop_def.txt"
-    , (parse_and_ret_res_str :: ParseToString AtomPropDef) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr AtomPropDef) .> extract_res_str
     )
   , ( "renaming_prop_def.txt"
-    , (parse_and_ret_res_str :: ParseToString RenamingPropDef) .>
+    , (parse_and_ret_res_str :: ParseToResStr RenamingPropDef) .>
       extract_res_str
     )
   , ( "type_theo.txt"
-    , (parse_and_ret_res_str :: ParseToString TypeTheo) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr TypeTheo) .> extract_res_str
     )
   ]
 
