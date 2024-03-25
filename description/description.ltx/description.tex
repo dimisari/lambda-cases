@@ -542,13 +542,13 @@ f(_, _, r) : Char x Int => String
 \item \textit{Grammar}
 \begin{grammar}
 <paren-func-app> ::= ""\\""
-[ <arguments> ] <identifier-with-arguments> [ <arguments> ]
+[ <arguments> ] <ident-with-args> [ <arguments> ]
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<simple-id> <arguments>
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
 
-<identifier-with-arguments> ::= ""\\""
+<ident-with-args> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
 [a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
 [ [0-9] ]
@@ -926,7 +926,7 @@ necessarily numbers but it is somewhat intuitively obvious what they should do
 in those other types. Furthermore, their behaviour can be defined by the user
 for new user defined types!
 
-\paragraph{Comparison and Boolean Operators}
+\paragraph{Comparison, Boolean and Bitwise Operators}
 
 \begin{center}
 \begin{tabular}{ |c|c|c| } 
@@ -953,7 +953,10 @@ Operator & Type
 \verb|<| & \verb|(@A)Can_Be_Less_Than(@B) --> @A x @B => Bool|
 \\
 \hline
-\verb|&| \texttt{|} & \verb|Bool^2 => Bool|
+\verb|&| & \verb|(@A)Has_And --> @A^2 => @A|
+\\
+\hline
+\texttt{|} & \verb|(@A)Has_Or --> @A^2 => @A|
 \\
 \hline
 \end{tabular}
@@ -972,13 +975,16 @@ the following example:
 >> 1.1 == 1
   : Bool
   ==> false
+>> 1.0 == 1
+  : Bool
+  ==> true
 \end{verbatim}
 In order for the example to work we need to be able to compare integers and
 reals.  Similarly, all the comparison operators need to be able to work on
-arguments of different types. Other than that, the comparison and boolean
-operators behave similarly to most programming languages. It's also worth
-noting that the "and" and "or" operators have the symbol once
-(\verb|&| \texttt{|}) instead of twice (\verb|&&| \texttt{||}).
+arguments of different types.
+\\\\
+Boolean "and" and bitwise "and" are combined into one general "and" operator
+(\verb|&|). The same applies to the "or" operator (\texttt{|}).
 
 \newpage
 
@@ -1281,38 +1287,38 @@ Operator & Type & Description
 \\ 
 \hline
 \hline
-\verb|->| & \verb|T1 x (T1 => T2) => T2| & Right function application
+\verb|->| & \verb|T1 x (T1 => T2) => T2| & Right Function Application
 \\
 \hline
-\verb|<-| & \verb|(T1 => T2) x T1 => T2| & Left function application
+\verb|<-| & \verb|(T1 => T2) x T1 => T2| & Left Function Application
 \\
 \hline
 \verb|o>| & \verb|(T1 => T2) x (T2 => T3) => (T1 => T3)| &
-Right function composition
+Right Function Composition
 \\
 \hline
 \verb|<o| & \verb|(T2 => T3) x (T1 => T2) => (T1 => T3)| &
-Left function composition
+Left Function Composition
 \\
 \hline
 \verb|^| & \verb|(@A)To_The(@B)Is(@C) --> @A x @B => @C| &
-General exponentiation
+General Exponentiation
 \\
 \hline
 \verb|*| & \verb|(@A)And(@B)Multiply_To(@C) --> @A x @B => @C| &
-General multiplication
+General Multiplication
 \\
 \hline
 \verb|/| & \verb|(@A)Divided_By(@B)Is(@C) --> @A x @B => @C| &
-General division
+General Division
 \\
 \hline
 \verb|+| & \verb|(@A)And(@B)Add_To(@C) --> @A x @B => @C| &
-General addition
+General Addition
 \\ 
 \hline
 \verb|-| & \verb|(@A)Minus(@B)Is(@C) --> @A x @B => @C| &
-General subtraction
+General Subtraction
 \\
 \hline
 \verb|==| & \verb|(@A)And(@B)Can_Be_Equal --> @A x @B => Bool| &
@@ -1324,30 +1330,33 @@ General Inequality
 \\
 \hline
 \verb|>=| & \verb|(@A)Can_Be_Gr_Or_Eq_To(@B) --> @A x @B => Bool| &
-General greater than or equal to
+General Greater Than or Equal To
 \\
 \hline
 \verb|<=| & \verb|(@A)Can_Be_Le_Or_Eq_To(@B) --> @A x @B => Bool| &
-General less than or equal to
+General Less Than or Equal To
 \\
 \hline
 \verb|>| & \verb|(@A)Can_Be_Greater_Than(@B) --> @A x @B => Bool| &
-General greater than
+General Greater Than
 \\
 \hline
 \verb|<| & \verb|(@A)Can_Be_Less_Than(@B) --> @A x @B => Bool| &
-General less than
+General Less Than
 \\
 \hline
-\verb|&| \texttt{|} & \verb|Bool^2 => Bool| & Boolean operators
+\verb|&| & \verb|(@A)Has_And --> @A^2 => @A| & General And
+\\
+\hline
+\texttt{|} & \verb|(@A)Has_Or --> @A^2 => @A| & General Or
 \\
 \hline
 \verb|;>| & \verb|(@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)| &
-"Use" environment action op 
+"Use" Environment Action
 \\
 \hline
 \verb|;| & \verb|(@E)Has_Then --> @E(T1) x @E(T2) => @E(T2)| &
-"Then" environment action op
+"Then" Environment Action
 \\
 \hline
 \end{tabular}
@@ -2869,13 +2878,13 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <paren-func-app> ::= ""\\""
-[ <arguments> ] <identifier-with-arguments> [ <arguments> ]
+[ <arguments> ] <ident-with-args> [ <arguments> ]
 \alt " "<arguments> <identifier> [ <arguments> ]
 \alt " "<simple-id> <arguments>
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
 
-<identifier-with-arguments> ::= ""\\""
+<ident-with-args> ::= ""\\""
 [a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
 [a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
 [ [0-9] ]

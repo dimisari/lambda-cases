@@ -75,15 +75,23 @@ opt_space_around = \a -> opt_space *> a <* opt_space
 in_paren :: Parser a -> Parser a
 in_paren = \a -> char '(' *> opt_space_around a <* char ')'
 
-par_lower_unders :: Parser String
-par_lower_unders = (try $ string "()") >++< many1 lower_under
-
 int_greater_than_1 :: Parser Int
 int_greater_than_1 =
   parser >>= \i -> case (i < 2) of
     True -> unexpected "integer in power type must be greater than 1"
     False -> return i
 
+--  helper parsers for identifiers
+before_paren_str_p :: Parser String
+before_paren_str_p = lower >:< many lower_under
+
+par_lower_unders :: Parser String
+par_lower_unders = (try $ string "()") >++< many1 lower_under
+
+strs_p :: Parser [String]
+strs_p = before_paren_str_p >:< many par_lower_unders
+
+-- helper parser combinators
 (+++) :: Parser a -> Parser b -> Parser (a, b)
 pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
 
@@ -139,15 +147,6 @@ instance HasParser Identifier where
     where
     id_p :: Parser Identifier
     id_p = Id <$> strs_p +++ optionMaybe digit
-
-    strs_p :: Parser [String]
-    strs_p = before_paren_str_p >:< paren_strs_p
-
-    before_paren_str_p :: Parser String
-    before_paren_str_p = lower >:< many lower_under
-
-    paren_strs_p :: Parser [String]
-    paren_strs_p = many par_lower_unders
 
 instance HasParser SimpleId where
   parser =
@@ -216,8 +215,8 @@ instance HasParser List where
 instance HasParser BigList where
   parser =
     BL <$>
-    (char '[' *> opt_space *> parser) +++
-    many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ']'
+      (char '[' *> opt_space *> parser) +++
+      many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ']'
 
 instance HasParser ParenFuncApp where
   parser = 
@@ -233,7 +232,7 @@ instance HasParser Arguments where
 
 instance HasParser IdentWithArgs where
   parser =
-    ident_with_args_start_p >>= \ident_with_args_start ->
+    parser >>= \ident_with_args_start ->
     parser >>= \arguments ->
     many1 lower_under >>= \string ->
     many (try $ empty_paren_or_args_p +++ many1 lower_under) >>= \pairs ->
@@ -241,17 +240,13 @@ instance HasParser IdentWithArgs where
     return $
       IWA $ (ident_with_args_start, arguments, string, pairs, maybe_digit)
     where
-    ident_with_args_start_p :: Parser IdentWithArgsStart
-    ident_with_args_start_p =
-      lower >>= \l1 ->
-      many lower_under >>= \lower_unders ->
-      many par_lower_unders >>= \par_lower_unders_l ->
-      return $ IWAS $ l1 : concat [lower_unders, concat par_lower_unders_l]
-
     empty_paren_or_args_p :: Parser EmptyParenOrArgs
     empty_paren_or_args_p =
       try (string "()") *> return EmptyParen <|> As1 <$> parser
       
+
+instance HasParser IdentWithArgsStart where
+  parser = IWAS <$> strs_p
 
 -- HasParser: PreFunc, PostFunc, BasicExpr, Change
 instance HasParser PreFunc where
@@ -440,14 +435,8 @@ instance HasParser ListMatching where
 
 instance HasParser IdWithParen where
   parser = 
-    IWP <$> strs_p +++ optionMaybe digit
+    IWP <$> before_paren_str_p >:< paren_strs_p +++ optionMaybe digit
     where
-    strs_p :: Parser [String]
-    strs_p = before_paren_str_p >:< paren_strs_p
-
-    before_paren_str_p :: Parser String
-    before_paren_str_p = lower >:< many lower_under
-
     paren_strs_p :: Parser [String]
     paren_strs_p = many1 par_lower_unders
 

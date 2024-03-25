@@ -103,10 +103,8 @@ instance Show Arguments where
 
 instance Show IdentWithArgs where
   show =
-    \(IWA
-      (id_with_args_start, args, str, empty_par_or_args_str_pairs, maybe_ch)
-     ) ->
-    show id_with_args_start ++ show args ++ str ++
+    \(IWA (iwas, args, str, empty_par_or_args_str_pairs, maybe_ch)) ->
+    show iwas ++ show args ++ str ++
     concatMap show_pair empty_par_or_args_str_pairs ++ show_maybe_char maybe_ch
     where
     show_pair :: (EmptyParenOrArgs, String) -> String
@@ -118,7 +116,7 @@ instance Show IdentWithArgs where
       Just c -> [c]
 
 instance Show IdentWithArgsStart where
-  show = \(IWAS str) -> str
+  show = \(IWAS strs) -> intercalate "()" strs
 
 instance Show EmptyParenOrArgs where
   show = \case

@@ -49,7 +49,7 @@ newtype IdentWithArgs =
     , Maybe Char
     )
 
-newtype IdentWithArgsStart = IWAS String
+newtype IdentWithArgsStart = IWAS [String]
 
 data EmptyParenOrArgs =
   EmptyParen | As1 Arguments

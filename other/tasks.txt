@@ -21,9 +21,6 @@
 
 - finish predefined
 
-- also & | polymorphic?
-  - (A)Has_And | Has_Or
-
 - add element index mechanism
   - .<int-lit> for element
   - .change for changing
