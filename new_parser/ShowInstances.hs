@@ -191,13 +191,11 @@ instance Show BigOpExprOpSplit where
     show_list osls ++ show_maybe maybe_oes ++ show ose
 
 instance Show OpSplitLine where
-  show = \(OSL (oes, maybe_op_arg_comp_op)) ->
-    show oes ++ show_moaco maybe_op_arg_comp_op ++ "  "
-    where
-    show_moaco :: Maybe (Operand, FuncCompOp) -> String
-    show_moaco = \case
-      Nothing -> "\n"
-      Just (op_arg, comp_op) -> show op_arg ++ " " ++  show comp_op ++ "\n"
+  show = \(OSL (oes, maybe_oper_fco)) ->
+    show oes ++ show_maybe maybe_oper_fco ++ "\n  "
+
+instance Show OperFCO where
+  show = \(OFCO (oper, fco)) -> show oper ++ " " ++ show fco
 
 instance Show OpSplitEnd where
   show = \case

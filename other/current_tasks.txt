@@ -1,2 +1,4 @@
 
+- param num state needs to be global?
+
 # tasks.txt

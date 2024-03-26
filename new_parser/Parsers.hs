@@ -320,12 +320,14 @@ instance HasParser BigOpExprOpSplit where
 
 instance HasParser OpSplitLine where
   parser =
-    OSL <$> (parser +++ maybe_op_arg_comp_op <* indent)
+    OSL <$> (parser +++ maybe_oper_fco_parser <* indent)
     where
-    maybe_op_arg_comp_op :: Parser (Maybe (Operand, FuncCompOp))
-    maybe_op_arg_comp_op =
-      try nl *> return Nothing <|>
-      Just <$> (parser +++ (char ' ' *> parser <* char '\n'))
+    maybe_oper_fco_parser :: Parser (Maybe OperFCO)
+    maybe_oper_fco_parser =
+      try nl *> return Nothing <|> Just <$> parser
+
+instance HasParser OperFCO where
+  parser = OFCO <$> parser +++ (char ' ' *> parser <* char '\n')
 
 instance HasParser OpSplitEnd where
   parser = FE1 <$> try parser <|> O2 <$> parser
