@@ -50,7 +50,7 @@ instance Show Tuple where
   show = \(T (loue, loues)) -> "(" ++ show loue ++ ", " ++ show loues ++ ")"
 
 instance Show LineExprOrUnders where
-  show = \(LOUEs (loue, loues)) -> show loue ++ show_list_comma loues
+  show = \(LEOUs (loue, loues)) -> show loue ++ show_list_comma loues
 
 instance Show LineExprOrUnder where
   show = \case
@@ -178,7 +178,7 @@ instance Show LineOpExpr where
 
 instance Show LineOpExprEnd where
   show = \case
-    OA1 oa -> show oa
+    O1 o -> show o
     LFE3 sfe -> show sfe
 
 instance Show BigOpExpr where
@@ -201,7 +201,7 @@ instance Show OpSplitLine where
 
 instance Show OpSplitEnd where
   show = \case
-    OA2 oa -> show oa
+    O2 o -> show o
     FE1 fe -> show fe
 
 instance Show BigOpExprFuncSplit where

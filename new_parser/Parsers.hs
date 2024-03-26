@@ -171,7 +171,7 @@ instance HasParser Tuple where
   parser = T <$> in_paren (parser +++ (comma *> parser))
 
 instance HasParser LineExprOrUnders where
-  parser = LOUEs <$> parser +++ many (comma *> parser)
+  parser = LEOUs <$> parser +++ many (comma *> parser)
 
 instance HasParser LineExprOrUnder where
   parser = LE1 <$> try parser <|> underscore *> return Underscore1
@@ -220,12 +220,17 @@ instance HasParser BigList where
 
 instance HasParser ParenFuncApp where
   parser = 
-    try iwa_parser <|> ai_parser <|> ia_parser <?>
-    "parenthesis function application"
+    IWA1 <$> try iwa_pfa_parser <|> AI <$> ai_pfa_parser <|>
+    IA <$> ia_pfa_parser <?> "parenthesis function application"
     where
-    iwa_parser = IWA1 <$> optionMaybe parser +++ parser ++< optionMaybe parser
-    ai_parser = AI <$> parser +++ parser ++< optionMaybe parser
-    ia_parser = IA <$> parser +++ parser
+    iwa_pfa_parser :: Parser IWAParenFuncApp
+    iwa_pfa_parser = optionMaybe parser +++ parser ++< optionMaybe parser
+
+    ai_pfa_parser :: Parser AIParenFuncApp
+    ai_pfa_parser = parser +++ parser ++< optionMaybe parser
+
+    ia_pfa_parser :: Parser (SimpleId, Arguments)
+    ia_pfa_parser = parser +++ parser
 
 instance HasParser Arguments where
   parser = As <$> in_paren parser
@@ -299,7 +304,7 @@ instance HasParser LineOpExpr where
   parser = LOE <$> try parser +++ parser
 
 instance HasParser LineOpExprEnd where
-  parser = LFE3 <$> try parser <|> OA1 <$> parser
+  parser = LFE3 <$> try parser <|> O1 <$> parser
 
 instance HasParser BigOpExpr where
   parser = BOEOS1 <$> try parser <|> BOEFS1 <$> parser
@@ -323,7 +328,7 @@ instance HasParser OpSplitLine where
       Just <$> (parser +++ (char ' ' *> parser <* char '\n'))
 
 instance HasParser OpSplitEnd where
-  parser = FE1 <$> try parser <|> OA2 <$> parser
+  parser = FE1 <$> try parser <|> O2 <$> parser
 
 instance HasParser BigOpExprFuncSplit where
   parser = BOEFS <$> parser +++ (we_are_not_in_equal_line *> parser)

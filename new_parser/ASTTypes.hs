@@ -15,7 +15,7 @@ data InsideParenExpr =
 
 newtype Tuple = T (LineExprOrUnder, LineExprOrUnders)
 
-newtype LineExprOrUnders = LOUEs (LineExprOrUnder, [LineExprOrUnder]) 
+newtype LineExprOrUnders = LEOUs (LineExprOrUnder, [LineExprOrUnder]) 
 
 data LineExprOrUnder = 
   LE1 LineExpr | Underscore1
@@ -36,18 +36,16 @@ newtype List = L (Maybe LineExprOrUnders)
 
 newtype BigList = BL (LineExprOrUnders, [LineExprOrUnders])
 
+type IWAParenFuncApp = (Maybe Arguments, IdentWithArgs, Maybe Arguments)
+type AIParenFuncApp = (Arguments, Identifier, Maybe Arguments)
 data ParenFuncApp = 
-  IWA1 (Maybe Arguments, IdentWithArgs, Maybe Arguments) |
-  AI (Arguments, Identifier, Maybe Arguments) |
-  IA (SimpleId, Arguments)
+  IWA1 IWAParenFuncApp | AI AIParenFuncApp | IA (SimpleId, Arguments)
 
 newtype Arguments = As LineExprOrUnders
 
+type EpoaStr = (EmptyParenOrArgs, String)
 newtype IdentWithArgs =
-  IWA
-    ( IdentWithArgsStart, Arguments, String, [(EmptyParenOrArgs, String)]
-    , Maybe Char
-    )
+  IWA (IdentWithArgsStart, Arguments, String, [EpoaStr], Maybe Char)
 
 newtype IdentWithArgsStart = IWAS [String]
 
@@ -86,7 +84,7 @@ newtype OpExprStart = OES [(Operand, Op)]
 newtype LineOpExpr = LOE (OpExprStart, LineOpExprEnd)
 
 data LineOpExprEnd = 
-  OA1 Operand | LFE3 LineFuncExpr
+  O1 Operand | LFE3 LineFuncExpr
 
 data BigOpExpr = 
   BOEOS1 BigOpExprOpSplit | BOEFS1 BigOpExprFuncSplit
@@ -96,7 +94,7 @@ newtype BigOpExprOpSplit = BOEOS ([OpSplitLine], Maybe OpExprStart, OpSplitEnd)
 newtype OpSplitLine = OSL (OpExprStart, Maybe (Operand, FuncCompOp)) 
 
 data OpSplitEnd =
-  OA2 Operand | FE1 FuncExpr 
+  O2 Operand | FE1 FuncExpr 
 
 newtype BigOpExprFuncSplit = BOEFS (OpExprStart, BigOrCasesFuncExpr)
 
