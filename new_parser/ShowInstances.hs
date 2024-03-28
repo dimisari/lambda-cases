@@ -353,7 +353,7 @@ instance Show Types where
     All t -> "all " ++ show t
 
 instance Show LineExprs where
-  show = \(CSLE (le, les)) -> show le ++ show_list_comma les
+  show = \(LEs (le, les)) -> show le ++ show_list_comma les
 
 instance Show WhereExpr where
   show =

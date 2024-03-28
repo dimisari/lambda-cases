@@ -174,7 +174,7 @@ newtype GroupedValueDefs =
 data Types = 
   Ts (Type, [Type]) | All Type
 
-newtype LineExprs = CSLE (LineExpr, [LineExpr])
+newtype LineExprs = LEs (LineExpr, [LineExpr])
 
 newtype WhereExpr = WE (WhereDefExpr, [WhereDefExpr])
 
@@ -200,12 +200,13 @@ newtype ParamTVar = PTV Int
 
 newtype AdHocTVar = AHTV Char
 
+type TIWATypeApp = (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen)
+type TIPTITypeApp = (TypesInParen, TIdOrAdHocTVar, Maybe TypesInParen)
 data TypeApp =  
-  TIWA1 (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) |
-  TIPTI (TypesInParen, TIdOrAdHocTVar, Maybe TypesInParen) |
-  TITIP (TIdOrAdHocTVar, TypesInParen)
+  TIWA1 TIWATypeApp | TIPTI TIPTITypeApp | TITIP (TIdOrAdHocTVar, TypesInParen)
 
-newtype TypeIdWithArgs = TIWA (TypeId, [(TypesInParen, String)])
+type TIPSTR = (TypesInParen, String)
+newtype TypeIdWithArgs = TIWA (TypeId, [TIPSTR])
 
 data TIdOrAdHocTVar =
   TId2 TypeId | AHTV2 AdHocTVar

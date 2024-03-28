@@ -502,7 +502,7 @@ instance HasParser GroupedValueDefs where
       All <$> (string "all " *> parser)
 
 instance HasParser LineExprs where
-  parser = CSLE <$> parser +++ (many (comma *> parser))
+  parser = LEs <$> parser +++ (many (comma *> parser))
 
 instance HasParser WhereExpr where
   parser = 
@@ -540,21 +540,21 @@ instance HasParser AdHocTVar where
 
 instance HasParser TypeApp where
   parser =
-    TIWA1 <$> try tiwa_p <|> TIPTI <$> tipti_p <|> TITIP <$> parser +++ parser
-    where
-    tiwa_p :: Parser (Maybe TypesInParen, TypeIdWithArgs, Maybe TypesInParen) 
-    tiwa_p =
-      optionMaybe parser >>= \maybe_types_in_paren1 ->
-      parser >>= \type_id_with_args ->
-      optionMaybe parser >>= \maybe_types_in_paren2 ->
-      return (maybe_types_in_paren1, type_id_with_args, maybe_types_in_paren2)
+    TIWA1 <$> try parser <|> TIPTI <$> parser <|> TITIP <$> parser +++ parser
 
-    tipti_p :: Parser (TypesInParen, TIdOrAdHocTVar, Maybe TypesInParen)
-    tipti_p = 
-      parser >>= \types_in_paren ->
-      parser >>= \type_id_or_var ->
-      optionMaybe parser >>= \maybe_types_in_paren ->
-      return (types_in_paren, type_id_or_var, maybe_types_in_paren)
+instance HasParser TIWATypeApp where
+  parser =
+    optionMaybe parser >>= \maybe_types_in_paren1 ->
+    parser >>= \type_id_with_args ->
+    optionMaybe parser >>= \maybe_types_in_paren2 ->
+    return (maybe_types_in_paren1, type_id_with_args, maybe_types_in_paren2)
+
+instance HasParser TIPTITypeApp where
+  parser =
+    parser >>= \types_in_paren ->
+    parser >>= \type_id_or_var ->
+    optionMaybe parser >>= \maybe_types_in_paren ->
+    return (types_in_paren, type_id_or_var, maybe_types_in_paren)
 
 instance HasParser TypeIdWithArgs where
   parser = TIWA <$> parser +++ many1 (try $ parser +++ many1 (lower <|> upper))
