@@ -243,10 +243,9 @@ newtype TupleTypeDef = TTD (TypeName, IdTuple, ProdOrPowerType)
 data ProdOrPowerType =
   PT4 ProdType | PoT4 PowerType
 
+type PVIPStr = (ParamVarsInParen, String)
 newtype TypeName =
-  TN
-    ( Maybe ParamVarsInParen, TypeId, [(ParamVarsInParen, String)]
-    , Maybe ParamVarsInParen)
+  TN (Maybe ParamVarsInParen, TypeId, [PVIPStr], Maybe ParamVarsInParen)
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 

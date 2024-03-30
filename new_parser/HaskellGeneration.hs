@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, FlexibleInstances  #-}
+{-# LANGUAGE LambdaCase, FlexibleInstances #-}
 
 module HaskellGeneration where
 
@@ -58,9 +58,6 @@ to_hs_prepend_list = \sep -> concatMap ((sep ++) . to_haskell)
 
 to_hs_prepend_comma_list :: ToHaskell a => [a] -> Haskell
 to_hs_prepend_comma_list = to_hs_prepend_list ", "
-
-to_hs_wpn_prepend_comma :: ToHsWithParamNum a => a -> WithParamNum Haskell
-to_hs_wpn_prepend_comma = to_hs_with_param_num .> fmap (", " ++)
 
 to_hs_wpn_list :: ToHsWithParamNum a => [a] -> WithParamNum [Haskell]
 to_hs_wpn_list = traverse to_hs_with_param_num
@@ -697,77 +694,103 @@ instance ToHaskell TypeDef where
 
 instance ToHaskell TupleTypeDef where
   to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
-    "data " ++ to_haskell tn ++ " =\n  " ++ to_haskell tn ++ id_tuple_popt_hs
+    "data " ++ tid_hs ++ " " ++ params_hs ++ " =\n  " ++
+    tid_hs ++ "\n    {" ++ id_tuple_popt_hs ++ "\n    }"
     where
+    (tid_hs, params_hs) = tn_to_hspair tn 
+      :: HaskellPair
+
     id_tuple_popt_hs :: Haskell
-    id_tuple_popt_hs = "{"++ undefined ++ "}"
+    id_tuple_popt_hs = 
+      zip (si : sis) popt_t_list &> map to_hs_id_st &> intercalate "\n    , "
 
     popt_t_list :: [SimpleType]
-    popt_t_list = undefined
+    popt_t_list = case popt of 
+      PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
+      PoT4 (PoT (pbt, i)) -> replicate i $ pbt_to_st pbt
 
-    id_list :: [SimpleId]
-    id_list = si : sis
-    
-    to_hs_id_st :: SimpleId -> SimpleType -> Haskell
-    to_hs_id_st = \sid st -> to_haskell sid ++ " :: " ++ to_haskell st
+    to_hs_id_st :: (SimpleId, SimpleType) -> Haskell
+    to_hs_id_st = \(sid, st) -> to_haskell sid ++ " :: " ++ to_haskell st
 
+    ft_to_st :: FieldType -> SimpleType
+    ft_to_st = \case
+      PBT1 pbt -> pbt_to_st pbt
+      PoT3 pot -> PoT1 pot
 
--- instance ToHaskell ProdOrPowerType where
---   to_haskell = \case
---     PT4 pt -> to_haskell pt
---     PoT4 pt -> to_haskell pt
--- 
--- instance ToHaskell TypeName where
---   to_haskell = \(TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) ->
---     to_haskell maybe_pvip1 ++ to_haskell tid ++
---     concatMap (\(pvip, str) -> to_haskell pvip ++ str) pvip_str_pairs ++
---     to_haskell maybe_pvip2
--- 
--- instance ToHaskell ParamVarsInParen where
---   to_haskell = \(PVIP (ptv, ptvs)) ->
---     "(" ++ to_haskell ptv ++ to_hs_prepend_comma_list ptvs ++ ")"
--- 
--- instance ToHaskell IdTuple where
---   to_haskell = \(PCSIs (id, ids)) ->
---     "(" ++ to_haskell id ++ to_hs_prepend_comma_list ids ++ ")"
--- 
--- instance ToHaskell OrTypeDef where
---   to_haskell =
---     \(OTD (tn, id, mst, id_mst_pairs)) ->
---     "or_type " ++ to_haskell tn ++
---     "\nvalues\n  " ++ to_haskell id ++ show_mst mst ++
---     concatMap show_id_mst_pair id_mst_pairs
---     where
---     show_mst :: Maybe SimpleType -> String
---     show_mst = \case
---       Nothing -> ""
---       Just st -> ":" ++ to_haskell st
--- 
---     show_id_mst_pair :: (SimpleId, Maybe SimpleType) -> String
---     show_id_mst_pair = \(id, mst) -> " | " ++ to_haskell id ++ show_mst mst
--- 
--- instance ToHaskell TypeNickname where
---   to_haskell = \(TNN (tn, st)) ->
---     "type_nickname " ++ to_haskell tn ++ " = " ++ to_haskell st
--- 
--- -- TypePropDef
--- instance ToHaskell TypePropDef where
---   to_haskell = \case
---     APD1 apd -> to_haskell apd
---     RPD1 rpd -> to_haskell rpd
--- 
--- instance ToHaskell AtomPropDef where
---   to_haskell = \(APD (pnl, id, st)) ->
---     to_haskell pnl ++ "\nvalue\n  " ++ to_haskell id ++ " : " ++ to_haskell st
--- 
+    pbt_to_st :: PowerBaseType -> SimpleType
+    pbt_to_st = \case
+      TIOV3 tiov -> TIOV1 tiov
+      TA3 ta -> TA1 ta
+      IPT ipt -> ipt_to_st ipt
+
+    ipt_to_st :: InParenT -> SimpleType
+    ipt_to_st = \case
+      PT3 pt -> PT1 pt
+      FT3 ft -> FT1 ft
+
+tn_to_hspair :: TypeName -> HaskellPair
+tn_to_hspair (TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) =
+  ( to_haskell tid ++ tid_cont_hs
+  , to_haskell maybe_pvip1 ++ pvip_hs2 ++ to_haskell maybe_pvip2
+  )
+  where
+  (tid_cont_hs, pvip_hs2) =
+    pvip_str_pairs_to_hs_pair ("", "") pvip_str_pairs
+    :: HaskellPair
+
+  pvip_str_pairs_to_hs_pair :: HaskellPair -> [PVIPStr] -> HaskellPair
+  pvip_str_pairs_to_hs_pair (tid_cont_hs_prev, pvip_hs2_prev) = \case
+    [] -> (tid_cont_hs_prev, pvip_hs2_prev)
+    (pvip, str) : pvip_strs ->
+      let 
+      tid_cont_hs_next :: Haskell
+      tid_cont_hs_next = tid_cont_hs_prev ++ "'" ++ str
+
+      pvip_hs2_next :: Haskell
+      pvip_hs2_next = pvip_hs2_prev ++ to_haskell pvip
+      in
+      pvip_str_pairs_to_hs_pair (tid_cont_hs_next, pvip_hs2_next) pvip_strs
+
+instance ToHaskell ParamVarsInParen where
+  to_haskell = \(PVIP (ptv, ptvs)) ->
+    concatMap (to_haskell .> (" " ++)) (ptv : ptvs)
+
+instance ToHaskell OrTypeDef where
+  to_haskell (OTD (tn, id, mst, id_mst_pairs)) =
+    "data " ++ tid_hs ++ " " ++ params_hs ++ " =\n  " ++
+    (map id_mst_pair_to_hs ((id, mst) : id_mst_pairs) &> intercalate " |\n  ")
+    where
+    (tid_hs, params_hs) = tn_to_hspair tn 
+      :: HaskellPair
+
+    id_mst_pair_to_hs :: (SimpleId, Maybe SimpleType) -> Haskell
+    id_mst_pair_to_hs = \(id, mst) ->
+      "C" ++ to_haskell id ++ case mst of
+        Nothing -> ""
+        Just st -> " " ++ to_haskell mst
+
+instance ToHaskell TypeNickname where
+  to_haskell = \(TNN (tn, st)) ->
+    "type_nickname " ++
+    (tn_to_hspair tn &> \(tid_hs, params_hs) -> tid_hs ++ params_hs) ++
+    " = " ++ to_haskell st
+
+-- TypePropDef
+instance ToHaskell TypePropDef where
+  to_haskell = \case
+    APD1 apd -> to_haskell apd
+    RPD1 rpd -> to_haskell rpd
+
+instance ToHaskell AtomPropDef where
+  to_haskell = \(APD (PNL pn, id, st)) ->
+    "class " ++ to_haskell pn ++ "where\n  " ++
+    to_haskell id ++ " :: " ++ to_haskell st
+
 -- instance ToHaskell RenamingPropDef where
 --   to_haskell = \(RPD (pnl, pn, pns)) ->
 --     to_haskell pnl ++ "\nequivalent\n  " ++ to_haskell pn ++
 --     to_hs_prepend_comma_list pns
--- 
--- instance ToHaskell PropNameLine where
---   to_haskell = \(PNL pn) -> "type_proposition " ++ to_haskell pn
--- 
+
 -- instance ToHaskell PropName where
 --   to_haskell = \case
 --     NPStart1 (c, np_ahvip_pairs, maybe_np) ->
