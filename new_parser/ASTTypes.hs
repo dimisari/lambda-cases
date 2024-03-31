@@ -267,9 +267,10 @@ newtype RenamingPropDef = RPD (PropNameLine, PropName, [PropName])
 
 newtype PropNameLine = PNL PropName
 
-data PropName =
-  NPStart1 (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart) |
-  AHVIPStart1 ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
+type NPStart1 = (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart)
+type AHVIPStart = ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
+data PropName = 
+  NPStart1 NPStart1 | AHVIPStart AHVIPStart
 
 newtype AdHocVarsInParen = AHVIP (AdHocTVar, [AdHocTVar])
 
@@ -279,9 +280,10 @@ newtype NamePart = NP String
 newtype TypeTheo =
   TT (PropNameWithSubs, Maybe PropNameWithSubs, Proof)
 
+type NPStart2 = (Char, [(NamePart, SubsInParen)], Maybe NamePart) 
+type SIPStart = ([(SubsInParen, NamePart)], Maybe SubsInParen)
 data PropNameWithSubs = 
-  NPStart2 (Char, [(NamePart, SubsInParen)], Maybe NamePart) |
-  SIPStart ([(SubsInParen, NamePart)], Maybe SubsInParen)
+  NPStart2 NPStart2 | SIPStart SIPStart
 
 newtype SubsInParen = SIP (TVarSub, [TVarSub])
 
@@ -289,13 +291,16 @@ data TVarSub =
   TIOV4 TypeIdOrVar | TAS1 TypeAppSub | PoTS1 PowerTypeSub | PTS1 ProdTypeSub |
   FTS1 FuncTypeSub 
 
+type TIWS_TAS =
+  (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen)
+type SOUIP_TI_TAS =
+  (SubsOrUndersInParen, TIdOrAdHocTVar, Maybe SubsOrUndersInParen)
 data TypeAppSub =  
-  TIWS1
-    (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen) |
-  SOUIP_TI (SubsOrUndersInParen, TIdOrAdHocTVar, Maybe SubsOrUndersInParen) |
+  TIWS_TAS TIWS_TAS | SOUIP_TI SOUIP_TI_TAS |
   TI_SOUIP (TIdOrAdHocTVar, SubsOrUndersInParen)
 
-newtype TypeIdWithSubs = TIWS (TypeId, [(SubsOrUndersInParen, String)])
+type SOUIPSTR = (SubsOrUndersInParen, String)
+newtype TypeIdWithSubs = TIWS (TypeId, [SOUIPSTR])
 
 newtype SubsOrUndersInParen = SOUIP (SubOrUnder, [SubOrUnder])
 

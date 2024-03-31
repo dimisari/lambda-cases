@@ -2,6 +2,7 @@
 
 module HaskellGeneration where
 
+import Control.Monad
 import Control.Monad.State.Lazy
 
 import Data.List
@@ -12,7 +13,7 @@ import ASTTypes
 -- types
 type Haskell = String
 
-type HaskellPair = (Haskell, Haskell)
+type HsPair = (Haskell, Haskell)
 
 type WithParamNum = State Int
 
@@ -56,9 +57,6 @@ run_generator = \hs_generator -> evalState hs_generator 0
 to_hs_prepend_list :: ToHaskell a => String -> [a] -> Haskell
 to_hs_prepend_list = \sep -> concatMap ((sep ++) . to_haskell)
 
-to_hs_prepend_comma_list :: ToHaskell a => [a] -> Haskell
-to_hs_prepend_comma_list = to_hs_prepend_list ", "
-
 to_hs_wpn_list :: ToHsWithParamNum a => [a] -> WithParamNum [Haskell]
 to_hs_wpn_list = traverse to_hs_with_param_num
 
@@ -69,20 +67,23 @@ to_hs_wpn_pair = \(a, b) ->
   to_hs_with_param_num b >>= \b_hs ->
   return $ a_hs ++ b_hs
 
--- a => Maybe a instance, a b => (a, b) instance
+-- 
+
+to_hs_maybe_np :: Maybe NamePart -> Haskell
+to_hs_maybe_np = \case
+  Nothing -> ""
+  Just (NP str) -> "'" ++ str
+
+-- a => Maybe a, a => [a] ToHaskell instances
 instance ToHaskell a => ToHaskell (Maybe a) where 
   to_haskell = \case
     Nothing -> ""
     Just a -> to_haskell a
 
-instance (ToHaskell a, ToHaskell b) => ToHaskell (a, b) where 
-  to_haskell = \(a, b) -> to_haskell a ++ to_haskell b
-
 instance ToHaskell a => ToHaskell [a] where 
   to_haskell = concatMap to_haskell
 
--- 
-
+-- a => Maybe a ToHsWithParamNum instance
 instance ToHsWithParamNum a => ToHsWithParamNum (Maybe a) where
   to_hs_with_param_num = \case
     Just a -> to_hs_with_param_num a 
@@ -128,7 +129,7 @@ instance ToHsWithParamNum LineExprOrUnders where
   to_hs_with_param_num = \(LEOUs (leou, leous)) ->
     to_hs_with_param_num leou >>= \leou_hs ->
     to_hs_wpn_list leous >>= \leous_hs ->
-    return $ intercalate "," $ leou_hs : leous_hs
+    return $ intercalate ", " $ leou_hs : leous_hs
 
 instance ToHsWithParamNum LineExprOrUnder where
   to_hs_with_param_num = \case
@@ -205,6 +206,27 @@ instance ToHsWithParamNum IWAParenFuncApp where
     to_hs_with_param_num maybe_args2 >>= \maybe_args2_hs ->
     return $ id_hs ++ maybe_args1_hs ++ args_hs ++ maybe_args2_hs 
 
+iwa_to_hs_with_param_num :: IdentWithArgs -> WithParamNum HsPair
+iwa_to_hs_with_param_num = 
+    \(IWA (iwas, args, str, epoa_str_pairs, maybe_c)) ->
+    to_hs_with_param_num args >>= \args_hs1 ->
+    epoa_str_pairs_hs_generator epoa_str_pairs >>= \(id_rest_hs, args_hs2) ->
+    let
+    id_hs = to_haskell iwas ++ "'" ++ str ++ id_rest_hs ++ to_haskell maybe_c
+    args_hs = args_hs1 ++ args_hs2
+    in
+    return (id_hs, args_hs)
+    where
+    epoa_str_pairs_hs_generator :: [EpoaStr] -> WithParamNum HsPair
+    epoa_str_pairs_hs_generator =
+      foldM add_epoa_str_to_hs_pair_wpn ("", "")
+
+    add_epoa_str_to_hs_pair_wpn :: HsPair -> EpoaStr -> WithParamNum HsPair
+    add_epoa_str_to_hs_pair_wpn =
+      \(id_rest_hs_prev, args_hs_prev) (epoa, str) ->
+      to_hs_with_param_num epoa >>= \epoa_hs ->
+      return (id_rest_hs_prev ++ "'" ++ str, args_hs_prev ++ epoa_hs)
+
 instance ToHsWithParamNum AIParenFuncApp where
   to_hs_with_param_num =  \(args, id, maybe_args) ->
     to_hs_with_param_num args >>= \args_hs ->
@@ -215,36 +237,13 @@ instance ToHsWithParamNum Arguments where
   to_hs_with_param_num = \(As (LEOUs (leou, leous))) ->
     to_hs_wpn_list (leou : leous) $> concatMap (" " ++)
 
-iwa_to_hs_with_param_num :: IdentWithArgs -> WithParamNum HaskellPair
-iwa_to_hs_with_param_num = 
-    \(IWA (iwas, args, str, epoa_str_pairs, maybe_ch)) ->
-    to_hs_with_param_num args >>= \args_hs1 ->
-    esp_to_hs_wpn ("", "") epoa_str_pairs >>= \(id_rest_hs, args_hs2) ->
-    let
-    id_hs = to_haskell iwas ++ "'" ++ str ++ id_rest_hs ++ to_haskell maybe_ch
-    args_hs = args_hs1 ++ args_hs2
-    in
-    return (id_hs, args_hs)
-    where
-    esp_to_hs_wpn :: HaskellPair -> [EpoaStr] -> WithParamNum HaskellPair
-    esp_to_hs_wpn (id_rest_hs_prev, args_hs_prev) = \case
-      [] -> return (id_rest_hs_prev, args_hs_prev)
-      (epoa, str) : rest ->
-        epoa_to_hs_wpn epoa >>= \epoa_hs ->
-        let
-        id_rest_hs_next = id_rest_hs_prev ++ "'" ++ str
-        args_hs_next = args_hs_prev ++ epoa_hs
-        in
-        esp_to_hs_wpn (id_rest_hs_next, args_hs_next) rest
-
-    epoa_to_hs_wpn :: EmptyParenOrArgs -> WithParamNum Haskell
-    epoa_to_hs_wpn = \case
-      EmptyParen -> return ""
-      As1 args -> to_hs_with_param_num args
-
-
 instance ToHaskell IdentWithArgsStart where
   to_haskell = \(IWAS strs) -> intercalate "'" strs
+
+instance ToHsWithParamNum EmptyParenOrArgs where
+  to_hs_with_param_num = \case
+    EmptyParen -> return ""
+    As1 args -> to_hs_with_param_num args
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance ToHaskell PreFunc where
@@ -254,7 +253,6 @@ instance ToHaskell PreFuncApp where
   to_haskell = \(PrFA (pf, oper)) ->
     to_haskell pf ++
     " (" ++ run_generator (add_params_to $ to_hs_with_param_num oper) ++ ")"
-    -- oper is probably gonna be ToHsWithParamNum
 
 instance ToHaskell PostFunc where
   to_haskell = \case
@@ -429,7 +427,7 @@ instance ToHaskell Parameters where
     ParamId id -> to_haskell id
     Star1 -> "_"
     Params (params, params_l) ->
-      "(" ++ to_haskell params ++ to_hs_prepend_comma_list params_l ++ ")"
+      "(" ++ to_haskell params ++ to_hs_prepend_list ", " params_l ++ ")"
 
 instance ToHaskell LineFuncBody where
   to_haskell = \case
@@ -499,7 +497,7 @@ instance ToHaskell InnerMatching where
 
 instance ToHaskell TupleMatching where
   to_haskell = \(TM (im, im_l)) ->
-    "(" ++ to_haskell im ++ to_hs_prepend_comma_list im_l ++ ")"
+    "(" ++ to_haskell im ++ to_hs_prepend_list ", " im_l ++ ")"
 
 instance ToHaskell ListMatching where
   to_haskell (LM maybe_ims) =
@@ -508,7 +506,7 @@ instance ToHaskell ListMatching where
     maybe_ims_hs :: Haskell
     maybe_ims_hs = case maybe_ims of
       Nothing -> ""
-      Just (im, im_l) -> to_haskell im ++ to_hs_prepend_comma_list im_l
+      Just (im, im_l) -> to_haskell im ++ to_hs_prepend_list ", " im_l
 
 instance ToHaskell IdWithParen where
   to_haskell = \(IWP iwp) -> to_haskell (Id iwp)
@@ -617,24 +615,16 @@ instance ToHaskell TypeApp where
     TITIP (tid_or_tv, tip) -> to_haskell tid_or_tv ++ to_haskell tip
 
 instance ToHaskell TIWATypeApp where
-  to_haskell = \(maybe_tip1, tiwa, maybe_tip2) ->
-    tiwa_to_hs tiwa &> \(tid_hs, tip_hs) ->
-    tid_hs ++ to_haskell maybe_tip1 ++ tip_hs ++ to_haskell maybe_tip2
+  to_haskell (maybe_tip1, TIWA (tid, tip_str_pairs), maybe_tip2) =
+    to_haskell tid ++ tid_cont_hs ++
+    to_haskell maybe_tip1 ++ tip_hs ++ to_haskell maybe_tip2
     where
-    tiwa_to_hs :: TypeIdWithArgs -> HaskellPair
-    tiwa_to_hs = \(TIWA (tid, tip_str_pairs)) ->
-      tip_str_pairs_to_hs ("", "") tip_str_pairs &> \(tid_cont_hs, tip_hs) ->
-      (to_haskell tid ++ tid_cont_hs, tip_hs)
+    (tid_cont_hs, tip_hs) = foldl add_tip_str_to_hs_pair ("", "") tip_str_pairs 
+      :: HsPair
 
-    tip_str_pairs_to_hs :: HaskellPair -> [TIPSTR] -> HaskellPair
-    tip_str_pairs_to_hs = \(tid_hs_prev, tip_hs_prev) -> \case
-      [] -> (tid_hs_prev, tip_hs_prev)
-      (tip, str):tip_strs ->
-        let
-        tid_hs_next = tid_hs_prev ++ "'" ++ str
-        tip_hs_next = tip_hs_prev ++ to_haskell tip
-        in
-        tip_str_pairs_to_hs (tid_hs_next, tip_hs_next) tip_strs
+    add_tip_str_to_hs_pair :: HsPair -> TIPSTR -> HsPair
+    add_tip_str_to_hs_pair = \(tid_hs_prev, tip_hs_prev) (tip, str) ->
+      (tid_hs_prev ++ "'" ++ str, tip_hs_prev ++ to_haskell tip)
 
 instance ToHaskell TIPTITypeApp where
   to_haskell = \(tip, tioahtv, maybe_tip) ->
@@ -646,11 +636,11 @@ instance ToHaskell TIdOrAdHocTVar where
     AHTV2 ahtv -> to_haskell ahtv
 
 instance ToHaskell TypesInParen where
-  to_haskell = \(TIP (st, sts)) -> to_hs_prepend_list " " (st : sts)
+  to_haskell = \(TIP (st, sts)) -> to_hs_prepend_list " " $ st : sts
 
 instance ToHaskell ProdType where
   to_haskell = \(PT (ft, fts)) ->
-    "(" ++ ((ft : fts) &> map to_haskell &> intercalate ",") ++ ")"
+    "(" ++ ((ft : fts) &> map to_haskell &> intercalate ", ") ++ ")"
 
 instance ToHaskell FieldType where
   to_haskell = \case
@@ -670,7 +660,7 @@ instance ToHaskell InParenT where
 
 instance ToHaskell PowerType where
   to_haskell = \(PoT (ft, i)) -> 
-    "(" ++ (replicate i ft &> map to_haskell &> intercalate ",") ++ ")"
+    "(" ++ (replicate i ft &> map to_haskell &> intercalate ", ") ++ ")"
 
 instance ToHaskell FuncType where
   to_haskell = \(FT (it, ot)) -> to_haskell it ++ " -> " ++ to_haskell ot
@@ -697,20 +687,20 @@ instance ToHaskell TupleTypeDef where
     "data " ++ tid_hs ++ " " ++ params_hs ++ " =\n  " ++
     tid_hs ++ "\n    {" ++ id_tuple_popt_hs ++ "\n    }"
     where
-    (tid_hs, params_hs) = tn_to_hspair tn 
-      :: HaskellPair
+    (tid_hs, params_hs) = tn_to_hs_pair tn 
+      :: HsPair
 
     id_tuple_popt_hs :: Haskell
     id_tuple_popt_hs = 
-      zip (si : sis) popt_t_list &> map to_hs_id_st &> intercalate "\n    , "
+      zip (si : sis) popt_t_list &> map id_st_to_hs &> intercalate "\n    , "
 
     popt_t_list :: [SimpleType]
     popt_t_list = case popt of 
       PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
       PoT4 (PoT (pbt, i)) -> replicate i $ pbt_to_st pbt
 
-    to_hs_id_st :: (SimpleId, SimpleType) -> Haskell
-    to_hs_id_st = \(sid, st) -> to_haskell sid ++ " :: " ++ to_haskell st
+    id_st_to_hs :: (SimpleId, SimpleType) -> Haskell
+    id_st_to_hs = \(sid, st) -> to_haskell sid ++ " :: " ++ to_haskell st
 
     ft_to_st :: FieldType -> SimpleType
     ft_to_st = \case
@@ -728,43 +718,33 @@ instance ToHaskell TupleTypeDef where
       PT3 pt -> PT1 pt
       FT3 ft -> FT1 ft
 
-tn_to_hspair :: TypeName -> HaskellPair
-tn_to_hspair (TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) =
+tn_to_hs_pair :: TypeName -> HsPair
+tn_to_hs_pair (TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) =
   ( to_haskell tid ++ tid_cont_hs
   , to_haskell maybe_pvip1 ++ pvip_hs2 ++ to_haskell maybe_pvip2
   )
   where
   (tid_cont_hs, pvip_hs2) =
-    pvip_str_pairs_to_hs_pair ("", "") pvip_str_pairs
-    :: HaskellPair
+    foldl add_pvip_str_to_hs_pair ("", "") pvip_str_pairs
+    :: HsPair
 
-  pvip_str_pairs_to_hs_pair :: HaskellPair -> [PVIPStr] -> HaskellPair
-  pvip_str_pairs_to_hs_pair (tid_cont_hs_prev, pvip_hs2_prev) = \case
-    [] -> (tid_cont_hs_prev, pvip_hs2_prev)
-    (pvip, str) : pvip_strs ->
-      let 
-      tid_cont_hs_next :: Haskell
-      tid_cont_hs_next = tid_cont_hs_prev ++ "'" ++ str
-
-      pvip_hs2_next :: Haskell
-      pvip_hs2_next = pvip_hs2_prev ++ to_haskell pvip
-      in
-      pvip_str_pairs_to_hs_pair (tid_cont_hs_next, pvip_hs2_next) pvip_strs
+  add_pvip_str_to_hs_pair :: HsPair -> PVIPStr -> HsPair
+  add_pvip_str_to_hs_pair = \(tid_cont_hs_prev, pvip_hs2_prev) (pvip, str) ->
+    (tid_cont_hs_prev ++ "'" ++ str, pvip_hs2_prev ++ to_haskell pvip)
 
 instance ToHaskell ParamVarsInParen where
-  to_haskell = \(PVIP (ptv, ptvs)) ->
-    concatMap (to_haskell .> (" " ++)) (ptv : ptvs)
+  to_haskell = \(PVIP (ptv, ptvs)) -> to_hs_prepend_list " " $ ptv : ptvs
 
 instance ToHaskell OrTypeDef where
   to_haskell (OTD (tn, id, mst, id_mst_pairs)) =
     "data " ++ tid_hs ++ " " ++ params_hs ++ " =\n  " ++
-    (map id_mst_pair_to_hs ((id, mst) : id_mst_pairs) &> intercalate " |\n  ")
+    (map id_mst_to_hs ((id, mst) : id_mst_pairs) &> intercalate " |\n  ")
     where
-    (tid_hs, params_hs) = tn_to_hspair tn 
-      :: HaskellPair
+    (tid_hs, params_hs) = tn_to_hs_pair tn 
+      :: HsPair
 
-    id_mst_pair_to_hs :: (SimpleId, Maybe SimpleType) -> Haskell
-    id_mst_pair_to_hs = \(id, mst) ->
+    id_mst_to_hs :: (SimpleId, Maybe SimpleType) -> Haskell
+    id_mst_to_hs = \(id, mst) ->
       "C" ++ to_haskell id ++ case mst of
         Nothing -> ""
         Just st -> " " ++ to_haskell mst
@@ -772,7 +752,7 @@ instance ToHaskell OrTypeDef where
 instance ToHaskell TypeNickname where
   to_haskell = \(TNN (tn, st)) ->
     "type_nickname " ++
-    (tn_to_hspair tn &> \(tid_hs, params_hs) -> tid_hs ++ params_hs) ++
+    (tn_to_hs_pair tn &> \(tid_hs, params_hs) -> tid_hs ++ params_hs) ++
     " = " ++ to_haskell st
 
 -- TypePropDef
@@ -786,149 +766,182 @@ instance ToHaskell AtomPropDef where
     "class " ++ to_haskell pn ++ "where\n  " ++
     to_haskell id ++ " :: " ++ to_haskell st
 
--- instance ToHaskell RenamingPropDef where
---   to_haskell = \(RPD (pnl, pn, pns)) ->
+instance ToHaskell RenamingPropDef where
+  to_haskell = \(RPD (pnl, pn, pns)) -> undefined
 --     to_haskell pnl ++ "\nequivalent\n  " ++ to_haskell pn ++
---     to_hs_prepend_comma_list pns
+--     to_hs_prepend_list ", " pns
 
--- instance ToHaskell PropName where
---   to_haskell = \case
---     NPStart1 (c, np_ahvip_pairs, maybe_np) ->
---       [c] ++ to_haskell np_ahvip_pairs ++ to_haskell maybe_np
---     AHVIPStart1 (ahvip_np_pairs, maybe_ahvip) ->
---       to_haskell ahvip_np_pairs ++ to_haskell maybe_ahvip
--- 
--- instance ToHaskell AdHocVarsInParen where
---   to_haskell = \(AHVIP (ahtv, ahtvs)) ->
---     "(" ++ to_haskell ahtv ++ to_hs_prepend_comma_list ahtvs ++ ")"
--- 
--- instance ToHaskell NamePart where
---   to_haskell = \(NP str) -> str
--- 
--- -- TypeTheo 
--- instance ToHaskell TypeTheo where
---   to_haskell = \(TT (pnws, maybe_pnws, proof)) ->
---     "type_theorem " ++ to_haskell pnws ++ show_mpnws maybe_pnws ++
---     "\nproof" ++ to_haskell proof
---     where
---     show_mpnws :: Maybe PropNameWithSubs -> String
---     show_mpnws = \case
---       Nothing -> ""
---       Just pnws -> " => " ++ to_haskell pnws
--- 
--- instance ToHaskell PropNameWithSubs where
---   to_haskell = \case
---     NPStart2 (c, np_sip_pairs, maybe_np) ->
---       [c] ++ to_haskell np_sip_pairs ++ to_haskell maybe_np
---     SIPStart (sip_np_pairs, maybe_sip) ->
---       to_haskell sip_np_pairs ++ to_haskell maybe_sip
--- 
--- instance ToHaskell SubsInParen where
---   to_haskell = \(SIP (tvs, tvss)) ->
---     "(" ++ to_haskell tvs ++ to_hs_prepend_comma_list tvss ++ ")"
--- 
--- instance ToHaskell TVarSub where
---   to_haskell = \case
---     TIOV4 tiov -> to_haskell tiov
---     TAS1 tas -> to_haskell tas
---     PoTS1 pts -> to_haskell pts
---     PTS1 pts -> to_haskell pts
---     FTS1 fts -> to_haskell fts
--- 
--- instance ToHaskell TypeAppSub where
---   to_haskell = \case
---     TIWS1 (maybe_souip1, tiws, maybe_souip2) ->
---       to_haskell maybe_souip1 ++ to_haskell tiws ++
---       to_haskell maybe_souip2
---     SOUIP_TI (souip, tid_or_tv, maybe_souip) ->
---       to_haskell souip ++ to_haskell tid_or_tv ++ to_haskell maybe_souip
---     TI_SOUIP (tid_or_tv, souip) ->
---       to_haskell tid_or_tv ++ to_haskell souip
--- 
--- instance ToHaskell TypeIdWithSubs where
---   to_haskell = \(TIWS (tid, souip_str_pairs)) ->
---     to_haskell tid ++
---     concatMap (\(souip, str) -> to_haskell souip ++ str) souip_str_pairs
--- 
--- instance ToHaskell SubsOrUndersInParen where
---   to_haskell = \(SOUIP (sou, sous)) ->
---     "(" ++ to_haskell sou ++ to_hs_prepend_comma_list sous ++ ")"
--- 
--- instance ToHaskell SubOrUnder where
---   to_haskell = \case
---     TVS1 tvs -> to_haskell tvs
---     Underscore4 -> "_"
--- 
--- instance ToHaskell PowerTypeSub where
---   to_haskell = \(PoTS (pbts, i)) -> to_haskell pbts ++ "^" ++ show i
--- 
--- instance ToHaskell PowerBaseTypeSub where
---   to_haskell = \case
---     Underscore5 -> "_"
---     TIOV5 tid_or_var -> to_haskell tid_or_var
---     TAS2 tas -> to_haskell tas
---     IPTS1 ipts -> "(" ++ to_haskell ipts ++ ")"
--- 
--- instance ToHaskell InParenTSub where
---   to_haskell = \case
---     PTS2 pts -> to_haskell pts
---     FTS2 fts -> to_haskell fts
--- 
--- instance ToHaskell ProdTypeSub where
---   to_haskell = \(PTS (fts, fts_l)) ->
---     to_haskell fts ++ to_hs_prepend_list " x " fts_l
--- 
--- instance ToHaskell FieldTypeSub where
---   to_haskell = \case
---     PBTS1 pbts -> to_haskell pbts
---     PoTS2 pots -> to_haskell pots
--- 
--- instance ToHaskell FuncTypeSub where
---   to_haskell = \(FTS (ioots1, ioots2)) ->
---     to_haskell ioots1 ++ " => " ++ to_haskell ioots2 
--- 
--- instance ToHaskell InOrOutTypeSub where
---   to_haskell = \case
---     Underscore6 -> "_"
---     TIOV6 tiov -> to_haskell tiov
---     TAS3 tas -> to_haskell tas
---     PoTS3 pots -> to_haskell pots
---     PTS3 pts -> to_haskell pts
---     FTS3 fts -> to_haskell fts
--- 
--- instance ToHaskell Proof where
---   to_haskell = \case
---     P1 (iooe, le) -> " " ++ to_haskell iooe ++ " " ++ to_haskell le
---     P2 (iooe, ttve) -> "\n  " ++ to_haskell iooe ++ to_haskell ttve
--- 
--- instance ToHaskell IdOrOpEq where
---   to_haskell = \(IOOE (id, maybe_op_id)) ->
---     to_haskell id ++ show_moi maybe_op_id ++ " ="
---     where
---     show_moi :: Maybe (Op, Identifier) -> String
---     show_moi = \case
---       Nothing -> ""
---       Just (op, id) -> to_haskell op ++ to_haskell id
--- 
--- instance ToHaskell TTValueExpr where
---   to_haskell = \case
---     LE2 le -> " " ++ to_haskell le
---     VEMWE (ve, mwe) -> "\n    " ++ to_haskell ve ++ to_haskell mwe
--- 
--- -- Program
--- instance ToHaskell Program where
---   to_haskell = \(P (pp, pps)) -> to_haskell pp ++ to_hs_prepend_list "\n\n" pps
--- 
--- instance ToHaskell ProgramPart where
---   to_haskell = \case
---     VD2 vd -> to_haskell vd
---     GVDs2 gvds -> to_haskell gvds
---     TD td -> to_haskell td
---     TNN1 tnn -> to_haskell tnn
---     TPD tpd -> to_haskell tpd
---     TT1 tt -> to_haskell tt
--- 
--- -- For fast vim navigation
--- -- Parsers.hs
--- -- Testing.hs
--- -- ASTTypes.hs
+instance ToHaskell PropName where
+  to_haskell = \case
+    NPStart1 np_start -> to_haskell np_start
+    AHVIPStart ahvip_start -> to_haskell ahvip_start
+
+instance ToHaskell NPStart1 where
+  to_haskell (c, np_ahvip_pairs, maybe_np) =
+    [c] ++ (map to_haskell nps &> intercalate "'") ++
+    to_hs_maybe_np maybe_np ++ to_haskell ahvips
+    where
+    (nps, ahvips) = unzip np_ahvip_pairs
+      :: ([NamePart], [AdHocVarsInParen])
+
+instance ToHaskell AHVIPStart where
+  to_haskell (ahvip_np_pairs, maybe_ahvip) =
+    (map to_haskell nps &> intercalate "'") ++ to_haskell ahvips ++
+    to_haskell maybe_ahvip
+    where
+    (ahvips, nps) = unzip ahvip_np_pairs
+      :: ([AdHocVarsInParen], [NamePart])
+
+instance ToHaskell AdHocVarsInParen where
+  to_haskell = \(AHVIP (ahtv, ahtvs)) -> to_hs_prepend_list " " $ ahtv : ahtvs
+
+instance ToHaskell NamePart where
+  to_haskell = \(NP str) -> str
+
+-- TypeTheo 
+instance ToHaskell TypeTheo where
+  to_haskell = \(TT (pnws, maybe_pnws, proof)) ->
+    "instance " ++ to_haskell pnws ++ mpnws_to_hs maybe_pnws ++ "where\n" ++
+    to_haskell proof
+    where
+    mpnws_to_hs :: Maybe PropNameWithSubs -> String
+    mpnws_to_hs = \case
+      Nothing -> ""
+      Just pnws -> " => " ++ to_haskell pnws
+
+instance ToHaskell PropNameWithSubs where
+  to_haskell = \case
+    NPStart2 np_start -> to_haskell np_start
+    SIPStart sip_start -> to_haskell sip_start
+
+instance ToHaskell NPStart2 where
+  to_haskell (c, np_sip_pairs, maybe_np) =
+    [c] ++ (map to_haskell nps &> intercalate "'") ++
+    to_hs_maybe_np maybe_np ++ to_haskell sips
+    where
+    (nps, sips) = unzip np_sip_pairs
+      :: ([NamePart], [SubsInParen])
+
+instance ToHaskell SIPStart where
+  to_haskell (sip_np_pairs, maybe_sip) =
+    (map to_haskell nps &> intercalate "'") ++ to_haskell sips ++
+    to_haskell maybe_sip
+    where
+    (sips, nps) = unzip sip_np_pairs
+      :: ([SubsInParen], [NamePart])
+   
+instance ToHaskell SubsInParen where
+  to_haskell = \(SIP (tvs, tvss)) -> to_hs_prepend_list " " $ tvs : tvss
+
+instance ToHaskell TVarSub where
+  to_haskell = \case
+    TIOV4 tiov -> to_haskell tiov
+    TAS1 tas -> to_haskell tas
+    PoTS1 pts -> to_haskell pts
+    PTS1 pts -> to_haskell pts
+    FTS1 fts -> to_haskell fts
+
+instance ToHaskell TypeAppSub where
+  to_haskell = \case
+    TIWS_TAS tiws_tas -> to_haskell tiws_tas
+    SOUIP_TI souip_ti_tas -> to_haskell souip_ti_tas
+    TI_SOUIP (tid_or_tv, souip) -> to_haskell tid_or_tv ++ to_haskell souip
+
+instance ToHaskell TIWS_TAS where
+  to_haskell (maybe_souip1, TIWS (tid, souip_str_pairs), maybe_souip2) =
+    to_haskell tid ++ tid_cont_hs ++
+    to_haskell maybe_souip1 ++ souip_hs ++ to_haskell maybe_souip2
+    where
+    (tid_cont_hs, souip_hs) =
+      foldl add_souip_str_to_hs_pair ("", "") souip_str_pairs 
+      :: HsPair
+
+    add_souip_str_to_hs_pair :: HsPair -> SOUIPSTR -> HsPair
+    add_souip_str_to_hs_pair = \(tid_hs_prev, souip_hs_prev) (souip, str) ->
+      (tid_hs_prev ++ "'" ++ str, souip_hs_prev ++ to_haskell souip)
+
+instance ToHaskell SOUIP_TI_TAS where
+  to_haskell = \(souip, tid_or_tv, maybe_souip) ->
+    to_haskell tid_or_tv ++ to_haskell souip ++ to_haskell maybe_souip
+
+instance ToHaskell SubsOrUndersInParen where
+  to_haskell = \(SOUIP (sou, sous)) -> to_haskell $ sou : sous
+
+instance ToHaskell SubOrUnder where
+  to_haskell = \case
+    TVS1 tvs -> " " ++ to_haskell tvs
+    Underscore4 -> ""
+
+instance ToHaskell PowerTypeSub where
+  to_haskell = \(PoTS (pbts, i)) -> to_haskell pbts ++ "^" ++ show i
+
+instance ToHaskell PowerBaseTypeSub where
+  to_haskell = \case
+    Underscore5 -> undefined
+    TIOV5 tid_or_var -> to_haskell tid_or_var
+    TAS2 tas -> to_haskell tas
+    IPTS1 ipts -> to_haskell ipts
+
+instance ToHaskell InParenTSub where
+  to_haskell = \case
+    PTS2 pts -> "(" ++ to_haskell pts ++ ")"
+    FTS2 fts -> "(" ++ to_haskell fts ++ ")"
+
+instance ToHaskell ProdTypeSub where
+  to_haskell = \(PTS (fts, fts_l)) ->
+    "(" ++ ((fts : fts_l) &> map to_haskell &> intercalate ", ") ++ ")"
+
+instance ToHaskell FieldTypeSub where
+  to_haskell = \case
+    PBTS1 pbts -> to_haskell pbts
+    PoTS2 pots -> to_haskell pots
+
+instance ToHaskell FuncTypeSub where
+  to_haskell = \(FTS (in_ts, out_ts)) ->
+    to_haskell in_ts ++ " -> " ++ to_haskell out_ts 
+
+instance ToHaskell InOrOutTypeSub where
+  to_haskell = \case
+    Underscore6 -> undefined
+    TIOV6 tiov -> to_haskell tiov
+    TAS3 tas -> to_haskell tas
+    PoTS3 pots -> to_haskell pots
+    PTS3 pts -> to_haskell pts
+    FTS3 fts -> to_haskell fts
+
+instance ToHaskell Proof where
+  to_haskell = \case
+    P1 (iooe, le) -> "  " ++ to_haskell iooe ++ " " ++ to_haskell le
+    P2 (iooe, ttve) -> "  " ++ to_haskell iooe ++ to_haskell ttve
+
+instance ToHaskell IdOrOpEq where
+  to_haskell (IOOE (id, maybe_op_id)) = 
+    to_haskell id ++ maybe_op_id_hs ++ " ="
+    where
+    maybe_op_id_hs :: Haskell
+    maybe_op_id_hs = case maybe_op_id of
+      Nothing -> ""
+      Just (op, id) -> to_haskell op ++ to_haskell id
+
+instance ToHaskell TTValueExpr where
+  to_haskell = \case
+    LE2 le -> " " ++ to_haskell le
+    VEMWE (ve, mwe) -> "\n    " ++ to_haskell ve ++ to_haskell mwe
+
+-- Program
+instance ToHaskell Program where
+  to_haskell = \(P (pp, pps)) -> to_haskell pp ++ to_hs_prepend_list "\n\n" pps
+
+instance ToHaskell ProgramPart where
+  to_haskell = \case
+    VD2 vd -> to_haskell vd
+    GVDs2 gvds -> to_haskell gvds
+    TD td -> to_haskell td
+    TNN1 tnn -> to_haskell tnn
+    TPD tpd -> to_haskell tpd
+    TT1 tt -> to_haskell tt
+
+-- For fast vim navigation
+-- Parsers.hs
+-- Testing.hs
+-- ASTTypes.hs

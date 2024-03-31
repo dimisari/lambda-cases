@@ -661,7 +661,7 @@ instance HasParser PropNameLine where
 
 instance HasParser PropName where
   parser =
-    NPStart1 <$> np_start_p <|> AHVIPStart1 <$> ahvip_start_p
+    NPStart1 <$> np_start_p <|> AHVIPStart <$> ahvip_start_p
     where
     np_start_p :: Parser (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart)
     np_start_p = 
@@ -719,7 +719,7 @@ instance HasParser TVarSub where
 
 instance HasParser TypeAppSub where
   parser =
-    TIWS1 <$> try tiws_p <|> SOUIP_TI <$> souip_ti_p <|>
+    TIWS_TAS <$> try tiws_p <|> SOUIP_TI <$> souip_ti_p <|>
     TI_SOUIP <$> parser +++ parser
     where
     tiws_p ::

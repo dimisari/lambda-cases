@@ -520,7 +520,7 @@ instance Show PropName where
   show = \case
     NPStart1 (c, np_ahvip_pairs, maybe_np) ->
       [c] ++ show_pair_list np_ahvip_pairs ++ show_maybe maybe_np
-    AHVIPStart1 (ahvip_np_pairs, maybe_ahvip) ->
+    AHVIPStart (ahvip_np_pairs, maybe_ahvip) ->
       show_pair_list ahvip_np_pairs ++ show_maybe maybe_ahvip
 
 instance Show AdHocVarsInParen where
@@ -561,7 +561,7 @@ instance Show TVarSub where
 
 instance Show TypeAppSub where
   show = \case
-    TIWS1 (maybe_souip1, tiws, maybe_souip2) ->
+    TIWS_TAS (maybe_souip1, tiws, maybe_souip2) ->
       show_maybe maybe_souip1 ++ show tiws ++ show_maybe maybe_souip2
     SOUIP_TI (souip, tid_or_tv, maybe_souip) ->
       show souip ++ show tid_or_tv ++ show_maybe maybe_souip
