@@ -2,7 +2,7 @@
   LambdaCase, FlexibleInstances, UndecidableInstances, MonoLocalBinds
 #-}
 
-module Testing where
+module ParsingTest where
 
 import Text.Parsec (runParser, eof, ParseError)
 
@@ -30,7 +30,7 @@ newtype ResultString a = RS ParseResultString
 
 -- paths
 [progs_dir, test_exs_dir, in_dir, res_dir] =
-  ["programs/", "test_examples/", "parsing_inputs/", "parsing_results/"]
+  ["programs/", "test_examples/", "../inputs/", "../parsing_results/"]
   :: [FilePath]
 
 -- helpers
