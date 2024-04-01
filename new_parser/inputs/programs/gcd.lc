@@ -8,7 +8,7 @@ read_two_ints: (Int^2)FromIO
   = print <- "Please give me 2 ints" ; 
     get_line ;> split_to_words o> cases
       [x, y] => io_wrapper(from_str(x), from_str(y))
-      ... => show_err("You didn’t give me 2 ints")
+      ... => show_err("You didn't give me 2 ints")
     
 tuple_type NumsAndGcd
 value (x, y, gcd):Int^3

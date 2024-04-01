@@ -86,7 +86,7 @@ before_paren_str_p :: Parser String
 before_paren_str_p = lower >:< many lower_under
 
 par_lower_unders :: Parser String
-par_lower_unders = (try $ string "()") >++< many1 lower_under
+par_lower_unders = (try $ string "()") *> many1 lower_under
 
 strs_p :: Parser [String]
 strs_p = before_paren_str_p >:< many par_lower_unders
@@ -845,5 +845,5 @@ stringLetter = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
 -- For fast vim navigation
 -- ShowInstances.hs
--- Testing.hs
+-- HsGenTest.hs
 -- ASTTypes.hs

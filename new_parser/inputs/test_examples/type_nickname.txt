@@ -8,9 +8,9 @@ type_nickname ErrOrRes(T1) = Error(String)OrResult(T1)#
 
 type_nickname Parse(T1)FuncT = String => T1 x String#
 
-type_nickname Ints= ListOf(Int)s#
+type_nickname IntsTwo= ListOf(Int)s#
 
-type_nickname IntStringPairs= ListOf(Int x String)s#
+type_nickname IntStringPairsTwo= ListOf(Int x String)s#
 
-type_nickname IO=(EmptyVal)FromIO#
+type_nickname IOTwo=(EmptyVal)FromIO#
 

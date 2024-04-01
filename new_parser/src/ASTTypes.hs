@@ -342,6 +342,6 @@ data ProgramPart =
   TPD TypePropDef | TT1 TypeTheo
 
 -- For fast vim navigation
--- ShowInstances.hs
+-- HaskellGeneration.hs
 -- Parsers.hs
--- Testing.hs
+-- HsGenTest.hs

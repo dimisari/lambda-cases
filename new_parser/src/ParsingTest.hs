@@ -1,6 +1,4 @@
-{-# LANGUAGE
-  LambdaCase, FlexibleInstances, UndecidableInstances, MonoLocalBinds
-#-}
+{-# LANGUAGE LambdaCase #-}
 
 module ParsingTest where
 
