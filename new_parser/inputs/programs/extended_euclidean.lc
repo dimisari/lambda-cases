@@ -27,9 +27,11 @@ read_two_ints: (Int^2)FromIO
       2 => wrap(ints)
       ... => throw_err("You didn't give me 2 ints")
 
-print_gcd_and_coeffs: GcdAndCoeffs => IO
-  = fields => print_line("Gcd: " + gcd + "\nCoefficients: a = " + a + ", b = " + b)
+print_gcd_and_coeffs: GcdAndCoeffs => OnlyIO
+  = gac =>
+    print_line <-
+    ("Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b)
 
-main: IO
+main: OnlyIO
   = read_two_ints ;> (i1, i2) => print_gcd_and_coeffs <- extended_euclidean(i1, i2)
 

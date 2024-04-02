@@ -15,7 +15,6 @@ import HaskellGeneration
 type FileName = String
 
 type ProgramFileName = FileName
-type ProgramStr = String
 
 type GenHsFunc = TestExample -> Haskell
 
@@ -43,7 +42,7 @@ change_extension = takeWhile (/= '.') .> (++ ".hs")
 -- read_prog_parse_write_res 
 read_prog_parse_write_res :: ProgramFileName -> IO ()
 read_prog_parse_write_res pfn =
-  readFile in_path >>= parse_program .> writeFile out_path
+  readFile in_path >>= parse_program .> (imports ++) .> writeFile out_path
   where
   (in_path, out_path) =
     (in_dir ++ progs_dir ++ pfn, res_dir ++ progs_dir ++ change_extension pfn)
@@ -52,6 +51,13 @@ read_prog_parse_write_res pfn =
   parse_program :: GenHsFunc
   parse_program =
     (parse_and_ret_res_str :: GenerateHs Program) .> extract_res_str
+
+  imports :: Haskell
+  imports = concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"
+
+  import_names :: [Haskell]
+  import_names =
+    ["Prelude hiding (gcd)", "Haskell.OpsInHaskell", "Haskell.Predefined"]
 
 -- run_parse_func_for_test_exs_file
 run_parse_func_for_test_exs_file :: (FileName, GenHsFunc) -> IO ()
