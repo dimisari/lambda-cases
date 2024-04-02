@@ -92,19 +92,20 @@ strs_p :: Parser [String]
 strs_p = before_paren_str_p >:< many par_lower_unders
 
 -- helper parser combinators
-(+++) :: Parser a -> Parser b -> Parser (a, b)
+(+++) :: Monad m => m a -> m b -> m (a, b)
 pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
 
-(++<) :: Parser (a, b) -> Parser c -> Parser (a, b, c)
+(++<) :: Monad m => m (a, b) -> m c -> m (a, b, c)
 pab ++< pc = pab >>= \(a, b) -> pc >>= \c -> return (a, b, c)
 
-(>++<) :: Parser [a] -> Parser [a] -> Parser [a]
+(>++<) :: Monad m => m [a] -> m [a] -> m [a]
 ps1 >++< ps2 = mapf (ps1 +++ ps2) (uncurry (++)) 
 
-(>:<) :: Parser a -> Parser [a] -> Parser [a]
+(>:<) :: Applicative f => f a -> f [a] -> f [a]
 a >:< as = mapf a (:) <*> as
 
 -- other helpers
+mapf :: Functor f => f a -> (a -> b) -> f b
 mapf = flip fmap
 
 -- HasParser class
