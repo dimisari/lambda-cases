@@ -1,8 +1,8 @@
 
-gcd: Int^2 => Int
+calc_gcd: Int^2 => Int
   = (x, cases)
     0 => x
-    y => gcd(y, x -> mod <- y) 
+    y => calc_gcd(y, x -> mod <- y) 
 
 read_two_ints: (Int^2)FromIO 
   = print <- "Please give me 2 ints" ; 
@@ -17,7 +17,8 @@ print_gcd_message: NumsAndGcd => IO
   = nums_gcd => print(message) 
     where
     message: String 
-      = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " + nums_gcd.gcd
+      = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " +
+        nums_gcd.gcd
 
 main: IO
-  = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i2))
+  = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, calc_gcd(i1, i2))

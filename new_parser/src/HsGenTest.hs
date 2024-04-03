@@ -57,7 +57,7 @@ read_prog_parse_write_res pfn =
 
   import_names :: [Haskell]
   import_names =
-    ["Prelude hiding (gcd)", "Haskell.OpsInHaskell", "Haskell.Predefined"]
+    ["Prelude hiding (IO, gcd)", "Haskell.Predefined", "Haskell.OpsInHaskell"]
 
 -- run_parse_func_for_test_exs_file
 run_parse_func_for_test_exs_file :: (FileName, GenHsFunc) -> IO ()

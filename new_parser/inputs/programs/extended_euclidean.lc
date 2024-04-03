@@ -6,7 +6,7 @@ tuple_type GcdAndCoeffs
 value (gcd, a, b):Int^3
 
 extended_euclidean: Int^2 => GcdAndCoeffs
-  = ee_recursion(init_a_coeffs, init_b_coeffs)
+  = ee_recursion(init_a_coeffs, init_b_coeffs, _)
     where
     init_a_coeffs, init_b_coeffs: all Coeffs
       = (1, 0), (0, 1)
@@ -22,16 +22,16 @@ extended_euclidean: Int^2 => GcdAndCoeffs
 
 read_two_ints: (Int^2)FromIO
   = print_line <- "Please give me 2 ints";
-    get_line ;> split_words o> apply(from_string)to_all o> ints =>
-    ints -> length -> cases
-      2 => wrap(ints)
+    get_line ;> split_words o> apply(from_string)to_all o> cases
+      [i, j] => wrap(i, j)
       ... => throw_err("You didn't give me 2 ints")
 
-print_gcd_and_coeffs: GcdAndCoeffs => OnlyIO
+print_gcd_and_coeffs: GcdAndCoeffs => IO
   = gac =>
     print_line <-
     ("Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b)
 
-main: OnlyIO
-  = read_two_ints ;> (i1, i2) => print_gcd_and_coeffs <- extended_euclidean(i1, i2)
+main: IO
+  = read_two_ints ;> (i1, i2) =>
+    print_gcd_and_coeffs <- extended_euclidean(i1, i2)
 

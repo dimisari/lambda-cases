@@ -21,6 +21,8 @@ type WithIndentLvl = State Int
 
 newtype NeedsParen a = NeedsParen a
 
+newtype NeedsTypeAnnotation a = NeedsTypeAnnotation a
+
 -- classes
 class ToHaskell a where
   to_haskell :: a -> Haskell
@@ -44,8 +46,9 @@ params_hs_gen =
 add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
   hs_gen >>= \hs ->
-  params_hs_gen >>= \params_hs ->
-  return $ params_hs ++ hs 
+  params_hs_gen >>= \case
+    "" -> return hs
+    params_hs -> return $ "(" ++ params_hs ++ hs ++ ")"
 
 add_params_to2 :: WithParamNum [Haskell] -> WithParamNum [Haskell]
 add_params_to2 = \hs_list_gen ->
@@ -204,6 +207,13 @@ instance ToHaskell Literal where
     Ch c -> show c
     S s -> show s
 
+instance ToHaskell (NeedsTypeAnnotation Literal) where 
+  to_haskell = \(NeedsTypeAnnotation l) -> case l of
+    Int i -> (show i ++ " :: Int")
+    R r -> show r
+    Ch c -> show c
+    S s -> show s
+
 instance ToHaskell Identifier where
   to_haskell = \(Id (strs, maybe_digit)) ->
     intercalate "'" strs ++ to_haskell maybe_digit
@@ -350,14 +360,29 @@ instance ToHaskell ParenFuncApp where
     paren_func_app_hs_gen = case pfa of
       IWA1 iwa_pfa -> to_hs_wpn iwa_pfa
       AI ai_pfa -> to_hs_wpn ai_pfa
-      IA (id, args) -> (to_haskell id ++) <$> to_hs_wpn args
+      IA (id, args) ->
+        (before_hs ++) <$> to_hs_wpn args $> (++ ")")
+        where
+        before_hs :: Haskell 
+        before_hs = to_haskell id ++ "("
 
 instance ToHsWithParamNum IWAParenFuncApp where
-  to_hs_wpn = \(maybe_args1, id_with_args, maybe_args2) ->
-    to_hs_wpn maybe_args1 >>= \maybe_args1_hs ->
+  to_hs_wpn (maybe_args1, id_with_args, maybe_args2) =
+    margs1_to_hs_wpn >>= \maybe_args1_hs ->
     iwa_to_hs_wpn id_with_args >>= \(id_hs, args_hs) ->
-    to_hs_wpn maybe_args2 >>= \maybe_args2_hs ->
-    return $ id_hs ++ maybe_args1_hs ++ args_hs ++ maybe_args2_hs 
+    margs2_to_hs_wpn >>= \maybe_args2_hs ->
+    return $
+      id_hs ++ "(" ++ maybe_args1_hs ++ args_hs ++ maybe_args2_hs ++ ")"
+    where
+    margs1_to_hs_wpn :: WithParamNum Haskell
+    margs1_to_hs_wpn = case maybe_args1 of
+      Nothing -> return $ ""
+      Just args -> to_hs_wpn args $> (++ ", ")
+
+    margs2_to_hs_wpn :: WithParamNum Haskell
+    margs2_to_hs_wpn = case maybe_args2 of
+      Nothing -> return $ ""
+      Just args -> (", " ++) <$> to_hs_wpn args
 
 iwa_to_hs_wpn :: IdentWithArgs -> WithParamNum HsPair
 iwa_to_hs_wpn = 
@@ -381,14 +406,19 @@ iwa_to_hs_wpn =
       return (id_rest_hs_prev ++ "'" ++ str, args_hs_prev ++ epoa_hs)
 
 instance ToHsWithParamNum AIParenFuncApp where
-  to_hs_wpn =  \(args, id, maybe_args) ->
+  to_hs_wpn (args, id, maybe_args) =
     to_hs_wpn args >>= \args_hs ->
-    to_hs_wpn maybe_args >>= \maybe_args_hs ->
-    return $ to_haskell id ++ args_hs ++ maybe_args_hs
+    margs_to_hs_wpn >>= \maybe_args_hs ->
+    return $ to_haskell id ++ "(" ++ args_hs ++ maybe_args_hs ++ ")"
+    where
+    margs_to_hs_wpn :: WithParamNum Haskell
+    margs_to_hs_wpn = case maybe_args of
+      Nothing -> return $ ""
+      Just args -> (", " ++) <$> to_hs_wpn args
 
 instance ToHsWithParamNum Arguments where
   to_hs_wpn = \(As (LEOUs (leou, leous))) ->
-    (leou : leous) &> map NeedsParen &> to_hs_wpn_list $> concatMap (" " ++)
+    (leou : leous) &> to_hs_wpn_list $> intercalate ", "
 
 instance ToHaskell IdentWithArgsStart where
   to_haskell = \(IWAS strs) -> intercalate "'" strs
@@ -396,7 +426,7 @@ instance ToHaskell IdentWithArgsStart where
 instance ToHsWithParamNum EmptyParenOrArgs where
   to_hs_wpn = \case
     EmptyParen -> return ""
-    As1 args -> to_hs_wpn args
+    As1 args -> (", " ++) <$> to_hs_wpn args
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance ToHaskell PreFunc where
@@ -501,7 +531,7 @@ instance ToHsWithParamNum OpExprStart where
 
 instance ToHsWithParamNum (Operand, Op) where
   to_hs_wpn = \(oper, op) ->
-    (++ to_haskell op) <$> to_hs_wpn oper
+     to_hs_wpn oper $> (++ to_haskell op)
 
 instance ToHaskell LineOpExpr where
   to_haskell (LOE oes_loee) =

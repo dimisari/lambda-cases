@@ -1,6 +1,9 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE
+  MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, 
+  UndecidableInstances, FunctionalDependencies, GADTs
+#-}
 
-module OpsInHaskell where
+module Haskell.OpsInHaskell where
 
 infixl 9 &>
 infixr 8 <&
@@ -62,3 +65,29 @@ class HasUse u where
 
 class HasThen t where
   (!>>) :: t a -> t b -> t b
+
+-- GeneralMultiplication
+instance Num a => GeneralMultiplication a a a where
+  (!*) = (*)
+
+-- GeneralAddition
+instance Show a => GeneralAddition String a String where
+  str !+ l = str ++ show l
+
+instance GeneralAddition a [a] [a] where
+  (!+) = (:)
+
+instance Num a => GeneralAddition a a a where
+  (!+) = (+)
+
+-- GeneralSubtraction
+instance Num a => GeneralSubtraction a a a where
+  (!-) = (-)
+
+-- GeneralLessThan
+instance Ord a => GeneralLessThan a a where
+  (!<) = (<)
+
+-- HasThen
+instance Applicative f => HasThen f where
+  (!>>) = (*>)

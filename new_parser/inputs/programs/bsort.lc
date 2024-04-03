@@ -9,7 +9,7 @@ bubble_sort_pass: ListOf(Int)s => ListOf(Int)s x Bool
         false => add(l.first)to_bubble(l.second)and_rest
       where
       add()to_bubble()and_rest: Int x Int => ListOf(Int)s x Bool
-        = (x, y) => add(x)to <- bubble_sort_pass(y + rest)
+        = (x, y) => add(x)to(_) <- bubble_sort_pass(y + rest)
 
       add()to: Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
         = (elem, (l, b)) => (elem + l, b)
