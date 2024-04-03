@@ -1,38 +1,31 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, FlexibleInstances #-}
 
-module ParsingTest where
+module Generation.Test where
 
 import Text.Parsec (runParser, eof, ParseError)
 
-import System.Directory
 import Data.List.Split
 
 import ASTTypes
-import Parsers
-import HaskellGeneration
+import Parsing.AST
+import Generation.TypesAndHelpers
+import Generation.AST
+import Helpers
 
 -- types
-type FileName = String
-
-type ProgramFileName = FileName
-
 type GenHsFunc = TestExample -> Haskell
-
-type FileString = String
-type TestExample = String
 
 type GenerateHs a = TestExample -> ResultString a
 newtype ResultString a = RS Haskell
 
 -- paths
-[progs_dir, test_exs_dir, in_dir, res_dir] =
-  ["programs/", "test_examples/", "../inputs/", "../hs_gen_results/"]
-  :: [FilePath]
+res_dir = "../hs_gen_results/"
+  :: FilePath
 
 -- main
 main :: IO ()
 main =
-  listDirectory (in_dir ++ progs_dir) >>= mapM_ read_prog_parse_write_res >>
+  list_progs >>= mapM_ read_prog_parse_write_res >>
   mapM_ run_parse_func_for_test_exs_file test_exs_file_name_parse_func_pairs
 
 -- helpers
@@ -108,13 +101,13 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: GenerateHs Tuple) .> extract_res_str
     )
   , ( "big_tuple.txt"
-    , (parse_and_ret_res_str :: GenerateHs BigTuple) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (THWIL BigTuple)) .> extract_res_str
     )
   , ( "list.txt"
     , (parse_and_ret_res_str :: GenerateHs List) .> extract_res_str
     )
   , ( "big_list.txt"
-    , (parse_and_ret_res_str :: GenerateHs BigList) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (THWIL BigList)) .> extract_res_str
     )
   , ( "paren_func_app.txt"
     , (parse_and_ret_res_str :: GenerateHs ParenFuncApp) .> extract_res_str
@@ -129,26 +122,30 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: GenerateHs LineOpExpr) .> extract_res_str
     )
   , ( "big_op_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs BigOpExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (THWIL BigOpExpr)) .>
+      extract_res_str
     )
   , ( "line_func_expr.txt"
     , (parse_and_ret_res_str :: GenerateHs LineFuncExpr) .> extract_res_str
     )
   , ( "big_func_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs BigFuncExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (THWIL BigFuncExpr)) .>
+      extract_res_str
     )
   , ( "cases_func_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs CasesFuncExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (THWIL CasesFuncExpr)) .>
+      extract_res_str
     )
   , ( "value_def.txt"
-    , (parse_and_ret_res_str :: GenerateHs ValueDef) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (THWIL ValueDef)) .> extract_res_str
     )
   , ( "grouped_val_defs.txt"
-    , (parse_and_ret_res_str :: GenerateHs GroupedValueDefs) .>
+    , (parse_and_ret_res_str :: GenerateHs (THWIL GroupedValueDefs)) .>
       extract_res_str
     )
   , ( "where_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs WhereExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (THWIL WhereExpr)) .>
+      extract_res_str
     )
   , ( "type_id.txt"
     , (parse_and_ret_res_str :: GenerateHs TypeId) .> extract_res_str
@@ -189,7 +186,15 @@ test_exs_file_name_parse_func_pairs =
     )
   ]
 
+-- 
+instance ToHsWithIndentLvl a => ToHaskell (THWIL a) where
+   to_haskell (THWIL a) = to_hs_wil a &> run_generator
+
+instance HasParser a => HasParser (THWIL a) where
+   parser = THWIL <$> parser
+
 -- For fast vim navigation
--- ASTTypes.hs
+-- ../ASTTypes.hs
 -- Parsers.hs
--- HaskellGeneration.hs
+-- TypesAndHelpers.hs
+-- AST.hs

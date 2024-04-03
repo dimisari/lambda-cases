@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module ParsingTest where
+module Parsing.Test where
 
 import Text.Parsec (runParser, eof, ParseError)
 
@@ -8,36 +8,26 @@ import System.Directory
 import Data.List.Split
 
 import ASTTypes
-import Parsers
+import Parsing.AST
 import ShowInstances
+import Helpers
 
 -- types
-type FileName = String
 type ParseResultString = String
 
-type ProgramFileName = FileName
-type ProgramStr = String
-
 type ParseFunc = TestExample -> ParseResultString
-
-type FileString = String
-type TestExample = String
 
 type ParseToResStr a = TestExample -> ResultString a
 newtype ResultString a = RS ParseResultString
 
 -- paths
-[progs_dir, test_exs_dir, in_dir, res_dir] =
-  ["programs/", "test_examples/", "../inputs/", "../parsing_results/"]
-  :: [FilePath]
-
--- helpers
-(.>) = flip (.)
+res_dir = "../parsing_results/"
+  :: FilePath
 
 -- main
 main :: IO ()
 main =
-  listDirectory (in_dir ++ progs_dir) >>= mapM_ read_prog_parse_write_res >>
+  list_progs >>= mapM_ read_prog_parse_write_res >>
   mapM_ run_parse_func_for_test_exs_file test_exs_file_name_parse_func_pairs
 
 -- read_prog_parse_write_res 

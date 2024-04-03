@@ -344,4 +344,4 @@ data ProgramPart =
 -- For fast vim navigation
 -- HaskellGeneration.hs
 -- Parsers.hs
--- HsGenTest.hs
+-- Generation/Test.hs

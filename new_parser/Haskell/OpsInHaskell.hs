@@ -36,7 +36,7 @@ class GeneralMultiplication a b c where
 class GeneralDivision a b c where
   (!/) :: a -> b -> c
 
-class GeneralAddition a b c where
+class GeneralAddition a b c | a b -> c where
   (!+) :: a -> b -> c
 class GeneralSubtraction a b c where
   (!-) :: a -> b -> c
@@ -67,11 +67,11 @@ class HasThen t where
   (!>>) :: t a -> t b -> t b
 
 -- GeneralMultiplication
-instance Num a => GeneralMultiplication a a a where
+instance (a ~ Int) => GeneralMultiplication Int Int a where
   (!*) = (*)
 
 -- GeneralAddition
-instance Show a => GeneralAddition String a String where
+instance GeneralAddition String [Int] String where
   str !+ l = str ++ show l
 
 instance GeneralAddition a [a] [a] where

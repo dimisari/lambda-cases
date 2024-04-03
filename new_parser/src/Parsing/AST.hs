@@ -1,112 +1,14 @@
 {-# LANGUAGE LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
-module Parsers where
+module Parsing.AST where
 
 import Text.Parsec 
-import Text.Parsec.Token hiding (comma, charLiteral, stringLiteral)
 
 import ASTTypes
+import Helpers
+
 import ShowInstances
-
-type Parser = Parsec String ParserState
-
-test_parser :: Parser a -> String -> Either ParseError a
-test_parser = \p s -> runParser (p <* eof) (0, False) "test" s
-
--- Parser State
-type IndentationLevel = Int
-type InEqualLine = Bool
-type ParserState = (IndentationLevel, InEqualLine)
-
-increase_il_by :: Int -> Parser ()
-increase_il_by = \i -> modifyState (\(il, b) -> (il + i, b))
-
-decrease_il_by :: Int -> Parser ()
-decrease_il_by = \i -> modifyState (\(il, b) -> (il - i, b))
-
-we_are_in_equal_line :: Parser ()
-we_are_in_equal_line = modifyState (\(il, _) -> (il, True))
-
-we_are_not_in_equal_line :: Parser ()
-we_are_not_in_equal_line = modifyState (\(il, _) -> (il, False))
-
-are_we_in_equal_line :: Parser Bool
-are_we_in_equal_line = snd <$> getState
-
-inc_il_if_false :: Bool -> Parser ()
-inc_il_if_false = \case
-  True -> return ()
-  False -> increase_il_by 1
-
-dec_il_if_false :: Bool -> Parser ()
-dec_il_if_false = \case
-  True -> return ()
-  False -> decrease_il_by 1
-
--- helper parsers
-[nl, nl_indent, space_or_nl, opt_space, comma]
-  = [ many (char ' ' <|> char '\t') *> char '\n' *> return ()
-    , nl *> indent
-    , (try (nl *> string "  ") <|> string " ") *> return ()
-    , optional (char ' ')
-    , char ',' *> opt_space
-    ]
-  :: [Parser ()]
-
-[underscore, lower_under]
-  = [char '_', lower <|> underscore]
-  :: [Parser Char]
-
-[digits, func_arr]
-  = [many1 digit, opt_space *> string "=>"]
-  :: [Parser String]
-
-indent :: Parser ()
-indent =
-  getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
-
-has_type_symbol :: Parser ()
-has_type_symbol =
-  (try nl_indent *> string ": " <|> opt_space_around (string ":")) *> return ()
-
-opt_space_around :: Parser a -> Parser a
-opt_space_around = \a -> opt_space *> a <* opt_space
-
-in_paren :: Parser a -> Parser a
-in_paren = \a -> char '(' *> opt_space_around a <* char ')'
-
-int_greater_than_1 :: Parser Int
-int_greater_than_1 =
-  parser >>= \i -> case (i < 2) of
-    True -> unexpected "integer in power type must be greater than 1"
-    False -> return i
-
---  helper parsers for identifiers
-before_paren_str_p :: Parser String
-before_paren_str_p = lower >:< many lower_under
-
-par_lower_unders :: Parser String
-par_lower_unders = (try $ string "()") *> many1 lower_under
-
-strs_p :: Parser [String]
-strs_p = before_paren_str_p >:< many par_lower_unders
-
--- helper parser combinators
-(+++) :: Monad m => m a -> m b -> m (a, b)
-pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
-
-(++<) :: Monad m => m (a, b) -> m c -> m (a, b, c)
-pab ++< pc = pab >>= \(a, b) -> pc >>= \c -> return (a, b, c)
-
-(>++<) :: Monad m => m [a] -> m [a] -> m [a]
-ps1 >++< ps2 = mapf (ps1 +++ ps2) (uncurry (++)) 
-
-(>:<) :: Applicative f => f a -> f [a] -> f [a]
-a >:< as = mapf a (:) <*> as
-
--- other helpers
-mapf :: Functor f => f a -> (a -> b) -> f b
-mapf = flip fmap
+import Parsing.TypesAndHelpers
 
 -- HasParser class
 class HasParser a where
@@ -580,6 +482,12 @@ instance HasParser PowerBaseType where
 instance HasParser PowerType where
   parser = PoT <$> parser +++ (string "^" *> int_greater_than_1)
 
+int_greater_than_1 :: Parser Int
+int_greater_than_1 =
+  parser >>= \i -> case (i < 2) of
+    True -> unexpected "integer in power type must be greater than 1"
+    False -> return i
+
 instance HasParser FuncType where
   parser = FT <$> parser +++ (string " => " *> parser)
 
@@ -804,45 +712,6 @@ instance HasParser ProgramPart where
   parser = 
     TD <$> try parser <|> TNN1 <$> try parser <|> TT1 <$> try parser <|>
     TPD <$> try parser <|> GVDs2 <$> try parser <|> VD2 <$> parser
-
--- for literals. Had to copy from Text.Parsec.Token source code
--- because I didn't want spaces after the char and string literals ...
--- if anyone knows how to import hidden functions from a module plz let me know
--- (this could have been way faster)
-
--- char literal
-charLiteral :: Parser Char
-charLiteral =
-  (between (char '\'') (char '\'' <?> "end of character") characterChar)
-  <?> "character"
-
-characterChar :: Parser Char
-characterChar = charLetter <|> charEscape <?> "literal character"
-
-charLetter :: Parser Char
-charLetter = satisfy (\c -> (c /= '\'') && (c /= '\\') && (c > '\026'))
-
-charEscape :: Parser Char
-charEscape = do{ _ <- char '\\'; charEsc <?> "escape code" }
-
-charEsc :: Parser Char
-charEsc =
-  choice (map parseEsc escMap)
-  where
-  parseEsc (c, code) = do{ _ <- char c; return code }
-  escMap = zip ("ntr0\\\"\'") ("\n\t\r\0\\\"\'")
-
--- string literal
-stringLiteral :: Parser String
-stringLiteral =
-  between (char '"') (char '"' <?> "end of string") (many stringChar)
-  <?> "string literal"
-
-stringChar :: Parser Char
-stringChar = stringLetter <|> charEscape <?> "string character"
-
-stringLetter :: Parser Char
-stringLetter = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
 -- For fast vim navigation
 -- ShowInstances.hs

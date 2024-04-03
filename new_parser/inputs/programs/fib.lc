@@ -9,7 +9,7 @@ advance_fib: FibType => (FibType)FromIO
 
 print()fib_nums: Int => IO
   = n =>
-    print("Fib num 0 = 0") ; print(n-1)fibs_init((0, 1, 1)) ; only_io
+    print("Fib num 0 = 0") ; print(n-1)fibs_init((0, 1, 1)) ; end_io
     where
     print()fibs_init : Int x FibType => (FibType)FromIO
       = (n, fv) => advance_fib(fv) ;> print(n-1)fibs_init
