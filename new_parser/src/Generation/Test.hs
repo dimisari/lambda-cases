@@ -186,7 +186,10 @@ test_exs_file_name_parse_func_pairs =
     )
   ]
 
--- 
+-- to have ToHaskell from ToHsWithIndentLvl and also HasParser
+-- for parse_and_ret_res_str
+newtype THWIL a = THWIL a
+
 instance ToHsWithIndentLvl a => ToHaskell (THWIL a) where
    to_haskell (THWIL a) = to_hs_wil a &> run_generator
 

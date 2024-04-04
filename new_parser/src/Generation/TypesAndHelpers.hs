@@ -20,7 +20,7 @@ newtype NeedsParen a = NeedsParen a
 
 newtype NeedsTypeAnnotation a = NeedsTypeAnnotation a
 
-newtype THWIL a = THWIL a
+newtype CaseOf = CaseOf CasesParams
 
 -- classes
 class ToHaskell a where
@@ -94,25 +94,10 @@ add_params_to2 = \hs_list_gen ->
 indent_all_and_concat :: [Haskell] -> WithParamNum Haskell
 indent_all_and_concat = \hs_list ->
   indent >>= \indent_hs ->
-  return $ concatMap (\hs -> indent_hs ++ hs ++ "\n") hs_list
+  return $ map (indent_hs ++) hs_list &> intercalate "\n"
 
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
-
--- case of
-case_of_inner_hs_gen :: WithParamNum Haskell
-case_of_inner_hs_gen =
-  get $> \case
-    0 -> error "should be impossible: no cases param"
-    1 -> "x0'"
-    i ->
-      "(" ++ map (\j -> "x" ++ show j ++ "'") [0..i-1] &>
-      intercalate ", " ++ ")"
-
-case_of_hs_gen :: Haskell -> WithParamNum Haskell
-case_of_hs_gen = \cps_hs ->
-  case_of_inner_hs_gen >>= \case_of_inner_hs ->
-  return $ "\\" ++ cps_hs ++ " -> case " ++ case_of_inner_hs ++ " of"
 
 -- to_hs_maybe_np
 to_hs_maybe_np :: Maybe NamePart -> Haskell
@@ -129,6 +114,12 @@ inc_indent_lvl = change_indent_lvl 1
 
 dec_indent_lvl :: WithIndentLvl ()
 dec_indent_lvl = change_indent_lvl (-1)
+
+deeper :: WithIndentLvl Haskell -> WithIndentLvl Haskell
+deeper = \hs_gen -> inc_indent_lvl *> hs_gen <* dec_indent_lvl
+
+deeper2 :: WithIndentLvl Haskell -> WithIndentLvl Haskell
+deeper2 = \hs_gen -> change_indent_lvl 2 *> hs_gen <* change_indent_lvl (-2)
 
 indent = indent_spaces <$> get
   :: WithIndentLvl Haskell
@@ -175,4 +166,5 @@ le_to_ve = \case
   LOE2 loe -> OE2 $ LOE3 loe
   LFE2 lfe -> FE2 $ LFE4 lfe
 
+-- ../ASTTypes.hs
 -- Test.hs

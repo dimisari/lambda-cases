@@ -28,8 +28,8 @@ from_string = read
 wrap :: Monad m => a -> m a
 wrap = return
 
-wrap_in_io :: a -> P.IO a
-wrap_in_io = return
+from_io :: a -> P.IO a
+from_io = return
 
 class IsFirst a b | b -> a where
   first :: b -> a

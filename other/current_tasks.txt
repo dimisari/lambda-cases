@@ -1,4 +1,14 @@
 
+- value expr in value def that is func expr: put params before =
+
+- tuples that are of a tuple type: type checking
+
+- change: if id from projection func need full val as arg
+
+- params with param num: make them tuple param
+
+- type checking
+
 - param num state needs to be global?
 
 # tasks.txt
