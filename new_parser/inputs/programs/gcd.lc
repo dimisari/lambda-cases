@@ -14,11 +14,10 @@ tuple_type NumsAndGcd
 value (x, y, gcd):Int^3
 
 print_gcd_message: NumsAndGcd => IO 
-  = nums_gcd => print(message) 
+  = nag => print(message) 
     where
     message: String 
-      = "The GCD of " + nums_gcd.x + " and " + nums_gcd.y + " is = " +
-        nums_gcd.gcd
+      = "The GCD of " + nag.x + " and " + nag.y + " is = " + nag.gcd
 
 main: IO
   = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, calc_gcd(i1, i2))

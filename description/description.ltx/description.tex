@@ -1120,7 +1120,7 @@ second action) and therefore it is of type \verb|@E(T2)|.
 Note that the value of type \verb|T1| produced by the first action is not
 used anywhere. This happens mostly when \verb|T1 = EmptyVal| and it is
 because values of type \verb|@E(EmptyVal)| are used for their environment
-action only \\(e.g. \verb|print_string(...)\ :\ (EmptyVal)FromIO|).
+action only \\(e.g. \verb|print_string(...): (EmptyVal)FromIO|).
 \\\\
 How the two environment actions of the \verb|@E(T1)| and \verb|@E(T2)|
 values are combined to produce the new environment action is specific to the
@@ -1735,9 +1735,9 @@ big_string : String
     where
     s1, s2, s3, s4 : all String
       = "Hello, my name is Struggling Programmer."
-      , "I have tried way too many times to fit a big chunk of text"
-      , "inside my program, without it hitting the half-screen mark!"
-      , "I am so glad I finally discovered lcases!"
+      , " I have tried way too many times to fit a big chunk of text"
+      , " inside my program, without it hitting the half-screen mark!"
+      , " I am so glad I finally discovered lcases!"
 \end{verbatim}
 
 \item \textit{Description}

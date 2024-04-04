@@ -11,4 +11,7 @@
 
 - param num state needs to be global?
 
+- change ids to contain underscores and have certain spots where they expect
+  arguments (including beginning and end)
+
 # tasks.txt
