@@ -23,7 +23,7 @@ extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
 read_two_ints: (Int^2)FromIO
   = print_line("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
-      [i, j] => (from_string(i), from_string(j))from_io
+      [i, j] => ((from_string(i), from_string(j)))from_io
       ... => throw_err("You didn't give me 2 ints")
 
 print_gcd_and_coeffs_of(_): GcdAndCoeffs => IO

@@ -4,8 +4,8 @@ value (prev, cur, cur_index):Int^3
 
 print_cur_advance(_): FibsAndIndex => (FibsAndIndex)FromIO
   = fai =>
-    print("Fib num " + fai.cur_idex + " = " + fai.cur);
-    from_io(fai.cur, fai.prev + fai.cur, fai.cur_index + 1)
+    print("Fib num " + fai.cur_index + " = " + fai.cur);
+    (fai.cur, fai.prev + fai.cur, fai.cur_index + 1) -> (_)from_io
 
 print(_)fib_nums: Int => IO
   = n =>
@@ -15,4 +15,4 @@ print(_)fib_nums: Int => IO
       = (n, fai) => print_cur_advance(fai) ;> print(n-1)fibs_with_init(_)
 
 main: IO
-  = get_line ;> (_)from_string o> print(_)fib_nums
+  = get_line ;> from_string(_) o> print(_)fib_nums

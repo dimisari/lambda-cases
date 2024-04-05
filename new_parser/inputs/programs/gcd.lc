@@ -7,7 +7,7 @@ gcd_of(_)and(_): Int^2 => Int
 read_two_ints: (Int^2)FromIO 
   = print <- "Please give me 2 ints"; 
     get_line ;> split(_)to_words o> cases
-      [x, y] => from_io(from_string(x), from_string(y))
+      [x, y] => (from_string(x), from_string(y)) -> (_)from_io
       ... => throw_err("You didn't give me 2 ints")
     
 tuple_type NumsAndGcd

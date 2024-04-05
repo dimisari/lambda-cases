@@ -75,7 +75,11 @@ params_hs_gen :: WithParamNum Haskell
 params_hs_gen =
   get $> \case
     0 -> ""
-    i -> "\\" ++ concatMap (\j -> "x" ++ show j ++ "' ") [0..i-1] ++ "-> "
+    i ->
+      "\\(" ++ ([0..i-1] &> map num_to_param &> intercalate ", ") ++ ") -> "
+      where
+      num_to_param :: Int -> String
+      num_to_param = \j -> "x" ++ show j ++ "'"
 
 add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
@@ -92,11 +96,9 @@ add_params_to2 = \hs_list_gen ->
     params_hs -> return $ params_hs : hs_list
 
 indent_all_and_concat :: [Haskell] -> WithParamNum Haskell
-indent_all_and_concat = \case
-  hs : hs_list ->
-    indent >>= \indent_hs ->
-    return $ (hs : map (indent_hs ++) hs_list) &> intercalate "\n"
-  [] -> return ""
+indent_all_and_concat = \hs_list ->
+  indent >>= \indent_hs ->
+  return $ map (indent_hs ++) hs_list &> intercalate "\n"
 
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
@@ -107,7 +109,7 @@ to_hs_maybe_np = \case
   Nothing -> ""
   Just (NP str) -> "'" ++ str
 
--- Indetation helpers
+-- Indentation helpers
 change_indent_lvl :: Int -> WithIndentLvl ()
 change_indent_lvl = \i -> modify (+i)
 

@@ -13,5 +13,5 @@ hanoi_with(_)rings_from(_)to(_)through(_)
 
 main: IO
   = print_line("Number of rings?");
-    get_line ;> from_string o> 
+    get_line ;> from_string(_) o> 
     hanoi_with(_)rings_from("left")to("right")through("middle")

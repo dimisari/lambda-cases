@@ -10,11 +10,20 @@ type FromIO = P.IO
 type IO = FromIO ()
 type ListOf's = []
 
+a'div' :: Integral a => (a, a) -> a
+a'div' = uncurry div
+
+a'mod' :: Integral a => (a, a) -> a
+a'mod' = uncurry mod
+
+print' :: Show a => a -> IO
+print' = print
+
 print_line' = putStrLn
 get_line = getLine
-split_words = words
+split'to_words = words
 apply'to_all = map
-throw_err = error
+throw_err' = error
 true = True
 
 drop'from' :: (Int, [a]) -> [a]
@@ -23,14 +32,14 @@ drop'from' = uncurry drop
 end_io :: IO
 end_io = return ()
 
-from_string :: Read a => String -> a
-from_string = read
+from_string' :: Read a => String -> a
+from_string' = read
 
 wrap :: Monad m => a -> m a
 wrap = return
 
-from_io :: a -> P.IO a
-from_io = return
+a'from_io :: a -> P.IO a
+a'from_io = return
 
 class IsFirst a b | b -> a where
   first :: b -> a

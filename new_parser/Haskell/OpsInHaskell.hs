@@ -67,7 +67,7 @@ class HasThen t where
   (!>>) :: t a -> t b -> t b
 
 -- GeneralMultiplication
-instance (a ~ Int) => GeneralMultiplication Int Int a where
+instance GeneralMultiplication Int Int Int where
   (!*) = (*)
 
 -- GeneralAddition
@@ -77,8 +77,8 @@ instance GeneralAddition String [Int] String where
 instance GeneralAddition a [a] [a] where
   (!+) = (:)
 
-instance Num a => GeneralAddition a a a where
-  (!+) = (+)
+instance GeneralAddition String String String where
+  (!+) = (++)
 
 -- GeneralSubtraction
 instance Num a => GeneralSubtraction a a a where
@@ -91,3 +91,7 @@ instance Ord a => GeneralLessThan a a where
 -- HasThen
 instance Applicative f => HasThen f where
   (!>>) = (*>)
+
+-- HasThen
+instance Monad m => HasUse m where
+  (!>>=) = (>>=)
