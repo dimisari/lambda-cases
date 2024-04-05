@@ -1,27 +1,27 @@
 
-bubble_sort_pass: ListOf(Int)s => ListOf(Int)s x Bool
+bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x Bool
   = cases
     [] => ([], true)
     [x] => ([x], true)
     l => 
       (l.first < l.second) -> cases
-        true => not_sorted <- add(l.second)to_bubble(l.first)and_rest
+        true => not_sorted(_) <- add(l.second)to_bubble(l.first)and_rest
         false => add(l.first)to_bubble(l.second)and_rest
       where
-      add()to_bubble()and_rest: Int x Int => ListOf(Int)s x Bool
-        = (x, y) => add(x)to(_) <- bubble_sort_pass(y + rest)
+      add(_)to_bubble(_)and_rest: Int x Int => ListOf(Int)s x Bool
+        = (x, y) => add(x)to(bubble_sort_pass(y + rest))
 
-      add()to: Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
+      add(_)to(_): Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
         = (elem, (l, b)) => (elem + l, b)
 
       rest: ListOf(Int)s
         = drop(2)from(l)
 
-      not_sorted: ListOf(Int)s x Bool => ListOf(Int)s x Bool
+      not_sorted(_): ListOf(Int)s x Bool => ListOf(Int)s x Bool
         = _.change{2nd = false}
 
-buble_sort: ListOf(Int)s => ListOf(Int)s
-  = bubble_sort_pass o> (l, is_sorted) =>
+buble_sort(_): ListOf(Int)s => ListOf(Int)s
+  = bubble_sort_pass(_) o> (l, is_sorted) =>
     is_sorted -> cases
       true => l
       false => buble_sort(l)
@@ -29,7 +29,7 @@ buble_sort: ListOf(Int)s => ListOf(Int)s
 initial: ListOf(Int)s
   = compute_list(16, 65)
     where
-    compute_list: Int^2 => ListOf(Int)s
+    compute_list(_): Int^2 => ListOf(Int)s
       = (cases, seed)
         0 => []
         n =>

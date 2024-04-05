@@ -11,7 +11,7 @@ needed
 
 type_proposition (@T)Has_Internal_App
 needed
-  apply()inside : (T1 => T2) x @T(T1) => @T(T2)#
+  apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)#
 
 type_proposition (@A)Is(@B)s_First_One
 needed first1 :@B => @A#

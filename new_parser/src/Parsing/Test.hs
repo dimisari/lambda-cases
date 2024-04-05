@@ -99,7 +99,8 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: ParseToResStr BigList) .> extract_res_str
     )
   , ( "paren_func_app.txt"
-    , (parse_and_ret_res_str :: ParseToResStr ParenFuncApp) .> extract_res_str
+    , (parse_and_ret_res_str :: ParseToResStr ParenFuncAppOrId) .>
+      extract_res_str
     )
   , ( "prefix_func_app.txt"
     , (parse_and_ret_res_str :: ParseToResStr PreFuncApp) .> extract_res_str
@@ -172,6 +173,6 @@ test_exs_file_name_parse_func_pairs =
   ]
 
 -- For fast vim navigation
--- Parsers.hs
 -- ShowInstances.hs
 -- ASTTypes.hs
+-- Parsing/AST.hs

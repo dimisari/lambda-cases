@@ -7,7 +7,6 @@ import Text.Parsec
 import ASTTypes
 import Helpers
 
-import ShowInstances
 import Parsing.TypesAndHelpers
 
 -- HasParser class
@@ -40,16 +39,25 @@ instance HasParser Literal where
     "Literal"
 
 -- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncApp
+instance HasParser HasParen where
+  parser = string "(_)" *> return True <|> return False
+
 instance HasParser Identifier where
   parser =
-    id_p >>= \id@(Id (strs, maybe_digit)) ->
-    case maybe_digit == Nothing && (strs == ["cases"] || strs == ["where"]) of
-      True ->
-        unexpected $ "cannot use \"" ++ head strs ++ "\" as an identifier"
-      False -> return id
+    id_p >>= \case
+      Id (False, ["cases"], Nothing, False) ->
+        unexpected $ "cannot use \"cases\" as an identifier"
+      Id (False, ["where"], Nothing, False) ->
+        unexpected $ "cannot use \"where\" as an identifier"
+      id -> return id
     where
     id_p :: Parser Identifier
-    id_p = Id <$> strs_p +++ optionMaybe digit
+    id_p =
+      parser >>= \has_paren1 ->
+      strs_p >>= \strs ->
+      optionMaybe digit >>= \maybe_digit ->
+      parser >>= \has_paren2 ->
+      return $ Id (has_paren1, strs, maybe_digit, has_paren2)
 
 instance HasParser SimpleId where
   parser =
@@ -87,8 +95,8 @@ instance HasParser BasicOrAppExpr where
 
 instance HasParser BasicExpr where
   parser =
-    PFA <$> try parser <|> SI1 <$> try parser <|> Lit1 <$> parser <|>
-    Id1 <$> parser <|> T1 <$> parser <|> L1 <$> parser <?> expecting_msg
+    PFAOI1 <$> try parser <|> SI1 <$> try parser <|> Lit1 <$> parser <|>
+    T1 <$> parser <|> L1 <$> parser <?> expecting_msg
     where
     expecting_msg :: String
     expecting_msg = 
@@ -110,7 +118,6 @@ instance HasParser BigTuple where
     line_expr_or_unders_l_p =
       many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ')'
 
-
 instance HasParser List where
   parser =
     L <$> (char '[' *> opt_space_around (optionMaybe parser) <* char ']')
@@ -121,40 +128,24 @@ instance HasParser BigList where
       (char '[' *> opt_space *> parser) +++
       many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ']'
 
-instance HasParser ParenFuncApp where
+instance HasParser ArgsStr where
+  parser = parser >>= \args -> many1 lower_under >>= \str -> return (args, str)
+
+instance HasParser ParenFuncAppOrId where
   parser = 
-    IWA1 <$> try iwa_pfa_parser <|> AI <$> ai_pfa_parser <|>
-    IA <$> ia_pfa_parser <?> "parenthesis function application"
-    where
-    iwa_pfa_parser :: Parser IWAParenFuncApp
-    iwa_pfa_parser = optionMaybe parser +++ parser ++< optionMaybe parser
-
-    ai_pfa_parser :: Parser AIParenFuncApp
-    ai_pfa_parser = parser +++ parser ++< optionMaybe parser
-
-    ia_pfa_parser :: Parser (SimpleId, Arguments)
-    ia_pfa_parser = parser +++ parser
+    optionMaybe parser >>= \maybe_args1 ->
+    before_paren_str_p >>= \before_paren_str ->
+    many (try parser) >>= \arg_str_pairs ->
+    optionMaybe digit >>= \maybe_digit ->
+    optionMaybe parser >>= \maybe_args2 ->
+    return $
+      PFAOI
+        ( maybe_args1, before_paren_str, arg_str_pairs, maybe_digit
+        , maybe_args2
+        )
 
 instance HasParser Arguments where
   parser = As <$> in_paren parser
-
-instance HasParser IdentWithArgs where
-  parser =
-    parser >>= \ident_with_args_start ->
-    parser >>= \arguments ->
-    many1 lower_under >>= \string ->
-    many (try $ empty_paren_or_args_p +++ many1 lower_under) >>= \pairs ->
-    optionMaybe digit >>= \maybe_digit ->
-    return $
-      IWA $ (ident_with_args_start, arguments, string, pairs, maybe_digit)
-    where
-    empty_paren_or_args_p :: Parser EmptyParenOrArgs
-    empty_paren_or_args_p =
-      try (string "()") *> return EmptyParen <|> As1 <$> parser
-      
-
-instance HasParser IdentWithArgsStart where
-  parser = IWAS <$> strs_p
 
 -- HasParser: PreFunc, PostFunc, BasicExpr, Change
 instance HasParser PreFunc where
@@ -287,7 +278,7 @@ instance HasParser BigFuncExpr where
 
 instance HasParser Parameters where
   parser =
-    ParamId <$> parser <|> char '*' *> return Star1 <|>
+    ParamId <$> try parser <|> char '*' *> return Star1 <|>
     Params <$> in_paren (parser +++ many1 (comma *> parser)) 
 
 instance HasParser LineFuncBody where
@@ -313,7 +304,7 @@ instance HasParser CasesFuncExpr where
 instance HasParser CasesParams where
   parser = 
     try (string "cases") *> return CasesKeyword <|>
-    char '*' *> return Star2 <|> CParamId <$> parser <|>
+    char '*' *> return Star2 <|> CParamId <$> try parser <|>
     CParams <$> in_paren (parser +++ many1 (comma *> parser))
 
 instance HasParser Case where
@@ -323,7 +314,7 @@ instance HasParser EndCase where
   parser = EC <$> try (nl_indent *> parser) +++ (func_arr *> parser)
 
 instance HasParser EndCaseParam where
-  parser = IWP1 <$> parser <|> string "..." *> return Ellipsis
+  parser = Id1 <$> parser <|> string "..." *> return Ellipsis
 
 instance HasParser Matching where
   parser = 
@@ -343,12 +334,24 @@ instance HasParser ListMatching where
     inside_p :: Parser (InnerMatching, [InnerMatching])
     inside_p = parser +++ (many $ comma *> parser)
 
+instance HasParser IdWithParenStart where
+  parser = string "()" *> strs_p +++ optionMaybe digit ++< parser
+
+instance HasParser IdWithNoParenStart where
+  parser = before_paren_str_p +++ parser
+
 instance HasParser IdWithParen where
-  parser = 
-    IWP <$> before_paren_str_p >:< paren_strs_p +++ optionMaybe digit
-    where
-    paren_strs_p :: Parser [String]
-    paren_strs_p = many1 par_lower_unders
+  parser = IWPS <$> try parser <|> IWNPS <$> parser
+
+instance HasParser ParenInTheMiddle where
+  parser =
+    PITM <$> many1 (try par_lower_unders) +++ optionMaybe digit ++< parser
+
+instance HasParser NoParenInTheMiddle where
+  parser = optionMaybe digit <* string "(_)"
+
+instance HasParser IWNPSContinuation where
+  parser = PITM1 <$> try parser <|> NPITM <$> parser
 
 instance HasParser CaseBody where
   parser = 
@@ -716,4 +719,5 @@ instance HasParser ProgramPart where
 -- For fast vim navigation
 -- ShowInstances.hs
 -- HsGenTest.hs
+-- Parsing/Test.hs
 -- ASTTypes.hs

@@ -110,7 +110,7 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: GenerateHs (THWIL BigList)) .> extract_res_str
     )
   , ( "paren_func_app.txt"
-    , (parse_and_ret_res_str :: GenerateHs ParenFuncApp) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs ParenFuncAppOrId) .> extract_res_str
     )
   , ( "prefix_func_app.txt"
     , (parse_and_ret_res_str :: GenerateHs PreFuncApp) .> extract_res_str

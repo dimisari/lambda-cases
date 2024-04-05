@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
 
 module ShowInstances where
 
@@ -23,6 +23,11 @@ show_list_comma = show_list_sep ", "
 show_pair_list :: (Show a, Show b) => [(a, b)] -> String
 show_pair_list = concatMap (\(a, b) -> show a ++ show b)
 
+show_hp :: HasParen -> String
+show_hp = \case 
+  True -> "(_)"
+  False -> ""
+
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
 instance Show Literal where 
   show = \case
@@ -32,8 +37,9 @@ instance Show Literal where
     S s -> show s
 
 instance Show Identifier where
-  show = \(Id (strs, maybe_digit)) ->
-    intercalate "()" strs ++ show_maybe maybe_digit
+  show = \(Id (has_paren1, strs, maybe_digit, has_paren2)) ->
+    show_hp has_paren1 ++ intercalate "(_)" strs ++ show_maybe maybe_digit ++
+    show_hp has_paren2
 
 instance Show SimpleId where
   show = \(SId str) -> str
@@ -72,10 +78,9 @@ instance Show BasicOrAppExpr where
 instance Show BasicExpr where
   show = \case
     Lit1 lit -> show lit
-    Id1 id -> show id
+    PFAOI1 pfaoi -> show pfaoi
     T1 tuple -> show tuple
     L1 list -> show list
-    PFA pfa -> show pfa
     SI1 sid -> show sid
 
 instance Show BigTuple where
@@ -90,38 +95,16 @@ instance Show BigList where
   show = \(BL (loues, loues_l)) ->
     "[ " ++ show loues ++ show_list_sep "\n, " loues_l ++ "\n]"
 
-instance Show ParenFuncApp where
-  show = \case
-    IWA1 (maybe_args1, id_with_args, maybe_args2) ->
-      show_maybe maybe_args1 ++ show id_with_args ++ show_maybe maybe_args2
-    AI (args, id, maybe_args) ->
-      show args ++ show id ++ show_maybe maybe_args
-    IA (sid, args) -> show sid ++ show args
+show_as :: ArgsStr -> String
+show_as = \(args, str) -> show args ++ str
+
+instance Show ParenFuncAppOrId where
+  show = \(PFAOI (maybe_args1, str, args_str_pairs, maybe_c, maybe_args2)) ->
+    show_maybe maybe_args1 ++ str ++ concatMap show_as args_str_pairs ++
+    show_maybe maybe_c ++ show_maybe maybe_args2
 
 instance Show Arguments where
   show = \(As loues) -> "(" ++ show loues ++ ")"
-
-instance Show IdentWithArgs where
-  show =
-    \(IWA (iwas, args, str, empty_par_or_args_str_pairs, maybe_ch)) ->
-    show iwas ++ show args ++ str ++
-    concatMap show_pair empty_par_or_args_str_pairs ++ show_maybe_char maybe_ch
-    where
-    show_pair :: (EmptyParenOrArgs, String) -> String
-    show_pair = \(epoa, str) -> show epoa ++ str
-
-    show_maybe_char :: Maybe Char -> String
-    show_maybe_char = \case
-      Nothing -> ""
-      Just c -> [c]
-
-instance Show IdentWithArgsStart where
-  show = \(IWAS strs) -> intercalate "()" strs
-
-instance Show EmptyParenOrArgs where
-  show = \case
-    EmptyParen -> "()"
-    As1 args -> show args
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance Show PreFunc where
@@ -295,7 +278,7 @@ instance Show EndCase where
 
 instance Show EndCaseParam where
   show = \case
-    IWP1 id_with_paren -> show id_with_paren
+    Id1 id -> show id
     Ellipsis -> "..."
 
 instance Show Matching where
@@ -320,8 +303,29 @@ instance Show ListMatching where
     Nothing -> "[]"
     Just (mos, mos_l) -> "[" ++ show mos ++ show_list_comma mos_l ++ "]"
 
+show_iwps :: IdWithParenStart -> String
+show_iwps = \(strs, maybe_c, has_paren) ->
+  concatMap ("(_)" ++) strs ++ show_maybe maybe_c ++ show_hp has_paren
+
+show_iwnps :: IdWithNoParenStart -> String
+show_iwnps = \(str, iwnps_cont) -> str ++ show iwnps_cont
+
 instance Show IdWithParen where
-  show = \(IWP iwp) -> show (Id iwp)
+  show = \case
+    IWPS iwps -> show_iwps iwps
+    IWNPS iwnps -> show_iwnps iwnps
+
+instance Show ParenInTheMiddle where
+  show = \(PITM (strs, maybe_c, has_paren)) ->
+    concatMap ("(_)" ++) strs ++ show_maybe maybe_c ++ show_hp has_paren
+
+show_npitm :: NoParenInTheMiddle -> String
+show_npitm = \maybe_c -> show_maybe maybe_c ++ "(_)"
+
+instance Show IWNPSContinuation where
+  show = \case
+    PITM1 pitm -> show pitm
+    NPITM npitm -> show_npitm npitm
 
 instance Show CaseBody where
   show = \case
@@ -648,6 +652,6 @@ instance Show ProgramPart where
     TT1 tt -> show tt
 
 -- For fast vim navigation
--- Parsers.hs
--- Testing.hs
+-- Parsing/AST.hs
+-- Parsing/Test.hs
 -- ASTTypes.hs

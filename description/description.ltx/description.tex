@@ -69,29 +69,26 @@ behaviour.
 
 \paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
-gcd: Int^2 => Int
+gcd_of(_)and(_): Int^2 => Int
   = (x, cases)
     0 => x
-    y => gcd(y, x -> mod <- y) 
+    y => gcd_of(y)and((x)mod(y)) 
 
 read_two_ints: (Int^2)FromIO
   = print <- "Please give me 2 ints";
-    get_line ;> split_to_words o> cases
-      [x, y] => wrap_with_io(from_string(x), from_string(y))
-      ... => show_err("You didn't give me 2 ints")
+    get_line ;> split(_)to_words o> cases
+      [x, y] => (from_string(x), from_string(y))from_io
+      ... => throw_err("You didn't give me 2 ints")
 
 tuple_type NumsAndGcd
 value (x, y, gcd):Int^3
 
-print_gcd_message: NumsAndGcd => IO
-  = nums_and_gcd => print(message)
-    where
-    message: String
-      = "The GCD of " + nums_and_gcd.x + " and " + nums_and_gcd.y + " is = " +
-        nums_and_gcd.gcd
+nag(_)to_message: NumsAndGcd => String
+  = nag => "The GCD of " + nag.x + " and " + nag.y + " is = " + nag.gcd
 
 main: IO
-  = read_two_ints ;> (i1, i2) => print_gcd_message(i1, i2, gcd(i1, i2))
+  = read_two_ints ;> (i1, i2) =>
+    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_string(_) 
 \end{verbatim}
 
 \paragraph{Program grammar}
@@ -183,8 +180,8 @@ There are literals for the four basic types: \texttt{Int, Real, Char, String}.
 \begin{verbatim}
 x y z
 a1 a2 a3 
-self_referencing_identifier 
-apply()to_all
+(_)mod(_)
+apply(_)to_all_in(_)
 \end{verbatim}
 
 \item \textit{Description}
@@ -205,7 +202,7 @@ It used in expressions where parentheses in the middle don't make sense
 
 \item \textit{Grammar}
 \begin{grammar}
-<identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
+<identifier> ::= [ `(_)' ] [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
 
 <simple-id> ::= [a-z] [a-z_]* [ [0-9] ]
 \end{grammar}
@@ -366,7 +363,7 @@ answers_to : ListOf(String)s
 <basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
 
 <basic-expr> ::=
-<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
+<literal> | <paren-func-app-or-id> | <special-id> | <tuple> | <list>
 
 <comma> ::= `,' [ `\ ' ]
 \\
@@ -470,8 +467,7 @@ my_big_list: ListOf(Int => IO)s
 f(x)
 f(x, y, z)
 (x)to_string
-apply(f)to_all
-apply(f)to_all(l)
+apply(f)to_all_in(l)
 \end{verbatim}
 
 \item \textit{Description}
@@ -485,22 +481,23 @@ reader, i.e. function application is done with the arguments of the function in
 parenthesis seperated by commas and \textbf{appended} to the function
 identifier.
 \\\\
-We extend this idea by allowing the arguments to be \textbf{prepended} to the
-function identifier (third example). Finally, it is also possible to to have
-the arguments \textbf{inside} the function identifier provided the function has
-been \textbf{defined with parentheses inside the identifier}. For example,
-below is the definition of "\verb|apply()to_all|":
+This idea can be extended by allowing the arguments to be \textbf{prepended} or
+to be \textbf{inside} to the function identifier (examples 3 and 4). This is
+only valid if the function has been \textbf{defined with these parentheses in
+the identifier}. For example, below is the definition of
+"\verb|apply(_)to_all_in(_)|":
 
 \begin{verbatim}
-apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
+apply(_)to_all_in(_) : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
     empty_l => empty_l
-    non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all <- l.tail)
+    non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all_in(_)<- l.tail)
 \end{verbatim}
 The actual definition doesn't matter at this point, what matters is that the
-identifier is "\verb|apply()to_all|" with the parentheses \textbf{included}.
-This is very useful for defining functions where the argument in the middle
-makes the function application look and sound more like natural language.
+identifier is "\verb|apply(_)to_all_in(_)|" with the parentheses
+\textbf{included}.  This is very useful for defining functions where the
+argument in the middle or before makes the function application look and sound
+more like natural language.
 \\\\
 It is possible to have many parentheses in a single function application (last
 example). The arguments are always inserted to the function from \textbf{left
@@ -530,28 +527,14 @@ f(_, i, _) : Char x Real => String
 f(_, _, r) : Char x Int => String
 \end{verbatim}
 
-The missing arguments after the last existing argument can be omitted and
-therefore the following are equivalent to the last three above:
-
-\begin{verbatim}
-f(c) : Int x Real => String
-f(_, i) : Char x Real => String
-f(_, _, r) : Char x Int => String
-\end{verbatim}
-
 \item \textit{Grammar}
 \begin{grammar}
-<paren-func-app> ::= ""\\""
-[ <arguments> ] <ident-with-args> [ <arguments> ]
-\alt " "<arguments> <identifier> [ <arguments> ]
-\alt " "<simple-id> <arguments>
+<paren-func-app-or-id> ::= 
+[ <arguments> ] [a-z] [a-z_]* ( <arguments> [a-z_]+ )* [ [0-9] ]
+[ <arguments> ]
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
 
-<ident-with-args> ::= ""\\""
-[a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
-[a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
-[ [0-9] ]
 \end{grammar}
 
 \end{itemize}
@@ -571,7 +554,7 @@ the_value:1
 non_empty_l:l
 error:e
 result:r
-apply(the_value:_)to_all
+apply(the_value:_)to_all_in(_)
 \end{verbatim}
 
 \item \textit{Description}
@@ -598,7 +581,7 @@ These functions are called prefix functions because they are prepended to
 their argument. However, they can also be used as arguments to other function
 with an underscore in their argument.
 An illustration of the aforementioned is the last example, where the function
-\verb|the_value:_| is an argument of the function \verb|apply()to_all|.
+\verb|the_value:_| is an argument of the function \verb|apply(_)to_all_in(_)|.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -663,7 +646,7 @@ These functions are called postfix functions because they are appended to their
 argument. However, they can also be used as arguments to other function with an
 underscore in their argument.  An illustration of the aforementioned is the
 last example, where the function "\verb|_.1st|" is an argument of the function
-"\verb|apply()to_all|".
+"\verb|apply(_)to_all_in(_)|".
 \\\\
 The is a special postfix function called "\verb|_.change|" which is described
 in the following paragraph.
@@ -777,11 +760,11 @@ function applications without the clutter of having to open and close
 parentheses for each one of the functions.  For example, assuming we have the
 following functions with the behaviour suggested by their names and types:
 \begin{verbatim}
-apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
-string_length : String => Int
-filter()with : ListOf(T1)s x (T1 => Bool) => ListOf(T1)s
-is_odd : Int => Bool
-sum_ints : ListOf(Int)s => Int
+apply(_)to_all_in(_) : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
+str_len(_) : String => Int
+filter(_)with(_) : ListOf(T1)s x (T1 => Bool) => ListOf(T1)s
+(_)is_odd : Int => Bool
+sum_ints(_) : ListOf(Int)s => Int
 \end{verbatim}
 And a list of strings:
 \begin{verbatim}
@@ -791,18 +774,14 @@ Here is a simple way to get the total number of characters in all the strings
 that have odd length:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
-  = strings -> apply(string_length)to_all -> filter(_)with(is_odd) -> sum_ints
+  = apply(str_len(_))to_all_in(strings) -> filter(_)with((_)is_odd) -> sum_ints(_)
 \end{verbatim}
 This can be done equivalently using the other operator:
 \begin{verbatim}
 chars_in_odd_length_strings : Int
-  = sum_ints <- filter(_)with(is_odd) <- apply(string_length)to_all <- strings
+  = sum_ints(_) <- filter(_)with((_)is_odd) <- apply(str_len(_))to_all_in(strings)
 
 \end{verbatim}
-These operators can also be used together to put a function between two
-arguments, for functions that are commonly used that way in math (or that look
-better that way). Taking the "\verb|mod|" function as an example, we can 
-write "\verb|x -> mod <- y|", which is equivalent to "\verb|mod(x, y)|".
 
 \newpage
 
@@ -831,20 +810,20 @@ function which is applied second.  A neat example using function composition is
 the following. Assuming we have the following functions with the behaviour
 suggested by their names and types: 
 \begin{verbatim}
-split_to_words : String => ListOf(String)s
-apply()to_all : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
-reverse_string : String => String
-merge_words : ListOf(String)s => String
+split(_)to_words : String => ListOf(String)s
+apply(_)to_all_in(_) : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
+reverse_str(_) : String => String
+merge_words(_) : ListOf(String)s => String
 \end{verbatim}
 We can reverse the all the words in a string like so:
 \begin{verbatim}
-reverse_words : String => String
-  = split_to_words o> apply(reverse_string)to_all o> merge_words
+reverse_words_in(_) : String => String
+  = split(_)to_words o> apply(reverse_str(_))to_all_in(_) o> merge_words(_)
 \end{verbatim}
 This can be done equivalently using the other operator:
 \begin{verbatim}
-reverse_words : String => String
-  = merge_words <o apply(reverse_string)to_all <o split_to_words
+reverse_words_in(_) : String => String
+  = merge_words(_) <o apply(reverse_str(_))to_all_in(_) <o split(_)to_words
 \end{verbatim}
 
 \newpage
@@ -1010,14 +989,14 @@ Operator & Type
 \paragraph{Simple Example Program}
 \begin{verbatim}
 main: (EmptyVal)FromIO
-  = print_string("I'll repeat the line") ; get_line ;> print_string
+  = print_string("I'll repeat the line") ; get_line ;> print_string(_)
 \end{verbatim}
 The example above demonstrates the use of the environment action operators with
 the \verb|FromIO| environment type, which is how IO is done in lcases. Some
 light can be shed on how this is done, if we take a look at the types (as
 always!):
 \begin{verbatim}
-print_string: String => (EmptyVal)FromIO
+print_string(_): String => (EmptyVal)FromIO
 print_string("I'll repeat the line"): (EmptyVal)FromIO
 
 get_line: (String)FromIO
@@ -1041,13 +1020,13 @@ print_string: String => (EmptyVal)FromIO
 ;> : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2) 
 
 # therefore in the following expression:
-#     print_string("I'll repeat the line") ; get_line ;> print_string
+#     print_string("I'll repeat the line") ; get_line ;> print_string(_)
 # the only way to match the types is if @E = FromIO, T1 = String, T2 = EmptyVal
 # from which it follows that (FromIO)Has_Use
 # and the "use" operator (in this particular case) has type
 #     (String)FromIO x (String => (EmptyVal)FromIO) => (EmptyVal)FromIO 
 # for the whole expression we have:
-print_string("I'll repeat the line") ; get_line ;> print_string
+print_string("I'll repeat the line") ; get_line ;> print_string(_)
   : (EmptyVal)FromIO
 \end{verbatim}
 
@@ -1058,7 +1037,7 @@ main: (EmptyVal)FromIO
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Nice to meet you " + name + "!") 
 
-print_string: String => (EmptyVal)FromIO
+print_string(_): String => (EmptyVal)FromIO
 "Hello! What's your name?": String
 <- : (T1 => T2) x T1 => T2
 
@@ -1513,7 +1492,7 @@ The precise indentation rules are described in the section
 \item \textit{Examples}
 
 \begin{verbatim}
-print_sentimental_bool: Bool => IO
+print_sentimental_bool(_): Bool => IO
   = cases
     true => print <- "It's true!! :)"
     false => print <- "It's false... :("
@@ -1521,45 +1500,45 @@ print_sentimental_bool: Bool => IO
 or_type TrafficLight
 values green | amber | red
 
-print_sentimental_traffic_light: TrafficLight => IO
+print_sentimental_traffic_light(_): TrafficLight => IO
   = cases
     green => print <- "It's green! Let's go!!! :)"
     amber => print <- "Go go go, fast!"
     red => print <- "Stop right now! You're going to kill us!!"
 
-is_not_red: TrafficLight => Bool
+(_)is_not_red: TrafficLight => Bool
   = cases
     green => true
     amber => true
     red => false
 
-is_seventeen_or_forty_two: Int => Bool
+(_)is_seventeen_or_forty_two: Int => Bool
   = cases
     17 => true
     42 => true
     ... => false
 
-traffic_lights_match: TrafficLight^2 => Bool
+traffic_lights_match(_, _): TrafficLight^2 => Bool
   = (cases, cases)
     (green, green) => true
     (amber, amber) => true
     (red, red) => true
     ... => false
 
-gcd: Int^2 => Int
+gcd_of(_)and(_): Int^2 => Int
   = (x, cases)
     0 => x
-    y => gcd(y, x -> mod <- y) 
+    y => gcd_of(y)and((x)mod(y)) 
 
-is_empty: ListOf(T1)s => Bool
+(_)is_empty: ListOf(T1)s => Bool
   = cases
     empty_l => true
     non_empty_l:* => false
 
-apply()to_all: (T1 => T2) x ListOf(T1)s => ListOf(T2)s
+apply(_)to_all_in(_): (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
     empty_l => empty_l
-    non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)
+    non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all_in(list.tail))
 
 \end{verbatim}
 
@@ -1606,7 +1585,7 @@ expressions in all cases must be the same as the number of parameters with the
 <case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
 
 <end-case> ::=
-<nl> <indent> (`...' | <id-with-paren>) [ `\ ' ] `=>' <case-body>
+<nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
 \\
 
 <matching> ::= 
@@ -1623,7 +1602,10 @@ expressions in all cases must be the same as the number of parameters with the
 `]'
 \\
 
-<id-with-paren> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )+ [ [0-9] ]
+<id-with-paren> ::= ""\\
+`(_)' [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
+\alt 
+[a-z] [a-z_]* ( ( `(_)' [a-z_]+ )+ [ [0-9] ] [ `(_)' ] | [ [0-9] ] `(_)' )
 \\
 
 <case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]
@@ -1647,7 +1629,7 @@ expressions in all cases must be the same as the number of parameters with the
 foo: Int
   = 42
 
-f: Int^3 => Int
+f(_, _, _): Int^3 => Int
   = (a, b, c) => a + b * c
 
 val1, val2, val3: Int, Bool, Char
@@ -1714,7 +1696,7 @@ keyword "\verb|all|" to give the same type to all the values.
 
 \item \textit{Examples}
 \begin{verbatim}
-sort: ListOf(Int)s => ListOf(Int)s
+sort(_): ListOf(Int)s => ListOf(Int)s
   = cases
     empty_l => empty_l
     non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
@@ -1722,10 +1704,11 @@ sort: ListOf(Int)s => ListOf(Int)s
       less_l, greater_l: all ListOf(Int)s
         = filter(l.tail)with(_ < l.head), filter(l.tail)with(_ >= l.head)
 
-sum_nodes: TreeOf(Int)s => Int
-  = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
+sum_nodes(_): TreeOf(Int)s => Int
+  = tree =>
+    tree.root + apply(sum_nodes(_))to_all_in(tree.subtrees) -> sum_list(_)
     where
-    sum_list : ListOf(Int)s => Int
+    sum_list(_) : ListOf(Int)s => Int
       = cases
         empty_l => 0
         non_empty_l:l => l.head + sum_list(l.tail)
@@ -1852,7 +1835,7 @@ Parametric type variables can be substituted with any type and the program will
 type check.  The simplest example of a polymorphic type with a parametric type
 variable is the type of the identity function where we have:
 \begin{verbatim}
-id: T1 => T1
+id(_): T1 => T1
   = x => x
 
 id(1): Int
@@ -2042,7 +2025,7 @@ which are seperated by the condition arrow (" \verb|-->| "). The condition is
 a type proposition which refers to type variables inside the "simple" type and
 it must hold whenever the polymorphic value of that type is used. For example:
 \begin{verbatim}
-first: (@A)Is(@B)s_First --> @B => @A
+(_)first: (@A)Is(@B)s_First --> @B => @A
 \end{verbatim}
 can be used as follows:
 \begin{verbatim}
@@ -2050,13 +2033,13 @@ pair, triple, list
   : Int x String, Real x Char x Int, ListOf(String)s
   = (42, "The answer to everything"), (3.14, 'a', 1), ["Hi!", "Hello", Heeey"]
 
->> pair -> first
+>> (pair)first
   : Int
   ==> 42
->> triple -> first
+>> (triple)first
   : Real
   ==> 3.14
->> list -> first
+>> (list)first
   : String
   ==> "Hi!"
 \end{verbatim}
@@ -2118,14 +2101,14 @@ value (index, val) : Int x T1
 euler_info: MathematicianInfo
   = (("Leonhard", "Euler"), "Swiss", (15, 4, 1707))
 
-name_to_string: Name => String
+name(_)to_string: Name => String
   = n => "\nFirst Name: " + n.first_name + "\nLast Name: " + n.last_name
 
-print_name_and_nationality: MathematicianInfo => IO
-  = ci => print(ci.name -> name_to_string + "\nNationality: " + ci.nationality)
+print_name_and_nat(_): MathematicianInfo => IO
+  = ci => print(name(ci.name)to_string + "\nNationality: " + ci.nationality)
 
-sum_nodes: TreeOf(Int)s => Int
-  = tree => tree.root + tree.subtrees -> apply(sum_nodes)to_all -> sum_list
+sum_nodes(_): TreeOf(Int)s => Int
+  = tree => tree.root + apply(sum_nodes)to_all_in(tree.subtrees) -> sum_list
 \end{verbatim}
 
 \item \textit{Description}
@@ -2188,24 +2171,24 @@ values result:T1 | error:T2
 \item \textit{Usage Examples}
 
 \begin{verbatim}
-is_empty: ListOf(T1)s => Bool
+(_)is_empty: ListOf(T1)s => Bool
   = cases
     empty_l => true
     non_empty_l:* => false
 
-get_head: ListOf(T1)s => Possibly(T1)
+(_)head: ListOf(T1)s => Possibly(T1)
   = cases
     empty_l => no_value
     non_empty_l:list => the_value:list.head
 
-sum_list: ListOf(Int)s => Int
+sum_list(_): ListOf(Int)s => Int
   = cases
     empty_l => 0
     non_empty_l:l => l.head + sum_list(l.tail)
 
-print_err_or_res: (@A)Has_Str_Rep --> Result(@A)OrError(String) => IO
+print_err(_)or_res(_): (@A)Has_Str_Rep --> Result(@A)OrError(String) => IO
   = cases
-    result:r => print("All good! The result is: " + r -> to_string)
+    result:r => print("All good! The result is: " + (r)to_string)
     error:e => print("Error occured: " + e)
 \end{verbatim}
 
@@ -2238,8 +2221,8 @@ the_value:_ : T1 => Possibly(T1)
 These functions can be used like any other function as arguments to other
 functions.  For example:
 \begin{verbatim}
-non_empty_ls_to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
-  = apply(non_empty_l:_)to_all
+non_empty_ls(_)to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
+  = apply(non_empty_l:_)to_all_in(_)
 \end{verbatim}
 
 \item \textit{Grammar}
@@ -2309,27 +2292,27 @@ described in the following paragraphs.
 \item \textit{Examples}
 \begin{verbatim}
 type_proposition (@A)Is(@B)s_First
-needed first: @B => @A
+needed (_)first: @B => @A
 
 type_proposition (@T)Has_Str_Rep
-needed to_string: @T => String
+needed (_)to_string: @T => String
 
 type_proposition (@T)Has_A_Wrapper
-needed wrapper: T1 => @T(T1)
+needed wrap(_): T1 => @T(T1)
 
 type_proposition (@T)Has_Internal_App
-needed apply()inside : (T1 => T2) x @T(T1) => @T(T2)
+needed apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)
 \end{verbatim}
 The examples above define the following (ad hoc) polymorphic functions which
 have the respective (conditional) types:
 \begin{verbatim}
-first: (@A)Is(@B)s_First --> @B => @A
+(_)first: (@A)Is(@B)s_First --> @B => @A
 
-to_string: (@T)Has_Str_Rep --> @T => String
+(_)to_string: (@T)Has_Str_Rep --> @T => String
 
-wrapper: (@T)Has_A_Wrapper --> T1 => @T(T1)
+wrap(_): (@T)Has_A_Wrapper --> T1 => @T(T1)
 
-apply()inside: (@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)
+apply(_)inside(_): (@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)
 \end{verbatim}
 
 \newpage
@@ -2355,26 +2338,26 @@ paragraph for the proposition "\verb|(@A)Is(@B)s_First|":
 
 \begin{verbatim}
 type_proposition (@A)Is(@B)s_First
-needed first: @B => @A
+needed (_)first: @B => @A
 \end{verbatim}
 
 \item Function defined and its type:
 
 \begin{verbatim}
-first: (@A)Is(@B)s_First --> @B => @A
+(_)first: (@A)Is(@B)s_First --> @B => @A
 \end{verbatim}
 
 \item Theorems for specific types:
 
 \begin{verbatim}
 type_theorem (T1)Is(T1 x T2)s_First
-proof first = _.1st
+proof (_)first = _.1st
 
 type_theorem (T1)Is(ListOf(T1)s)s_First
 proof
-  first =
+  (_)first =
     cases
-      empty_l => show_err("Tried to take the first element of an empty_l list")
+      empty_l => show_err("Tried to take the first element of an empty list")
       non_empty_l:l => l.head
 \end{verbatim}
 
@@ -2384,10 +2367,10 @@ pair, list
   : Int x String, ListOf(String)s
   = (42, "The answer to everything"), ["Hi!", "Hello", Heeey"]
 
->> pair -> first
+>> (pair)first
   : Int
   ==> 42
->> list -> first
+>> (list)first
   : String
   ==> "Hi!"
 \end{verbatim}
@@ -2475,20 +2458,20 @@ following paragraphs.
 
 \begin{verbatim}
 type_theorem (Possibly(_))Has_A_Wrapper
-proof wrapper = the_value:_
+proof wrap(_) = the_value:_
 
 type_theorem (ListOf(_)s)Has_A_Wrapper
-proof wrapper = [_]
+proof wrap(_) = [_]
 
 type_theorem (Possibly(_))Has_Internal_App
 proof
-  apply()inside =
-    (f, cases)
+  apply(_)inside(_) =
+    (f(_), cases)
       no_value => no_value
       the_value:x => the_value:f(x)
 
 type_theorem (ListOf(_)s)Has_Internal_App
-proof apply()inside = apply()to_all
+proof apply(_)inside(_) = apply(_)to_all_in(_)
 \end{verbatim}
 
 \item \textit{Usage}
@@ -2515,19 +2498,19 @@ l1, l2, l3 : all ListOf(Int)s
 \end{verbatim}
 \newpage
 \begin{verbatim} 
->> a -> apply(_ + 1)inside
+>> apply(_ + 1)inside(a)
   : Possibly(Int)
   ==> the_value:2
->> b -> apply(_ + 1)inside
+>> apply(_ + 1)inside(b)
   : Possibly(Int)
   ==> no_value
->> l1 -> apply(_ + 1)inside
+>> apply(_ + 1)inside(l1)
   : ListOf(Int)s
   ==> [2]
->> l2 -> apply(_ + 1)inside
+>> apply(_ + 1)inside(l2)
   : ListOf(Int)s
   ==> []
->> l3 -> apply(_ + 1)inside
+>> apply(_ + 1)inside(l3)
   : ListOf(Int)s
   ==> [2, 3, 4]
 \end{verbatim}
@@ -2689,34 +2672,42 @@ the condition arrow (" \verb|-->| ") arrow.
 \item Functions
   \begin{itemize}
 
-  \item Miscellaneous: \verb|not, id, show_error|
+  \item Miscellaneous: \verb|not(_), id(_), throw_err(_)|
 
-  \item Numerical
+  \item Numerical:
     \begin{itemize}
-    \item Miscellaneous: \verb|sqrt, abs, max, min|
-    \item Trigonometric: \verb|sin, cos, tan, asin, acos, atan|
-    \item Division related: \verb|div, mod, gcd, lcm, even, odd|
-    \item Rounding: \verb|truncate, round, floor, ceiling|
-    \item e and log: \verb|exp, ln, log_of()base|
+    \item Miscellaneous:
+      \verb|sqrt_of(_), abs_val_of(_), max_of(_)and(_), min_of(_)and(_)|
+    \item Trigonometric:
+      \verb|sin(_), cos(_), tan(_), asin(_), acos(_), atan(_)|
+    \item Division related:
+      \verb|(_)div(_), (_)mod(_), gcd_of(_)and(_), lcm_of(_)and(_)|
+      \verb|(_)is_even, (_)is_odd|
+    \item Rounding:
+      \verb|truncate(_), round(_), floor(_), ceiling(_)|
+    \item e and log:
+      \verb|exp(_), ln(_), log_of(_)base(_)|
     \end{itemize}
 
   \item List:\\
-    \verb|length, is_in, apply()to_all, filter()with, take()from, leave()from,|
-    \verb|zip, unzip,|
+    \verb|(_)length, (_)is_in(_), apply(_)to_all_in(_), filter(_)with(_), |
     \\
-    \verb|zip()with|
+    \verb|take(_)from(_), leave(_)from(_), zip(_)and(_), unzip(_), |
+    \verb|zip(_)and(_)with(_)|
 
-  \item IO
+  \item IO:
     \begin{itemize}
-    \item Input: \verb|get_char, get_line, get_input, read_file|
-    \item Output: \verb|print, print_string, print_line, write_file|
+    \item Input: \verb|get_char, get_line, get_input, read_file(_)|
+    \item Output:
+      \verb|print(_), print_string(_), print_line(_), write(_)in_file(_)|
     \end{itemize}
 
   \item Ad Hoc Polymorphic:\\
-  \verb|first, second, third, fourth, fifth, wrap, to_string, from_string,|
-  \verb|apply()inside, |
+  \verb|(_)first, (_)second, (_)third, (_)fourth, (_)fifth, wrap(_), |
   \\
-  \verb|wrapd_app()inside, to_list, from_list|
+  \verb|(_)to_string, from_string(_), apply(_)inside(_), |
+  \\
+  \verb|apply_wrapd(_)inside(_), (_)to_list, from_list(_)|
 
   \end{itemize}
 \end{itemize}
@@ -2837,7 +2828,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <literal> ::= <int-lit> | <real-lit> | <char-lit> | <string-lit>
 \\
 
-<identifier> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )* [ [0-9] ]
+<identifier> ::= [ `(_)' ] [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
 
 <simple-id> ::= [a-z] [a-z_]* [ [0-9] ]
 \\
@@ -2858,7 +2849,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <basic-or-app-expr> ::= <basic-expr> | <pre-func-app> | <post-func-app>
 
 <basic-expr> ::=
-<literal> | <identifier> | <special-id> | <tuple> | <list> | <paren-func-app>
+<literal> | <paren-func-app-or-id> | <special-id> | <tuple> | <list>
 
 <comma> ::= `,' [ `\ ' ]
 \\
@@ -2877,17 +2868,11 @@ the condition arrow (" \verb|-->| ") arrow.
 ( <nl> <indent> <comma> <line-expr-or-unders> )* <nl> <indent> `]'
 \\
 
-<paren-func-app> ::= ""\\""
-[ <arguments> ] <ident-with-args> [ <arguments> ]
-\alt " "<arguments> <identifier> [ <arguments> ]
-\alt " "<simple-id> <arguments>
+<paren-func-app-or-id> ::= 
+[ <arguments> ] [a-z] [a-z_]* ( <arguments> [a-z_]+ )* [ [0-9] ]
+[ <arguments> ]
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
-
-<ident-with-args> ::= ""\\""
-[a-z] [a-z_]* ( `()'[a-z_]+ )* <arguments>
-[a-z_]+ ( ( `()' | <arguments> ) [a-z_]+ )* 
-[ [0-9] ]
 \\
 
 \newpage
@@ -2972,7 +2957,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
 
 <end-case> ::=
-<nl> <indent> (`...' | <id-with-paren>) [ `\ ' ] `=>' <case-body>
+<nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
 \\
 
 <matching> ::= 
@@ -2989,7 +2974,10 @@ the condition arrow (" \verb|-->| ") arrow.
 `]'
 \\
 
-<id-with-paren> ::= [a-z] [a-z_]* ( `()' [a-z_]+ )+ [ [0-9] ]
+<id-with-paren> ::= ""\\
+`(_)' [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
+\alt 
+[a-z] [a-z_]* ( ( `(_)' [a-z_]+ )+ [ [0-9] ] [ `(_)' ] | [ [0-9] ] `(_)' )
 \\
 
 <case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]

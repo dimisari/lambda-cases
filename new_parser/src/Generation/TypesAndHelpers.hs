@@ -92,9 +92,11 @@ add_params_to2 = \hs_list_gen ->
     params_hs -> return $ params_hs : hs_list
 
 indent_all_and_concat :: [Haskell] -> WithParamNum Haskell
-indent_all_and_concat = \hs_list ->
-  indent >>= \indent_hs ->
-  return $ map (indent_hs ++) hs_list &> intercalate "\n"
+indent_all_and_concat = \case
+  hs : hs_list ->
+    indent >>= \indent_hs ->
+    return $ (hs : map (indent_hs ++) hs_list) &> intercalate "\n"
+  [] -> return ""
 
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
@@ -167,4 +169,5 @@ le_to_ve = \case
   LFE2 lfe -> FE2 $ LFE4 lfe
 
 -- ../ASTTypes.hs
+-- AST.hs
 -- Test.hs

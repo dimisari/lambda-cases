@@ -1,10 +1,11 @@
 module ASTTypes where
 
--- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
+-- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 data Literal = 
   Int Int | R Double | Ch Char | S String 
 
-newtype Identifier = Id ([String], Maybe Char)
+type HasParen = Bool
+newtype Identifier = Id (HasParen, [String], Maybe Char, HasParen)
 
 newtype SimpleId = SId String
 
@@ -27,8 +28,7 @@ data BasicOrAppExpr =
   BE3 BasicExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
 
 data BasicExpr = 
-  Lit1 Literal | Id1 Identifier | T1 Tuple | L1 List | PFA ParenFuncApp | 
-  SI1 SpecialId
+  Lit1 Literal | PFAOI1 ParenFuncAppOrId | T1 Tuple | L1 List | SI1 SpecialId
 
 newtype BigTuple = BT (LineExprOrUnder, LineExprOrUnders, [LineExprOrUnders])
 
@@ -36,21 +36,11 @@ newtype List = L (Maybe LineExprOrUnders)
 
 newtype BigList = BL (LineExprOrUnders, [LineExprOrUnders])
 
-type IWAParenFuncApp = (Maybe Arguments, IdentWithArgs, Maybe Arguments)
-type AIParenFuncApp = (Arguments, Identifier, Maybe Arguments)
-data ParenFuncApp = 
-  IWA1 IWAParenFuncApp | AI AIParenFuncApp | IA (SimpleId, Arguments)
+type ArgsStr = (Arguments, String)
+newtype ParenFuncAppOrId = 
+  PFAOI (Maybe Arguments, String, [ArgsStr], Maybe Char, Maybe Arguments)
 
 newtype Arguments = As LineExprOrUnders
-
-type EpoaStr = (EmptyParenOrArgs, String)
-newtype IdentWithArgs =
-  IWA (IdentWithArgsStart, Arguments, String, [EpoaStr], Maybe Char)
-
-newtype IdentWithArgsStart = IWAS [String]
-
-data EmptyParenOrArgs =
-  EmptyParen | As1 Arguments
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 newtype PreFunc = PF SimpleId
@@ -144,7 +134,7 @@ newtype Case = Ca (Matching, CaseBody)
 newtype EndCase = EC (EndCaseParam, CaseBody)
 
 data EndCaseParam =
-  IWP1 IdWithParen | Ellipsis
+  Id1 Identifier | Ellipsis
 
 data Matching = 
   Lit2 Literal | SId3 SimpleId | PFM (PreFunc, InnerMatching) |
@@ -157,7 +147,15 @@ newtype TupleMatching = TM (InnerMatching, [InnerMatching])
 
 newtype ListMatching = LM (Maybe (InnerMatching, [InnerMatching]))
 
-newtype IdWithParen = IWP ([String], Maybe Char)
+type IdWithParenStart = ([String], Maybe Char, HasParen)
+type IdWithNoParenStart = (String, IWNPSContinuation)
+data IdWithParen =
+  IWPS IdWithParenStart | IWNPS IdWithNoParenStart
+
+newtype ParenInTheMiddle = PITM ([String], Maybe Char, HasParen)
+type NoParenInTheMiddle = Maybe Char
+data IWNPSContinuation = 
+  PITM1 ParenInTheMiddle | NPITM NoParenInTheMiddle
 
 data CaseBody = 
   LFB1 LineFuncBody | BFB1 (BigFuncBody, Maybe WhereExpr)
@@ -345,3 +343,4 @@ data ProgramPart =
 -- Generation/TypesAndHelpers.hs
 -- Generation/AST.hs
 -- Generation/Test.hs
+-- Parsing/Test.hs

@@ -1,5 +1,5 @@
 
-- value expr in value def that is func expr: put params before =
+- add more underscore in the same paren in id
 
 - tuples that are of a tuple type: type checking
 
