@@ -1,18 +1,17 @@
 
-tuple_type HanoiRods
-value (source, target, auxiliary):String^3
-
-hanoi: Int x HanoiRods => IO
-  = (cases, rods)
+hanoi_with(_)rings_from(_)to(_)through(_)
+  : Int x String x String x String => IO
+  = (cases, source, target, auxiliary)
     0 => end_io
-    rings =>
-      hanoi(rings - 1, (rods.source, rods.auxiliary, rods.target)) ;
-      move(rods.source, rods.target) ; 
-      hanoi(rings - 1, (rods.auxiliary, rods.target, rods.source))
+    n =>
+      hanoi_with(n - 1)rings_from(source)to(auxiliary)through(target);
+      move_from(source)to(target); 
+      hanoi_with(n - 1)rings_from(auxiliary)to(target)through(source)
       where
-      move : String^2 => IO
-        = ("Move from " + _ + " to " + _) o> print_line
+      move_from(_)to(_): String^2 => IO
+        = print_line(_) <o ("Move from " + _ + " to " + _)
 
 main: IO
   = print_line("Number of rings?");
-    get_line ;> from_string o> n => hanoi(n, ("left", "right", "middle"))
+    get_line ;> from_string o> 
+    hanoi_with(_)rings_from("left")to("right")through("middle")

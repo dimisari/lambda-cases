@@ -29,18 +29,27 @@ instance ToHaskell (NeedsTypeAnnotation Literal) where
     R r -> "(" ++ show r ++ " :: Double)"
     _ -> to_haskell l
 
-instance ToHaskell HasParen where
-  to_haskell = \case
-    True -> "'"
-    False -> ""
-
 instance ToHaskell Identifier where
-  to_haskell = \(Id (has_paren1, strs, maybe_digit, has_paren2)) ->
-    to_haskell has_paren1 ++ intercalate "'" strs ++ to_haskell maybe_digit ++
-    to_haskell has_paren2
+  to_haskell (Id (muip1, id_start, id_conts, maybe_digit, muip2)) =
+    muip1_hs ++ to_haskell id_start ++ to_haskell id_conts ++
+    to_haskell maybe_digit ++ to_haskell muip2
+    where
+    muip1_hs = case muip1 of
+      Nothing -> ""
+      Just muip -> "_" ++ to_haskell muip
 
 instance ToHaskell SimpleId where
-  to_haskell = \(SId str) -> str
+  to_haskell = \(SId (id_start, maybe_digit)) ->
+    to_haskell id_start ++ to_haskell maybe_digit
+
+instance ToHaskell IdStart where
+  to_haskell = \(IS str) -> str
+
+instance ToHaskell IdCont where
+  to_haskell = \(IC (uip, str)) -> to_haskell uip ++ to_haskell str
+
+instance ToHaskell UndersInParen where
+  to_haskell = \(UIP i) -> replicate i '\''
 
 instance ToHaskell ParenExpr where
   to_haskell = \(PE ipe) -> "(" ++ to_haskell ipe ++ ")"
@@ -151,7 +160,8 @@ instance ToHsWithIndentLvl BigList where
       return $ ["[ " ++ leous_hs] ++ map (", " ++) leous_hs_l ++ ["]"]
 
 instance ToHaskell ParenFuncAppOrId where
-  to_haskell (PFAOI (maybe_args1, str, args_str_pairs, maybe_c, maybe_args2)) =
+  to_haskell
+    (PFAOI (maybe_args1, id_start, args_str_pairs, maybe_c, maybe_args2)) =
     run_generator paren_func_app_or_id_hs_gen
     where
     paren_func_app_or_id_hs_gen :: WithParamNum Haskell
@@ -161,7 +171,7 @@ instance ToHaskell ParenFuncAppOrId where
       to_hs_wpn maybe_args2 >>= \maybe_args2_hs ->
       let
       init_id_hs :: Haskell
-      init_id_hs = str ++ middle_id_hs
+      init_id_hs = to_haskell id_start ++ middle_id_hs
 
       id_hs :: Haskell
       id_hs = case (maybe_args1_hs, maybe_args2_hs) of
@@ -497,10 +507,10 @@ instance ToHsWithParamNum CasesParams where
       return $ "(" ++ intercalate ", " (cps_hs : cps_l_hs) ++ ")"
 
 instance ToHsWithIndentLvl Case where
-  to_hs_wil = \(Ca (m, cb)) ->
+  to_hs_wil = \(Ca (om, cb)) ->
     indent >>= \indent_hs ->
     deeper (to_hs_wil cb) >>= \cb_hs ->
-    return ("\n" ++ indent_hs ++ to_haskell m ++ " ->" ++ cb_hs)
+    return ("\n" ++ indent_hs ++ to_haskell om ++ " ->" ++ cb_hs)
 
 instance ToHsWithIndentLvl EndCase where
   to_hs_wil = \(EC (ecp, cb)) ->
@@ -513,19 +523,23 @@ instance ToHaskell EndCaseParam where
     Id1 id -> to_haskell id
     Ellipsis -> "_"
 
+instance ToHaskell OuterMatching where
+  to_haskell = \case
+    SId3 sid -> to_haskell sid
+    M1 m -> to_haskell m
+
 instance ToHaskell Matching where
   to_haskell = \case
     Lit2 lit -> to_haskell lit
-    SId3 id -> to_haskell id
     PFM (pf, im) -> to_haskell pf ++ " (" ++  to_haskell im ++ ")"
     TM1 tm -> to_haskell tm
     LM1 lm -> to_haskell lm
 
 instance ToHaskell InnerMatching where
   to_haskell = \case
-    M1 m -> to_haskell m
-    IWP2 iwp -> to_haskell iwp
     Star -> "_"
+    Id2 id -> to_haskell id
+    M2 m -> to_haskell m
 
 instance ToHaskell TupleMatching where
   to_haskell = \(TM (im, im_l)) ->
@@ -539,27 +553,6 @@ instance ToHaskell ListMatching where
     maybe_ims_hs = case maybe_ims of
       Nothing -> ""
       Just (im, im_l) -> to_haskell im ++ to_hs_prepend_list ", " im_l
-
-instance ToHaskell IdWithParenStart where
-  to_haskell = \(strs, maybe_c, has_paren) ->
-    concatMap ("'" ++) strs ++ to_haskell maybe_c ++ to_haskell has_paren
-
-instance ToHaskell IdWithNoParenStart where
-  to_haskell = \(str, iwnps_cont) -> str ++ to_haskell iwnps_cont
-
-instance ToHaskell IdWithParen where
-  to_haskell = \case
-    IWPS iwps -> to_haskell iwps
-    IWNPS iwnps -> to_haskell iwnps
-
-instance ToHaskell ParenInTheMiddle where
-  to_haskell = \(PITM (strs, maybe_c, has_paren)) ->
-    concatMap ("'" ++) strs ++ to_haskell maybe_c ++ to_haskell has_paren
-
-instance ToHaskell IWNPSContinuation where
-  to_haskell = \case
-    PITM1 pitm -> to_haskell pitm
-    NPITM maybe_c -> to_haskell maybe_c ++ "'"
 
 instance ToHsWithIndentLvl CaseBody where
   to_hs_wil = \case

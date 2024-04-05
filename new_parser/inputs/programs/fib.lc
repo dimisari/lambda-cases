@@ -1,18 +1,18 @@
 
-tuple_type FibType
+tuple_type FibsAndIndex
 value (prev, cur, cur_index):Int^3
 
-advance_fib(_): FibType => (FibType)FromIO
-  = fv =>
-    print("Fib num " + fv.cur_idex + " = " + fv.cur);
-    from_io(fv.cur, fv.prev + fv.cur, fv.cur_index + 1)
+print_cur_advance(_): FibsAndIndex => (FibsAndIndex)FromIO
+  = fai =>
+    print("Fib num " + fai.cur_idex + " = " + fai.cur);
+    from_io(fai.cur, fai.prev + fai.cur, fai.cur_index + 1)
 
 print(_)fib_nums: Int => IO
   = n =>
-    print("Fib num 0 = 0") ; print(n-1)fibs_init((0, 1, 1)) ; end_io
+    print("Fib num 0 = 0") ; print(n-1)fibs_with_init((0, 1, 1)) ; end_io
     where
-    print(_)fibs_init(_) : Int x FibType => (FibType)FromIO
-      = (n, fv) => advance_fib(fv) ;> print(n-1)fibs_init
+    print(_)fibs_with_init(_) : Int x FibsAndIndex => (FibsAndIndex)FromIO
+      = (n, fai) => print_cur_advance(fai) ;> print(n-1)fibs_with_init(_)
 
 main: IO
-  = get_line ;> from_string o> n => print(n)fib_nums
+  = get_line ;> (_)from_string o> print(_)fib_nums

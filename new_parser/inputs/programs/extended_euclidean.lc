@@ -18,7 +18,7 @@ extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
           ee_recursion(next(a_coeffs), next(b_coeffs), (y, (x)mod(y)))
           where
           next(_): Coeffs => Coeffs
-            = _.change{prev = curr, curr = prev - x -> div <- y * curr}
+            = _.change{prev = curr, curr = prev - (x)div(y) * curr}
 
 read_two_ints: (Int^2)FromIO
   = print_line("Please give me 2 ints");
