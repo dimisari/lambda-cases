@@ -39,38 +39,46 @@ instance HasParser Literal where
     "Literal"
 
 -- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncApp
-instance HasParser HasParen where
-  parser = string "(_)" *> return True <|> return False
-
 instance HasParser Identifier where
   parser =
     id_p >>= \case
-      Id (False, ["cases"], Nothing, False) ->
+      Id (Nothing, IS "cases", [], Nothing, Nothing) ->
         unexpected $ "cannot use \"cases\" as an identifier"
-      Id (False, ["where"], Nothing, False) ->
+      Id (Nothing, IS "where", [], Nothing, Nothing) ->
         unexpected $ "cannot use \"where\" as an identifier"
       id -> return id
     where
     id_p :: Parser Identifier
     id_p =
-      parser >>= \has_paren1 ->
-      strs_p >>= \strs ->
+      optionMaybe parser >>= \maybe_uip1 ->
+      parser >>= \id_start ->
+      many (try parser) >>= \id_conts ->
       optionMaybe digit >>= \maybe_digit ->
-      parser >>= \has_paren2 ->
-      return $ Id (has_paren1, strs, maybe_digit, has_paren2)
+      optionMaybe parser >>= \maybe_uip2 ->
+      return $ Id (maybe_uip1, id_start, id_conts, maybe_digit, maybe_uip2)
 
 instance HasParser SimpleId where
   parser =
-    id_str_p >>= \id_str ->
-    case elem id_str ["cases", "where"] of
-      True -> unexpected $ "cannot use \"" ++ id_str ++ "\" as an identifier"
-      False -> return $ SId id_str
+    sid_p >>= \case
+      SId (IS "cases", Nothing) ->
+        unexpected $ "cannot use \"cases\" as an identifier"
+      SId (IS "where", Nothing) ->
+        unexpected $ "cannot use \"where\" as an identifier"
+      id -> return id
     where
-    id_str_p :: Parser String
-    id_str_p = lower >:< many lower_under >++< option "" str_digit
+    sid_p :: Parser SimpleId
+    sid_p = SId <$> parser +++ optionMaybe digit
 
-    str_digit :: Parser String
-    str_digit = mapf digit (:[])
+instance HasParser IdStart where
+  parser = IS <$> lower >:< many lower_under
+
+instance HasParser IdCont where
+  parser = IC <$> parser +++ many1 lower_under
+
+instance HasParser UndersInParen where
+  parser =
+    string "(_" *> many (comma *> underscore) <* char ')' >>= \interm_unders ->
+    return $ UIP $ length interm_unders + 1
 
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
@@ -134,15 +142,12 @@ instance HasParser ArgsStr where
 instance HasParser ParenFuncAppOrId where
   parser = 
     optionMaybe parser >>= \maybe_args1 ->
-    before_paren_str_p >>= \before_paren_str ->
+    parser >>= \id_start ->
     many (try parser) >>= \arg_str_pairs ->
     optionMaybe digit >>= \maybe_digit ->
     optionMaybe parser >>= \maybe_args2 ->
     return $
-      PFAOI
-        ( maybe_args1, before_paren_str, arg_str_pairs, maybe_digit
-        , maybe_args2
-        )
+      PFAOI (maybe_args1, id_start, arg_str_pairs, maybe_digit, maybe_args2)
 
 instance HasParser Arguments where
   parser = As <$> in_paren parser
@@ -316,13 +321,16 @@ instance HasParser EndCase where
 instance HasParser EndCaseParam where
   parser = Id1 <$> parser <|> string "..." *> return Ellipsis
 
+instance HasParser OuterMatching where
+  parser = M1 <$> try parser <|> SId3 <$> parser
+
 instance HasParser Matching where
   parser = 
-    Lit2 <$> parser <|> PFM <$> try (parser +++ parser) <|> SId3 <$> parser <|>
+    Lit2 <$> parser <|> PFM <$> try (parser +++ parser) <|>
     TM1 <$> parser <|> LM1 <$> parser
 
 instance HasParser InnerMatching where
-  parser = IWP2 <$> try parser <|> M1 <$> parser <|> char '*' *> return Star
+  parser = Id2 <$> try parser <|> M2 <$> parser <|> char '*' *> return Star
 
 instance HasParser TupleMatching where
   parser = TM <$> in_paren (parser +++ many1 (comma *> parser))
@@ -333,25 +341,6 @@ instance HasParser ListMatching where
     where
     inside_p :: Parser (InnerMatching, [InnerMatching])
     inside_p = parser +++ (many $ comma *> parser)
-
-instance HasParser IdWithParenStart where
-  parser = string "()" *> strs_p +++ optionMaybe digit ++< parser
-
-instance HasParser IdWithNoParenStart where
-  parser = before_paren_str_p +++ parser
-
-instance HasParser IdWithParen where
-  parser = IWPS <$> try parser <|> IWNPS <$> parser
-
-instance HasParser ParenInTheMiddle where
-  parser =
-    PITM <$> many1 (try par_lower_unders) +++ optionMaybe digit ++< parser
-
-instance HasParser NoParenInTheMiddle where
-  parser = optionMaybe digit <* string "(_)"
-
-instance HasParser IWNPSContinuation where
-  parser = PITM1 <$> try parser <|> NPITM <$> parser
 
 instance HasParser CaseBody where
   parser = 

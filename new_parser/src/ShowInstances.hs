@@ -23,10 +23,10 @@ show_list_comma = show_list_sep ", "
 show_pair_list :: (Show a, Show b) => [(a, b)] -> String
 show_pair_list = concatMap (\(a, b) -> show a ++ show b)
 
-show_hp :: HasParen -> String
-show_hp = \case 
-  True -> "(_)"
-  False -> ""
+show_md :: Maybe Char -> String
+show_md = \case
+  Nothing -> ""
+  Just c -> [c]
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
 instance Show Literal where 
@@ -37,12 +37,21 @@ instance Show Literal where
     S s -> show s
 
 instance Show Identifier where
-  show = \(Id (has_paren1, strs, maybe_digit, has_paren2)) ->
-    show_hp has_paren1 ++ intercalate "(_)" strs ++ show_maybe maybe_digit ++
-    show_hp has_paren2
+  show = \(Id (maybe_uip1, id_start, id_conts, maybe_digit, maybe_uip2)) ->
+    show_maybe maybe_uip1 ++ show id_start ++ show_list id_conts ++
+    show_md maybe_digit ++ show_maybe maybe_uip2
 
 instance Show SimpleId where
-  show = \(SId str) -> str
+  show = \(SId (id_start, maybe_digit)) -> show id_start ++ show_md maybe_digit
+
+instance Show IdStart where
+  show = \(IS str) -> str
+
+instance Show IdCont where
+  show = \(IC (uip, str)) -> show uip ++ str
+
+instance Show UndersInParen where
+  show = \(UIP i) -> "(_" ++ concat (replicate (i-1) ", _") ++")"
 
 instance Show ParenExpr where
   show = \(PE pei) -> "(" ++ show pei ++ ")"
@@ -99,9 +108,10 @@ show_as :: ArgsStr -> String
 show_as = \(args, str) -> show args ++ str
 
 instance Show ParenFuncAppOrId where
-  show = \(PFAOI (maybe_args1, str, args_str_pairs, maybe_c, maybe_args2)) ->
-    show_maybe maybe_args1 ++ str ++ concatMap show_as args_str_pairs ++
-    show_maybe maybe_c ++ show_maybe maybe_args2
+  show = \(PFAOI (margs1, id_start, args_str_pairs, maybe_digit, margs2)) ->
+    show_maybe margs1 ++ show id_start ++
+    concatMap show_as args_str_pairs ++ show_md maybe_digit ++
+    show_maybe margs2
 
 instance Show Arguments where
   show = \(As loues) -> "(" ++ show loues ++ ")"
@@ -271,7 +281,7 @@ instance Show CasesParams where
     CParams (cps, cps_l) -> "(" ++ show cps ++ show_list_comma cps_l ++ ")"
 
 instance Show Case where
-  show = \(Ca (m, cb)) -> "\n" ++ show m ++ " =>" ++ show cb
+  show = \(Ca (om, cb)) -> "\n" ++ show om ++ " =>" ++ show cb
 
 instance Show EndCase where
   show = \(EC (ecp, cb)) -> "\n" ++ show ecp ++ " =>" ++ show cb
@@ -281,19 +291,23 @@ instance Show EndCaseParam where
     Id1 id -> show id
     Ellipsis -> "..."
 
+instance Show OuterMatching where
+  show = \case
+    SId3 sid -> show sid
+    M1 m -> show m
+
 instance Show Matching where
   show = \case
     Lit2 lit -> show lit
-    SId3 sid -> show sid
     PFM (pf, mos) -> show pf ++ show mos
     TM1 tm -> show tm
     LM1 lm -> show lm
 
 instance Show InnerMatching where
   show = \case
-    M1 m -> show m
-    IWP2 iwp -> show iwp
     Star -> "*"
+    Id2 id -> show id
+    M2 m -> show m
 
 instance Show TupleMatching where
   show = \(TM (mos, mos_l)) -> "(" ++ show mos ++ show_list_comma mos_l ++ ")"
@@ -302,30 +316,6 @@ instance Show ListMatching where
   show = \(LM maybe_m_ms) -> case maybe_m_ms of
     Nothing -> "[]"
     Just (mos, mos_l) -> "[" ++ show mos ++ show_list_comma mos_l ++ "]"
-
-show_iwps :: IdWithParenStart -> String
-show_iwps = \(strs, maybe_c, has_paren) ->
-  concatMap ("(_)" ++) strs ++ show_maybe maybe_c ++ show_hp has_paren
-
-show_iwnps :: IdWithNoParenStart -> String
-show_iwnps = \(str, iwnps_cont) -> str ++ show iwnps_cont
-
-instance Show IdWithParen where
-  show = \case
-    IWPS iwps -> show_iwps iwps
-    IWNPS iwnps -> show_iwnps iwnps
-
-instance Show ParenInTheMiddle where
-  show = \(PITM (strs, maybe_c, has_paren)) ->
-    concatMap ("(_)" ++) strs ++ show_maybe maybe_c ++ show_hp has_paren
-
-show_npitm :: NoParenInTheMiddle -> String
-show_npitm = \maybe_c -> show_maybe maybe_c ++ "(_)"
-
-instance Show IWNPSContinuation where
-  show = \case
-    PITM1 pitm -> show pitm
-    NPITM npitm -> show_npitm npitm
 
 instance Show CaseBody where
   show = \case

@@ -10,14 +10,15 @@ type FromIO = P.IO
 type IO = FromIO ()
 type ListOf's = []
 
-print_line = putStrLn
+print_line' = putStrLn
 get_line = getLine
 split_words = words
 apply'to_all = map
 throw_err = error
 true = True
-drop'from :: (Int, [a]) -> [a]
-drop'from = uncurry drop
+
+drop'from' :: (Int, [a]) -> [a]
+drop'from' = uncurry drop
 
 end_io :: IO
 end_io = return ()

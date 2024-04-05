@@ -5,33 +5,34 @@ value (prev, curr):Int^2
 tuple_type GcdAndCoeffs
 value (gcd, a, b):Int^3
 
-extended_euclidean: Int^2 => GcdAndCoeffs
+extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
   = ee_recursion(init_a_coeffs, init_b_coeffs, _)
     where
     init_a_coeffs, init_b_coeffs: all Coeffs
       = (1, 0), (0, 1)
 
-    ee_recursion: Coeffs x Coeffs x Int^2 => GcdAndCoeffs
+    ee_recursion(_, _, _): Coeffs x Coeffs x Int^2 => GcdAndCoeffs
       = (a_coeffs, b_coeffs, (x, cases))
         0 => (x, a_coeffs.prev, b_coeffs.prev)
         y =>
-          ee_recursion(next <- a_coeffs, next <- b_coeffs, (y, x -> mod <- y))
+          ee_recursion(next(a_coeffs), next(b_coeffs), (y, (x)mod(y)))
           where
-          next: Coeffs => Coeffs
+          next(_): Coeffs => Coeffs
             = _.change{prev = curr, curr = prev - x -> div <- y * curr}
 
 read_two_ints: (Int^2)FromIO
-  = print_line <- "Please give me 2 ints";
-    get_line ;> split_words o> apply(from_string)to_all o> cases
-      [i, j] => wrap(i, j)
+  = print_line("Please give me 2 ints");
+    get_line ;> split(_)to_words o> cases
+      [i, j] => (from_string(i), from_string(j))from_io
       ... => throw_err("You didn't give me 2 ints")
 
-print_gcd_and_coeffs: GcdAndCoeffs => IO
-  = gac =>
-    print_line <-
-    ("Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b)
+print_gcd_and_coeffs_of(_): GcdAndCoeffs => IO
+  = gac => print_line(message)
+    where
+    message: String 
+      = "Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
 
 main: IO
   = read_two_ints ;> (i1, i2) =>
-    print_gcd_and_coeffs <- extended_euclidean(i1, i2)
+    print_gcd_and_coeffs_of(extended_euclidean_of(i1)and(i2))
 

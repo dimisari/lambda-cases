@@ -202,9 +202,16 @@ It used in expressions where parentheses in the middle don't make sense
 
 \item \textit{Grammar}
 \begin{grammar}
-<identifier> ::= [ `(_)' ] [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
+<identifier> ::=
+[ <unders_in_par> ] <id-start> <id-cont>* [ [0-9] ] [ <unders_in_par> ]
 
-<simple-id> ::= [a-z] [a-z_]* [ [0-9] ]
+<simple-id> ::= <id-start> [ [0-9] ]
+
+<id-start> ::= [a-z] [a-z_]*
+
+<id-cont> ::= <unders_in_par> [a-z_]+
+
+<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)' 
 \end{grammar}
 Even though the "\verb|cases|" and "\verb|where|" keywords can be generated
 by these grammar rules, they cannot be used as identifiers.
@@ -530,7 +537,7 @@ f(_, _, r) : Char x Int => String
 \item \textit{Grammar}
 \begin{grammar}
 <paren-func-app-or-id> ::= 
-[ <arguments> ] [a-z] [a-z_]* ( <arguments> [a-z_]+ )* [ [0-9] ]
+[ <arguments> ] <id-start> ( <arguments> [a-z_]+ )* [ [0-9] ]
 [ <arguments> ]
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
@@ -1582,17 +1589,18 @@ expressions in all cases must be the same as the number of parameters with the
 `(' [ `\ ' ] <cases-params> ( <comma> <cases-params> )+ [ `\ ' ] `)'
 \\
 
-<case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
+<case> ::=  <nl> <indent> <outer-matching> [ `\ ' ] `=>' <case-body>
 
 <end-case> ::=
 <nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
 \\
 
-<matching> ::= 
-<literal> | <simple-id> | <pre-func> <inner-matching> | <tuple-matching> |
-<list-matching>
+<outer-matching> ::= <simple-id> | <matching> 
 
-<inner-matching> ::= <matching> | `*' | <id-with-paren>
+<matching> ::= 
+<literal> | <pre-func> <inner-matching> | <tuple-matching> | <list-matching>
+
+<inner-matching> ::= `*' | <identifier> | <matching>
 
 <tuple-matching> ::=
 `(' [ `\ ' ] <inner-matching> ( <comma> <inner-matching> )+ [ `\ ' ] `)'
@@ -1600,12 +1608,6 @@ expressions in all cases must be the same as the number of parameters with the
 <list-matching> ::=
 `[' [ `\ ' ] [ <inner-matching> ( <comma> <inner-matching> )* ] [ `\ ' ]
 `]'
-\\
-
-<id-with-paren> ::= ""\\
-`(_)' [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
-\alt 
-[a-z] [a-z_]* ( ( `(_)' [a-z_]+ )+ [ [0-9] ] [ `(_)' ] | [ [0-9] ] `(_)' )
 \\
 
 <case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]
@@ -2828,9 +2830,16 @@ the condition arrow (" \verb|-->| ") arrow.
 <literal> ::= <int-lit> | <real-lit> | <char-lit> | <string-lit>
 \\
 
-<identifier> ::= [ `(_)' ] [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
+<identifier> ::=
+[ <unders_in_par> ] <id-start> <id-cont>* [ [0-9] ] [ <unders_in_par> ]
 
-<simple-id> ::= [a-z] [a-z_]* [ [0-9] ]
+<simple-id> ::= <id-start> [ [0-9] ]
+
+<id-start> ::= [a-z] [a-z_]*
+
+<id-cont> ::= <unders_in_par> [a-z_]+
+
+<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)' 
 \\
 
 <paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'  
@@ -2869,7 +2878,7 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <paren-func-app-or-id> ::= 
-[ <arguments> ] [a-z] [a-z_]* ( <arguments> [a-z_]+ )* [ [0-9] ]
+[ <arguments> ] <id-start> ( <arguments> [a-z_]+ )* [ [0-9] ]
 [ <arguments> ]
 
 <arguments> ::= `(' [ `\ ' ] <line-expr-or-unders> [ `\ ' ] `)'
@@ -2954,17 +2963,18 @@ the condition arrow (" \verb|-->| ") arrow.
 `(' [ `\ ' ] <cases-params> ( <comma> <cases-params> )+ [ `\ ' ] `)'
 \\
 
-<case> ::=  <nl> <indent> <matching> [ `\ ' ] `=>' <case-body>
+<case> ::=  <nl> <indent> <outer-matching> [ `\ ' ] `=>' <case-body>
 
 <end-case> ::=
 <nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
 \\
 
-<matching> ::= 
-<literal> | <simple-id> | <pre-func> <inner-matching> | <tuple-matching> |
-<list-matching>
+<outer-matching> ::= <simple-id> | <matching> 
 
-<inner-matching> ::= <matching> | `*' | <id-with-paren>
+<matching> ::= 
+<literal> | <pre-func> <inner-matching> | <tuple-matching> | <list-matching>
+
+<inner-matching> ::= `*' | <identifier> | <matching>
 
 <tuple-matching> ::=
 `(' [ `\ ' ] <inner-matching> ( <comma> <inner-matching> )+ [ `\ ' ] `)'
@@ -2972,12 +2982,6 @@ the condition arrow (" \verb|-->| ") arrow.
 <list-matching> ::=
 `[' [ `\ ' ] [ <inner-matching> ( <comma> <inner-matching> )* ] [ `\ ' ]
 `]'
-\\
-
-<id-with-paren> ::= ""\\
-`(_)' [a-z] [a-z_]* ( `(_)' [a-z_]+ )* [ [0-9] ] [ `(_)' ]
-\alt 
-[a-z] [a-z_]* ( ( `(_)' [a-z_]+ )+ [ [0-9] ] [ `(_)' ] | [ [0-9] ] `(_)' )
 \\
 
 <case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]

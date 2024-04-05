@@ -4,10 +4,16 @@ module ASTTypes where
 data Literal = 
   Int Int | R Double | Ch Char | S String 
 
-type HasParen = Bool
-newtype Identifier = Id (HasParen, [String], Maybe Char, HasParen)
+newtype Identifier =
+  Id (Maybe UndersInParen, IdStart, [IdCont], Maybe Char, Maybe UndersInParen)
 
-newtype SimpleId = SId String
+newtype SimpleId = SId (IdStart, Maybe Char)
+
+newtype IdStart = IS String
+
+newtype IdCont = IC (UndersInParen, String)
+
+newtype UndersInParen = UIP Int
 
 newtype ParenExpr = PE InsideParenExpr
 
@@ -38,7 +44,7 @@ newtype BigList = BL (LineExprOrUnders, [LineExprOrUnders])
 
 type ArgsStr = (Arguments, String)
 newtype ParenFuncAppOrId = 
-  PFAOI (Maybe Arguments, String, [ArgsStr], Maybe Char, Maybe Arguments)
+  PFAOI (Maybe Arguments, IdStart, [ArgsStr], Maybe Char, Maybe Arguments)
 
 newtype Arguments = As LineExprOrUnders
 
@@ -129,33 +135,26 @@ data CasesParams =
   CParamId Identifier | CasesKeyword | Star2 |
   CParams (CasesParams, [CasesParams])
 
-newtype Case = Ca (Matching, CaseBody)
+newtype Case = Ca (OuterMatching, CaseBody)
 
 newtype EndCase = EC (EndCaseParam, CaseBody)
 
 data EndCaseParam =
   Id1 Identifier | Ellipsis
 
+data OuterMatching = 
+  SId3 SimpleId | M1 Matching
+
 data Matching = 
-  Lit2 Literal | SId3 SimpleId | PFM (PreFunc, InnerMatching) |
-  TM1 TupleMatching | LM1 ListMatching
+  Lit2 Literal | PFM (PreFunc, InnerMatching) | TM1 TupleMatching |
+  LM1 ListMatching
 
 data InnerMatching = 
-  M1 Matching | IWP2 IdWithParen | Star
+  Star | Id2 Identifier | M2 Matching
 
 newtype TupleMatching = TM (InnerMatching, [InnerMatching])
 
 newtype ListMatching = LM (Maybe (InnerMatching, [InnerMatching]))
-
-type IdWithParenStart = ([String], Maybe Char, HasParen)
-type IdWithNoParenStart = (String, IWNPSContinuation)
-data IdWithParen =
-  IWPS IdWithParenStart | IWNPS IdWithNoParenStart
-
-newtype ParenInTheMiddle = PITM ([String], Maybe Char, HasParen)
-type NoParenInTheMiddle = Maybe Char
-data IWNPSContinuation = 
-  PITM1 ParenInTheMiddle | NPITM NoParenInTheMiddle
 
 data CaseBody = 
   LFB1 LineFuncBody | BFB1 (BigFuncBody, Maybe WhereExpr)

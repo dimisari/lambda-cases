@@ -29,14 +29,14 @@ buble_sort(_): ListOf(Int)s => ListOf(Int)s
 initial: ListOf(Int)s
   = compute_list(16, 65)
     where
-    compute_list(_): Int^2 => ListOf(Int)s
+    compute_list(_, _): Int^2 => ListOf(Int)s
       = (cases, seed)
         0 => []
         n =>
           new_seed + compute_list(n - 1, new_seed)
           where
           new_seed: Int
-            = (seed * 137 + 236 - n) -> mod <- 101
+            = (seed * 137 + 236 - n)mod(101)
 
 main: IO
   = print_line("Initial list = " + initial);

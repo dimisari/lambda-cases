@@ -1,3 +1,4 @@
+- before_paren_str_p in ParenFuncAppOrId => id start
 
 - add more underscore in the same paren in id
 

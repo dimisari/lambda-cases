@@ -70,19 +70,6 @@ opt_space_around = \a -> opt_space *> a <* opt_space
 in_paren :: Parser a -> Parser a
 in_paren = \a -> char '(' *> opt_space_around a <* char ')'
 
--- helper parsers for identifiers
-before_paren_str_p :: Parser String
-before_paren_str_p = lower >:< many lower_under
-
-par_lower_unders :: Parser String
-par_lower_unders = string "(_)" *> many1 lower_under
-
-paren_strs_p :: Parser [String]
-paren_strs_p = many (try par_lower_unders)
-
-strs_p :: Parser [String]
-strs_p = before_paren_str_p >:< paren_strs_p 
-
 -- for literals. Had to copy from Text.Parsec.Token source code
 -- because I didn't want spaces after the char and string literals ...
 -- if anyone knows how to import hidden functions from a module plz let me know
