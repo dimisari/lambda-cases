@@ -12,7 +12,10 @@ print(_)fib_nums: Int => IO
     print("Fib num 0 = 0") ; print(n-1)fibs_with_init((0, 1, 1)) ; end_io
     where
     print(_)fibs_with_init(_) : Int x FibsAndIndex => (FibsAndIndex)FromIO
-      = (n, fai) => print_cur_advance(fai) ;> print(n-1)fibs_with_init(_)
+      = (cases, fai)
+        0 => (fai)from_io
+        n => print_cur_advance(fai) ;> print(n-1)fibs_with_init(_)
 
 main: IO
-  = get_line ;> from_string(_) o> print(_)fib_nums
+  = print_line("How many fibonacci numbers?"); 
+    get_line ;> from_string(_) o> print(_)fib_nums

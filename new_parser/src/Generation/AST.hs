@@ -36,7 +36,7 @@ instance ToHaskell Identifier where
     where
     muip1_hs = case muip1 of
       Nothing -> ""
-      Just muip -> "a" ++ to_haskell muip
+      Just muip -> "a0" ++ to_haskell muip
 
 instance ToHaskell SimpleId where
   to_haskell = \(SId (id_start, maybe_digit)) ->
@@ -178,7 +178,7 @@ instance ToHaskell ParenFuncAppOrId where
       id_hs :: Haskell
       id_hs = case i1 of
         0 -> init_id_hs
-        _ -> "a" ++ replicate i1 '\'' ++ init_id_hs
+        _ -> "a0" ++ replicate i1 '\'' ++ init_id_hs
 
       all_args_hs :: Haskell
       all_args_hs =
@@ -235,7 +235,7 @@ instance ToHaskell PreFuncApp where
 
 instance ToHaskell PostFunc where
   to_haskell = \case
-    SId1 sid -> to_haskell sid
+    SId1 sid -> "b0" ++ to_haskell sid
     SI2 sid -> to_haskell sid
     C1 c -> to_haskell c
 
@@ -246,11 +246,11 @@ instance ToHaskell PostFunc where
 -- 
 instance ToHaskell SpecialId where
   to_haskell = \case
-    First -> "first'"
-    Second -> "second'"
-    Third -> "third'"
-    Fourth -> "fourth'"
-    Fifth -> "fifth'"
+    First -> "b0first"
+    Second -> "b0second"
+    Third -> "b0third"
+    Fourth -> "b0fourth"
+    Fifth -> "b0fifth"
 
 instance ToHaskell PostFuncApp where
   to_haskell (PoFA (pfa, pfs)) =
@@ -269,8 +269,8 @@ instance ToHaskell PostFuncApp where
 
     order_according_to_pf :: PostFunc -> Haskell -> Haskell
     order_according_to_pf = \pf hs -> case pf of
-      C1 _ -> to_haskell pfa ++ " " ++ to_haskell pf
-      _ -> to_haskell pf ++ " " ++ to_haskell pfa
+      C1 _ -> to_haskell pfa ++ to_haskell pf
+      _ -> to_haskell pf ++ to_haskell pfa
 
 
 instance ToHaskell PostFuncArg where
@@ -325,8 +325,8 @@ instance ToHsWithParamNum (Operand, Op) where
      to_hs_wpn oper $> (++ to_haskell op)
 
 instance ToHaskell LineOpExpr where
-  to_haskell (LOE oes_loee) =
-    run_generator $ add_params_to $ to_hs_wpn_pair oes_loee
+  to_haskell (LOE (oes, loee)) =
+    run_generator $ add_params_to $ to_hs_wpn oes >++< to_hs_wpn loee
 
 instance ToHsWithParamNum LineOpExprEnd where
   to_hs_wpn = \case
@@ -363,7 +363,7 @@ instance ToHsWithIndentLvl BigOpExprOpSplit where
       _ -> return ""
 
 instance ToHsWithParamNum OpSplitLine where
-  to_hs_wpn = \(OSL oes_mofco) -> to_hs_wpn_pair oes_mofco
+  to_hs_wpn = \(OSL (oes, mofco)) -> to_hs_wpn oes >++< to_hs_wpn mofco
 
 instance ToHsWithParamNum OperFCO where
   to_hs_wpn = \(OFCO (oper, fco)) -> to_hs_wpn oper $> (++ to_haskell fco)
@@ -734,41 +734,87 @@ instance ToHaskell TypeDef where
     TTD1 ttd -> to_haskell ttd
     OTD1 otd -> to_haskell otd
 
+-- instance ToHaskell TupleTypeDef where
+--   to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
+--     "data " ++ tid_hs ++ params_hs ++ " =\n  " ++
+--     tid_hs ++ "\n    { " ++ id_tuple_popt_hs ++ "\n    }"
+--     where
+--     (tid_hs, params_hs) = tn_to_hs_pair tn 
+--       :: HsPair
+-- 
+--     id_tuple_popt_hs :: Haskell
+--     id_tuple_popt_hs = 
+--       zip (si : sis) popt_t_list &> map id_st_to_hs &> intercalate "\n    , "
+-- 
+--     popt_t_list :: [SimpleType]
+--     popt_t_list = case popt of 
+--       PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
+--       PoT4 (PoT (pbt, i)) -> replicate i $ pbt_to_st pbt
+-- 
+--     id_st_to_hs :: (SimpleId, SimpleType) -> Haskell
+--     id_st_to_hs = \(sid, st) -> to_haskell sid ++ " :: " ++ to_haskell st
+-- 
+--     ft_to_st :: FieldType -> SimpleType
+--     ft_to_st = \case
+--       PBT1 pbt -> pbt_to_st pbt
+--       PoT3 pot -> PoT1 pot
+-- 
+--     pbt_to_st :: PowerBaseType -> SimpleType
+--     pbt_to_st = \case
+--       TIOV3 tiov -> TIOV1 tiov
+--       TA3 ta -> TA1 ta
+--       IPT ipt -> ipt_to_st ipt
+-- 
+--     ipt_to_st :: InParenT -> SimpleType
+--     ipt_to_st = \case
+--       PT3 pt -> PT1 pt
+--       FT3 ft -> FT1 ft
+
 instance ToHaskell TupleTypeDef where
   to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
-    "data " ++ tid_hs ++ params_hs ++ " =\n  " ++
-    tid_hs ++ "\n    { " ++ id_tuple_popt_hs ++ "\n    }"
+    "type " ++ tid_hs ++ params_hs ++ " = " ++ popt_hs ++
+    func_types_hs ++ func_defs_hs
     where
     (tid_hs, params_hs) = tn_to_hs_pair tn 
       :: HsPair
 
-    id_tuple_popt_hs :: Haskell
-    id_tuple_popt_hs = 
-      zip (si : sis) popt_t_list &> map id_st_to_hs &> intercalate "\n    , "
+    popt_hs :: Haskell
+    popt_hs = case popt of 
+      PT4 pt -> to_haskell pt
+      PoT4 pt -> to_haskell pt
 
-    popt_t_list :: [SimpleType]
-    popt_t_list = case popt of 
-      PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
-      PoT4 (PoT (pbt, i)) -> replicate i $ pbt_to_st pbt
+    sid_hs_list :: [Haskell]
+    sid_hs_list = map (to_haskell .> ("b0" ++)) $ si : sis
 
-    id_st_to_hs :: (SimpleId, SimpleType) -> Haskell
-    id_st_to_hs = \(sid, st) -> to_haskell sid ++ " :: " ++ to_haskell st
+    func_types_hs :: Haskell
+    func_types_hs = zipWith combine_type sid_hs_list types &> concat
+    
+    combine_type :: Haskell -> Haskell -> Haskell
+    combine_type = \hs1 hs2 -> "\n" ++ hs1 ++ " :: " ++ hs2
 
-    ft_to_st :: FieldType -> SimpleType
-    ft_to_st = \case
-      PBT1 pbt -> pbt_to_st pbt
-      PoT3 pot -> PoT1 pot
+    func_defs_hs :: Haskell
+    func_defs_hs = zipWith combine_def sid_hs_list projections &> concat
+    
+    combine_def :: Haskell -> Haskell -> Haskell
+    combine_def = \hs1 hs2 -> "\n" ++ hs1 ++ " = " ++ hs2
 
-    pbt_to_st :: PowerBaseType -> SimpleType
-    pbt_to_st = \case
-      TIOV3 tiov -> TIOV1 tiov
-      TA3 ta -> TA1 ta
-      IPT ipt -> ipt_to_st ipt
+    projections :: [Haskell]
+    projections =
+      map ("b1" ++) ["first", "second", "third", "fourth", "fifth"]
 
-    ipt_to_st :: InParenT -> SimpleType
-    ipt_to_st = \case
-      PT3 pt -> PT1 pt
-      FT3 ft -> FT1 ft
+    types :: [Haskell]
+    types =
+      [ popt_hs ++ " -> " ++ hs_of_fields_type 0
+      , popt_hs ++ " -> " ++ hs_of_fields_type 1
+      , popt_hs ++ " -> " ++ hs_of_fields_type 2
+      , popt_hs ++ " -> " ++ hs_of_fields_type 3
+      , popt_hs ++ " -> " ++ hs_of_fields_type 4
+      ]
+       
+    hs_of_fields_type :: Int -> Haskell
+    hs_of_fields_type = \i -> case popt of 
+      PT4 (PT (ft, fts)) -> to_haskell $ (ft:fts) !! i
+      PoT4 (PoT (pbt, _)) -> to_haskell pbt
 
 tn_to_hs_pair :: TypeName -> HsPair
 tn_to_hs_pair (TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) =

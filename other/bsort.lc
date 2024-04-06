@@ -1,0 +1,40 @@
+
+bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x Bool
+  = cases
+    [] => ([], true)
+    [x] => ([x], true)
+    [x1, x2, rest = ...] => 
+      (x1 < x2) -> cases
+        true => add(x2)to_bubble_pass(x1)with_rest -> not_sorted(_)
+        false => add(x1)to_bubble_pass(x2)with_rest
+      where
+      add(_)to_bubble_pass(_)with_rest: Int x Int => ListOf(Int)s x Bool
+        = (x, y) => add(x)to(bubble_sort_pass(y + rest))
+
+      add(_)to(_): Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
+        = (elem, (l, b)) => (elem + l, b)
+
+      not_sorted(_): ListOf(Int)s x Bool => ListOf(Int)s x Bool
+        = _.change{2nd = false}
+
+buble_sort(_): ListOf(Int)s => ListOf(Int)s
+  = bubble_sort_pass(_) o> (l, is_sorted) =>
+    is_sorted -> cases
+      true => l
+      false => buble_sort(l)
+
+initial: ListOf(Int)s
+  = compute_list(16, 65)
+    where
+    compute_list(_, _): Int^2 => ListOf(Int)s
+      = (cases, seed)
+        0 => []
+        n =>
+          new_seed + compute_list(n - 1, new_seed)
+          where
+          new_seed: Int
+            = (seed * 137 + 236 - n)mod(101)
+
+main: IO
+  = print_line("Initial list = " + initial);
+    print_line("Sorted list = " + buble_sort(initial))

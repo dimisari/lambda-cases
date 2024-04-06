@@ -249,8 +249,7 @@ newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 newtype IdTuple = PCSIs (SimpleId, [SimpleId])
 
 newtype OrTypeDef =
-  OTD
-    (TypeName, SimpleId, Maybe SimpleType, [(SimpleId, Maybe SimpleType)])
+  OTD (TypeName, SimpleId, Maybe SimpleType, [(SimpleId, Maybe SimpleType)])
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 
@@ -339,7 +338,7 @@ data ProgramPart =
   TPD TypePropDef | TT1 TypeTheo
 
 -- For fast vim navigation
+-- Parsing/Test.hs
 -- Generation/TypesAndHelpers.hs
 -- Generation/AST.hs
 -- Generation/Test.hs
--- Parsing/Test.hs

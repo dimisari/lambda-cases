@@ -60,13 +60,6 @@ to_hs_wpn_list = traverse to_hs_wpn
 to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
 to_hs_wil_list = traverse to_hs_wil
 
-to_hs_wpn_pair
-  :: (ToHsWithParamNum a, ToHsWithParamNum b) => (a, b) -> WithParamNum Haskell
-to_hs_wpn_pair = \(a, b) ->
-  to_hs_wpn a >>= \a_hs ->
-  to_hs_wpn b >>= \b_hs ->
-  return $ a_hs ++ b_hs
-
 -- params helpers
 get_next_param :: WithParamNum Haskell
 get_next_param = get $> (\i -> "x" ++ show i ++ "'") <* modify (+1)
@@ -75,6 +68,7 @@ params_hs_gen :: WithParamNum Haskell
 params_hs_gen =
   get $> \case
     0 -> ""
+    1 -> "\\x0' -> "
     i ->
       "\\(" ++ ([0..i-1] &> map num_to_param &> intercalate ", ") ++ ") -> "
       where

@@ -1,18 +1,15 @@
-- before_paren_str_p in ParenFuncAppOrId => id start
-
-- add more underscore in the same paren in id
-
 - tuples that are of a tuple type: type checking
 
 - change: if id from projection func need full val as arg
-
-- params with param num: make them tuple param
 
 - type checking
 
 - param num state needs to be global?
 
-- change ids to contain underscores and have certain spots where they expect
-  arguments (including beginning and end)
+- pattern match multiple elems in list with:
+  - [x1, x2, xs=...]
+  - in Haskell: x1 : x2 : xs
+ 
+- replace bsort.lc with the better version in the "other" dir
 
 # tasks.txt

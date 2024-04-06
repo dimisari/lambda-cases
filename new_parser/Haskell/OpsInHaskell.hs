@@ -1,6 +1,6 @@
 {-# LANGUAGE
   MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, 
-  UndecidableInstances, FunctionalDependencies, GADTs
+  UndecidableInstances, FunctionalDependencies, GADTs, IncoherentInstances
 #-}
 
 module Haskell.OpsInHaskell where
@@ -36,7 +36,7 @@ class GeneralMultiplication a b c where
 class GeneralDivision a b c where
   (!/) :: a -> b -> c
 
-class GeneralAddition a b c | a b -> c where
+class GeneralAddition a b c where
   (!+) :: a -> b -> c
 class GeneralSubtraction a b c where
   (!-) :: a -> b -> c
@@ -74,13 +74,19 @@ instance (a ~ Int) => GeneralMultiplication Int Int a where
 instance GeneralAddition String [Int] String where
   str !+ l = str ++ show l
 
+instance (a ~ String) => GeneralAddition String Int a where
+  str !+ i = str ++ show i
+
 instance GeneralAddition a [a] [a] where
   (!+) = (:)
 
-instance GeneralAddition String String String where
+instance (a ~ String) => GeneralAddition String String a where
   (!+) = (++)
 
 instance (a ~ Int) => GeneralAddition Int Int a where
+  (!+) = (+)
+
+instance (a ~ Int) => GeneralAddition a Int Int where
   (!+) = (+)
 
 -- GeneralSubtraction

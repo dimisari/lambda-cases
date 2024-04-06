@@ -109,3 +109,4 @@ stringChar = stringLetter <|> charEscape <?> "string character"
 stringLetter :: Parser Char
 stringLetter = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
+-- AST.hs
