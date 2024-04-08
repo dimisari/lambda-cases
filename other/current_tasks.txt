@@ -1,8 +1,5 @@
-- tuples that are of a tuple type: type checking
 
 - change: if id from projection func need full val as arg
-
-- type checking
 
 - param num state needs to be global?
 

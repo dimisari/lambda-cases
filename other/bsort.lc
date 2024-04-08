@@ -5,13 +5,13 @@ bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x Bool
     [x] => ([x], true)
     [x1, x2, rest = ...] => 
       (x1 < x2) -> cases
-        true => add(x2)to_bubble_pass(x1)with_rest -> not_sorted(_)
-        false => add(x1)to_bubble_pass(x2)with_rest
+        true => prepend(x2)to_bubble_pass(x1)with_rest -> not_sorted(_)
+        false => prepend(x1)to_bubble_pass(x2)with_rest
       where
-      add(_)to_bubble_pass(_)with_rest: Int x Int => ListOf(Int)s x Bool
-        = (x, y) => add(x)to(bubble_sort_pass(y + rest))
+      prepend(_)to_bubble_pass(_)with_rest: Int x Int => ListOf(Int)s x Bool
+        = (x, y) => prepend(x)to(bubble_sort_pass(y + rest))
 
-      add(_)to(_): Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
+      prepend(_)to(_): Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
         = (elem, (l, b)) => (elem + l, b)
 
       not_sorted(_): ListOf(Int)s x Bool => ListOf(Int)s x Bool

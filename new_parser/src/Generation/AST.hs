@@ -46,7 +46,7 @@ instance ToHaskell IdStart where
   to_haskell = \(IS str) -> str
 
 instance ToHaskell IdCont where
-  to_haskell = \(IC (uip, str)) -> to_haskell uip ++ to_haskell str
+  to_haskell = \(IC (uip, str)) -> to_haskell uip ++ str
 
 instance ToHaskell UndersInParen where
   to_haskell = \(UIP i) -> replicate i '\''
@@ -246,11 +246,11 @@ instance ToHaskell PostFunc where
 -- 
 instance ToHaskell SpecialId where
   to_haskell = \case
-    First -> "b0first"
-    Second -> "b0second"
-    Third -> "b0third"
-    Fourth -> "b0fourth"
-    Fifth -> "b0fifth"
+    First -> "b1first"
+    Second -> "b1second"
+    Third -> "b1third"
+    Fourth -> "b1fourth"
+    Fifth -> "b1fifth"
 
 instance ToHaskell PostFuncApp where
   to_haskell (PoFA (pfa, pfs)) =
@@ -294,12 +294,11 @@ instance ToHaskell Change where
 --       [] -> error "field changes haskell list should no be empty"
 --       fc_hs : fcs_hs -> 
 --         indent $> (++ "\\y' -> y'\n") >++<
---         ( inc_indent_lvl *>
+--         deeper (
 --           indent_all_and_concat
 --             (["{ " ++ fc_hs] ++ map (", " ++) fcs_hs ++ ["}"])
---           <* dec_indent_lvl
 --         )
--- 
+
 instance ToHsWithParamNum FieldChange where
   to_hs_wpn = \(FC (f, leou)) ->
     to_hs_wpn leou >>= \leou_hs ->
@@ -610,13 +609,46 @@ instance ToHsWithIndentLvl (ValueExpr, WhereExpr) where
     _ -> to_hs_wil we >++< to_hs_wil ve
 
 instance ToHsWithIndentLvl GroupedValueDefs where
-  to_hs_wil = gvds_to_vd_list .> to_hs_wil_list .> fmap (intercalate "\n\n")
+  to_hs_wil (GVDs (id, ids, ts, les, les_l)) =
+    to_hs_wil_list vd_list $> intercalate "\n\n"
+    where
+    vd_list :: [ValueDef]
+    vd_list = to_val_def_list (total_ids, t_list, total_le_list)
+
+    total_ids :: [Identifier]
+    total_ids = id : ids
+
+    t_list :: [Type]
+    t_list = case ts of
+      Ts (t, ts) -> t : ts
+      All t -> replicate (length total_ids) t
+
+    total_le_list :: [LineExpr]
+    total_le_list = concatMap (\(LEs (le, le_l)) -> le : le_l) (les : les_l)
+
+    to_val_def_list :: ([Identifier], [Type], [LineExpr]) -> [ValueDef]
+    to_val_def_list = \case
+      ([], [], []) -> []
+      (id : ids, t : ts, le : les) ->
+        VD (id, t, le_to_ve le, Nothing) : to_val_def_list (ids, ts, les)
+      _ ->
+        error $
+          "identifiers, types and expressions don't match in number " ++
+          "in grouped value definitions"
+
+    le_to_ve :: LineExpr -> ValueExpr
+    le_to_ve = \case
+      BOAE1 boae -> BOAE5 boae
+      LOE2 loe -> OE2 $ LOE3 loe
+      LFE2 lfe -> FE2 $ LFE4 lfe
 
 instance ToHsWithIndentLvl WhereExpr where
-  to_hs_wil = \(WE (wde, wdes)) -> 
-    indent $> (++ "let\n") >++<
-    (to_hs_wil_list (wde : wdes) $> intercalate "\n\n" $> (++ "\n")) >++<
+  to_hs_wil (WE (wde, wdes)) =
+    indent $> (++ "let\n") >++< (wdes_gen $> (++ "\n")) >++<
     indent $> (++ "in\n")
+    where
+    wdes_gen :: WithIndentLvl Haskell
+    wdes_gen = to_hs_wil_list (wde : wdes) $> intercalate "\n\n"
 
 instance ToHsWithIndentLvl WhereDefExpr where
   to_hs_wil = \case
@@ -734,50 +766,11 @@ instance ToHaskell TypeDef where
     TTD1 ttd -> to_haskell ttd
     OTD1 otd -> to_haskell otd
 
--- instance ToHaskell TupleTypeDef where
---   to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
---     "data " ++ tid_hs ++ params_hs ++ " =\n  " ++
---     tid_hs ++ "\n    { " ++ id_tuple_popt_hs ++ "\n    }"
---     where
---     (tid_hs, params_hs) = tn_to_hs_pair tn 
---       :: HsPair
--- 
---     id_tuple_popt_hs :: Haskell
---     id_tuple_popt_hs = 
---       zip (si : sis) popt_t_list &> map id_st_to_hs &> intercalate "\n    , "
--- 
---     popt_t_list :: [SimpleType]
---     popt_t_list = case popt of 
---       PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
---       PoT4 (PoT (pbt, i)) -> replicate i $ pbt_to_st pbt
--- 
---     id_st_to_hs :: (SimpleId, SimpleType) -> Haskell
---     id_st_to_hs = \(sid, st) -> to_haskell sid ++ " :: " ++ to_haskell st
--- 
---     ft_to_st :: FieldType -> SimpleType
---     ft_to_st = \case
---       PBT1 pbt -> pbt_to_st pbt
---       PoT3 pot -> PoT1 pot
--- 
---     pbt_to_st :: PowerBaseType -> SimpleType
---     pbt_to_st = \case
---       TIOV3 tiov -> TIOV1 tiov
---       TA3 ta -> TA1 ta
---       IPT ipt -> ipt_to_st ipt
--- 
---     ipt_to_st :: InParenT -> SimpleType
---     ipt_to_st = \case
---       PT3 pt -> PT1 pt
---       FT3 ft -> FT1 ft
-
 instance ToHaskell TupleTypeDef where
   to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
-    "type " ++ tid_hs ++ params_hs ++ " = " ++ popt_hs ++
+    "type " ++ to_haskell tn ++ " = " ++ popt_hs ++
     func_types_hs ++ func_defs_hs
     where
-    (tid_hs, params_hs) = tn_to_hs_pair tn 
-      :: HsPair
-
     popt_hs :: Haskell
     popt_hs = case popt of 
       PT4 pt -> to_haskell pt
@@ -792,6 +785,20 @@ instance ToHaskell TupleTypeDef where
     combine_type :: Haskell -> Haskell -> Haskell
     combine_type = \hs1 hs2 -> "\n" ++ hs1 ++ " :: " ++ hs2
 
+    types :: [Haskell]
+    types =
+      [ popt_hs ++ " -> " ++ hs_of_field_type 0
+      , popt_hs ++ " -> " ++ hs_of_field_type 1
+      , popt_hs ++ " -> " ++ hs_of_field_type 2
+      , popt_hs ++ " -> " ++ hs_of_field_type 3
+      , popt_hs ++ " -> " ++ hs_of_field_type 4
+      ]
+       
+    hs_of_field_type :: Int -> Haskell
+    hs_of_field_type = \i -> case popt of 
+      PT4 (PT (ft, fts)) -> to_haskell $ (ft : fts) !! i
+      PoT4 (PoT (pbt, _)) -> to_haskell pbt
+
     func_defs_hs :: Haskell
     func_defs_hs = zipWith combine_def sid_hs_list projections &> concat
     
@@ -802,45 +809,27 @@ instance ToHaskell TupleTypeDef where
     projections =
       map ("b1" ++) ["first", "second", "third", "fourth", "fifth"]
 
-    types :: [Haskell]
-    types =
-      [ popt_hs ++ " -> " ++ hs_of_fields_type 0
-      , popt_hs ++ " -> " ++ hs_of_fields_type 1
-      , popt_hs ++ " -> " ++ hs_of_fields_type 2
-      , popt_hs ++ " -> " ++ hs_of_fields_type 3
-      , popt_hs ++ " -> " ++ hs_of_fields_type 4
-      ]
-       
-    hs_of_fields_type :: Int -> Haskell
-    hs_of_fields_type = \i -> case popt of 
-      PT4 (PT (ft, fts)) -> to_haskell $ (ft:fts) !! i
-      PoT4 (PoT (pbt, _)) -> to_haskell pbt
+instance ToHaskell TypeName where
+  to_haskell (TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) =
+    to_haskell tid ++ tid_cont_hs ++
+    to_haskell maybe_pvip1 ++ pvip_hs2 ++ to_haskell maybe_pvip2
+    where
+    (tid_cont_hs, pvip_hs2) =
+      foldl add_pvip_str_to_hs_pair ("", "") pvip_str_pairs
+      :: HsPair
 
-tn_to_hs_pair :: TypeName -> HsPair
-tn_to_hs_pair (TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) =
-  ( to_haskell tid ++ tid_cont_hs
-  , to_haskell maybe_pvip1 ++ pvip_hs2 ++ to_haskell maybe_pvip2
-  )
-  where
-  (tid_cont_hs, pvip_hs2) =
-    foldl add_pvip_str_to_hs_pair ("", "") pvip_str_pairs
-    :: HsPair
-
-  add_pvip_str_to_hs_pair :: HsPair -> PVIPStr -> HsPair
-  add_pvip_str_to_hs_pair = \(tid_cont_hs_prev, pvip_hs2_prev) (pvip, str) ->
-    (tid_cont_hs_prev ++ "'" ++ str, pvip_hs2_prev ++ to_haskell pvip)
+    add_pvip_str_to_hs_pair :: HsPair -> PVIPStr -> HsPair
+    add_pvip_str_to_hs_pair = \(tid_cont_hs_prev, pvip_hs2_prev) (pvip, str) ->
+      (tid_cont_hs_prev ++ "'" ++ str, pvip_hs2_prev ++ to_haskell pvip)
 
 instance ToHaskell ParamVarsInParen where
   to_haskell = \(PVIP (ptv, ptvs)) -> to_hs_prepend_list " " $ ptv : ptvs
 
 instance ToHaskell OrTypeDef where
   to_haskell (OTD (tn, id, mst, id_mst_pairs)) =
-    "data " ++ tid_hs ++ params_hs ++ " =\n  " ++
+    "data " ++ to_haskell tn ++ " =\n  " ++
     (map id_mst_to_hs ((id, mst) : id_mst_pairs) &> intercalate " |\n  ")
     where
-    (tid_hs, params_hs) = tn_to_hs_pair tn 
-      :: HsPair
-
     id_mst_to_hs :: (SimpleId, Maybe SimpleType) -> Haskell
     id_mst_to_hs = \(id, mst) ->
       "C" ++ to_haskell id ++ case mst of
@@ -849,9 +838,7 @@ instance ToHaskell OrTypeDef where
 
 instance ToHaskell TypeNickname where
   to_haskell = \(TNN (tn, st)) ->
-    "type " ++
-    (tn_to_hs_pair tn &> \(tid_hs, params_hs) -> tid_hs ++ params_hs) ++
-    " = " ++ to_haskell st
+    "type " ++ to_haskell tn ++ " = " ++ to_haskell st
 
 -- TypePropDef
 instance ToHaskell TypePropDef where

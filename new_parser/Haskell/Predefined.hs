@@ -87,7 +87,7 @@ instance IsSecond' b (a, b, c, d) where
 instance IsSecond' b (a, b, c, d, e) where
   b1second = \(_, b, _, _, _) -> b
 
--- IsSecond'
+-- IsThird'
 
 class IsThird' a b where
   b1third :: b -> a

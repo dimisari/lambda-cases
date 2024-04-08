@@ -4,14 +4,14 @@ bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x Bool
     [] => ([], true)
     [x] => ([x], true)
     l => 
-      (l.first < l.second) -> cases
-        true => not_sorted(_) <- add(l.second)to_bubble(l.first)and_rest
-        false => add(l.first)to_bubble(l.second)and_rest
+      ((l)first < (l)second) -> cases
+        true => not_sorted(_) <- prepend((l)second)to_pass((l)first)and_rest
+        false => prepend((l)first)to_pass((l)second)and_rest
       where
-      add(_)to_bubble(_)and_rest: Int x Int => ListOf(Int)s x Bool
-        = (x, y) => add(x)to(bubble_sort_pass(y + rest))
+      prepend(_)to_pass(_)and_rest: Int x Int => ListOf(Int)s x Bool
+        = (x, y) => prepend(x)to(bubble_sort_pass(y + rest))
 
-      add(_)to(_): Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
+      prepend(_)to(_): Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
         = (elem, (l, b)) => (elem + l, b)
 
       rest: ListOf(Int)s
