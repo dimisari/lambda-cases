@@ -2,6 +2,7 @@
 
 module Generation.Test where
 
+import System.Process
 import Text.Parsec (runParser, eof, ParseError)
 
 import Data.List.Split
@@ -26,7 +27,8 @@ res_dir = "../hs_gen_results/"
 main :: IO ()
 main =
   list_progs >>= mapM_ read_prog_parse_write_res >>
-  mapM_ run_parse_func_for_test_exs_file test_exs_file_name_parse_func_pairs
+--   mapM_ run_parse_func_for_test_exs_file test_exs_file_name_parse_func_pairs >>
+  callCommand "./compile.sh"
 
 -- helpers
 change_extension :: FileName -> FileName

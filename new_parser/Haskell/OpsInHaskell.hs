@@ -77,6 +77,9 @@ instance GeneralAddition String [Int] String where
 instance (a ~ String) => GeneralAddition String Int a where
   str !+ i = str ++ show i
 
+instance (a ~ String) => GeneralAddition String (Int, Int, Int) a where
+  str !+ i = str ++ show i
+
 instance GeneralAddition a [a] [a] where
   (!+) = (:)
 
@@ -92,6 +95,10 @@ instance (a ~ Int) => GeneralAddition a Int Int where
 -- GeneralSubtraction
 instance Num a => GeneralSubtraction a a a where
   (!-) = (-)
+
+-- GeneralGreaterThan
+instance Ord a => GeneralGreaterThan a a where
+  (!>) = (>)
 
 -- GeneralLessThan
 instance Ord a => GeneralLessThan a a where

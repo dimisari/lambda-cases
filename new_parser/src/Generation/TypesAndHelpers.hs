@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances, FlexibleContexts #-}
+
 module Generation.TypesAndHelpers where
 
 import Control.Monad.State.Lazy
@@ -45,6 +47,12 @@ instance ToHsWithParamNum a => ToHsWithParamNum (Maybe a) where
   to_hs_wpn = \case
     Nothing -> return ""
     Just a -> to_hs_wpn a 
+
+instance ToHsWithParamNum (a, Haskell) => ToHsWithParamNum (Maybe a, Haskell)
+  where 
+  to_hs_wpn = \case
+    (Nothing, _) -> return ""
+    (Just a, hs) -> to_hs_wpn (a, hs)
 
 instance ToHsWithIndentLvl a => ToHsWithIndentLvl (Maybe a) where
   to_hs_wil = \case
@@ -107,6 +115,21 @@ indent_all_and_concat :: [Haskell] -> WithParamNum Haskell
 indent_all_and_concat = \hs_list ->
   indent >>= \indent_hs ->
   return $ map (indent_hs ++) hs_list &> intercalate "\n"
+
+-- ParenFuncAppOrId helpers 
+
+margs1_id_hs :: Int -> Haskell
+margs1_id_hs = \case
+  0 -> ""
+  i -> "a0" ++ replicate i '\''
+
+margs2_id_hs :: Int -> Haskell
+margs2_id_hs = \i -> replicate i '\''
+
+args_hs :: [Haskell] -> Haskell
+args_hs = filter (/= "") .> intercalate ", " .> \case
+  "" -> ""
+  hs -> "(" ++ hs ++ ")"
 
 -- other
 run_generator :: State Int a -> a

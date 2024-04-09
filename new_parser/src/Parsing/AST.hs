@@ -38,7 +38,7 @@ instance HasParser Literal where
     R <$> try parser <|> Int <$> parser <|> Ch <$> parser <|> S <$> parser <?>
     "Literal"
 
--- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncApp
+-- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 instance HasParser Identifier where
   parser =
     id_p >>= \case
@@ -239,7 +239,7 @@ instance HasParser BigOrCasesFuncExpr where
   
 instance HasParser Operand where
   parser =
-    PE3 <$> try parser <|> BOAE2 <$> try parser <|>
+    BOAE2 <$> try parser <|> PE3 <$> try parser <|>
     underscore *> return Underscore3
 
 instance HasParser Op where

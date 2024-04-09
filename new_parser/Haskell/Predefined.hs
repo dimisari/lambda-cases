@@ -25,6 +25,7 @@ split'to_words = words
 apply'to_all = map
 throw_err' = error
 true = True
+false = False
 
 drop'from' :: (Int, [a]) -> [a]
 drop'from' = uncurry drop
@@ -42,20 +43,20 @@ a0'from_io :: a -> P.IO a
 a0'from_io = return
 
 class IsFirst a b | b -> a where
-  first :: b -> a
+  a0'first :: b -> a
 
 instance IsFirst a [a] where
-  first = head
+  a0'first = head
 
 class IsSecond a b | b -> a where
-  second :: b -> a
+  a0'second :: b -> a
 
 instance IsSecond a [a] where
-  second = head . tail 
+  a0'second = head . tail 
 
 -- IsFirst'
 
-class IsFirst' a b where
+class IsFirst' a b | b -> a where
   b1first :: b -> a
 
 instance IsFirst' a (a, b) where
@@ -72,7 +73,7 @@ instance IsFirst' a (a, b, c, d, e) where
 
 -- IsSecond'
 
-class IsSecond' a b where
+class IsSecond' a b | b -> a where
   b1second :: b -> a
 
 instance IsSecond' b (a, b) where
@@ -89,7 +90,7 @@ instance IsSecond' b (a, b, c, d, e) where
 
 -- IsThird'
 
-class IsThird' a b where
+class IsThird' a b | b -> a where
   b1third :: b -> a
 
 instance IsThird' c (a, b, c) where
@@ -100,4 +101,52 @@ instance IsThird' c (a, b, c, d) where
 
 instance IsThird' c (a, b, c, d, e) where
   b1third = \(_, _, c, _, _) -> c
+
+-- ChangeFirst'
+
+class ChangeFirstTo' a b | b -> a where
+  c1first :: a -> b -> b
+
+instance ChangeFirstTo' a (a, b) where
+  c1first = \a (_, b) -> (a, b)
+
+instance ChangeFirstTo' a (a, b, c) where
+  c1first = \a (_, b, c) -> (a, b, c)
+
+instance ChangeFirstTo' a (a, b, c, d) where
+  c1first = \a (_, b, c, d) -> (a, b, c, d)
+
+instance ChangeFirstTo' a (a, b, c, d, e) where
+  c1first = \a (_, b, c, d, e) -> (a, b, c, d, e)
+
+-- ChangeSecond'
+
+class ChangeSecondTo' a b | b -> a where
+  c1second :: a -> b -> b
+
+instance ChangeSecondTo' b (a, b) where
+  c1second = \b (a, _) -> (a, b)
+
+instance ChangeSecondTo' b (a, b, c) where
+  c1second = \b (a, _, c) -> (a, b, c)
+
+instance ChangeSecondTo' b (a, b, c, d) where
+  c1second = \b (a, _, c, d) -> (a, b, c, d)
+
+instance ChangeSecondTo' b (a, b, c, d, e) where
+  c1second = \b (a, _, c, d, e) -> (a, b, c, d, e)
+
+-- ChangeThird'
+
+class ChangeThirdTo' a b | b -> a where
+  c1third :: a -> b -> b
+
+instance ChangeThirdTo' c (a, b, c) where
+  c1third = \c (a, b, _) -> (a, b, c)
+
+instance ChangeThirdTo' c (a, b, c, d) where
+  c1third = \c (a, b, _, d) -> (a, b, c, d)
+
+instance ChangeThirdTo' c (a, b, c, d, e) where
+  c1third = \c (a, b, _, d, e) -> (a, b, c, d, e)
 

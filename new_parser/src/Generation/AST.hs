@@ -30,17 +30,20 @@ instance ToHaskell (NeedsTypeAnnotation Literal) where
     _ -> to_haskell l
 
 instance ToHaskell Identifier where
-  to_haskell (Id (muip1, id_start, id_conts, maybe_digit, muip2)) =
+  to_haskell (Id (muip1, id_start, id_conts, mdigit, muip2)) =
     muip1_hs ++ to_haskell id_start ++ to_haskell id_conts ++
-    to_haskell maybe_digit ++ to_haskell muip2
+    to_haskell mdigit ++ to_haskell muip2
     where
     muip1_hs = case muip1 of
       Nothing -> ""
       Just muip -> "a0" ++ to_haskell muip
 
 instance ToHaskell SimpleId where
-  to_haskell = \(SId (id_start, maybe_digit)) ->
-    to_haskell id_start ++ to_haskell maybe_digit
+  to_haskell = \(SId sid_tuple) ->
+    case sid_tuple of
+      (IS "true", Nothing) -> "True"
+      (IS "false", Nothing) -> "False"
+      (id_start, mdigit) -> to_haskell id_start ++ to_haskell mdigit
 
 instance ToHaskell IdStart where
   to_haskell = \(IS str) -> str
@@ -54,10 +57,18 @@ instance ToHaskell UndersInParen where
 instance ToHaskell ParenExpr where
   to_haskell = \(PE ipe) -> "(" ++ to_haskell ipe ++ ")"
 
+instance ToHaskell (ParenExpr, Haskell) where
+  to_haskell = \(PE ipe, pfa_hs) -> "(" ++ to_haskell (ipe, pfa_hs) ++ ")"
+
 instance ToHaskell InsideParenExpr where
   to_haskell = \case
     LOE1 loe -> to_haskell loe
     LFE1 lfe -> to_haskell lfe
+
+instance ToHaskell (InsideParenExpr, Haskell) where
+  to_haskell = \(ipe, pfa_hs) -> case ipe of
+    LOE1 loe -> to_haskell (loe, pfa_hs)
+    LFE1 lfe -> to_haskell (lfe, pfa_hs)
 
 instance ToHaskell Tuple where
   to_haskell (T (leou, leous)) =
@@ -69,20 +80,35 @@ instance ToHaskell Tuple where
       to_hs_wpn leous >>= \leous_hs ->
       return $ "(" ++ leou_hs ++ ", " ++ leous_hs ++ ")"
 
+instance ToHaskell (Tuple, Haskell) where
+  to_haskell (T (leou, leous), pfa_hs) =
+    run_generator $ add_params_to tuple_hs_gen
+    where
+    tuple_hs_gen :: WithParamNum Haskell
+    tuple_hs_gen =
+      to_hs_wpn (leou, pfa_hs) >>= \leou_hs ->
+      to_hs_wpn (leous, pfa_hs) >>= \leous_hs ->
+      return $ "(" ++ leou_hs ++ ", " ++ leous_hs ++ ")"
+
 instance ToHsWithParamNum LineExprOrUnders where
   to_hs_wpn = \(LEOUs (leou, leous)) ->
-    to_hs_wpn leou >>= \leou_hs ->
-    to_hs_wpn_list leous >>= \leous_hs ->
-    return $ intercalate ", " $ leou_hs : leous_hs
+    to_hs_wpn_list (leou : leous) $> intercalate ", "
+
+instance ToHsWithParamNum (LineExprOrUnders, Haskell) where
+  to_hs_wpn (LEOUs (leou, leous), pfa_hs) =
+    to_hs_wpn_list leous_with_pfa_hs $> intercalate ", "
+    where
+    leous_with_pfa_hs :: [(LineExprOrUnder, Haskell)]
+    leous_with_pfa_hs = map (\leou -> (leou, pfa_hs)) $ leou : leous
 
 instance ToHsWithParamNum LineExprOrUnder where
   to_hs_wpn = \case
     LE1 le -> return $ to_haskell le
     Underscore1 -> get_next_param
 
-instance ToHsWithParamNum (NeedsParen LineExprOrUnder) where
-  to_hs_wpn = \(NeedsParen loue) -> case loue of
-    LE1 le -> return $ to_haskell $ NeedsParen le
+instance ToHsWithParamNum (LineExprOrUnder, Haskell) where
+  to_hs_wpn = \(loue, pfa_hs) -> case loue of
+    LE1 le -> return $ to_haskell (le, pfa_hs)
     Underscore1 -> get_next_param
 
 instance ToHaskell LineExpr where
@@ -91,11 +117,11 @@ instance ToHaskell LineExpr where
     LOE2 loe -> to_haskell loe
     LFE2 lfe -> to_haskell lfe
 
-instance ToHaskell (NeedsParen LineExpr) where
-  to_haskell = \(NeedsParen le) -> case le of
-    BOAE1 boae -> to_haskell $ NeedsParen boae
-    LOE2 loe -> "(" ++ to_haskell loe ++ ")"
-    LFE2 lfe -> "(" ++ to_haskell lfe ++ ")"
+instance ToHaskell (LineExpr, Haskell) where
+  to_haskell = \(le, pfa_hs) -> case le of
+    BOAE1 boae -> to_haskell (boae, pfa_hs)
+    LOE2 loe -> "(" ++ to_haskell (loe, pfa_hs) ++ ")"
+    LFE2 lfe -> "(" ++ to_haskell (lfe, pfa_hs) ++ ")"
 
 instance ToHaskell BasicOrAppExpr where
   to_haskell = \case
@@ -105,8 +131,14 @@ instance ToHaskell BasicOrAppExpr where
 
 instance ToHaskell (NeedsParen BasicOrAppExpr) where
   to_haskell = \(NeedsParen boae) -> case boae of
-    BE3 be -> to_haskell $ NeedsParen be
+    BE3 be -> to_haskell be
     PrFA1 prfa -> "(" ++ to_haskell prfa ++ ")"
+    PoFA1 pofa -> "(" ++ to_haskell pofa ++ ")"
+
+instance ToHaskell (BasicOrAppExpr, Haskell) where
+  to_haskell = \(boae, pfa_hs) -> case boae of
+    BE3 be -> to_haskell (be, pfa_hs)  
+    PrFA1 prfa -> "(" ++ to_haskell (prfa, pfa_hs) ++ ")"
     PoFA1 pofa -> "(" ++ to_haskell pofa ++ ")"
 
 instance ToHaskell BasicExpr where
@@ -117,10 +149,13 @@ instance ToHaskell BasicExpr where
     L1 list -> to_haskell list
     SI1 sid -> to_haskell sid
 
-instance ToHaskell (NeedsParen BasicExpr) where
-  to_haskell = \(NeedsParen be) -> case be of
-    PFAOI1 pfa -> "(" ++ to_haskell pfa ++ ")"
-    _ -> to_haskell be
+instance ToHaskell (BasicExpr, Haskell) where
+  to_haskell = \(be, pfa_hs) -> case be of
+    Lit1 lit -> to_haskell $ NeedsTypeAnnotation lit
+    PFAOI1 pfaoi -> to_haskell (pfaoi, pfa_hs)
+    T1 tuple -> to_haskell (tuple, pfa_hs)
+    L1 list -> to_haskell (list, pfa_hs)
+    SI1 sid -> to_haskell (sid, pfa_hs)
 
 instance ToHsWithIndentLvl BigTuple where
   to_hs_wil (BT (leou, leous, leous_l)) = 
@@ -146,6 +181,15 @@ instance ToHaskell List where
       to_hs_wpn maybe_leous >>= \maybe_leous_hs ->
       return $ "[" ++ maybe_leous_hs ++ "]"
 
+instance ToHaskell (List, Haskell) where
+  to_haskell (L maybe_leous, pfa_hs) =
+    run_generator $ add_params_to list_hs_gen
+    where
+    list_hs_gen :: WithParamNum Haskell
+    list_hs_gen =
+      to_hs_wpn (maybe_leous, pfa_hs) >>= \maybe_leous_hs ->
+      return $ "[" ++ maybe_leous_hs ++ "]"
+
 instance ToHsWithIndentLvl BigList where
   to_hs_wil (BL (leous, leous_l)) = 
     indent_all_and_concat big_list_hs_list
@@ -160,46 +204,30 @@ instance ToHsWithIndentLvl BigList where
       return $ ["[ " ++ leous_hs] ++ map (", " ++) leous_hs_l ++ ["]"]
 
 instance ToHaskell ParenFuncAppOrId where
-  to_haskell
-    (PFAOI (maybe_args1, id_start, args_str_pairs, maybe_c, maybe_args2)) =
+  to_haskell (PFAOI (margs1, id_start, args_str_pairs, mdigit, margs2)) =
     run_generator $ add_params_to paren_func_app_or_id_hs_gen
     where
     paren_func_app_or_id_hs_gen :: WithParamNum Haskell
     paren_func_app_or_id_hs_gen =
-      maybe_args_to_hs_int_wpn maybe_args1 >>= \(maybe_args1_hs, i1) ->
+      maybe_args_to_hs_int_wpn margs1 >>= \(margs1_hs, i1) ->
       args_str_pairs_hs_gen >>= \(middle_id_hs, middle_args_hs) ->
-      maybe_args_to_hs_int_wpn maybe_args2 >>= \(maybe_args2_hs, i2) ->
+      maybe_args_to_hs_int_wpn margs2 >>= \(margs2_hs, i2) ->
       let
-      init_id_hs :: Haskell
-      init_id_hs =
-        to_haskell id_start ++ middle_id_hs ++ to_haskell maybe_c ++
-        replicate i2 '\''
-
       id_hs :: Haskell
-      id_hs = case i1 of
-        0 -> init_id_hs
-        _ -> "a0" ++ replicate i1 '\'' ++ init_id_hs
-
-      all_args_hs :: Haskell
-      all_args_hs =
-        [maybe_args1_hs, middle_args_hs, maybe_args2_hs] &>
-        filter (/= "") &> intercalate ", "
-
-      args_hs :: Haskell
-      args_hs = case all_args_hs of
-        "" -> ""
-        _ -> "(" ++ all_args_hs ++ ")"
+      id_hs =
+        margs1_id_hs i1 ++ to_haskell id_start ++ middle_id_hs ++
+        to_haskell mdigit ++ margs2_id_hs i2
       in
-      return $ id_hs ++ args_hs
+      return $ id_hs ++ args_hs [margs1_hs, middle_args_hs, margs2_hs]
+
+    args_str_pairs_hs_gen :: WithParamNum HsPair
+    args_str_pairs_hs_gen =
+      foldM add_args_str_to_hs_pair_wpn ("", "") args_str_pairs
 
     maybe_args_to_hs_int_wpn :: Maybe Arguments -> WithParamNum (Haskell, Int)
     maybe_args_to_hs_int_wpn = \case
       Nothing -> return ("", 0)
       Just args -> args_to_hs_int_wpn args
-
-    args_str_pairs_hs_gen :: WithParamNum HsPair
-    args_str_pairs_hs_gen =
-      foldM add_args_str_to_hs_pair_wpn ("", "") args_str_pairs
 
     add_args_str_to_hs_pair_wpn :: HsPair -> ArgsStr -> WithParamNum HsPair
     add_args_str_to_hs_pair_wpn =
@@ -212,17 +240,59 @@ instance ToHaskell ParenFuncAppOrId where
       in
       return (id_rest_hs_prev ++ replicate i '\'' ++ str, new_args_hs)
 
-args_to_hs_int_wpn :: Arguments -> WithParamNum (Haskell, Int)
-args_to_hs_int_wpn (As (LEOUs (leou, leous))) =
-  to_hs_wpn_list total_leous >>= \total_leous_hs_list ->
-  return (intercalate ", " total_leous_hs_list, length total_leous) 
-  where
-  total_leous :: [LineExprOrUnder]
-  total_leous = leou : leous 
+    args_to_hs_int_wpn :: Arguments -> WithParamNum (Haskell, Int)
+    args_to_hs_int_wpn (As (LEOUs (leou, leous))) =
+      to_hs_wpn_list total_leous >>= \total_leous_hs_list ->
+      return (intercalate ", " total_leous_hs_list, length total_leous) 
+      where
+      total_leous :: [LineExprOrUnder]
+      total_leous = leou : leous 
 
-instance ToHsWithParamNum Arguments where
-  to_hs_wpn = \(As (LEOUs (leou, leous))) ->
-    (leou : leous) &> to_hs_wpn_list $> intercalate ", "
+instance ToHaskell (ParenFuncAppOrId, Haskell) where
+  to_haskell
+    (PFAOI (margs1, id_start, args_str_pairs, mdigit, margs2), pfa_hs) =
+    run_generator $ add_params_to paren_func_app_or_id_hs_gen
+    where
+    paren_func_app_or_id_hs_gen :: WithParamNum Haskell
+    paren_func_app_or_id_hs_gen =
+      maybe_args_to_hs_int_wpn margs1 >>= \(margs1_hs, i1) ->
+      args_str_pairs_hs_gen >>= \(middle_id_hs, middle_args_hs) ->
+      maybe_args_to_hs_int_wpn margs2 >>= \(margs2_hs, i2) ->
+      let
+      id_hs :: Haskell
+      id_hs =
+        margs1_id_hs i1 ++ to_haskell id_start ++ middle_id_hs ++
+        to_haskell mdigit ++ margs2_id_hs i2
+      in
+      return $ id_hs ++ args_hs [margs1_hs, middle_args_hs, margs2_hs]
+
+    args_str_pairs_hs_gen :: WithParamNum HsPair
+    args_str_pairs_hs_gen =
+      foldM add_args_str_to_hs_pair_wpn ("", "") args_str_pairs
+
+    maybe_args_to_hs_int_wpn :: Maybe Arguments -> WithParamNum (Haskell, Int)
+    maybe_args_to_hs_int_wpn = \case
+      Nothing -> return ("", 0)
+      Just args -> args_to_hs_int_wpn args
+
+    add_args_str_to_hs_pair_wpn :: HsPair -> ArgsStr -> WithParamNum HsPair
+    add_args_str_to_hs_pair_wpn =
+      \(id_rest_hs_prev, args_hs_prev) (args, str) ->
+      args_to_hs_int_wpn args >>= \(args_hs, i) ->
+      let
+      new_args_hs = case args_hs_prev of 
+        "" -> args_hs
+        _ -> args_hs_prev ++ ", " ++ args_hs
+      in
+      return (id_rest_hs_prev ++ replicate i '\'' ++ str, new_args_hs)
+
+    args_to_hs_int_wpn :: Arguments -> WithParamNum (Haskell, Int)
+    args_to_hs_int_wpn (As (LEOUs (leou, leous))) =
+      to_hs_wpn_list total_leous >>= \total_leous_hs_list ->
+      return (intercalate ", " total_leous_hs_list, length total_leous) 
+      where
+      total_leous :: [(LineExprOrUnder, Haskell)]
+      total_leous = map (\leou -> (leou, pfa_hs)) $ leou : leous 
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance ToHaskell PreFunc where
@@ -233,11 +303,16 @@ instance ToHaskell PreFuncApp where
     to_haskell pf ++ " " ++
     run_generator (add_params_to $ to_hs_wpn $ NeedsParen oper)
 
+instance ToHaskell (PreFuncApp, Haskell) where
+  to_haskell = \(PrFA (pf, oper), pfa_hs) ->
+    to_haskell pf ++ " " ++
+    run_generator (add_params_to $ to_hs_wpn (oper, pfa_hs))
+
 instance ToHaskell PostFunc where
   to_haskell = \case
     SId1 sid -> "b0" ++ to_haskell sid
-    SI2 sid -> to_haskell sid
-    C1 c -> to_haskell c
+    SI2 sid -> "b1" ++  to_haskell sid
+    C1 c -> error "should be impossible"
 
 -- instance ToHsWithIndentLvl PostFunc where
 --   to_hs_wil = \case
@@ -246,11 +321,15 @@ instance ToHaskell PostFunc where
 -- 
 instance ToHaskell SpecialId where
   to_haskell = \case
-    First -> "b1first"
-    Second -> "b1second"
-    Third -> "b1third"
-    Fourth -> "b1fourth"
-    Fifth -> "b1fifth"
+    First -> "first"
+    Second -> "second"
+    Third -> "third"
+    Fourth -> "fourth"
+    Fifth -> "fifth"
+
+instance ToHaskell (SpecialId, Haskell) where
+  to_haskell = \(sid, pfa_hs) ->
+    "(b1" ++ to_haskell sid ++ " " ++ pfa_hs ++ ")"
 
 instance ToHaskell PostFuncApp where
   to_haskell (PoFA (pfa, pfs)) =
@@ -259,34 +338,33 @@ instance ToHaskell PostFuncApp where
     pfs_pfa_to_haskell :: [PostFunc] -> Haskell
     pfs_pfa_to_haskell = \case
       [] -> to_haskell pfa 
-      [pf] -> order_according_to_pf pf $ to_haskell pfa 
-      pf:pfs -> order_according_to_pf pf $ "(" ++ pfs_pfa_to_haskell pfs ++ ")"
+      [C1 c] -> to_haskell (c, to_haskell pfa)
+      [pf] -> to_haskell pf ++ " " ++ to_haskell pfa
+      pf:pfs -> to_haskell pf ++ " (" ++ pfs_pfa_to_haskell pfs ++ ")"
 
     maybe_param_hs :: Haskell
     maybe_param_hs = case pfa of
       Underscore2 -> "\\x' -> "
       _ -> ""
 
-    order_according_to_pf :: PostFunc -> Haskell -> Haskell
-    order_according_to_pf = \pf hs -> case pf of
-      C1 _ -> to_haskell pfa ++ to_haskell pf
-      _ -> to_haskell pf ++ to_haskell pfa
-
-
 instance ToHaskell PostFuncArg where
   to_haskell = \case
     PE2 pe -> to_haskell pe
-    BE2 be -> to_haskell $ NeedsParen be
+    BE2 be -> to_haskell be
     Underscore2 -> "x'"
 
-instance ToHaskell Change where
-  to_haskell (C (fc, fcs)) =
+instance ToHaskell (Change, Haskell) where
+  to_haskell (C (fc, fcs), pfa_hs) =
     run_generator (add_params_to change_hs_gen)
     where
     change_hs_gen :: WithParamNum Haskell
     change_hs_gen =
-      to_hs_wpn_list (fc : fcs) >>= \fcs_hs ->
-      return $ "{" ++ intercalate ", " fcs_hs ++ "}"
+      to_hs_wpn_list fcs_with_pfa_hs >>= \fcs_hs ->
+      return $ "(" ++ intercalate " .> " fcs_hs ++ ") " ++ pfa_hs
+
+    fcs_with_pfa_hs :: [(FieldChange, Haskell)]
+    fcs_with_pfa_hs = map (\fc -> (fc, pfa_hs)) $ fc : fcs
+
 
 -- instance ToHsWithIndentLvl Change where
 --   to_hs_wil (C (fc, fcs)) =
@@ -299,15 +377,16 @@ instance ToHaskell Change where
 --             (["{ " ++ fc_hs] ++ map (", " ++) fcs_hs ++ ["}"])
 --         )
 
-instance ToHsWithParamNum FieldChange where
-  to_hs_wpn = \(FC (f, leou)) ->
-    to_hs_wpn leou >>= \leou_hs ->
-    return $ to_haskell f ++ " = " ++ leou_hs
+instance ToHsWithParamNum (FieldChange, Haskell) where
+  to_hs_wpn = \(FC (f, leou), pfa_hs) ->
+    to_hs_wpn (leou, pfa_hs) >>= \leou_hs ->
+--     to_hs_wpn (NeedsParen leou) >>= \leou_hs ->
+    return $ to_haskell f ++ " " ++ leou_hs
 
 instance ToHaskell Field where
   to_haskell = \case
-    SId2 id -> to_haskell id
-    SI3 sid -> to_haskell sid
+    SId2 id -> "c1" ++ to_haskell id
+    SI3 sid -> "c1" ++ to_haskell sid
 
 -- Values: OpExpr
 instance ToHsWithIndentLvl OpExpr where
@@ -319,18 +398,39 @@ instance ToHsWithParamNum OpExprStart where
   to_hs_wpn = \(OES oper_op_pairs) -> 
     to_hs_wpn_list oper_op_pairs $> concat
 
+instance ToHsWithParamNum (OpExprStart, Haskell) where
+  to_hs_wpn (OES oper_op_pairs, pfa_hs) =
+    to_hs_wpn_list oper_op_pairs_with_pfa_hs $> concat
+    where
+    oper_op_pairs_with_pfa_hs :: [(Operand, Op, Haskell)]
+    oper_op_pairs_with_pfa_hs = map (\(o, op) -> (o, op, pfa_hs)) oper_op_pairs
+
 instance ToHsWithParamNum (Operand, Op) where
   to_hs_wpn = \(oper, op) ->
      to_hs_wpn oper $> (++ to_haskell op)
+
+instance ToHsWithParamNum (Operand, Op, Haskell) where
+  to_hs_wpn = \(oper, op, pfa_hs) ->
+     to_hs_wpn (oper, pfa_hs) $> (++ to_haskell op)
 
 instance ToHaskell LineOpExpr where
   to_haskell (LOE (oes, loee)) =
     run_generator $ add_params_to $ to_hs_wpn oes >++< to_hs_wpn loee
 
+instance ToHaskell (LineOpExpr, Haskell) where
+  to_haskell (LOE (oes, loee), pfa_hs) =
+    run_generator $ add_params_to $ to_hs_wpn (oes, pfa_hs) >++<
+    to_hs_wpn (loee, pfa_hs)
+
 instance ToHsWithParamNum LineOpExprEnd where
   to_hs_wpn = \case
     O1 o -> to_hs_wpn o
     LFE3 lfe -> return $ to_haskell lfe
+
+instance ToHsWithParamNum (LineOpExprEnd, Haskell) where
+  to_hs_wpn = \(loee, pfa_hs) -> case loee of
+    O1 o -> to_hs_wpn (o, pfa_hs)
+    LFE3 lfe -> return $ to_haskell (lfe, pfa_hs)
 
 instance ToHsWithIndentLvl BigOpExpr where
   to_hs_wil = \case
@@ -394,6 +494,12 @@ instance ToHsWithParamNum Operand where
     PE3 pe -> return $ to_haskell pe
     Underscore3 -> get_next_param
 
+instance ToHsWithParamNum (Operand, Haskell) where
+  to_hs_wpn = \(o, pfa_hs) -> case o of
+    BOAE2 boae -> return $ to_haskell (boae, pfa_hs)
+    PE3 pe -> return $ to_haskell (pe, pfa_hs)
+    Underscore3 -> get_next_param
+
 instance ToHsWithParamNum (NeedsParen Operand) where
   to_hs_wpn = \(NeedsParen oper) -> case oper of
     BOAE2 boae -> return $ to_haskell $ NeedsParen boae
@@ -446,6 +552,10 @@ instance ToHaskell LineFuncExpr where
   to_haskell = \(LFE (params, lfb)) ->
     "\\" ++ to_haskell params ++ " -> " ++ to_haskell lfb
 
+instance ToHaskell (LineFuncExpr, Haskell) where
+  to_haskell = \(LFE (params, lfb), pfa_hs) ->
+    "\\" ++ to_haskell params ++ " -> " ++ to_haskell (lfb, pfa_hs)
+
 instance ToHsWithIndentLvl (LineFuncExpr, WhereExpr) where
   to_hs_wil = \(LFE (params, lfb), we) ->
     to_hs_wil we >>= \we_hs ->
@@ -476,6 +586,11 @@ instance ToHaskell LineFuncBody where
   to_haskell = \case
     BOAE3 boae -> to_haskell boae
     LOE4 loe -> to_haskell loe
+
+instance ToHaskell (LineFuncBody, Haskell) where
+  to_haskell = \(lfb, pfa_hs) -> case lfb of
+    BOAE3 boae -> to_haskell (boae, pfa_hs)
+    LOE4 loe -> to_haskell (loe, pfa_hs)
 
 instance ToHsWithIndentLvl BigFuncBody where
   to_hs_wil = \case
