@@ -7,11 +7,10 @@
   - [x1, x2, ...=xs]
   - in Haskell: x1 : x2 : xs
  
-- maybe .change always last postfunc (from grammar)?
-  - or maybe not even allow to mix?
-
 - replace bsort.lc with the better version in the "other" dir
 
 - remove hard coded values for or types (e.g. true=True)
+
+- later: put try inside the parsers in the least possible prefix
 
 # tasks.txt

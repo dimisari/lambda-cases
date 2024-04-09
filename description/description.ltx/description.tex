@@ -660,11 +660,13 @@ in the following paragraph.
 
 \item \textit{Grammar}
 \begin{grammar}
-<post-func> ::= `.' ( <simple-id> | <special-id> | <change> )
+<post-func> ::= `.' ( <simple-id> | <special-id> )
 
 <special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
-<post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
+<post-func-app> ::=
+( <basic-expr> | <paren-expr> | `_' )
+( <dot-change> | <post-func>+ [ <dot-change> ] )
 \end{grammar}
 
 \end{itemize}
@@ -729,8 +731,8 @@ a function that expects those new values as arguments (last example).
 \item \textit{Grammar}
 
 \begin{grammar}
-<change> ::=
-`change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
+<dot-change> ::=
+`.change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
 <field-change> ::=
 ( <simple-id> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
@@ -2890,15 +2892,17 @@ the condition arrow (" \verb|-->| ") arrow.
 <pre-func-app> ::= <pre-func> <operand>
 \\
 
-<post-func> ::= `.' ( <simple-id> | <special-id> | <change> )
+<post-func> ::= `.' ( <simple-id> | <special-id> )
 
 <special-id> ::= `1st' | `2nd' | `3rd' | `4th' | `5th'
 
-<post-func-app> ::= ( <basic-expr> | <paren-expr> | `_' ) <post-func>+
+<post-func-app> ::=
+( <basic-expr> | <paren-expr> | `_' )
+( <dot-change> | <post-func>+ [ <dot-change> ] )
 \\
 
-<change> ::=
-`change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
+<dot-change> ::=
+`.change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
 <field-change> ::=
 ( <simple-id> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
@@ -3427,46 +3431,45 @@ parsed$>$, whereas if it fails it returns Nothing.
 
 The grammar rule for the "change" expression is the following:
 \begin{grammar}
-<change> ::=
-`change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
+<dot-change> ::=
+`.change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 \\
 \end{grammar}
 The AST type for the "change" expression is:
 \begin{verbatim}
-newtype Change = C (FieldChange, [FieldChange])
+newtype DotChange = DC (FieldChange, [FieldChange])
 
 \end{verbatim}
 And the parser for the "change" expression is:
 \begin{verbatim}
-instance HasParser Change where
+instance HasParser DotChange where
   parser = 
-    C <$>
-      (try (string "change{") *> opt_space_around field_changes_p <* char '}')
+    DC <$>
+      (try (string ".change{") *> opt_space_around field_changes_p <* char '}')
     where
     field_changes_p :: Parser (FieldChange, [FieldChange])
     field_changes_p = field_change_p +++ many (comma *> field_change_p)
 
 \end{verbatim}
-Here we use the "\verb|+++|" operator which is defined in the parser. It
-takes two parsers as operands and creates a parser that uses them sequentially
-and puts the two results in a tuple. "field_change_p" parses a single field
-change. "many" is defined in the library and it is self explanatory, it parses
-with the argument parser as many times as possible and puts the results in a
-list, the equivalent of the Kleene star in the parser world.  Lastly, we also
-use the "try" parser combinator (defined in the library) which is used to avoid
-comsuming any input if the parser fails. For example if the input was
-"\verb|change |", the parser would fail because we have a space instead of an
-opening bracket.  Without the "try" combinator it would consume the
-"\verb|change|" part and leave only the space after failing. This would
-result in the PostFunc alternative parsers below failing as well (the parser
-after "\verb|C1 <$>|" is the Change parser). Whereas with the "try"
-combinator we avoid this problem and the parser after "\verb|Id2 <$>|"
-successfully parses "change" as an identifier (and leaves the space to be
-parsed by whatever parser comes next).
+Here we use the "\verb|+++|" operator which is defined in the parser. It takes
+two parsers as operands and creates a parser that uses them sequentially and
+puts the two results in a tuple. "field_change_p" parses a single field change.
+"many" is defined in the library, it parses with the argument parser as many
+times as possible and puts the results in a list (the Kleene star of the parser
+world).  Lastly, we also use the "try" parser combinator (defined in the
+library) which is used to avoid comsuming any input if the parser fails. For
+example if the input was "\verb|.change ...|", the parser would fail because we
+have a space instead of an opening bracket.  Without the "try" combinator it
+would consume the "\verb|.change|" part and leave only "\verb| ...|" after
+failing. This would result in the PostFuncAppEnd alternative parser below
+failing as well (the parser after "\verb|DC1 <$>|" is the Change parser).
+Whereas with the "try" combinator we avoid this problem and the parser after
+"\verb|PFsMDC <$>|" successfully parses ".change" as an alternative postfunc
+(get the "change" field of a tuple type value).
 
 \begin{verbatim}
-instance HasParser PostFunc where
-  parser = char '.' *> (C1 <$> parser <|> Id2 <$> parser <|> SI2 <$> parser)
+instance HasParser PostFuncAppEnd where
+  parser = DC1 <$> parser <|> PFsMDC <$> many1 parser +++ optionMaybe parser
 \end{verbatim}
 
 

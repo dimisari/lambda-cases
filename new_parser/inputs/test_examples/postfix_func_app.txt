@@ -20,3 +20,5 @@ x.change{ 1st = _, 3rd = _ }#
 
 x.change{ 1st=_, 3rd=_ }#
 
+x.y.z.change{ 1st=_, 3rd=_ }#
+

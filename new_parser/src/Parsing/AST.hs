@@ -160,7 +160,9 @@ instance HasParser PreFuncApp where
   parser = PrFA <$> parser +++ parser
 
 instance HasParser PostFunc where
-  parser = char '.' *> (C1 <$> parser <|> SId1 <$> parser <|> SI2 <$> parser)
+  parser =
+    try (char '.' *> notFollowedBy (string "change{")) *>
+    (SId1 <$> parser <|> SI2 <$> parser)
 
 instance HasParser SpecialId where
   parser =
@@ -169,18 +171,19 @@ instance HasParser SpecialId where
     string "5th" *> return Fifth 
 
 instance HasParser PostFuncApp where
-  parser =
-    PoFA <$> post_func_arg_p +++ many1 parser
-    where
-    post_func_arg_p :: Parser PostFuncArg
-    post_func_arg_p =
-      PE2 <$> try parser <|> BE2 <$> parser <|>
-      underscore *> return Underscore2
+  parser = PoFA <$> parser +++ parser
 
-instance HasParser Change where
+instance HasParser PostFuncArg where
+  parser =
+    PE2 <$> try parser <|> BE2 <$> parser <|> underscore *> return Underscore2
+
+instance HasParser PostFuncAppEnd where
+  parser = DC1 <$> parser <|> PFsMDC <$> many1 parser +++ optionMaybe parser
+
+instance HasParser DotChange where
   parser = 
-    C <$>
-      (try (string "change{") *> opt_space_around field_changes_p <* char '}')
+    DC <$>
+      (try (string ".change{") *> opt_space_around field_changes_p <* char '}')
     where
     field_changes_p :: Parser (FieldChange, [FieldChange])
     field_changes_p = field_change_p +++ many (comma *> field_change_p)

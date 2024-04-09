@@ -127,7 +127,6 @@ instance Show PostFunc where
   show = \case
     SId1 sid -> "." ++ show sid
     SI2 sid -> "." ++ show sid
-    C1 c -> "." ++ show c
 
 instance Show SpecialId where
   show = \case
@@ -138,7 +137,7 @@ instance Show SpecialId where
     Fifth -> "5th"
 
 instance Show PostFuncApp where
-  show = \(PoFA (pfa, pfs)) -> show pfa ++ show_list pfs
+  show = \(PoFA (pfa, pfae)) -> show pfa ++ show pfae
 
 instance Show PostFuncArg where
   show = \case
@@ -146,8 +145,13 @@ instance Show PostFuncArg where
     BE2 be -> show be
     Underscore2 -> "_"
 
-instance Show Change where
-  show = \(C (fc, fcs)) -> "change{" ++ show fc ++ show_list_comma fcs ++ "}"
+instance Show PostFuncAppEnd where
+  show = \case
+    DC1 dc -> show dc
+    PFsMDC (pfs, mdc) -> show_list pfs ++ show_maybe mdc
+
+instance Show DotChange where
+  show = \(DC (fc, fcs)) -> ".change{" ++ show fc ++ show_list_comma fcs ++ "}"
 
 instance Show FieldChange where
   show = \(FC (f, le)) -> show f ++ " = " ++ show le
@@ -642,6 +646,7 @@ instance Show ProgramPart where
     TT1 tt -> show tt
 
 -- For fast vim navigation
+-- Parsing/TypesAndHelpers.hs
 -- Parsing/AST.hs
 -- Parsing/Test.hs
 -- ASTTypes.hs

@@ -54,17 +54,20 @@ newtype PreFunc = PF SimpleId
 newtype PreFuncApp = PrFA (PreFunc, Operand)
 
 data PostFunc = 
-  SId1 SimpleId | SI2 SpecialId | C1 Change
+  SId1 SimpleId | SI2 SpecialId
 
 data SpecialId = 
   First | Second | Third | Fourth | Fifth
 
-newtype PostFuncApp = PoFA (PostFuncArg, [PostFunc])
+newtype PostFuncApp = PoFA (PostFuncArg, PostFuncAppEnd)
 
 data PostFuncArg = 
   PE2 ParenExpr | BE2 BasicExpr | Underscore2
 
-newtype Change = C (FieldChange, [FieldChange])
+data PostFuncAppEnd =
+  DC1 DotChange | PFsMDC ([PostFunc], Maybe DotChange)
+ 
+newtype DotChange = DC (FieldChange, [FieldChange])
 
 newtype FieldChange = FC (Field, LineExprOrUnder)
 

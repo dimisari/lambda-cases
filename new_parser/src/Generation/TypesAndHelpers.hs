@@ -128,7 +128,6 @@ add_to_id_args_pair = \(id_hs, args_hs) (total_id_hs, total_args_hs) ->
 
 add_args_hs :: (Haskell, Haskell) -> Haskell
 add_args_hs = \case
-  ("", "") -> ""
   (total_args_hs, "") -> total_args_hs
   ("", args_hs) -> args_hs
   (total_args_hs, args_hs) -> total_args_hs ++ ", " ++ args_hs

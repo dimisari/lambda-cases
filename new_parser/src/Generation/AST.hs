@@ -289,7 +289,6 @@ instance ToHaskell PostFunc where
   to_haskell = \case
     SId1 sid -> "b0" ++ to_haskell sid
     SI2 sid -> "b1" ++  to_haskell sid
-    C1 c -> error "should be impossible"
 
 instance ToHaskell SpecialId where
   to_haskell = \case
@@ -304,16 +303,9 @@ instance ToHaskell (SpecialId, Haskell) where
     "(b1" ++ to_haskell sid ++ " " ++ pfa_hs ++ ")"
 
 instance ToHaskell PostFuncApp where
-  to_haskell (PoFA (pfa, pfs)) =
-    maybe_param_hs ++ pfs_pfa_to_haskell (reverse pfs) 
+  to_haskell (PoFA (pfa, pfae)) =
+    maybe_param_hs ++ to_haskell (pfae, to_haskell pfa)
     where
-    pfs_pfa_to_haskell :: [PostFunc] -> Haskell
-    pfs_pfa_to_haskell = \case
-      [] -> to_haskell pfa 
-      [C1 c] -> to_haskell (c, to_haskell pfa)
-      [pf] -> to_haskell pf ++ " " ++ to_haskell pfa
-      pf:pfs -> to_haskell pf ++ " (" ++ pfs_pfa_to_haskell pfs ++ ")"
-
     maybe_param_hs :: Haskell
     maybe_param_hs = case pfa of
       Underscore2 -> "\\x' -> "
@@ -325,33 +317,40 @@ instance ToHaskell PostFuncArg where
     BE2 be -> to_haskell be
     Underscore2 -> "x'"
 
-instance ToHaskell (Change, Haskell) where
-  to_haskell (C (fc, fcs), pfa_hs) =
+instance ToHaskell (PostFuncAppEnd, Haskell) where
+  to_haskell = \(pfae, pfa_hs) -> case pfae of
+    DC1 dc -> to_haskell (dc, pfa_hs)
+    PFsMDC (pfs, mdc) ->
+      to_haskell (mdc, pfs_pfa_to_haskell $ reverse pfs)
+      where
+      pfs_pfa_to_haskell :: [PostFunc] -> Haskell
+      pfs_pfa_to_haskell = \case
+        [] -> error "should be impossible"
+        [pf] -> to_haskell pf ++ " " ++ pfa_hs
+        pf:pfs -> to_haskell pf ++ "(" ++ pfs_pfa_to_haskell pfs ++ ")"
+
+instance ToHaskell (Maybe DotChange, Haskell) where
+  to_haskell (mdc, pfa_hs) = case mdc of
+    Nothing -> pfa_hs
+    Just dc -> to_haskell (dc, pfa_hs)
+
+instance ToHaskell (DotChange, Haskell) where
+  to_haskell (DC (fc, fcs), pfa_hs) =
     run_generator (add_params_to change_hs_gen)
     where
     change_hs_gen :: WithParamNum Haskell
     change_hs_gen =
-      to_hs_wpn_list fcs_with_pfa_hs >>= \fcs_hs ->
-      return $ "(" ++ intercalate " .> " fcs_hs ++ ") " ++ pfa_hs
+      to_hs_wpn_list fcs_with_pfa_hs $> \case
+        [] -> error "should be impossible"
+        [fc_hs] -> fc_hs ++ " " ++ pfa_hs
+        fcs_hs_list -> "(" ++ intercalate " .> " fcs_hs_list ++ ") " ++ pfa_hs
 
     fcs_with_pfa_hs :: [(FieldChange, Haskell)]
     fcs_with_pfa_hs = map (\fc -> (fc, pfa_hs)) $ fc : fcs
 
--- instance ToHsWithIndentLvl Change where
---   to_hs_wil (C (fc, fcs)) =
---     case run_generator $ to_hs_wpn_list (fc : fcs) of
---       [] -> error "field changes haskell list should no be empty"
---       fc_hs : fcs_hs -> 
---         indent $> (++ "\\y' -> y'\n") >++<
---         deeper (
---           indent_all_and_concat
---             (["{ " ++ fc_hs] ++ map (", " ++) fcs_hs ++ ["}"])
---         )
-
 instance ToHsWithParamNum (FieldChange, Haskell) where
   to_hs_wpn = \(FC (f, leou), pfa_hs) ->
-    to_hs_wpn (leou, pfa_hs) >>= \leou_hs ->
-    return $ to_haskell f ++ " " ++ leou_hs
+    (to_haskell f ++ " ") ++> to_hs_wpn (leou, pfa_hs)
 
 instance ToHaskell Field where
   to_haskell = \case
@@ -423,7 +422,7 @@ instance ToHsWithIndentLvl BigOpExprOpSplit where
       O2 o -> to_hs_wpn o
       _ -> return ""
 
-    ose_hs_wil_gen :: WithParamNum Haskell
+    ose_hs_wil_gen :: WithIndentLvl Haskell
     ose_hs_wil_gen = case ose of
       FE1 fe -> to_hs_wil fe
       _ -> return ""
@@ -436,19 +435,11 @@ instance ToHsWithParamNum OperFCO where
 
 instance ToHsWithIndentLvl BigOpExprFuncSplit where
   to_hs_wil (BOEFS (oes, bocfe)) =
-    params_and_oes_hs_gen >++< to_hs_wil bocfe
+    indent_all_and_concat params_and_oes_hs_list >++< to_hs_wil bocfe
     where
-    params_and_oes_hs_gen :: WithIndentLvl Haskell
-    params_and_oes_hs_gen = 
-      indent >>= \indent_hs ->
-      return $
-        map (\hs -> indent_hs ++ hs) params_and_oes_hs_list &> intercalate "\n"
-
     params_and_oes_hs_list :: [Haskell]
-    params_and_oes_hs_list = run_generator params_and_oes_hs_list_gen
-
-    params_and_oes_hs_list_gen :: WithParamNum [Haskell]
-    params_and_oes_hs_list_gen = add_params_to2 (to_hs_wpn_list [oes])
+    params_and_oes_hs_list =
+      run_generator $ add_params_to2 $ to_hs_wpn_list [oes]
 
 instance ToHsWithIndentLvl BigOrCasesFuncExpr where
   to_hs_wil = \case
