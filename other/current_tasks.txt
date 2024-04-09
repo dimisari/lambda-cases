@@ -4,9 +4,14 @@
 - param num state needs to be global?
 
 - pattern match multiple elems in list with:
-  - [x1, x2, xs=...]
+  - [x1, x2, ...=xs]
   - in Haskell: x1 : x2 : xs
  
+- maybe .change always last postfunc (from grammar)?
+  - or maybe not even allow to mix?
+
 - replace bsort.lc with the better version in the "other" dir
+
+- remove hard coded values for or types (e.g. true=True)
 
 # tasks.txt

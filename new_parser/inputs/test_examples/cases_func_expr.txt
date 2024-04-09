@@ -1,11 +1,11 @@
 cases
-  true => print <- "It's true!! :)"
-  false => print <- "It's false... :("#
+  true => print("It's true!! :)")
+  false => print("It's false... :(")#
 
 cases
-  green => print <- "It's green! Let's go!!! :)"
-  amber => print <- "Go go go, fast!"
-  red => print <- "Stop right now! You're going to kill us!!"#
+  green => print("It's green! Let's go!!! :)")
+  amber => print("Go go go, fast!")
+  red => print("Stop right now! You're going to kill us!!")#
 
 cases
   green => true
@@ -41,5 +41,5 @@ cases
 
 (f, cases)
   empty_l => empty_l
-  non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all <- list.tail)#
+  non_empty_l:list => non_empty_l:(f(list.head), apply(f)to_all_in(list.tail))#
 

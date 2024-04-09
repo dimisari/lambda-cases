@@ -222,8 +222,7 @@ instance HasParser OpSplitLine where
     OSL <$> (parser +++ maybe_oper_fco_parser <* indent)
     where
     maybe_oper_fco_parser :: Parser (Maybe OperFCO)
-    maybe_oper_fco_parser =
-      try nl *> return Nothing <|> Just <$> parser
+    maybe_oper_fco_parser = try nl *> return Nothing <|> Just <$> parser
 
 instance HasParser OperFCO where
   parser = OFCO <$> parser +++ (char ' ' *> parser <* char '\n')
@@ -313,10 +312,10 @@ instance HasParser CasesParams where
     CParams <$> in_paren (parser +++ many1 (comma *> parser))
 
 instance HasParser Case where
-  parser = Ca <$> try (nl_indent *> parser) +++ (func_arr *> parser)
+  parser = Ca <$> try (nl_indent *> parser) +++ (func_arr *> deeper parser)
 
 instance HasParser EndCase where
-  parser = EC <$> try (nl_indent *> parser) +++ (func_arr *> parser)
+  parser = EC <$> try (nl_indent *> parser) +++ (func_arr *> deeper parser)
 
 instance HasParser EndCaseParam where
   parser = Id1 <$> parser <|> string "..." *> return Ellipsis
@@ -343,10 +342,7 @@ instance HasParser ListMatching where
     inside_p = parser +++ (many $ comma *> parser)
 
 instance HasParser CaseBody where
-  parser = 
-    increase_il_by 1 *>
-    (BFB1 <$> try parser +++ optionMaybe (try parser) <|> LFB1 <$> parser) <*
-    decrease_il_by 1
+  parser = BFB1 <$> try parser +++ optionMaybe (try parser) <|> LFB1 <$> parser
 
 -- HasParser: ValueDef, WhereExpr
 instance HasParser ValueDef where
@@ -358,7 +354,8 @@ instance HasParser ValueDef where
     has_type_symbol *> parser >>= \type_ ->
     nl_indent *> string "= " *>
 
-    increase_il_by 1 >> we_are_in_equal_line >>
+    we_are_in_equal_line >>
+    increase_il_by 1 >>
 
     parser >>= \value_expr ->
 
@@ -689,9 +686,7 @@ instance HasParser TTValueExpr where
     VEMWE <$> vemwe_p <|> LE2 <$> (char ' ' *> parser)
     where
     vemwe_p :: Parser (ValueExpr, Maybe WhereExpr)
-    vemwe_p =
-      increase_il_by 2 *> try nl_indent *> parser +++ optionMaybe parser <*
-      decrease_il_by 2
+    vemwe_p = deeper2 (try nl_indent *> parser +++ optionMaybe parser)
 
 -- HasParser: Program
 instance HasParser Program where

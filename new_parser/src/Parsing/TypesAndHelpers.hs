@@ -19,6 +19,12 @@ increase_il_by = \i -> modifyState (\(il, b) -> (il + i, b))
 decrease_il_by :: Int -> Parser ()
 decrease_il_by = \i -> modifyState (\(il, b) -> (il - i, b))
 
+deeper :: Parser a -> Parser a
+deeper p = increase_il_by 1 *> p <* decrease_il_by 1
+
+deeper2 :: Parser a -> Parser a
+deeper2 p = increase_il_by 2 *> p <* decrease_il_by 2
+
 we_are_in_equal_line :: Parser ()
 we_are_in_equal_line = modifyState (\(il, _) -> (il, True))
 
@@ -110,3 +116,4 @@ stringLetter :: Parser Char
 stringLetter = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
 -- AST.hs
+-- Test.hs

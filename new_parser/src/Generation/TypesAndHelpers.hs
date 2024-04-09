@@ -118,16 +118,23 @@ indent_all_and_concat = \hs_list ->
 
 -- ParenFuncAppOrId helpers 
 
-margs1_id_hs :: Int -> Haskell
-margs1_id_hs = \case
-  0 -> ""
-  i -> "a0" ++ replicate i '\''
+single_quotes :: Arguments -> Haskell
+single_quotes = \(As (LEOUs (leou, leous))) ->
+  replicate (length $ leou : leous) '\''
 
-margs2_id_hs :: Int -> Haskell
-margs2_id_hs = \i -> replicate i '\''
+add_to_id_args_pair :: HsPair -> HsPair -> HsPair
+add_to_id_args_pair = \(id_hs, args_hs) (total_id_hs, total_args_hs) ->
+  (total_id_hs ++ id_hs, add_args_hs(total_args_hs, args_hs))
 
-args_hs :: [Haskell] -> Haskell
-args_hs = filter (/= "") .> intercalate ", " .> \case
+add_args_hs :: (Haskell, Haskell) -> Haskell
+add_args_hs = \case
+  ("", "") -> ""
+  (total_args_hs, "") -> total_args_hs
+  ("", args_hs) -> args_hs
+  (total_args_hs, args_hs) -> total_args_hs ++ ", " ++ args_hs
+
+in_paren_if_non_empty :: Haskell -> Haskell
+in_paren_if_non_empty = \case
   "" -> ""
   hs -> "(" ++ hs ++ ")"
 

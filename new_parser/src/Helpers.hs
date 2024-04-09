@@ -30,6 +30,12 @@ mapf = flip fmap
 ($>) :: Functor f => f a -> (a -> b) -> f b
 ($>) = flip fmap
 
+(<++) :: Functor f => f [a] -> [a] -> f [a]
+fas <++ as = (++ as) <$> fas
+
+(++>) :: Functor f => [a] -> f [a] -> f [a]
+as ++> fas = (as ++) <$> fas
+
 -- Applicative
 (>:<) :: Applicative f => f a -> f [a] -> f [a]
 a >:< as = (:) <$> a <*> as
