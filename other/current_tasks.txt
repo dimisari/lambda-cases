@@ -1,16 +1,14 @@
 
 - change: if id from projection func need full val as arg
 
-- param num state needs to be global?
-
 - pattern match multiple elems in list with:
-  - [x1, x2, ...=xs]
+  - [x1, x2, ...=xs] ->
   - in Haskell: x1 : x2 : xs
  
 - replace bsort.lc with the better version in the "other" dir
 
 - remove hard coded values for or types (e.g. true=True)
 
-- later: put try inside the parsers in the least possible prefix
+- type app doesn't have single quotes before and after
 
 # tasks.txt

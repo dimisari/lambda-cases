@@ -320,11 +320,11 @@ instance HasParser Case where
 instance HasParser EndCase where
   parser = EC <$> try (nl_indent *> parser) +++ (func_arr *> deeper parser)
 
-instance HasParser EndCaseParam where
-  parser = Id1 <$> parser <|> string "..." *> return Ellipsis
-
 instance HasParser OuterMatching where
   parser = M1 <$> try parser <|> SId3 <$> parser
+
+instance HasParser EndCaseParam where
+  parser = Id1 <$> parser <|> string "..." *> return Ellipsis
 
 instance HasParser Matching where
   parser = 
@@ -332,7 +332,7 @@ instance HasParser Matching where
     TM1 <$> parser <|> LM1 <$> parser
 
 instance HasParser InnerMatching where
-  parser = Id2 <$> try parser <|> M2 <$> parser <|> char '*' *> return Star
+  parser = M2 <$> try parser <|> Id2 <$> parser <|> char '*' *> return Star
 
 instance HasParser TupleMatching where
   parser = TM <$> in_paren (parser +++ many1 (comma *> parser))

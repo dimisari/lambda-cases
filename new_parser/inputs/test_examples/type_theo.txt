@@ -1,15 +1,15 @@
 type_theorem (Possibly(_))Has_A_Wrapper
-proof wrapper = the_value:_#
+proof wrap(_) = the_value:_#
 
 type_theorem (ListOf(_)s)Has_A_Wrapper
-proof wrapper = [_]#
+proof wrap(_) = [_]#
 
 type_theorem (Possibly(_))Has_Internal_App
 proof
   apply(_)inside(_) =
     (f, cases)
       no_value => no_value
-      the_value:x =>
+      the_value:the_value:x =>
         the_value:f(x)
         where 
         x : Int
@@ -33,16 +33,16 @@ proof a >= b = a == b | a > b#
 
 type_theorem (Possibly(_))Has_A_Wrapper
 proof
-  wrapper = the_value:_#
+  wrap(_) = the_value:_#
 
 type_theorem (ListOf(_)s)Has_A_Wrapper
 proof
-  wrapper =
+  wrap(_) =
     [_]#
 
 type_theorem (ListOf(_)s)Has_A_Wrapper
 proof
-  wrapper =
+  wrap(_) =
     a
     where
     a : Int

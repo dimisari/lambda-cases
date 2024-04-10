@@ -18,11 +18,17 @@ type WithParamNum = State Int
 
 type WithIndentLvl = State Int
 
+type PostFuncArgHs = Haskell
+
+type PFAWithPostFuncsHs = Haskell
+
 newtype NeedsParen a = NeedsParen a
 
 newtype NeedsTypeAnnotation a = NeedsTypeAnnotation a
 
 newtype CaseOf = CaseOf CasesParams
+
+newtype WholeParams = Whole Parameters
 
 -- classes
 class ToHaskell a where
@@ -80,9 +86,9 @@ params_hs_gen =
     1 -> "\\x0' -> "
     i ->
       "\\(" ++ ([0..i-1] &> map num_to_param &> intercalate ", ") ++ ") -> "
-      where
-      num_to_param :: Int -> String
-      num_to_param = \j -> "x" ++ show j ++ "'"
+
+num_to_param :: Int -> String
+num_to_param = \j -> "x" ++ show j ++ "'"
 
 add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
@@ -118,24 +124,57 @@ indent_all_and_concat = \hs_list ->
 
 -- ParenFuncAppOrId helpers 
 
+margs1_to_id_hs :: Maybe Arguments -> Haskell
+margs1_to_id_hs = \case
+  Nothing -> ""
+  Just args -> "a0" ++ single_quotes args
+
+margs2_to_id_hs :: Maybe Arguments -> Haskell
+margs2_to_id_hs = \case
+  Nothing -> ""
+  Just args -> single_quotes args
+
 single_quotes :: Arguments -> Haskell
 single_quotes = \(As (LEOUs (leou, leous))) ->
   replicate (length $ leou : leous) '\''
 
-add_to_id_args_pair :: HsPair -> HsPair -> HsPair
-add_to_id_args_pair = \(id_hs, args_hs) (total_id_hs, total_args_hs) ->
-  (total_id_hs ++ id_hs, add_args_hs(total_args_hs, args_hs))
+args_str_pairs_to_id_hs :: [ArgsStr] -> Haskell
+args_str_pairs_to_id_hs = concatMap (\(args, str) -> single_quotes args ++ str)
 
-add_args_hs :: (Haskell, Haskell) -> Haskell
-add_args_hs = \case
-  (total_args_hs, "") -> total_args_hs
-  ("", args_hs) -> args_hs
-  (total_args_hs, args_hs) -> total_args_hs ++ ", " ++ args_hs
+type MargsPair = (Maybe Arguments, Maybe Arguments)
+add_margs_to_args_list :: MargsPair -> [Arguments] -> [Arguments]
+add_margs_to_args_list = \case
+  (Nothing, Nothing) -> id
+  (Just args, Nothing) -> ([args] ++)
+  (Nothing, Just args) -> (++ [args])
+  (Just args1, Just args2) -> \args_list -> [args1] ++ args_list ++ [args2]
 
-in_paren_if_non_empty :: Haskell -> Haskell
-in_paren_if_non_empty = \case
-  "" -> ""
-  hs -> "(" ++ hs ++ ")"
+calc_args_list :: MargsPair -> [ArgsStr] -> [Arguments]
+calc_args_list = \margs_pair args_str_pairs ->
+  add_margs_to_args_list margs_pair $ map fst args_str_pairs
+
+-- TupleTypeDef helpers
+combine_sids_and_types :: [Haskell] -> [Haskell] -> Haskell
+combine_sids_and_types = \sid_hs_list types_hs_list ->
+  zipWith comb_sid_t_hs sid_hs_list types_hs_list &> concat
+
+comb_sid_t_hs :: Haskell -> Haskell -> Haskell
+comb_sid_t_hs = \hs1 hs2 -> "\n" ++ hs1 ++ " :: " ++ hs2
+
+proj_func_defs_hs :: [Haskell] -> Haskell
+proj_func_defs_hs = \sid_hs_list ->
+  zipWith comb_sid_proj_hs sid_hs_list proj_fun_hs_list &> concat
+    
+comb_sid_proj_hs :: Haskell -> Haskell -> Haskell
+comb_sid_proj_hs = \hs1 hs2 -> "\n" ++ hs1 ++ " = " ++ hs2
+
+proj_fun_hs_list :: [Haskell]
+proj_fun_hs_list =
+  map ("b1" ++) ["first", "second", "third", "fourth", "fifth"]
+
+--
+add_to_hs_pair :: HsPair -> HsPair -> HsPair
+add_to_hs_pair = \(hs1, hs2) (hs1', hs2') -> (hs1' ++ hs1, hs2' ++ hs2)
 
 -- other
 run_generator :: State Int a -> a
@@ -147,6 +186,6 @@ to_hs_maybe_np = \case
   Just (NP str) -> "'" ++ str
 
 -- GroupedValueDefs helpers
--- ../ASTTypes.hs
+-- ASTTypes.hs
 -- AST.hs
 -- Test.hs

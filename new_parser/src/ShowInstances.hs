@@ -290,15 +290,15 @@ instance Show Case where
 instance Show EndCase where
   show = \(EC (ecp, cb)) -> "\n" ++ show ecp ++ " =>" ++ show cb
 
-instance Show EndCaseParam where
-  show = \case
-    Id1 id -> show id
-    Ellipsis -> "..."
-
 instance Show OuterMatching where
   show = \case
     SId3 sid -> show sid
     M1 m -> show m
+
+instance Show EndCaseParam where
+  show = \case
+    Id1 id -> show id
+    Ellipsis -> "..."
 
 instance Show Matching where
   show = \case

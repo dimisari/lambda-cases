@@ -10,3 +10,5 @@ ListOf(Int => Int)s#
 
 ListOf(T1)s#
 
+A(B(C))#
+

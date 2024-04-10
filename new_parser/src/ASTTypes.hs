@@ -142,11 +142,11 @@ newtype Case = Ca (OuterMatching, CaseBody)
 
 newtype EndCase = EC (EndCaseParam, CaseBody)
 
-data EndCaseParam =
-  Id1 Identifier | Ellipsis
-
 data OuterMatching = 
   SId3 SimpleId | M1 Matching
+
+data EndCaseParam =
+  Id1 Identifier | Ellipsis
 
 data Matching = 
   Lit2 Literal | PFM (PreFunc, InnerMatching) | TM1 TupleMatching |

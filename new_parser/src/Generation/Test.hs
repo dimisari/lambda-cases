@@ -199,7 +199,7 @@ instance HasParser a => HasParser (THWIL a) where
    parser = THWIL <$> parser
 
 -- For fast vim navigation
--- ../ASTTypes.hs
+-- ASTTypes.hs
 -- Parsers.hs
 -- TypesAndHelpers.hs
 -- AST.hs

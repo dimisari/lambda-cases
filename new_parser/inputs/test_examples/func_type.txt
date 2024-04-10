@@ -12,3 +12,5 @@ Real^3 => Real#
 
 (Int => Int) => (Int => Int)#
 
+((Int => Int) => Int) x Int => Int#
+

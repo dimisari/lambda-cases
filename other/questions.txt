@@ -1,0 +1,14 @@
+
+- prop names can have simple types?
+  - probably only in conditions for values that use ad hoc values
+
+- simplify type-app?
+
+- param num state needs to be global?
+  - probably not
+
+- define arrays with power?
+  - maybe good for one dimension +
+    better with square brackets and commas (or x?) for multidimensional
+
+- isolate hs gen (am I even gonna bother to look at the old code?)

@@ -2,7 +2,8 @@
 -------------------------------------------------------------- parsing
 
 - better parser errors with <?>
-  - with less try? it fails on the last it tried how to mitigate that?
+
+- put try inside the parsers in the least possible prefix
 
 -------------------------------------------------------------- pdf
 
@@ -27,12 +28,6 @@
     - (i, j) = ...
 
 - printing tuples (json style or similar)
-
-- define arrays with power?
-  - maybe good for one dimension +
-    better with square brackets and commas (or x?) for multidimensional
-
-- isolate hs gen (am I even gonna bother to look at the old code?)
 
 - group type nicknames with "all"
 
