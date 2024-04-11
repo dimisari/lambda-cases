@@ -22,9 +22,9 @@ type PostFuncArgHs = Haskell
 
 type PFAWithPostFuncsHs = Haskell
 
-newtype NeedsParen a = NeedsParen a
+data NeedsParenBool = Paren | NoParen
 
-newtype NeedsTypeAnnotation a = NeedsTypeAnnotation a
+data NeedsAnnotationBool = Annotation | NoAnnotation
 
 newtype CaseOf = CaseOf CasesParams
 
@@ -184,6 +184,11 @@ to_hs_maybe_np :: Maybe NamePart -> Haskell
 to_hs_maybe_np = \case
   Nothing -> ""
   Just (NP str) -> "'" ++ str
+
+in_paren_if :: NeedsParenBool -> Haskell -> Haskell
+in_paren_if = \case
+  NoParen -> id
+  Paren -> \hs -> "(" ++ hs ++ ")"
 
 -- GroupedValueDefs helpers
 -- ASTTypes.hs

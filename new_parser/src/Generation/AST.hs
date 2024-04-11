@@ -17,18 +17,18 @@ import Generation.TypesAndHelpers
 instance ToHaskell Char where 
   to_haskell = (:[])
 
-instance ToHaskell Literal where 
-  to_haskell = \case
-    Int i -> show i
-    R r -> show r
+instance ToHaskell (NeedsAnnotationBool, Literal) where 
+  to_haskell = \(needs_annot, lit) -> case lit of
+    Int i -> 
+      case needs_annot of
+        NoAnnotation -> show i
+        Annotation -> "(" ++ show i ++ " :: Int)"
+    R r -> 
+      case needs_annot of
+        NoAnnotation -> show r
+        Annotation -> "(" ++ show r ++ " :: Double)"
     Ch c -> show c
     S s -> show s
-
-instance ToHaskell (NeedsTypeAnnotation Literal) where 
-  to_haskell = \(NeedsTypeAnnotation l) -> case l of
-    Int i -> "(" ++ show i ++ " :: Int)"
-    R r -> "(" ++ show r ++ " :: Double)"
-    _ -> to_haskell l
 
 instance ToHaskell Identifier where
   to_haskell (Id (muip1, id_start, id_conts, mdigit, muip2)) =
@@ -114,7 +114,7 @@ instance ToHsWithParamNum (LineExprOrUnder, Haskell) where
 
 instance ToHaskell LineExpr where
   to_haskell = \case
-    BOAE1 boae -> to_haskell boae
+    BOAE1 boae -> to_haskell (NoParen, boae)
     LOE2 loe -> to_haskell loe
     LFE2 lfe -> to_haskell lfe
 
@@ -124,17 +124,11 @@ instance ToHaskell (LineExpr, Haskell) where
     LOE2 loe -> "(" ++ to_haskell (loe, hs) ++ ")"
     LFE2 lfe -> "(" ++ to_haskell (lfe, hs) ++ ")"
 
-instance ToHaskell BasicOrAppExpr where
-  to_haskell = \case
+instance ToHaskell (NeedsParenBool, BasicOrAppExpr) where
+  to_haskell = \(needs_paren, boae) -> case boae of
     BE3 be -> to_haskell be
-    PrFA1 prfa -> to_haskell prfa
-    PoFA1 pofa -> to_haskell pofa
-
-instance ToHaskell (NeedsParen BasicOrAppExpr) where
-  to_haskell = \(NeedsParen boae) -> case boae of
-    BE3 be -> to_haskell be
-    PrFA1 prfa -> "(" ++ to_haskell prfa ++ ")"
-    PoFA1 pofa -> "(" ++ to_haskell pofa ++ ")"
+    PrFA1 prfa -> in_paren_if needs_paren $ to_haskell prfa
+    PoFA1 pofa -> in_paren_if needs_paren $ to_haskell pofa
 
 instance ToHaskell (BasicOrAppExpr, Haskell) where
   to_haskell = \(boae, hs) -> case boae of
@@ -144,7 +138,7 @@ instance ToHaskell (BasicOrAppExpr, Haskell) where
 
 instance ToHaskell BasicExpr where
   to_haskell = \case
-    Lit1 lit -> to_haskell $ NeedsTypeAnnotation lit
+    Lit1 lit -> to_haskell (Annotation, lit)
     PFAOI1 pfaoi -> to_haskell pfaoi
     T1 tuple -> to_haskell tuple
     L1 list -> to_haskell list
@@ -152,7 +146,7 @@ instance ToHaskell BasicExpr where
 
 instance ToHaskell (BasicExpr, Haskell) where
   to_haskell = \(be, hs) -> case be of
-    Lit1 lit -> to_haskell $ NeedsTypeAnnotation lit
+    Lit1 lit -> to_haskell (Annotation, lit)
     PFAOI1 pfaoi -> to_haskell (pfaoi, hs)
     T1 tuple -> to_haskell (tuple, hs)
     L1 list -> to_haskell (list, hs)
@@ -261,12 +255,12 @@ instance ToHaskell PreFunc where
 instance ToHaskell PreFuncApp where
   to_haskell = \(PrFA (pf, oper)) ->
     run_generator $
-    add_params_to $ (to_haskell pf ++ " ") ++> to_hs_wpn (NeedsParen oper)
+    add_params_to $ (to_haskell pf ++ " ") ++> to_hs_wpn (Paren, oper)
 
 instance ToHaskell (PreFuncApp, Haskell) where
   to_haskell = \(PrFA (pf, oper), hs) ->
-    to_haskell pf ++ " " ++
-    run_generator (add_params_to $ to_hs_wpn (oper, hs))
+    run_generator $
+    add_params_to $ (to_haskell pf ++ " ") ++> to_hs_wpn (oper, hs)
 
 instance ToHaskell PostFunc where
   to_haskell = \case
@@ -357,7 +351,7 @@ instance ToHsWithParamNum (OpExprStart, Haskell) where
     oper_op_pairs_with_hs = map (\(o, op) -> (o, op, hs)) oper_op_pairs
 
 instance ToHsWithParamNum (Operand, Op) where
-  to_hs_wpn = \(oper, op) -> to_hs_wpn oper <++ to_haskell op
+  to_hs_wpn = \(oper, op) -> to_hs_wpn (NoParen, oper) <++ to_haskell op
 
 instance ToHsWithParamNum (Operand, Op, Haskell) where
   to_hs_wpn = \(oper, op, hs) -> to_hs_wpn (oper, hs) <++ to_haskell op
@@ -373,7 +367,7 @@ instance ToHaskell (LineOpExpr, Haskell) where
 
 instance ToHsWithParamNum LineOpExprEnd where
   to_hs_wpn = \case
-    O1 o -> to_hs_wpn o
+    O1 o -> to_hs_wpn (NoParen, o)
     LFE3 lfe -> return $ to_haskell lfe
 
 instance ToHsWithParamNum (LineOpExprEnd, Haskell) where
@@ -404,11 +398,12 @@ instance ToHsWithParamNum OpSplitLine where
   to_hs_wpn = \(OSL (oes, mofco)) -> to_hs_wpn oes >++< to_hs_wpn mofco
 
 instance ToHsWithParamNum OperFCO where
-  to_hs_wpn = \(OFCO (oper, fco)) -> to_hs_wpn oper <++ to_haskell fco
+  to_hs_wpn = \(OFCO (oper, fco)) ->
+    to_hs_wpn (NoParen, oper) <++ to_haskell fco
 
 instance ToHsWithParamNum OpSplitEnd where
   to_hs_wpn = \case
-    O2 o -> to_hs_wpn o
+    O2 o -> to_hs_wpn (NoParen, o)
     _ -> return ""
 
 instance ToHsWithIndentLvl OpSplitEnd where
@@ -429,9 +424,9 @@ instance ToHsWithIndentLvl BigOrCasesFuncExpr where
     BFE1 bfe -> to_hs_wil bfe
     CFE1 cfe -> to_hs_wil cfe
 
-instance ToHsWithParamNum Operand where
-  to_hs_wpn = \case
-    BOAE2 boae -> return $ to_haskell boae
+instance ToHsWithParamNum (NeedsParenBool, Operand) where
+  to_hs_wpn = \(needs_paren, oper) -> case oper of
+    BOAE2 boae -> return $ to_haskell (needs_paren, boae)
     PE3 pe -> return $ to_haskell pe
     Underscore3 -> get_next_param
 
@@ -440,11 +435,6 @@ instance ToHsWithParamNum (Operand, Haskell) where
     BOAE2 boae -> return $ to_haskell (boae, hs)
     PE3 pe -> return $ to_haskell (pe, hs)
     Underscore3 -> get_next_param
-
-instance ToHsWithParamNum (NeedsParen Operand) where
-  to_hs_wpn = \(NeedsParen oper) -> case oper of
-    BOAE2 boae -> return $ to_haskell $ NeedsParen boae
-    _ -> to_hs_wpn oper
 
 instance ToHaskell Op where
   to_haskell = \case
@@ -522,7 +512,7 @@ instance ToHaskell Parameters where
 
 instance ToHaskell LineFuncBody where
   to_haskell = \case
-    BOAE3 boae -> to_haskell boae
+    BOAE3 boae -> to_haskell (NoParen, boae)
     LOE4 loe -> to_haskell loe
 
 instance ToHaskell (LineFuncBody, Haskell) where
@@ -532,7 +522,7 @@ instance ToHaskell (LineFuncBody, Haskell) where
 
 instance ToHsWithIndentLvl BigFuncBody where
   to_hs_wil = \case
-    BOAE4 boae -> indent <++ to_haskell boae
+    BOAE4 boae -> indent <++ to_haskell (NoParen, boae)
     OE1 oe -> to_hs_wil oe
 
 instance ToHsWithIndentLvl CasesFuncExpr where
@@ -585,39 +575,34 @@ instance ToHsWithIndentLvl EndCase where
 instance ToHaskell OuterMatching where
   to_haskell = \case
     SId3 sid -> to_haskell sid
-    M1 m -> to_haskell m
+    M1 m -> to_haskell (NoParen, m)
 
 instance ToHaskell EndCaseParam where
   to_haskell = \case
     Id1 id -> to_haskell id
     Ellipsis -> "_"
 
-instance ToHaskell Matching where
-  to_haskell = \case
-    Lit2 lit -> to_haskell lit
-    PFM (pf, im) -> to_haskell pf ++ " " ++ to_haskell (NeedsParen im)
+instance ToHaskell (NeedsParenBool, Matching) where
+  to_haskell = \(needs_paren, m) -> case m of
+    Lit2 lit -> to_haskell (NoAnnotation, lit)
+    PFM (pf, im) ->
+      in_paren_if needs_paren $ to_haskell pf ++ " " ++ to_haskell (Paren, im)
     TM1 tm -> to_haskell tm
     LM1 lm -> to_haskell lm
 
-instance ToHaskell (NeedsParen Matching) where
-  to_haskell = \(NeedsParen m) -> case m of
-    PFM _ -> "(" ++ to_haskell m ++ ")"
-    _ -> to_haskell m
-
-instance ToHaskell InnerMatching where
-  to_haskell = \case
+instance ToHaskell (NeedsParenBool, InnerMatching) where
+  to_haskell = \(needs_paren, im) -> case im of
     Star -> "_"
     Id2 id -> to_haskell id
-    M2 m -> to_haskell m
-
-instance ToHaskell (NeedsParen InnerMatching) where
-  to_haskell = \(NeedsParen im) -> case im of
-    M2 m -> to_haskell $ NeedsParen m
-    _ -> to_haskell im
+    M2 m -> to_haskell (needs_paren, m)
 
 instance ToHaskell TupleMatching where
-  to_haskell = \(TM (im, im_l)) ->
-    "(" ++ to_haskell im ++ to_hs_prepend_list ", " im_l ++ ")"
+  to_haskell (TM (im, im_l)) =
+    "(" ++ ims_hs ++ ")"
+    where
+    ims_hs :: Haskell
+    ims_hs =
+      (im : im_l) &> map (\im -> to_haskell (NoParen, im)) &> intercalate ", "
 
 instance ToHaskell ListMatching where
   to_haskell (LM maybe_ims) =
@@ -626,7 +611,9 @@ instance ToHaskell ListMatching where
     maybe_ims_hs :: Haskell
     maybe_ims_hs = case maybe_ims of
       Nothing -> ""
-      Just (im, im_l) -> to_haskell im ++ to_hs_prepend_list ", " im_l
+      Just (im, im_l) ->
+        (im : im_l) &> map (\im -> to_haskell (NoParen, im)) &>
+        intercalate ", "
 
 instance ToHsWithIndentLvl CaseBody where
   to_hs_wil = \case
@@ -647,7 +634,7 @@ instance ToHsWithIndentLvl (ValueExpr, Maybe WhereExpr) where
 
 instance ToHsWithIndentLvl ValueExpr where
   to_hs_wil = \case
-    BOAE5 boae -> indent <++ to_haskell boae
+    BOAE5 boae -> indent <++ to_haskell (NoParen, boae)
     OE2 oe -> to_hs_wil oe
     FE2 fe -> indent >++< to_hs_wil fe
     BT1 bt -> to_hs_wil bt
@@ -706,21 +693,16 @@ instance ToHsWithIndentLvl WhereDefExpr where
 
 -- Type
 instance ToHaskell Type where
-  to_haskell = \(Ty (maybe_c, st)) -> to_haskell maybe_c ++ to_haskell st
+  to_haskell = \(Ty (maybe_c, st)) ->
+    to_haskell maybe_c ++ to_haskell (NoParen, st)
 
-instance ToHaskell SimpleType where
-  to_haskell = \case
+instance ToHaskell (NeedsParenBool, SimpleType) where
+  to_haskell = \(needs_paren, st) -> case st of
     TIOV1 tiov -> to_haskell tiov
-    TA1 ta -> to_haskell ta
+    TA1 ta -> in_paren_if needs_paren $ to_haskell ta
     PoT1 pt -> to_haskell pt
     PT1 pt -> to_haskell pt
-    FT1 ft -> to_haskell ft
-
-instance ToHaskell (NeedsParen SimpleType) where
-  to_haskell = \(NeedsParen st) -> case st of
-    TA1 ta -> "(" ++ to_haskell ta ++ ")"
-    FT1 ft -> "(" ++ to_haskell ft ++ ")"
-    _ -> to_haskell st
+    FT1 ft -> in_paren_if needs_paren $ to_haskell ft
 
 instance ToHaskell TypeIdOrVar where
   to_haskell = \case
@@ -770,7 +752,7 @@ instance ToHaskell TIdOrAdHocTVar where
 
 instance ToHaskell TypesInParen where
   to_haskell = \(TIP (st, sts)) ->
-    to_hs_prepend_list " " $ map NeedsParen $ st : sts
+    to_hs_prepend_list " " $ map (\st -> (Paren, st)) $ st : sts
 
 instance ToHaskell ProdType where
   to_haskell = \(PT (ft, fts)) ->
@@ -871,11 +853,11 @@ instance ToHaskell OrTypeDef where
     id_mst_to_hs = \(id, mst) ->
       "C" ++ to_haskell id ++ case mst of
         Nothing -> ""
-        Just st -> " " ++ to_haskell (NeedsParen st)
+        Just st -> " " ++ to_haskell (Paren, st)
 
 instance ToHaskell TypeNickname where
   to_haskell = \(TNN (tn, st)) ->
-    "type " ++ to_haskell tn ++ " = " ++ to_haskell st
+    "type " ++ to_haskell tn ++ " = " ++ to_haskell (NoParen, st)
 
 -- TypePropDef
 instance ToHaskell TypePropDef where
@@ -886,7 +868,7 @@ instance ToHaskell TypePropDef where
 instance ToHaskell AtomPropDef where
   to_haskell = \(APD (PNL pn, id, st)) ->
     "class " ++ to_haskell pn ++ " where\n  " ++
-    to_haskell id ++ " :: " ++ to_haskell st
+    to_haskell id ++ " :: " ++ to_haskell (NoParen, st)
 
 instance ToHaskell RenamingPropDef where
   to_haskell = show

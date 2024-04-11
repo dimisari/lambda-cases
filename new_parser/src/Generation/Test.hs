@@ -84,15 +84,18 @@ parse_and_ret_res_str =
     Left err -> "Error :( ==>" ++ show err ++ "\n\n"
     Right res -> to_haskell res ++ "\n\n"
 
+res_to_str_lit :: Either ParseError Literal -> ResultString Literal
+res_to_str_lit = RS <$> \case
+  Left err -> "Error :( ==>" ++ show err ++ "\n\n"
+  Right lit -> to_haskell (NoAnnotation, lit) ++ "\n\n"
+
 -- test_exs_file_name_parse_func_pairs
 extract_res_str :: ResultString a -> Haskell
 extract_res_str = \(RS s) -> s
 
 test_exs_file_name_parse_func_pairs :: [(FileName, GenHsFunc)]
 test_exs_file_name_parse_func_pairs =
-  [ ( "literals.txt"
-    , (parse_and_ret_res_str :: GenerateHs Literal) .> extract_res_str
-    )
+  [ ( "literals.txt", parse .> res_to_str_lit .> extract_res_str)
   , ( "identifiers.txt"
     , (parse_and_ret_res_str :: GenerateHs Identifier) .> extract_res_str
     )
