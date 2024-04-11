@@ -9,26 +9,32 @@ import Data.List
 import ASTTypes
 import Helpers
 
--- types
+-- Haskell types
 type Haskell = String
 
 type HsPair = (Haskell, Haskell)
-
-type WithParamNum = State Int
-
-type WithIndentLvl = State Int
 
 type PostFuncArgHs = Haskell
 
 type PFAWithPostFuncsHs = Haskell
 
+type DotChangeArgHs = Haskell
+
+-- Halper types
 data NeedsParenBool = Paren | NoParen
 
 data NeedsAnnotationBool = Annotation | NoAnnotation
 
+data PossiblyDCAHs = WithDCAHs DotChangeArgHs | NoDCAHs
+
 newtype CaseOf = CaseOf CasesParams
 
 newtype WholeParams = Whole Parameters
+
+-- State types
+type WithParamNum = State Int
+
+type WithIndentLvl = State Int
 
 -- classes
 class ToHaskell a where
@@ -54,7 +60,9 @@ instance ToHsWithParamNum a => ToHsWithParamNum (Maybe a) where
     Nothing -> return ""
     Just a -> to_hs_wpn a 
 
-instance ToHsWithParamNum (a, Haskell) => ToHsWithParamNum (Maybe a, Haskell)
+instance
+  ToHsWithParamNum (a, PossiblyDCAHs) =>
+  ToHsWithParamNum (Maybe a, PossiblyDCAHs)
   where 
   to_hs_wpn = \case
     (Nothing, _) -> return ""
@@ -189,6 +197,9 @@ in_paren_if :: NeedsParenBool -> Haskell -> Haskell
 in_paren_if = \case
   NoParen -> id
   Paren -> \hs -> "(" ++ hs ++ ")"
+
+no_dca_hs :: a -> (a, PossiblyDCAHs)
+no_dca_hs = \a -> (a, NoDCAHs)
 
 -- GroupedValueDefs helpers
 -- ASTTypes.hs

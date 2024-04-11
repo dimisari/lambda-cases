@@ -52,7 +52,7 @@ read_prog_parse_write_res pfn =
 
   import_names :: [Haskell]
   import_names =
-    ["Prelude hiding (IO, gcd)", "Haskell.Predefined", "Haskell.OpsInHaskell"]
+    ["Prelude hiding (IO)", "Haskell.Predefined", "Haskell.OpsInHaskell"]
 
 -- run_parse_func_for_test_exs_file
 run_parse_func_for_test_exs_file :: (FileName, GenHsFunc) -> IO ()
@@ -80,12 +80,12 @@ parse_and_ret_res_str =
   parse .> res_to_str
   where
   res_to_str :: ToHaskell a => Either ParseError a -> ResultString a
-  res_to_str = RS <$> \case
+  res_to_str = RS . \case
     Left err -> "Error :( ==>" ++ show err ++ "\n\n"
     Right res -> to_haskell res ++ "\n\n"
 
 res_to_str_lit :: Either ParseError Literal -> ResultString Literal
-res_to_str_lit = RS <$> \case
+res_to_str_lit = RS . \case
   Left err -> "Error :( ==>" ++ show err ++ "\n\n"
   Right lit -> to_haskell (NoAnnotation, lit) ++ "\n\n"
 
@@ -100,38 +100,46 @@ test_exs_file_name_parse_func_pairs =
     , (parse_and_ret_res_str :: GenerateHs Identifier) .> extract_res_str
     )
   , ( "paren_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs ParenExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (ParenExpr, PossiblyDCAHs)) .>
+      extract_res_str
     )
   , ( "tuple.txt"
-    , (parse_and_ret_res_str :: GenerateHs Tuple) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (Tuple, PossiblyDCAHs)) .>
+      extract_res_str
     )
   , ( "big_tuple.txt"
     , (parse_and_ret_res_str :: GenerateHs (THWIL BigTuple)) .> extract_res_str
     )
   , ( "list.txt"
-    , (parse_and_ret_res_str :: GenerateHs List) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (List, PossiblyDCAHs)) .>
+      extract_res_str
     )
   , ( "big_list.txt"
     , (parse_and_ret_res_str :: GenerateHs (THWIL BigList)) .> extract_res_str
     )
   , ( "paren_func_app.txt"
-    , (parse_and_ret_res_str :: GenerateHs ParenFuncAppOrId) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (ParenFuncAppOrId, PossiblyDCAHs))
+      .>
+      extract_res_str
     )
   , ( "prefix_func_app.txt"
-    , (parse_and_ret_res_str :: GenerateHs PreFuncApp) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (PreFuncApp, PossiblyDCAHs)) .>
+      extract_res_str
     )
   , ( "postfix_func_app.txt"
     , (parse_and_ret_res_str :: GenerateHs PostFuncApp) .> extract_res_str
     )
   , ( "line_op_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs LineOpExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (LineOpExpr, PossiblyDCAHs)) .>
+      extract_res_str
     )
   , ( "big_op_expr.txt"
     , (parse_and_ret_res_str :: GenerateHs (THWIL BigOpExpr)) .>
       extract_res_str
     )
   , ( "line_func_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs LineFuncExpr) .> extract_res_str
+    , (parse_and_ret_res_str :: GenerateHs (LineFuncExpr, PossiblyDCAHs)) .>
+      extract_res_str
     )
   , ( "big_func_expr.txt"
     , (parse_and_ret_res_str :: GenerateHs (THWIL BigFuncExpr)) .>
@@ -200,6 +208,9 @@ instance ToHsWithIndentLvl a => ToHaskell (THWIL a) where
 
 instance HasParser a => HasParser (THWIL a) where
    parser = THWIL <$> parser
+
+instance HasParser a => HasParser (a, PossiblyDCAHs) where
+   parser = parser $> \a -> (a, NoDCAHs)
 
 -- For fast vim navigation
 -- ASTTypes.hs
