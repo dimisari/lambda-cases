@@ -9,6 +9,8 @@ import Data.List
 import ASTTypes
 import Helpers
 
+import Generation.FieldIds
+
 -- Haskell types
 type Haskell = String
 
@@ -36,6 +38,10 @@ type WithParamNum = State Int
 
 type WithIndentLvl = State Int
 
+type DotChangeState = State (PossiblyDCAHs, [SimpleId])
+
+type PNAndDCState = State (Int, PossiblyDCAHs, [SimpleId])
+
 -- classes
 class ToHaskell a where
   to_haskell :: a -> Haskell
@@ -45,6 +51,12 @@ class ToHsWithParamNum a where
 
 class ToHsWithIndentLvl a where
   to_hs_wil :: a -> WithIndentLvl Haskell
+
+class ToHsWithDCS a where
+  to_hs_wdcs :: a -> DotChangeState Haskell
+
+class ToHsWithPNDCS a where
+  to_hs_wpndcs :: a -> PNAndDCState Haskell
 
 -- helper instances
 instance ToHaskell a => ToHaskell [a] where 
@@ -82,6 +94,9 @@ to_hs_wpn_list = traverse to_hs_wpn
 
 to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
 to_hs_wil_list = traverse to_hs_wil
+
+to_hs_wpndcs_list :: ToHsWithPNDCS a => [a] -> PNAndDCState [Haskell]
+to_hs_wpndcs_list = traverse to_hs_wpndcs
 
 -- params helpers
 get_next_param :: WithParamNum Haskell
