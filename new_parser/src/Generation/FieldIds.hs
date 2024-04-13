@@ -1,26 +1,41 @@
+{-# LANGUAGE StandaloneDeriving #-}
+
 module Generation.FieldIds where
 
+import Data.Set
+
 import ASTTypes
+import Helpers
 
-class FieldIds a where
-  field_ids :: a -> [SimpleId]
+type FieldId = SimpleId
 
-instance FieldIds Program where 
-  field_ids = \(P (pp, pps)) -> concatMap field_ids $ pp : pps
+deriving instance Eq IdStart
+deriving instance Eq SimpleId 
 
-instance FieldIds ProgramPart where 
+deriving instance Ord IdStart
+deriving instance Ord SimpleId 
+
+type FieldIds = Set FieldId
+
+field_ids_set :: Program -> Set FieldId
+field_ids_set = \(P (pp, pps)) -> (pp : pps) &> concatMap field_ids &> fromList
+
+class GetFieldIds a where
+  field_ids :: a -> [FieldId]
+
+instance GetFieldIds ProgramPart where 
   field_ids = \case
     TD td -> field_ids td
     _ -> []
 
-instance FieldIds TypeDef where 
+instance GetFieldIds TypeDef where 
   field_ids = \case
     TTD1 ttd -> field_ids ttd
     _ -> []
 
-instance FieldIds TupleTypeDef where 
+instance GetFieldIds TupleTypeDef where 
   field_ids = \(TTD (_, idt, _)) -> field_ids idt
 
-instance FieldIds IdTuple where 
+instance GetFieldIds IdTuple where 
   field_ids = \(PCSIs (si, sis)) -> si : sis
 

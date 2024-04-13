@@ -57,96 +57,96 @@ instance IsSecond a [a] where
 -- IsFirst'
 
 class IsFirst' a b | b -> a where
-  b1first :: b -> a
+  p1st :: b -> a
 
 instance IsFirst' a (a, b) where
-  b1first = fst
+  p1st = fst
 
 instance IsFirst' a (a, b, c) where
-  b1first = \(a, _, _) -> a
+  p1st = \(a, _, _) -> a
 
 instance IsFirst' a (a, b, c, d) where
-  b1first = \(a, _, _, _) -> a
+  p1st = \(a, _, _, _) -> a
 
 instance IsFirst' a (a, b, c, d, e) where
-  b1first = \(a, _, _, _, _) -> a
+  p1st = \(a, _, _, _, _) -> a
 
 -- IsSecond'
 
 class IsSecond' a b | b -> a where
-  b1second :: b -> a
+  p2nd :: b -> a
 
 instance IsSecond' b (a, b) where
-  b1second = snd
+  p2nd = snd
 
 instance IsSecond' b (a, b, c) where
-  b1second = \(_, b, _) -> b
+  p2nd = \(_, b, _) -> b
 
 instance IsSecond' b (a, b, c, d) where
-  b1second = \(_, b, _, _) -> b
+  p2nd = \(_, b, _, _) -> b
 
 instance IsSecond' b (a, b, c, d, e) where
-  b1second = \(_, b, _, _, _) -> b
+  p2nd = \(_, b, _, _, _) -> b
 
 -- IsThird'
 
 class IsThird' a b | b -> a where
-  b1third :: b -> a
+  p3rd :: b -> a
 
 instance IsThird' c (a, b, c) where
-  b1third = \(_, _, c) -> c
+  p3rd = \(_, _, c) -> c
 
 instance IsThird' c (a, b, c, d) where
-  b1third = \(_, _, c, _) -> c
+  p3rd = \(_, _, c, _) -> c
 
 instance IsThird' c (a, b, c, d, e) where
-  b1third = \(_, _, c, _, _) -> c
+  p3rd = \(_, _, c, _, _) -> c
 
 -- ChangeFirst'
 
 class ChangeFirstTo' a b | b -> a where
-  c1first :: a -> b -> b
+  c1st :: a -> b -> b
 
 instance ChangeFirstTo' a (a, b) where
-  c1first = \a (_, b) -> (a, b)
+  c1st = \a (_, b) -> (a, b)
 
 instance ChangeFirstTo' a (a, b, c) where
-  c1first = \a (_, b, c) -> (a, b, c)
+  c1st = \a (_, b, c) -> (a, b, c)
 
 instance ChangeFirstTo' a (a, b, c, d) where
-  c1first = \a (_, b, c, d) -> (a, b, c, d)
+  c1st = \a (_, b, c, d) -> (a, b, c, d)
 
 instance ChangeFirstTo' a (a, b, c, d, e) where
-  c1first = \a (_, b, c, d, e) -> (a, b, c, d, e)
+  c1st = \a (_, b, c, d, e) -> (a, b, c, d, e)
 
 -- ChangeSecond'
 
 class ChangeSecondTo' a b | b -> a where
-  c1second :: a -> b -> b
+  c2nd :: a -> b -> b
 
 instance ChangeSecondTo' b (a, b) where
-  c1second = \b (a, _) -> (a, b)
+  c2nd = \b (a, _) -> (a, b)
 
 instance ChangeSecondTo' b (a, b, c) where
-  c1second = \b (a, _, c) -> (a, b, c)
+  c2nd = \b (a, _, c) -> (a, b, c)
 
 instance ChangeSecondTo' b (a, b, c, d) where
-  c1second = \b (a, _, c, d) -> (a, b, c, d)
+  c2nd = \b (a, _, c, d) -> (a, b, c, d)
 
 instance ChangeSecondTo' b (a, b, c, d, e) where
-  c1second = \b (a, _, c, d, e) -> (a, b, c, d, e)
+  c2nd = \b (a, _, c, d, e) -> (a, b, c, d, e)
 
 -- ChangeThird'
 
 class ChangeThirdTo' a b | b -> a where
-  c1third :: a -> b -> b
+  c3rd :: a -> b -> b
 
 instance ChangeThirdTo' c (a, b, c) where
-  c1third = \c (a, b, _) -> (a, b, c)
+  c3rd = \c (a, b, _) -> (a, b, c)
 
 instance ChangeThirdTo' c (a, b, c, d) where
-  c1third = \c (a, b, _, d) -> (a, b, c, d)
+  c3rd = \c (a, b, _, d) -> (a, b, c, d)
 
 instance ChangeThirdTo' c (a, b, c, d, e) where
-  c1third = \c (a, b, _, d, e) -> (a, b, c, d, e)
+  c3rd = \c (a, b, _, d, e) -> (a, b, c, d, e)
 

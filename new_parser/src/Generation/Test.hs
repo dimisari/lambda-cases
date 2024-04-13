@@ -33,8 +33,8 @@ main =
 -- helpers
 change_extension :: FileName -> FileName
 change_extension = takeWhile (/= '.') .> (++ ".hs")
-  
--- read_prog_parse_write_res 
+
+-- read_prog_parse_write_res
 read_prog_parse_write_res :: ProgramFileName -> IO ()
 read_prog_parse_write_res pfn =
   readFile in_path >>= parse_program .> (imports ++) .> writeFile out_path
@@ -73,7 +73,7 @@ run_parse_func_for_test_exs_file (file_name, parse_func) =
 
 -- parse, parse_and_ret_res_str
 parse :: HasParser a => String -> Either ParseError a
-parse = runParser (parser <* eof) (0, False) "" 
+parse = runParser (parser <* eof) (0, False) ""
 
 parse_and_ret_res_str :: (HasParser a, ToHaskell a) => GenerateHs a
 parse_and_ret_res_str =

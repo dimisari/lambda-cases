@@ -16,16 +16,16 @@ import Generation.TypesAndHelpers
 import Generation.FieldIds
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
-instance ToHaskell Char where 
+instance ToHaskell Char where
   to_haskell = (:[])
 
-instance ToHaskell (NeedsAnnotationBool, Literal) where 
+instance ToHaskell (NeedsAnnotationBool, Literal) where
   to_haskell = \(needs_annot, lit) -> case lit of
-    Int i -> 
+    Int i ->
       case needs_annot of
         NoAnnotation -> show i
         Annotation -> "(" ++ show i ++ " :: Int)"
-    R r -> 
+    R r ->
       case needs_annot of
         NoAnnotation -> show r
         Annotation -> "(" ++ show r ++ " :: Double)"
@@ -85,8 +85,7 @@ instance ToHaskell (Tuple, PossiblyDCAHs) where
 
 instance ToHsWithDCS Tuple where
   to_hs_wdcs (T (leou, leous)) =
-    --run_generator $ add_params_to tuple_hs_gen
-    undefined
+    run_pndc_gen $ add_params_to_pndc tuple_hs_gen
     where
     tuple_hs_gen :: PNAndDCState Haskell
     tuple_hs_gen =
@@ -112,10 +111,8 @@ instance ToHsWithParamNum (LineExprOrUnder, PossiblyDCAHs) where
 
 instance ToHsWithPNDCS LineExprOrUnder where
   to_hs_wpndcs = \case
-    LE1 le -> undefined $ to_hs_wdcs le
---     LE1 le -> return $ to_haskell (le, pdcahs)
-    Underscore1 -> undefined
-    -- Underscore1 -> get_next_param
+    LE1 le -> dcs_gen_to_pndc_gen $ to_hs_wdcs le
+    Underscore1 -> get_next_param_pndc
 
 instance ToHaskell (LineExpr, PossiblyDCAHs) where
   to_haskell = \(le, pdcahs) -> case le of
@@ -131,7 +128,7 @@ instance ToHsWithDCS LineExpr where
 
 instance ToHaskell (BasicOrAppExpr, PossiblyDCAHs) where
   to_haskell = \(boae, pdcahs) -> case boae of
-    BE3 be -> to_haskell (be, pdcahs)  
+    BE3 be -> to_haskell (be, pdcahs)
     PrFA1 prfa -> to_haskell (prfa, pdcahs)
     PoFA1 pofa -> to_haskell pofa
 
@@ -147,15 +144,20 @@ instance ToHaskell (BasicExpr, PossiblyDCAHs) where
     PFAOI1 pfaoi -> to_haskell (pfaoi, pdcahs)
     T1 tuple -> to_haskell (tuple, pdcahs)
     L1 list -> to_haskell (list, pdcahs)
-    SI1 sid -> case pdcahs of
-      NoDCAHs -> to_haskell sid
-      WithDCAHs dcahs -> to_haskell (sid, dcahs)
+    SI1 sp_id -> case pdcahs of
+      NoDCAHs -> to_haskell sp_id
+      WithDCAHs dcahs -> to_haskell (sp_id, dcahs)
 
 instance ToHsWithDCS BasicExpr where
-  to_hs_wdcs = undefined
+  to_hs_wdcs = \case
+    Lit1 lit -> return $ to_haskell (Annotation, lit)
+    PFAOI1 pfaoi -> to_hs_wdcs pfaoi
+    T1 tuple -> to_hs_wdcs tuple
+    L1 list -> to_hs_wdcs list
+    SI1 sp_id -> to_hs_wdcs sp_id
 
 instance ToHsWithIndentLvl BigTuple where
-  to_hs_wil (BT (leou, leous, leous_l)) = 
+  to_hs_wil (BT (leou, leous, leous_l)) =
     indent_all_and_concat big_tuple_hs_list
     where
     big_tuple_hs_list :: [Haskell]
@@ -169,18 +171,15 @@ instance ToHsWithIndentLvl BigTuple where
 
 instance ToHaskell (List, PossiblyDCAHs) where
   to_haskell (L maybe_leous, pdcahs) =
-    run_generator $ add_params_to list_hs_gen
-    where
-    list_hs_gen :: WithParamNum Haskell
-    list_hs_gen =
-      to_hs_wpn (maybe_leous, pdcahs) >>= \maybe_leous_hs ->
-      return $ "[" ++ maybe_leous_hs ++ "]"
+    run_generator $
+    add_params_to $ "[" ++> to_hs_wpn (maybe_leous, pdcahs) <++ "]"
 
 instance ToHsWithDCS List where
-  to_hs_wdcs = undefined
+  to_hs_wdcs (L maybe_leous) =
+    run_pndc_gen $ add_params_to_pndc $ "[" ++> to_hs_wpndcs maybe_leous <++ "]"
 
 instance ToHsWithIndentLvl BigList where
-  to_hs_wil (BL (leous, leous_l)) = 
+  to_hs_wil (BL (leous, leous_l)) =
     indent_all_and_concat big_list_hs_list
     where
     big_list_hs_list :: [Haskell]
@@ -209,25 +208,54 @@ instance ToHaskell (ParenFuncAppOrId, PossiblyDCAHs) where
       margs2_to_id_hs margs2
 
 instance ToHsWithDCS ParenFuncAppOrId where
-  to_hs_wdcs = undefined
+  to_hs_wdcs (PFAOI (margs1, id_start, args_str_pairs, mdigit, margs2)) =
+    get_pdcahs >>= \pdcahs ->
+    case (pdcahs, msid) of
+      (WithDCAHs dcahs, Just sid) -> dcahs_sid_gen (dcahs, sid)
+      _ -> run_pndc_gen $ add_params_to_pndc paren_func_app_or_id_hs_gen
+    where
+    paren_func_app_or_id_hs_gen :: PNAndDCState Haskell
+    paren_func_app_or_id_hs_gen =
+      total_id_hs ++>
+      to_hs_wpndcs (calc_args_list (margs1, margs2) args_str_pairs)
+
+    total_id_hs :: Haskell
+    total_id_hs =
+      margs1_to_id_hs margs1 ++ to_haskell id_start ++
+      args_str_pairs_to_id_hs args_str_pairs ++ to_haskell mdigit ++
+      margs2_to_id_hs margs2
+
+    msid :: Maybe SimpleId
+    msid = case (margs1, args_str_pairs, margs2) of
+      (Nothing, [], Nothing) -> Just $ SId (id_start, mdigit)
+      _ -> Nothing
+
+    dcahs_sid_gen :: (DotChangeArgHs, SimpleId) -> DotChangeState Haskell
+    dcahs_sid_gen = \(dcahs, sid) ->
+      check_if_in_fids sid $> \case
+        True -> "c0" ++ to_haskell sid ++ "(" ++ dcahs ++ ")"
+        False -> to_haskell sid
 
 instance ToHsWithParamNum ([Arguments], PossiblyDCAHs) where
   to_hs_wpn (args_l, pdcahs) =
     to_hs_wpn_list args_with_hs_l $> \case
       [] -> ""
-      args_hs_list -> "(" ++ intercalate ", " args_hs_list ++ ")" 
+      args_hs_list -> "(" ++ intercalate ", " args_hs_list ++ ")"
     where
     args_with_hs_l :: [(Arguments, PossiblyDCAHs)]
     args_with_hs_l = map (\args -> (args, pdcahs)) args_l
 
 instance ToHsWithPNDCS [Arguments] where
-  to_hs_wpndcs = undefined
+  to_hs_wpndcs args_l =
+    to_hs_wpndcs_list args_l $> \case
+      [] -> ""
+      args_hs_list -> "(" ++ intercalate ", " args_hs_list ++ ")"
 
 instance ToHsWithParamNum (Arguments, PossiblyDCAHs) where
   to_hs_wpn = \(As leous, pdcahs) -> to_hs_wpn (leous, pdcahs)
 
 instance ToHsWithPNDCS Arguments where
-  to_hs_wpndcs = undefined
+  to_hs_wpndcs = \(As leous) -> to_hs_wpndcs leous
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance ToHaskell PreFunc where
@@ -239,24 +267,32 @@ instance ToHaskell (PreFuncApp, PossiblyDCAHs) where
     add_params_to $ (to_haskell pf ++ "(") ++> to_hs_wpn (oper, pdcahs) <++ ")"
 
 instance ToHsWithDCS PreFuncApp where
-  to_hs_wdcs = undefined
+  to_hs_wdcs = \(PrFA (pf, oper)) ->
+    run_pndc_gen $
+    add_params_to_pndc $ (to_haskell pf ++ "(") ++> to_hs_wpndcs oper <++ ")"
 
 instance ToHaskell PostFunc where
   to_haskell = \case
-    SId1 sid -> "b0" ++ to_haskell sid
-    SI2 sid -> "b1" ++  to_haskell sid
+    SId1 sid -> "p0" ++ to_haskell sid
+    SI2 sp_id -> "p" ++  to_haskell sp_id
 
 instance ToHaskell SpecialId where
   to_haskell = \case
-    First -> "first"
-    Second -> "second"
-    Third -> "third"
-    Fourth -> "fourth"
-    Fifth -> "fifth"
+    First -> "1st"
+    Second -> "2nd"
+    Third -> "3rd"
+    Fourth -> "4th"
+    Fifth -> "5th"
 
 instance ToHaskell (SpecialId, DotChangeArgHs) where
-  to_haskell = \(sid, dcahs) ->
-    "b1" ++ to_haskell sid ++ "(" ++ dcahs ++ ")"
+  to_haskell = \(sp_id, dcahs) ->
+    "p" ++ to_haskell sp_id ++ "(" ++ dcahs ++ ")"
+
+instance ToHsWithDCS SpecialId where
+  to_hs_wdcs = \sp_id ->
+    get_pdcahs $> \case
+      NoDCAHs -> to_haskell sp_id
+      WithDCAHs dcahs -> "p" ++ to_haskell sp_id ++ "(" ++ dcahs ++ ")"
 
 instance ToHaskell PostFuncApp where
   to_haskell (PoFA (pfa, pfae)) =
@@ -269,8 +305,8 @@ instance ToHaskell PostFuncApp where
 
 instance ToHaskell PostFuncArg where
   to_haskell = \case
-    PE2 pe -> to_haskell (pe, NoDCAHs)
-    BE2 be -> to_haskell (be, NoDCAHs)
+    PE2 pe -> run_no_dcahs $ to_hs_wdcs pe
+    BE2 be -> run_no_dcahs $ to_hs_wdcs be
     Underscore2 -> "x'"
 
 instance ToHaskell (PostFuncAppEnd, PostFuncArgHs) where
@@ -307,10 +343,14 @@ instance ToHsWithParamNum (FieldChange, DotChangeArgHs) where
   to_hs_wpn = \(FC (f, leou), dcahs) ->
     (to_haskell f ++ "(") ++> to_hs_wpn (leou, WithDCAHs dcahs) <++ ")"
 
+instance ToHsWithPNDCS FieldChange where
+  to_hs_wpndcs = \(FC (f, leou)) ->
+    (to_haskell f ++ "(") ++> to_hs_wpndcs leou <++ ")"
+
 instance ToHaskell Field where
   to_haskell = \case
-    SId2 id -> "c1" ++ to_haskell id
-    SI3 sid -> "c1" ++ to_haskell sid
+    SId2 id -> "c0" ++ to_haskell id
+    SI3 sp_id -> "c" ++ to_haskell sp_id
 
 -- Values: OpExpr
 instance ToHsWithIndentLvl OpExpr where
@@ -323,13 +363,13 @@ instance ToHsWithParamNum (OpExprStart, PossiblyDCAHs) where
     to_hs_wpn_list (map (\(o, op) -> (o, op, pdcahs)) oper_op_pairs) $> concat
 
 instance ToHsWithPNDCS OpExprStart where
-  to_hs_wpndcs = undefined
+  to_hs_wpndcs (OES oper_op_pairs) = to_hs_wpndcs_list oper_op_pairs $> concat
 
 instance ToHsWithParamNum (Operand, Op, PossiblyDCAHs) where
   to_hs_wpn = \(oper, op, pdcahs) -> to_hs_wpn (oper, pdcahs) <++ to_haskell op
 
 instance ToHsWithPNDCS (Operand, Op) where
-  to_hs_wpndcs = undefined
+  to_hs_wpndcs = \(oper, op) -> to_hs_wpndcs oper <++ to_haskell op
 
 instance ToHaskell (LineOpExpr, PossiblyDCAHs) where
   to_haskell (LOE (oes, loee), pdcahs) =
@@ -337,7 +377,9 @@ instance ToHaskell (LineOpExpr, PossiblyDCAHs) where
     to_hs_wpn (loee, pdcahs)
 
 instance ToHsWithDCS LineOpExpr where
-  to_hs_wdcs = undefined
+  to_hs_wdcs (LOE (oes, loee)) =
+    run_pndc_gen $ add_params_to_pndc $ to_hs_wpndcs oes >++<
+    to_hs_wpndcs loee
 
 instance ToHsWithParamNum (LineOpExprEnd, PossiblyDCAHs) where
   to_hs_wpn = \(loee, pdcahs) -> case loee of
@@ -345,15 +387,17 @@ instance ToHsWithParamNum (LineOpExprEnd, PossiblyDCAHs) where
     LFE3 lfe -> return $ to_haskell (lfe, pdcahs)
 
 instance ToHsWithPNDCS LineOpExprEnd where
-  to_hs_wpndcs = undefined
+  to_hs_wpndcs = \case
+    O1 o -> to_hs_wpndcs o
+    LFE3 lfe -> dcs_gen_to_pndc_gen $ to_hs_wdcs lfe
 
 instance ToHsWithIndentLvl BigOpExpr where
   to_hs_wil = \case
     BOEOS1 boeos -> to_hs_wil boeos
-    BOEFS1 boefs -> to_hs_wil boefs 
+    BOEFS1 boefs -> to_hs_wil boefs
 
 instance ToHsWithIndentLvl BigOpExprOpSplit where
-  to_hs_wil (BOEOS (osls, maybe_oes, ose)) = 
+  to_hs_wil (BOEOS (osls, maybe_oes, ose)) =
     indent_all_and_concat boeos_hs_list >++< to_hs_wil ose
     where
     boeos_hs_list :: [Haskell]
@@ -404,7 +448,10 @@ instance ToHsWithParamNum (Operand, PossiblyDCAHs) where
     Underscore3 -> get_next_param
 
 instance ToHsWithPNDCS Operand where
-  to_hs_wpndcs = undefined
+  to_hs_wpndcs = \case
+    BOAE2 boae -> dcs_gen_to_pndc_gen $ to_hs_wdcs boae
+    PE3 pe -> dcs_gen_to_pndc_gen $ to_hs_wdcs pe
+    Underscore3 -> get_next_param_pndc
 
 instance ToHaskell Op where
   to_haskell = \case
@@ -420,21 +467,21 @@ instance ToHaskell OptionalSpacesOp where
   to_haskell = \case
     RightApp -> "&>"
     LeftApp -> "<&"
-    Power -> "!^" 
-    Mult -> "!*" 
-    Div -> "!/" 
-    Plus -> "!+" 
-    Minus -> "!-" 
-    Equal -> "!==" 
+    Power -> "!^"
+    Mult -> "!*"
+    Div -> "!/"
+    Plus -> "!+"
+    Minus -> "!-"
+    Equal -> "!=="
     NotEqual -> "!!="
-    Greater -> "!>" 
-    Less -> "!<" 
+    Greater -> "!>"
+    Less -> "!<"
     GrEq -> "!>="
     LeEq -> "!<="
-    And -> "!&" 
-    Or -> "!|" 
+    And -> "!&"
+    Or -> "!|"
     Use -> "!>>="
-    Then -> "!>>" 
+    Then -> "!>>"
 
 -- Values: FuncExpr
 instance ToHsWithIndentLvl FuncExpr where
@@ -454,7 +501,8 @@ instance ToHaskell (LineFuncExpr, PossiblyDCAHs) where
     to_haskell (Whole params) ++ " " ++ to_haskell (lfb, pdcahs)
 
 instance ToHsWithDCS LineFuncExpr where
-  to_hs_wdcs = undefined
+  to_hs_wdcs = \(LFE (params, lfb)) ->
+    (to_haskell (Whole params) ++ " ") ++> to_hs_wdcs lfb
 
 instance ToHsWithIndentLvl (LineFuncExpr, WhereExpr) where
   to_hs_wil = \(LFE (params, lfb), we) ->
@@ -485,7 +533,9 @@ instance ToHaskell (LineFuncBody, PossiblyDCAHs) where
     LOE4 loe -> to_haskell (loe, pdcahs)
 
 instance ToHsWithDCS LineFuncBody where
-  to_hs_wdcs = undefined
+  to_hs_wdcs = \case
+    BOAE3 boae -> to_hs_wdcs boae
+    LOE4 loe -> to_hs_wdcs loe
 
 instance ToHsWithIndentLvl BigFuncBody where
   to_hs_wil = \case
@@ -520,7 +570,7 @@ instance ToHaskell CaseOf where
       get $> \case
         0 -> error "should be impossible: no cases param"
         1 -> "x0'"
-        i -> "(" ++ map num_to_param [0..i-1] &> intercalate ", " ++ ")"
+        i -> to_params_in_paren_hs i
 
 instance ToHsWithParamNum CasesParams where
   to_hs_wpn = \case
@@ -701,7 +751,7 @@ instance ToHaskell TIWATypeApp where
     to_haskell tid ++ tid_cont_hs ++
     to_haskell maybe_tip1 ++ tip_hs ++ to_haskell maybe_tip2
     where
-    (tid_cont_hs, tip_hs) = foldl add_tip_str_to_hs_pair ("", "") tip_str_pairs 
+    (tid_cont_hs, tip_hs) = foldl add_tip_str_to_hs_pair ("", "") tip_str_pairs
       :: HsPair
 
     add_tip_str_to_hs_pair :: HsPair -> TIPSTR -> HsPair
@@ -739,10 +789,10 @@ instance ToHaskell PowerBaseType where
 instance ToHaskell InParenT where
   to_haskell = \case
     PT3 pt -> to_haskell pt
-    FT3 ft -> to_haskell ft  
+    FT3 ft -> to_haskell ft
 
 instance ToHaskell PowerType where
-  to_haskell = \(PoT (ft, i)) -> 
+  to_haskell = \(PoT (ft, i)) ->
     "(" ++ (replicate i ft &> map to_haskell &> intercalate ", ") ++ ")"
 
 instance ToHaskell FuncType where
@@ -768,32 +818,51 @@ instance ToHaskell TypeDef where
 instance ToHaskell TupleTypeDef where
   to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
     "type " ++ to_haskell tn ++ " = " ++ popt_hs ++
-    func_types_hs ++ proj_func_defs_hs sid_hs_list
+    proj_types_hs ++ proj_defs_hs ++ change_types_hs ++ change_defs_hs
     where
     popt_hs :: Haskell
-    popt_hs = case popt of 
+    popt_hs = case popt of
       PT4 pt -> to_haskell pt
       PoT4 pt -> to_haskell pt
 
-    func_types_hs :: Haskell
-    func_types_hs = combine_sids_and_types sid_hs_list types_hs_list
-
     sid_hs_list :: [Haskell]
-    sid_hs_list = map (to_haskell .> ("b0" ++)) $ si : sis
+    sid_hs_list = map to_haskell $ si : sis
 
-    types_hs_list :: [Haskell]
-    types_hs_list =
-      [ popt_hs ++ " -> " ++ hs_of_field_type 0
-      , popt_hs ++ " -> " ++ hs_of_field_type 1
-      , popt_hs ++ " -> " ++ hs_of_field_type 2
-      , popt_hs ++ " -> " ++ hs_of_field_type 3
-      , popt_hs ++ " -> " ++ hs_of_field_type 4
-      ]
-       
+    proj_hs_list :: [Haskell]
+    proj_hs_list = to_proj_hs_list sid_hs_list
+
+    change_hs_list :: [Haskell]
+    change_hs_list = to_change_hs_list sid_hs_list
+
     hs_of_field_type :: Int -> Haskell
-    hs_of_field_type = \i -> case popt of 
+    hs_of_field_type = \i -> case popt of
       PT4 (PT (ft, fts)) -> to_haskell $ (ft : fts) !! i
       PoT4 (PoT (pbt, _)) -> to_haskell pbt
+
+    proj_types_hs :: Haskell
+    proj_types_hs = combine_with_ts proj_hs_list proj_types_hs_list
+
+    proj_defs_hs :: Haskell
+    proj_defs_hs = combine_with_defs proj_hs_list general_proj_hs_list
+
+    change_types_hs :: Haskell
+    change_types_hs = combine_with_ts change_hs_list change_types_hs_list
+
+    change_defs_hs :: Haskell
+    change_defs_hs = combine_with_defs change_hs_list general_change_hs_list
+
+    proj_types_hs_list :: [Haskell]
+    proj_types_hs_list = map to_proj_type [0..4]
+
+    change_types_hs_list :: [Haskell]
+    change_types_hs_list = map to_change_type [0..4]
+
+    to_proj_type :: Int -> Haskell
+    to_proj_type = \i -> popt_hs ++ " -> " ++ hs_of_field_type i
+
+    to_change_type :: Int -> Haskell
+    to_change_type = \i ->
+      hs_of_field_type i ++ " -> " ++ popt_hs ++ " -> " ++ popt_hs
 
 instance ToHaskell TypeName where
   to_haskell (TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) =
@@ -839,7 +908,7 @@ instance ToHaskell AtomPropDef where
 
 instance ToHaskell RenamingPropDef where
   to_haskell = show
---   to_haskell = \(RPD (pnl, pn, pns)) -> 
+--   to_haskell = \(RPD (pnl, pn, pns)) ->
 --     to_haskell pnl ++ "\nequivalent\n  " ++ to_haskell pn ++
 --     to_hs_prepend_list ", " pns
 
@@ -870,7 +939,7 @@ instance ToHaskell AdHocVarsInParen where
 instance ToHaskell NamePart where
   to_haskell = \(NP str) -> str
 
--- TypeTheo 
+-- TypeTheo
 instance ToHaskell TypeTheo where
   to_haskell = \(TT (pnws, maybe_pnws, proof)) ->
     "instance " ++ to_haskell pnws ++ mpnws_to_hs maybe_pnws ++ " where\n  " ++
@@ -901,7 +970,7 @@ instance ToHaskell SIPStart where
     where
     (sips, nps) = unzip sip_np_pairs
       :: ([SubsInParen], [NamePart])
-   
+
 instance ToHaskell SubsInParen where
   to_haskell = \(SIP (tvs, tvss)) -> to_hs_prepend_list " " $ tvs : tvss
 
@@ -925,7 +994,7 @@ instance ToHaskell TIWS_TAS where
     to_haskell maybe_souip1 ++ souip_hs ++ to_haskell maybe_souip2
     where
     (tid_cont_hs, souip_hs) =
-      foldl add_souip_str_to_hs_pair ("", "") souip_str_pairs 
+      foldl add_souip_str_to_hs_pair ("", "") souip_str_pairs
       :: HsPair
 
     add_souip_str_to_hs_pair :: HsPair -> SOUIPSTR -> HsPair
@@ -970,7 +1039,7 @@ instance ToHaskell FieldTypeSub where
 
 instance ToHaskell FuncTypeSub where
   to_haskell = \(FTS (in_ts, out_ts)) ->
-    to_haskell in_ts ++ " -> " ++ to_haskell out_ts 
+    to_haskell in_ts ++ " -> " ++ to_haskell out_ts
 
 instance ToHaskell InOrOutTypeSub where
   to_haskell = \case
@@ -987,7 +1056,7 @@ instance ToHaskell Proof where
     P2 (iooe, ttve) -> to_haskell iooe ++ to_haskell ttve
 
 instance ToHaskell IdOrOpEq where
-  to_haskell (IOOE (id, maybe_op_id)) = 
+  to_haskell (IOOE (id, maybe_op_id)) =
     to_haskell id ++ maybe_op_id_hs ++ " ="
     where
     maybe_op_id_hs :: Haskell
