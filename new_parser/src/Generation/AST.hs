@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE LambdaCase, FlexibleInstances #-}
 
 module Generation.AST where
 

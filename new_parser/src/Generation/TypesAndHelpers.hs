@@ -265,6 +265,10 @@ dcs_gen_to_pndc_gen :: DotChangeState a -> PNAndDCState a
 dcs_gen_to_pndc_gen = \gcs_gen ->
   get $> \(_, pdcahs, fis) -> evalState gcs_gen (pdcahs, fis)
 
+-- pndcs_gen_to_pn_gen :: PNAndDCState a -> WithParamNum a
+-- pndcs_gen_to_pn_gen = \pndcs_gen ->
+--   get $> \pn -> evalState gcs_gen (pn, pdcahs, fis)
+--
 to_hs_maybe_np :: Maybe NamePart -> Haskell
 to_hs_maybe_np = \case
   Nothing -> ""
