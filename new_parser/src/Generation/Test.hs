@@ -7,14 +7,20 @@ import Text.Parsec (runParser, eof, ParseError)
 
 import Data.List.Split
 
-import ASTTypes
-import Parsing.AST
-import Generation.TypesAndHelpers
-import Generation.AST
 import Helpers
+import ASTTypes
+
+import Parsing.AST
+
+import Generation.TypesAndHelpers
+import Generation.FieldIds
+import Generation.DotChangePreprocess
+import Generation.AST
 
 -- types
 type GenHsFunc = TestExample -> Haskell
+
+type Lcases = String
 
 type GenerateHs a = TestExample -> ResultString a
 newtype ResultString a = RS Haskell
@@ -37,15 +43,22 @@ change_extension = takeWhile (/= '.') .> (++ ".hs")
 -- read_prog_parse_write_res
 read_prog_parse_write_res :: ProgramFileName -> IO ()
 read_prog_parse_write_res pfn =
-  readFile in_path >>= parse_program .> (imports ++) .> writeFile out_path
+  readFile in_path >>= prog_gen_hs .> (imports ++) .> writeFile out_path
   where
   (in_path, out_path) =
     (in_dir ++ progs_dir ++ pfn, res_dir ++ progs_dir ++ change_extension pfn)
     :: (FilePath, FilePath)
 
-  parse_program :: GenHsFunc
-  parse_program =
-    (parse_and_ret_res_str :: GenerateHs Program) .> extract_res_str
+  prog_gen_hs :: Lcases -> Haskell
+  prog_gen_hs =
+    parse .> parse_res_to_hs
+    where
+    parse_res_to_hs :: Either ParseError Program -> Haskell
+    parse_res_to_hs = \case
+      Left err -> "Error :( ==>" ++ show err ++ "\n\n"
+      Right prog ->
+        change_program_if_needed (prog, get_field_ids prog) &> \new_prog ->
+        to_haskell new_prog ++ "\n\n"
 
   imports :: Haskell
   imports = concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"
@@ -71,16 +84,16 @@ run_parse_func_for_test_exs_file (file_name, parse_func) =
   file_string_to_examples :: FileString -> [ TestExample ]
   file_string_to_examples = endBy "#\n\n"
 
--- parse, parse_and_ret_res_str
+-- parse, generate_hs
 parse :: HasParser a => String -> Either ParseError a
 parse = runParser (parser <* eof) (0, False) ""
 
-parse_and_ret_res_str :: (HasParser a, ToHaskell a) => GenerateHs a
-parse_and_ret_res_str =
-  parse .> res_to_str
+generate_hs :: (HasParser a, ToHaskell a) => GenerateHs a
+generate_hs =
+  parse .> parse_res_to_hs
   where
-  res_to_str :: ToHaskell a => Either ParseError a -> ResultString a
-  res_to_str = RS . \case
+  parse_res_to_hs :: ToHaskell a => Either ParseError a -> ResultString a
+  parse_res_to_hs = RS . \case
     Left err -> "Error :( ==>" ++ show err ++ "\n\n"
     Right res -> to_haskell res ++ "\n\n"
 
@@ -97,110 +110,110 @@ test_exs_file_name_parse_func_pairs :: [(FileName, GenHsFunc)]
 test_exs_file_name_parse_func_pairs =
   [ ( "literals.txt", parse .> res_to_str_lit .> extract_res_str)
   , ( "identifiers.txt"
-    , (parse_and_ret_res_str :: GenerateHs Identifier) .> extract_res_str
+    , (generate_hs :: GenerateHs Identifier) .> extract_res_str
     )
   , ( "paren_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs (ParenExpr, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs (ParenExpr, PossiblyDCAHs)) .>
       extract_res_str
     )
   , ( "tuple.txt"
-    , (parse_and_ret_res_str :: GenerateHs (Tuple, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs (Tuple, PossiblyDCAHs)) .>
       extract_res_str
     )
   , ( "big_tuple.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL BigTuple)) .> extract_res_str
+    , (generate_hs :: GenerateHs (THWIL BigTuple)) .> extract_res_str
     )
   , ( "list.txt"
-    , (parse_and_ret_res_str :: GenerateHs (List, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs (List, PossiblyDCAHs)) .>
       extract_res_str
     )
   , ( "big_list.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL BigList)) .> extract_res_str
+    , (generate_hs :: GenerateHs (THWIL BigList)) .> extract_res_str
     )
   , ( "paren_func_app.txt"
-    , (parse_and_ret_res_str :: GenerateHs (ParenFuncAppOrId, PossiblyDCAHs))
+    , (generate_hs :: GenerateHs (ParenFuncAppOrId, PossiblyDCAHs))
       .>
       extract_res_str
     )
   , ( "prefix_func_app.txt"
-    , (parse_and_ret_res_str :: GenerateHs (PreFuncApp, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs (PreFuncApp, PossiblyDCAHs)) .>
       extract_res_str
     )
   , ( "postfix_func_app.txt"
-    , (parse_and_ret_res_str :: GenerateHs PostFuncApp) .> extract_res_str
+    , (generate_hs :: GenerateHs PostFuncApp) .> extract_res_str
     )
   , ( "line_op_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs (LineOpExpr, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs (LineOpExpr, PossiblyDCAHs)) .>
       extract_res_str
     )
   , ( "big_op_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL BigOpExpr)) .>
+    , (generate_hs :: GenerateHs (THWIL BigOpExpr)) .>
       extract_res_str
     )
   , ( "line_func_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs (LineFuncExpr, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs (LineFuncExpr, PossiblyDCAHs)) .>
       extract_res_str
     )
   , ( "big_func_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL BigFuncExpr)) .>
+    , (generate_hs :: GenerateHs (THWIL BigFuncExpr)) .>
       extract_res_str
     )
   , ( "cases_func_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL CasesFuncExpr)) .>
+    , (generate_hs :: GenerateHs (THWIL CasesFuncExpr)) .>
       extract_res_str
     )
   , ( "value_def.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL ValueDef)) .> extract_res_str
+    , (generate_hs :: GenerateHs (THWIL ValueDef)) .> extract_res_str
     )
   , ( "grouped_val_defs.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL GroupedValueDefs)) .>
+    , (generate_hs :: GenerateHs (THWIL GroupedValueDefs)) .>
       extract_res_str
     )
   , ( "where_expr.txt"
-    , (parse_and_ret_res_str :: GenerateHs (THWIL WhereExpr)) .>
+    , (generate_hs :: GenerateHs (THWIL WhereExpr)) .>
       extract_res_str
     )
   , ( "type_id.txt"
-    , (parse_and_ret_res_str :: GenerateHs TypeId) .> extract_res_str
+    , (generate_hs :: GenerateHs TypeId) .> extract_res_str
     )
   , ( "type_var.txt"
-    , (parse_and_ret_res_str :: GenerateHs TypeVar) .> extract_res_str
+    , (generate_hs :: GenerateHs TypeVar) .> extract_res_str
     )
   , ( "func_type.txt"
-    , (parse_and_ret_res_str :: GenerateHs FuncType) .> extract_res_str
+    , (generate_hs :: GenerateHs FuncType) .> extract_res_str
     )
   , ( "prod_type.txt"
-    , (parse_and_ret_res_str :: GenerateHs ProdType) .> extract_res_str
+    , (generate_hs :: GenerateHs ProdType) .> extract_res_str
     )
   , ( "type_app.txt"
-    , (parse_and_ret_res_str :: GenerateHs TypeApp) .> extract_res_str
+    , (generate_hs :: GenerateHs TypeApp) .> extract_res_str
     )
   , ( "cond_type.txt"
-    , (parse_and_ret_res_str :: GenerateHs Type) .> extract_res_str
+    , (generate_hs :: GenerateHs Type) .> extract_res_str
     )
   , ( "tuple_type_def.txt"
-    , (parse_and_ret_res_str :: GenerateHs TupleTypeDef) .> extract_res_str
+    , (generate_hs :: GenerateHs TupleTypeDef) .> extract_res_str
     )
   , ( "or_type_def.txt"
-    , (parse_and_ret_res_str :: GenerateHs OrTypeDef) .> extract_res_str
+    , (generate_hs :: GenerateHs OrTypeDef) .> extract_res_str
     )
   , ( "type_nickname.txt"
-    , (parse_and_ret_res_str :: GenerateHs TypeNickname) .> extract_res_str
+    , (generate_hs :: GenerateHs TypeNickname) .> extract_res_str
     )
   , ( "atom_prop_def.txt"
-    , (parse_and_ret_res_str :: GenerateHs AtomPropDef) .> extract_res_str
+    , (generate_hs :: GenerateHs AtomPropDef) .> extract_res_str
     )
   , ( "renaming_prop_def.txt"
-    , (parse_and_ret_res_str :: GenerateHs RenamingPropDef) .>
+    , (generate_hs :: GenerateHs RenamingPropDef) .>
       extract_res_str
     )
   , ( "type_theo.txt"
-    , (parse_and_ret_res_str :: GenerateHs TypeTheo) .> extract_res_str
+    , (generate_hs :: GenerateHs TypeTheo) .> extract_res_str
     )
   ]
 
 -- to have ToHaskell from ToHsWithIndentLvl and also HasParser
--- for parse_and_ret_res_str
+-- for generate_hs
 newtype THWIL a = THWIL a
 
 instance ToHsWithIndentLvl a => ToHaskell (THWIL a) where
@@ -214,6 +227,5 @@ instance HasParser a => HasParser (a, PossiblyDCAHs) where
 
 -- For fast vim navigation
 -- ASTTypes.hs
--- Parsers.hs
 -- TypesAndHelpers.hs
 -- AST.hs

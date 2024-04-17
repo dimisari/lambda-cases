@@ -27,3 +27,6 @@ value (day, month, year):Int^3#
 tuple_type MathematicianInfo
 value (name, nationality, date_of_birth):Name x String x Date#
 
+tuple_type NonEmptyListOf(T1)s
+value (head, tail) : T1 x ListOf(T1)s#
+

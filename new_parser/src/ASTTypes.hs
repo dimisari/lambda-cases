@@ -341,10 +341,12 @@ data ProgramPart =
   TPD TypePropDef | TT1 TypeTheo
 
 -- For fast vim navigation
+-- Helpers.hs
 -- Parsing/TypesAndHelpers.hs
 -- Parsing/AST.hs
 -- Parsing/Test.hs
 -- Generation/TypesAndHelpers.hs
 -- Generation/DotChangePreprocess.hs
+-- Generation/FieldIds.hs
 -- Generation/AST.hs
 -- Generation/Test.hs

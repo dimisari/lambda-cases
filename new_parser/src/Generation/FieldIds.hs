@@ -7,7 +7,6 @@ import Control.Monad.State
 
 import ASTTypes
 import Helpers
-import Parsing.Test
 
 -- types and class
 type FieldId = SimpleId
@@ -59,17 +58,4 @@ instance CollectFieldIds IdTuple where
 instance CollectFieldIds SimpleId where
   collect_fids = \si -> modify (insert si)
 
--- testing
-
-in_file :: FilePath
-in_file =
-  "/home/gnostis/Desktop/lambda-cases/new_parser/inputs/programs/" ++
-  "gcd.lc"
-
-test_parse :: String -> Program
-test_parse = parse .> \case
-  Left err -> error $ show err
-  Right res -> res
-
-test :: IO ()
-test = readFile in_file >>= test_parse .> get_field_ids .> print
+-- Test.hs
