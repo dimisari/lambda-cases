@@ -12,8 +12,6 @@ apply(the_value:_)to_all#
 
 apply( _.1st )to_all#
 
-apply( _.change{1st = 1st + 1} )to_all#
-
 f(_, y, z)#
 
 f(x, _, _)#
@@ -27,6 +25,4 @@ f(x)#
 f(_, y)#
 
 f(_, _, z)#
-
-(x + 2nd)div(y)#
 

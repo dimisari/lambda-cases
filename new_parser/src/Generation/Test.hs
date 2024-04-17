@@ -113,37 +113,37 @@ test_exs_file_name_parse_func_pairs =
     , (generate_hs :: GenerateHs Identifier) .> extract_res_str
     )
   , ( "paren_expr.txt"
-    , (generate_hs :: GenerateHs (ParenExpr, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs ParenExpr) .>
       extract_res_str
     )
   , ( "tuple.txt"
-    , (generate_hs :: GenerateHs (Tuple, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs Tuple) .>
       extract_res_str
     )
   , ( "big_tuple.txt"
     , (generate_hs :: GenerateHs (THWIL BigTuple)) .> extract_res_str
     )
   , ( "list.txt"
-    , (generate_hs :: GenerateHs (List, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs List) .>
       extract_res_str
     )
   , ( "big_list.txt"
     , (generate_hs :: GenerateHs (THWIL BigList)) .> extract_res_str
     )
   , ( "paren_func_app.txt"
-    , (generate_hs :: GenerateHs (ParenFuncAppOrId, PossiblyDCAHs))
+    , (generate_hs :: GenerateHs ParenFuncAppOrId)
       .>
       extract_res_str
     )
   , ( "prefix_func_app.txt"
-    , (generate_hs :: GenerateHs (PreFuncApp, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs PreFuncApp) .>
       extract_res_str
     )
   , ( "postfix_func_app.txt"
     , (generate_hs :: GenerateHs PostFuncApp) .> extract_res_str
     )
   , ( "line_op_expr.txt"
-    , (generate_hs :: GenerateHs (LineOpExpr, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs LineOpExpr) .>
       extract_res_str
     )
   , ( "big_op_expr.txt"
@@ -151,7 +151,7 @@ test_exs_file_name_parse_func_pairs =
       extract_res_str
     )
   , ( "line_func_expr.txt"
-    , (generate_hs :: GenerateHs (LineFuncExpr, PossiblyDCAHs)) .>
+    , (generate_hs :: GenerateHs LineFuncExpr) .>
       extract_res_str
     )
   , ( "big_func_expr.txt"
@@ -221,9 +221,6 @@ instance ToHsWithIndentLvl a => ToHaskell (THWIL a) where
 
 instance HasParser a => HasParser (THWIL a) where
    parser = THWIL <$> parser
-
-instance HasParser a => HasParser (a, PossiblyDCAHs) where
-   parser = parser $> \a -> (a, NoDCAHs)
 
 -- For fast vim navigation
 -- ASTTypes.hs

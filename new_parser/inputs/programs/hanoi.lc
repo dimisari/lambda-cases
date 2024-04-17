@@ -5,7 +5,7 @@ hanoi_with(_)rings_from(_)to(_)through(_)
     0 => end_io
     n =>
       hanoi_with(n - 1)rings_from(source)to(auxiliary)through(target);
-      move_from(source)to(target); 
+      move_from(source)to(target);
       hanoi_with(n - 1)rings_from(auxiliary)to(target)through(source)
       where
       move_from(_)to(_): String^2 => IO
@@ -13,5 +13,5 @@ hanoi_with(_)rings_from(_)to(_)through(_)
 
 main: IO
   = print_line("Number of rings?");
-    get_line ;> from_string(_) o> 
+    get_line ;> from_string(_) o>
     hanoi_with(_)rings_from("left")to("right")through("middle")

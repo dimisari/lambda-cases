@@ -18,17 +18,13 @@ type Haskell = String
 type HsPair = (Haskell, Haskell)
 
 type PostFuncArgHs = Haskell
-
-type PFAWithPostFuncsHs = Haskell
-
 type DotChangeArgHs = Haskell
+type PFAWithPostFuncsHs = Haskell
 
 -- Halper types
 data NeedsParenBool = Paren | NoParen
 
 data NeedsAnnotationBool = Annotation | NoAnnotation
-
-data PossiblyDCAHs = WithDCAHs DotChangeArgHs | NoDCAHs
 
 newtype CaseOf = CaseOf CasesParams
 
@@ -39,10 +35,6 @@ type WithParamNum = State Int
 
 type WithIndentLvl = State Int
 
-type DotChangeState = State (PossiblyDCAHs, FieldIds)
-
-type PNAndDCState = State (Int, PossiblyDCAHs, FieldIds)
-
 -- classes
 class ToHaskell a where
   to_haskell :: a -> Haskell
@@ -52,12 +44,6 @@ class ToHsWithParamNum a where
 
 class ToHsWithIndentLvl a where
   to_hs_wil :: a -> WithIndentLvl Haskell
-
-class ToHsWithDCS a where
-  to_hs_wdcs :: a -> DotChangeState Haskell
-
-class ToHsWithPNDCS a where
-  to_hs_wpndcs :: a -> PNAndDCState Haskell
 
 -- helper instances
 instance ToHaskell a => ToHaskell [a] where
@@ -73,23 +59,10 @@ instance ToHsWithParamNum a => ToHsWithParamNum (Maybe a) where
     Nothing -> return ""
     Just a -> to_hs_wpn a
 
-instance
-  ToHsWithParamNum (a, PossiblyDCAHs) =>
-  ToHsWithParamNum (Maybe a, PossiblyDCAHs)
-  where
-  to_hs_wpn = \case
-    (Nothing, _) -> return ""
-    (Just a, hs) -> to_hs_wpn (a, hs)
-
 instance ToHsWithIndentLvl a => ToHsWithIndentLvl (Maybe a) where
   to_hs_wil = \case
     Nothing -> return ""
     Just a -> to_hs_wil a
-
-instance ToHsWithPNDCS a => ToHsWithPNDCS (Maybe a) where
-  to_hs_wpndcs = \case
-    Nothing -> return ""
-    Just a -> to_hs_wpndcs a
 
 -- list helpers
 to_hs_prepend_list :: ToHaskell a => String -> [a] -> Haskell
@@ -101,37 +74,12 @@ to_hs_wpn_list = traverse to_hs_wpn
 to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
 to_hs_wil_list = traverse to_hs_wil
 
-to_hs_wpndcs_list :: ToHsWithPNDCS a => [a] -> PNAndDCState [Haskell]
-to_hs_wpndcs_list = traverse to_hs_wpndcs
-
--- state helpers
-get_param_num :: PNAndDCState Int
-get_param_num = get $> \(pn, _, _) -> pn
-
-inc_param_num :: PNAndDCState ()
-inc_param_num = modify $ \(pn, pdcahs, fids) -> (pn + 1, pdcahs, fids)
-
-get_pdcahs :: DotChangeState PossiblyDCAHs
-get_pdcahs = get $> fst
-
-get_fids :: DotChangeState FieldIds
-get_fids = get $> snd
-
-check_if_in_fids :: SimpleId -> DotChangeState Bool
-check_if_in_fids = \sid -> S.member sid <$> get_fids
-
 -- params helpers
 get_next_param :: WithParamNum Haskell
 get_next_param = get $> to_param <* modify (+1)
 
-get_next_param_pndc :: PNAndDCState Haskell
-get_next_param_pndc = get_param_num $> to_param <* inc_param_num
-
 params_hs_gen :: WithParamNum Haskell
 params_hs_gen = get $> to_params_hs
-
-params_hs_gen_pndc :: PNAndDCState Haskell
-params_hs_gen_pndc = get_param_num $> to_params_hs
 
 to_params_hs :: Int -> Haskell
 to_params_hs = \case
@@ -150,13 +98,6 @@ add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
   hs_gen >>= \hs ->
   params_hs_gen >>= \case
-    "" -> return hs
-    params_hs -> return $ "(" ++ params_hs ++ hs ++ ")"
-
-add_params_to_pndc :: PNAndDCState Haskell -> PNAndDCState Haskell
-add_params_to_pndc = \hs_gen ->
-  hs_gen >>= \hs ->
-  params_hs_gen_pndc >>= \case
     "" -> return hs
     params_hs -> return $ "(" ++ params_hs ++ hs ++ ")"
 
@@ -186,7 +127,6 @@ indent_all_and_concat = \hs_list ->
   return $ map (indent_hs ++) hs_list &> intercalate "\n"
 
 -- ParenFuncAppOrId helpers
-
 margs1_to_id_hs :: Maybe Arguments -> Haskell
 margs1_to_id_hs = \case
   Nothing -> ""
@@ -254,21 +194,6 @@ add_to_hs_pair = \(hs1, hs2) (hs1', hs2') -> (hs1' ++ hs1, hs2' ++ hs2)
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
 
-run_pndc_gen :: PNAndDCState a -> DotChangeState a
-run_pndc_gen = \pndc_gen ->
-  get $> \(pdcahs, fids) -> evalState pndc_gen (0, pdcahs, fids)
-
-run_no_dcahs :: DotChangeState Haskell -> Haskell
-run_no_dcahs = \dc_gen -> evalState dc_gen (NoDCAHs, mempty)
-
-dcs_gen_to_pndc_gen :: DotChangeState a -> PNAndDCState a
-dcs_gen_to_pndc_gen = \gcs_gen ->
-  get $> \(_, pdcahs, fis) -> evalState gcs_gen (pdcahs, fis)
-
--- pndcs_gen_to_pn_gen :: PNAndDCState a -> WithParamNum a
--- pndcs_gen_to_pn_gen = \pndcs_gen ->
---   get $> \pn -> evalState gcs_gen (pn, pdcahs, fis)
---
 to_hs_maybe_np :: Maybe NamePart -> Haskell
 to_hs_maybe_np = \case
   Nothing -> ""
@@ -278,9 +203,6 @@ in_paren_if :: NeedsParenBool -> Haskell -> Haskell
 in_paren_if = \case
   NoParen -> id
   Paren -> \hs -> "(" ++ hs ++ ")"
-
-no_dca_hs :: a -> (a, PossiblyDCAHs)
-no_dca_hs = \a -> (a, NoDCAHs)
 
 -- GroupedValueDefs helpers
 -- ASTTypes.hs
