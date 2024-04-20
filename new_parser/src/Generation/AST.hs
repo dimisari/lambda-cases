@@ -205,7 +205,7 @@ instance ToHaskell (PostFuncAppEnd, PostFuncArgHs) where
       pfs_pfa_to_haskell :: [PostFunc] -> Haskell
       pfs_pfa_to_haskell = \case
         [] -> pfa_hs
-        pf:pfs -> to_haskell pf ++ "(" ++ pfs_pfa_to_haskell pfs ++ ")"
+        pf : pfs -> to_haskell pf ++ "(" ++ pfs_pfa_to_haskell pfs ++ ")"
 
 instance ToHaskell (Maybe DotChange, PFAWithPostFuncsHs) where
   to_haskell (mdc, pfawpf_hs) = case mdc of
@@ -214,14 +214,14 @@ instance ToHaskell (Maybe DotChange, PFAWithPostFuncsHs) where
 
 instance ToHaskell (DotChange, DotChangeArgHs) where
   to_haskell (DC (fc, fcs), dcahs) =
-    run_generator $ add_params_to change_hs_gen
+    run_generator (add_params_to change_hs_gen) ++ " " ++ dcahs
     where
     change_hs_gen :: WithParamNum Haskell
     change_hs_gen =
       to_hs_wpn_list (fc : fcs) $> \case
         [] -> error "should be impossible"
-        [fc_hs] -> fc_hs ++ " " ++ dcahs
-        fcs_hs_list -> "(" ++ intercalate " .> " fcs_hs_list ++ ") " ++ dcahs
+        [fc_hs] -> fc_hs
+        fcs_hs_list -> "(" ++ intercalate " .> " fcs_hs_list ++ ")"
 
 instance ToHsWithParamNum FieldChange where
   to_hs_wpn = \(FC (f, leou)) ->

@@ -12,18 +12,24 @@ type ParserState = (IndentationLevel, InEqualLine)
 type IndentationLevel = Int
 type InEqualLine = Bool
 
--- helpers for state
+-- state parsers
+modify_il :: (Int -> Int) -> Parser ()
+modify_il = \f -> modifyState $ \(il, b) -> (f il, b)
+
 increase_il_by :: Int -> Parser ()
-increase_il_by = \i -> modifyState (\(il, b) -> (il + i, b))
+increase_il_by = \i -> modify_il (+i)
 
 decrease_il_by :: Int -> Parser ()
-decrease_il_by = \i -> modifyState (\(il, b) -> (il - i, b))
+decrease_il_by = \i -> modify_il $ \il -> il - i
+
+deeper_num :: Int -> Parser a -> Parser a
+deeper_num = \i p -> increase_il_by i *> p <* decrease_il_by i
 
 deeper :: Parser a -> Parser a
-deeper p = increase_il_by 1 *> p <* decrease_il_by 1
+deeper = deeper_num 1
 
-deeper2 :: Parser a -> Parser a
-deeper2 p = increase_il_by 2 *> p <* decrease_il_by 2
+twice_deeper :: Parser a -> Parser a
+twice_deeper = deeper_num 2
 
 we_are_in_equal_line :: Parser ()
 we_are_in_equal_line = modifyState (\(il, _) -> (il, True))
@@ -34,15 +40,11 @@ we_are_not_in_equal_line = modifyState (\(il, _) -> (il, False))
 are_we_in_equal_line :: Parser Bool
 are_we_in_equal_line = snd <$> getState
 
-inc_il_if_false :: Bool -> Parser ()
-inc_il_if_false = \case
-  True -> return ()
-  False -> increase_il_by 1
-
-dec_il_if_false :: Bool -> Parser ()
-dec_il_if_false = \case
-  True -> return ()
-  False -> decrease_il_by 1
+deeper_if_not_in_equal_line :: Parser a -> Parser a
+deeper_if_not_in_equal_line = \parser ->
+  are_we_in_equal_line >>= \case
+    True -> parser
+    False -> deeper parser
 
 -- helper parsers
 [nl, nl_indent, space_or_nl, opt_space, comma]
@@ -75,6 +77,15 @@ opt_space_around = \a -> opt_space *> a <* opt_space
 
 in_paren :: Parser a -> Parser a
 in_paren = \a -> char '(' *> opt_space_around a <* char ')'
+
+-- reserved words
+reserved_words :: [String]
+reserved_words = ["cases", "where"]
+
+err_if_reserved :: String -> Parser ()
+err_if_reserved = \id_str -> case elem id_str reserved_words of
+  True -> unexpected $ "cannot use " ++ id_str ++ " as an identifier"
+  False -> nothing
 
 -- for literals. Had to copy from Text.Parsec.Token source code
 -- because I didn't want spaces after the char and string literals ...
@@ -115,5 +126,6 @@ stringChar = stringLetter <|> charEscape <?> "string character"
 stringLetter :: Parser Char
 stringLetter = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
+-- ASTTypes.hs
 -- AST.hs
 -- Test.hs

@@ -40,6 +40,9 @@ as ++> fas = (as ++) <$> fas
 (>:<) :: Applicative f => f a -> f [a] -> f [a]
 a >:< as = (:) <$> a <*> as
 
+nothing :: Applicative f => f ()
+nothing = pure ()
+
 -- Monad
 (+++) :: Monad m => m a -> m b -> m (a, b)
 pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)

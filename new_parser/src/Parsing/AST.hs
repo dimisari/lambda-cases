@@ -22,7 +22,7 @@ instance HasParser Double where
     read <$> int_p >++< string "." >++< digits >++< option "" exponent_p
     where
     int_p :: Parser String
-    int_p = mapf (parser :: Parser Int) show
+    int_p = show <$> (parser :: Parser Int)
 
     exponent_p :: Parser String
     exponent_p = (char 'e' <|> char 'E') >:< int_p
@@ -41,12 +41,7 @@ instance HasParser Literal where
 -- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 instance HasParser Identifier where
   parser =
-    id_p >>= \case
-      Id (Nothing, IS "cases", [], Nothing, Nothing) ->
-        unexpected $ "cannot use \"cases\" as an identifier"
-      Id (Nothing, IS "where", [], Nothing, Nothing) ->
-        unexpected $ "cannot use \"where\" as an identifier"
-      id -> return id
+    id_p >>= check_not_reserved
     where
     id_p :: Parser Identifier
     id_p =
@@ -57,17 +52,23 @@ instance HasParser Identifier where
       optionMaybe parser >>= \maybe_uip2 ->
       return $ Id (maybe_uip1, id_start, id_conts, maybe_digit, maybe_uip2)
 
+    check_not_reserved :: Identifier -> Parser Identifier
+    check_not_reserved = \id -> case id of
+      Id (Nothing, IS id_str, [], Nothing, Nothing) ->
+        err_if_reserved id_str >> return id
+      _ -> return id
+
 instance HasParser SimpleId where
   parser =
-    sid_p >>= \case
-      SId (IS "cases", Nothing) ->
-        unexpected $ "cannot use \"cases\" as an identifier"
-      SId (IS "where", Nothing) ->
-        unexpected $ "cannot use \"where\" as an identifier"
-      id -> return id
+    sid_p >>= check_not_reserved
     where
     sid_p :: Parser SimpleId
     sid_p = SId <$> parser +++ optionMaybe digit
+
+    check_not_reserved :: SimpleId -> Parser SimpleId
+    check_not_reserved = \sid -> case sid of
+      SId (IS id_str, Nothing) -> err_if_reserved id_str >> return sid
+      _ -> return sid
 
 instance HasParser IdStart where
   parser = IS <$> lower >:< many lower_under
@@ -113,18 +114,16 @@ instance HasParser BasicExpr where
 
 instance HasParser BigTuple where
   parser =
-    BT <$>
-    line_expr_or_under_p +++ line_expr_or_unders_p ++< line_expr_or_unders_l_p
+    BT <$> leou_p +++ leous_p ++< leous_l_p <* nl_indent <* char ')'
     where
-    line_expr_or_under_p :: Parser LineExprOrUnder
-    line_expr_or_under_p = char '(' *> opt_space *> parser
+    leou_p :: Parser LineExprOrUnder
+    leou_p = char '(' *> opt_space *> parser
 
-    line_expr_or_unders_p :: Parser LineExprOrUnders
-    line_expr_or_unders_p = (optional (try nl_indent) *> comma *> parser)
+    leous_p :: Parser LineExprOrUnders
+    leous_p = optional (try nl_indent) *> comma *> parser
 
-    line_expr_or_unders_l_p :: Parser [LineExprOrUnders]
-    line_expr_or_unders_l_p =
-      many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ')'
+    leous_l_p :: Parser [LineExprOrUnders]
+    leous_l_p = many $ try (nl_indent *> comma) *> parser
 
 instance HasParser List where
   parser =
@@ -132,9 +131,13 @@ instance HasParser List where
 
 instance HasParser BigList where
   parser =
-    BL <$>
-      (char '[' *> opt_space *> parser) +++
-      many (try (nl_indent *> comma) *> parser) <* nl_indent <* char ']'
+    BL <$> leous_p +++ leous_l_p <* nl_indent <* char ']'
+    where
+    leous_p :: Parser LineExprOrUnders
+    leous_p = char '[' *> opt_space *> parser
+
+    leous_l_p :: Parser [LineExprOrUnders]
+    leous_l_p = many $ try (nl_indent *> comma) *> parser
 
 instance HasParser ArgsStr where
   parser = parser >>= \args -> many1 lower_under >>= \str -> return (args, str)
@@ -183,7 +186,7 @@ instance HasParser PostFuncAppEnd where
 instance HasParser DotChange where
   parser =
     DC <$>
-      (try (string ".change{") *> opt_space_around field_changes_p <* char '}')
+    (try (string ".change{") *> opt_space_around field_changes_p <* char '}')
     where
     field_changes_p :: Parser (FieldChange, [FieldChange])
     field_changes_p = field_change_p +++ many (comma *> field_change_p)
@@ -214,7 +217,9 @@ instance HasParser BigOpExpr where
 instance HasParser BigOpExprOpSplit where
   parser =
     parser >>= \osl ->
+
     we_are_not_in_equal_line >>
+
     many (try parser) >>= \osls ->
     optionMaybe (try parser) >>= \maybe_oes ->
     parser >>= \ose ->
@@ -234,7 +239,7 @@ instance HasParser OpSplitEnd where
   parser = FE1 <$> try parser <|> O2 <$> parser
 
 instance HasParser BigOpExprFuncSplit where
-  parser = BOEFS <$> parser +++ (we_are_not_in_equal_line *> parser)
+  parser = BOEFS <$> parser +++ parser
 
 instance HasParser BigOrCasesFuncExpr where
   parser = BFE1 <$> try parser <|> CFE1 <$> parser
@@ -292,21 +297,19 @@ instance HasParser LineFuncBody where
   parser = opt_space *> (LOE4 <$> try parser <|> BOAE3 <$> parser)
 
 instance HasParser BigFuncBody where
-  parser = nl_indent *> (OE1 <$> try parser <|> BOAE4 <$> parser)
+  parser =
+    nl_indent *> we_are_not_in_equal_line *>
+    (OE1 <$> try parser <|> BOAE4 <$> parser)
 
 instance HasParser CasesFuncExpr where
   parser =
     parser >>= \cases_params ->
-
-    are_we_in_equal_line >>= \answer ->
-    inc_il_if_false answer *>
-
-    many1 parser >>= \cases ->
-    optionMaybe parser >>= \maybe_end_case ->
-
-    dec_il_if_false answer *>
-
-    return (CFE (cases_params, cases, maybe_end_case))
+    deeper_if_not_in_equal_line all_cases_p >>= \(cases, maybe_end_case) ->
+    return $ CFE (cases_params, cases, maybe_end_case)
+    where
+    all_cases_p :: Parser ([Case], Maybe EndCase)
+    all_cases_p =
+      we_are_not_in_equal_line *> many1 parser +++ optionMaybe parser
 
 instance HasParser CasesParams where
   parser =
@@ -379,22 +382,22 @@ instance HasParser GroupedValueDefs where
   parser =
     indent *> parser >>= \id ->
     many1 (comma *> parser) >>= \ids ->
-
-    increase_il_by 1 >>
-
-    has_type_symbol *> types_p >>= \types ->
-    nl_indent *> string "= " *> parser >>= \comma_sep_line_exprs ->
-    many (try (nl_indent *> comma) *> parser) >>= \comma_sep_line_exprs_l ->
-
-    decrease_il_by 1 >>
-
-    return
-      (GVDs (id, ids, types, comma_sep_line_exprs, comma_sep_line_exprs_l))
+    deeper (types_p +++ equal_les_p ++< les_l_p) >>= \(ts, equal_les, les_l) ->
+    return $ GVDs (id, ids, ts, equal_les, les_l)
     where
     types_p :: Parser Types
-    types_p =
-      Ts <$> (parser +++ (many1 $ comma *> parser)) <|>
-      All <$> (string "all " *> parser)
+    types_p = has_type_symbol *> parser
+
+    equal_les_p :: Parser LineExprs
+    equal_les_p = nl_indent *> string "= " *> parser
+
+    les_l_p :: Parser [LineExprs]
+    les_l_p = many $ try (nl_indent *> comma) *> parser
+
+instance HasParser Types where
+  parser =
+    Ts <$> (parser +++ (many1 $ comma *> parser)) <|>
+    All <$> (string "all " *> parser)
 
 instance HasParser LineExprs where
   parser = LEs <$> parser +++ (many (comma *> parser))
@@ -445,11 +448,7 @@ instance HasParser TIWATypeApp where
     return (maybe_types_in_paren1, type_id_with_args, maybe_types_in_paren2)
 
 instance HasParser TIPTITypeApp where
-  parser =
-    parser >>= \types_in_paren ->
-    parser >>= \type_id_or_var ->
-    optionMaybe parser >>= \maybe_types_in_paren ->
-    return (types_in_paren, type_id_or_var, maybe_types_in_paren)
+  parser = parser +++ parser ++< optionMaybe parser
 
 instance HasParser TypeIdWithArgs where
   parser = TIWA <$> parser +++ many1 (try $ parser +++ many1 (lower <|> upper))
@@ -498,9 +497,9 @@ instance HasParser TypeDef where
 instance HasParser TupleTypeDef where
   parser =
     string "tuple_type " *> parser >>= \type_name ->
-    nl *> string "value" *> space_or_nl *> parser >>= \paren_comma_sep_ids ->
+    nl *> string "value" *> space_or_nl *> parser >>= \id_tuple ->
     opt_space_around (string ":") *> parser >>= \prod_or_power_type ->
-    return $ TTD (type_name, paren_comma_sep_ids, prod_or_power_type)
+    return $ TTD (type_name, id_tuple, prod_or_power_type)
 
 instance HasParser ProdOrPowerType where
   parser = PT4 <$> try parser <|> PoT4 <$> parser
@@ -523,13 +522,12 @@ instance HasParser OrTypeDef where
   parser =
     string "or_type " *> parser >>= \type_name ->
     nl *> string "values" *> space_or_nl *> parser >>= \simple_id ->
-    optionMaybe (char ':' *> parser) >>= \maybe_simple_type ->
-    many1 ident_maybe_simple_type_p >>= \ident_maybe_simple_types ->
-    return $
-      OTD (type_name, simple_id, maybe_simple_type, ident_maybe_simple_types)
+    optionMaybe (char ':' *> parser) >>= \mst ->
+    many1 id_mst_p >>= \id_msts ->
+    return $ OTD (type_name, simple_id, mst, id_msts)
     where
-    ident_maybe_simple_type_p :: Parser (SimpleId, Maybe SimpleType)
-    ident_maybe_simple_type_p =
+    id_mst_p :: Parser (SimpleId, Maybe SimpleType)
+    id_mst_p =
       (opt_space_around (string "|") *> parser) +++
       (optionMaybe $ char ':' *> parser)
 
@@ -623,17 +621,14 @@ instance HasParser TypeAppSub where
     TIWS_TAS <$> try tiws_p <|> SOUIP_TI <$> souip_ti_p <|>
     TI_SOUIP <$> parser +++ parser
     where
-    tiws_p ::
-      Parser
-        (Maybe SubsOrUndersInParen, TypeIdWithSubs, Maybe SubsOrUndersInParen)
+    tiws_p :: Parser TIWS_TAS
     tiws_p =
       optionMaybe parser >>= \maybe_souip1 ->
       parser >>= \tiws ->
       optionMaybe parser >>= \maybe_souip2 ->
       return (maybe_souip1, tiws, maybe_souip2)
 
-    souip_ti_p ::
-      Parser (SubsOrUndersInParen, TIdOrAdHocTVar, Maybe SubsOrUndersInParen)
+    souip_ti_p :: Parser SOUIP_TI_TAS
     souip_ti_p =
       parser >>= \souip ->
       parser >>= \type_id_or_var ->
@@ -689,7 +684,7 @@ instance HasParser TTValueExpr where
     VEMWE <$> vemwe_p <|> LE2 <$> (char ' ' *> parser)
     where
     vemwe_p :: Parser (ValueExpr, Maybe WhereExpr)
-    vemwe_p = deeper2 (try nl_indent *> parser +++ optionMaybe parser)
+    vemwe_p = twice_deeper (try nl_indent *> parser +++ optionMaybe parser)
 
 -- HasParser: Program
 instance HasParser Program where
