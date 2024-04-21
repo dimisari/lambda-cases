@@ -12,7 +12,13 @@ type ParserState = (IndentationLevel, InEqualLine)
 type IndentationLevel = Int
 type InEqualLine = Bool
 
--- state parsers
+-- state parsers: indentation level
+get_il :: Parser Int
+get_il = fst <$> getState
+
+indent :: Parser ()
+indent = get_il $> ind_lvl_to_spaces >>= string >> nothing
+
 modify_il :: (Int -> Int) -> Parser ()
 modify_il = \f -> modifyState $ \(il, b) -> (f il, b)
 
@@ -31,14 +37,12 @@ deeper = deeper_num 1
 twice_deeper :: Parser a -> Parser a
 twice_deeper = deeper_num 2
 
-we_are_in_equal_line :: Parser ()
-we_are_in_equal_line = modifyState (\(il, _) -> (il, True))
-
-we_are_not_in_equal_line :: Parser ()
-we_are_not_in_equal_line = modifyState (\(il, _) -> (il, False))
-
+-- state parsers: equal line
 are_we_in_equal_line :: Parser Bool
 are_we_in_equal_line = snd <$> getState
+
+set_in_equal_line :: Bool -> Parser ()
+set_in_equal_line = \b -> modifyState (\(il, _) -> (il, b))
 
 deeper_if_not_in_equal_line :: Parser a -> Parser a
 deeper_if_not_in_equal_line = \parser ->
@@ -48,9 +52,9 @@ deeper_if_not_in_equal_line = \parser ->
 
 -- helper parsers
 [nl, nl_indent, space_or_nl, opt_space, comma]
-  = [ many (char ' ' <|> char '\t') *> char '\n' *> return ()
+  = [ many (char ' ' <|> char '\t') *> char '\n' *> nothing
     , nl *> indent
-    , (try (nl *> string "  ") <|> string " ") *> return ()
+    , (try (nl *> string "  ") <|> string " ") *> nothing
     , optional (char ' ')
     , char ',' *> opt_space
     ]
@@ -64,19 +68,20 @@ deeper_if_not_in_equal_line = \parser ->
   = [many1 digit, opt_space *> string "=>"]
   :: [Parser String]
 
-indent :: Parser ()
-indent =
-  getState >>= \(il, _) -> string (concat $ replicate il "  ") >> return ()
-
 has_type_symbol :: Parser ()
 has_type_symbol =
-  (try nl_indent *> string ": " <|> opt_space_around (string ":")) *> return ()
+  (try nl_indent *> string ": " <|> opt_space_around (string ":")) *> nothing
 
 opt_space_around :: Parser a -> Parser a
 opt_space_around = \a -> opt_space *> a <* opt_space
 
 in_paren :: Parser a -> Parser a
 in_paren = \a -> char '(' *> opt_space_around a <* char ')'
+
+err_if_less_than_2 :: Int -> Parser Int
+err_if_less_than_2 =  \i -> case (i < 2) of
+  True -> unexpected "integer in power type must be greater than 1"
+  False -> return i
 
 -- reserved words
 reserved_words :: [String]

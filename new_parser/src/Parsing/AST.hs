@@ -9,9 +9,12 @@ import Helpers
 
 import Parsing.TypesAndHelpers
 
--- HasParser class
+-- HasParser class + parse
 class HasParser a where
   parser :: Parser a
+
+parse :: HasParser a => String -> Either ParseError a
+parse = runParser (parser <* eof) (0, False) ""
 
 -- HasParser: Literal
 instance HasParser Int where
@@ -45,12 +48,12 @@ instance HasParser Identifier where
     where
     id_p :: Parser Identifier
     id_p =
-      optionMaybe parser >>= \maybe_uip1 ->
+      optionMaybe parser >>= \muip1 ->
       parser >>= \id_start ->
       many (try parser) >>= \id_conts ->
-      optionMaybe digit >>= \maybe_digit ->
-      optionMaybe parser >>= \maybe_uip2 ->
-      return $ Id (maybe_uip1, id_start, id_conts, maybe_digit, maybe_uip2)
+      optionMaybe digit >>= \mdigit ->
+      optionMaybe parser >>= \muip2 ->
+      return $ Id (muip1, id_start, id_conts, mdigit, muip2)
 
     check_not_reserved :: Identifier -> Parser Identifier
     check_not_reserved = \id -> case id of
@@ -144,13 +147,12 @@ instance HasParser ArgsStr where
 
 instance HasParser ParenFuncAppOrId where
   parser =
-    optionMaybe parser >>= \maybe_args1 ->
+    optionMaybe parser >>= \margs1 ->
     parser >>= \id_start ->
     many (try parser) >>= \arg_str_pairs ->
-    optionMaybe digit >>= \maybe_digit ->
-    optionMaybe parser >>= \maybe_args2 ->
-    return $
-      PFAOI (maybe_args1, id_start, arg_str_pairs, maybe_digit, maybe_args2)
+    optionMaybe digit >>= \mdigit ->
+    optionMaybe parser >>= \margs2 ->
+    return $ PFAOI (margs1, id_start, arg_str_pairs, mdigit, margs2)
 
 instance HasParser Arguments where
   parser = As <$> in_paren parser
@@ -218,7 +220,7 @@ instance HasParser BigOpExprOpSplit where
   parser =
     parser >>= \osl ->
 
-    we_are_not_in_equal_line >>
+    set_in_equal_line False >>
 
     many (try parser) >>= \osls ->
     optionMaybe (try parser) >>= \maybe_oes ->
@@ -298,7 +300,7 @@ instance HasParser LineFuncBody where
 
 instance HasParser BigFuncBody where
   parser =
-    nl_indent *> we_are_not_in_equal_line *>
+    nl_indent *> set_in_equal_line False *>
     (OE1 <$> try parser <|> BOAE4 <$> parser)
 
 instance HasParser CasesFuncExpr where
@@ -309,7 +311,7 @@ instance HasParser CasesFuncExpr where
     where
     all_cases_p :: Parser ([Case], Maybe EndCase)
     all_cases_p =
-      we_are_not_in_equal_line *> many1 parser +++ optionMaybe parser
+      set_in_equal_line False *> many1 parser +++ optionMaybe parser
 
 instance HasParser CasesParams where
   parser =
@@ -360,12 +362,10 @@ instance HasParser ValueDef where
     has_type_symbol *> parser >>= \type_ ->
     nl_indent *> string "= " *>
 
-    we_are_in_equal_line >>
+    set_in_equal_line True >>
     increase_il_by 1 >>
 
     parser >>= \value_expr ->
-
-    we_are_not_in_equal_line >>
 
     optionMaybe (try parser) >>= \maybe_where_expr ->
 
@@ -396,18 +396,17 @@ instance HasParser GroupedValueDefs where
 
 instance HasParser Types where
   parser =
-    Ts <$> (parser +++ (many1 $ comma *> parser)) <|>
+    Ts <$> (parser +++ many1 (comma *> parser)) <|>
     All <$> (string "all " *> parser)
 
 instance HasParser LineExprs where
-  parser = LEs <$> parser +++ (many (comma *> parser))
+  parser = LEs <$> parser +++ many (comma *> parser)
 
 instance HasParser WhereExpr where
   parser =
-    nl_indent *> string "where" *>
-    nl *> where_def_expr_p >>= \where_def_expr1 ->
-    many (try $ nl *> nl *> where_def_expr_p) >>= \where_def_exprs ->
-    return $ WE (where_def_expr1, where_def_exprs)
+    WE <$>
+      (nl_indent *> string "where" *> nl *> where_def_expr_p) +++
+      many (try $ nl *> nl *> where_def_expr_p)
     where
     where_def_expr_p :: Parser WhereDefExpr
     where_def_expr_p = VD1 <$> try parser <|> GVDs1 <$> parser
@@ -441,11 +440,7 @@ instance HasParser TypeApp where
     TIWA1 <$> try parser <|> TIPTI <$> parser <|> TITIP <$> parser +++ parser
 
 instance HasParser TIWATypeApp where
-  parser =
-    optionMaybe parser >>= \maybe_types_in_paren1 ->
-    parser >>= \type_id_with_args ->
-    optionMaybe parser >>= \maybe_types_in_paren2 ->
-    return (maybe_types_in_paren1, type_id_with_args, maybe_types_in_paren2)
+  parser = optionMaybe parser +++ parser ++< optionMaybe parser
 
 instance HasParser TIPTITypeApp where
   parser = parser +++ parser ++< optionMaybe parser
@@ -471,13 +466,7 @@ instance HasParser PowerBaseType where
     TA3 <$> try parser <|> TIOV3 <$> parser
 
 instance HasParser PowerType where
-  parser = PoT <$> parser +++ (string "^" *> int_greater_than_1)
-
-int_greater_than_1 :: Parser Int
-int_greater_than_1 =
-  parser >>= \i -> case (i < 2) of
-    True -> unexpected "integer in power type must be greater than 1"
-    False -> return i
+  parser = PoT <$> parser +++ (string "^" *> parser >>= err_if_less_than_2)
 
 instance HasParser FuncType where
   parser = FT <$> parser +++ (string " => " *> parser)
@@ -496,10 +485,10 @@ instance HasParser TypeDef where
 
 instance HasParser TupleTypeDef where
   parser =
-    string "tuple_type " *> parser >>= \type_name ->
-    nl *> string "value" *> space_or_nl *> parser >>= \id_tuple ->
-    opt_space_around (string ":") *> parser >>= \prod_or_power_type ->
-    return $ TTD (type_name, id_tuple, prod_or_power_type)
+    TTD <$>
+      (string "tuple_type " *> parser) +++
+      (nl *> string "value" *> space_or_nl *> parser) ++<
+      (opt_space_around (string ":") *> parser)
 
 instance HasParser ProdOrPowerType where
   parser = PT4 <$> try parser <|> PoT4 <$> parser
@@ -521,9 +510,13 @@ instance HasParser IdTuple where
 instance HasParser OrTypeDef where
   parser =
     string "or_type " *> parser >>= \type_name ->
+
     nl *> string "values" *> space_or_nl *> parser >>= \simple_id ->
+
     optionMaybe (char ':' *> parser) >>= \mst ->
+
     many1 id_mst_p >>= \id_msts ->
+
     return $ OTD (type_name, simple_id, mst, id_msts)
     where
     id_mst_p :: Parser (SimpleId, Maybe SimpleType)
@@ -543,17 +536,17 @@ instance HasParser TypePropDef where
 
 instance HasParser AtomPropDef where
   parser =
-    parser >>= \prop_name_line ->
-    nl *> string "needed" *> space_or_nl *> parser >>= \identifier ->
-    opt_space_around (string ":") *> parser >>= \simple_type ->
-    return $ APD (prop_name_line, identifier, simple_type)
+    APD <$>
+      parser +++
+      (nl *> string "needed" *> space_or_nl *> parser) ++<
+      (opt_space_around (string ":") *> parser)
 
 instance HasParser RenamingPropDef where
   parser =
-    parser >>= \prop_name_line ->
-    nl *> string "equivalent" *> space_or_nl *> parser >>= \prop_name ->
-    many (comma *> parser) >>= \prop_names ->
-    return $ RPD (prop_name_line, prop_name, prop_names)
+    RPD <$>
+      parser +++
+      (nl *> string "equivalent" *> space_or_nl *> parser) ++<
+      many (comma *> parser)
 
 instance HasParser PropNameLine where
   parser = PNL <$> (string "type_proposition " *> parser)
@@ -564,10 +557,7 @@ instance HasParser PropName where
     where
     np_start_p :: Parser (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart)
     np_start_p =
-      upper >>= \u ->
-      many1 (try $ parser +++ parser) >>= \np_ahvips ->
-      optionMaybe parser >>= \maybe_name_part ->
-      return (u, np_ahvips, maybe_name_part)
+      upper +++ many1 (try $ parser +++ parser) ++< optionMaybe parser
 
     ahvip_start_p
       :: Parser ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
@@ -589,10 +579,16 @@ instance HasParser NamePart where
 -- HasParser: TypeTheo
 instance HasParser TypeTheo where
   parser =
-    string "type_theorem " *> parser >>= \pnws ->
-    optionMaybe (string " --> " *> parser) >>= \maybe_pnws ->
-    nl *> string "proof" *> parser >>= \proof ->
-    return $ TT (pnws, maybe_pnws, proof)
+    TT <$> pnws_p +++ mpnws_p ++< proof_p
+    where
+    pnws_p :: Parser PropNameWithSubs
+    pnws_p = string "type_theorem " *> parser
+
+    mpnws_p :: Parser (Maybe PropNameWithSubs)
+    mpnws_p = optionMaybe (string " --> " *> parser)
+
+    proof_p :: Parser Proof
+    proof_p = nl *> string "proof" *> parser
 
 instance HasParser PropNameWithSubs where
   parser =
@@ -600,10 +596,7 @@ instance HasParser PropNameWithSubs where
     where
     np_start_p :: Parser (Char, [(NamePart, SubsInParen)], Maybe NamePart)
     np_start_p =
-      upper >>= \u ->
-      many1 (try $ parser +++ parser) >>= \np_sips ->
-      optionMaybe parser >>= \maybe_name_part ->
-      return (u, np_sips, maybe_name_part)
+      upper +++ many1 (try $ parser +++ parser) ++< optionMaybe parser
 
     sip_start_p :: Parser ([(SubsInParen, NamePart)], Maybe SubsInParen)
     sip_start_p = (many1 $ try $ parser +++ parser) +++ optionMaybe parser
@@ -618,22 +611,9 @@ instance HasParser TVarSub where
 
 instance HasParser TypeAppSub where
   parser =
-    TIWS_TAS <$> try tiws_p <|> SOUIP_TI <$> souip_ti_p <|>
+    TIWS_TAS <$> try (optionMaybe parser +++ parser ++< optionMaybe parser) <|>
+    SOUIP_TI <$> (parser +++ parser ++< optionMaybe parser) <|>
     TI_SOUIP <$> parser +++ parser
-    where
-    tiws_p :: Parser TIWS_TAS
-    tiws_p =
-      optionMaybe parser >>= \maybe_souip1 ->
-      parser >>= \tiws ->
-      optionMaybe parser >>= \maybe_souip2 ->
-      return (maybe_souip1, tiws, maybe_souip2)
-
-    souip_ti_p :: Parser SOUIP_TI_TAS
-    souip_ti_p =
-      parser >>= \souip ->
-      parser >>= \type_id_or_var ->
-      optionMaybe parser >>= \maybe_souip ->
-      return (souip, type_id_or_var, maybe_souip)
 
 instance HasParser TypeIdWithSubs where
   parser = TIWS <$> parser +++ many1 (try $ parser +++ many1 (lower <|> upper))
@@ -645,7 +625,7 @@ instance HasParser SubOrUnder where
   parser = TVS1 <$> try parser <|> underscore *> return Underscore4
 
 instance HasParser PowerTypeSub where
-  parser = PoTS <$> parser +++ (string "^" *> int_greater_than_1)
+  parser = PoTS <$> parser +++ (string "^" *> parser >>= err_if_less_than_2)
 
 instance HasParser PowerBaseTypeSub where
   parser =

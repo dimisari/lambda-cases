@@ -7,8 +7,9 @@ import Control.Monad.State
 
 import ASTTypes
 import Helpers
+import ShowInstances
 
-import Parsing.Test
+import Parsing.AST
 import Generation.FieldIds
 
 -- types
@@ -40,9 +41,9 @@ pfa_if_in_dot_change =
     InDotChange [] -> error "should not be possible"
     InDotChange (pfa : pfas) -> Just pfa
 
-change_program_if_needed :: (Program, FieldIds) -> Program
-change_program_if_needed = \(prog, fids) ->
-  evalState (change_inside_if_needed prog) (NotInDotChange, fids)
+change_prog_if_needed :: Program -> Program
+change_prog_if_needed = \prog ->
+  evalState (change_inside_if_needed prog) (NotInDotChange, get_field_ids prog)
 
 -- push, pop
 push_post_func_arg :: PostFuncArg -> DotChangeState ()
@@ -422,6 +423,6 @@ test_parse = parse .> \case
 test :: IO ()
 test =
   readFile in_file >>= test_parse .> \prog ->
-  print $ change_program_if_needed (prog, get_field_ids prog)
+  print $ change_prog_if_needed prog
 
 -- ASTTypes.hs

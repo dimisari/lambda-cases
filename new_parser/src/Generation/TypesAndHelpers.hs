@@ -119,12 +119,11 @@ deeper2 :: WithIndentLvl Haskell -> WithIndentLvl Haskell
 deeper2 = \hs_gen -> change_indent_lvl 2 *> hs_gen <* change_indent_lvl (-2)
 
 indent :: WithIndentLvl Haskell
-indent = get $> (\i -> replicate (2 * i) ' ')
+indent = get $> ind_lvl_to_spaces
 
 indent_all_and_concat :: [Haskell] -> WithParamNum Haskell
 indent_all_and_concat = \hs_list ->
-  indent >>= \indent_hs ->
-  return $ map (indent_hs ++) hs_list &> intercalate "\n"
+  indent $> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
 -- ParenFuncAppOrId helpers
 margs1_to_id_hs :: Maybe Arguments -> Haskell
