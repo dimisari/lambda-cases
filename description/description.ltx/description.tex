@@ -16,7 +16,7 @@
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
-    filecolor=magenta,      
+    filecolor=magenta,
     urlcolor=cyan,
 }
 
@@ -54,7 +54,7 @@ familiarity, I present some (hopefully useful) new syntax, of which some is
 closer to the imperative/OOP style (to attract more already experienced
 programmers from these languages), some is closer to mathematics (in which most
 programmers should be experienced) and some is closer to natural language (in
-which we are all already experienced). 
+which we are all already experienced).
 
 \section{Language Description: General}
 
@@ -65,14 +65,14 @@ theorems.  Definitions are split into value definitions, type definitions and
 type proposition definitions. Theorems are proven type propositions. Functions
 as well as "Environment Actions" (see section \ref{subsec:envacts}) are also
 considered values. The definition of the "main" value determines the program's
-behaviour. 
+behaviour.
 
 \paragraph{Program example: Euclidean Algorithm}
 \begin{verbatim}
 gcd_of(_)and(_): Int^2 => Int
   = (x, cases)
     0 => x
-    y => gcd_of(y)and((x)mod(y)) 
+    y => gcd_of(y)and((x)mod(y))
 
 read_two_ints: (Int^2)FromIO
   = print <- "Please give me 2 ints";
@@ -88,7 +88,7 @@ nag(_)to_message: NumsAndGcd => String
 
 main: IO
   = read_two_ints ;> (i1, i2) =>
-    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_string(_) 
+    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_string(_)
 \end{verbatim}
 
 \paragraph{Program grammar}
@@ -114,10 +114,10 @@ Each keyword's functionality is described in the respective section shown in
 the table below:
 
 \begin{center}
-\begin{tabular}{ |c|c| } 
+\begin{tabular}{ |c|c| }
 \hline
 Keyword & Section
-\\ 
+\\
 \hline
 \hline
 \verb|cases| & \ref{subsubsec:casessyntax} "cases" Function Expressions
@@ -179,7 +179,7 @@ There are literals for the four basic types: \texttt{Int, Real, Char, String}.
 \item \textit{Examples}
 \begin{verbatim}
 x y z
-a1 a2 a3 
+a1 a2 a3
 (_)mod(_)
 apply(_)to_all_in(_)
 \end{verbatim}
@@ -197,7 +197,7 @@ middle of an identifier (see "Parenthesis Function Application" section
 can be ended with a digit.
 \\\\
 A simple identifier is an identifier without any parentheses in the middle.
-It used in expressions where parentheses in the middle don't make sense 
+It used in expressions where parentheses in the middle don't make sense
 (e.g. "Prefix and Postfix Functions" \ref{subsubsec:prefixpostfix}).
 
 \item \textit{Grammar}
@@ -211,7 +211,7 @@ It used in expressions where parentheses in the middle don't make sense
 
 <id-cont> ::= <unders_in_par> [a-z_]+
 
-<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)' 
+<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)'
 \end{grammar}
 Even though the "\verb|cases|" and "\verb|where|" keywords can be generated
 by these grammar rules, they cannot be used as identifiers.
@@ -244,7 +244,7 @@ that extend of over multiple lines new values must be defined.
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'  
+<paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'
 \end{grammar}
 
 \end{itemize}
@@ -261,7 +261,7 @@ that extend of over multiple lines new values must be defined.
 (1, my_function, (x, y, z) => sqrt(x^2 + y^2 + z^2))
 \end{verbatim}
 
-\item \textit{Description} 
+\item \textit{Description}
 
 Tuples are used to group many values (of possibly different types) into one.
 The type of a tuple can be either the product of the types of the fields or a
@@ -378,7 +378,7 @@ answers_to : ListOf(String)s
 <big-tuple> ::= ""\\
 `(' [ `\ ' ] <line-expr-or-under> [ <nl> <indent> ]
 <comma> <line-expr-or-unders> \\
-( <nl> <indent> <comma> <line-expr-or-unders> )* 
+( <nl> <indent> <comma> <line-expr-or-unders> )*
 <nl> <indent> `)'
 \end{grammar}
 
@@ -409,7 +409,7 @@ ListOf(String)s
 (@A)And(Int)Add_To(@B) --> ListOf(@A => @B)s
 \end{verbatim}
 And the last list is only legal if x, y, z and w all have the same type.
-Assuming they do and it's the type T, the type of the list is: 
+Assuming they do and it's the type T, the type of the list is:
 \begin{verbatim}
 ListOf(T)s
 \end{verbatim}
@@ -427,7 +427,7 @@ my_big_list: ListOf(Int => IO)s
     ]
   \end{verbatim}
 
-  \textbf{Description} 
+  \textbf{Description}
 
   It is possible to stretch a (big) list expression over multiple lines (only)
   in a seperate value definition (see "Value Definitions" section
@@ -498,7 +498,7 @@ the identifier}. For example, below is the definition of
 apply(_)to_all_in(_) : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
     empty_l => empty_l
-    non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all_in(_)<- l.tail)
+    non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all_in(l.tail))
 \end{verbatim}
 The actual definition doesn't matter at this point, what matters is that the
 identifier is "\verb|apply(_)to_all_in(_)|" with the parentheses
@@ -536,7 +536,7 @@ f(_, _, r) : Char x Int => String
 
 \item \textit{Grammar}
 \begin{grammar}
-<paren-func-app-or-id> ::= 
+<paren-func-app-or-id> ::=
 [ <arguments> ] <id-start> ( <arguments> [a-z_]+ )* [ [0-9] ]
 [ <arguments> ]
 
@@ -550,7 +550,7 @@ f(_, _, r) : Char x Int => String
 
 \subsubsection{Prefix and Postfix Functions}
 \label{subsubsec:prefixpostfix}
- 
+
 \paragraph{Prefix Functions}
 
 \begin{itemize}
@@ -613,7 +613,7 @@ tuple.1st
 apply(_.1st)to_all
 \end{verbatim}
 
-\item \textit{Description} 
+\item \textit{Description}
 
 Postfix functions are automatically generated from \verb|tuple_type|
 definitions (see "Tuple Types" in section \ref{subsubsec:tdefs}). They are
@@ -678,7 +678,7 @@ in the following paragraph.
 \item \textit{Examples}
 
 \begin{verbatim}
-state.change{counter = counter + 1} 
+state.change{counter = counter + 1}
 tuple.change{1st = 42, 3rd = 17}
 point.change{x = 1.62, y = 2.72, z = 3.14}
 apply(_.change{1st = 1st + 1})to_all
@@ -725,8 +725,8 @@ The changes of the fields have the following structure:
 "\verb|field = <expression of new value>|"
 and they are seperated by commas. The input tuple's fields (i.e. the
 "old" values) can be used inside the expression of a new value and they are
-referred to by the field identifier (1st and 4th example). Underscores can be 
-used as the expressions of some new values which makes the whole expression 
+referred to by the field identifier (1st and 4th example). Underscores can be
+used as the expressions of some new values which makes the whole expression
 a function that expects those new values as arguments (last example).
 \item \textit{Grammar}
 
@@ -736,7 +736,7 @@ a function that expects those new values as arguments (last example).
 
 <field-change> ::=
 ( <simple-id> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
-\end{grammar} 
+\end{grammar}
 
 \end{itemize}
 
@@ -747,10 +747,10 @@ a function that expects those new values as arguments (last example).
 \paragraph{Function Application Operators}
 
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
 \hline
 Operator & Type
-\\ 
+\\
 \hline
 \hline
 \verb|->| & \verb| T1 x (T1 => T2) => T2|
@@ -796,10 +796,10 @@ chars_in_odd_length_strings : Int
 
 \paragraph{Function Composition Operators}
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
 \hline
 Operator & Type
-\\ 
+\\
 \hline
 \hline
 \verb|o>| & \verb|(T1 => T2) x (T2 => T3) => (T1 => T3)|
@@ -817,7 +817,7 @@ composition symbol '\(\circ\)' and the symbols '\verb|>|', '\verb|<|' are used
 so that the operator points from the function which is applied first to the
 function which is applied second.  A neat example using function composition is
 the following. Assuming we have the following functions with the behaviour
-suggested by their names and types: 
+suggested by their names and types:
 \begin{verbatim}
 split(_)to_words : String => ListOf(String)s
 apply(_)to_all_in(_) : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
@@ -841,10 +841,10 @@ reverse_words_in(_) : String => String
 
 \paragraph{Arithmetic Operators}
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
 \hline
 Operator & Type
-\\ 
+\\
 \hline
 \hline
 \verb|^| & \verb|(@A)To_The(@B)Is(@C) --> @A x @B => @C|
@@ -857,7 +857,7 @@ Operator & Type
 \\
 \hline
 \verb|+| & \verb|(@A)And(@B)Add_To(@C) --> @A x @B => @C|
-\\ 
+\\
 \hline
 \verb|-| & \verb|(@A)Minus(@B)Is(@C) --> @A x @B => @C|
 \\
@@ -917,10 +917,10 @@ for new user defined types!
 \paragraph{Comparison, Boolean and Bitwise Operators}
 
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
 \hline
 Operator & Type
-\\ 
+\\
 \hline
 \hline
 \verb|==| & \verb|(@A)And(@B)Can_Be_Equal --> @A x @B => Bool|
@@ -980,10 +980,10 @@ Boolean "and" and bitwise "and" are combined into one general "and" operator
 \label{subsec:envacts}
 
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
 \hline
 Operator & Type
-\\ 
+\\
 \hline
 \hline
 \verb|;>| & \verb|(@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)|
@@ -1011,14 +1011,14 @@ print_string("I'll repeat the line"): (EmptyVal)FromIO
 get_line: (String)FromIO
 
 # for the "then" operator we have:
-; : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2) 
+; : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2)
 
 # therefore in the following expression:
 #     print_string("I'll repeat the line") ; get_line
 # the only way to match the types is if @E = FromIO, T1 = EmptyVal, T2 = String
 # from which it follows that (FromIO)Has_Then
 # and the "then" operator (in this particular case) has type
-#     (EmptyVal)FromIO x (String)FromIO => (String)FromIO 
+#     (EmptyVal)FromIO x (String)FromIO => (String)FromIO
 # for the whole expression we have:
 print_string("I'll repeat the line") ; get_line
   : (String)FromIO
@@ -1026,14 +1026,14 @@ print_string("I'll repeat the line") ; get_line
 print_string: String => (EmptyVal)FromIO
 
 # for the "use" operator we have:
-;> : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2) 
+;> : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)
 
 # therefore in the following expression:
 #     print_string("I'll repeat the line") ; get_line ;> print_string(_)
 # the only way to match the types is if @E = FromIO, T1 = String, T2 = EmptyVal
 # from which it follows that (FromIO)Has_Use
 # and the "use" operator (in this particular case) has type
-#     (String)FromIO x (String => (EmptyVal)FromIO) => (EmptyVal)FromIO 
+#     (String)FromIO x (String => (EmptyVal)FromIO) => (EmptyVal)FromIO
 # for the whole expression we have:
 print_string("I'll repeat the line") ; get_line ;> print_string(_)
   : (EmptyVal)FromIO
@@ -1044,13 +1044,13 @@ print_string("I'll repeat the line") ; get_line ;> print_string(_)
 \begin{verbatim}
 main: (EmptyVal)FromIO
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
-    print_string("Nice to meet you " + name + "!") 
+    print_string("Nice to meet you " + name + "!")
 
 print_string(_): String => (EmptyVal)FromIO
 "Hello! What's your name?": String
 <- : (T1 => T2) x T1 => T2
 
-# matching the types: T1 = String, T2 = (EmptyVal)FromIO 
+# matching the types: T1 = String, T2 = (EmptyVal)FromIO
 print_string <- "Hello! What's your name?"
   : (EmptyVal)FromIO
 
@@ -1058,16 +1058,16 @@ print_string <- "Hello! What's your name?"
 print_string <- "Hello! What's your name?" ; get_line
   : (String)FromIO
 
-name => print_string("Nice to meet you " + name + "!") 
+name => print_string("Nice to meet you " + name + "!")
   : String => (EmptyVal)FromIO
 
 # Here we have a function expression as the second operand
 # of the ";>" operator:
 #   print_string <- "Hello! What's your name?" ; get_line ;> name =>
-#   print_string("Nice to meet you " + name + "!") 
+#   print_string("Nice to meet you " + name + "!")
 # Whenever this happens the function extends to the end of the expression.
 # So the expression:
-#   name => print_string("Nice to meet you " + name + "!") 
+#   name => print_string("Nice to meet you " + name + "!")
 # is the second operand.
 # This is important to note as it could be longer and have other subexpressions
 # in it. For example it could be:
@@ -1076,10 +1076,10 @@ name => print_string("Nice to meet you " + name + "!")
 # Here again the whole expression from "name => ..." till the end would be the
 # second operand to the ";>" operator (and as you can see it has more ";>"
 # operators and operands of those operators inside)
-# 
+#
 # Putting all together (similarly to the previous example program):
 print_string <- "Hello! What's your name?" ; get_line ;> name =>
-print_string("Nice to meet you " + name + "!") 
+print_string("Nice to meet you " + name + "!")
   : (EmptyVal)FromIO
 \end{verbatim}
 
@@ -1120,7 +1120,7 @@ given a value of type \verb|@E(T1)| (which is an environment action of type
 \verb|T1 => @E(T2)| (which is a function that takes a value of type
 \verb|T1| and returns an environment action of type \verb|@E| that produces
 a value of type \verb|T2|), combine those two values by creating a value that
-does the following: 
+does the following:
 \begin{itemize}
 \item
 Performs the first action that produces a value of type \verb|T1|
@@ -1131,7 +1131,7 @@ passes it to the function of type \verb|T1 => @E(T2)| that then returns an
 action
 
 \item
-Perfoms the resulting action 
+Perfoms the resulting action
 \end{itemize}
 The overall effect is an environment action  of type \verb|@E| that produces
 a value is of type \verb|T2| and therefore the new value is of type
@@ -1154,7 +1154,7 @@ x >= y - z & x < 2 * y
 get_line ; get_line ;> line => print("Second line: " + line)
 2 * _
 _ - 1
-"Hello " + "it's me, " + _ 
+"Hello " + "it's me, " + _
 "Hi, I am " + _ + " and I am " + _ + " years old"
 \end{verbatim}
 
@@ -1179,7 +1179,7 @@ following operators: "\verb|->|", "\verb|o>|", "\verb|<o|".
 \\\\
 It is possible to use an underscore as an operand. An operator expression with
 underscore operands becomes a function that expects those operands as
-arguments.  This is best demonstrated by the types of the last four examples: 
+arguments.  This is best demonstrated by the types of the last four examples:
 
 \begin{verbatim}
 2 * _ : Int => Int
@@ -1198,7 +1198,7 @@ compatible and good enough for their illustration purposes.
 \begin{verbatim}
 "Hello, I'm a big string that's going to contain multiple values from " +
 "inside the imaginary program that I'm a part of. Here they are:\n" +
-"value1 = " + value1 + ", value2 = " + value2 + ", value3 = " + value3 + 
+"value1 = " + value1 + ", value2 = " + value2 + ", value3 = " + value3 +
 ", value4 = " + value4 + ", value5 = " + value5
 \end{verbatim}
 
@@ -1212,7 +1212,7 @@ The operator expression must split in a new line after an operator (not an
 argument).
 
 \item
-Every line after the first must be indented so that in begins at the column 
+Every line after the first must be indented so that in begins at the column
 where the first line of the operator expression begun.
 
 \item
@@ -1230,15 +1230,15 @@ The precise indentation rules are described in the section
 <line-op-expr> ::= <op-expr-start> ( <operand> | <line-func-expr> )
 \\
 
-<big-op-expr> ::= 
+<big-op-expr> ::=
 <big-op-expr-op-split> | <big-op-expr-func-split>
 \\
 
-<big-op-expr-op-split> ::= 
+<big-op-expr-op-split> ::=
 <op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
 
 <op-split-line> ::=
-<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent> 
+<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent>
 \\
 
 <big-op-expr-func-split> ::=
@@ -1252,7 +1252,7 @@ The precise indentation rules are described in the section
 
 <func-comp-op> ::= `o>' | `<o'
 
-<optional-spaces-op> ::= 
+<optional-spaces-op> ::=
 `->' | `<-' | `^' | `*' | `/' | `+' | `-' | `==' | `!=' | `>' | `<' | `>=' |
 `<=' | `\&' | `|' | `;>' | `;'
 \end{grammar}
@@ -1264,15 +1264,15 @@ The precise indentation rules are described in the section
 \begin{table}[h]
 
 \caption{
-The complete table of lcases operators along with their types and 
+The complete table of lcases operators along with their types and
 their short descriptions.
 }
 
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
 \hline
 Operator & Type & Description
-\\ 
+\\
 \hline
 \hline
 \verb|->| & \verb|T1 x (T1 => T2) => T2| & Right Function Application
@@ -1303,7 +1303,7 @@ General Division
 \hline
 \verb|+| & \verb|(@A)And(@B)Add_To(@C) --> @A x @B => @C| &
 General Addition
-\\ 
+\\
 \hline
 \verb|-| & \verb|(@A)Minus(@B)Is(@C) --> @A x @B => @C| &
 General Subtraction
@@ -1366,10 +1366,10 @@ is shown in the table below.
 \caption{ The table of precedence and associativity of the lcases operators.  }
 
 \begin{center}
-\begin{tabular}{ |c|c|c| } 
+\begin{tabular}{ |c|c|c| }
 \hline
 Operator & Precedence & Associativity
-\\ 
+\\
 \hline
 \hline
 \verb|->| & 10 (highest) & Left
@@ -1388,7 +1388,7 @@ Operator & Precedence & Associativity
 \\
 \hline
 \verb|+ -| & 5 & Left
-\\ 
+\\
 \hline
 \verb|== != > < >= <=| & 4 & None
 \\
@@ -1454,7 +1454,7 @@ The parameters and the body are seperated by the funciton arrow
 \textbf{Example}
 
 \begin{verbatim}
-(value1, value2, value3, value4, value5, value6, value7) => 
+(value1, value2, value3, value4, value5, value6, value7) =>
 print_line("value1 = " + value1 + ", value2 = " + value2 + ", value3 = " + value3) ;
 print_line("value4 = " + value4 + ", value5 = " + value5 + ", value6 = " + value6) ;
 print_line("value7 = " + value7)
@@ -1470,7 +1470,7 @@ The function expression must split in a new line after the function arrow
 ("\verb|=>|").
 
 \item
-Every line after the first must be indented so that in begins at the column 
+Every line after the first must be indented so that in begins at the column
 where the first character of the parameters was in the first line.
 
 \item
@@ -1537,7 +1537,7 @@ traffic_lights_match(_, _): TrafficLight^2 => Bool
 gcd_of(_)and(_): Int^2 => Int
   = (x, cases)
     0 => x
-    y => gcd_of(y)and((x)mod(y)) 
+    y => gcd_of(y)and((x)mod(y))
 
 (_)is_empty: ListOf(T1)s => Bool
   = cases
@@ -1558,7 +1558,7 @@ apply(_)to_all_in(_): (T1 => T2) x ListOf(T1)s => ListOf(T2)s
 "\verb|cases|" is a keyword that works as a special parameter.  Instead of
 giving the name "\verb|cases|" to that parameter, it is used to pattern match
 on the possible values of that parameter and return a different result for each
-particular case. 
+particular case.
 \\\\
 The last case can be "\verb|... => (body of default case)|" to capture all
 remaining cases while dismissing the value (e.g.
@@ -1597,9 +1597,9 @@ expressions in all cases must be the same as the number of parameters with the
 <nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
 \\
 
-<outer-matching> ::= <simple-id> | <matching> 
+<outer-matching> ::= <simple-id> | <matching>
 
-<matching> ::= 
+<matching> ::=
 <literal> | <pre-func> <inner-matching> | <tuple-matching> | <list-matching>
 
 <inner-matching> ::= `*' | <identifier> | <matching>
@@ -1672,7 +1672,7 @@ keyword "\verb|all|" to give the same type to all the values.
 \item \textit{Grammar}
 \begin{grammar}
 <value-def> ::= ""\\
-<indent> <identifier> 
+<indent> <identifier>
 ( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' ) <type>  \\
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
@@ -1737,7 +1737,7 @@ A "\verb|where|" expression begins by a line that only has the word
 "\verb|where|" in it. It is indented as described in the "Value Definitions"
 (\ref{subsubsec:valdefs}) or "'cases' Function Expressions"
 (\ref{subsubsec:casessyntax}) sections.  The definitions are placed below the
-"\verb|where|" line and must have the same indentation. 
+"\verb|where|" line and must have the same indentation.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1745,7 +1745,7 @@ A "\verb|where|" expression begins by a line that only has the word
 <nl> <indent> `where'
 <nl> <value-def-or-defs> ( <nl> <nl> <value-def-or-defs> )*
 
-<value-def-or-defs> ::= <value-def> | <grouped-value-defs> 
+<value-def-or-defs> ::= <value-def> | <grouped-value-defs>
 \end{grammar}
 
 \end{itemize}
@@ -1776,7 +1776,7 @@ which are described in the following paragraphs.
 \\\\
 The grammar of a type expression is:
 \begin{grammar}
-<type> ::= [ <condition> ]  <simple-type> 
+<type> ::= [ <condition> ]  <simple-type>
 
 <simple-type> ::=
 <type-id-or-var> | <type-app> | <power-type> | <prod-type> | <func-type>
@@ -1815,14 +1815,14 @@ and they are described in the following paragraphs.
 \\\\
 \textit{Grammar}
 \begin{grammar}
-<type-var> ::= <param-t-var> | <ad-hoc-t-var> \\ 
+<type-var> ::= <param-t-var> | <ad-hoc-t-var> \\
 \end{grammar}
 \subparagraph{Parametric Type Variables}
 
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-T1     T2     T3 
+T1     T2     T3
 \end{verbatim}
 
 \item
@@ -1853,7 +1853,7 @@ A parametric type variable is written with capital "T" followed by a digit.
 
 \item \textit{Grammar}
 \begin{grammar}
-<param-t-var> ::= `T' [0-9] \\ 
+<param-t-var> ::= `T' [0-9] \\
 \end{grammar}
 \end{itemize}
 
@@ -1885,7 +1885,7 @@ An ad hoc type variable is written with an '@' followed by any capital letter.
 
 \item \textit{Grammar}
 \begin{grammar}
-<ad-hoc-t-var> ::= `@' [A-Z] 
+<ad-hoc-t-var> ::= `@' [A-Z]
 \end{grammar}
 \end{itemize}
 
@@ -1896,7 +1896,7 @@ An ad hoc type variable is written with an '@' followed by any capital letter.
 \begin{verbatim}
 Possibly(Int)
 ListOf(Real)s
-TreeOf(String)s 
+TreeOf(String)s
 Result(Int)OrError(String)
 ListOf(Int => Int)s
 ListOf(T1)s
@@ -1979,7 +1979,7 @@ number of times the type is repeated.
 \begin{itemize}
 \item \textit{Examples}
 \begin{verbatim}
-String => String 
+String => String
 Real => Int
 T1 => T1
 Int^2 => Int
@@ -1993,7 +1993,7 @@ Real^3 => Real
 A function type expression is comprised of the input type expression and the
 output type expression seperated by the function arrow ("\verb|=>|"). The
 input and output type expressions are type expressions which are put in
-parentheses only if they are function type expressions. 
+parentheses only if they are function type expressions.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -2059,7 +2059,7 @@ polymorphism works, see the "Type Logic" section (\ref{subsec:typelogic}).
 
 \item \textit{Grammar}
 \begin{grammar}
-<condition> ::= <prop-name> `\ -->\ ' 
+<condition> ::= <prop-name> `\ -->\ '
 \end{grammar}
 
 \end{itemize}
@@ -2234,7 +2234,7 @@ non_empty_ls(_)to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 \begin{grammar}
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
-`values' ( `\ ' | <nl> `\ \ ' ) \\ 
+`values' ( `\ ' | <nl> `\ \ ' ) \\
 <simple-id> [ `:' <simple-type> ]
 ( [ `\ ' ] | [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
 \end{grammar}
@@ -2265,7 +2265,7 @@ Parametric type variables can be used in the nickname.
 \begin{grammar}
 <t-nickname> ::=
 `type_nickname\ ' <type-name> [ `\ ' ] `=' [ `\ ' ] <simple-type>
-\end{grammar} 
+\end{grammar}
 
 \end{itemize}
 
@@ -2282,7 +2282,7 @@ Therefore, the following constructs exist and accomplish the aforementioned
 respectively: \textbf{type proposition definitions} and \textbf{type theorems}.
 These constructs are described in detail in the following sections. From this
 point onwards the "type" part will be omitted, i.e. propositions are always
-type propositions and theorems are always type theorems. 
+type propositions and theorems are always type theorems.
 
 \subsubsection{Proposition Definitions}
 
@@ -2444,7 +2444,7 @@ essentially mean "and").
 `(' [ `\ ' ] <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* [ `\ ' ] `)'
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
-\end{grammar} 
+\end{grammar}
 
 \newpage
 
@@ -2480,7 +2480,7 @@ proof apply(_)inside(_) = apply(_)to_all_in(_)
 
 \item \textit{Usage}
 
-\begin{verbatim} 
+\begin{verbatim}
 a, b : all Possibly(Int)
   = wrapper(1), no_value
 
@@ -2501,7 +2501,7 @@ l1, l2, l3 : all ListOf(Int)s
   ==> []
 \end{verbatim}
 \newpage
-\begin{verbatim} 
+\begin{verbatim}
 >> apply(_ + 1)inside(a)
   : Possibly(Int)
   ==> the_value:2
@@ -2588,10 +2588,10 @@ values used in the implementation for this same combination of types. This
 mechanism essentially gives definitions for free, that is in the sense that
 when you define a set of ad hoc polymorphic values for a particular set of
 types you get for free all the ad hoc polymorphic values that can be defined
-using a subset of the defined ones. 
+using a subset of the defined ones.
 \\\\
 A theorem of an implication proposition is grammatically the same as
-a theorem of an atomic proposition with the only difference being that an 
+a theorem of an atomic proposition with the only difference being that an
 implication propostition is comprised by two atomic propositions seperated by
 the condition arrow (" \verb|-->| ") arrow.
 
@@ -2602,8 +2602,8 @@ the condition arrow (" \verb|-->| ") arrow.
 \paragraph{Grammar for Theorems}
 
 \begin{grammar}
-<type-theo> ::= 
-`type_theorem\ ' <prop-name-with-subs> [ `\ -->\ ' <prop-name-with-subs> ] <nl> 
+<type-theo> ::=
+`type_theorem\ ' <prop-name-with-subs> [ `\ -->\ ' <prop-name-with-subs> ] <nl>
 `proof' <proof>
 
 <prop-name-with-subs> ::=  ""\\""
@@ -2616,7 +2616,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <t-var-sub> ::=
 <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
-<func-type-sub> 
+<func-type-sub>
 \\
 
 <type-app-sub> ::= ""\\""
@@ -2653,7 +2653,7 @@ the condition arrow (" \verb|-->| ") arrow.
 `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
-<proof> ::= 
+<proof> ::=
 `\ ' <id-or-op-eq> `\ ' <line-expr> |
 <nl> `\ \ ' <id-or-op-eq>  <tt-value-expr>
 
@@ -2661,7 +2661,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <tt-value-expr> ::=
 `\ ' <line-expr> | <nl> <indent> <value-expr> [ <where-expr> ]
-\end{grammar} 
+\end{grammar}
 
 \newpage
 
@@ -2841,10 +2841,10 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <id-cont> ::= <unders_in_par> [a-z_]+
 
-<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)' 
+<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)'
 \\
 
-<paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'  
+<paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'
 \\
 
 <tuple> ::=
@@ -2868,18 +2868,18 @@ the condition arrow (" \verb|-->| ") arrow.
 <big-tuple> ::= ""\\
 `(' [ `\ ' ] <line-expr-or-under> [ <nl> <indent> ]
 <comma> <line-expr-or-unders> \\
-( <nl> <indent> <comma> <line-expr-or-unders> )* 
+( <nl> <indent> <comma> <line-expr-or-unders> )*
 <nl> <indent> `)'
 \\
 
 <list> ::= `[' [ `\ ' ] [ <line-expr-or-unders> ] [ `\ ' ] `]'
 
-<big-list> ::= 
+<big-list> ::=
 `[' [ `\ ' ] <line-expr-or-unders>
 ( <nl> <indent> <comma> <line-expr-or-unders> )* <nl> <indent> `]'
 \\
 
-<paren-func-app-or-id> ::= 
+<paren-func-app-or-id> ::=
 [ <arguments> ] <id-start> ( <arguments> [a-z_]+ )* [ [0-9] ]
 [ <arguments> ]
 
@@ -2916,15 +2916,15 @@ the condition arrow (" \verb|-->| ") arrow.
 <line-op-expr> ::= <op-expr-start> ( <operand> | <line-func-expr> )
 \\
 
-<big-op-expr> ::= 
+<big-op-expr> ::=
 <big-op-expr-op-split> | <big-op-expr-func-split>
 \\
 
-<big-op-expr-op-split> ::= 
+<big-op-expr-op-split> ::=
 <op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
 
 <op-split-line> ::=
-<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent> 
+<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent>
 \\
 
 <big-op-expr-func-split> ::=
@@ -2938,7 +2938,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <func-comp-op> ::= `o>' | `<o'
 
-<optional-spaces-op> ::= 
+<optional-spaces-op> ::=
 `->' | `<-' | `^' | `*' | `/' | `+' | `-' | `==' | `!=' | `>' | `<' | `>=' |
 `<=' | `\&' | `|' | `;>' | `;'
 \\
@@ -2973,9 +2973,9 @@ the condition arrow (" \verb|-->| ") arrow.
 <nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
 \\
 
-<outer-matching> ::= <simple-id> | <matching> 
+<outer-matching> ::= <simple-id> | <matching>
 
-<matching> ::= 
+<matching> ::=
 <literal> | <pre-func> <inner-matching> | <tuple-matching> | <list-matching>
 
 <inner-matching> ::= `*' | <identifier> | <matching>
@@ -2992,7 +2992,7 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <value-def> ::= ""\\
-<indent> <identifier> 
+<indent> <identifier>
 ( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' ) <type>  \\
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 
@@ -3013,10 +3013,10 @@ the condition arrow (" \verb|-->| ") arrow.
 <nl> <indent> `where'
 <nl> <value-def-or-defs> ( <nl> <nl> <value-def-or-defs> )*
 
-<value-def-or-defs> ::= <value-def> | <grouped-value-defs> 
+<value-def-or-defs> ::= <value-def> | <grouped-value-defs>
 \\
 
-<type> ::= [ <condition> ]  <simple-type> 
+<type> ::= [ <condition> ]  <simple-type>
 
 <simple-type> ::=
 <type-id-or-var> | <type-app> | <power-type> | <prod-type> | <func-type>
@@ -3027,11 +3027,11 @@ the condition arrow (" \verb|-->| ") arrow.
 <type-id> ::= [A-Z] [A-Za-z]*
 \\
 
-<type-var> ::= <param-t-var> | <ad-hoc-t-var> 
+<type-var> ::= <param-t-var> | <ad-hoc-t-var>
 
-<param-t-var> ::= `T' [0-9] 
+<param-t-var> ::= `T' [0-9]
 
-<ad-hoc-t-var> ::= `@' [A-Z] 
+<ad-hoc-t-var> ::= `@' [A-Z]
 \\
 
 <type-app> ::= ""\\""
@@ -3065,7 +3065,7 @@ the condition arrow (" \verb|-->| ") arrow.
 `(' [ `\ ' ] <func-type>  [ `\ ' ] `)'
 \\
 
-<condition> ::= <prop-name> `\ -->\ ' 
+<condition> ::= <prop-name> `\ -->\ '
 \\
 \\
 
@@ -3090,7 +3090,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <or-type-def> ::= ""\\
 `or_type\ ' <type-name> <nl> \\
-`values' ( `\ ' | <nl> `\ \ ' ) \\ 
+`values' ( `\ ' | <nl> `\ \ ' ) \\
 <simple-id> [ `:' <simple-type> ]
 ( [ `\ ' ] | [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
 \\
@@ -3123,8 +3123,8 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 \newpage
-<type-theo> ::= 
-`type_theorem\ ' <prop-name-with-subs> [ `\ -->\ ' <prop-name-with-subs> ] <nl> 
+<type-theo> ::=
+`type_theorem\ ' <prop-name-with-subs> [ `\ -->\ ' <prop-name-with-subs> ] <nl>
 `proof' <proof>
 
 <prop-name-with-subs> ::=  ""\\""
@@ -3137,7 +3137,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <t-var-sub> ::=
 <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
-<func-type-sub> 
+<func-type-sub>
 \\
 
 <type-app-sub> ::= ""\\""
@@ -3174,7 +3174,7 @@ the condition arrow (" \verb|-->| ") arrow.
 `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
-<proof> ::= 
+<proof> ::=
 `\ ' <id-or-op-eq> `\ ' <line-expr> |
 <nl> `\ \ ' <id-or-op-eq>  <tt-value-expr>
 
@@ -3349,12 +3349,12 @@ The parser code is split into the following files:
 All of the above are written using the full grammar. The types correspond to
 non-terminal symbols. The parsers try to parse a string into the correspoding
 AST type. If the string is valid every terminal symbol is discarded unless it's
-part of a literal or an identifier. 
+part of a literal or an identifier.
 
 \subsection{Parser Examples}
 
 In this section we show how the types and the parsers are derived from the
-grammar with some examples. We begin with a grammar rule and we create the 
+grammar with some examples. We begin with a grammar rule and we create the
 AST type and the parser that parses it.
 
 \subsubsection{Parser Class and Example 0: Literal}
@@ -3366,22 +3366,22 @@ type Parser = Parsec String ParserState
 
 \end{verbatim}
 We create the polymorphic value "parser" with the "HasParser" class
-so that all the parsers have the name "parser" irrespective of the particular 
+so that all the parsers have the name "parser" irrespective of the particular
 type they are parsing:
 \begin{verbatim}
 class HasParser a where
   parser :: Parser a
 
 \end{verbatim}
-We begin with the very simple example of the literal with the following 
+We begin with the very simple example of the literal with the following
 grammar rule:
 \begin{grammar}
 <literal> ::= <int-lit> | <real-lit> | <char-lit> | <string-lit>\\
 \end{grammar}
 The AST type for the literal is:
 \begin{verbatim}
-data Literal = 
-  Int Int | R Double | Ch Char | S String 
+data Literal =
+  Int Int | R Double | Ch Char | S String
 
 \end{verbatim}
 And here is the parser for the literal which is defined as an instance of
@@ -3394,7 +3394,7 @@ instance HasParser Literal where
     "Literal"
 
 \end{verbatim}
-The Parser type is a Functor so the "\verb|<$>|" (fmap) operator passes each 
+The Parser type is a Functor so the "\verb|<$>|" (fmap) operator passes each
 constructor inside the particular parser and the "\texttt{<|>}" operator means
 "this parser or that parser". Finally, the "\verb|<?>|" operator means "if
 all the parsers fail show this in the error message".
@@ -3443,7 +3443,7 @@ newtype DotChange = DC (FieldChange, [FieldChange])
 And the parser for the "change" expression is:
 \begin{verbatim}
 instance HasParser DotChange where
-  parser = 
+  parser =
     DC <$>
       (try (string ".change{") *> opt_space_around field_changes_p <* char '}')
     where
@@ -3478,7 +3478,7 @@ instance HasParser PostFuncAppEnd where
 The grammar rule for the value definition is the following:
 \begin{grammar}
 <value-def> ::= ""\\
-<indent> <identifier> 
+<indent> <identifier>
 ( [ `\ ' ] `:' [ `\ ' ] | <nl> <indent> `:\ ' ) <type>  \\
 <nl> <indent> `=\ ' <value-expr> [ <where-expr> ]
 \\
@@ -3491,7 +3491,7 @@ newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
 And the parser for the value definition is:
 \begin{verbatim}
 instance HasParser ValueDef where
-  parser = 
+  parser =
     indent *> parser >>= \identifier ->
 
     increase_il_by 1 >>
@@ -3519,11 +3519,11 @@ spaces, getting the indentation level from the state (see Indentation System
 type but they don't actually parse anything, they are "parsers" that only
 update the indentation level (but can also be combined with other parsers).
 They are used as described in rule 2 of the Indentation System
-(\ref{subsubsec:indsys}). "has_type_symbol" parses the following part of 
+(\ref{subsubsec:indsys}). "has_type_symbol" parses the following part of
 the grammar rule:
 ( [ \lit{\ } ] \lit{:} [ \lit{\ } ]
 \verb||| \synt{nl} \synt{indent} \lit{:\ }).
-"we_are_in_equal_line" and "we_are_not_in_equal_line" change the state 
+"we_are_in_equal_line" and "we_are_not_in_equal_line" change the state
 to enforce rule 6 of the Indentation System.
 
 \section{Semantic Analysis}
@@ -3540,7 +3540,7 @@ to enforce rule 6 of the Indentation System.
 
 Lcases is essentially a subset of \H\ with different syntax and naming,
 sprinkled with few new constructs. Anything that is not mentioned in the
-following sections is more or less the same in \H\ and lcases. 
+following sections is more or less the same in \H\ and lcases.
 
 \subsubsection{Correspondaces with \H}
 
@@ -3563,7 +3563,7 @@ Operators:
 Operators are not actually compiled to the corresponding ones in \H\ because
 the are some difference either in the precedence or in the types (in lcases
 they are more general). Nevertheless, they are similar enough to be considered
-"correspondances". Everything is compiled into function application in \H. 
+"correspondances". Everything is compiled into function application in \H.
 (TODO will it?)
 \begin{itemize}
 \item
@@ -3581,24 +3581,24 @@ Left function application operator "\verb|->|" \r
 Left function composition operator "\verb|<o|" \r "\verb|.|" operator
 
 \item
-Right function composition operator "\verb|o>|" \r 
+Right function composition operator "\verb|o>|" \r
 "\verb|>.>|" operator from GHC.Core.Map.Expr (or other equivalent ones from
 other esoteric libraries, why \H?)
 
 \item
-"\verb|!=|" operator \r "\verb|\=|" operator 
+"\verb|!=|" operator \r "\verb|\=|" operator
 
 \item
-"\verb|&|" operator \r "\verb|&&|" operator 
+"\verb|&|" operator \r "\verb|&&|" operator
 
 \item
-"\texttt{|}" operator \r "\texttt{||}" operator 
+"\texttt{|}" operator \r "\texttt{||}" operator
 
 \item
-"\verb|;>|" operator \r "\verb|>>=|" operator 
+"\verb|;>|" operator \r "\verb|>>=|" operator
 
 \item
-"\verb|;|" operator \r "\verb|>>|" operator 
+"\verb|;|" operator \r "\verb|>>|" operator
 
 \end{itemize}
 
@@ -3630,9 +3630,9 @@ for the type to extend to the whole expression. "value definitions" are
 compiled into a type annotation \textbf{and} a value definition in \H.
 
 \item
-"where" expressions are also similar. In lcases the values defined in a 
-"where" expression can "see" the parameters of the outer expression when 
-it is a function. "where" expressions in lcases are actually compiled to 
+"where" expressions are also similar. In lcases the values defined in a
+"where" expression can "see" the parameters of the outer expression when
+it is a function. "where" expressions in lcases are actually compiled to
 "let-in" expressions in \H.
 
 \item
@@ -3641,7 +3641,7 @@ hoc type variables (constrained type variables in \H) and parametric type
 variables whereas in \H\ they are all lower case letters.
 
 \item
-The condition (constaint in \H) arrow: "\verb|-->|" \r "\verb|=>|" 
+The condition (constaint in \H) arrow: "\verb|-->|" \r "\verb|=>|"
 
 \item
 The product type: "\verb|A x B x C|" \r "\verb|(A, B, C)|"

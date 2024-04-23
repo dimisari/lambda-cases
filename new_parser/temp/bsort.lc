@@ -3,7 +3,7 @@ bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x Bool
   = cases
     [] => ([], true)
     [x] => ([x], true)
-    [x1, x2, rest = ...] => 
+    [x1, x2, rest = ...] =>
       (x1 < x2) -> cases
         true => prepend(x2)to_bubble_pass(x1)with_rest -> not_sorted(_)
         false => prepend(x1)to_bubble_pass(x2)with_rest

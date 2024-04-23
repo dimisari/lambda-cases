@@ -36,10 +36,22 @@ main =
 -- compile_prog
 compile_prog :: ProgramFileName -> IO ()
 compile_prog pfn =
-  read_prog pfn >>= compile .> add_imports .> writeFile out_path
+  read_prog pfn >>= compile .> writeFile out_path
   where
-  add_imports :: Haskell -> Haskell
-  add_imports = (imports ++)
+  out_path :: FilePath
+  out_path = res_dir ++ progs_dir ++ make_extension_hs pfn
+
+compile :: Lcases -> String
+compile =
+  parse .> parse_res_to_final_res
+  where
+  parse_res_to_final_res :: Either ParseError Program -> String
+  parse_res_to_final_res = \case
+    Left err -> "Error :( ==>" ++ show err
+    Right prog -> prog_to_hs prog
+
+  prog_to_hs :: Program -> Haskell
+  prog_to_hs = change_prog_if_needed .> to_haskell .> (imports ++)
 
   imports :: Haskell
   imports = concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"
@@ -47,18 +59,6 @@ compile_prog pfn =
   import_names :: [Haskell]
   import_names =
     ["Prelude hiding (IO)", "Haskell.Predefined", "Haskell.OpsInHaskell"]
-
-  out_path :: FilePath
-  out_path = res_dir ++ progs_dir ++ make_extension_hs pfn
-
-compile :: Lcases -> String
-compile =
-  parse .> parse_res_to_hs
-  where
-  parse_res_to_hs :: Either ParseError Program -> Haskell
-  parse_res_to_hs = \case
-    Left err -> "Error :( ==>" ++ show err
-    Right prog -> change_prog_if_needed prog &> to_haskell
 
 -- compile_example
 compile_example :: (FileName, CompileExFunc) -> IO ()
@@ -68,17 +68,16 @@ compile_example (file_name, comp_ex_func) =
   out_path :: FilePath
   out_path = res_dir ++ test_exs_dir ++ make_extension_hs file_name
 
--- compile_example_func
 compile_example_func :: (HasParser a, ToHaskell a) => Compile a
-compile_example_func = parse .> parse_res_to_hs
+compile_example_func = parse .> parse_res_to_final_res
 
-parse_res_to_hs :: ToHaskell a => Either ParseError a -> ResultString a
-parse_res_to_hs = RS . (++ "\n\n") . \case
+parse_res_to_final_res :: ToHaskell a => Either ParseError a -> ResultString a
+parse_res_to_final_res = RS . (++ "\n\n") . \case
   Left err -> "Error :( ==>" ++ show err
   Right res -> to_haskell res
 
-res_to_str_lit :: Either ParseError Literal -> Haskell
-res_to_str_lit = \case
+parse_res_to_str_lit :: Either ParseError Literal -> Haskell
+parse_res_to_str_lit = \case
   Left err -> "Error :( ==>" ++ show err
   Right lit -> to_haskell (NoAnnotation, lit)
 
@@ -88,7 +87,7 @@ extract_res_str = \(RS s) -> s
 -- file_name_compile_func_pairs
 file_name_compile_func_pairs :: [(FileName, CompileExFunc)]
 file_name_compile_func_pairs =
-  [ ( "literals.txt", parse .> res_to_str_lit .> (++ "\n\n"))
+  [ ( "literals.txt", parse .> parse_res_to_str_lit .> (++ "\n\n"))
   , ( "identifiers.txt"
     , (compile_example_func :: Compile Identifier) .> extract_res_str
     )
@@ -126,16 +125,21 @@ file_name_compile_func_pairs =
     , (compile_example_func :: Compile LineFuncExpr) .> extract_res_str
     )
   , ( "big_func_expr.txt"
-    , (compile_example_func :: Compile (THWIL BigFuncExpr)) .> extract_res_str
+    , ( compile_example_func ::
+        Compile (THWIL (BigFuncExpr, PossiblyWhereExpr))
+      ) .> extract_res_str
     )
   , ( "cases_func_expr.txt"
-    , (compile_example_func :: Compile (THWIL CasesFuncExpr)) .> extract_res_str
+    , ( compile_example_func ::
+        Compile (THWIL (CasesFuncExpr, PossiblyWhereExpr))
+      ) .> extract_res_str
     )
   , ( "value_def.txt"
     , (compile_example_func :: Compile (THWIL ValueDef)) .> extract_res_str
     )
   , ( "grouped_val_defs.txt"
-    , (compile_example_func :: Compile (THWIL GroupedValueDefs)) .> extract_res_str
+    , (compile_example_func :: Compile (THWIL GroupedValueDefs)) .>
+      extract_res_str
     )
   , ( "where_expr.txt"
     , (compile_example_func :: Compile (THWIL WhereExpr)) .> extract_res_str
@@ -187,6 +191,9 @@ instance ToHsWithIndentLvl a => ToHaskell (THWIL a) where
 
 instance HasParser a => HasParser (THWIL a) where
    parser = THWIL <$> parser
+
+instance HasParser a => HasParser (a, PossiblyWhereExpr) where
+   parser = parser $> \a -> (a, NoWhereExpr)
 
 -- For fast vim navigation
 -- TypesAndHelpers.hs

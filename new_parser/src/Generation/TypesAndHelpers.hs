@@ -17,14 +17,14 @@ type Haskell = String
 
 type HsPair = (Haskell, Haskell)
 
-type PostFuncArgHs = Haskell
 type DotChangeArgHs = Haskell
-type PFAWithPostFuncsHs = Haskell
 
--- Halper types
+-- Helper types
 data NeedsParenBool = Paren | NoParen
 
 data NeedsAnnotationBool = Annotation | NoAnnotation
+
+data PossiblyWhereExpr = HasWhereExpr WhereExpr | NoWhereExpr
 
 newtype CaseOf = CaseOf CasesParams
 
@@ -45,7 +45,7 @@ class ToHsWithParamNum a where
 class ToHsWithIndentLvl a where
   to_hs_wil :: a -> WithIndentLvl Haskell
 
--- helper instances
+-- automatic instances
 instance ToHaskell a => ToHaskell [a] where
   to_haskell = concatMap to_haskell
 
@@ -66,7 +66,7 @@ instance ToHsWithIndentLvl a => ToHsWithIndentLvl (Maybe a) where
 
 -- list helpers
 to_hs_prepend_list :: ToHaskell a => String -> [a] -> Haskell
-to_hs_prepend_list = \sep -> concatMap ((sep ++) . to_haskell)
+to_hs_prepend_list = \prepend_hs -> concatMap ((prepend_hs ++) . to_haskell)
 
 to_hs_wpn_list :: ToHsWithParamNum a => [a] -> WithParamNum [Haskell]
 to_hs_wpn_list = traverse to_hs_wpn
@@ -85,7 +85,9 @@ to_params_hs :: Int -> Haskell
 to_params_hs = \case
   0 -> ""
   1 -> "\\x0' -> "
-  i -> "\\" ++ to_params_in_paren_hs i ++ " -> "
+  i -> case i > 1 of
+    True -> "\\" ++ to_params_in_paren_hs i ++ " -> "
+    False -> error "should be impossible: negative num of params"
 
 to_params_in_paren_hs :: Int -> Haskell
 to_params_in_paren_hs = \i ->
@@ -97,31 +99,42 @@ to_param = \j -> "x" ++ show j ++ "'"
 add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
   hs_gen >>= \hs ->
-  params_hs_gen >>= \case
-    "" -> return hs
-    params_hs -> return $ "(" ++ params_hs ++ hs ++ ")"
+  params_hs_gen $> \case
+    "" -> hs
+    params_hs -> "(" ++ params_hs ++ hs ++ ")"
 
-add_params_to2 :: WithParamNum [Haskell] -> WithParamNum [Haskell]
-add_params_to2 = \hs_list_gen ->
+add_params_to_list :: WithParamNum [Haskell] -> WithParamNum [Haskell]
+add_params_to_list = \hs_list_gen ->
   hs_list_gen >>= \hs_list ->
-  params_hs_gen >>= \case
-    "" -> return hs_list
-    params_hs -> return $ params_hs : hs_list
+  params_hs_gen $> \case
+    "" -> hs_list
+    params_hs -> params_hs : hs_list
+
+case_of_inner_hs_gen :: WithParamNum Haskell
+case_of_inner_hs_gen =
+  get $> \case
+    1 -> "x0'"
+    i -> case i > 1 of
+      True -> to_params_in_paren_hs i
+      False -> error "should be impossible: zero or negative cases params"
 
 -- Indentation helpers
-change_indent_lvl :: Int -> WithIndentLvl ()
-change_indent_lvl = \i -> modify (+i)
+change_il :: Int -> WithIndentLvl ()
+change_il = \i -> modify (+i)
+
+deeper_with_num :: Int -> WithIndentLvl Haskell -> WithIndentLvl Haskell
+deeper_with_num = \i hs_gen -> change_il i *> hs_gen <* change_il (-i)
 
 deeper :: WithIndentLvl Haskell -> WithIndentLvl Haskell
-deeper = \hs_gen -> change_indent_lvl 1 *> hs_gen <* change_indent_lvl (-1)
+deeper = deeper_with_num 1
 
-deeper2 :: WithIndentLvl Haskell -> WithIndentLvl Haskell
-deeper2 = \hs_gen -> change_indent_lvl 2 *> hs_gen <* change_indent_lvl (-2)
+twice_deeper :: WithIndentLvl Haskell -> WithIndentLvl Haskell
+twice_deeper = deeper_with_num 2
 
 indent :: WithIndentLvl Haskell
 indent = get $> ind_lvl_to_spaces
 
-indent_all_and_concat :: [Haskell] -> WithParamNum Haskell
+indent_all_and_concat :: [Haskell] -> WithIndentLvl Haskell
 indent_all_and_concat = \hs_list ->
   indent $> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
@@ -179,17 +192,10 @@ general_change_hs_list = map ("c" ++) general_hs_list
 general_hs_list :: [Haskell]
 general_hs_list = ["1st", "2nd", "3rd", "4th", "5th"]
 
-to_proj_hs_list :: [Haskell] -> [Haskell]
-to_proj_hs_list = map ("p0" ++)
-
-to_change_hs_list :: [Haskell] -> [Haskell]
-to_change_hs_list = map ("c0" ++)
-
---
+-- other
 add_to_hs_pair :: HsPair -> HsPair -> HsPair
 add_to_hs_pair = \(hs1, hs2) (hs1', hs2') -> (hs1' ++ hs1, hs2' ++ hs2)
 
--- other
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
 
@@ -202,6 +208,11 @@ in_paren_if :: NeedsParenBool -> Haskell -> Haskell
 in_paren_if = \case
   NoParen -> id
   Paren -> \hs -> "(" ++ hs ++ ")"
+
+mwe_to_pwe :: Maybe WhereExpr -> PossiblyWhereExpr
+mwe_to_pwe = \case
+  Nothing -> NoWhereExpr
+  Just we -> HasWhereExpr we
 
 -- GroupedValueDefs helpers
 -- ASTTypes.hs

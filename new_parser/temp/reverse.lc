@@ -7,7 +7,9 @@ values non_empty_l:NonEmptyListOf(T1)s | empty_l
 type_theorem (ListOf(T1)s)And(T1)add_to(ListOf(T1)s)
 proof
   l + a =
-    l -> a
+    l -> cases
+      empty_l => non_empty_l:(a, empty_l)
+      non_empty_l:(head, tail) => non_empty_l:(head, tail + a)
 
 reverse(_): ListOf(T1)s => ListOf(T1)s
   = cases
