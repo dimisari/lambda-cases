@@ -2,6 +2,8 @@
 - prop names can have simple types?
   - probably only in conditions for values that use ad hoc values
 
+- ahtv in <type-app-sub-or-id> (like in <type-app-...>)?
+
 - simplify type-app?
 
 - param num state needs to be global?

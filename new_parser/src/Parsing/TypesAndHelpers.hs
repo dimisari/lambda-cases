@@ -17,7 +17,7 @@ get_il :: Parser Int
 get_il = fst <$> getState
 
 indent :: Parser ()
-indent = get_il $> ind_lvl_to_spaces >>= string >> nothing
+indent = get_il >$> ind_lvl_to_spaces >>= string >> nothing
 
 modify_il :: (Int -> Int) -> Parser ()
 modify_il = \f -> modifyState $ \(il, b) -> (f il, b)

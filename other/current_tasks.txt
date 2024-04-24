@@ -1,6 +1,4 @@
 
-- type app doesn't have single quotes before and after
-
 - from_io, FromIO => with_io, WithIO
 
 - pattern match multiple elems in list with:
@@ -12,5 +10,7 @@
 - add reverse.lc from "temp" dir
 
 - remove hard coded values for or types (e.g. true=True)
+
+- prop-name and prop-name-with-subs fix single quotes
 
 # tasks.txt

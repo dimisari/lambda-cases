@@ -1779,9 +1779,8 @@ The grammar of a type expression is:
 <type> ::= [ <condition> ]  <simple-type>
 
 <simple-type> ::=
-<type-id-or-var> | <type-app> | <power-type> | <prod-type> | <func-type>
-
-<type-id-or-var> ::= <type-id> | <type-var>
+<param-t-var> | <type-app-id-or-ahtv> | <power-type> | <prod-type> |
+<func-type>
 \end{grammar}
 
 \paragraph{Type Identifiers}
@@ -1921,14 +1920,11 @@ type parameters are substituted by the expressions of the type arguments.
 
 \item \textit{Grammar}
 \begin{grammar}
-<type-app> ::= ""\\""
-[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <t-id-or-ad-hoc-t-var> [ <types-in-paren> ]
-\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren>
+<type-app-id-or-ahtv> ::=
+[ <types-in-paren> ] <taioa-middle> [ <types-in-paren> ]
 
-<type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
-
-<t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
+<taioa-middle> ::=
+<type-id> ( <types-in-paren> [A-Za-z]+ )* | <ad-hoc-t-var>
 
 <types-in-paren> ::=
 `(' [ `\ ' ] <simple-type> ( <comma> <simple-type> )* [ `\ ' ] `)'
@@ -1967,7 +1963,7 @@ number of times the type is repeated.
 <field-type> ::= <power-base-type> | <power-type>
 
 <power-base-type> ::=
-<type-id-or-var> | <type-app> |
+<param-t-var> | <type-app-id-or-ahtv> |
 `(' [ `\ ' ] ( <prod-type> | <func-type> ) [ `\ ' ] `)'
 
 <power-type> ::= <power-base-type> `^' <int-greater-than-one>
@@ -2000,7 +1996,7 @@ parentheses only if they are function type expressions.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id-or-var> | <type-app> | <power-type> | <prod-type> |
+<param-t-var> | <type-app-id-or-ahtv> | <power-type> | <prod-type> |
 `(' [ `\ ' ] <func-type>  [ `\ ' ] `)'
 \end{grammar}
 \end{itemize}
@@ -2615,18 +2611,14 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <t-var-sub> ::=
-<type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+<type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
 <func-type-sub>
 \\
 
-<type-app-sub> ::= ""\\""
-[ <subs-or-unders-in-paren> ] <type-id-with-subs> [ <subs-or-unders-in-paren> ]
-\alt " "
-<subs-or-unders-in-paren> <t-id-or-ad-hoc-t-var> [ <subs-or-unders-in-paren> ]
-\alt " "
-<t-id-or-ad-hoc-t-var> <subs-or-unders-in-paren>
-
-<type-id-with-subs> ::= <type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )+
+<type-app-sub-or-id> ::= ""\\""
+[ <subs-or-unders-in-paren> ]
+<type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )*
+[ <subs-or-unders-in-paren> ]
 
 <subs-or-unders-in-paren> ::=
 `(' [ `\ ' ] <sub-or-under> ( <comma> <sub-or-under> )* [ `\ ' ] `)'
@@ -2637,7 +2629,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <power-type-sub> ::= <power-base-type-sub> `^' <int-greater-than-one>
 
 <power-base-type-sub> ::= ""\\
-`_' | <type-id-or-var> | <type-app-sub> |
+`_' | <type-var> | <type-app-sub-or-id> |
 `(' [ `\ ' ] ( <prod-type-sub> | <func-type-sub> ) [ `\ ' ] `)'
 \\
 
@@ -2649,7 +2641,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
 
 <in-or-out-type-sub> ::= ""\\
-`_' | <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+`_' | <type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
 `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
@@ -3019,9 +3011,8 @@ the condition arrow (" \verb|-->| ") arrow.
 <type> ::= [ <condition> ]  <simple-type>
 
 <simple-type> ::=
-<type-id-or-var> | <type-app> | <power-type> | <prod-type> | <func-type>
-
-<type-id-or-var> ::= <type-id> | <type-var>
+<param-t-var> | <type-app-id-or-ahtv> | <power-type> | <prod-type> |
+<func-type>
 \\
 
 <type-id> ::= [A-Z] [A-Za-z]*
@@ -3034,14 +3025,11 @@ the condition arrow (" \verb|-->| ") arrow.
 <ad-hoc-t-var> ::= `@' [A-Z]
 \\
 
-<type-app> ::= ""\\""
-[ <types-in-paren> ] <type-id-with-args> [ <types-in-paren> ]
-\alt " "<types-in-paren> <t-id-or-ad-hoc-t-var> [ <types-in-paren> ]
-\alt " "<t-id-or-ad-hoc-t-var> <types-in-paren>
+<type-app-id-or-ahtv> ::=
+[ <types-in-paren> ] <taioa-middle> [ <types-in-paren> ]
 
-<type-id-with-args> ::= <type-id> ( <types-in-paren> [A-Za-z]+ )+
-
-<t-id-or-ad-hoc-t-var> ::= <type-id> | <ad-hoc-t-var>
+<taioa-middle> ::=
+<type-id> ( <types-in-paren> [A-Za-z]+ )* | <ad-hoc-t-var>
 
 <types-in-paren> ::=
 `(' [ `\ ' ] <simple-type> ( <comma> <simple-type> )* [ `\ ' ] `)'
@@ -3052,7 +3040,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <field-type> ::= <power-base-type> | <power-type>
 
 <power-base-type> ::=
-<type-id-or-var> | <type-app> |
+<param-t-var> | <type-app-id-or-ahtv> |
 `(' [ `\ ' ] ( <prod-type> | <func-type> ) [ `\ ' ] `)'
 
 <power-type> ::= <power-base-type> `^' <int-greater-than-one>
@@ -3061,7 +3049,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
-<type-id-or-var> | <type-app> | <power-type> | <prod-type> |
+<param-t-var> | <type-app-id-or-ahtv> | <power-type> | <prod-type> |
 `(' [ `\ ' ] <func-type>  [ `\ ' ] `)'
 \\
 
@@ -3136,18 +3124,14 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <t-var-sub> ::=
-<type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+<type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
 <func-type-sub>
 \\
 
-<type-app-sub> ::= ""\\""
-[ <subs-or-unders-in-paren> ] <type-id-with-subs> [ <subs-or-unders-in-paren> ]
-\alt " "
-<subs-or-unders-in-paren> <t-id-or-ad-hoc-t-var> [ <subs-or-unders-in-paren> ]
-\alt " "
-<t-id-or-ad-hoc-t-var> <subs-or-unders-in-paren>
-
-<type-id-with-subs> ::= <type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )+
+<type-app-sub-or-id> ::= ""\\""
+[ <subs-or-unders-in-paren> ]
+<type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )*
+[ <subs-or-unders-in-paren> ]
 
 <subs-or-unders-in-paren> ::=
 `(' [ `\ ' ] <sub-or-under> ( <comma> <sub-or-under> )* [ `\ ' ] `)'
@@ -3158,7 +3142,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <power-type-sub> ::= <power-base-type-sub> `^' <int-greater-than-one>
 
 <power-base-type-sub> ::= ""\\
-`_' | <type-id-or-var> | <type-app-sub> |
+`_' | <type-var> | <type-app-sub-or-id> |
 `(' [ `\ ' ] ( <prod-type-sub> | <func-type-sub> ) [ `\ ' ] `)'
 \\
 
@@ -3170,7 +3154,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
 
 <in-or-out-type-sub> ::= ""\\
-`_' | <type-id-or-var> | <type-app-sub> | <power-type-sub> | <prod-type-sub> |
+`_' | <type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
 `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 

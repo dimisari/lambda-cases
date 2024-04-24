@@ -157,7 +157,7 @@ file_name_compile_func_pairs =
     , (compile_example_func :: Compile ProdType) .> extract_res_str
     )
   , ( "type_app.txt"
-    , (compile_example_func :: Compile TypeApp) .> extract_res_str
+    , (compile_example_func :: Compile TypeAppSubOrId) .> extract_res_str
     )
   , ( "cond_type.txt"
     , (compile_example_func :: Compile Type) .> extract_res_str
@@ -193,7 +193,7 @@ instance HasParser a => HasParser (THWIL a) where
    parser = THWIL <$> parser
 
 instance HasParser a => HasParser (a, PossiblyWhereExpr) where
-   parser = parser $> \a -> (a, NoWhereExpr)
+   parser = parser >$> \a -> (a, NoWhereExpr)
 
 -- For fast vim navigation
 -- TypesAndHelpers.hs

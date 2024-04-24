@@ -29,7 +29,7 @@ show_md = \case
   Just c -> [c]
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
-instance Show Literal where 
+instance Show Literal where
   show = \case
     Int i -> show i
     R r -> show r
@@ -206,7 +206,7 @@ instance Show BigOrCasesFuncExpr where
   show = \case
     BFE1 bfe -> show bfe
     CFE1 cfe -> show cfe
-  
+
 instance Show Operand where
   show = \case
     BOAE2 npoa -> show npoa
@@ -227,21 +227,21 @@ instance Show OptionalSpacesOp where
   show = \case
     RightApp -> "->"
     LeftApp -> "<-"
-    Power -> "^" 
-    Mult -> "*" 
-    Div -> "/" 
-    Plus -> "+" 
-    Minus -> "-" 
-    Equal -> "==" 
+    Power -> "^"
+    Mult -> "*"
+    Div -> "/"
+    Plus -> "+"
+    Minus -> "-"
+    Equal -> "=="
     NotEqual -> "/="
-    Greater -> ">" 
-    Less -> "<" 
+    Greater -> ">"
+    Less -> "<"
     GrEq -> ">="
     LeEq -> "<="
-    And -> "&" 
-    Or -> "|" 
+    And -> "&"
+    Or -> "|"
     Use -> ";>"
-    Then -> ";" 
+    Then -> ";"
 
 -- Values: FuncExpr
 instance Show FuncExpr where
@@ -368,23 +368,18 @@ instance Show Type where
 
 instance Show SimpleType where
   show = \case
-    TIOV1 tiov -> show tiov
-    TA1 ta -> show ta
+    PTV1 tv -> show tv
+    TAIOA1 ta -> show ta
     PoT1 pt -> show pt
     PT1 pt -> show pt
     FT1 ft -> show ft
-
-instance Show TypeIdOrVar where
-  show = \case
-    TId1 tid -> show tid
-    TV1 tv -> show tv
 
 instance Show TypeId where
   show = \(TId str) -> str
 
 instance Show TypeVar where
   show = \case
-    PTV1 ptv -> show ptv
+    PTV2 ptv -> show ptv
     AHTV1 ahtv -> show ahtv
 
 instance Show ParamTVar where
@@ -393,22 +388,14 @@ instance Show ParamTVar where
 instance Show AdHocTVar where
   show = \(AHTV c) -> "@" ++ [c]
 
-instance Show TypeApp where
-  show = \case
-    TIWA1 (maybe_tip1, tiwa, maybe_tip2) ->
-      show_maybe maybe_tip1 ++ show tiwa ++ show_maybe maybe_tip2
-    TIPTI (tip, tid_or_tv, maybe_tip) ->
-      show tip ++ show tid_or_tv ++ show_maybe maybe_tip
-    TITIP (tid_or_tv, tip) ->
-      show tid_or_tv ++ show tip
+instance Show TypeAppIdOrAHTV where
+  show = \(TAIOA (mtip1, taioam, mtip2)) ->
+    show_maybe mtip1 ++ show taioam ++ show_maybe mtip2
 
-instance Show TypeIdWithArgs where
-  show = \(TIWA (tid, tip_str_pairs)) ->
-    show tid ++ concatMap (\(tip, str) -> show tip ++ str) tip_str_pairs
-
-instance Show TIdOrAdHocTVar where
+instance Show TAIOAMiddle where
   show = \case
-    TId2 tid -> show tid
+    TIdStart (tid, tip_str_pairs) ->
+      show tid ++ concatMap (\(tip, str) -> show tip ++ str) tip_str_pairs
     AHTV2 ahtv -> show ahtv
 
 instance Show TypesInParen where
@@ -424,14 +411,14 @@ instance Show FieldType where
 
 instance Show PowerBaseType where
   show = \case
-    TIOV3 tiov -> show tiov
-    TA3 ta -> show ta
+    PTV3 ptv -> show ptv
+    TAIOA2 ta -> show ta
     IPT ipt -> show ipt
 
 instance Show InParenT where
   show = \case
     PT3 pt -> "(" ++ show pt ++ ")"
-    FT3 ft -> "(" ++ show ft ++ ")"  
+    FT3 ft -> "(" ++ show ft ++ ")"
 
 instance Show PowerType where
   show = \(PoT (ft, i)) -> show ft ++ "^" ++ show i
@@ -441,8 +428,8 @@ instance Show FuncType where
 
 instance Show InOrOutType where
   show = \case
-    TIOV2 tiov -> show tiov
-    TA2 ta -> show ta
+    PTV4 ptv -> show ptv
+    TAIOA3 ta -> show ta
     PoT2 pt -> show pt
     PT2 pt -> show pt
     FT2 ft -> "(" ++ show ft ++ ")"
@@ -528,7 +515,7 @@ instance Show AdHocVarsInParen where
 instance Show NamePart where
   show = \(NP str) -> str
 
--- TypeTheo 
+-- TypeTheo
 instance Show TypeTheo where
   show = \(TT (pnws, maybe_pnws, proof)) ->
     "type_theorem " ++ show pnws ++ show_mpnws maybe_pnws ++
@@ -551,24 +538,17 @@ instance Show SubsInParen where
 
 instance Show TVarSub where
   show = \case
-    TIOV4 tiov -> show tiov
-    TAS1 tas -> show tas
+    TV1 tv -> show tv
+    TASOI1 tas -> show tas
     PoTS1 pts -> show pts
     PTS1 pts -> show pts
     FTS1 fts -> show fts
 
-instance Show TypeAppSub where
-  show = \case
-    TIWS_TAS (maybe_souip1, tiws, maybe_souip2) ->
-      show_maybe maybe_souip1 ++ show tiws ++ show_maybe maybe_souip2
-    SOUIP_TI (souip, tid_or_tv, maybe_souip) ->
-      show souip ++ show tid_or_tv ++ show_maybe maybe_souip
-    TI_SOUIP (tid_or_tv, souip) ->
-      show tid_or_tv ++ show souip
-
-instance Show TypeIdWithSubs where
-  show = \(TIWS (tid, souip_str_pairs)) ->
-    show tid ++ concatMap (\(souip, str) -> show souip ++ str) souip_str_pairs
+instance Show TypeAppSubOrId where
+  show = \(TASOI (msouip1, tid, souip_str_pairs, msouip2)) ->
+    show_maybe msouip1 ++ show tid ++
+    concatMap (\(souip, str) -> show souip ++ str) souip_str_pairs ++
+    show_maybe msouip2
 
 instance Show SubsOrUndersInParen where
   show = \(SOUIP (sou, sous)) -> "(" ++ show sou ++ show_list_comma sous ++ ")"
@@ -584,8 +564,8 @@ instance Show PowerTypeSub where
 instance Show PowerBaseTypeSub where
   show = \case
     Underscore5 -> "_"
-    TIOV5 tid_or_var -> show tid_or_var
-    TAS2 tas -> show tas
+    TV2 tid_or_var -> show tid_or_var
+    TASOI2 tas -> show tas
     IPTS1 ipts -> "(" ++ show ipts ++ ")"
 
 instance Show InParenTSub where
@@ -602,13 +582,13 @@ instance Show FieldTypeSub where
     PoTS2 pots -> show pots
 
 instance Show FuncTypeSub where
-  show = \(FTS (ioots1, ioots2)) -> show ioots1 ++ " => " ++ show ioots2 
+  show = \(FTS (ioots1, ioots2)) -> show ioots1 ++ " => " ++ show ioots2
 
 instance Show InOrOutTypeSub where
   show = \case
     Underscore6 -> "_"
-    TIOV6 tiov -> show tiov
-    TAS3 tas -> show tas
+    TV3 tv -> show tv
+    TASOI3 tas -> show tas
     PoTS3 pots -> show pots
     PTS3 pts -> show pts
     FTS3 fts -> show fts

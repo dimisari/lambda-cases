@@ -20,7 +20,7 @@ proof
   apply(_)inside(_) =
     (f, cases)
       empty_l => empty_l
-      non_empty_l:l => non_empty_l:(f(l.head), apply(f)inside(l.tail))#
+      non_empty_l:l => non_empty_l:(f <- l.head, apply(f)inside(l.tail))#
 
 type_theorem (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
 proof a != b = not(a == b)#
@@ -48,14 +48,14 @@ proof
     a : Int
       = b#
 
-type_theorem (ListOf(T1)s)And(T1)add_to(ListOf(T1)s)
+type_theorem (ListOf(T1)s)And(T1)Add_To(ListOf(T1)s)
 proof
   l + a =
     l -> cases
       empty_l => non_empty_l:(a, empty_l)
       non_empty_l:(head, tail) => non_empty_l:(head, tail + a)#
 
-type_theorem (ListOf(T1)s)And(T1)add_to(ListOf(T1)s)
+type_theorem (ListOf(T1)s)And(T1)Add_To(ListOf(T1)s)
 proof
   l + a =
     l -> a#

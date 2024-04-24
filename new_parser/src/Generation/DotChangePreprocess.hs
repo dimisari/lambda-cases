@@ -26,17 +26,17 @@ class ChangeIfNeeded a where
 -- State helpers
 -- get, put
 get_pidc :: DotChangeState PossiblyInDC
-get_pidc = get $> fst
+get_pidc = get >$> fst
 
 get_fids :: DotChangeState FieldIds
-get_fids = get $> snd
+get_fids = get >$> snd
 
 put_new_pidc :: PossiblyInDC -> DotChangeState ()
 put_new_pidc = \pidc -> modify (\(_, fids) -> (pidc, fids))
 
 pfa_if_in_dot_change :: DotChangeState (Maybe PostFuncArg)
 pfa_if_in_dot_change =
-  get_pidc $> \case
+  get_pidc >$> \case
     NotInDotChange -> Nothing
     InDotChange [] -> error "should not be possible"
     InDotChange (pfa : pfas) -> Just pfa
@@ -82,7 +82,7 @@ x'_pfa = BE2 $ PFAOI1 $ PFAOI (Nothing, IS "x'", [], Nothing, Nothing)
 pf_pfa_if_pfaoi_needs_change :: PFAOI -> DCS (Maybe (PostFunc, PostFuncArg))
 pf_pfa_if_pfaoi_needs_change = \case
   PFAOI (Nothing, ids, [], mdigit, Nothing) ->
-    pfa_if_sid_needs_change sid $> \case
+    pfa_if_sid_needs_change sid >$> \case
       Nothing -> Nothing
       Just pfa -> Just (SId1 sid, pfa)
     where
@@ -92,7 +92,7 @@ pf_pfa_if_pfaoi_needs_change = \case
 
 pf_pfa_if_sp_id_needs_ch :: SpecialId -> DCS (Maybe (PostFunc, PostFuncArg))
 pf_pfa_if_sp_id_needs_ch = \sp_id ->
-  pfa_if_in_dot_change $> \case
+  pfa_if_in_dot_change >$> \case
     Nothing -> Nothing
     Just pfa -> Just (SI2 sp_id, change_pfa_if_underscore pfa)
 
@@ -179,7 +179,7 @@ instance ChangeIfNeeded BigList where
 
 instance ChangeIfNeeded ArgsStr where
   change_inside_if_needed = \(args, str) ->
-    change_inside_if_needed args $> \args' -> (args', str)
+    change_inside_if_needed args >$> \args' -> (args', str)
 
 instance ChangeIfNeeded ParenFuncAppOrId where
   change_inside_if_needed =
@@ -194,7 +194,7 @@ instance ChangeIfNeeded Arguments where
 
 instance ChangeIfNeeded PreFuncApp where
   change_inside_if_needed = \(PrFA (pf, oper)) ->
-    change_inside_if_needed oper $> \oper' -> PrFA (pf, oper')
+    change_inside_if_needed oper >$> \oper' -> PrFA (pf, oper')
 
 instance ChangeIfNeeded PostFuncApp where
   change_inside_if_needed = \(PoFA (pfa, pfae)) ->
@@ -214,7 +214,7 @@ instance ChangeIfNeeded PostFuncAppEnd where
   change_inside_if_needed = \case
     DC1 dc -> DC1 <$> change_inside_if_needed dc
     PFsMDC (pfs, mdc) ->
-      change_inside_if_needed mdc $> \mdc' -> PFsMDC (pfs, mdc')
+      change_inside_if_needed mdc >$> \mdc' -> PFsMDC (pfs, mdc')
 
 instance ChangeIfNeeded DotChange where
   change_inside_if_needed = \(DC (fc, fcs)) ->
@@ -224,7 +224,7 @@ instance ChangeIfNeeded DotChange where
 
 instance ChangeIfNeeded FieldChange where
   change_inside_if_needed = \(FC (field, leou)) ->
-    change_inside_if_needed leou $> \leou' -> FC (field, leou')
+    change_inside_if_needed leou >$> \leou' -> FC (field, leou')
 
 instance ChangeIfNeeded OpExpr where
   change_inside_if_needed = \case
@@ -237,7 +237,7 @@ instance ChangeIfNeeded OpExprStart where
 
 instance ChangeIfNeeded (Operand, Op) where
   change_inside_if_needed = \(oper, op) ->
-    change_inside_if_needed oper $> \oper' -> (oper', op)
+    change_inside_if_needed oper >$> \oper' -> (oper', op)
 
 instance ChangeIfNeeded LineOpExpr where
   change_inside_if_needed = \(LOE (oes, loee)) ->
@@ -270,7 +270,7 @@ instance ChangeIfNeeded OpSplitLine where
 
 instance ChangeIfNeeded OperFCO where
   change_inside_if_needed = \(OFCO (oper, fco)) ->
-    change_inside_if_needed oper $> \oper' -> OFCO (oper, fco)
+    change_inside_if_needed oper >$> \oper' -> OFCO (oper, fco)
 
 instance ChangeIfNeeded OpSplitEnd where
   change_inside_if_needed = \case
@@ -302,11 +302,11 @@ instance ChangeIfNeeded FuncExpr where
 
 instance ChangeIfNeeded LineFuncExpr where
   change_inside_if_needed = \(LFE (params, lfb)) ->
-    change_inside_if_needed lfb $> \lfb' -> LFE (params, lfb')
+    change_inside_if_needed lfb >$> \lfb' -> LFE (params, lfb')
 
 instance ChangeIfNeeded BigFuncExpr where
   change_inside_if_needed = \(BFE (params, bfb)) ->
-    change_inside_if_needed bfb $> \bfb' -> BFE (params, bfb')
+    change_inside_if_needed bfb >$> \bfb' -> BFE (params, bfb')
 
 instance ChangeIfNeeded LineFuncBody where
   change_inside_if_needed = \case
@@ -326,11 +326,11 @@ instance ChangeIfNeeded CasesFuncExpr where
 
 instance ChangeIfNeeded Case where
   change_inside_if_needed = \(Ca (om, cb)) ->
-    change_inside_if_needed cb $> \cb' -> Ca (om, cb')
+    change_inside_if_needed cb >$> \cb' -> Ca (om, cb')
 
 instance ChangeIfNeeded EndCase where
   change_inside_if_needed = \(EC (ecp, cb)) ->
-    change_inside_if_needed cb $> \cb' -> EC (ecp, cb')
+    change_inside_if_needed cb >$> \cb' -> EC (ecp, cb')
 
 instance ChangeIfNeeded CaseBody where
   change_inside_if_needed = \case
@@ -379,13 +379,13 @@ instance ChangeIfNeeded WhereDefExpr where
 
 instance ChangeIfNeeded TypeTheo where
   change_inside_if_needed = \(TT (pnws, mpnws, proof)) ->
-    change_inside_if_needed proof $> \proof' -> TT (pnws, mpnws, proof')
+    change_inside_if_needed proof >$> \proof' -> TT (pnws, mpnws, proof')
 
 instance ChangeIfNeeded Proof where
   change_inside_if_needed = \case
-    P1 (iooe, le) -> change_inside_if_needed le $> \le' -> P1 (iooe, le)
+    P1 (iooe, le) -> change_inside_if_needed le >$> \le' -> P1 (iooe, le)
     P2 (iooe, ttve) ->
-      change_inside_if_needed ttve $> \ttve' -> P2 (iooe, ttve')
+      change_inside_if_needed ttve >$> \ttve' -> P2 (iooe, ttve')
 
 instance ChangeIfNeeded TTValueExpr where
   change_inside_if_needed = \case

@@ -1,7 +1,7 @@
 module Helpers where
 
 import System.Directory
-
+import Control.Applicative
 import Data.List.Split
 
 type ProgramFileName = FileName
@@ -29,8 +29,8 @@ list_progs = listDirectory (in_dir ++ progs_dir)
 mapf :: Functor f => f a -> (a -> b) -> f b
 mapf = flip fmap
 
-($>) :: Functor f => f a -> (a -> b) -> f b
-($>) = flip fmap
+(>$>) :: Functor f => f a -> (a -> b) -> f b
+(>$>) = flip fmap
 
 (<++) :: Functor f => f [a] -> [a] -> f [a]
 fas <++ as = (++ as) <$> fas
@@ -39,31 +39,31 @@ fas <++ as = (++ as) <$> fas
 as ++> fas = (as ++) <$> fas
 
 -- Applicative
-(>:<) :: Applicative f => f a -> f [a] -> f [a]
-a >:< as = (:) <$> a <*> as
-
 nothing :: Applicative f => f ()
 nothing = pure ()
 
--- Monad
-(+++) :: Monad m => m a -> m b -> m (a, b)
-pa +++ pb = pa >>= \a -> pb >>= \b -> return (a, b)
+(++<) :: Applicative f => f a -> f b -> f (a, b)
+pa ++< pb = liftA2 (,) pa pb
 
-(++<) :: Monad m => m (a, b) -> m c -> m (a, b, c)
-pab ++< pc = pab >>= \(a, b) -> pc >>= \c -> return (a, b, c)
+(+++<) :: Applicative f => f (a, b) -> f c -> f (a, b, c)
+pab +++< pc = liftA2 (\(a, b) -> (,,) a b) pab pc
 
-(>++<) :: Monad m => m [a] -> m [a] -> m [a]
-mas1 >++< mas2 = mas1 >>= \as1 -> mas2 >>= \as2 -> return $ as1 ++ as2
+(++++<) :: Applicative f => f (a, b, c) -> f d -> f (a, b, c, d)
+pabc ++++< pd = liftA2 (\(a, b, c) -> (,,,) a b c) pabc pd
 
---
+(>:<) :: Applicative f => f a -> f [a] -> f [a]
+a >:< as = liftA2 (:) a as
+
+(>++<) :: Applicative f => f [a] -> f [a] -> f [a]
+fas1 >++< fas2 = liftA2 (++) fas1 fas2
+
+-- other
 ind_lvl_to_spaces :: Int -> String
 ind_lvl_to_spaces = \i -> replicate (2 * i) ' '
 
---
 make_extension_hs :: FileName -> FileName
 make_extension_hs = takeWhile (/= '.') .> (++ ".hs")
 
---
 read_prog :: ProgramFileName -> IO ProgramStr
 read_prog = \pfn -> readFile $ in_dir ++ progs_dir ++ pfn
 
@@ -71,8 +71,9 @@ read_exs_file :: FileName -> IO FileString
 read_exs_file = \file_name -> readFile $ in_dir ++ test_exs_dir ++ file_name
 
 read_examples :: FileName -> IO [FileString]
-read_examples = \file_name -> read_exs_file file_name $> file_str_to_examples
+read_examples = \file_name -> read_exs_file file_name >$> file_str_to_examples
 
 file_str_to_examples :: FileString -> [ TestExample ]
 file_str_to_examples = endBy "#\n\n"
 
+-- ASTTypes.hs

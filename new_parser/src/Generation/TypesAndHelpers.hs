@@ -76,10 +76,10 @@ to_hs_wil_list = traverse to_hs_wil
 
 -- params helpers
 get_next_param :: WithParamNum Haskell
-get_next_param = get $> to_param <* modify (+1)
+get_next_param = get >$> to_param <* modify (+1)
 
 params_hs_gen :: WithParamNum Haskell
-params_hs_gen = get $> to_params_hs
+params_hs_gen = get >$> to_params_hs
 
 to_params_hs :: Int -> Haskell
 to_params_hs = \case
@@ -99,20 +99,20 @@ to_param = \j -> "x" ++ show j ++ "'"
 add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
   hs_gen >>= \hs ->
-  params_hs_gen $> \case
+  params_hs_gen >$> \case
     "" -> hs
     params_hs -> "(" ++ params_hs ++ hs ++ ")"
 
 add_params_to_list :: WithParamNum [Haskell] -> WithParamNum [Haskell]
 add_params_to_list = \hs_list_gen ->
   hs_list_gen >>= \hs_list ->
-  params_hs_gen $> \case
+  params_hs_gen >$> \case
     "" -> hs_list
     params_hs -> params_hs : hs_list
 
 case_of_inner_hs_gen :: WithParamNum Haskell
 case_of_inner_hs_gen =
-  get $> \case
+  get >$> \case
     1 -> "x0'"
     i -> case i > 1 of
       True -> to_params_in_paren_hs i
@@ -132,29 +132,33 @@ twice_deeper :: WithIndentLvl Haskell -> WithIndentLvl Haskell
 twice_deeper = deeper_with_num 2
 
 indent :: WithIndentLvl Haskell
-indent = get $> ind_lvl_to_spaces
+indent = get >$> ind_lvl_to_spaces
 
 indent_all_and_concat :: [Haskell] -> WithIndentLvl Haskell
 indent_all_and_concat = \hs_list ->
-  indent $> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
+  indent >$> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
 -- ParenFuncAppOrId helpers
+id_prefix :: Haskell
+id_prefix = "v0"
+
 margs1_to_id_hs :: Maybe Arguments -> Haskell
 margs1_to_id_hs = \case
   Nothing -> ""
-  Just args -> "a0" ++ single_quotes args
+  Just args -> id_prefix ++ args_single_quotes args
 
 margs2_to_id_hs :: Maybe Arguments -> Haskell
 margs2_to_id_hs = \case
   Nothing -> ""
-  Just args -> single_quotes args
+  Just args -> args_single_quotes args
 
-single_quotes :: Arguments -> Haskell
-single_quotes = \(As (LEOUs (leou, leous))) ->
+args_single_quotes :: Arguments -> Haskell
+args_single_quotes = \(As (LEOUs (leou, leous))) ->
   replicate (length $ leou : leous) '\''
 
 args_str_pairs_to_id_hs :: [ArgsStr] -> Haskell
-args_str_pairs_to_id_hs = concatMap (\(args, str) -> single_quotes args ++ str)
+args_str_pairs_to_id_hs =
+  concatMap (\(args, str) -> args_single_quotes args ++ str)
 
 type MargsPair = (Maybe Arguments, Maybe Arguments)
 add_margs_to_args_list :: MargsPair -> [Arguments] -> [Arguments]
@@ -191,6 +195,46 @@ general_change_hs_list = map ("c" ++) general_hs_list
 
 general_hs_list :: [Haskell]
 general_hs_list = ["1st", "2nd", "3rd", "4th", "5th"]
+
+-- TypeAppIdOrAHTV helpers
+tid_prefix :: Haskell
+tid_prefix = "T0"
+
+mtip1_to_tid_hs :: Maybe TypesInParen -> Haskell
+mtip1_to_tid_hs = \case
+  Nothing -> ""
+  Just tip -> tid_prefix ++ tip_single_quotes tip
+
+mtip2_to_tid_hs :: Maybe TypesInParen -> Haskell
+mtip2_to_tid_hs = \case
+  Nothing -> ""
+  Just tip -> tip_single_quotes tip
+
+tip_single_quotes :: TypesInParen -> Haskell
+tip_single_quotes = \(TIP (st, sts)) -> replicate (length $ st : sts) '\''
+
+tip_str_pairs_to_tid_hs :: [(TypesInParen, String)] -> Haskell
+tip_str_pairs_to_tid_hs =
+  concatMap (\(tip, str) -> tip_single_quotes tip ++ str)
+
+-- TypeAppSubOrId helpers
+msouip1_to_tid_hs :: Maybe SubsOrUndersInParen -> Haskell
+msouip1_to_tid_hs = \case
+  Nothing -> ""
+  Just souip -> tid_prefix ++ souip_single_quotes souip
+
+msouip2_to_tid_hs :: Maybe SubsOrUndersInParen -> Haskell
+msouip2_to_tid_hs = \case
+  Nothing -> ""
+  Just souip -> souip_single_quotes souip
+
+souip_single_quotes :: SubsOrUndersInParen -> Haskell
+souip_single_quotes = \(SOUIP (sou, sous)) ->
+  replicate (length $ sou : sous) '\''
+
+souip_str_pairs_to_tid_hs :: [(SubsOrUndersInParen, String)] -> Haskell
+souip_str_pairs_to_tid_hs =
+  concatMap (\(souip, str) -> souip_single_quotes souip ++ str)
 
 -- other
 add_to_hs_pair :: HsPair -> HsPair -> HsPair

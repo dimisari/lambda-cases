@@ -66,7 +66,7 @@ instance HasParser SimpleId where
     sid_p >>= check_not_reserved
     where
     sid_p :: Parser SimpleId
-    sid_p = SId <$> parser +++ optionMaybe digit
+    sid_p = SId <$> parser ++< optionMaybe digit
 
     check_not_reserved :: SimpleId -> Parser SimpleId
     check_not_reserved = \sid -> case sid of
@@ -77,12 +77,12 @@ instance HasParser IdStart where
   parser = IS <$> lower >:< many lower_under
 
 instance HasParser IdCont where
-  parser = IC <$> parser +++ many1 lower_under
+  parser = IC <$> parser ++< many1 lower_under
 
 instance HasParser UndersInParen where
   parser =
-    string "(_" *> many (comma *> underscore) <* char ')' >>= \interm_unders ->
-    return $ UIP $ length interm_unders + 1
+    (string "(_" *> many (comma *> underscore) <* char ')') >$>
+    \interm_unders -> UIP $ length interm_unders + 1
 
 instance HasParser ParenExpr where
   parser = PE <$> in_paren parser
@@ -91,10 +91,10 @@ instance HasParser InsideParenExpr where
   parser = LOE1 <$> try parser <|> LFE1 <$> parser
 
 instance HasParser Tuple where
-  parser = T <$> in_paren (parser +++ (comma *> parser))
+  parser = T <$> in_paren (parser ++< (comma *> parser))
 
 instance HasParser LineExprOrUnders where
-  parser = LEOUs <$> parser +++ many (comma *> parser)
+  parser = LEOUs <$> parser ++< many (comma *> parser)
 
 instance HasParser LineExprOrUnder where
   parser = LE1 <$> try parser <|> underscore *> return Underscore1
@@ -117,7 +117,7 @@ instance HasParser BasicExpr where
 
 instance HasParser BigTuple where
   parser =
-    BT <$> leou_p +++ leous_p ++< leous_l_p <* nl_indent <* char ')'
+    BT <$> leou_p ++< leous_p +++< leous_l_p <* nl_indent <* char ')'
     where
     leou_p :: Parser LineExprOrUnder
     leou_p = char '(' *> opt_space *> parser
@@ -134,7 +134,7 @@ instance HasParser List where
 
 instance HasParser BigList where
   parser =
-    BL <$> leous_p +++ leous_l_p <* nl_indent <* char ']'
+    BL <$> leous_p ++< leous_l_p <* nl_indent <* char ']'
     where
     leous_p :: Parser LineExprOrUnders
     leous_p = char '[' *> opt_space *> parser
@@ -143,7 +143,7 @@ instance HasParser BigList where
     leous_l_p = many $ try (nl_indent *> comma) *> parser
 
 instance HasParser ArgsStr where
-  parser = parser >>= \args -> many1 lower_under >>= \str -> return (args, str)
+  parser = parser ++< many1 lower_under
 
 instance HasParser ParenFuncAppOrId where
   parser =
@@ -162,7 +162,7 @@ instance HasParser PreFunc where
   parser = PF <$> parser <* char ':'
 
 instance HasParser PreFuncApp where
-  parser = PrFA <$> parser +++ parser
+  parser = PrFA <$> parser ++< parser
 
 instance HasParser PostFunc where
   parser =
@@ -176,14 +176,14 @@ instance HasParser SpecialId where
     string "5th" *> return Fifth
 
 instance HasParser PostFuncApp where
-  parser = PoFA <$> parser +++ parser
+  parser = PoFA <$> parser ++< parser
 
 instance HasParser PostFuncArg where
   parser =
     PE2 <$> try parser <|> BE2 <$> parser <|> underscore *> return Underscore2
 
 instance HasParser PostFuncAppEnd where
-  parser = DC1 <$> parser <|> PFsMDC <$> many1 parser +++ optionMaybe parser
+  parser = DC1 <$> parser <|> PFsMDC <$> many1 parser ++< optionMaybe parser
 
 instance HasParser DotChange where
   parser =
@@ -191,11 +191,11 @@ instance HasParser DotChange where
     (try (string ".change{") *> opt_space_around field_changes_p <* char '}')
     where
     field_changes_p :: Parser (FieldChange, [FieldChange])
-    field_changes_p = field_change_p +++ many (comma *> field_change_p)
+    field_changes_p = field_change_p ++< many (comma *> field_change_p)
 
     field_change_p :: Parser FieldChange
     field_change_p =
-      FC <$> field_p +++ (opt_space_around (string "=") *> parser)
+      FC <$> field_p ++< (opt_space_around (string "=") *> parser)
 
     field_p :: Parser Field
     field_p = SId2 <$> parser <|> SI3 <$> parser
@@ -205,10 +205,10 @@ instance HasParser OpExpr where
   parser = BOE1 <$> try parser <|> LOE3 <$> parser
 
 instance HasParser OpExprStart where
-  parser = OES <$> many1 (try $ parser +++ parser)
+  parser = OES <$> many1 (try $ parser ++< parser)
 
 instance HasParser LineOpExpr where
-  parser = LOE <$> try parser +++ parser
+  parser = LOE <$> try parser ++< parser
 
 instance HasParser LineOpExprEnd where
   parser = LFE3 <$> try parser <|> O1 <$> parser
@@ -218,30 +218,27 @@ instance HasParser BigOpExpr where
 
 instance HasParser BigOpExprOpSplit where
   parser =
-    parser >>= \osl ->
-
-    set_in_equal_line False >>
-
-    many (try parser) >>= \osls ->
-    optionMaybe (try parser) >>= \maybe_oes ->
-    parser >>= \ose ->
-    return $ BOEOS (osl : osls, maybe_oes, ose)
+    BOEOS <$>
+      parser >:<
+      (set_in_equal_line False *> many (try parser)) ++<
+      optionMaybe (try parser) +++<
+      parser
 
 instance HasParser OpSplitLine where
   parser =
-    OSL <$> (parser +++ maybe_oper_fco_parser <* indent)
+    OSL <$> (parser ++< maybe_oper_fco_parser <* indent)
     where
     maybe_oper_fco_parser :: Parser (Maybe OperFCO)
     maybe_oper_fco_parser = try nl *> return Nothing <|> Just <$> parser
 
 instance HasParser OperFCO where
-  parser = OFCO <$> parser +++ (char ' ' *> parser <* char '\n')
+  parser = OFCO <$> parser ++< (char ' ' *> parser <* char '\n')
 
 instance HasParser OpSplitEnd where
   parser = FE1 <$> try parser <|> O2 <$> parser
 
 instance HasParser BigOpExprFuncSplit where
-  parser = BOEFS <$> parser +++ parser
+  parser = BOEFS <$> parser ++< parser
 
 instance HasParser BigOrCasesFuncExpr where
   parser = BFE1 <$> try parser <|> CFE1 <$> parser
@@ -285,15 +282,15 @@ instance HasParser FuncExpr where
   parser = CFE2 <$> try parser <|> BFE2 <$> try parser <|> LFE4 <$> parser
 
 instance HasParser LineFuncExpr where
-  parser = LFE <$> parser +++ (func_arr *> parser)
+  parser = LFE <$> parser ++< (func_arr *> parser)
 
 instance HasParser BigFuncExpr where
-  parser = BFE <$> parser +++ (func_arr *> parser)
+  parser = BFE <$> parser ++< (func_arr *> parser)
 
 instance HasParser Parameters where
   parser =
     ParamId <$> try parser <|> char '*' *> return Star1 <|>
-    Params <$> in_paren (parser +++ many1 (comma *> parser))
+    Params <$> in_paren (parser ++< many1 (comma *> parser))
 
 instance HasParser LineFuncBody where
   parser = opt_space *> (LOE4 <$> try parser <|> BOAE3 <$> parser)
@@ -311,19 +308,19 @@ instance HasParser CasesFuncExpr where
     where
     all_cases_p :: Parser ([Case], Maybe EndCase)
     all_cases_p =
-      set_in_equal_line False *> many1 parser +++ optionMaybe parser
+      set_in_equal_line False *> many1 parser ++< optionMaybe parser
 
 instance HasParser CasesParams where
   parser =
     try (string "cases") *> return CasesKeyword <|>
     char '*' *> return Star2 <|> CParamId <$> try parser <|>
-    CParams <$> in_paren (parser +++ many1 (comma *> parser))
+    CParams <$> in_paren (parser ++< many1 (comma *> parser))
 
 instance HasParser Case where
-  parser = Ca <$> try (nl_indent *> parser) +++ (func_arr *> deeper parser)
+  parser = Ca <$> try (nl_indent *> parser) ++< (func_arr *> deeper parser)
 
 instance HasParser EndCase where
-  parser = EC <$> try (nl_indent *> parser) +++ (func_arr *> deeper parser)
+  parser = EC <$> try (nl_indent *> parser) ++< (func_arr *> deeper parser)
 
 instance HasParser OuterMatching where
   parser = M1 <$> try parser <|> SId3 <$> parser
@@ -333,24 +330,24 @@ instance HasParser EndCaseParam where
 
 instance HasParser Matching where
   parser =
-    Lit2 <$> parser <|> PFM <$> try (parser +++ parser) <|>
+    Lit2 <$> parser <|> PFM <$> try (parser ++< parser) <|>
     TM1 <$> parser <|> LM1 <$> parser
 
 instance HasParser InnerMatching where
   parser = M2 <$> try parser <|> Id2 <$> parser <|> char '*' *> return Star
 
 instance HasParser TupleMatching where
-  parser = TM <$> in_paren (parser +++ many1 (comma *> parser))
+  parser = TM <$> in_paren (parser ++< many1 (comma *> parser))
 
 instance HasParser ListMatching where
   parser =
     LM <$> (char '[' *> opt_space_around (optionMaybe inside_p) <* char ']')
     where
     inside_p :: Parser (InnerMatching, [InnerMatching])
-    inside_p = parser +++ (many $ comma *> parser)
+    inside_p = parser ++< (many $ comma *> parser)
 
 instance HasParser CaseBody where
-  parser = BFB1 <$> try parser +++ optionMaybe (try parser) <|> LFB1 <$> parser
+  parser = BFB1 <$> try parser ++< optionMaybe (try parser) <|> LFB1 <$> parser
 
 -- HasParser: ValueDef, WhereExpr
 instance HasParser ValueDef where
@@ -382,7 +379,7 @@ instance HasParser GroupedValueDefs where
   parser =
     indent *> parser >>= \id ->
     many1 (comma *> parser) >>= \ids ->
-    deeper (types_p +++ equal_les_p ++< les_l_p) >>= \(ts, equal_les, les_l) ->
+    deeper (types_p ++< equal_les_p +++< les_l_p) >>= \(ts, equal_les, les_l) ->
     return $ GVDs (id, ids, ts, equal_les, les_l)
     where
     types_p :: Parser Types
@@ -396,16 +393,16 @@ instance HasParser GroupedValueDefs where
 
 instance HasParser Types where
   parser =
-    Ts <$> (parser +++ many1 (comma *> parser)) <|>
+    Ts <$> (parser ++< many1 (comma *> parser)) <|>
     All <$> (string "all " *> parser)
 
 instance HasParser LineExprs where
-  parser = LEs <$> parser +++ many (comma *> parser)
+  parser = LEs <$> parser ++< many (comma *> parser)
 
 instance HasParser WhereExpr where
   parser =
     WE <$>
-      (nl_indent *> string "where" *> nl *> where_def_expr_p) +++
+      (nl_indent *> string "where" *> nl *> where_def_expr_p) ++<
       many (try $ nl *> nl *> where_def_expr_p)
     where
     where_def_expr_p :: Parser WhereDefExpr
@@ -413,21 +410,18 @@ instance HasParser WhereExpr where
 
 -- HasParser: Type
 instance HasParser Type where
-  parser = Ty <$> (optionMaybe $ try parser) +++ parser
+  parser = Ty <$> (optionMaybe $ try parser) ++< parser
 
 instance HasParser SimpleType where
   parser =
     FT1 <$> try parser <|> PT1 <$> try parser <|> PoT1 <$> try parser <|>
-    TA1 <$> try parser <|> TIOV1 <$> parser
-
-instance HasParser TypeIdOrVar where
-  parser = TV1 <$> try parser <|> TId1 <$> parser
+    PTV1 <$> try parser <|> TAIOA1 <$> parser
 
 instance HasParser TypeId where
   parser = TId <$> upper >:< many (upper <|> lower)
 
 instance HasParser TypeVar where
-  parser = PTV1 <$> try parser <|> AHTV1 <$> parser
+  parser = PTV2 <$> try parser <|> AHTV1 <$> parser
 
 instance HasParser ParamTVar where
   parser = PTV <$> (char 'T' *> mapf digit (\d -> read [d]))
@@ -435,27 +429,19 @@ instance HasParser ParamTVar where
 instance HasParser AdHocTVar where
   parser = AHTV <$> (char '@' *> upper)
 
-instance HasParser TypeApp where
+instance HasParser TypeAppIdOrAHTV where
+  parser = TAIOA <$> optionMaybe parser ++< parser +++< optionMaybe parser
+
+instance HasParser TAIOAMiddle where
   parser =
-    TIWA1 <$> try parser <|> TIPTI <$> parser <|> TITIP <$> parser +++ parser
-
-instance HasParser TIWATypeApp where
-  parser = optionMaybe parser +++ parser ++< optionMaybe parser
-
-instance HasParser TIPTITypeApp where
-  parser = parser +++ parser ++< optionMaybe parser
-
-instance HasParser TypeIdWithArgs where
-  parser = TIWA <$> parser +++ many1 (try $ parser +++ many1 (lower <|> upper))
-
-instance HasParser TIdOrAdHocTVar where
-  parser = TId2 <$> try parser <|> AHTV2 <$> parser
+    AHTV2 <$> parser <|>
+    TIdStart <$> parser ++< many (try $ parser ++< many1 (lower <|> upper))
 
 instance HasParser TypesInParen where
-  parser = TIP <$> in_paren (parser +++ many (comma *> parser))
+  parser = TIP <$> in_paren (parser ++< many (comma *> parser))
 
 instance HasParser ProdType where
-  parser = PT <$> parser +++ (many1 $ try (string " x ") *> parser)
+  parser = PT <$> parser ++< (many1 $ try (string " x ") *> parser)
 
 instance HasParser FieldType where
   parser = PoT3 <$> try parser <|> PBT1 <$> parser
@@ -463,18 +449,18 @@ instance HasParser FieldType where
 instance HasParser PowerBaseType where
   parser =
     IPT <$> try (in_paren $ FT3 <$> try parser <|> PT3 <$> parser) <|>
-    TA3 <$> try parser <|> TIOV3 <$> parser
+    PTV3 <$> try parser <|> TAIOA2 <$> parser
 
 instance HasParser PowerType where
-  parser = PoT <$> parser +++ (string "^" *> parser >>= err_if_less_than_2)
+  parser = PoT <$> parser ++< (string "^" *> parser >>= err_if_less_than_2)
 
 instance HasParser FuncType where
-  parser = FT <$> parser +++ (string " => " *> parser)
+  parser = FT <$> parser ++< (string " => " *> parser)
 
 instance HasParser InOrOutType where
   parser =
     PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|>
-    PoT2 <$> try parser <|> TA2 <$> try parser <|> TIOV2 <$> parser
+    PoT2 <$> try parser <|> PTV4 <$> try parser <|> TAIOA3 <$> parser
 
 instance HasParser Condition where
   parser = Co <$> (parser <* string " --> ")
@@ -486,8 +472,8 @@ instance HasParser TypeDef where
 instance HasParser TupleTypeDef where
   parser =
     TTD <$>
-      (string "tuple_type " *> parser) +++
-      (nl *> string "value" *> space_or_nl *> parser) ++<
+      (string "tuple_type " *> parser) ++<
+      (nl *> string "value" *> space_or_nl *> parser) +++<
       (opt_space_around (string ":") *> parser)
 
 instance HasParser ProdOrPowerType where
@@ -495,39 +481,35 @@ instance HasParser ProdOrPowerType where
 
 instance HasParser TypeName where
   parser =
-    optionMaybe parser >>= \maybe_pvip1 ->
-    parser >>= \tid ->
-    many (try $ parser +++ (many1 $ lower <|> upper)) >>= \pvip_string_pairs ->
-    optionMaybe parser >>= \maybe_pvip2 ->
-    return $ TN (maybe_pvip1, tid, pvip_string_pairs, maybe_pvip2)
+    TN <$>
+      optionMaybe parser ++<
+      parser +++<
+      many (try $ parser ++< (many1 $ lower <|> upper)) ++++<
+      optionMaybe parser
 
 instance HasParser ParamVarsInParen where
-  parser = PVIP <$> in_paren (parser +++ many (comma *> parser))
+  parser = PVIP <$> in_paren (parser ++< many (comma *> parser))
 
 instance HasParser IdTuple where
-  parser = PCSIs <$> in_paren (parser +++ many1 (comma *> parser))
+  parser = PCSIs <$> in_paren (parser ++< many1 (comma *> parser))
 
 instance HasParser OrTypeDef where
   parser =
-    string "or_type " *> parser >>= \type_name ->
-
-    nl *> string "values" *> space_or_nl *> parser >>= \simple_id ->
-
-    optionMaybe (char ':' *> parser) >>= \mst ->
-
-    many1 id_mst_p >>= \id_msts ->
-
-    return $ OTD (type_name, simple_id, mst, id_msts)
+    OTD <$>
+      (string "or_type " *> parser) ++<
+      (nl *> string "values" *> space_or_nl *> parser) +++<
+      optionMaybe (char ':' *> parser) ++++<
+      many1 id_mst_p
     where
     id_mst_p :: Parser (SimpleId, Maybe SimpleType)
     id_mst_p =
-      (opt_space_around (string "|") *> parser) +++
+      (opt_space_around (string "|") *> parser) ++<
       (optionMaybe $ char ':' *> parser)
 
 instance HasParser TypeNickname where
   parser =
     TNN <$>
-      (string "type_nickname " *> parser) +++
+      (string "type_nickname " *> parser) ++<
       (opt_space_around (string "=") *> parser)
 
 -- HasParser: TypePropDef
@@ -537,15 +519,15 @@ instance HasParser TypePropDef where
 instance HasParser AtomPropDef where
   parser =
     APD <$>
-      parser +++
-      (nl *> string "needed" *> space_or_nl *> parser) ++<
+      parser ++<
+      (nl *> string "needed" *> space_or_nl *> parser) +++<
       (opt_space_around (string ":") *> parser)
 
 instance HasParser RenamingPropDef where
   parser =
     RPD <$>
-      parser +++
-      (nl *> string "equivalent" *> space_or_nl *> parser) ++<
+      parser ++<
+      (nl *> string "equivalent" *> space_or_nl *> parser) +++<
       many (comma *> parser)
 
 instance HasParser PropNameLine where
@@ -557,14 +539,14 @@ instance HasParser PropName where
     where
     np_start_p :: Parser (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart)
     np_start_p =
-      upper +++ many1 (try $ parser +++ parser) ++< optionMaybe parser
+      upper ++< many1 (try $ parser ++< parser) +++< optionMaybe parser
 
     ahvip_start_p
       :: Parser ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
-    ahvip_start_p = (many1 $ try $ parser +++ parser) +++ optionMaybe parser
+    ahvip_start_p = (many1 $ try $ parser ++< parser) ++< optionMaybe parser
 
 instance HasParser AdHocVarsInParen where
-  parser = AHVIP <$> in_paren (parser +++ many (comma *> parser))
+  parser = AHVIP <$> in_paren (parser ++< many (comma *> parser))
 
 instance HasParser NamePart where
   parser =
@@ -579,7 +561,7 @@ instance HasParser NamePart where
 -- HasParser: TypeTheo
 instance HasParser TypeTheo where
   parser =
-    TT <$> pnws_p +++ mpnws_p ++< proof_p
+    TT <$> pnws_p ++< mpnws_p +++< proof_p
     where
     pnws_p :: Parser PropNameWithSubs
     pnws_p = string "type_theorem " *> parser
@@ -596,82 +578,80 @@ instance HasParser PropNameWithSubs where
     where
     np_start_p :: Parser (Char, [(NamePart, SubsInParen)], Maybe NamePart)
     np_start_p =
-      upper +++ many1 (try $ parser +++ parser) ++< optionMaybe parser
+      upper ++< many1 (try $ parser ++< parser) +++< optionMaybe parser
 
     sip_start_p :: Parser ([(SubsInParen, NamePart)], Maybe SubsInParen)
-    sip_start_p = (many1 $ try $ parser +++ parser) +++ optionMaybe parser
+    sip_start_p = (many1 $ try $ parser ++< parser) ++< optionMaybe parser
 
 instance HasParser SubsInParen where
-  parser = SIP <$> in_paren (parser +++ many (comma *> parser))
+  parser = SIP <$> in_paren (parser ++< many (comma *> parser))
 
 instance HasParser TVarSub where
   parser =
     FTS1 <$> try parser <|> PTS1 <$> try parser <|> PoTS1 <$> try parser <|>
-    TAS1 <$> try parser <|> TIOV4 <$> parser
+    TV1 <$> try parser <|> TASOI1 <$> parser
 
-instance HasParser TypeAppSub where
+instance HasParser TypeAppSubOrId where
   parser =
-    TIWS_TAS <$> try (optionMaybe parser +++ parser ++< optionMaybe parser) <|>
-    SOUIP_TI <$> (parser +++ parser ++< optionMaybe parser) <|>
-    TI_SOUIP <$> parser +++ parser
-
-instance HasParser TypeIdWithSubs where
-  parser = TIWS <$> parser +++ many1 (try $ parser +++ many1 (lower <|> upper))
+    TASOI <$>
+      optionMaybe parser ++<
+      parser +++<
+      many (try $ parser ++< many1 (lower <|> upper)) ++++<
+      optionMaybe parser
 
 instance HasParser SubsOrUndersInParen where
-  parser = SOUIP <$> in_paren (parser +++ many (comma *> parser))
+  parser = SOUIP <$> in_paren (parser ++< many (comma *> parser))
 
 instance HasParser SubOrUnder where
   parser = TVS1 <$> try parser <|> underscore *> return Underscore4
 
 instance HasParser PowerTypeSub where
-  parser = PoTS <$> parser +++ (string "^" *> parser >>= err_if_less_than_2)
+  parser = PoTS <$> parser ++< (string "^" *> parser >>= err_if_less_than_2)
 
 instance HasParser PowerBaseTypeSub where
   parser =
-    IPTS1 <$> try (in_paren parser) <|> TAS2 <$> try parser <|>
-    TIOV5 <$> parser <|> underscore *> return Underscore5
+    IPTS1 <$> try (in_paren parser) <|> TASOI2 <$> try parser <|>
+    TV2 <$> parser <|> underscore *> return Underscore5
 
 instance HasParser InParenTSub where
   parser = FTS2 <$> try parser <|> PTS2 <$> parser
 
 instance HasParser ProdTypeSub where
-  parser = PTS <$> parser +++ (many1 $ try (string " x ") *> parser)
+  parser = PTS <$> parser ++< (many1 $ try (string " x ") *> parser)
 
 instance HasParser FieldTypeSub where
   parser = PoTS2 <$> try parser <|> PBTS1 <$> parser
 
 instance HasParser FuncTypeSub where
-  parser = FTS <$> parser +++ (string " => " *> parser)
+  parser = FTS <$> parser ++< (string " => " *> parser)
 
 instance HasParser InOrOutTypeSub where
   parser =
     FTS3 <$> try (in_paren parser) <|> PTS3 <$> try parser <|>
-    PoTS3 <$> try parser <|> TAS3 <$> try parser <|> TIOV6 <$> parser <|>
+    PoTS3 <$> try parser <|> TASOI3 <$> try parser <|> TV3 <$> parser <|>
     underscore *> return Underscore6
 
 instance HasParser Proof where
   parser =
-    P1 <$> (char ' ' *> parser) +++ (char ' ' *> parser) <|>
-    P2 <$> (nl *> string "  " *> parser) +++ parser
+    P1 <$> (char ' ' *> parser) ++< (char ' ' *> parser) <|>
+    P2 <$> (nl *> string "  " *> parser) ++< parser
 
 instance HasParser IdOrOpEq where
   parser =
-    IOOE <$> parser +++ optionMaybe (try $ parser +++ parser) <* string " ="
+    IOOE <$> parser ++< optionMaybe (try $ parser ++< parser) <* string " ="
 
 instance HasParser TTValueExpr where
   parser =
     VEMWE <$> vemwe_p <|> LE2 <$> (char ' ' *> parser)
     where
     vemwe_p :: Parser (ValueExpr, Maybe WhereExpr)
-    vemwe_p = twice_deeper (try nl_indent *> parser +++ optionMaybe parser)
+    vemwe_p = twice_deeper (try nl_indent *> parser ++< optionMaybe parser)
 
 -- HasParser: Program
 instance HasParser Program where
   parser =
-    many nl *> parser >>= \pp ->
-    many (try $ nl *> nl *> parser) >>= \pps ->
-    spaces *> eof *> return (P (pp, pps))
+    P <$>
+      (many nl *> parser) ++< many (try $ nl *> nl *> parser) <* spaces <* eof
 
 instance HasParser ProgramPart where
   parser =
@@ -680,6 +660,5 @@ instance HasParser ProgramPart where
 
 -- For fast vim navigation
 -- ShowInstances.hs
--- HsGenTest.hs
--- Parsing/Test.hs
 -- ASTTypes.hs
+-- Test.hs

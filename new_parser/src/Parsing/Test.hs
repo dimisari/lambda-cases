@@ -34,7 +34,7 @@ main =
 -- parse_prog
 parse_prog :: ProgramFileName -> IO ()
 parse_prog pfn =
-  read_prog pfn $> parse_prog_str >>= write_parse_res
+  read_prog pfn >$> parse_prog_str >>= write_parse_res
   where
   parse_prog_str :: ProgramStr -> ParseResultString
   parse_prog_str = (parse_func :: ParseFunc Program) .> extract_res_str
@@ -45,7 +45,7 @@ parse_prog pfn =
 -- parse_example
 parse_example :: (FileName, ExampleParseFunc) -> IO ()
 parse_example (file_name, parse_func) =
-  read_examples file_name $> concatMap parse_func >>= write_parse_res
+  read_examples file_name >$> concatMap parse_func >>= write_parse_res
   where
   write_parse_res :: FileString -> IO ()
   write_parse_res = writeFile $ parse_results_dir ++ test_exs_dir ++ file_name
@@ -132,7 +132,7 @@ example_parse_func_pairs =
     , (parse_func :: ParseFunc ProdType) .> extract_res_str
     )
   , ( "type_app.txt"
-    , (parse_func :: ParseFunc TypeApp) .> extract_res_str
+    , (parse_func :: ParseFunc TypeAppIdOrAHTV) .> extract_res_str
     )
   , ( "cond_type.txt"
     , (parse_func :: ParseFunc Type) .> extract_res_str

@@ -6,15 +6,15 @@ module Haskell.Predefined where
 import Prelude hiding (IO)
 import qualified Prelude as P
 
-type FromIO = P.IO
-type IO = FromIO ()
+type T0'FromIO = P.IO
+type IO = T0'FromIO ()
 type ListOf's = []
 
-a0'div' :: Integral a => (a, a) -> a
-a0'div' = uncurry div
+v0'div' :: Integral a => (a, a) -> a
+v0'div' = uncurry div
 
-a0'mod' :: Integral a => (a, a) -> a
-a0'mod' = uncurry mod
+v0'mod' :: Integral a => (a, a) -> a
+v0'mod' = uncurry mod
 
 print' :: Show a => a -> IO
 print' = print
@@ -39,20 +39,20 @@ from_string' = read
 wrap :: Monad m => a -> m a
 wrap = return
 
-a0'from_io :: a -> P.IO a
-a0'from_io = return
+v0'from_io :: a -> P.IO a
+v0'from_io = return
 
 class IsFirst a b | b -> a where
-  a0'first :: b -> a
+  v0'first :: b -> a
 
 instance IsFirst a [a] where
-  a0'first = head
+  v0'first = head
 
 class IsSecond a b | b -> a where
-  a0'second :: b -> a
+  v0'second :: b -> a
 
 instance IsSecond a [a] where
-  a0'second = head . tail 
+  v0'second = head . tail
 
 -- IsFirst'
 
