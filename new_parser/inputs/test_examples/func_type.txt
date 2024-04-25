@@ -14,3 +14,7 @@ Real^3 => Real#
 
 ((Int => Int) => Int) x Int => Int#
 
+ListOf(T1)s => ListOf(T1)s#
+
+ListOf(ListOf(T1)s)s => ListOf(ListOf(T1)s)s#
+

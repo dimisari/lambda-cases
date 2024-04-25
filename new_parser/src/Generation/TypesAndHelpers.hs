@@ -45,6 +45,9 @@ class ToHsWithParamNum a where
 class ToHsWithIndentLvl a where
   to_hs_wil :: a -> WithIndentLvl Haskell
 
+class HasQuotesLength a where
+  quotes_length :: a -> Int
+
 -- automatic instances
 instance ToHaskell a => ToHaskell [a] where
   to_haskell = concatMap to_haskell
@@ -74,7 +77,7 @@ to_hs_wpn_list = traverse to_hs_wpn
 to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
 to_hs_wil_list = traverse to_hs_wil
 
--- params helpers
+-- Params helpers
 get_next_param :: WithParamNum Haskell
 get_next_param = get >$> to_param <* modify (+1)
 
@@ -138,27 +141,51 @@ indent_all_and_concat :: [Haskell] -> WithIndentLvl Haskell
 indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
+-- Single quotes
+single_quotes :: HasQuotesLength a => a -> String
+single_quotes = \a -> replicate (quotes_length a) '\''
+
+quotes_strs_hs :: HasQuotesLength a => [(a, String)] -> Haskell
+quotes_strs_hs = concatMap (\(a, str) -> single_quotes a ++ str)
+
+quotes_nps_hs :: HasQuotesLength a => [(a, NamePart)] -> Haskell
+quotes_nps_hs =
+  concatMap (\(a, NP str) -> single_quotes a ++ str) .> (prop_prefix ++)
+
+nps_quotes_hs :: HasQuotesLength a => [(NamePart, a)] -> Haskell
+nps_quotes_hs = concatMap (\(NP str, a) -> str ++ single_quotes a)
+
+maybe_quotes :: HasQuotesLength a => Maybe a -> Haskell
+maybe_quotes = \case
+  Nothing -> ""
+  Just a -> single_quotes a
+
+prefix_maybe_quotes :: HasQuotesLength a => String -> Maybe a -> Haskell
+prefix_maybe_quotes = \prefix -> \case
+  Nothing -> ""
+  Just a -> prefix ++ single_quotes a
+
+instance HasQuotesLength Arguments where
+  quotes_length = \(As (LEOUs (leou, leous))) -> length $ leou : leous
+
+instance HasQuotesLength TypesInParen where
+  quotes_length = \(TIP (st, sts)) -> length $ st : sts
+
+instance HasQuotesLength SubsOrUndersInParen where
+  quotes_length = \(SOUIP (sou, sous)) -> length $ sou : sous
+
+instance HasQuotesLength ParamVarsInParen where
+  quotes_length = \(PVIP (ptv, ptvs)) -> length $ ptv : ptvs
+
+instance HasQuotesLength AdHocVarsInParen where
+  quotes_length = \(AHVIP (ahtv, ahtvs)) -> length $ ahtv : ahtvs
+
+instance HasQuotesLength SubsInParen where
+  quotes_length = \(SIP (tvs, tvss)) -> length $ tvs : tvss
+
 -- ParenFuncAppOrId helpers
 id_prefix :: Haskell
 id_prefix = "v0"
-
-margs1_to_id_hs :: Maybe Arguments -> Haskell
-margs1_to_id_hs = \case
-  Nothing -> ""
-  Just args -> id_prefix ++ args_single_quotes args
-
-margs2_to_id_hs :: Maybe Arguments -> Haskell
-margs2_to_id_hs = \case
-  Nothing -> ""
-  Just args -> args_single_quotes args
-
-args_single_quotes :: Arguments -> Haskell
-args_single_quotes = \(As (LEOUs (leou, leous))) ->
-  replicate (length $ leou : leous) '\''
-
-args_str_pairs_to_id_hs :: [ArgsStr] -> Haskell
-args_str_pairs_to_id_hs =
-  concatMap (\(args, str) -> args_single_quotes args ++ str)
 
 type MargsPair = (Maybe Arguments, Maybe Arguments)
 add_margs_to_args_list :: MargsPair -> [Arguments] -> [Arguments]
@@ -196,47 +223,13 @@ general_change_hs_list = map ("c" ++) general_hs_list
 general_hs_list :: [Haskell]
 general_hs_list = ["1st", "2nd", "3rd", "4th", "5th"]
 
--- TypeAppIdOrAHTV helpers
+-- other
 tid_prefix :: Haskell
 tid_prefix = "T0"
 
-mtip1_to_tid_hs :: Maybe TypesInParen -> Haskell
-mtip1_to_tid_hs = \case
-  Nothing -> ""
-  Just tip -> tid_prefix ++ tip_single_quotes tip
+prop_prefix :: Haskell
+prop_prefix = "P0"
 
-mtip2_to_tid_hs :: Maybe TypesInParen -> Haskell
-mtip2_to_tid_hs = \case
-  Nothing -> ""
-  Just tip -> tip_single_quotes tip
-
-tip_single_quotes :: TypesInParen -> Haskell
-tip_single_quotes = \(TIP (st, sts)) -> replicate (length $ st : sts) '\''
-
-tip_str_pairs_to_tid_hs :: [(TypesInParen, String)] -> Haskell
-tip_str_pairs_to_tid_hs =
-  concatMap (\(tip, str) -> tip_single_quotes tip ++ str)
-
--- TypeAppSubOrId helpers
-msouip1_to_tid_hs :: Maybe SubsOrUndersInParen -> Haskell
-msouip1_to_tid_hs = \case
-  Nothing -> ""
-  Just souip -> tid_prefix ++ souip_single_quotes souip
-
-msouip2_to_tid_hs :: Maybe SubsOrUndersInParen -> Haskell
-msouip2_to_tid_hs = \case
-  Nothing -> ""
-  Just souip -> souip_single_quotes souip
-
-souip_single_quotes :: SubsOrUndersInParen -> Haskell
-souip_single_quotes = \(SOUIP (sou, sous)) ->
-  replicate (length $ sou : sous) '\''
-
-souip_str_pairs_to_tid_hs :: [(SubsOrUndersInParen, String)] -> Haskell
-souip_str_pairs_to_tid_hs =
-  concatMap (\(souip, str) -> souip_single_quotes souip ++ str)
-
--- other
 add_to_hs_pair :: HsPair -> HsPair -> HsPair
 add_to_hs_pair = \(hs1, hs2) (hs1', hs2') -> (hs1' ++ hs1, hs2' ++ hs2)
 

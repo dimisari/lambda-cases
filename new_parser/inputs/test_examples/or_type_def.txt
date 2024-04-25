@@ -23,3 +23,6 @@ values the_value:T1 | no_value#
 or_type ListOf(T1)s
 values non_empty_l:NonEmptyListOf(T1)s |empty_l#
 
+or_type (T1)Or(T2)
+values t1:T1 | t2:T2#
+
