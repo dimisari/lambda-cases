@@ -1,4 +1,8 @@
 
+- add reverse.lc from "temp" dir
+
+- preprocess set of naked or_type cases and add C
+
 - dot change: when underscore inside, postfunc arg inside the paren
 
 - from_io, FromIO => with_io, WithIO
@@ -8,8 +12,6 @@
   - in Haskell: x1 : x2 : xs
 
 - replace bsort.lc with the better version in the "temp" dir
-
-- add reverse.lc from "temp" dir
 
 - remove hard coded values for or types (e.g. true=True)
 

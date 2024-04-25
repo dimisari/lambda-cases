@@ -58,5 +58,5 @@ proof
 type_theorem (ListOf(T1)s)And(T1)Add_To(ListOf(T1)s)
 proof
   l + a =
-    l -> a#
+    l#
 

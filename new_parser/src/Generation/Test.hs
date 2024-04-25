@@ -3,6 +3,7 @@
 module Generation.Test where
 
 import System.Process
+import Data.List
 import Text.Parsec (runParser, eof, ParseError)
 
 import Helpers
@@ -51,7 +52,16 @@ compile =
     Right prog -> prog_to_hs prog
 
   prog_to_hs :: Program -> Haskell
-  prog_to_hs = change_prog_if_needed .> to_haskell .> (imports ++)
+  prog_to_hs = change_prog_if_needed .> to_haskell .> (top_hs ++)
+
+  top_hs :: Haskell
+  top_hs = lang_exts ++ imports
+
+  lang_exts :: Haskell
+  lang_exts = "{-# language " ++ intercalate ", " lang_ext_names ++ " #-}\n"
+
+  lang_ext_names :: [Haskell]
+  lang_ext_names = ["FlexibleInstances", "MultiParamTypeClasses"]
 
   imports :: Haskell
   imports = concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"

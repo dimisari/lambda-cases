@@ -364,6 +364,8 @@ instance HasParser ValueDef where
 
     parser >>= \value_expr ->
 
+    set_in_equal_line False >>
+
     optionMaybe (try parser) >>= \maybe_where_expr ->
 
     decrease_il_by 2 >>
@@ -402,7 +404,7 @@ instance HasParser LineExprs where
 instance HasParser WhereExpr where
   parser =
     WE <$>
-      (nl_indent *> string "where" *> nl *> where_def_expr_p) ++<
+      (try (nl_indent *> string "where") *> nl *> where_def_expr_p) ++<
       many (try $ nl *> nl *> where_def_expr_p)
     where
     where_def_expr_p :: Parser WhereDefExpr
@@ -472,7 +474,7 @@ instance HasParser TypeDef where
 instance HasParser TupleTypeDef where
   parser =
     TTD <$>
-      (string "tuple_type " *> parser) ++<
+      (try (string "tuple_type ") *> parser) ++<
       (nl *> string "value" *> space_or_nl *> parser) +++<
       (opt_space_around (string ":") *> parser)
 
@@ -496,7 +498,7 @@ instance HasParser IdTuple where
 instance HasParser OrTypeDef where
   parser =
     OTD <$>
-      (string "or_type " *> parser) ++<
+      (try (string "or_type ") *> parser) ++<
       (nl *> string "values" *> space_or_nl *> parser) +++<
       optionMaybe (char ':' *> parser) ++++<
       many1 id_mst_p
@@ -509,7 +511,7 @@ instance HasParser OrTypeDef where
 instance HasParser TypeNickname where
   parser =
     TNN <$>
-      (string "type_nickname " *> parser) ++<
+      (try (string "type_nickname ") *> parser) ++<
       (opt_space_around (string "=") *> parser)
 
 -- HasParser: TypePropDef
@@ -531,7 +533,7 @@ instance HasParser RenamingPropDef where
       many (comma *> parser)
 
 instance HasParser PropNameLine where
-  parser = PNL <$> (string "type_proposition " *> parser)
+  parser = PNL <$> (try (string "type_proposition ") *> parser)
 
 instance HasParser PropName where
   parser =
@@ -550,13 +552,13 @@ instance HasParser AdHocVarsInParen where
 
 instance HasParser NamePart where
   parser =
-    NP <$> concat <$> many1 (lower_upper <|> under_lower_upper)
+    NP <$> concat <$> many1 (lower_or_upper <|> under_upper)
     where
-    lower_upper :: Parser String
-    lower_upper = fmap pure (lower <|> upper)
+    lower_or_upper :: Parser String
+    lower_or_upper = fmap (:[]) (lower <|> upper)
 
-    under_lower_upper :: Parser String
-    under_lower_upper = underscore >:< lower_upper
+    under_upper :: Parser String
+    under_upper = underscore >:< fmap (:[]) upper
 
 -- HasParser: TypeTheo
 instance HasParser TypeTheo where
@@ -564,7 +566,7 @@ instance HasParser TypeTheo where
     TT <$> pnws_p ++< mpnws_p +++< proof_p
     where
     pnws_p :: Parser PropNameWithSubs
-    pnws_p = string "type_theorem " *> parser
+    pnws_p = try (string "type_theorem ") *> parser
 
     mpnws_p :: Parser (Maybe PropNameWithSubs)
     mpnws_p = optionMaybe (string " --> " *> parser)
@@ -645,7 +647,8 @@ instance HasParser TTValueExpr where
     VEMWE <$> vemwe_p <|> LE2 <$> (char ' ' *> parser)
     where
     vemwe_p :: Parser (ValueExpr, Maybe WhereExpr)
-    vemwe_p = twice_deeper (try nl_indent *> parser ++< optionMaybe parser)
+    vemwe_p =
+      twice_deeper (try nl_indent *> parser ++< optionMaybe parser)
 
 -- HasParser: Program
 instance HasParser Program where
@@ -655,8 +658,8 @@ instance HasParser Program where
 
 instance HasParser ProgramPart where
   parser =
-    TD <$> try parser <|> TNN1 <$> try parser <|> TT1 <$> try parser <|>
-    TPD <$> try parser <|> GVDs2 <$> try parser <|> VD2 <$> parser
+    TD <$> parser <|> TNN1 <$> parser <|> TT1 <$> parser <|>
+    TPD <$> parser <|> GVDs2 <$> try parser <|> VD2 <$> parser
 
 -- For fast vim navigation
 -- ShowInstances.hs

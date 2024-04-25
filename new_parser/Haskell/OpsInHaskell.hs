@@ -1,5 +1,5 @@
 {-# LANGUAGE
-  MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, 
+  MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
   UndecidableInstances, FunctionalDependencies, GADTs, IncoherentInstances
 #-}
 
@@ -36,7 +36,7 @@ class GeneralMultiplication a b c where
 class GeneralDivision a b c where
   (!/) :: a -> b -> c
 
-class GeneralAddition a b c where
+class P0'And'Add_To a b c where
   (!+) :: a -> b -> c
 class GeneralSubtraction a b c where
   (!-) :: a -> b -> c
@@ -70,26 +70,26 @@ class HasThen t where
 instance (a ~ Int) => GeneralMultiplication Int Int a where
   (!*) = (*)
 
--- GeneralAddition
-instance GeneralAddition String [Int] String where
+-- P0'And'Add_To
+instance P0'And'Add_To String [Int] String where
   str !+ l = str ++ show l
 
-instance (a ~ String) => GeneralAddition String Int a where
+instance (a ~ String) => P0'And'Add_To String Int a where
   str !+ i = str ++ show i
 
-instance (a ~ String) => GeneralAddition String (Int, Int, Int) a where
+instance (a ~ String) => P0'And'Add_To String (Int, Int, Int) a where
   str !+ i = str ++ show i
 
-instance GeneralAddition a [a] [a] where
+instance P0'And'Add_To a [a] [a] where
   (!+) = (:)
 
-instance (a ~ String) => GeneralAddition String String a where
+instance (a ~ String) => P0'And'Add_To String String a where
   (!+) = (++)
 
-instance (a ~ Int) => GeneralAddition Int Int a where
+instance (a ~ Int) => P0'And'Add_To Int Int a where
   (!+) = (+)
 
-instance (a ~ Int) => GeneralAddition a Int Int where
+instance (a ~ Int) => P0'And'Add_To a Int Int where
   (!+) = (+)
 
 -- GeneralSubtraction

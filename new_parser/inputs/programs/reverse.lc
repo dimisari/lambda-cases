@@ -1,0 +1,36 @@
+tuple_type NonEmptyListOf(T1)s
+value (head, tail) : T1 x MyListOf(T1)s
+
+or_type MyListOf(T1)s
+values non_empty_l:NonEmptyListOf(T1)s | empty_l
+
+type_theorem (MyListOf(T1)s)And(T1)Add_To(MyListOf(T1)s)
+proof
+  l + a =
+    l -> cases
+      empty_l => non_empty_l:(a, empty_l)
+      non_empty_l:(head, tail) => non_empty_l:(head, tail + a)
+
+reverse(_): MyListOf(T1)s => MyListOf(T1)s
+  = cases
+    empty_l => empty_l
+    non_empty_l:(head, tail) => reverse(tail) + head
+
+my_int_list: MyListOf(Int)s
+  = non_empty_l:(1, non_empty_l:(2, non_empty_l:(3, empty_l)))
+
+type_proposition (@T)Has_String_Repr
+needed (_)to_string : @T => String
+
+type_theorem (Int)Has_String_Repr
+proof (_)to_string = show
+
+type_theorem (MyListOf(Int)s)Has_String_Repr
+proof
+  (_)to_string =
+    cases
+      empty_l => ""
+      non_empty_l:(head, tail) => (head)to_string + (tail)to_string
+
+main: IO
+  = (my_int_list)to_string -> print_line(_)

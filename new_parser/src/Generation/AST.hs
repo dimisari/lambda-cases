@@ -42,11 +42,8 @@ instance ToHaskell Identifier where
       Just uip -> id_prefix ++ to_haskell uip
 
 instance ToHaskell SimpleId where
-  to_haskell = \(SId sid_tuple) ->
-    case sid_tuple of
-      (IS "true", Nothing) -> "True"
-      (IS "false", Nothing) -> "False"
-      (id_start, mdigit) -> to_haskell id_start ++ to_haskell mdigit
+  to_haskell = \(SId (id_start, mdigit)) ->
+    to_haskell id_start ++ to_haskell mdigit
 
 instance ToHaskell IdStart where
   to_haskell = \(IS str) -> str
@@ -136,19 +133,21 @@ instance ToHsWithIndentLvl BigList where
       return $ ["[ " ++ leous_hs] ++ map (", " ++) leous_hs_l ++ ["]"]
 
 instance ToHaskell ParenFuncAppOrId where
-  to_haskell (PFAOI (margs1, id_start, args_str_pairs, mdigit, margs2)) =
-    run_generator $ add_params_to paren_func_app_or_id_hs_gen
-    where
-    paren_func_app_or_id_hs_gen :: WithParamNum Haskell
-    paren_func_app_or_id_hs_gen =
-      total_id_hs ++>
-      to_hs_wpn (calc_args_list (margs1, margs2) args_str_pairs)
+  to_haskell = \case
+    (PFAOI (Nothing, IS "empty_l", [], Nothing, Nothing)) -> "Cempty_l"
+    (PFAOI (margs1, id_start, args_str_pairs, mdigit, margs2)) ->
+      run_generator $ add_params_to paren_func_app_or_id_hs_gen
+      where
+      paren_func_app_or_id_hs_gen :: WithParamNum Haskell
+      paren_func_app_or_id_hs_gen =
+        total_id_hs ++>
+        to_hs_wpn (calc_args_list (margs1, margs2) args_str_pairs)
 
-    total_id_hs :: Haskell
-    total_id_hs =
-      prefix_maybe_quotes id_prefix margs1 ++ to_haskell id_start ++
-      quotes_strs_hs args_str_pairs ++ to_haskell mdigit ++
-      maybe_quotes margs2
+      total_id_hs :: Haskell
+      total_id_hs =
+        prefix_maybe_quotes id_prefix margs1 ++ to_haskell id_start ++
+        quotes_strs_hs args_str_pairs ++ to_haskell mdigit ++
+        maybe_quotes margs2
 
 instance ToHsWithParamNum [Arguments] where
   to_hs_wpn = \args_l ->
@@ -430,6 +429,9 @@ instance ToHsWithIndentLvl EndCase where
 
 instance ToHaskell OuterMatching where
   to_haskell = \case
+    SId3 (SId (IS "true", Nothing)) -> "True"
+    SId3 (SId (IS "false", Nothing)) -> "False"
+    SId3 (SId (IS "empty_l", Nothing)) -> "Cempty_l"
     SId3 sid -> to_haskell sid
     M1 m -> to_haskell (NoParen, m)
 
