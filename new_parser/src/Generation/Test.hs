@@ -12,8 +12,8 @@ import ASTTypes
 import Parsing.AST
 
 import Generation.TypesAndHelpers
-import Generation.FieldIds
-import Generation.DotChangePreprocess
+import Generation.Collect
+import Generation.Preprocess
 import Generation.AST
 
 -- types
@@ -211,6 +211,6 @@ instance HasParser a => HasParser (NeedsParenBool, a) where
 
 -- For fast vim navigation
 -- TypesAndHelpers.hs
--- DotChangePreprocess.hs
+-- Preprocess.hs
 -- AST.hs
 -- ASTTypes.hs

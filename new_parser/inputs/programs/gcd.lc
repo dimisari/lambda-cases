@@ -4,21 +4,18 @@ gcd_of(_)and(_): Int^2 => Int
     0 => x
     y => gcd_of(y)and((x)mod(y))
 
-read_two_ints: (Int^2)FromIO
+read_two_ints: (Int^2)WithIO
   = print_line("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
-      [x, y] => (from_string(x), from_string(y)) -> (_)from_io
+      [x, y] => (from_string(x), from_string(y)) -> (_)with_io
       ... => throw_err("You didn't give me 2 ints")
 
 tuple_type NumsAndGcd
 value (x, y, gcd):Int^3
 
-print_gcd_message(_): NumsAndGcd => IO
-  = nag => print_line(message)
-    where
-    message: String
-      = "The GCD of " + nag.x + " and " + nag.y + " is = " + nag.gcd
+nag(_)to_message: NumsAndGcd => String
+  = nag => "The GCD of " + nag.x + " and " + nag.y + " is " + nag.gcd
 
 main: IO
   = read_two_ints ;> (i1, i2) =>
-    (i1, i2, gcd_of(i1)and(i2)) -> print_gcd_message(_)
+    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_line(_)

@@ -11,10 +11,10 @@ ee_recursion(_, _, _): Int^2 x Int^2 x Int^2 => Int^3
       next(_): Int^2 => Int^2
         = _.change{1st = 2nd, 2nd = 1st - (x)div(y) * 2nd}
 
-read_two_ints: (Int^2)FromIO
+read_two_ints: (Int^2)WithIO
   = print_line("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
-      [x, y] => (from_string(x), from_string(y)) -> (_)from_io
+      [x, y] => (from_string(x), from_string(y)) -> (_)with_io
       ... => throw_err("You didn't give me 2 ints")
 
 main: IO

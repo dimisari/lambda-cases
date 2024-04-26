@@ -6,8 +6,8 @@ module Haskell.Predefined where
 import Prelude hiding (IO)
 import qualified Prelude as P
 
-type T0'FromIO = P.IO
-type IO = T0'FromIO ()
+type T0'WithIO = P.IO
+type IO = T0'WithIO ()
 type ListOf's = []
 
 v0'div' :: Integral a => (a, a) -> a
@@ -39,8 +39,8 @@ from_string' = read
 wrap :: Monad m => a -> m a
 wrap = return
 
-v0'from_io :: a -> P.IO a
-v0'from_io = return
+v0'with_io :: a -> P.IO a
+v0'with_io = return
 
 class IsFirst a b | b -> a where
   v0'first :: b -> a

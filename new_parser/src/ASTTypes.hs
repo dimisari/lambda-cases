@@ -331,7 +331,7 @@ data ProgramPart =
 -- Parsing/AST.hs
 -- Parsing/Test.hs
 -- Generation/TypesAndHelpers.hs
--- Generation/DotChangePreprocess.hs
--- Generation/FieldIds.hs
+-- Generation/Preprocess.hs
+-- Generation/Collect.hs
 -- Generation/AST.hs
 -- Generation/Test.hs

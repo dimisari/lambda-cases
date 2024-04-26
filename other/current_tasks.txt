@@ -1,11 +1,7 @@
 
-- add reverse.lc from "temp" dir
-
 - preprocess set of naked or_type cases and add C
 
 - dot change: when underscore inside, postfunc arg inside the paren
-
-- from_io, FromIO => with_io, WithIO
 
 - pattern match multiple elems in list with:
   - [x1, x2, xs = ...] ->

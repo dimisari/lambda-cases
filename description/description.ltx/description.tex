@@ -74,21 +74,21 @@ gcd_of(_)and(_): Int^2 => Int
     0 => x
     y => gcd_of(y)and((x)mod(y))
 
-read_two_ints: (Int^2)FromIO
-  = print <- "Please give me 2 ints";
+read_two_ints: (Int^2)WithIO
+  = print_line("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
-      [x, y] => (from_string(x), from_string(y))from_io
+      [x, y] => (from_string(x), from_string(y)) -> (_)with_io
       ... => throw_err("You didn't give me 2 ints")
 
 tuple_type NumsAndGcd
 value (x, y, gcd):Int^3
 
 nag(_)to_message: NumsAndGcd => String
-  = nag => "The GCD of " + nag.x + " and " + nag.y + " is = " + nag.gcd
+  = nag => "The GCD of " + nag.x + " and " + nag.y + " is " + nag.gcd
 
 main: IO
   = read_two_ints ;> (i1, i2) =>
-    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_string(_)
+    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_line(_)
 \end{verbatim}
 
 \paragraph{Program grammar}
@@ -103,6 +103,7 @@ main: IO
 <nl> :: ( `\ ' | `\\t' )* `\\n'
 \end{grammar}
 
+\newpage
 \subsection{Keywords}
 
 The lcases keywords are the following:
@@ -997,69 +998,69 @@ Operator & Type
 
 \paragraph{Simple Example Program}
 \begin{verbatim}
-main: (EmptyVal)FromIO
+main: (EmptyVal)WithIO
   = print_string("I'll repeat the line") ; get_line ;> print_string(_)
 \end{verbatim}
 The example above demonstrates the use of the environment action operators with
-the \verb|FromIO| environment type, which is how IO is done in lcases. Some
+the \verb|WithIO| environment type, which is how IO is done in lcases. Some
 light can be shed on how this is done, if we take a look at the types (as
 always!):
 \begin{verbatim}
-print_string(_): String => (EmptyVal)FromIO
-print_string("I'll repeat the line"): (EmptyVal)FromIO
+print_string(_): String => (EmptyVal)WithIO
+print_string("I'll repeat the line"): (EmptyVal)WithIO
 
-get_line: (String)FromIO
+get_line: (String)WithIO
 
 # for the "then" operator we have:
 ; : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2)
 
 # therefore in the following expression:
 #     print_string("I'll repeat the line") ; get_line
-# the only way to match the types is if @E = FromIO, T1 = EmptyVal, T2 = String
-# from which it follows that (FromIO)Has_Then
+# the only way to match the types is if @E = WithIO, T1 = EmptyVal, T2 = String
+# from which it follows that (WithIO)Has_Then
 # and the "then" operator (in this particular case) has type
-#     (EmptyVal)FromIO x (String)FromIO => (String)FromIO
+#     (EmptyVal)WithIO x (String)WithIO => (String)WithIO
 # for the whole expression we have:
 print_string("I'll repeat the line") ; get_line
-  : (String)FromIO
+  : (String)WithIO
 
-print_string: String => (EmptyVal)FromIO
+print_string: String => (EmptyVal)WithIO
 
 # for the "use" operator we have:
 ;> : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)
 
 # therefore in the following expression:
 #     print_string("I'll repeat the line") ; get_line ;> print_string(_)
-# the only way to match the types is if @E = FromIO, T1 = String, T2 = EmptyVal
-# from which it follows that (FromIO)Has_Use
+# the only way to match the types is if @E = WithIO, T1 = String, T2 = EmptyVal
+# from which it follows that (WithIO)Has_Use
 # and the "use" operator (in this particular case) has type
-#     (String)FromIO x (String => (EmptyVal)FromIO) => (EmptyVal)FromIO
+#     (String)WithIO x (String => (EmptyVal)WithIO) => (EmptyVal)WithIO
 # for the whole expression we have:
 print_string("I'll repeat the line") ; get_line ;> print_string(_)
-  : (EmptyVal)FromIO
+  : (EmptyVal)WithIO
 \end{verbatim}
 
 \newpage
 \paragraph{Another Example Program}
 \begin{verbatim}
-main: (EmptyVal)FromIO
+main: (EmptyVal)WithIO
   = print_string <- "Hello! What's your name?" ; get_line ;> name =>
     print_string("Nice to meet you " + name + "!")
 
-print_string(_): String => (EmptyVal)FromIO
+print_string(_): String => (EmptyVal)WithIO
 "Hello! What's your name?": String
 <- : (T1 => T2) x T1 => T2
 
-# matching the types: T1 = String, T2 = (EmptyVal)FromIO
+# matching the types: T1 = String, T2 = (EmptyVal)WithIO
 print_string <- "Hello! What's your name?"
-  : (EmptyVal)FromIO
+  : (EmptyVal)WithIO
 
 # Similarly to the previous example program
 print_string <- "Hello! What's your name?" ; get_line
-  : (String)FromIO
+  : (String)WithIO
 
 name => print_string("Nice to meet you " + name + "!")
-  : String => (EmptyVal)FromIO
+  : String => (EmptyVal)WithIO
 
 # Here we have a function expression as the second operand
 # of the ";>" operator:
@@ -1080,7 +1081,7 @@ name => print_string("Nice to meet you " + name + "!")
 # Putting all together (similarly to the previous example program):
 print_string <- "Hello! What's your name?" ; get_line ;> name =>
 print_string("Nice to meet you " + name + "!")
-  : (EmptyVal)FromIO
+  : (EmptyVal)WithIO
 \end{verbatim}
 
 \paragraph{Description}
@@ -1108,7 +1109,7 @@ second action) and therefore it is of type \verb|@E(T2)|.
 Note that the value of type \verb|T1| produced by the first action is not
 used anywhere. This happens mostly when \verb|T1 = EmptyVal| and it is
 because values of type \verb|@E(EmptyVal)| are used for their environment
-action only \\(e.g. \verb|print_string(...): (EmptyVal)FromIO|).
+action only \\(e.g. \verb|print_string(...): (EmptyVal)WithIO|).
 \\\\
 How the two environment actions of the \verb|@E(T1)| and \verb|@E(T2)|
 values are combined to produce the new environment action is specific to the
@@ -2246,7 +2247,7 @@ non_empty_ls(_)to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 \begin{verbatim}
 type_nickname Ints = ListOf(Int)s
 type_nickname IntStringPairs = ListOf(Int x String)s
-type_nickname IO = (EmptyVal)FromIO
+type_nickname IO = (EmptyVal)WithIO
 type_nickname Res(T1)OrErr = Result(T1)OrError(String)
 \end{verbatim}
 

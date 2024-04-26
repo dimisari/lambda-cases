@@ -13,7 +13,7 @@ import Helpers
 import ShowInstances
 
 import Generation.TypesAndHelpers
-import Generation.FieldIds
+import Generation.Collect
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 instance ToHaskell Char where

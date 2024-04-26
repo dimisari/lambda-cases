@@ -10,7 +10,7 @@ import qualified Data.Set as S
 import ASTTypes
 import Helpers
 
-import Generation.FieldIds
+import Generation.Collect
 
 -- Haskell types
 type Haskell = String
@@ -253,6 +253,6 @@ mwe_to_pwe = \case
 
 -- GroupedValueDefs helpers
 -- ASTTypes.hs
--- FieldIds.hs
+-- Collect.hs
 -- AST.hs
 -- Test.hs

@@ -20,10 +20,10 @@ extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
           next(_): Coeffs => Coeffs
             = _.change{prev = curr, curr = prev - (x)div(y) * curr}
 
-read_two_ints: (Int^2)FromIO
+read_two_ints: (Int^2)WithIO
   = print_line("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
-      [i, j] => (from_string(i), from_string(j)) -> (_)from_io
+      [i, j] => (from_string(i), from_string(j)) -> (_)with_io
       ... => throw_err("You didn't give me 2 ints")
 
 print_gcd_and_coeffs_of(_): GcdAndCoeffs => IO
