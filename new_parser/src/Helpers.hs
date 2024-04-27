@@ -11,7 +11,7 @@ type FileName = String
 type FileString = String
 type TestExample = String
 
---paths
+-- paths
 [progs_dir, test_exs_dir, in_dir] =
   ["programs/", "test_examples/", "../inputs/"]
   :: [FilePath]

@@ -211,6 +211,7 @@ instance HasParser a => HasParser (NeedsParenBool, a) where
 
 -- For fast vim navigation
 -- TypesAndHelpers.hs
+-- Collect.hs
 -- Preprocess.hs
 -- AST.hs
 -- ASTTypes.hs

@@ -1,8 +1,12 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE
+  TypeSynonymInstances, FlexibleInstances, StandaloneDeriving,
+  GeneralizedNewtypeDeriving
+#-}
 
 module Generation.Preprocess where
 
 import Data.Set as S
+import Control.Monad
 import Control.Monad.State
 
 import ASTTypes
@@ -15,7 +19,7 @@ import Generation.Collect
 -- types
 data PossiblyInDC = InDotChange [PostFuncArg] | NotInDotChange
 
-type DotChangeState = State (PossiblyInDC, FieldIds)
+type DotChangeState = State (PossiblyInDC, FieldIds, NakedCases)
 type DCS = DotChangeState
 type PFAOI = ParenFuncAppOrId
 
@@ -28,101 +32,149 @@ change_prog_if_needed :: Program -> Program
 change_prog_if_needed = \prog ->
   evalState (ch_inside_if_needed prog) (init_state prog)
 
--- State helpers
--- get, put
-init_state :: Program -> (PossiblyInDC, FieldIds)
-init_state = \prog -> (NotInDotChange, field_ids prog)
+-- State helpers: init, get, put
+init_state :: Program -> (PossiblyInDC, FieldIds, NakedCases)
+init_state = \prog -> (NotInDotChange, field_ids prog, naked_cases prog)
 
 get_pidc :: DotChangeState PossiblyInDC
-get_pidc = get >$> fst
+get_pidc = get >$> \(pidc, _, _) -> pidc
 
 get_fids :: DotChangeState FieldIds
-get_fids = get >$> snd
+get_fids = get >$> \(_, fids, _) -> fids
+
+get_ncs :: DotChangeState NakedCases
+get_ncs = get >$> \(_, ncs, _) -> ncs
 
 put_new_pidc :: PossiblyInDC -> DotChangeState ()
-put_new_pidc = \pidc -> modify (\(_, fids) -> (pidc, fids))
+put_new_pidc = \pidc -> modify (\(_, fids, ncs) -> (pidc, fids, ncs))
 
-pfa_if_in_dot_change :: DotChangeState (Maybe PostFuncArg)
-pfa_if_in_dot_change =
+put_new_args :: [PostFuncArg] -> DotChangeState ()
+put_new_args = \pfargs -> put_new_pidc $ InDotChange pfargs
+
+pfarg_if_in_dot_change :: DotChangeState (Maybe PostFuncArg)
+pfarg_if_in_dot_change =
   get_pidc >$> \case
     NotInDotChange -> Nothing
     InDotChange [] -> error "should not be possible"
-    InDotChange (pfa : pfas) -> Just pfa
+    InDotChange (pfarg : pfargs) -> Just pfarg
 
--- push, pop
+-- State helpers: post func arg push/pop
 push_post_func_arg :: PostFuncArg -> DotChangeState ()
-push_post_func_arg = \pfa ->
+push_post_func_arg = \pfarg ->
   get_pidc >>= \case
-    NotInDotChange -> put_new_pidc $ InDotChange [pfa]
-    InDotChange pfas -> put_new_pidc $ InDotChange $ pfa : pfas
+    NotInDotChange -> put_new_args [pfarg]
+    InDotChange pfargs -> put_new_args $ pfarg : pfargs
 
 pop_post_func_arg :: DotChangeState ()
 pop_post_func_arg =
   get_pidc >>= \case
-    InDotChange [pfa] -> put_new_pidc NotInDotChange
-    InDotChange (pfa : pfas) -> put_new_pidc $ InDotChange pfas
+    InDotChange [pfarg] -> put_new_pidc NotInDotChange
+    InDotChange (pfarg : pfargs) -> put_new_args pfargs
     _ -> error "should not be possible"
 
--- check
+-- change basic expr to post func app if it is a simple or special id and
+-- we are inside a dot change epxression
+change_be_if_needed :: BasicExpr -> DotChangeState BasicOrAppExpr
+change_be_if_needed = \be -> pfapp_if_be_needs_change be >>= \case
+  Nothing -> BE3 <$> ch_inside_if_needed be
+  Just pfapp -> return $ PoFA1 pfapp
+
+pfapp_if_be_needs_change :: BasicExpr -> DCS (Maybe PostFuncApp)
+pfapp_if_be_needs_change = \case
+  PFAOI1 pfaoi -> pfapp_if_pfaoi_needs_change pfaoi
+  SI1 spid -> pfapp_if_spid_needs_change spid
+  _ -> return Nothing
+
+pfapp_if_pfaoi_needs_change :: PFAOI -> DCS (Maybe PostFuncApp)
+pfapp_if_pfaoi_needs_change =
+  check_if_pfaoi_is_sid .> \case
+    Just sid -> pfapp_if_sid_needs_change sid
+    _ -> return Nothing
+
+pfapp_if_spid_needs_change :: SpecialId -> DCS (Maybe PostFuncApp)
+pfapp_if_spid_needs_change = \spid ->
+  pfarg_if_in_dot_change >$> \case
+    Nothing -> Nothing
+    Just pfarg -> Just $ pfarg_pf_to_pfapp (pfarg, SI2 spid)
+
+pfapp_if_sid_needs_change :: SimpleId -> DotChangeState (Maybe PostFuncApp)
+pfapp_if_sid_needs_change = \sid ->
+  check_if_sid_in_fids sid >>= \in_fids ->
+  pfarg_if_in_dot_change >>= \mpfarg ->
+  return $ case (in_fids, mpfarg) of
+    (True, Just pfarg) -> Just $ pfarg_pf_to_pfapp (pfarg, SId1 sid)
+    _ -> Nothing
+
 check_if_sid_in_fids :: SimpleId -> DotChangeState Bool
 check_if_sid_in_fids = \sid -> S.member sid <$> get_fids
 
-pfa_if_sid_needs_change :: SimpleId -> DotChangeState (Maybe PostFuncArg)
-pfa_if_sid_needs_change = \sid ->
-  check_if_sid_in_fids sid >>= \in_fids ->
-  pfa_if_in_dot_change >>= \mpfa ->
-  return $ case (in_fids, mpfa) of
-    (True, Just pfa) -> Just $ change_pfa_if_underscore pfa
-    _ -> Nothing
+pfarg_pf_to_pfapp :: (PostFuncArg, PostFunc) -> PostFuncApp
+pfarg_pf_to_pfapp = \(pfarg, pf) ->
+  PoFA (change_pfarg_if_under pfarg, PFsMDC ([pf], Nothing))
 
-change_pfa_if_underscore :: PostFuncArg -> PostFuncArg
-change_pfa_if_underscore = \case
-  Underscore2 -> x'_pfa
+change_pfarg_if_under :: PostFuncArg -> PostFuncArg
+change_pfarg_if_under = \case
+  Underscore2 -> BE2 $ PFAOI1 $ sid_to_pfaoi (SId (IS "x'", Nothing))
   other -> other
 
-x'_pfa :: PostFuncArg
-x'_pfa = BE2 $ PFAOI1 $ PFAOI (Nothing, IS "x'", [], Nothing, Nothing)
+-- helpers
+check_if_pfaoi_is_sid :: ParenFuncAppOrId -> Maybe SimpleId
+check_if_pfaoi_is_sid = \case
+  PFAOI (Nothing, id_strt, [], mdigit, Nothing) -> Just $ SId (id_strt, mdigit)
+  _ -> Nothing
 
-pf_pfa_if_pfaoi_needs_change :: PFAOI -> DCS (Maybe (PostFunc, PostFuncArg))
-pf_pfa_if_pfaoi_needs_change = \case
-  PFAOI (Nothing, ids, [], mdigit, Nothing) ->
-    pfa_if_sid_needs_change sid >$> \case
-      Nothing -> Nothing
-      Just pfa -> Just (SId1 sid, pfa)
-    where
-    sid :: SimpleId
-    sid = SId (ids, mdigit)
-  _ -> return Nothing
+check_if_sid_in_ncs :: SimpleId -> DotChangeState Bool
+check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
 
-pf_pfa_if_sp_id_needs_ch :: SpecialId -> DCS (Maybe (PostFunc, PostFuncArg))
-pf_pfa_if_sp_id_needs_ch = \sp_id ->
-  pfa_if_in_dot_change >$> \case
-    Nothing -> Nothing
-    Just pfa -> Just (SI2 sp_id, change_pfa_if_underscore pfa)
+if_sid_in_ncs_to_new_pfaoi :: SimpleId -> DotChangeState (Maybe PFAOI)
+if_sid_in_ncs_to_new_pfaoi = \sid ->
+  check_if_sid_in_ncs sid >$> \case
+    True -> Just $ sid_to_pfaoi $ add_c_to_sid sid
+    False -> Nothing
 
-pf_pfa_if_be_needs_change :: BasicExpr -> DCS (Maybe (PostFunc, PostFuncArg))
-pf_pfa_if_be_needs_change = \case
-  PFAOI1 pfaoi -> pf_pfa_if_pfaoi_needs_change pfaoi
-  SI1 sp_id -> pf_pfa_if_sp_id_needs_ch sp_id
-  _ -> return Nothing
+add_c_to_sid :: SimpleId -> SimpleId
+add_c_to_sid = \(SId (IS str, mdigit)) -> SId (IS $ "C" ++ str, mdigit)
 
-change_be_if_needed :: BasicExpr -> DotChangeState BasicOrAppExpr
-change_be_if_needed = \be -> pf_pfa_if_be_needs_change be >>= \case
-  Nothing -> BE3 <$> ch_inside_if_needed be
-  Just (pf, pfa) -> return $ PoFA1 $ PoFA (pfa, PFsMDC ([pf], Nothing))
+sid_to_pfaoi :: SimpleId -> ParenFuncAppOrId
+sid_to_pfaoi = \(SId (id_start, mdigit)) ->
+  PFAOI (Nothing, id_start, [], mdigit, Nothing)
 
 -- automatic instances
 instance ChangeIfNeeded a => ChangeIfNeeded [a] where
-  ch_inside_if_needed = mapM ch_inside_if_needed
+  ch_inside_if_needed = traverse ch_inside_if_needed
 
 instance ChangeIfNeeded a => ChangeIfNeeded (Maybe a) where
   ch_inside_if_needed = \case
     Nothing -> return Nothing
     Just a -> Just <$> ch_inside_if_needed a
 
+-- ch_inside_if_needed for pairs and triples
+ch_inside_if_needed_pair
+  :: (ChangeIfNeeded a, ChangeIfNeeded b) => (a, b) -> DotChangeState (a, b)
+
+ch_inside_if_needed_pair = \(a, b) ->
+  ch_inside_if_needed a ++< ch_inside_if_needed b
+
+ch_inside_if_needed_triple
+  :: (ChangeIfNeeded a, ChangeIfNeeded b, ChangeIfNeeded c) =>
+     (a, b, c) -> DotChangeState (a, b, c)
+
+ch_inside_if_needed_triple = \(a, b, c) ->
+  ch_inside_if_needed a ++< ch_inside_if_needed b +++< ch_inside_if_needed c
+
+ch_inside_if_needed_first
+  :: ChangeIfNeeded a => (a, b) -> DotChangeState (a, b)
+
+ch_inside_if_needed_first = \(a, b) -> ch_inside_if_needed a >$> \a' -> (a', b)
+
+ch_inside_if_needed_second
+  :: ChangeIfNeeded b => (a, b) -> DotChangeState (a, b)
+
+ch_inside_if_needed_second = \(a, b) ->
+  ch_inside_if_needed b >$> \b' -> (a, b')
+
 -- regular instances
-instance ChangeIfNeeded ParenExpr where
-  ch_inside_if_needed = \(PE ipe) -> PE <$> ch_inside_if_needed ipe
+deriving instance ChangeIfNeeded ParenExpr
 
 instance ChangeIfNeeded InsideParenExpr where
   ch_inside_if_needed = \case
@@ -130,12 +182,11 @@ instance ChangeIfNeeded InsideParenExpr where
     LFE1 lfe -> LFE1 <$> ch_inside_if_needed lfe
 
 instance ChangeIfNeeded Tuple where
-  ch_inside_if_needed = \(T (leou, leous)) ->
-    T <$> ch_inside_if_needed leou ++< ch_inside_if_needed leous
+  ch_inside_if_needed = \(T t) -> T <$> ch_inside_if_needed_pair t
 
 instance ChangeIfNeeded LineExprOrUnders where
-  ch_inside_if_needed = \(LEOUs (leou, leous)) ->
-    LEOUs <$> ch_inside_if_needed leou ++< ch_inside_if_needed leous
+  ch_inside_if_needed = \(LEOUs leous) ->
+    LEOUs <$> ch_inside_if_needed_pair leous
 
 instance ChangeIfNeeded LineExprOrUnder where
   ch_inside_if_needed = \case
@@ -162,45 +213,49 @@ instance ChangeIfNeeded BasicExpr where
     other -> return other
 
 instance ChangeIfNeeded BigTuple where
-  ch_inside_if_needed = \(BT (leou, leous, leous_l)) ->
-    BT <$>
-      ch_inside_if_needed leou ++<
-      ch_inside_if_needed leous +++<
-      ch_inside_if_needed leous_l
+  ch_inside_if_needed = \(BT bt) -> BT <$> ch_inside_if_needed_triple bt
 
-instance ChangeIfNeeded List where
-  ch_inside_if_needed = \(L mleous) -> L <$> ch_inside_if_needed mleous
+deriving instance ChangeIfNeeded List
 
 instance ChangeIfNeeded BigList where
-  ch_inside_if_needed = \(BL (leou, leous)) ->
-    BL <$> ch_inside_if_needed leou ++< ch_inside_if_needed leous
+  ch_inside_if_needed = \(BL bl) -> BL <$> ch_inside_if_needed_pair bl
 
 instance ChangeIfNeeded ArgsStr where
-  ch_inside_if_needed = \(args, str) ->
-    ch_inside_if_needed args >$> \args' -> (args', str)
+  ch_inside_if_needed = ch_inside_if_needed_first
 
 instance ChangeIfNeeded ParenFuncAppOrId where
-  ch_inside_if_needed =
-    \(PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
-    ch_inside_if_needed margs1 >>= \margs1' ->
-    ch_inside_if_needed args_str_pairs >>= \args_str_pairs' ->
-    ch_inside_if_needed margs2 >>= \margs2' ->
-    return $ PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
+  ch_inside_if_needed pfaoi =
+    case check_if_pfaoi_is_sid pfaoi of
+      Just sid -> ch_inside_pfaoi_if_needed pfaoi -- pfaoi_is_sid_case sid
+      _ -> ch_inside_pfaoi_if_needed pfaoi
+    where
+    pfaoi_is_sid_case :: SimpleId -> DCS ParenFuncAppOrId
+    pfaoi_is_sid_case =
+      if_sid_in_ncs_to_new_pfaoi >=> \case
+        Just new_pfaoi -> return new_pfaoi
+        _ -> ch_inside_pfaoi_if_needed pfaoi
+
+    ch_inside_pfaoi_if_needed :: ParenFuncAppOrId -> DCS ParenFuncAppOrId
+    ch_inside_pfaoi_if_needed =
+      \(PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
+        ch_inside_if_needed_triple (margs1, args_str_pairs, margs2) >$>
+          \(margs1', args_str_pairs', margs2') ->
+          PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
 
 instance ChangeIfNeeded Arguments where
   ch_inside_if_needed = \(As leous) -> As <$> ch_inside_if_needed leous
 
 instance ChangeIfNeeded PreFuncApp where
-  ch_inside_if_needed = \(PrFA (pf, oper)) ->
-    ch_inside_if_needed oper >$> \oper' -> PrFA (pf, oper')
+  ch_inside_if_needed = \(PrFA prfa) ->
+    PrFA <$> ch_inside_if_needed_second prfa
 
 instance ChangeIfNeeded PostFuncApp where
-  ch_inside_if_needed = \(PoFA (pfa, pfae)) ->
-    ch_inside_if_needed pfa >>= \pfa' ->
-    push_post_func_arg pfa >>
+  ch_inside_if_needed = \(PoFA (pfarg, pfae)) ->
+    ch_inside_if_needed pfarg >>= \pfarg' ->
+    push_post_func_arg pfarg >>
     ch_inside_if_needed pfae >>= \pfae' ->
     pop_post_func_arg >>
-    return (PoFA (pfa', pfae'))
+    return (PoFA (pfarg', pfae'))
 
 instance ChangeIfNeeded PostFuncArg where
   ch_inside_if_needed = \case
@@ -211,16 +266,13 @@ instance ChangeIfNeeded PostFuncArg where
 instance ChangeIfNeeded PostFuncAppEnd where
   ch_inside_if_needed = \case
     DC1 dc -> DC1 <$> ch_inside_if_needed dc
-    PFsMDC (pfs, mdc) ->
-      ch_inside_if_needed mdc >$> \mdc' -> PFsMDC (pfs, mdc')
+    PFsMDC pfs_mdc -> PFsMDC <$> ch_inside_if_needed_second pfs_mdc
 
 instance ChangeIfNeeded DotChange where
-  ch_inside_if_needed = \(DC (fc, fcs)) ->
-    DC <$> ch_inside_if_needed fc ++< ch_inside_if_needed fcs
+  ch_inside_if_needed = \(DC dc) -> DC <$> ch_inside_if_needed_pair dc
 
 instance ChangeIfNeeded FieldChange where
-  ch_inside_if_needed = \(FC (field, leou)) ->
-    ch_inside_if_needed leou >$> \leou' -> FC (field, leou')
+  ch_inside_if_needed = \(FC fc) -> FC <$> ch_inside_if_needed_second fc
 
 instance ChangeIfNeeded OpExpr where
   ch_inside_if_needed = \case
@@ -232,12 +284,10 @@ instance ChangeIfNeeded OpExprStart where
     OES <$> ch_inside_if_needed oper_op_list
 
 instance ChangeIfNeeded (Operand, Op) where
-  ch_inside_if_needed = \(oper, op) ->
-    ch_inside_if_needed oper >$> \oper' -> (oper', op)
+  ch_inside_if_needed = ch_inside_if_needed_first
 
 instance ChangeIfNeeded LineOpExpr where
-  ch_inside_if_needed = \(LOE (oes, loee)) ->
-    LOE <$> ch_inside_if_needed oes ++< ch_inside_if_needed loee
+  ch_inside_if_needed = \(LOE loe) -> LOE <$> ch_inside_if_needed_pair loe
 
 instance ChangeIfNeeded LineOpExprEnd where
   ch_inside_if_needed = \case
@@ -250,19 +300,15 @@ instance ChangeIfNeeded BigOpExpr where
     BOEFS1 boefs -> BOEFS1 <$> ch_inside_if_needed boefs
 
 instance ChangeIfNeeded BigOpExprOpSplit where
-  ch_inside_if_needed = \(BOEOS (osls, moes, ose)) ->
-    BOEOS <$>
-      ch_inside_if_needed osls ++<
-      ch_inside_if_needed moes +++<
-      ch_inside_if_needed ose
+  ch_inside_if_needed = \(BOEOS boeos) ->
+    BOEOS <$> ch_inside_if_needed_triple boeos
 
 instance ChangeIfNeeded OpSplitLine where
-  ch_inside_if_needed = \(OSL (oes, mofco)) ->
-    OSL <$> ch_inside_if_needed oes ++< ch_inside_if_needed mofco
+  ch_inside_if_needed = \(OSL osl) -> OSL <$> ch_inside_if_needed_pair osl
 
 instance ChangeIfNeeded OperFCO where
-  ch_inside_if_needed = \(OFCO (oper, fco)) ->
-    ch_inside_if_needed oper >$> \oper' -> OFCO (oper, fco)
+  ch_inside_if_needed = \(OFCO oper_fco) ->
+    OFCO <$> ch_inside_if_needed_first oper_fco
 
 instance ChangeIfNeeded OpSplitEnd where
   ch_inside_if_needed = \case
@@ -270,8 +316,8 @@ instance ChangeIfNeeded OpSplitEnd where
     FE1 fe -> FE1 <$> ch_inside_if_needed fe
 
 instance ChangeIfNeeded BigOpExprFuncSplit where
-  ch_inside_if_needed = \(BOEFS (oes, bocfe)) ->
-    BOEFS <$> ch_inside_if_needed oes ++< ch_inside_if_needed bocfe
+  ch_inside_if_needed = \(BOEFS boefs) ->
+    BOEFS <$> ch_inside_if_needed_pair boefs
 
 instance ChangeIfNeeded BigOrCasesFuncExpr where
   ch_inside_if_needed = \case
@@ -291,12 +337,10 @@ instance ChangeIfNeeded FuncExpr where
     CFE2 cfe -> CFE2 <$> ch_inside_if_needed cfe
 
 instance ChangeIfNeeded LineFuncExpr where
-  ch_inside_if_needed = \(LFE (params, lfb)) ->
-    ch_inside_if_needed lfb >$> \lfb' -> LFE (params, lfb')
+  ch_inside_if_needed = \(LFE lfe) -> LFE <$> ch_inside_if_needed_second lfe
 
 instance ChangeIfNeeded BigFuncExpr where
-  ch_inside_if_needed = \(BFE (params, bfb)) ->
-    ch_inside_if_needed bfb >$> \bfb' -> BFE (params, bfb')
+  ch_inside_if_needed = \(BFE bfe) -> BFE <$> ch_inside_if_needed_second bfe
 
 instance ChangeIfNeeded LineFuncBody where
   ch_inside_if_needed = \case
@@ -310,29 +354,25 @@ instance ChangeIfNeeded BigFuncBody where
 
 instance ChangeIfNeeded CasesFuncExpr where
   ch_inside_if_needed = \(CFE (cparams, cases, mec)) ->
-    ch_inside_if_needed cases >>= \cases' ->
-    ch_inside_if_needed mec >>= \mec' ->
-    return $ CFE (cparams, cases', mec')
+    ch_inside_if_needed_pair (cases, mec) >$> \(cases', mec') ->
+    CFE (cparams, cases', mec')
 
 instance ChangeIfNeeded Case where
-  ch_inside_if_needed = \(Ca (om, cb)) ->
-    ch_inside_if_needed cb >$> \cb' -> Ca (om, cb')
+  ch_inside_if_needed = \(Ca om_cb) -> Ca <$> ch_inside_if_needed_second om_cb
 
 instance ChangeIfNeeded EndCase where
-  ch_inside_if_needed = \(EC (ecp, cb)) ->
-    ch_inside_if_needed cb >$> \cb' -> EC (ecp, cb')
+  ch_inside_if_needed = \(EC ecp_cb) ->
+    EC <$> ch_inside_if_needed_second ecp_cb
 
 instance ChangeIfNeeded CaseBody where
   ch_inside_if_needed = \case
     LFB1 lfb -> LFB1 <$> ch_inside_if_needed lfb
-    BFB1 (bfb, mwe) ->
-      BFB1 <$> ch_inside_if_needed bfb ++< ch_inside_if_needed mwe
+    BFB1 bfb -> BFB1 <$> ch_inside_if_needed_pair bfb
 
 instance ChangeIfNeeded ValueDef where
   ch_inside_if_needed = \(VD (id, t, ve, mwe)) ->
-    ch_inside_if_needed ve >>= \ve' ->
-    ch_inside_if_needed mwe >>= \mwe' ->
-    return $ VD (id, t, ve', mwe')
+    ch_inside_if_needed_pair (ve, mwe) >$> \(ve', mwe') ->
+    VD (id, t, ve', mwe')
 
 instance ChangeIfNeeded ValueExpr where
   ch_inside_if_needed = \case
@@ -344,17 +384,14 @@ instance ChangeIfNeeded ValueExpr where
 
 instance ChangeIfNeeded GroupedValueDefs where
   ch_inside_if_needed = \(GVDs (id, ids, ts, les, les_l)) ->
-    ch_inside_if_needed les >>= \les' ->
-    ch_inside_if_needed les_l >>= \les_l' ->
-    return $ GVDs (id, ids, ts, les', les_l')
+    ch_inside_if_needed_pair (les, les_l) >$> \(les', les_l') ->
+    GVDs (id, ids, ts, les', les_l')
 
 instance ChangeIfNeeded LineExprs where
-  ch_inside_if_needed = \(LEs (le, les)) ->
-    LEs <$> ch_inside_if_needed le ++< ch_inside_if_needed les
+  ch_inside_if_needed = \(LEs les) -> LEs <$> ch_inside_if_needed_pair les
 
 instance ChangeIfNeeded WhereExpr where
-  ch_inside_if_needed = \(WE (wde, wdes)) ->
-    WE <$> ch_inside_if_needed wde ++< ch_inside_if_needed wdes
+  ch_inside_if_needed = \(WE we) -> WE <$> ch_inside_if_needed_pair we
 
 instance ChangeIfNeeded WhereDefExpr where
   ch_inside_if_needed = \case
@@ -367,19 +404,16 @@ instance ChangeIfNeeded TypeTheo where
 
 instance ChangeIfNeeded Proof where
   ch_inside_if_needed = \case
-    P1 (iooe, le) -> ch_inside_if_needed le >$> \le' -> P1 (iooe, le)
-    P2 (iooe, ttve) ->
-      ch_inside_if_needed ttve >$> \ttve' -> P2 (iooe, ttve')
+    P1 iooe_le -> P1 <$> ch_inside_if_needed_second iooe_le
+    P2 iooe_ttve -> P2 <$> ch_inside_if_needed_second iooe_ttve
 
 instance ChangeIfNeeded TTValueExpr where
   ch_inside_if_needed = \case
     LE2 le -> LE2 <$> ch_inside_if_needed le
-    VEMWE (ve, mwe) ->
-      VEMWE <$> ch_inside_if_needed ve ++< ch_inside_if_needed mwe
+    VEMWE vemwe -> VEMWE <$> ch_inside_if_needed_pair vemwe
 
 instance ChangeIfNeeded Program where
-  ch_inside_if_needed = \(P (pp, pps)) ->
-    P <$> ch_inside_if_needed pp ++< ch_inside_if_needed pps
+  ch_inside_if_needed = \(P p) -> P <$> ch_inside_if_needed_pair p
 
 instance ChangeIfNeeded ProgramPart where
   ch_inside_if_needed = \case
