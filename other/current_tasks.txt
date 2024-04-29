@@ -1,5 +1,6 @@
 
-- dot change: when underscore inside, postfunc arg inside the paren
+- Ίσως υπάρχει καλύτερος τρόπος για τα tuples;
+  Μήπως να τα κάνω όλα κάποιο default data;
 
 - pattern match multiple elems in list with:
   - [x1, x2, xs = ...] ->

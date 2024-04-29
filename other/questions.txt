@@ -12,7 +12,3 @@
 - define arrays with power?
   - maybe good for one dimension +
     better with square brackets and commas (or x?) for multidimensional
-
-- add needs_paren to oper for prefunc app?
-
-- isolate hs gen (am I even gonna bother to look at the old code?)

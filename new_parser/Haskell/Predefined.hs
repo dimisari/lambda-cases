@@ -27,8 +27,11 @@ throw_err' = error
 true = True
 false = False
 
-drop'from' :: (Int, [a]) -> [a]
-drop'from' = uncurry drop
+ignore'from' :: (Int, [a]) -> [a]
+ignore'from' = uncurry drop
+
+take'from' :: (Int, [a]) -> [a]
+take'from' = uncurry take
 
 end_io :: IO
 end_io = return ()
@@ -55,7 +58,6 @@ instance IsSecond a [a] where
   v0'second = head . tail
 
 -- IsFirst'
-
 class IsFirst' a b | b -> a where
   p1st :: b -> a
 
@@ -72,7 +74,6 @@ instance IsFirst' a (a, b, c, d, e) where
   p1st = \(a, _, _, _, _) -> a
 
 -- IsSecond'
-
 class IsSecond' a b | b -> a where
   p2nd :: b -> a
 
@@ -89,7 +90,6 @@ instance IsSecond' b (a, b, c, d, e) where
   p2nd = \(_, b, _, _, _) -> b
 
 -- IsThird'
-
 class IsThird' a b | b -> a where
   p3rd :: b -> a
 
@@ -103,7 +103,6 @@ instance IsThird' c (a, b, c, d, e) where
   p3rd = \(_, _, c, _, _) -> c
 
 -- ChangeFirst'
-
 class ChangeFirstTo' a b | b -> a where
   c1st :: a -> b -> b
 
@@ -120,7 +119,6 @@ instance ChangeFirstTo' a (a, b, c, d, e) where
   c1st = \a (_, b, c, d, e) -> (a, b, c, d, e)
 
 -- ChangeSecond'
-
 class ChangeSecondTo' a b | b -> a where
   c2nd :: a -> b -> b
 
@@ -137,7 +135,6 @@ instance ChangeSecondTo' b (a, b, c, d, e) where
   c2nd = \b (a, _, c, d, e) -> (a, b, c, d, e)
 
 -- ChangeThird'
-
 class ChangeThirdTo' a b | b -> a where
   c3rd :: a -> b -> b
 

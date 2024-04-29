@@ -15,7 +15,7 @@ bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x Bool
         = (elem, (l, b)) => (elem + l, b)
 
       rest: ListOf(Int)s
-        = drop(2)from(l)
+        = ignore(2)from(l)
 
       not_sorted(_): ListOf(Int)s x Bool => ListOf(Int)s x Bool
         = _.change{2nd = false}

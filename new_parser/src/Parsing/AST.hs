@@ -2,6 +2,7 @@
 
 module Parsing.AST where
 
+import Control.Monad
 import Text.Parsec
 
 import ASTTypes
@@ -303,12 +304,31 @@ instance HasParser BigFuncBody where
 instance HasParser CasesFuncExpr where
   parser =
     parser >>= \cases_params ->
+
+    check_at_least_one_cases_keyword cases_params >>
+
     deeper_if_not_in_equal_line all_cases_p >>= \(cases, maybe_end_case) ->
     return $ CFE (cases_params, cases, maybe_end_case)
     where
     all_cases_p :: Parser ([Case], Maybe EndCase)
     all_cases_p =
       set_in_equal_line False *> many1 parser ++< optionMaybe parser
+
+    check_at_least_one_cases_keyword :: CasesParams -> Parser ()
+    check_at_least_one_cases_keyword =
+      count_cases_keywords >=> \case
+        0 -> unexpected "0 cases keywords in cases func expr"
+        n ->
+          case n > 0 of
+            True -> do_nothing
+            False -> error "Should be impossible"
+
+    count_cases_keywords :: CasesParams -> Parser Int
+    count_cases_keywords = \case
+      CParamId _ -> return 0
+      CasesKeyword -> return 1
+      Star2 -> return 0
+      CParams (cp, cps) -> mapM count_cases_keywords (cp : cps) >$> sum
 
 instance HasParser CasesParams where
   parser =

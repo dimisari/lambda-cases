@@ -182,10 +182,10 @@ instance ToHaskell SpecialId where
 instance ToHaskell PostFuncApp where
   to_haskell (PoFA (pfa, pfae)) =
     maybe_param_hs ++ case pfae of
-      DC1 dc -> to_haskell dc ++ " " ++ pfa_hs
+      DC1 dc -> to_haskell (dc, pfa_hs)
       PFsMDC (pfs, mdc) -> case mdc of
         Nothing -> pfa_pfs_hs
-        Just dc -> to_haskell dc ++ " " ++ pfa_pfs_hs
+        Just dc -> to_haskell (dc, pfa_pfs_hs)
         where
         pfa_pfs_hs :: Haskell
         pfa_pfs_hs = pfa_pfs_to_hs $ reverse pfs
@@ -209,9 +209,9 @@ instance ToHaskell PostFuncArg where
     BE2 be -> to_haskell be
     Underscore2 -> "x'"
 
-instance ToHaskell DotChange where
-  to_haskell (DC (fc, fcs)) =
-    run_generator $ add_params_to change_hs_gen
+instance ToHaskell (DotChange, DotChangeArgHs) where
+  to_haskell (DC (fc, fcs), dcahs) =
+    run_generator $ add_params_to (change_hs_gen <++ (" " ++ dcahs))
     where
     change_hs_gen :: WithParamNum Haskell
     change_hs_gen =
@@ -398,16 +398,6 @@ instance ToHsWithIndentLvl (CasesFuncExpr, PossiblyWhereExpr) where
 instance ToHsWithIndentLvl ([Case], Maybe EndCase) where
   to_hs_wil = \(cs, maybe_ec) ->
     to_hs_wil_list cs >$> concat >++< to_hs_wil maybe_ec
-
-instance ToHaskell CaseOf where
-  to_haskell (CaseOf cps) =
-    run_generator case_of_hs_gen
-    where
-    case_of_hs_gen :: WithParamNum Haskell
-    case_of_hs_gen =
-      to_hs_wpn cps >>= \cps_hs ->
-      case_of_inner_hs_gen >>= \case_of_inner_hs ->
-      return $ "\\" ++ cps_hs ++ " -> case " ++ case_of_inner_hs ++ " of"
 
 instance ToHsWithParamNum CasesParams where
   to_hs_wpn = \case

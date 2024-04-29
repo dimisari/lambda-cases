@@ -1,0 +1,54 @@
+
+tuple_type NonEmptyListOf(T1)s
+value (head, tail) : T1 x MyListOf(T1)s
+
+or_type MyListOf(T1)s
+values non_empty_l:NonEmptyListOf(T1)s | empty_l
+
+or_type Possibly(T1)
+values the_value:T1 | no_value
+
+or_type Comparison
+values lesser | equal | greater
+
+compare(_)with(_) : Int x Int => Comparison
+  = (a, b) =>
+    (a < b) -> cases
+      true => lesser
+      false =>
+        (a == b) -> cases
+          true => equal
+          false => greater
+
+elem(_)of(_) : Int x MyListOf(T1)s => Possibly(T1)
+  = (cases, cases)
+    (*, empty_l) => no_value
+    (0, non_empty_l:(h, *)) => the_value:h
+    (ind, non_empty_l:(h, t)) => elem(ind - 1)of(t)
+
+bin_search(_, _) : MyListOf(Int)s x Int => Possibly(Int)
+  = (list, target) =>
+    elem(middle_ind)of(list) -> cases
+      no_value => throw_err("should be impossible")
+      the_value:middle =>
+        compare(middle)with(target) -> cases
+          lesser => bin_search(ignore(middle_ind + 1)from(list), target)
+          equal => the_value:middle_ind
+          greater => bin_search(take(middle_ind)from(list), target)
+    where
+    middle_ind : Int
+      = (length <- list)div(2)
+
+list : MyListOf(Int)s
+  = non_empty_l:(2, non_empty_l:(4, non_empty_l:(6, non_empty_l:(8, empty_l))))
+
+result_msg(_) : Possibly(Int) => IO
+  = cases
+    no_value => print_line("Target Not Found")
+    the_value:ind => print_line("Found! The index is: " + ind)
+
+main : IO
+  = print_line("Trying 2") ; result_msg(bin_search(list, 2)) ;
+    print_line("Trying 3") ; result_msg(bin_search(list, 3)) ;
+    print_line("Trying 4") ; result_msg(bin_search(list, 4))
+

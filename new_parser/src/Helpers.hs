@@ -77,7 +77,7 @@ read_examples = \file_name -> read_exs_file file_name >$> file_str_to_examples
 file_str_to_examples :: FileString -> [ TestExample ]
 file_str_to_examples = endBy "#\n\n"
 
-do_nothing :: State a ()
+do_nothing :: Monad m => m ()
 do_nothing = return ()
 
 -- ASTTypes.hs

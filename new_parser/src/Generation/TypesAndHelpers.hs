@@ -26,8 +26,6 @@ data NeedsAnnotationBool = Annotation | NoAnnotation
 
 data PossiblyWhereExpr = HasWhereExpr WhereExpr | NoWhereExpr
 
-newtype CaseOf = CaseOf CasesParams
-
 newtype WholeParams = Whole Parameters
 
 -- State types
