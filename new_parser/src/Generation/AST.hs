@@ -134,7 +134,6 @@ instance ToHsWithIndentLvl BigList where
 
 instance ToHaskell ParenFuncAppOrId where
   to_haskell = \case
-    (PFAOI (Nothing, IS "empty_l", [], Nothing, Nothing)) -> "Cempty_l"
     (PFAOI (margs1, id_start, args_str_pairs, mdigit, margs2)) ->
       run_generator $ add_params_to paren_func_app_or_id_hs_gen
       where
@@ -429,9 +428,6 @@ instance ToHsWithIndentLvl EndCase where
 
 instance ToHaskell OuterMatching where
   to_haskell = \case
-    SId3 (SId (IS "true", Nothing)) -> "True"
-    SId3 (SId (IS "false", Nothing)) -> "False"
-    SId3 (SId (IS "empty_l", Nothing)) -> "Cempty_l"
     SId3 sid -> to_haskell sid
     M1 m -> to_haskell (NoParen, m)
 

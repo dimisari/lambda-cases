@@ -43,7 +43,7 @@ get_fids :: DotChangeState FieldIds
 get_fids = get >$> \(_, fids, _) -> fids
 
 get_ncs :: DotChangeState NakedCases
-get_ncs = get >$> \(_, ncs, _) -> ncs
+get_ncs = get >$> \(_, _, ncs) -> ncs
 
 put_new_pidc :: PossiblyInDC -> DotChangeState ()
 put_new_pidc = \pidc -> modify (\(_, fids, ncs) -> (pidc, fids, ncs))
@@ -134,6 +134,18 @@ if_sid_in_ncs_to_new_pfaoi = \sid ->
 
 add_c_to_sid :: SimpleId -> SimpleId
 add_c_to_sid = \(SId (IS str, mdigit)) -> SId (IS $ "C" ++ str, mdigit)
+
+change_if_bool_sid :: SimpleId -> SimpleId
+change_if_bool_sid = \case
+  SId (IS "true", Nothing) -> SId (IS "True", Nothing)
+  SId (IS "false", Nothing) -> SId (IS "False", Nothing)
+  sid -> sid
+
+change_sid_if_needed :: SimpleId -> DotChangeState SimpleId
+change_sid_if_needed = \sid ->
+  check_if_sid_in_ncs sid >$> \case
+    True -> add_c_to_sid sid
+    False -> change_if_bool_sid sid
 
 sid_to_pfaoi :: SimpleId -> ParenFuncAppOrId
 sid_to_pfaoi = \(SId (id_start, mdigit)) ->
@@ -226,7 +238,7 @@ instance ChangeIfNeeded ArgsStr where
 instance ChangeIfNeeded ParenFuncAppOrId where
   ch_inside_if_needed pfaoi =
     case check_if_pfaoi_is_sid pfaoi of
-      Just sid -> ch_inside_pfaoi_if_needed pfaoi -- pfaoi_is_sid_case sid
+      Just sid -> pfaoi_is_sid_case sid
       _ -> ch_inside_pfaoi_if_needed pfaoi
     where
     pfaoi_is_sid_case :: SimpleId -> DCS ParenFuncAppOrId
@@ -358,11 +370,16 @@ instance ChangeIfNeeded CasesFuncExpr where
     CFE (cparams, cases', mec')
 
 instance ChangeIfNeeded Case where
-  ch_inside_if_needed = \(Ca om_cb) -> Ca <$> ch_inside_if_needed_second om_cb
+  ch_inside_if_needed = \(Ca om_cb) -> Ca <$> ch_inside_if_needed_pair om_cb
 
 instance ChangeIfNeeded EndCase where
   ch_inside_if_needed = \(EC ecp_cb) ->
     EC <$> ch_inside_if_needed_second ecp_cb
+
+instance ChangeIfNeeded OuterMatching where
+  ch_inside_if_needed = \case
+    SId3 sid -> SId3 <$> change_sid_if_needed sid
+    other -> return other
 
 instance ChangeIfNeeded CaseBody where
   ch_inside_if_needed = \case

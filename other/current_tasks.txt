@@ -1,11 +1,4 @@
 
-- preprocess set of naked or_type cases and add C
-  - αν είμαστε σε
-    - outer matching
-    - fpaoi
-      - πρέπει να τσεκάρουμε ότι δεν αντιστοιχεί σε κάποιο parameter πρώτα
-    τσεκάρουμε αν έχουμε sid και αν ανήκει ανήκει στα ncs
-
 - dot change: when underscore inside, postfunc arg inside the paren
 
 - pattern match multiple elems in list with:
