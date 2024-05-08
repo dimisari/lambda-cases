@@ -32,7 +32,7 @@ change_prog_if_needed :: Program -> Program
 change_prog_if_needed = \prog ->
   evalState (ch_inside_if_needed prog) (init_state prog)
 
--- State helpers: init, get, put
+-- State helpers: init, get, put, pfarg if in dc, check
 init_state :: Program -> (PossiblyInDC, FieldIds, NakedCases)
 init_state = \prog -> (NotInDotChange, field_ids prog, naked_cases prog)
 
@@ -58,6 +58,12 @@ pfarg_if_in_dot_change =
     InDotChange [] -> error "should not be possible"
     InDotChange (pfarg : pfargs) -> Just pfarg
 
+check_if_sid_in_fids :: SimpleId -> DotChangeState Bool
+check_if_sid_in_fids = \sid -> S.member sid <$> get_fids
+
+check_if_sid_in_ncs :: SimpleId -> DotChangeState Bool
+check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
+
 -- State helpers: post func arg push/pop
 push_post_func_arg :: PostFuncArg -> DotChangeState ()
 push_post_func_arg = \pfarg ->
@@ -75,9 +81,10 @@ pop_post_func_arg =
 -- change basic expr to post func app if it is a simple or special id and
 -- we are inside a dot change epxression
 change_be_if_needed :: BasicExpr -> DotChangeState BasicOrAppExpr
-change_be_if_needed = \be -> pfapp_if_be_needs_change be >>= \case
-  Nothing -> BE3 <$> ch_inside_if_needed be
-  Just pfapp -> return $ PoFA1 pfapp
+change_be_if_needed = \be ->
+  pfapp_if_be_needs_change be >>= \case
+    Nothing -> BE3 <$> ch_inside_if_needed be
+    Just pfapp -> return $ PoFA1 pfapp
 
 pfapp_if_be_needs_change :: BasicExpr -> DCS (Maybe PostFuncApp)
 pfapp_if_be_needs_change = \case
@@ -88,8 +95,8 @@ pfapp_if_be_needs_change = \case
 pfapp_if_pfaoi_needs_change :: PFAOI -> DCS (Maybe PostFuncApp)
 pfapp_if_pfaoi_needs_change =
   check_if_pfaoi_is_sid .> \case
+    Nothing -> return Nothing
     Just sid -> pfapp_if_sid_needs_change sid
-    _ -> return Nothing
 
 pfapp_if_spid_needs_change :: SpecialId -> DCS (Maybe PostFuncApp)
 pfapp_if_spid_needs_change = \spid ->
@@ -105,9 +112,6 @@ pfapp_if_sid_needs_change = \sid ->
     (True, Just pfarg) -> Just $ pfarg_pf_to_pfapp (pfarg, SId1 sid)
     _ -> Nothing
 
-check_if_sid_in_fids :: SimpleId -> DotChangeState Bool
-check_if_sid_in_fids = \sid -> S.member sid <$> get_fids
-
 pfarg_pf_to_pfapp :: (PostFuncArg, PostFunc) -> PostFuncApp
 pfarg_pf_to_pfapp = \(pfarg, pf) ->
   PoFA (change_pfarg_if_under pfarg, PFsMDC ([pf], Nothing))
@@ -118,19 +122,33 @@ change_pfarg_if_under = \case
   other -> other
 
 -- helpers
+change_pfaoi_if_needed :: PFAOI -> DotChangeState (Maybe PFAOI)
+change_pfaoi_if_needed =
+  check_if_pfaoi_is_sid .> \case
+    Nothing -> return Nothing
+    Just sid -> change_sid_if_needed sid >$> (sid_to_pfaoi .> Just)
+
+change_id_if_needed :: Identifier -> DotChangeState Identifier
+change_id_if_needed = \id ->
+  case check_if_id_is_sid id of
+    Nothing -> return id
+    Just sid -> change_sid_if_needed sid >$> sid_to_id
+
 check_if_pfaoi_is_sid :: ParenFuncAppOrId -> Maybe SimpleId
 check_if_pfaoi_is_sid = \case
   PFAOI (Nothing, id_strt, [], mdigit, Nothing) -> Just $ SId (id_strt, mdigit)
   _ -> Nothing
 
-check_if_sid_in_ncs :: SimpleId -> DotChangeState Bool
-check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
+check_if_id_is_sid :: Identifier -> Maybe SimpleId
+check_if_id_is_sid = \case
+  Id (Nothing, ids, [], mdigit, Nothing) -> Just $ SId (ids, mdigit)
+  _ -> Nothing
 
-if_sid_in_ncs_to_new_pfaoi :: SimpleId -> DotChangeState (Maybe PFAOI)
-if_sid_in_ncs_to_new_pfaoi = \sid ->
+change_sid_if_needed :: SimpleId -> DotChangeState SimpleId
+change_sid_if_needed = \sid ->
   check_if_sid_in_ncs sid >$> \case
-    True -> Just $ sid_to_pfaoi $ add_c_to_sid sid
-    False -> Nothing
+    True -> add_c_to_sid sid
+    False -> change_if_bool_sid sid
 
 add_c_to_sid :: SimpleId -> SimpleId
 add_c_to_sid = \(SId (IS str, mdigit)) -> SId (IS $ "C" ++ str, mdigit)
@@ -141,15 +159,13 @@ change_if_bool_sid = \case
   SId (IS "false", Nothing) -> SId (IS "False", Nothing)
   sid -> sid
 
-change_sid_if_needed :: SimpleId -> DotChangeState SimpleId
-change_sid_if_needed = \sid ->
-  check_if_sid_in_ncs sid >$> \case
-    True -> add_c_to_sid sid
-    False -> change_if_bool_sid sid
-
 sid_to_pfaoi :: SimpleId -> ParenFuncAppOrId
 sid_to_pfaoi = \(SId (id_start, mdigit)) ->
   PFAOI (Nothing, id_start, [], mdigit, Nothing)
+
+sid_to_id :: SimpleId -> Identifier
+sid_to_id = \(SId (id_start, mdigit)) ->
+  Id (Nothing, id_start, [], mdigit, Nothing)
 
 -- automatic instances
 instance ChangeIfNeeded a => ChangeIfNeeded [a] where
@@ -219,7 +235,10 @@ instance ChangeIfNeeded BasicOrAppExpr where
 
 instance ChangeIfNeeded BasicExpr where
   ch_inside_if_needed = \case
-    PFAOI1 pfaoi -> PFAOI1 <$> ch_inside_if_needed pfaoi
+    PFAOI1 pfaoi ->
+      change_pfaoi_if_needed pfaoi >>= \case
+        Just new_pfaoi -> return $ PFAOI1 new_pfaoi
+        _ -> PFAOI1 <$> ch_inside_if_needed pfaoi
     T1 t -> T1 <$> ch_inside_if_needed t
     L1 l -> L1 <$> ch_inside_if_needed l
     other -> return other
@@ -236,23 +255,11 @@ instance ChangeIfNeeded ArgsStr where
   ch_inside_if_needed = ch_inside_if_needed_first
 
 instance ChangeIfNeeded ParenFuncAppOrId where
-  ch_inside_if_needed pfaoi =
-    case check_if_pfaoi_is_sid pfaoi of
-      Just sid -> pfaoi_is_sid_case sid
-      _ -> ch_inside_pfaoi_if_needed pfaoi
-    where
-    pfaoi_is_sid_case :: SimpleId -> DCS ParenFuncAppOrId
-    pfaoi_is_sid_case =
-      if_sid_in_ncs_to_new_pfaoi >=> \case
-        Just new_pfaoi -> return new_pfaoi
-        _ -> ch_inside_pfaoi_if_needed pfaoi
-
-    ch_inside_pfaoi_if_needed :: ParenFuncAppOrId -> DCS ParenFuncAppOrId
-    ch_inside_pfaoi_if_needed =
-      \(PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
-        ch_inside_if_needed_triple (margs1, args_str_pairs, margs2) >$>
-          \(margs1', args_str_pairs', margs2') ->
-          PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
+  ch_inside_if_needed =
+    \(PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
+      ch_inside_if_needed_triple (margs1, args_str_pairs, margs2) >$>
+        \(margs1', args_str_pairs', margs2') ->
+        PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
 
 instance ChangeIfNeeded Arguments where
   ch_inside_if_needed = \(As leous) -> As <$> ch_inside_if_needed leous
@@ -379,7 +386,33 @@ instance ChangeIfNeeded EndCase where
 instance ChangeIfNeeded OuterMatching where
   ch_inside_if_needed = \case
     SId3 sid -> SId3 <$> change_sid_if_needed sid
-    other -> return other
+    M1 m -> M1 <$> ch_inside_if_needed m
+
+instance ChangeIfNeeded Matching where
+  ch_inside_if_needed = \case
+    PFM pfm -> PFM <$> ch_inside_if_needed_second pfm
+    TM1 tm -> TM1 <$> ch_inside_if_needed tm
+    LM1 lm -> LM1 <$> ch_inside_if_needed lm
+    lit -> return lit
+
+instance ChangeIfNeeded InnerMatching where
+  ch_inside_if_needed = \case
+    Star -> return Star
+    Id2 id -> Id2 <$> change_id_if_needed id
+    M2 m -> M2 <$> ch_inside_if_needed m
+
+instance ChangeIfNeeded TupleMatching where
+  ch_inside_if_needed = \(TM ims) -> TM <$> ch_inside_if_needed_pair ims
+
+instance ChangeIfNeeded ListMatching where
+  ch_inside_if_needed = \(LM m_list_internals) ->
+    LM <$> ch_inside_if_needed m_list_internals
+
+instance
+  ChangeIfNeeded (InnerMatching, [InnerMatching], Maybe RestListMatching)
+  where
+  ch_inside_if_needed = \(im, ims, mrlm) ->
+   ch_inside_if_needed_pair (im, ims) >$> \(im', ims') -> (im', ims', mrlm)
 
 instance ChangeIfNeeded CaseBody where
   ch_inside_if_needed = \case

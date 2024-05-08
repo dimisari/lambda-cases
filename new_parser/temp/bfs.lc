@@ -1,0 +1,15 @@
+tuple_type TreeOf(T1)s
+value (root, subtrees) : T1 x ListOf(TreeOf(T1)s)s
+
+or_type ListOf(T1)s
+values non_empty_l:T1 x ListOf(T1)s | empty_l
+
+bfs(_) : TreeOf(T1)s => TreeOf(Int x T1)s
+  = tree => ((0, tree.root), bfs_on_subtrees(tree.subtrees)with_num(1))
+    where
+    bfs_on_subtrees(_)with_num(_) : TreeOf(T1)s x Int => TreeOf(Int x T1)s
+      = (subtrees, start_num) =>
+        ((start_num, tree.root))
+
+
+

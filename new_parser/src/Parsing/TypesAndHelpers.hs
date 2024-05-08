@@ -51,12 +51,13 @@ deeper_if_not_in_equal_line = \parser ->
     False -> deeper parser
 
 -- helper parsers
-[nl, nl_indent, space_or_nl, opt_space, comma]
+[nl, nl_indent, space_or_nl, opt_space, comma, equals]
   = [ many (char ' ' <|> char '\t') *> char '\n' *> nothing
     , nl *> indent
     , (try (nl *> string "  ") <|> string " ") *> nothing
     , optional (char ' ')
     , char ',' *> opt_space
+    , opt_space_around (string "=") *> nothing
     ]
   :: [Parser ()]
 

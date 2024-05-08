@@ -1,4 +1,7 @@
 
+- Ίσως υπάρχει καλύτερος τρόπος για τα tuples;
+  Μήπως να τα κάνω όλα κάποιο default data;
+
 - prop names can have simple types?
   - probably only in conditions for values that use ad hoc values
 

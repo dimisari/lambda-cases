@@ -22,7 +22,7 @@ cases
   (amber, amber) => true
   (red, red) =>
     a
-    where 
+    where
     a : Bool
       = true
   ... => false#
@@ -42,4 +42,10 @@ cases
 (f, cases)
   empty_l => empty_l
   non_empty_l:list => non_empty_l:(f(list.head), apply(f)to_all_in(list.tail))#
+
+cases
+  [] => []
+  [x1, x2, xs = ...] => xs
+  [x1, x2, ...] => x1
+  [head, tail = ...] => tail#
 

@@ -204,15 +204,17 @@ It used in expressions where parentheses in the middle don't make sense
 \item \textit{Grammar}
 \begin{grammar}
 <identifier> ::=
-[ <unders_in_par> ] <id-start> <id-cont>* [ [0-9] ] [ <unders_in_par> ]
+[ <unders-in-paren> ] <id-start> <id-cont>* [ [0-9] ] [ <unders-in-paren> ]
 
 <simple-id> ::= <id-start> [ [0-9] ]
 
 <id-start> ::= [a-z] [a-z_]*
 
-<id-cont> ::= <unders_in_par> [a-z_]+
+<id-cont> ::= <unders-in-paren> [a-z_]+
 
-<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)'
+<unders-in-paren> ::= `(_' ( <comma> `_' )* `)'
+
+<comma> ::= `,' [ `\ ' ]
 \end{grammar}
 Even though the "\verb|cases|" and "\verb|where|" keywords can be generated
 by these grammar rules, they cannot be used as identifiers.
@@ -372,8 +374,6 @@ answers_to : ListOf(String)s
 
 <basic-expr> ::=
 <literal> | <paren-func-app-or-id> | <special-id> | <tuple> | <list>
-
-<comma> ::= `,' [ `\ ' ]
 \\
 
 <big-tuple> ::= ""\\
@@ -735,8 +735,9 @@ a function that expects those new values as arguments (last example).
 <dot-change> ::=
 `.change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
-<field-change> ::=
-( <simple-id> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
+<field-change> ::= ( <simple-id> | <special-id> ) <equals> <line-expr-or-under>
+
+<equals> ::= [ `\ ' ] `=' [ `\ ' ]
 \end{grammar}
 
 \end{itemize}
@@ -1595,7 +1596,7 @@ expressions in all cases must be the same as the number of parameters with the
 <case> ::=  <nl> <indent> <outer-matching> [ `\ ' ] `=>' <case-body>
 
 <end-case> ::=
-<nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
+<nl> <indent> ( `...' | <identifier> ) [ `\ ' ] `=>' <case-body>
 \\
 
 <outer-matching> ::= <simple-id> | <matching>
@@ -1608,9 +1609,12 @@ expressions in all cases must be the same as the number of parameters with the
 <tuple-matching> ::=
 `(' [ `\ ' ] <inner-matching> ( <comma> <inner-matching> )+ [ `\ ' ] `)'
 
-<list-matching> ::=
-`[' [ `\ ' ] [ <inner-matching> ( <comma> <inner-matching> )* ] [ `\ ' ]
-`]'
+<list-matching> ::= ""\\
+`[' [ `\ ' ]
+[ <inner-matching> ( <comma> <inner-matching> )* [ <rest-list-matching> ] ]
+[ `\ ' ] `]'
+
+<rest-list-matching> ::= <comma> [ <simple-id> <equals> ] `...'
 \\
 
 <case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]
@@ -2261,7 +2265,7 @@ Parametric type variables can be used in the nickname.
 
 \begin{grammar}
 <t-nickname> ::=
-`type_nickname\ ' <type-name> [ `\ ' ] `=' [ `\ ' ] <simple-type>
+`type_nickname\ ' <type-name> <equals> <simple-type>
 \end{grammar}
 
 \end{itemize}
@@ -2704,7 +2708,7 @@ the condition arrow (" \verb|-->| ") arrow.
   \\
   \verb|(_)to_string, from_string(_), apply(_)inside(_), |
   \\
-  \verb|apply_wrapd(_)inside(_), (_)to_list, from_list(_)|
+  \verb|apply_wrapped(_)inside(_), (_)to_list, from_list(_)|
 
   \end{itemize}
 \end{itemize}
@@ -2758,7 +2762,7 @@ the condition arrow (" \verb|-->| ") arrow.
   \item \verb|(@T)Has_Str_Rep|
   \item \verb|(@T)Can_Be_Parsed|
   \item \verb|(@T)Has_Internal_App|
-  \item \verb|(@T)Has_Wrapd_Intern_App|
+  \item \verb|(@T)Has_Wrapped_Internal_App|
   \end{itemize}
 
 \item Renaming Propositions:
@@ -2805,7 +2809,7 @@ the condition arrow (" \verb|-->| ") arrow.
   \item \verb|(Real)Has_Str_Rep|
   \item \verb|(@A)Has_Str_Rep --> (ListOf(@A)s)Has_Str_Rep|
   \item \verb|TODO apply()inside|
-  \item \verb|TODO wrapd_app()inside|
+  \item \verb|TODO apply_wrapped()inside|
   \item \verb|TODO ;>|
   \item \verb|TODO ;|
   \end{itemize}
@@ -2826,15 +2830,17 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <identifier> ::=
-[ <unders_in_par> ] <id-start> <id-cont>* [ [0-9] ] [ <unders_in_par> ]
+[ <unders-in-paren> ] <id-start> <id-cont>* [ [0-9] ] [ <unders-in-paren> ]
 
 <simple-id> ::= <id-start> [ [0-9] ]
 
 <id-start> ::= [a-z] [a-z_]*
 
-<id-cont> ::= <unders_in_par> [a-z_]+
+<id-cont> ::= <unders-in-paren> [a-z_]+
 
-<unders_in_par> ::= `(_' (`,' [ `\ ' ] `_' )* `)'
+<unders-in-paren> ::= `(_' ( <comma> `_' )* `)'
+
+<comma> ::= `,' [ `\ ' ]
 \\
 
 <paren-expr> ::= `(' [ `\ ' ] <line-op-expr> | <line-func-expr> [ `\ ' ] `)'
@@ -2854,8 +2860,6 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <basic-expr> ::=
 <literal> | <paren-func-app-or-id> | <special-id> | <tuple> | <list>
-
-<comma> ::= `,' [ `\ ' ]
 \\
 
 <big-tuple> ::= ""\\
@@ -2897,8 +2901,9 @@ the condition arrow (" \verb|-->| ") arrow.
 <dot-change> ::=
 `.change{' [ `\ ' ] <field-change> ( <comma> <field-change> )* [ `\ ' ] `}'
 
-<field-change> ::=
-( <simple-id> | <special-id> ) [ `\ ' ] `=' [ `\ ' ] <line-expr-or-under>
+<field-change> ::= ( <simple-id> | <special-id> ) <equals> <line-expr-or-under>
+
+<equals> ::= [ `\ ' ] `=' [ `\ ' ]
 \\
 
 <op-expr> ::= <line-op-expr> | <big-op-expr>
@@ -2963,7 +2968,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <case> ::=  <nl> <indent> <outer-matching> [ `\ ' ] `=>' <case-body>
 
 <end-case> ::=
-<nl> <indent> (`...' | <identifier>) [ `\ ' ] `=>' <case-body>
+<nl> <indent> ( `...' | <identifier> ) [ `\ ' ] `=>' <case-body>
 \\
 
 <outer-matching> ::= <simple-id> | <matching>
@@ -2977,8 +2982,11 @@ the condition arrow (" \verb|-->| ") arrow.
 `(' [ `\ ' ] <inner-matching> ( <comma> <inner-matching> )+ [ `\ ' ] `)'
 
 <list-matching> ::=
-`[' [ `\ ' ] [ <inner-matching> ( <comma> <inner-matching> )* ] [ `\ ' ]
-`]'
+`[' [ `\ ' ]
+[ <inner-matching> ( <comma> <inner-matching> )* [ <rest-list-matching> ] ]
+[ `\ ' ] `]'
+
+<rest-list-matching> ::= <comma> [ <simple-id> <equals> ] `...'
 \\
 
 <case-body> ::= <line-func-body> | <big-func-body> [ <where-expr> ]
@@ -3085,7 +3093,7 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <t-nickname> ::=
-`type_nickname\ ' <type-name> [ `\ ' ] `=' [ `\ ' ] <simple-type>
+`type_nickname\ ' <type-name> <equals> <simple-type>
 \\\\
 
 <type-prop-def> ::= <atom-prop-def> | <renaming-prop-def>

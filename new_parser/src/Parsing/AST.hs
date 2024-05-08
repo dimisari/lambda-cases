@@ -195,8 +195,7 @@ instance HasParser DotChange where
     field_changes_p = field_change_p ++< many (comma *> field_change_p)
 
     field_change_p :: Parser FieldChange
-    field_change_p =
-      FC <$> field_p ++< (opt_space_around (string "=") *> parser)
+    field_change_p = FC <$> field_p ++< (equals *> parser)
 
     field_p :: Parser Field
     field_p = SId2 <$> parser <|> SI3 <$> parser
@@ -361,10 +360,19 @@ instance HasParser TupleMatching where
 
 instance HasParser ListMatching where
   parser =
-    LM <$> (char '[' *> opt_space_around (optionMaybe inside_p) <* char ']')
+    LM <$> (char '[' *> opt_space_around inside_list_p <* char ']')
     where
-    inside_p :: Parser (InnerMatching, [InnerMatching])
-    inside_p = parser ++< (many $ comma *> parser)
+    inside_list_p
+      :: Parser
+         (Maybe (InnerMatching, [InnerMatching], Maybe RestListMatching))
+    inside_list_p = optionMaybe $ parser ++< ims_p +++< optionMaybe parser
+
+    ims_p :: Parser [InnerMatching]
+    ims_p =
+      many $ try $ comma *> parser <* notFollowedBy (equals *> string "...")
+
+instance HasParser RestListMatching where
+  parser = RLM <$> (comma *> optionMaybe (parser <* equals) <* string "...")
 
 instance HasParser CaseBody where
   parser = BFB1 <$> try parser ++< optionMaybe (try parser) <|> LFB1 <$> parser
@@ -470,8 +478,9 @@ instance HasParser FieldType where
 
 instance HasParser PowerBaseType where
   parser =
-    IPT <$> try (in_paren $ FT3 <$> try parser <|> PT3 <$> parser) <|>
-    PTV3 <$> try parser <|> TAIOA2 <$> parser
+    PTV3 <$> parser <|>
+    TAIOA2 <$> try parser <|>
+    IPT <$> (in_paren $ FT3 <$> try parser <|> PT3 <$> parser)
 
 instance HasParser PowerType where
   parser = PoT <$> parser ++< (string "^" *> parser >>= err_if_less_than_2)
@@ -530,9 +539,7 @@ instance HasParser OrTypeDef where
 
 instance HasParser TypeNickname where
   parser =
-    TNN <$>
-      (try (string "type_nickname ") *> parser) ++<
-      (opt_space_around (string "=") *> parser)
+    TNN <$> (try (string "type_nickname ") *> parser) ++< (equals *> parser)
 
 -- HasParser: TypePropDef
 instance HasParser TypePropDef where
@@ -667,8 +674,7 @@ instance HasParser TTValueExpr where
     VEMWE <$> vemwe_p <|> LE2 <$> (char ' ' *> parser)
     where
     vemwe_p :: Parser (ValueExpr, Maybe WhereExpr)
-    vemwe_p =
-      twice_deeper (try nl_indent *> parser ++< optionMaybe parser)
+    vemwe_p = twice_deeper (try nl_indent *> parser ++< optionMaybe parser)
 
 -- HasParser: Program
 instance HasParser Program where

@@ -160,4 +160,4 @@ example_parse_func_pairs =
 -- For fast vim navigation
 -- ShowInstances.hs
 -- ASTTypes.hs
--- Parsing/AST.hs
+-- AST.hs

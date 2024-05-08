@@ -20,24 +20,36 @@ compare(_)with(_) : Int x Int => Comparison
           true => equal
           false => greater
 
-elem(_)of(_) : Int x MyListOf(T1)s => Possibly(T1)
+(_)length : MyListOf(T1)s => Int
+  = cases
+    empty_l => 0
+    non_empty_l:(*, t) => (t)length + 1
+
+split(_)at(_) : MyListOf(T1)s x Int => Possibly(MyListOf(T1)s^2 x T1)
   = (cases, cases)
-    (*, empty_l) => no_value
-    (0, non_empty_l:(h, *)) => the_value:h
-    (ind, non_empty_l:(h, t)) => elem(ind - 1)of(t)
+    (empty_l, *) => no_value
+    (non_empty_l:(h, t), 0) => the_value:((empty_l, t), h)
+    (non_empty_l:(h, t), n) =>
+      split(t)at(n - 1) -> cases
+        no_value => no_value
+        the_value:((left_l, right_l), item) =>
+          the_value:((non_empty_l:(h, left_l), right_l), item)
 
 bin_search(_, _) : MyListOf(Int)s x Int => Possibly(Int)
   = (list, target) =>
-    elem(middle_ind)of(list) -> cases
-      no_value => throw_err("should be impossible")
-      the_value:middle =>
+    split(list)at(middle_ind) -> cases
+      no_value => no_value
+      the_value:((left_l, right_l), middle) =>
         compare(middle)with(target) -> cases
-          lesser => bin_search(ignore(middle_ind + 1)from(list), target)
+          lesser =>
+            bin_search(right_l, target) -> cases
+              no_value => no_value
+              the_value:i => the_value:(middle_ind + 1 + i)
           equal => the_value:middle_ind
-          greater => bin_search(take(middle_ind)from(list), target)
+          greater => bin_search(left_l, target)
     where
     middle_ind : Int
-      = (length <- list)div(2)
+      = ((list)length - 1)div(2)
 
 list : MyListOf(Int)s
   = non_empty_l:(2, non_empty_l:(4, non_empty_l:(6, non_empty_l:(8, empty_l))))
@@ -48,7 +60,12 @@ result_msg(_) : Possibly(Int) => IO
     the_value:ind => print_line("Found! The index is: " + ind)
 
 main : IO
-  = print_line("Trying 2") ; result_msg(bin_search(list, 2)) ;
+  = print_line("Trying 0") ; result_msg(bin_search(list, 0)) ;
+    print_line("Trying 1") ; result_msg(bin_search(list, 1)) ;
+    print_line("Trying 2") ; result_msg(bin_search(list, 2)) ;
     print_line("Trying 3") ; result_msg(bin_search(list, 3)) ;
-    print_line("Trying 4") ; result_msg(bin_search(list, 4))
-
+    print_line("Trying 4") ; result_msg(bin_search(list, 4)) ;
+    print_line("Trying 5") ; result_msg(bin_search(list, 5)) ;
+    print_line("Trying 6") ; result_msg(bin_search(list, 6)) ;
+    print_line("Trying 7") ; result_msg(bin_search(list, 7)) ;
+    print_line("Trying 8") ; result_msg(bin_search(list, 8))

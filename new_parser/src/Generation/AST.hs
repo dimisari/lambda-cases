@@ -449,15 +449,27 @@ instance ToHaskell TupleMatching where
       (im : im_l) &> map (\im -> to_haskell (NoParen, im)) &> intercalate ", "
 
 instance ToHaskell ListMatching where
-  to_haskell (LM maybe_ims) =
-    "[" ++ maybe_ims_hs ++ "]"
+  to_haskell (LM m_list_internals) =
+    case m_list_internals of
+      Nothing -> "[]"
+      Just (im, im_l, Nothing) -> "[" ++ commas_ims_hs (im, im_l) ++ "]"
+      Just (im, im_l, Just rlm) -> colons_ims_hs (im, im_l) ++ to_haskell rlm
     where
-    maybe_ims_hs :: Haskell
-    maybe_ims_hs = case maybe_ims of
-      Nothing -> ""
-      Just (im, im_l) ->
-        (im : im_l) &> map (\im -> to_haskell (NoParen, im)) &>
-        intercalate ", "
+    commas_ims_hs :: (InnerMatching, [InnerMatching]) -> Haskell
+    commas_ims_hs = \(im, im_l) ->
+      (im : im_l) &> map (\im -> to_haskell (NoParen, im)) &> intercalate ", "
+
+    colons_ims_hs :: (InnerMatching, [InnerMatching]) -> Haskell
+    colons_ims_hs = \(im, im_l) ->
+      (im : im_l) &> map (\im -> to_haskell (Paren, im)) &>
+      concatMap (++ " : ")
+
+
+instance ToHaskell RestListMatching where
+  to_haskell = \(RLM msid) ->
+    case msid of
+      Nothing -> "_"
+      Just sid -> to_haskell sid
 
 instance ToHsWithIndentLvl CaseBody where
   to_hs_wil = \case

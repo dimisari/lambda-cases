@@ -96,6 +96,10 @@ instance (a ~ Int) => P0'And'Add_To a Int Int where
 instance Num a => GeneralSubtraction a a a where
   (!-) = (-)
 
+-- GeneralEquality
+instance Eq a => GeneralEquality a a where
+  (!==) = (==)
+
 -- GeneralGreaterThan
 instance Ord a => GeneralGreaterThan a a where
   (!>) = (>)

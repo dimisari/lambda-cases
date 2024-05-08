@@ -317,9 +317,25 @@ instance Show TupleMatching where
   show = \(TM (mos, mos_l)) -> "(" ++ show mos ++ show_list_comma mos_l ++ ")"
 
 instance Show ListMatching where
-  show = \(LM maybe_m_ms) -> case maybe_m_ms of
-    Nothing -> "[]"
-    Just (mos, mos_l) -> "[" ++ show mos ++ show_list_comma mos_l ++ "]"
+  show (LM (maybe_inside_list)) =
+    "[" ++ maybe_inside_list_str ++ "]"
+    where
+    maybe_inside_list_str :: String
+    maybe_inside_list_str =
+      case maybe_inside_list of
+        Nothing -> ""
+        Just (mos, mos_l, maybe_rlm) ->
+          show mos ++ show_list_comma mos_l ++ show_maybe maybe_rlm
+
+instance Show RestListMatching where
+  show (RLM maybe_sid) =
+    ", " ++ maybe_sid_str ++ "..."
+    where
+    maybe_sid_str :: String
+    maybe_sid_str =
+      case maybe_sid of
+        Nothing -> ""
+        Just sid -> show sid ++ " = "
 
 instance Show CaseBody where
   show = \case

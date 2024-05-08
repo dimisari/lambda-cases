@@ -8,3 +8,5 @@ Int^2 x Int^2#
 
 Real^3 x Real^3#
 
+(Int x T1)Tree x Int#
+

@@ -157,7 +157,10 @@ data InnerMatching =
 
 newtype TupleMatching = TM (InnerMatching, [InnerMatching])
 
-newtype ListMatching = LM (Maybe (InnerMatching, [InnerMatching]))
+newtype ListMatching =
+  LM (Maybe (InnerMatching, [InnerMatching], Maybe RestListMatching))
+
+newtype RestListMatching = RLM (Maybe SimpleId)
 
 data CaseBody =
   LFB1 LineFuncBody | BFB1 (BigFuncBody, Maybe WhereExpr)
@@ -327,6 +330,7 @@ data ProgramPart =
 
 -- For fast vim navigation
 -- Helpers.hs
+-- ShowInstances.hs
 -- Parsing/TypesAndHelpers.hs
 -- Parsing/AST.hs
 -- Parsing/Test.hs
