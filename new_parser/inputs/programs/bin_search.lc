@@ -1,10 +1,4 @@
 
-tuple_type NonEmptyListOf(T1)s
-value (head, tail) : T1 x MyListOf(T1)s
-
-or_type MyListOf(T1)s
-values non_empty_l:NonEmptyListOf(T1)s | empty_l
-
 or_type Possibly(T1)
 values the_value:T1 | no_value
 
@@ -20,26 +14,21 @@ compare(_)with(_) : Int x Int => Comparison
           true => equal
           false => greater
 
-(_)length : MyListOf(T1)s => Int
-  = cases
-    empty_l => 0
-    non_empty_l:(*, t) => (t)length + 1
-
-split(_)at(_) : MyListOf(T1)s x Int => Possibly(MyListOf(T1)s^2 x T1)
+split(_)at(_) : ListOf(T1)s x Int => Possibly(T1 x ListOf(T1)s^2)
   = (cases, cases)
-    (empty_l, *) => no_value
-    (non_empty_l:(h, t), 0) => the_value:((empty_l, t), h)
-    (non_empty_l:(h, t), n) =>
-      split(t)at(n - 1) -> cases
+    ([], *) => no_value
+    ([head, tail = ...], 0) => the_value:(head, ([], tail))
+    ([head, tail = ...], n) =>
+      split(tail)at(n - 1) -> cases
         no_value => no_value
-        the_value:((left_l, right_l), item) =>
-          the_value:((non_empty_l:(h, left_l), right_l), item)
+        the_value:(item, (left_l, right_l)) =>
+          the_value:(item, (head + left_l, right_l))
 
-bin_search(_, _) : MyListOf(Int)s x Int => Possibly(Int)
+bin_search(_, _) : ListOf(Int)s x Int => Possibly(Int)
   = (list, target) =>
     split(list)at(middle_ind) -> cases
       no_value => no_value
-      the_value:((left_l, right_l), middle) =>
+      the_value:(middle, (left_l, right_l)) =>
         compare(middle)with(target) -> cases
           lesser =>
             bin_search(right_l, target) -> cases
@@ -51,21 +40,21 @@ bin_search(_, _) : MyListOf(Int)s x Int => Possibly(Int)
     middle_ind : Int
       = ((list)length - 1)div(2)
 
-list : MyListOf(Int)s
-  = non_empty_l:(2, non_empty_l:(4, non_empty_l:(6, non_empty_l:(8, empty_l))))
+list : ListOf(Int)s
+  = [2, 4, 6, 8]
 
 result_msg(_) : Possibly(Int) => IO
   = cases
     no_value => print_line("Target Not Found")
     the_value:ind => print_line("Found! The index is: " + ind)
 
+try(_) : Int => IO
+  = i => print_line("Trying " + (i)to_string) ; result_msg(bin_search(list, i))
+
+try_list(_) : ListOf(Int)s => IO
+  = cases
+    [] => do_nothing
+    [i, is = ...] => try(i) ; try_list(is)
+
 main : IO
-  = print_line("Trying 0") ; result_msg(bin_search(list, 0)) ;
-    print_line("Trying 1") ; result_msg(bin_search(list, 1)) ;
-    print_line("Trying 2") ; result_msg(bin_search(list, 2)) ;
-    print_line("Trying 3") ; result_msg(bin_search(list, 3)) ;
-    print_line("Trying 4") ; result_msg(bin_search(list, 4)) ;
-    print_line("Trying 5") ; result_msg(bin_search(list, 5)) ;
-    print_line("Trying 6") ; result_msg(bin_search(list, 6)) ;
-    print_line("Trying 7") ; result_msg(bin_search(list, 7)) ;
-    print_line("Trying 8") ; result_msg(bin_search(list, 8))
+  = try_list([0,1,2,3,4,5,6,7,8])

@@ -24,8 +24,9 @@ get_line = getLine
 split'to_words = words
 apply'to_all = map
 throw_err' = error
-true = True
-false = False
+
+v0'length :: [a] -> Int
+v0'length = length
 
 ignore'from' :: (Int, [a]) -> [a]
 ignore'from' = uncurry drop
@@ -33,11 +34,14 @@ ignore'from' = uncurry drop
 take'from' :: (Int, [a]) -> [a]
 take'from' = uncurry take
 
-end_io :: IO
-end_io = return ()
+do_nothing :: IO
+do_nothing = return ()
 
 from_string' :: Read a => String -> a
 from_string' = read
+
+v0'to_string :: Show a => a -> String
+v0'to_string = show
 
 wrap :: Monad m => a -> m a
 wrap = return

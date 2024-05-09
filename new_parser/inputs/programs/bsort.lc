@@ -1,28 +1,30 @@
 
-bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x Bool
+type_nickname IsSorted = Bool
+
+bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x IsSorted
   = cases
     [] => ([], true)
     [x] => ([x], true)
-    l =>
-      ((l)first > (l)second) -> cases
-        true => not_sorted(_) <- prepend((l)second)to_pass((l)first)and_rest
-        false => prepend((l)first)to_pass((l)second)and_rest
+    [x1, x2, rest = ...] =>
+      (x1 > x2) -> cases
+        true => not_sorted(_) <- prepend(x2)to_bubble_pass(x1)with_rest
+        false => prepend(x1)to_bubble_pass(x2)with_rest
       where
-      prepend(_)to_pass(_)and_rest: Int x Int => ListOf(Int)s x Bool
-        = (x, y) => prepend(x)to(bubble_sort_pass(y + rest))
-
-      prepend(_)to(_): Int x (ListOf(Int)s x Bool) => ListOf(Int)s x Bool
-        = (elem, (l, b)) => (elem + l, b)
-
-      rest: ListOf(Int)s
-        = ignore(2)from(l)
-
-      not_sorted(_): ListOf(Int)s x Bool => ListOf(Int)s x Bool
+      not_sorted(_)
+        : ListOf(Int)s x IsSorted => ListOf(Int)s x IsSorted
         = _.change{2nd = false}
 
+      prepend(_)to_bubble_pass(_)with_rest
+        : Int x Int => ListOf(Int)s x IsSorted
+        = (x, y) => prepend(x)to(bubble_sort_pass(y + rest))
+
+      prepend(_)to(_)
+        : Int x (ListOf(Int)s x IsSorted) => ListOf(Int)s x IsSorted
+        = (elem, (l, b)) => (elem + l, b)
+
 buble_sort(_): ListOf(Int)s => ListOf(Int)s
-  = bubble_sort_pass(_) o> (l, is_sorted) =>
-    is_sorted -> cases
+  = bubble_sort_pass(_) o>
+    (l, cases)
       true => l
       false => buble_sort(l)
 

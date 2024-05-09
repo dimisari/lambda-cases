@@ -2,19 +2,26 @@
 tuple_type FibsAndIndex
 value (prev, cur, cur_index):Int^3
 
-print_cur_advance(_): FibsAndIndex => (FibsAndIndex)WithIO
-  = fai =>
-    print_line("Fib num " + fai.cur_index + " = " + fai.cur);
-    (fai.cur, fai.prev + fai.cur, fai.cur_index + 1) -> (_)with_io
-
 print(_)fib_nums: Int => IO
-  = n =>
-    print_line("Fib num 0 = 0") ; print(n-1)fibs_with_init((0, 1, 1)) ; end_io
+  = cases
+    0 => do_nothing
+    1 => print_fib(1, 0)
+    n =>
+      print_fib(1, 0); print_fib(2, 1); print(n - 2)fibs_with_init((0, 1, 2))
+      where
+      print(_)fibs_with_init(_) : Int x FibsAndIndex => IO
+        = (cases, fai)
+          0 => do_nothing
+          n => advance(fai)and_print ;> print(n - 1)fibs_with_init(_)
+
+advance(_)and_print: FibsAndIndex => (FibsAndIndex)WithIO
+  = fai => print_fib(next.cur_index, next.cur); (next)with_io
     where
-    print(_)fibs_with_init(_) : Int x FibsAndIndex => (FibsAndIndex)WithIO
-      = (cases, fai)
-        0 => (fai)with_io
-        n => print_cur_advance(fai) ;> print(n-1)fibs_with_init(_)
+    next : FibsAndIndex
+      = (fai.cur, fai.prev + fai.cur, fai.cur_index + 1)
+
+print_fib(_,_): Int x Int => IO
+  = (index, number) => print_line("Fib num " + index + " = " + number)
 
 main: IO
   = print_line("How many fibonacci numbers?");

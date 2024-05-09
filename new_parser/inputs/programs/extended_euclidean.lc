@@ -29,10 +29,10 @@ read_two_ints: (Int^2)WithIO
 print_gcd_and_coeffs_of(_): GcdAndCoeffs => IO
   = gac => print_line(message)
     where
-    message: String 
+    message: String
       = "Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
 
 main: IO
-  = read_two_ints ;> (i1, i2) =>
-    print_gcd_and_coeffs_of(extended_euclidean_of(i1)and(i2))
+  = read_two_ints ;>
+    extended_euclidean_of(_)and(_) o> print_gcd_and_coeffs_of(_)
 

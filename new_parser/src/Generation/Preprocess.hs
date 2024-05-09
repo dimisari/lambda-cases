@@ -323,7 +323,9 @@ instance ChangeIfNeeded BigOpExprOpSplit where
     BOEOS <$> ch_inside_if_needed_triple boeos
 
 instance ChangeIfNeeded OpSplitLine where
-  ch_inside_if_needed = \(OSL osl) -> OSL <$> ch_inside_if_needed_pair osl
+  ch_inside_if_needed = \case
+    OESMOFCO oesmofco -> OESMOFCO <$> ch_inside_if_needed_pair oesmofco
+    OFCO1 ofco -> OFCO1 <$> ch_inside_if_needed ofco
 
 instance ChangeIfNeeded OperFCO where
   ch_inside_if_needed = \(OFCO oper_fco) ->

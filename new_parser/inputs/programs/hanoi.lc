@@ -2,7 +2,7 @@
 hanoi_with(_)rings_from(_)to(_)through(_)
   : Int x String x String x String => IO
   = (cases, source, target, auxiliary)
-    0 => end_io
+    0 => do_nothing
     n =>
       hanoi_with(n - 1)rings_from(source)to(auxiliary)through(target);
       move_from(source)to(target);

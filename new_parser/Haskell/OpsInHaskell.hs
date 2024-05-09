@@ -83,6 +83,9 @@ instance (a ~ String) => P0'And'Add_To String (Int, Int, Int) a where
 instance P0'And'Add_To a [a] [a] where
   (!+) = (:)
 
+instance P0'And'Add_To [a] a [a] where
+  l !+ a = l ++ [a]
+
 instance (a ~ String) => P0'And'Add_To String String a where
   (!+) = (++)
 

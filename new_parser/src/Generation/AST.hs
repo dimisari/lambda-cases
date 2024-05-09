@@ -270,7 +270,9 @@ instance ToHsWithIndentLvl BigOpExprOpSplit where
       return $ osls_hs ++ [maybe_oes_hs ++ ose_hs]
 
 instance ToHsWithParamNum OpSplitLine where
-  to_hs_wpn = \(OSL (oes, mofco)) -> to_hs_wpn oes >++< to_hs_wpn mofco
+  to_hs_wpn = \case
+    OESMOFCO (oes, mofco) -> to_hs_wpn oes >++< to_hs_wpn mofco
+    OFCO1 ofco -> to_hs_wpn ofco
 
 instance ToHsWithParamNum OperFCO where
   to_hs_wpn = \(OFCO (oper, fco)) -> to_hs_wpn oper <++ to_haskell fco

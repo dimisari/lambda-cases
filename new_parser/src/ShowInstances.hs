@@ -188,8 +188,9 @@ instance Show BigOpExprOpSplit where
     show_list osls ++ show_maybe maybe_oes ++ show ose
 
 instance Show OpSplitLine where
-  show = \(OSL (oes, maybe_oper_fco)) ->
-    show oes ++ show_maybe maybe_oper_fco ++ "\n  "
+  show = \case
+    OESMOFCO (oes, mofco) -> show oes ++ show_maybe mofco ++ "\n  "
+    OFCO1 ofco -> show ofco ++ "\n  "
 
 instance Show OperFCO where
   show = \(OFCO (oper, fco)) -> show oper ++ " " ++ show fco

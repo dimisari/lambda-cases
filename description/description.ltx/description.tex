@@ -1240,7 +1240,9 @@ The precise indentation rules are described in the section
 <op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
 
 <op-split-line> ::=
-<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent>
+( <op-expr-start> ( <nl> | <oper-fco> ) | <oper-fco> ) <indent>
+
+<oper-fco> ::= <operand> `\ ' <func-comp-op> `\\n'
 \\
 
 <big-op-expr-func-split> ::=
@@ -2922,7 +2924,9 @@ the condition arrow (" \verb|-->| ") arrow.
 <op-split-line>+ [ <op-expr-start> ] ( <operand> | <func-expr> )
 
 <op-split-line> ::=
-<op-expr-start> ( <nl> | <operand> `\ ' <func-comp-op> `\\n' ) <indent>
+( <op-expr-start> ( <nl> | <oper-fco> ) | <oper-fco> ) <indent>
+
+<oper-fco> ::= <operand> `\ ' <func-comp-op> `\\n'
 \\
 
 <big-op-expr-func-split> ::=

@@ -90,7 +90,8 @@ data BigOpExpr =
 
 newtype BigOpExprOpSplit = BOEOS ([OpSplitLine], Maybe OpExprStart, OpSplitEnd)
 
-newtype OpSplitLine = OSL (OpExprStart, Maybe OperFCO)
+data OpSplitLine =
+  OESMOFCO (OpExprStart, Maybe OperFCO) | OFCO1 OperFCO
 
 newtype OperFCO = OFCO (Operand, FuncCompOp)
 
