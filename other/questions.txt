@@ -15,3 +15,5 @@
 - define arrays with power?
   - maybe good for one dimension +
     better with square brackets and commas (or x?) for multidimensional
+
+# current_tasks.txt

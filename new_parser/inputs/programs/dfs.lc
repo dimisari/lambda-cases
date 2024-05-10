@@ -1,0 +1,56 @@
+
+tuple_type (T1)Tree
+value (root, subtrees) : T1 x (T1)Trees
+
+type_nickname (T1)Trees = ListOf((T1)Tree)s
+
+tuple_type (T1)ResultTreeAndNum
+value (tree, t_num) : (Int x T1)Tree x Int
+
+tuple_type (T1)ResultTreesAndNum
+value (trees, ts_num) : (Int x T1)Trees x Int
+
+dfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
+  = dfs_on_tree(_)with_num(1) o> _.tree
+    where
+    dfs_on_tree(_)with_num(_) : (T1)Tree x Int => (T1)ResultTreeAndNum
+      = (tree, num) => (new_tree, subtrees_res.ts_num)
+        where
+        new_tree : (Int x T1)Tree
+          = ((num, tree.root), subtrees_res.trees)
+
+        subtrees_res : (T1)ResultTreesAndNum
+          = dfs_on_trees(tree.subtrees)with_num(num + 1)
+
+    dfs_on_trees(_)with_num(_) : (T1)Trees x Int => (T1)ResultTreesAndNum
+      = (cases, num)
+        [] => ([], num)
+        [tree1, other_trees = ...] =>
+          (tree_res.tree + trees_res.trees, trees_res.ts_num)
+          where
+          tree_res : (T1)ResultTreeAndNum
+            = dfs_on_tree(tree1)with_num(num)
+
+          trees_res : (T1)ResultTreesAndNum
+            = dfs_on_trees(other_trees)with_num(tree_res.t_num)
+
+test_tree : (Char)Tree
+  = ('a', [t1, t2, t3])
+    where
+    t1 : (Char)Tree
+      = ('b', [('e', []), ('f', [])])
+
+    t2 : (Char)Tree
+      = ('c', [])
+
+    t3 : (Char)Tree
+      = ('d', [('g', []), ('h', [])])
+
+type_theorem (@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
+proof
+  (_)to_string =
+    (root, subtress) =>
+    "root: " + (root)to_string + "\nsubtrees: " + (subtrees)to_string + "\n"
+
+main: IO
+  = dfs_on_tree(test_tree) -> (_)to_string -> print_line(_)

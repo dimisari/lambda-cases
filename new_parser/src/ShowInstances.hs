@@ -93,9 +93,14 @@ instance Show BasicExpr where
     SI1 sid -> show sid
 
 instance Show BigTuple where
-  show = \(BT (loue, loues, loues_l)) ->
-    "( " ++ show loue ++ ", " ++ show loues ++ show_list_sep "\n, " loues_l ++
-    "\n)"
+  show = \(BT (loue, btsplit, loues, loues_l)) ->
+    "( " ++ show loue ++ show btsplit ++ ", " ++ show loues ++
+    show_list_sep "\n, " loues_l ++ "\n)"
+
+instance Show BigTupleSplit where
+  show = \case
+    NoSplit -> ""
+    Split -> "\n"
 
 instance Show List where
   show = \(L maybe_loues) -> "[" ++ show_maybe maybe_loues ++ "]"

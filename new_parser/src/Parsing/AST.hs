@@ -118,13 +118,17 @@ instance HasParser BasicExpr where
 
 instance HasParser BigTuple where
   parser =
-    BT <$> leou_p ++< leous_p +++< leous_l_p <* nl_indent <* char ')'
+    BT <$>
+    leou_p ++< split_p +++< leous_p ++++< leous_l_p <* nl_indent <* char ')'
     where
     leou_p :: Parser LineExprOrUnder
     leou_p = char '(' *> opt_space *> parser
 
+    split_p :: Parser BigTupleSplit
+    split_p = try nl_indent *> return Split <|> return NoSplit
+
     leous_p :: Parser LineExprOrUnders
-    leous_p = optional (try nl_indent) *> comma *> parser
+    leous_p = comma *> parser
 
     leous_l_p :: Parser [LineExprOrUnders]
     leous_l_p = many $ try (nl_indent *> comma) *> parser

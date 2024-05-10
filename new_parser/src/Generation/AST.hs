@@ -102,7 +102,7 @@ instance ToHaskell BasicExpr where
     SI1 sp_id -> error $ "special id in basic expr:" ++ show sp_id
 
 instance ToHsWithIndentLvl BigTuple where
-  to_hs_wil (BT (leou, leous, leous_l)) =
+  to_hs_wil (BT (leou, btsplit, leous, leous_l)) =
     indent_all_and_concat big_tuple_hs_list
     where
     big_tuple_hs_list :: [Haskell]
@@ -112,8 +112,14 @@ instance ToHsWithIndentLvl BigTuple where
     big_tuple_hs_list_gen :: WithParamNum [Haskell]
     big_tuple_hs_list_gen =
       to_hs_wpn leou >>= \leou_hs ->
-      to_hs_wpn_list (leous : leous_l) >>= \leous_hs_l ->
-      return $ ["( " ++ leou_hs] ++ map (", " ++) leous_hs_l ++ [")"]
+      to_hs_wpn leous >>= \leous_hs ->
+      to_hs_wpn_list leous_l >>= \leous_hs_l ->
+      return $ case btsplit of
+        NoSplit ->
+          ["( " ++ leou_hs ++ ", " ++ leous_hs] ++ map (", " ++) leous_hs_l ++
+          [")"]
+        Split ->
+          ["( " ++ leou_hs] ++ map (", " ++) (leous_hs : leous_hs_l) ++ [")"]
 
 instance ToHaskell List where
   to_haskell (L maybe_leous) =

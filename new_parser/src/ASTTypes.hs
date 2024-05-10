@@ -36,7 +36,11 @@ data BasicOrAppExpr =
 data BasicExpr =
   Lit1 Literal | PFAOI1 ParenFuncAppOrId | T1 Tuple | L1 List | SI1 SpecialId
 
-newtype BigTuple = BT (LineExprOrUnder, LineExprOrUnders, [LineExprOrUnders])
+newtype BigTuple =
+  BT (LineExprOrUnder, BigTupleSplit, LineExprOrUnders, [LineExprOrUnders])
+
+data BigTupleSplit =
+  Split | NoSplit
 
 newtype List = L (Maybe LineExprOrUnders)
 

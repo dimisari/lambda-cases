@@ -1,5 +1,6 @@
 {-# language
-  MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies
+  MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies,
+  UndecidableInstances
 #-}
 module Haskell.Predefined where
 
@@ -40,26 +41,11 @@ do_nothing = return ()
 from_string' :: Read a => String -> a
 from_string' = read
 
-v0'to_string :: Show a => a -> String
-v0'to_string = show
-
 wrap :: Monad m => a -> m a
 wrap = return
 
 v0'with_io :: a -> P.IO a
 v0'with_io = return
-
-class IsFirst a b | b -> a where
-  v0'first :: b -> a
-
-instance IsFirst a [a] where
-  v0'first = head
-
-class IsSecond a b | b -> a where
-  v0'second :: b -> a
-
-instance IsSecond a [a] where
-  v0'second = head . tail
 
 -- IsFirst'
 class IsFirst' a b | b -> a where
@@ -150,4 +136,11 @@ instance ChangeThirdTo' c (a, b, c, d) where
 
 instance ChangeThirdTo' c (a, b, c, d, e) where
   c3rd = \c (a, b, _, d, e) -> (a, b, c, d, e)
+
+-- P0'Has_Str_Rep
+class P0'Has_Str_Rep a where
+  v0'to_string :: a -> String
+
+instance Show a => P0'Has_Str_Rep a where
+  v0'to_string = show
 

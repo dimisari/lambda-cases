@@ -244,7 +244,9 @@ instance ChangeIfNeeded BasicExpr where
     other -> return other
 
 instance ChangeIfNeeded BigTuple where
-  ch_inside_if_needed = \(BT bt) -> BT <$> ch_inside_if_needed_triple bt
+  ch_inside_if_needed = \(BT (leou, bts, leous, leous_l)) ->
+    ch_inside_if_needed_triple (leou, leous, leous_l) >$>
+    \(leou', leous', leous_l') -> BT (leou', bts, leous', leous_l')
 
 deriving instance ChangeIfNeeded List
 

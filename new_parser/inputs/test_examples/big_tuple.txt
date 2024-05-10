@@ -3,3 +3,8 @@
 , ("Hey, I'm a string inside the nested tuple", 2.71, 1.61)
 )#
 
+( "Hey, I'm the first field and I'm also a relatively big string.", 42
+, 3.14, "Hey, I'm the first small string", "Hey, I'm the second small string"
+, ("Hey, I'm a string inside the nested tuple", 2.71, 1.61)
+)#
+
