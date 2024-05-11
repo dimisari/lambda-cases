@@ -213,21 +213,43 @@ comb_sid_def_hs :: Haskell -> Haskell -> Haskell
 comb_sid_def_hs = \hs1 hs2 -> "\n" ++ hs1 ++ " = " ++ hs2
 
 general_proj_hs_list :: [Haskell]
-general_proj_hs_list = map ("p" ++) general_hs_list
+general_proj_hs_list = map (spid_projection_prefix ++) general_hs_list
 
 general_change_hs_list :: [Haskell]
-general_change_hs_list = map ("c" ++) general_hs_list
+general_change_hs_list = map (spid_change_prefix ++) general_hs_list
 
 general_hs_list :: [Haskell]
 general_hs_list = ["1st", "2nd", "3rd", "4th", "5th"]
 
--- other
+-- prefixes
+projection_prefix :: Haskell
+projection_prefix = "p0"
+
+change_prefix :: Haskell
+change_prefix = "c0"
+
+spid_projection_prefix :: Haskell
+spid_projection_prefix = "p"
+
+spid_change_prefix :: Haskell
+spid_change_prefix = "c"
+
 tid_prefix :: Haskell
 tid_prefix = "T0"
 
 prop_prefix :: Haskell
 prop_prefix = "P0"
 
+constructor_prefix :: Haskell
+constructor_prefix = "C"
+
+param_t_var_prefix :: Haskell
+param_t_var_prefix = "a"
+
+ad_hoc_t_var_prefix :: Haskell
+ad_hoc_t_var_prefix = "b"
+
+-- other
 add_to_hs_pair :: HsPair -> HsPair -> HsPair
 add_to_hs_pair = \(hs1, hs2) (hs1', hs2') -> (hs1' ++ hs1, hs2' ++ hs2)
 
@@ -248,6 +270,9 @@ mwe_to_pwe :: Maybe WhereExpr -> PossiblyWhereExpr
 mwe_to_pwe = \case
   Nothing -> NoWhereExpr
   Just we -> HasWhereExpr we
+
+under_pfarg_param :: Haskell
+under_pfarg_param = "x'"
 
 -- GroupedValueDefs helpers
 -- ASTTypes.hs

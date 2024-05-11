@@ -99,7 +99,7 @@ instance ToHaskell BasicExpr where
     PFAOI1 pfaoi -> to_haskell pfaoi
     T1 tuple -> to_haskell tuple
     L1 list -> to_haskell list
-    SI1 sp_id -> error $ "special id in basic expr:" ++ show sp_id
+    SI1 spid -> error $ "special id in basic expr:" ++ show spid
 
 instance ToHsWithIndentLvl BigTuple where
   to_hs_wil (BT (leou, btsplit, leous, leous_l)) =
@@ -165,7 +165,7 @@ instance ToHsWithParamNum Arguments where
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance ToHaskell PreFunc where
-  to_haskell = \(PF id) -> "C" ++ to_haskell id
+  to_haskell = \(PF id) -> constructor_prefix ++ to_haskell id
 
 instance ToHaskell PreFuncApp where
   to_haskell = \(PrFA (pf, oper)) ->
@@ -174,8 +174,8 @@ instance ToHaskell PreFuncApp where
 
 instance ToHaskell PostFunc where
   to_haskell = \case
-    SId1 sid -> "p0" ++ to_haskell sid
-    SI2 sp_id -> "p" ++  to_haskell sp_id
+    SId1 sid -> projection_prefix ++ to_haskell sid
+    SI2 spid -> spid_projection_prefix ++ to_haskell spid
 
 instance ToHaskell SpecialId where
   to_haskell = \case
@@ -203,7 +203,7 @@ instance ToHaskell PostFuncApp where
     where
     maybe_param_hs :: Haskell
     maybe_param_hs = case pfa of
-      Underscore2 -> "\\x' -> "
+      Underscore2 -> "\\" ++ under_pfarg_param ++ " -> "
       _ -> ""
 
     pfa_hs :: Haskell
@@ -213,7 +213,7 @@ instance ToHaskell PostFuncArg where
   to_haskell = \case
     PE2 pe -> to_haskell pe
     BE2 be -> to_haskell be
-    Underscore2 -> "x'"
+    Underscore2 -> under_pfarg_param
 
 instance ToHaskell (DotChange, DotChangeArgHs) where
   to_haskell (DC (fc, fcs), dcahs) =
@@ -232,8 +232,8 @@ instance ToHsWithParamNum FieldChange where
 
 instance ToHaskell Field where
   to_haskell = \case
-    SId2 id -> "c0" ++ to_haskell id
-    SI3 sp_id -> "c" ++ to_haskell sp_id
+    SId2 id -> change_prefix ++ to_haskell id
+    SI3 spid -> spid_change_prefix ++ to_haskell spid
 
 -- Values: OpExpr
 instance ToHsWithIndentLvl OpExpr where
@@ -570,10 +570,10 @@ instance ToHaskell TypeVar where
     AHTV1 ahtv -> to_haskell ahtv
 
 instance ToHaskell ParamTVar where
-  to_haskell = \(PTV i) -> "a" ++ show i
+  to_haskell = \(PTV i) -> param_t_var_prefix ++ show i
 
 instance ToHaskell AdHocTVar where
-  to_haskell = \(AHTV c) -> "b" ++ show (ord c - 65)
+  to_haskell = \(AHTV c) -> ad_hoc_t_var_prefix ++ show (ord c - 65)
 
 instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTV) where
   to_haskell (needs_paren, TAIOA (mtip1, taioam, mtip2)) = case taioam of
@@ -674,10 +674,10 @@ instance ToHaskell TupleTypeDef where
     sid_hs_list = map to_haskell $ si : sis
 
     proj_hs_list :: [Haskell]
-    proj_hs_list = map ("p0" ++) sid_hs_list
+    proj_hs_list = map (projection_prefix ++) sid_hs_list
 
     change_hs_list :: [Haskell]
-    change_hs_list = map ("c0" ++) sid_hs_list
+    change_hs_list = map (change_prefix ++) sid_hs_list
 
     proj_types_hs_list :: [Haskell]
     proj_types_hs_list = map to_proj_type [0..4]
@@ -727,7 +727,7 @@ instance ToHaskell OrTypeDef where
     where
     id_mst_to_hs :: (SimpleId, Maybe SimpleType) -> Haskell
     id_mst_to_hs = \(id, mst) ->
-      "C" ++ to_haskell id ++ case mst of
+      constructor_prefix ++ to_haskell id ++ case mst of
         Nothing -> ""
         Just st -> " " ++ to_haskell (Paren, st)
 
