@@ -210,21 +210,10 @@ comb_sid_t_hs :: Haskell -> Haskell -> Haskell
 comb_sid_t_hs = \hs1 hs2 -> "\n" ++ hs1 ++ " :: " ++ hs2
 
 comb_sid_def_hs :: Haskell -> Haskell -> Haskell
-comb_sid_def_hs = \hs1 hs2 -> "\n" ++ hs1 ++ " = " ++ hs2
-
-general_proj_hs_list :: [Haskell]
-general_proj_hs_list = map (spid_projection_prefix ++) general_hs_list
-
-general_change_hs_list :: [Haskell]
-general_change_hs_list = map (spid_change_prefix ++) general_hs_list
-
-general_hs_list :: [Haskell]
-general_hs_list = ["1st", "2nd", "3rd", "4th", "5th"]
+comb_sid_def_hs = \hs1 hs2 ->
+  "\n" ++ hs1 ++ " = \\new x -> x { " ++ hs2 ++ " = new }"
 
 -- prefixes
-projection_prefix :: Haskell
-projection_prefix = "p0"
-
 change_prefix :: Haskell
 change_prefix = "c0"
 
@@ -250,9 +239,6 @@ ad_hoc_t_var_prefix :: Haskell
 ad_hoc_t_var_prefix = "b"
 
 -- other
-add_to_hs_pair :: HsPair -> HsPair -> HsPair
-add_to_hs_pair = \(hs1, hs2) (hs1', hs2') -> (hs1' ++ hs1, hs2' ++ hs2)
-
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
 
@@ -273,6 +259,40 @@ mwe_to_pwe = \case
 
 under_pfarg_param :: Haskell
 under_pfarg_param = "x'"
+
+tn_to_tid_hs :: TypeName -> Haskell
+tn_to_tid_hs = \(TN (mpvip1, TId str, pvip_str_pairs, mpvip2)) ->
+  prefix_maybe_quotes tid_prefix mpvip1 ++ str ++
+  quotes_strs_hs pvip_str_pairs ++ maybe_quotes mpvip2
+
+tn_to_cons_hs :: TypeName -> Haskell
+tn_to_cons_hs = tn_to_tid_hs .> (++ "'")
+
+ft_to_st :: FieldType -> SimpleType
+ft_to_st = \case
+  PBT1 pbt -> pbt_to_st pbt
+  PoT3 pt -> PoT1 pt
+
+pbt_to_st :: PowerBaseType -> SimpleType
+pbt_to_st = \case
+  PTV3 ptv -> PTV1 ptv
+  TAIOA2 taioa -> TAIOA1 taioa
+  IPT ipt -> ipt_to_st ipt
+
+ipt_to_st :: InParenT -> SimpleType
+ipt_to_st = \case
+  PT3 pt -> PT1 pt
+  FT3 ft -> FT1 ft
+
+change_prop_hs_if_needed :: Haskell -> Haskell
+change_prop_hs_if_needed = \case
+  "P0'Has_Str_Rep" -> "Show"
+  hs -> hs
+
+change_id_hs_if_needed :: Haskell -> Haskell
+change_id_hs_if_needed = \case
+  "v0'to_string" -> "show"
+  hs -> hs
 
 -- GroupedValueDefs helpers
 -- ASTTypes.hs

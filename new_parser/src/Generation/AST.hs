@@ -70,7 +70,11 @@ instance ToHaskell Tuple where
     tuple_hs_gen =
       to_hs_wpn leou >>= \leou_hs ->
       to_hs_wpn leous >>= \leous_hs ->
-      return $ "(" ++ leou_hs ++ ", " ++ leous_hs ++ ")"
+      return $ "ft" ++ show size ++ "(" ++ leou_hs ++ ", " ++ leous_hs ++ ")"
+
+    size :: Int
+    size = case leous of
+      LEOUs (_, l) -> length l + 2
 
 instance ToHsWithParamNum LineExprOrUnders where
   to_hs_wpn = \(LEOUs (leou, leous)) ->
@@ -114,12 +118,20 @@ instance ToHsWithIndentLvl BigTuple where
       to_hs_wpn leou >>= \leou_hs ->
       to_hs_wpn leous >>= \leous_hs ->
       to_hs_wpn_list leous_l >>= \leous_hs_l ->
-      return $ case btsplit of
-        NoSplit ->
-          ["( " ++ leou_hs ++ ", " ++ leous_hs] ++ map (", " ++) leous_hs_l ++
-          [")"]
-        Split ->
-          ["( " ++ leou_hs] ++ map (", " ++) (leous_hs : leous_hs_l) ++ [")"]
+      return $ ["ft" ++ show size] ++
+        case btsplit of
+          NoSplit ->
+            ["( " ++ leou_hs ++ ", " ++ leous_hs] ++
+            map (", " ++) leous_hs_l ++
+            [")"]
+          Split ->
+            ["( " ++ leou_hs] ++ map (", " ++) (leous_hs : leous_hs_l) ++ [")"]
+
+    size :: Int
+    size = (leous : leous_l) &> map leous_size &> sum &> (+ 1)
+
+    leous_size :: LineExprOrUnders -> Int
+    leous_size = \(LEOUs (_, l)) -> length l + 1
 
 instance ToHaskell List where
   to_haskell (L maybe_leous) =
@@ -145,7 +157,7 @@ instance ToHaskell ParenFuncAppOrId where
       where
       paren_func_app_or_id_hs_gen :: WithParamNum Haskell
       paren_func_app_or_id_hs_gen =
-        total_id_hs ++>
+        change_id_hs_if_needed total_id_hs ++>
         to_hs_wpn (calc_args_list (margs1, margs2) args_str_pairs)
 
       total_id_hs :: Haskell
@@ -174,7 +186,7 @@ instance ToHaskell PreFuncApp where
 
 instance ToHaskell PostFunc where
   to_haskell = \case
-    SId1 sid -> projection_prefix ++ to_haskell sid
+    SId1 sid -> to_haskell sid
     SI2 spid -> spid_projection_prefix ++ to_haskell spid
 
 instance ToHaskell SpecialId where
@@ -487,9 +499,22 @@ instance ToHsWithIndentLvl CaseBody where
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 instance ToHsWithIndentLvl ValueDef where
   to_hs_wil (VD (id, t, ve, maybe_we)) =
-    indent <++ (to_haskell id ++ " :: " ++ to_haskell t ++ "\n") >++<
+    get >>= \il ->
+    indent <++
+    (to_haskell id ++ " :: " ++ forall_hs il ++ to_haskell t ++ "\n") >++<
     indent <++ (to_haskell id ++ " =\n") >++<
     deeper (to_hs_wil (ve, mwe_to_pwe maybe_we))
+    where
+    forall_hs :: Int -> Haskell
+    forall_hs = \case
+      0 ->
+        case concatMap (" " ++) param_t_vars_hs_list of
+          "" -> ""
+          hs -> "forall" ++ hs ++ ". "
+      _ -> ""
+
+    param_t_vars_hs_list :: [Haskell]
+    param_t_vars_hs_list = param_t_vars t &> map to_haskell
 
 instance ToHsWithIndentLvl (ValueExpr, PossiblyWhereExpr) where
   to_hs_wil = \(ve, pwe) -> case ve of
@@ -652,65 +677,83 @@ instance ToHaskell TypeDef where
 
 instance ToHaskell TupleTypeDef where
   to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
-    "type " ++ to_haskell tn ++ " = " ++ popt_hs ++
-    proj_types_hs ++ proj_defs_hs ++ change_types_hs ++ change_defs_hs
+    data_hs ++ "\n\n" ++ instance_hs ++ "\n" ++
+    change_types_hs ++ change_defs_hs
     where
-    popt_hs :: Haskell
-    popt_hs = to_haskell popt
+    data_hs :: Haskell
+    data_hs =
+      "data " ++ tn_hs ++ " =\n  " ++ cons_hs ++
+      " { " ++ projections_and_types_hs ++ " }"
 
-    proj_types_hs :: Haskell
-    proj_types_hs = combine_with_ts proj_hs_list proj_types_hs_list
-
-    proj_defs_hs :: Haskell
-    proj_defs_hs = combine_with_defs proj_hs_list general_proj_hs_list
+    instance_hs :: Haskell
+    instance_hs =
+      "instance FromTuple" ++ size_hs ++ types_hs ++ " " ++
+      to_haskell (Paren, tn) ++ " where\n" ++
+      "  ft" ++ size_hs ++
+      " = \\(" ++ intercalate ", " params_list ++ ") -> " ++
+      cons_hs ++ concatMap (" " ++) params_list
 
     change_types_hs :: Haskell
     change_types_hs = combine_with_ts change_hs_list change_types_hs_list
 
     change_defs_hs :: Haskell
-    change_defs_hs = combine_with_defs change_hs_list general_change_hs_list
+    change_defs_hs = combine_with_defs change_hs_list sid_hs_list
 
     sid_hs_list :: [Haskell]
     sid_hs_list = map to_haskell $ si : sis
 
-    proj_hs_list :: [Haskell]
-    proj_hs_list = map (projection_prefix ++) sid_hs_list
-
     change_hs_list :: [Haskell]
     change_hs_list = map (change_prefix ++) sid_hs_list
-
-    proj_types_hs_list :: [Haskell]
-    proj_types_hs_list = map to_proj_type [0..4]
 
     change_types_hs_list :: [Haskell]
     change_types_hs_list = map to_change_type [0..4]
 
-    to_proj_type :: Int -> Haskell
-    to_proj_type = \i -> popt_hs ++ " -> " ++ hs_of_field_type i
-
     to_change_type :: Int -> Haskell
     to_change_type = \i ->
-      hs_of_field_type i ++ " -> " ++ popt_hs ++ " -> " ++ popt_hs
+      (types_hs_list !! i) ++ " -> " ++ tn_hs  ++ " -> " ++ tn_hs
 
-    hs_of_field_type :: Int -> Haskell
-    hs_of_field_type = \i -> case popt of
-      PT4 (PT (ft, fts)) -> to_haskell $ (ft : fts) !! i
-      PoT4 (PoT (pbt, _)) -> to_haskell pbt
+    tn_hs :: Haskell
+    tn_hs = to_haskell (NoParen, tn)
+
+    types_list :: [SimpleType]
+    types_list = case popt of
+      PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
+      PoT4 (PoT (pbt, i)) -> replicate i $ pbt_to_st pbt
+
+    types_hs_list :: [Haskell]
+    types_hs_list = map (\st -> to_haskell (NoParen, st)) types_list
+
+    types_hs :: Haskell
+    types_hs = concatMap (\st -> " " ++ to_haskell (Paren, st)) types_list
+
+    size :: Int
+    size = length types_hs_list
+
+    size_hs :: Haskell
+    size_hs = show size
+
+    projections_and_types_hs :: Haskell
+    projections_and_types_hs =
+      zipWith (\a b -> a ++ " :: " ++ b) sid_hs_list types_hs_list &>
+      intercalate ", "
+
+    cons_hs :: Haskell
+    cons_hs = tn_to_cons_hs tn
+
+    params_list :: [Haskell]
+    params_list = [1..size] &> map (\i -> "x" ++ show i)
 
 instance ToHaskell ProdOrPowerType where
   to_haskell = \case
     PT4 pt -> to_haskell pt
     PoT4 pt -> to_haskell pt
 
-instance ToHaskell TypeName where
-  to_haskell (TN (mpvip1, tid, pvip_str_pairs, mpvip2)) =
-    tid_hs ++ pvips_hs
+instance ToHaskell (NeedsParenBool, TypeName) where
+  to_haskell (needs_paren, tn@(TN (mpvip1, _, pvip_str_pairs, mpvip2))) =
+    case pvips_hs of
+      "" -> tn_to_tid_hs tn
+      _ -> in_paren_if needs_paren $ tn_to_tid_hs tn ++ pvips_hs
     where
-    tid_hs :: Haskell
-    tid_hs =
-      prefix_maybe_quotes tid_prefix mpvip1 ++ to_haskell tid ++
-      quotes_strs_hs pvip_str_pairs ++ maybe_quotes mpvip2
-
     pvips_hs :: Haskell
     pvips_hs = to_haskell mpvip1 ++ to_haskell pvips ++ to_haskell mpvip2
 
@@ -722,7 +765,7 @@ instance ToHaskell ParamVarsInParen where
 
 instance ToHaskell OrTypeDef where
   to_haskell (OTD (tn, id, mst, id_mst_pairs)) =
-    "data " ++ to_haskell tn ++ " =\n  " ++
+    "data " ++ to_haskell (NoParen, tn) ++ " =\n  " ++
     (map id_mst_to_hs ((id, mst) : id_mst_pairs) &> intercalate " |\n  ")
     where
     id_mst_to_hs :: (SimpleId, Maybe SimpleType) -> Haskell
@@ -733,7 +776,7 @@ instance ToHaskell OrTypeDef where
 
 instance ToHaskell TypeNickname where
   to_haskell = \(TNN (tn, st)) ->
-    "type " ++ to_haskell tn ++ " = " ++ to_haskell (NoParen, st)
+    "type " ++ to_haskell (NoParen, tn) ++ " = " ++ to_haskell (NoParen, st)
 
 -- TypePropDef
 instance ToHaskell TypePropDef where
@@ -748,9 +791,6 @@ instance ToHaskell AtomPropDef where
 
 instance ToHaskell RenamingPropDef where
   to_haskell = show
---   to_haskell = \(RPD (pnl, pn, pns)) ->
---     to_haskell pnl ++ "\nequivalent\n  " ++ to_haskell pn ++
---     to_hs_prepend_list ", " pns
 
 instance ToHaskell PropNameLine where
   to_haskell = \(PNL pn) -> to_haskell pn
@@ -799,16 +839,21 @@ instance ToHaskell PropNameWithSubs where
 
 instance ToHaskell NPStart2 where
   to_haskell (c, np_sip_pairs, maybe_np) =
-    [c] ++ nps_quotes_hs np_sip_pairs ++ to_hs_maybe_np maybe_np ++
-    to_haskell sips
+    change_prop_hs_if_needed prop_hs ++ to_haskell sips
     where
+    prop_hs :: Haskell
+    prop_hs = [c] ++ nps_quotes_hs np_sip_pairs ++ to_hs_maybe_np maybe_np
+
     sips :: [SubsInParen]
     sips = map snd np_sip_pairs
 
 instance ToHaskell SIPStart where
   to_haskell (sip_np_pairs, maybe_sip) =
-    quotes_nps_hs sip_np_pairs ++ to_haskell sips ++ to_haskell maybe_sip
+    change_prop_hs_if_needed prop_hs ++ to_haskell sips ++ to_haskell maybe_sip
     where
+    prop_hs :: Haskell
+    prop_hs = quotes_nps_hs sip_np_pairs
+
     sips :: [SubsInParen]
     sips = map fst sip_np_pairs
 
@@ -891,7 +936,7 @@ instance ToHaskell Proof where
 
 instance ToHaskell IdOrOpEq where
   to_haskell (IOOE (id, maybe_op_id)) =
-    to_haskell id ++ maybe_op_id_hs ++ " ="
+    change_id_hs_if_needed (to_haskell id) ++ maybe_op_id_hs ++ " ="
     where
     maybe_op_id_hs :: Haskell
     maybe_op_id_hs = case maybe_op_id of

@@ -61,7 +61,8 @@ compile =
   lang_exts = "{-# language " ++ intercalate ", " lang_ext_names ++ " #-}\n"
 
   lang_ext_names :: [Haskell]
-  lang_ext_names = ["FlexibleInstances", "MultiParamTypeClasses"]
+  lang_ext_names =
+    ["FlexibleInstances", "MultiParamTypeClasses", "ScopedTypeVariables"]
 
   imports :: Haskell
   imports = concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"

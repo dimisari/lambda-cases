@@ -11,15 +11,19 @@ import Helpers
 -- types
 type FieldId = SimpleId
 
-type FieldIds = Set FieldId
-
 type NakedCase = SimpleId
 
+type FieldIds = Set FieldId
+
 type NakedCases = Set NakedCase
+
+type ParamTVars = Set ParamTVar
 
 type FieldIdsState = State FieldIds ()
 
 type NakedCasesState = State NakedCases ()
+
+type ParamTVarsState = State ParamTVars ()
 
 -- classes
 class CollectFieldIds a where
@@ -28,12 +32,17 @@ class CollectFieldIds a where
 class CollectNakedCases a where
   collect_ncs :: a -> NakedCasesState
 
+class CollectParamTVars a where
+  collect_ptvs :: a -> ParamTVarsState
+
 -- Eq and Ord for Set
 deriving instance Eq IdStart
 deriving instance Eq SimpleId
+deriving instance Eq ParamTVar
 
 deriving instance Ord IdStart
 deriving instance Ord SimpleId
+deriving instance Ord ParamTVar
 
 --
 field_ids :: Program -> FieldIds
@@ -41,6 +50,9 @@ field_ids = \prog -> execState (collect_fids prog) empty
 
 naked_cases :: Program -> NakedCases
 naked_cases = \prog -> execState (collect_ncs prog) empty
+
+param_t_vars :: Type -> [ParamTVar]
+param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
 
 -- CollectFieldIds
 instance CollectFieldIds Program where
@@ -87,5 +99,68 @@ instance CollectNakedCases (SimpleId, Maybe SimpleType) where
   collect_ncs = \case
     (sid, Nothing) -> modify (insert sid)
     _ -> do_nothing
+
+-- CollectParamTVars
+instance CollectParamTVars SimpleType where
+  collect_ptvs = \case
+    PTV1 ptv -> modify (insert ptv)
+    TAIOA1 taioa -> collect_ptvs taioa
+    PoT1 pt -> collect_ptvs pt
+    PT1 pt -> collect_ptvs pt
+    FT1 ft -> collect_ptvs ft
+
+instance CollectParamTVars TypeAppIdOrAHTV where
+  collect_ptvs = \(TAIOA (mtip1, taioam, mtip2)) ->
+    collect_ptvs mtip1 >> collect_ptvs taioam >> collect_ptvs mtip2
+
+instance CollectParamTVars PowerType where
+  collect_ptvs = \(PoT (pbt, _)) -> collect_ptvs pbt
+
+instance CollectParamTVars ProdType where
+  collect_ptvs = \(PT (ft, fts)) -> mapM_ collect_ptvs $ ft : fts
+
+instance CollectParamTVars FuncType where
+  collect_ptvs = \(FT (ioot1, ioot2)) ->
+    collect_ptvs ioot1 >> collect_ptvs ioot2
+
+instance CollectParamTVars (Maybe TypesInParen) where
+  collect_ptvs = \case
+    Nothing -> do_nothing
+    Just tip -> collect_ptvs tip
+
+instance CollectParamTVars TypesInParen where
+  collect_ptvs = \(TIP (st, sts)) -> mapM_ collect_ptvs $ st : sts
+
+instance CollectParamTVars TAIOAMiddle where
+  collect_ptvs = \case
+    TIdStart (_, tip_str_pairs) -> mapM_ collect_ptvs $ tip_str_pairs
+    AHTV2 _ -> do_nothing
+
+instance CollectParamTVars PowerBaseType where
+  collect_ptvs = \case
+    PTV3 ptv -> modify (insert ptv)
+    TAIOA2 taioa -> collect_ptvs taioa
+    IPT ipt -> collect_ptvs ipt
+
+instance CollectParamTVars FieldType where
+  collect_ptvs = \case
+    PBT1 pbt -> collect_ptvs pbt
+    PoT3 pt -> collect_ptvs pt
+
+instance CollectParamTVars InOrOutType where
+  collect_ptvs = \case
+    PTV4 ptv -> modify (insert ptv)
+    TAIOA3 taioa -> collect_ptvs taioa
+    PoT2 pt -> collect_ptvs pt
+    PT2 pt -> collect_ptvs pt
+    FT2 ft -> collect_ptvs ft
+
+instance CollectParamTVars (TypesInParen, String) where
+  collect_ptvs = \(tip, _) -> collect_ptvs tip
+
+instance CollectParamTVars InParenT where
+  collect_ptvs = \case
+    PT3 pt -> collect_ptvs pt
+    FT3 ft -> collect_ptvs ft
 
 -- Test.hs

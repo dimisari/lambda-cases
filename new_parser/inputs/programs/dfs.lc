@@ -35,22 +35,16 @@ dfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
             = dfs_on_trees(other_trees)with_num(tree_res.t_num)
 
 test_tree : (Char)Tree
-  = ('a', [t1, t2, t3])
-    where
-    t1 : (Char)Tree
-      = ('b', [('e', []), ('f', [])])
-
-    t2 : (Char)Tree
-      = ('c', [])
-
-    t3 : (Char)Tree
-      = ('d', [('g', []), ('h', [])])
+  = ( 'a'
+    , [('b', [('e', []), ('f', [])]), ('c', []), ('d', [('g', []), ('h', [])])]
+    )
 
 type_theorem (@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
 proof
   (_)to_string =
-    (root, subtress) =>
-    "root: " + (root)to_string + "\nsubtrees: " + (subtrees)to_string + "\n"
+    tree =>
+    "root: " + (tree.root)to_string +
+    "\nsubtrees: " + (tree.subtrees)to_string + "\n"
 
 main: IO
   = dfs_on_tree(test_tree) -> (_)to_string -> print_line(_)

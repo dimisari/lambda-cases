@@ -144,3 +144,29 @@ class P0'Has_Str_Rep a where
 instance Show a => P0'Has_Str_Rep a where
   v0'to_string = show
 
+-- FromTuple classes
+class FromTuple2 a b c | c -> a b where
+  ft2 :: (a, b) -> c
+
+class FromTuple3 a b c d | d -> a b c where
+  ft3 :: (a, b, c) -> d
+
+class FromTuple4 a b c d e | e -> a b c d where
+  ft4 :: (a, b, c, d) -> e
+
+class FromTuple5 a b c d e f | f -> a b c d e where
+  ft5 :: (a, b, c, d, e) -> f
+
+-- FromTuple classes for regular tuples
+instance FromTuple2 a b (a, b) where
+  ft2 = id
+
+instance FromTuple3 a b c (a, b, c) where
+  ft3 = id
+
+instance FromTuple4 a b c d (a, b, c, d) where
+  ft4 = id
+
+instance FromTuple5 a b c d e (a, b, c, d, e) where
+  ft5 = id
+
