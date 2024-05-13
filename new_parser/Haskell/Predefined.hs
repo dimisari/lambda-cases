@@ -23,7 +23,7 @@ print' = print
 print_line' = putStrLn
 get_line = getLine
 split'to_words = words
-apply'to_all = map
+apply'to_all_in' = uncurry map
 throw_err' = error
 
 v0'length :: [a] -> Int

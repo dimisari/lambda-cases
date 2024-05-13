@@ -1,0 +1,90 @@
+tuple_type (T1)Tree
+value (root, subtrees) : T1 x (T1)Trees
+
+type_nickname (T1)Trees = ListOf((T1)Tree)s
+
+or_type Possibly(T1)
+values the_value:T1 | no_value
+
+tuple_type InfoTuple(T1)
+value (my_val, subts_num, my_num) : T1 x Int x Int
+
+bfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
+  = [_] o> bfs_on_trees(_)with_num(1) o> cases
+    [t] => t
+    ... => throw_err("should be impossible: got more than one trees")
+
+bfs_on_trees(_)with_num(_) : (T1)Trees x Int => (Int x T1)Trees
+  = (cases, n)
+    [] => []
+    ts =>
+      info_tuples(its_num.1st)and_low_trees(done_subts)to_high_trees
+      where
+      its_num : ListOf(InfoTuple(T1))s x Int
+        = trees(ts)and_num(n)to_info_tuples_and_num
+
+      done_subts : (Int x T1)Trees
+        = bfs_on_trees(all_subtrees_of_trees(ts))with_num(its_num.2nd)
+
+trees(_)and_num(_)to_info_tuples_and_num
+  : (T1)Trees x Int => ListOf(InfoTuple(T1))s x Int
+  = (cases, n)
+    [] => ([], n)
+    [t, ts = ...] =>
+      (t_info_tuple + ts_its_and_num.1st, ts_its_and_num.2nd)
+      where
+      t_info_tuple : InfoTuple(T1)
+        = (t.root, (t.subtrees)length, n)
+
+      ts_its_and_num : ListOf(InfoTuple(T1))s x Int
+        = trees(ts)and_num(n + 1)to_info_tuples_and_num
+
+all_subtrees_of_trees(_) : (T1)Trees => (T1)Trees
+  = apply(_.subtrees)to_all_in(_) o> concat
+
+info_tuples(_)and_low_trees(_)to_high_trees
+  : ListOf(InfoTuple(T1))s x (Int x T1)Trees => (Int x T1)Trees
+  = (cases, cases)
+    ([], []) => []
+    ([it1, its = ...], ts) =>
+      split_list(ts)at(it1.subts_num) -> cases
+        no_value => throw_err("should be impossible: no trees for me")
+        the_value:(my_ts, other_ts) =>
+          ((it1.my_num, it1.my_val), my_ts) +
+          info_tuples(its)and_low_trees(other_ts)to_high_trees
+
+split_list(_)at(_) : ListOf(T1)s x Int => Possibly(ListOf(T1)s^2)
+  = (cases, cases)
+    (l, 0) => the_value:([], l)
+    ([], i) => no_value
+    ([x, xs = ...], i) =>
+      add(x)to_left_l(split_list(xs)at(i - 1))
+      where
+      add(_)to_left_l(_)
+        : T1 x Possibly(ListOf(T1)s^2) => Possibly(ListOf(T1)s^2)
+        = (x, pls) => apply((l, r) => (x + l, r))inside(pls)
+
+type_proposition (@T)Has_Internal_App
+needed apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)
+
+type_theorem (Possibly(_))Has_Internal_App
+proof
+  apply(_)inside(_) =
+    (f(_), cases)
+      no_value => no_value
+      the_value:x => the_value:f(x)
+
+test_tree : (Char)Tree
+  = ( 'a'
+    , [('b', [('e', []), ('f', [])]), ('c', []), ('d', [('g', []), ('h', [])])]
+    )
+
+type_theorem (@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
+proof
+  (_)to_string =
+    tree =>
+    "\nroot: " + (tree.root)to_string +
+    "\nsubtrees:\n" + (tree.subtrees)to_string + "\n"
+
+main: IO
+  = bfs_on_tree(test_tree) -> (_)to_string -> print_line(_)

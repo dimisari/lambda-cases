@@ -43,8 +43,8 @@ type_theorem (@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
 proof
   (_)to_string =
     tree =>
-    "root: " + (tree.root)to_string +
-    "\nsubtrees: " + (tree.subtrees)to_string + "\n"
+    "\nroot: " + (tree.root)to_string +
+    "\nsubtrees:\n" + (tree.subtrees)to_string + "\n"
 
 main: IO
   = dfs_on_tree(test_tree) -> (_)to_string -> print_line(_)
