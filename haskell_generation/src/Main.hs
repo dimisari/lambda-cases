@@ -66,12 +66,12 @@ parse_err_or_sem_analysis = ( \(in_path, out_path) lcs_prog ->
 sem_err_or_hs_to_file = ( \prog out_path ->
   run_sem_analysis prog ==> \case
     Left (_, _, sem_err_msg) -> putStrLn sem_err_msg
-    Right generated_haskell -> 
+    Right generated_haskell ->
       readFile haskell_header >>= \header ->
       writeFile out_path $ header ++ generated_haskell
   ) :: Program -> Path -> IO ()
 
-run_sem_analysis = 
+run_sem_analysis =
   program_g .> runExceptT .> flip evalState init_state
   :: Program -> Either Error Haskell
 
@@ -84,12 +84,12 @@ vals_or_tdefs_to_l = ( \vals_or_tdefs_l ->
   concatMap vals_or_type_def_to_list vals_or_tdefs_l
   ) :: [ ValuesOrTypeDef ] -> [ (ValueName, ValueType, ValueExpression) ]
 
-vals_or_type_def_to_list = ( \case 
+vals_or_type_def_to_list = ( \case
   Values values -> values_to_list values
   TypeDefinition _ -> []
   ) :: ValuesOrTypeDef -> [ (ValueName, ValueType, ValueExpression) ]
 
-values_or_type_definition_g = ( \case 
+values_or_type_definition_g = ( \case
   Values values -> values_g values
   TypeDefinition type_definition -> type_definition_g type_definition
   ) :: ValuesOrTypeDef -> Stateful Haskell
