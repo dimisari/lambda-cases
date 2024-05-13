@@ -87,18 +87,15 @@ parse_res_to_final_res = RS . (++ "\n\n") . \case
   Left err -> "Error :( ==>" ++ show err
   Right res -> to_haskell res
 
-parse_res_to_str_lit :: Either ParseError Literal -> Haskell
-parse_res_to_str_lit = \case
-  Left err -> "Error :( ==>" ++ show err
-  Right lit -> to_haskell (NoAnnotation, lit)
-
 extract_res_str :: ResultString a -> Haskell
 extract_res_str = \(RS s) -> s
 
 -- file_name_compile_func_pairs
 file_name_compile_func_pairs :: [(FileName, CompileExFunc)]
 file_name_compile_func_pairs =
-  [ ( "literals.txt", parse .> parse_res_to_str_lit .> (++ "\n\n"))
+  [ ( "literals.txt"
+    , (compile_example_func :: Compile Literal) .> extract_res_str
+    )
   , ( "identifiers.txt"
     , (compile_example_func :: Compile Identifier) .> extract_res_str
     )

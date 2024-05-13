@@ -19,16 +19,10 @@ import Generation.Collect
 instance ToHaskell Char where
   to_haskell = (:[])
 
-instance ToHaskell (NeedsAnnotationBool, Literal) where
-  to_haskell = \(needs_annot, lit) -> case lit of
-    Int i ->
-      case needs_annot of
-        NoAnnotation -> show i
-        Annotation -> "(" ++ show i ++ " :: Int)"
-    R r ->
-      case needs_annot of
-        NoAnnotation -> show r
-        Annotation -> "(" ++ show r ++ " :: Double)"
+instance ToHaskell Literal where
+  to_haskell = \case
+    Int i -> show i
+    R r -> show r
     Ch c -> show c
     S s -> show s
 
@@ -99,7 +93,7 @@ instance ToHaskell BasicOrAppExpr where
 
 instance ToHaskell BasicExpr where
   to_haskell = \case
-    Lit1 lit -> to_haskell (Annotation, lit)
+    Lit1 lit -> to_haskell lit
     PFAOI1 pfaoi -> to_haskell pfaoi
     T1 tuple -> to_haskell tuple
     L1 list -> to_haskell list
@@ -448,7 +442,7 @@ instance ToHaskell EndCaseParam where
 
 instance ToHaskell (NeedsParenBool, Matching) where
   to_haskell = \(needs_paren, m) -> case m of
-    Lit2 lit -> to_haskell (NoAnnotation, lit)
+    Lit2 lit -> to_haskell lit
     PFM (pf, im) ->
       in_paren_if needs_paren $ to_haskell pf ++ " " ++ to_haskell (Paren, im)
     TM1 tm -> to_haskell tm

@@ -67,7 +67,13 @@ class HasThen t where
   (!>>) :: t a -> t b -> t b
 
 -- GeneralMultiplication
-instance a ~ Int => GeneralMultiplication Int Int a where
+instance (a ~ b, Num a) => GeneralMultiplication a a b where
+  (!*) = (*)
+
+instance (a ~ b, Num a) => GeneralMultiplication a b a  where
+  (!*) = (*)
+
+instance (a ~ b, Num b) => GeneralMultiplication a b b where
   (!*) = (*)
 
 -- P0'And'Add_To
@@ -86,17 +92,29 @@ instance a ~ String => P0'And'Add_To String String a where
 instance a ~ String => P0'And'Add_To a String String where
   (!+) = (++)
 
-instance a ~ Int => P0'And'Add_To Int Int a where
-  (!+) = (+)
-
-instance a ~ Int => P0'And'Add_To a Int Int where
-  (!+) = (+)
-
 instance a ~ b => P0'And'Add_To a [b] [b] where
   (!+) = (:)
 
+instance (a ~ b, Num a) => P0'And'Add_To a a b where
+  (!+) = (+)
+
+instance (a ~ b, Num a) => P0'And'Add_To a b a  where
+  (!+) = (+)
+
+instance (a ~ b, Num b) => P0'And'Add_To a b b where
+  (!+) = (+)
+
+instance (a ~ Int, b ~ Int) => P0'And'Add_To a b Int where
+  (!+) = (+)
+
 -- GeneralSubtraction
-instance Num a => GeneralSubtraction a a a where
+instance (a ~ b, Num a) => GeneralSubtraction a a b where
+  (!-) = (-)
+
+instance (a ~ b, Num a) => GeneralSubtraction a b a  where
+  (!-) = (-)
+
+instance (a ~ b, Num b) => GeneralSubtraction a b b where
   (!-) = (-)
 
 -- GeneralEquality
