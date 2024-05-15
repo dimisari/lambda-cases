@@ -7,26 +7,22 @@ bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x IsSorted
     [x] => ([x], true)
     [x1, x2, rest = ...] =>
       (x1 > x2) -> cases
-        true => not_sorted(_) <- prepend(x2)to_bubble_pass(x1)with_rest
-        false => prepend(x1)to_bubble_pass(x2)with_rest
+        true => not_sorted(_) <- prepend(x2)to(bubble_sort_pass(x1 + rest))
+        false => prepend(x1)to(bubble_sort_pass(x2 + rest))
       where
       not_sorted(_)
         : ListOf(Int)s x IsSorted => ListOf(Int)s x IsSorted
         = _.change{2nd = false}
 
-      prepend(_)to_bubble_pass(_)with_rest
-        : Int x Int => ListOf(Int)s x IsSorted
-        = (x, y) => prepend(x)to(bubble_sort_pass(y + rest))
-
       prepend(_)to(_)
         : Int x (ListOf(Int)s x IsSorted) => ListOf(Int)s x IsSorted
         = (elem, (l, b)) => (elem + l, b)
 
-buble_sort(_): ListOf(Int)s => ListOf(Int)s
+bubble_sort(_): ListOf(Int)s => ListOf(Int)s
   = bubble_sort_pass(_) o>
     (l, cases)
       true => l
-      false => buble_sort(l)
+      false => bubble_sort(l)
 
 initial: ListOf(Int)s
   = compute_list(16, 65)
@@ -42,4 +38,4 @@ initial: ListOf(Int)s
 
 main: IO
   = print_line("Initial list = " + initial);
-    print_line("Sorted list = " + buble_sort(initial))
+    print_line("Sorted list = " + bubble_sort(initial))

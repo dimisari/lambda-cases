@@ -132,10 +132,10 @@ data Parameters =
   ParamId Identifier | Star1 | Params (Parameters, [Parameters])
 
 data LineFuncBody =
-  BOAE3 BasicOrAppExpr | LOE4 LineOpExpr
+  BOAE3 BasicOrAppExpr | LOE4 LineOpExpr | LFE5 LineFuncExpr
 
 data BigFuncBody =
-  BOAE4 BasicOrAppExpr | OE1 OpExpr
+  BOAE4 BasicOrAppExpr | OE1 OpExpr | LFE6 LineFuncExpr
 
 newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
 

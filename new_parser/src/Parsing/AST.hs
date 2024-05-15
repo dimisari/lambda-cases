@@ -299,12 +299,18 @@ instance HasParser Parameters where
     Params <$> in_paren (parser ++< many1 (comma *> parser))
 
 instance HasParser LineFuncBody where
-  parser = opt_space *> (LOE4 <$> try parser <|> BOAE3 <$> parser)
+  parser =
+    opt_space *>
+    ( LOE4 <$> try parser <|> BOAE3 <$> try parser <|>
+      LFE5 <$> (char '(' *> opt_space_around parser <* char ')')
+    )
 
 instance HasParser BigFuncBody where
   parser =
     nl_indent *> set_in_equal_line False *>
-    (OE1 <$> try parser <|> BOAE4 <$> parser)
+    ( OE1 <$> try parser <|> BOAE4 <$> try parser <|>
+      LFE6 <$> (char '(' *> opt_space_around parser <* char ')')
+    )
 
 instance HasParser CasesFuncExpr where
   parser =
@@ -536,7 +542,7 @@ instance HasParser OrTypeDef where
       (try (string "or_type ") *> parser) ++<
       (nl *> string "values" *> space_or_nl *> parser) +++<
       optionMaybe (char ':' *> parser) ++++<
-      many1 id_mst_p
+      many id_mst_p
     where
     id_mst_p :: Parser (SimpleId, Maybe SimpleType)
     id_mst_p =

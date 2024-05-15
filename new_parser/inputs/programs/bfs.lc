@@ -82,9 +82,7 @@ test_tree : (Char)Tree
 type_theorem (@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
 proof
   (_)to_string =
-    tree =>
-    "\nroot: " + (tree.root)to_string +
-    "\nsubtrees:\n" + (tree.subtrees)to_string + "\n"
+    tree => "\nroot: " + tree.root + "\nsubtrees:\n" + tree.subtrees + "\n"
 
 main: IO
-  = bfs_on_tree(test_tree) -> (_)to_string -> print_line(_)
+  = bfs_on_tree(test_tree) -> print

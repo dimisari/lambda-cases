@@ -1,7 +1,4 @@
 
-- Ίσως υπάρχει καλύτερος τρόπος για τα tuples;
-  Μήπως να τα κάνω όλα κάποιο default data;
-
 - prop names can have simple types?
   - probably only in conditions for values that use ad hoc values
 
@@ -15,5 +12,8 @@
 - define arrays with power?
   - maybe good for one dimension +
     better with square brackets and commas (or x?) for multidimensional
+
+- παραπάνω από ένα underscores στα propnames με subs στο type_theo;
+  - αν ναι θέλει state για να πάρει το καθένα το δικό του variable
 
 # current_tasks.txt

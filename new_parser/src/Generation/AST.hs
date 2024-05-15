@@ -193,7 +193,15 @@ instance ToHaskell SpecialId where
 
 instance ToHaskell PostFuncApp where
   to_haskell (PoFA (pfa, pfae)) =
-    maybe_param_hs ++ case pfae of
+    case pfa of
+      Underscore2 -> "(\\" ++ under_pfarg_param ++ " -> " ++ inside_hs ++")"
+      _ -> inside_hs
+    where
+    pfa_hs :: Haskell
+    pfa_hs = to_haskell pfa
+
+    inside_hs :: Haskell
+    inside_hs = case pfae of
       DC1 dc -> to_haskell (dc, pfa_hs)
       PFsMDC (pfs, mdc) -> case mdc of
         Nothing -> pfa_pfs_hs
@@ -206,14 +214,6 @@ instance ToHaskell PostFuncApp where
         pfa_pfs_to_hs = \case
           [] -> pfa_hs
           pf : pfs -> to_haskell pf ++ "(" ++ pfa_pfs_to_hs pfs ++ ")"
-    where
-    maybe_param_hs :: Haskell
-    maybe_param_hs = case pfa of
-      Underscore2 -> "\\" ++ under_pfarg_param ++ " -> "
-      _ -> ""
-
-    pfa_hs :: Haskell
-    pfa_hs = to_haskell pfa
 
 instance ToHaskell PostFuncArg where
   to_haskell = \case
@@ -287,7 +287,8 @@ instance ToHsWithParamNum OpSplitLine where
     OFCO1 ofco -> to_hs_wpn ofco
 
 instance ToHsWithParamNum OperFCO where
-  to_hs_wpn = \(OFCO (oper, fco)) -> to_hs_wpn oper <++ to_haskell fco
+  to_hs_wpn = \(OFCO (oper, fco)) ->
+    to_hs_wpn oper <++ (" " ++ to_haskell fco ++ " ")
 
 instance ToHsWithParamNum OpSplitEnd where
   to_hs_wpn = \case
@@ -320,7 +321,7 @@ instance ToHsWithParamNum Operand where
 
 instance ToHaskell Op where
   to_haskell = \case
-    FCO3 co -> " " ++ to_haskell co ++ " "
+    FCO3 fco -> " " ++ to_haskell fco ++ " "
     OSO oso -> " " ++ to_haskell oso ++ " "
 
 instance ToHaskell FuncCompOp where
@@ -387,11 +388,13 @@ instance ToHaskell LineFuncBody where
   to_haskell = \case
     BOAE3 boae -> to_haskell boae
     LOE4 loe -> to_haskell loe
+    LFE5 lfe -> "(" ++ to_haskell lfe ++ ")"
 
 instance ToHsWithIndentLvl BigFuncBody where
   to_hs_wil = \case
     BOAE4 boae -> indent <++ to_haskell boae
     OE1 oe -> to_hs_wil oe
+    LFE6 lfe -> indent <++ ("(" ++ to_haskell lfe ++ ")")
 
 instance ToHsWithIndentLvl (CasesFuncExpr, PossiblyWhereExpr) where
   to_hs_wil (CFE (cps, cs, maybe_ec), pwe) =

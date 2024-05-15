@@ -273,11 +273,13 @@ instance Show LineFuncBody where
   show = \case
     BOAE3 npoa -> " " ++ show npoa
     LOE4 soe -> " " ++ show soe
+    LFE5 lfe -> " (" ++ show lfe ++ ")"
 
 instance Show BigFuncBody where
   show = \case
     BOAE4 npoa -> "\n" ++ show npoa
     OE1 oe -> "\n" ++ show oe
+    LFE6 lfe -> "\n(" ++ show lfe ++ ")"
 
 instance Show CasesFuncExpr where
   show = \(CFE (cps, cs, maybe_ec)) ->

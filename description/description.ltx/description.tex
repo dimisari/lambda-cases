@@ -7,27 +7,22 @@
 \usepackage{syntax}
 \usepackage{array}
 \usepackage{multirow}
-\usepackage[left=2cm,right=2cm,top=2cm]{geometry}
+\usepackage[left=2cm, right=2cm, top=2cm]{geometry}
 
 \usepackage{biblatex}
 \addbibresource{parsec.bib}
 
 \usepackage{hyperref}
 \hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,
-    urlcolor=cyan,
+  colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan
 }
 
 \date{}
-\author{
-  Dimitris Saridakis
-}
+\author{ Dimitris Saridakis }
 
 \def\imgs{../Images}
 \def\H{Haskell}
-\def\r{$\Longleftrightarrow$ }
+\def\r{$\Longleftrightarrow$}
 %\newcommand\_[_]{_}
 
 \renewcommand{\arraystretch}{1.5}
@@ -1492,9 +1487,18 @@ The precise indentation rules are described in the section
 <identifier> | `*' |
 `(' [ `\ ' ] <parameters> ( <comma> <parameters> )+ [ `\ ' ] `)'
 
-<line-func-body> ::= [ `\ ' ] ( <basic-or-app-expr> | <line-op-expr> )
+<line-func-body> ::=
+[ `\ ' ]
+(
+<basic-or-app-expr> | <line-op-expr> |
+`(' [ `\ ' ] <line-func-expr> [ `\ ' ] `)'
+)
 
-<big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
+<big-func-body> ::=
+<nl> <indent>
+(
+<basic-or-app-expr> | <op-expr> | `(' [ `\ ' ] <line-func-expr> [ `\ ' ] `)'
+)
 \end{grammar}
 \end{itemize}
 
@@ -2239,7 +2243,7 @@ non_empty_ls(_)to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 `or_type\ ' <type-name> <nl> \\
 `values' ( `\ ' | <nl> `\ \ ' ) \\
 <simple-id> [ `:' <simple-type> ]
-( [ `\ ' ] | [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
+( [ `\ ' ] `|' [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
 \end{grammar}
 
 \end{itemize}
@@ -2957,9 +2961,18 @@ the condition arrow (" \verb|-->| ") arrow.
 <identifier> | `*' |
 `(' [ `\ ' ] <parameters> ( <comma> <parameters> )+ [ `\ ' ] `)'
 
-<line-func-body> ::= [ `\ ' ] ( <basic-or-app-expr> | <line-op-expr> )
+<line-func-body> ::=
+[ `\ ' ]
+(
+<basic-or-app-expr> | <line-op-expr> |
+`(' [ `\ ' ] <line-func-expr> [ `\ ' ] `)'
+)
 
-<big-func-body> ::= <nl> <indent> ( <basic-or-app-expr> | <op-expr> )
+<big-func-body> ::=
+<nl> <indent>
+(
+<basic-or-app-expr> | <op-expr> | `(' [ `\ ' ] <line-func-expr> [ `\ ' ] `)'
+)
 \\
 
 <cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
@@ -3093,7 +3106,7 @@ the condition arrow (" \verb|-->| ") arrow.
 `or_type\ ' <type-name> <nl> \\
 `values' ( `\ ' | <nl> `\ \ ' ) \\
 <simple-id> [ `:' <simple-type> ]
-( [ `\ ' ] | [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
+( [ `\ ' ] `|' [ `\ ' ] <simple-id> [ `:' <simple-type> ] )*
 \\
 
 <t-nickname> ::=

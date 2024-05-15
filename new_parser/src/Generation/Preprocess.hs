@@ -369,11 +369,13 @@ instance ChangeIfNeeded LineFuncBody where
   ch_inside_if_needed = \case
     BOAE3 boae -> BOAE3 <$> ch_inside_if_needed boae
     LOE4 loe -> LOE4 <$> ch_inside_if_needed loe
+    LFE5 lfe -> LFE5 <$> ch_inside_if_needed lfe
 
 instance ChangeIfNeeded BigFuncBody where
   ch_inside_if_needed = \case
     BOAE4 boae -> BOAE4 <$> ch_inside_if_needed boae
     OE1 oe -> OE1 <$> ch_inside_if_needed oe
+    LFE6 lfe -> LFE6 <$> ch_inside_if_needed lfe
 
 instance ChangeIfNeeded CasesFuncExpr where
   ch_inside_if_needed = \(CFE (cparams, cases, mec)) ->

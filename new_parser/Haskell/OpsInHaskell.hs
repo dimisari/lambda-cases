@@ -5,6 +5,8 @@
 
 module Haskell.OpsInHaskell where
 
+import Haskell.Predefined
+
 infixl 9 &>
 infixr 8 <&
 infixl 7 .>, <.
@@ -60,10 +62,10 @@ class HasAnd a where
 class HasOr a where
   (!|) :: a -> a -> a
 
-class HasUse u where
+class P0'Has_Use u where
   (!>>=) :: u a -> (a -> u b) -> u b
 
-class HasThen t where
+class P0'Has_Then t where
   (!>>) :: t a -> t b -> t b
 
 -- GeneralMultiplication
@@ -77,20 +79,23 @@ instance (a ~ b, Num b) => GeneralMultiplication a b b where
   (!*) = (*)
 
 -- P0'And'Add_To
-instance (Show a, b ~ String) => P0'And'Add_To String a b where
-  str !+ i = str ++ show i
+instance Show a => P0'And'Add_To a String String where
+  x !+ str = show x ++ str
 
-instance P0'And'Add_To a [a] [a] where
+instance (Show a, b ~ String) => P0'And'Add_To String a b where
+  str !+ x = str ++ show x
+
+instance (Show a, b ~ String) => P0'And'Add_To a String b where
+  x !+ str = show x ++ str
+
+instance b ~ [a] => P0'And'Add_To [a] [a] b where
+  (!+) = (++)
+
+instance b ~ [a] => P0'And'Add_To a [a] b where
   (!+) = (:)
 
-instance P0'And'Add_To [a] a [a] where
+instance b ~ [a] => P0'And'Add_To [a] a b where
   l !+ a = l ++ [a]
-
-instance a ~ String => P0'And'Add_To String String a where
-  (!+) = (++)
-
-instance a ~ String => P0'And'Add_To a String String where
-  (!+) = (++)
 
 instance a ~ b => P0'And'Add_To a [b] [b] where
   (!+) = (:)
@@ -129,10 +134,10 @@ instance Ord a => GeneralGreaterThan a a where
 instance Ord a => GeneralLessThan a a where
   (!<) = (<)
 
--- HasThen
-instance Applicative f => HasThen f where
+-- P0'Has_Then
+instance Applicative f => P0'Has_Then f where
   (!>>) = (*>)
 
--- HasThen
-instance Monad m => HasUse m where
+-- P0'Has_Use
+instance Monad m => P0'Has_Use m where
   (!>>=) = (>>=)

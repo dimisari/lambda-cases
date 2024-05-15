@@ -2,13 +2,6 @@
   - is_case: OrType -> Bool
     put in map + generate definition
 
-- better error messages with <?>
-
-- Questions:
-  - String = ListOf(Char)s?
-    - After type variables
-    - Or hard coded
-
 - Compilation targets to consider:
   - Haskell Core
   - LLVM IR

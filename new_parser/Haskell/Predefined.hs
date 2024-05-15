@@ -170,3 +170,6 @@ instance FromTuple4 a b c d (a, b, c, d) where
 instance FromTuple5 a b c d e (a, b, c, d, e) where
   ft5 = id
 
+-- MyShow class
+instance {-# OVERLAPS #-} Show String where
+  show = id

@@ -1,0 +1,172 @@
+type_nickname Graph = ListOf(Node)s
+
+tuple_type Node
+value (n_name, neighbors) : Char x ListOf(Neighbor)s
+
+type_nickname Dist = Int
+
+type_nickname Neighbor = NameAndDist
+
+tuple_type NameAndDist
+value (name, dist) : Char x Dist
+
+tuple_type State
+value (dns, rns) : ListOf(DoneNode)s x ListOf(ReachableNode)s
+
+or_type InRNsPossibilities
+values in_rns:Dist x ListOf(ReachableNode)s | not_in_rns
+
+type_nickname DoneNode = NameAndDist
+
+type_nickname ReachableNode = NameAndDist
+
+or_type (T1)WStateMan
+values from_state_f:State => T1 x State
+
+or_type OneVal
+values the_one_val
+
+type_nickname StateMan = (OneVal)WStateMan
+
+get_state : (State)WStateMan
+  = from_state_f:(s => (s, s))
+
+modify_state(_) : (State => State) => StateMan
+  = f(_) => from_state_f:(s => (the_one_val, f(s)))
+
+set_state(_) : State => StateMan
+  = new_s => modify_state(* => new_s)
+
+set_rns(_) : ListOf(ReachableNode)s => StateMan
+  = rns => modify_state(s => (s.dns, rns))
+
+type_theorem ((_)WStateMan)Has_Use
+proof
+  wsm ;> f(_) =
+    from_state_f:_ <- init_s =>
+    wsm -> cases
+      from_state_f:fsf1 =>
+        init_s -> fsf1 -> (a, s1) =>
+        f(a) -> cases
+          from_state_f:fsf2 =>
+            s1 -> fsf2
+
+type_theorem ((_)WStateMan)Has_Then
+proof wsm1 ; wsm2 = wsm1 ;> * => wsm2
+
+run(_)on_init_state(_) : (T1)WStateMan x State => T1 x State
+  = (cases, is)
+    from_state_f:fsf => is -> fsf
+
+type_proposition (@T)Has_A_Wrapper
+needed wrap(_): T1 => @T(T1)
+
+type_theorem ((_)WStateMan)Has_A_Wrapper
+proof wrap(_) = x => from_state_f:(s => (x, s))
+
+dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
+  = (source_name, g) => run(get_result)on_init_state(is).1st
+    where
+    is : State
+      = ([], [(source_name, 0)])
+
+    get_result : (ListOf(DoneNode)s)WStateMan
+      = get_state ;> state =>
+        state.rns -> cases
+          [] => wrap(state.dns)
+          [rn1, rns = ...] =>
+            set_state((state.dns + rn1, rns)) ;
+            add_new_rns(rn1, get_neighbors(rn1)) ;
+            get_result
+
+    get_neighbors(_) : DoneNode => ListOf(Neighbor)s
+      = get_neighbors_of(_)from_nodes(g)
+        where
+        get_neighbors_of(_)from_nodes(_)
+          : DoneNode x ListOf(Node)s => ListOf(Neighbor)s
+          = (dn, cases)
+            [] => throw_err("Should be impossible: I'm not in the nodes")
+            [n, ns = ...] =>
+              (dn.name == n.n_name) -> cases
+                true => n.neighbors
+                false => get_neighbors_of(dn)from_nodes(ns)
+
+update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
+  = (ne, dn) =>
+    check_if_ne_in_rns ;> cases
+      in_rns:stuff => add_ne_to_rns_from_dn_if_better(stuff)
+      not_in_rns =>
+        check_if_ne_in_dns ;> cases
+          true => nothing
+          false => add_ne_to_rns_from_dn
+    where
+    check_if_ne_in_rns : (InRNsPossibilities)WStateMan
+      = get_state ;> _.rns o> check_ne_in_rns_rec([], _)
+        where
+        check_ne_in_rns_rec(_, _)
+          : ListOf(ReachableNode)s^2 => (InRNsPossibilities)WStateMan
+          = (checked, cases)
+            [] => wrap(not_in_rns)
+            [rn1, rns = ...] =>
+              (ne.name == rn1.name) -> cases
+                true => in_rns:(rn1.dist, checked + rns) -> wrap(_)
+                false => check_ne_in_rns_rec(checked + rn1, rns)
+
+    add_ne_to_rns_from_dn_if_better(_)
+      : Dist x ListOf(ReachableNode)s => StateMan
+      = (d, other_rns) =>
+        (new_d < d) -> cases
+          true => set_rns(_) <- add((ne.name, new_d))to_rns(other_rns)
+          false => nothing
+        where
+        new_d : Dist
+          = dn.dist + ne.dist
+
+    check_if_ne_in_dns : (Bool)WStateMan
+      = get_state ;> _.dns o> check_ne_name_in(_)
+        where
+        check_ne_name_in(_)
+          : ListOf(DoneNode)s => (Bool)WStateMan
+          = cases
+            [] => wrap(false)
+            [dn, dns = ... ] =>
+              (ne.name == dn.name) -> cases
+                true => wrap(true)
+                false => check_ne_name_in(dns)
+
+    add_ne_to_rns_from_dn : StateMan
+      = get_state ;> _.rns o> add((ne.name, dn.dist + ne.dist))to_rns(_) o>
+        set_rns(_)
+
+add_new_rns(_, _) : DoneNode x ListOf(Neighbor)s => StateMan
+  = (dn, cases)
+    [] => nothing
+    [ne1, nes = ...] => update_neighbor(ne1)of(dn) ; add_new_rns(dn, nes)
+
+add(_)to_rns(_)
+  : ReachableNode x ListOf(ReachableNode)s => ListOf(ReachableNode)s
+  = (rn, cases)
+    [] => [rn]
+    [rn1, rns = ...] =>
+      (rn.dist < rn1.dist) -> cases
+        true => rn + (rn1 + rns)
+        false => rn1 + add(rn)to_rns(rns)
+
+nothing : StateMan
+  = wrap(the_one_val)
+
+test_graph : Graph
+  = [ ('a', [('b', 2), ('d', 6)])
+    , ('b', [('a', 2), ('c', 3)])
+    , ('c', [('b', 3), ('d', 5), ('e', 1)])
+    , ('d', [('a', 6), ('c', 5), ('e', 4)])
+    , ('e', [('c', 1), ('d', 4), ('f', 3)])
+    , ('f', [('c', 7), ('e', 3)])
+    ]
+
+type_theorem (NameAndDist)Has_Str_Rep
+proof
+  (_)to_string = nam => "(name = " + nam.name + ", dist = " + nam.dist + ")"
+
+main : IO
+  = dijkstra('a', test_graph) -> print
