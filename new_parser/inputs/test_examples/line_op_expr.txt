@@ -24,3 +24,11 @@ _ + "string in the middle of the arguments" + _#
 
 x + x.1st#
 
+fsf -> _.2nd#
+
+_.2nd -> fsf#
+
+_.b -> a#
+
+a -> _.b#
+

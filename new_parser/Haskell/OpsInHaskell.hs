@@ -141,3 +141,8 @@ instance Applicative f => P0'Has_Then f where
 -- P0'Has_Use
 instance Monad m => P0'Has_Use m where
   (!>>=) = (>>=)
+
+-- HasOr
+instance HasOr Bool where
+  (!|) = (||)
+

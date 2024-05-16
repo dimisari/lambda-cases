@@ -14,8 +14,8 @@ print(_)fib_nums: Int => IO
           0 => do_nothing
           n => advance(fai)and_print ;> print(n - 1)fibs_with_init(_)
 
-advance(_)and_print: FibsAndIndex => (FibsAndIndex)WithIO
-  = fai => print_fib(next.cur_index, next.cur); (next)with_io
+advance(_)and_print: FibsAndIndex => (FibsAndIndex)FromIO
+  = fai => print_fib(next.cur_index, next.cur); (next)from_io
     where
     next : FibsAndIndex
       = (fai.cur, fai.prev + fai.cur, fai.cur_index + 1)

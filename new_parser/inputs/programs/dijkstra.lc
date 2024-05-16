@@ -20,15 +20,15 @@ type_nickname DoneNode = NameAndDist
 
 type_nickname ReachableNode = NameAndDist
 
-or_type (T1)WStateMan
+or_type (T1)FStateMan
 values from_state_f:State => T1 x State
 
 or_type OneVal
 values the_one_val
 
-type_nickname StateMan = (OneVal)WStateMan
+type_nickname StateMan = (OneVal)FStateMan
 
-get_state : (State)WStateMan
+get_state : (State)FStateMan
   = from_state_f:(s => (s, s))
 
 modify_state(_) : (State => State) => StateMan
@@ -40,37 +40,37 @@ set_state(_) : State => StateMan
 set_rns(_) : ListOf(ReachableNode)s => StateMan
   = rns => modify_state(s => (s.dns, rns))
 
-type_theorem ((_)WStateMan)Has_Use
+type_theorem ((_)FStateMan)Has_Use
 proof
-  wsm ;> f(_) =
+  fsm ;> f(_) =
     from_state_f:_ <- init_s =>
-    wsm -> cases
+    fsm -> cases
       from_state_f:fsf1 =>
         init_s -> fsf1 -> (a, s1) =>
         f(a) -> cases
           from_state_f:fsf2 =>
             s1 -> fsf2
 
-type_theorem ((_)WStateMan)Has_Then
-proof wsm1 ; wsm2 = wsm1 ;> * => wsm2
+type_theorem ((_)FStateMan)Has_Then
+proof fsm1 ; fsm2 = fsm1 ;> * => fsm2
 
-run(_)on_init_state(_) : (T1)WStateMan x State => T1 x State
+result_of(_)on_init_state(_) : (T1)FStateMan x State => T1
   = (cases, is)
-    from_state_f:fsf => is -> fsf
+    from_state_f:fsf => is -> fsf -> _.1st
 
 type_proposition (@T)Has_A_Wrapper
 needed wrap(_): T1 => @T(T1)
 
-type_theorem ((_)WStateMan)Has_A_Wrapper
+type_theorem ((_)FStateMan)Has_A_Wrapper
 proof wrap(_) = x => from_state_f:(s => (x, s))
 
 dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
-  = (source_name, g) => run(get_result)on_init_state(is).1st
+  = (source_name, g) => result_of(get_result)on_init_state(is)
     where
     is : State
       = ([], [(source_name, 0)])
 
-    get_result : (ListOf(DoneNode)s)WStateMan
+    get_result : (ListOf(DoneNode)s)FStateMan
       = get_state ;> state =>
         state.rns -> cases
           [] => wrap(state.dns)
@@ -80,16 +80,15 @@ dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
             get_result
 
     get_neighbors(_) : DoneNode => ListOf(Neighbor)s
-      = get_neighbors_of(_)from_nodes(g)
+      = dn => get_neighbors_from_nodes(g)
         where
-        get_neighbors_of(_)from_nodes(_)
-          : DoneNode x ListOf(Node)s => ListOf(Neighbor)s
-          = (dn, cases)
-            [] => throw_err("Should be impossible: I'm not in the nodes")
+        get_neighbors_from_nodes(_) : ListOf(Node)s => ListOf(Neighbor)s
+          = cases
+            [] => throw_err("Should be impossible: I'm not in the nodes!")
             [n, ns = ...] =>
               (dn.name == n.n_name) -> cases
                 true => n.neighbors
-                false => get_neighbors_of(dn)from_nodes(ns)
+                false => get_neighbors_from_nodes(ns)
 
 update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
   = (ne, dn) =>
@@ -100,11 +99,11 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
           true => nothing
           false => add_ne_to_rns_from_dn
     where
-    check_if_ne_in_rns : (InRNsPossibilities)WStateMan
+    check_if_ne_in_rns : (InRNsPossibilities)FStateMan
       = get_state ;> _.rns o> check_ne_in_rns_rec([], _)
         where
         check_ne_in_rns_rec(_, _)
-          : ListOf(ReachableNode)s^2 => (InRNsPossibilities)WStateMan
+          : ListOf(ReachableNode)s^2 => (InRNsPossibilities)FStateMan
           = (checked, cases)
             [] => wrap(not_in_rns)
             [rn1, rns = ...] =>
@@ -122,11 +121,11 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
         new_d : Dist
           = dn.dist + ne.dist
 
-    check_if_ne_in_dns : (Bool)WStateMan
+    check_if_ne_in_dns : (Bool)FStateMan
       = get_state ;> _.dns o> check_ne_name_in(_)
         where
         check_ne_name_in(_)
-          : ListOf(DoneNode)s => (Bool)WStateMan
+          : ListOf(DoneNode)s => (Bool)FStateMan
           = cases
             [] => wrap(false)
             [dn, dns = ... ] =>
