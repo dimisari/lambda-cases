@@ -64,9 +64,6 @@ split_list(_)at(_) : ListOf(T1)s x Int => Possibly(ListOf(T1)s^2)
         : T1 x Possibly(ListOf(T1)s^2) => Possibly(ListOf(T1)s^2)
         = (x, pls) => apply((l, r) => (x + l, r))inside(pls)
 
-type_proposition (@T)Has_Internal_App
-needed apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)
-
 type_theorem (Possibly(_))Has_Internal_App
 proof
   apply(_)inside(_) =

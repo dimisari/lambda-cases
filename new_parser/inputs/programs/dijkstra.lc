@@ -20,49 +20,12 @@ type_nickname DoneNode = NameAndDist
 
 type_nickname ReachableNode = NameAndDist
 
-or_type (T1)FStateMan
-values from_state_f:State => T1 x State
+type_nickname (T1)FStateMan = (T1)FState(State)Man
 
-or_type OneVal
-values the_one_val
-
-type_nickname StateMan = (OneVal)FStateMan
-
-get_state : (State)FStateMan
-  = from_state_f:(s => (s, s))
-
-modify_state(_) : (State => State) => StateMan
-  = f(_) => from_state_f:(s => (the_one_val, f(s)))
-
-set_state(_) : State => StateMan
-  = new_s => modify_state(* => new_s)
+type_nickname StateMan = State(State)Man
 
 set_rns(_) : ListOf(ReachableNode)s => StateMan
-  = rns => modify_state(s => (s.dns, rns))
-
-type_theorem ((_)FStateMan)Has_Use
-proof
-  fsm ;> f(_) =
-    from_state_f:_ <- init_s =>
-    fsm -> cases
-      from_state_f:fsf1 =>
-        init_s -> fsf1 -> (a, s1) =>
-        f(a) -> cases
-          from_state_f:fsf2 =>
-            s1 -> fsf2
-
-type_theorem ((_)FStateMan)Has_Then
-proof fsm1 ; fsm2 = fsm1 ;> * => fsm2
-
-result_of(_)on_init_state(_) : (T1)FStateMan x State => T1
-  = (cases, is)
-    from_state_f:fsf => is -> fsf -> _.1st
-
-type_proposition (@T)Has_A_Wrapper
-needed wrap(_): T1 => @T(T1)
-
-type_theorem ((_)FStateMan)Has_A_Wrapper
-proof wrap(_) = x => from_state_f:(s => (x, s))
+  = rns => modify_state_with(s => (s.dns, rns))
 
 dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
   = (source_name, g) => result_of(get_result)on_init_state(is)
@@ -96,7 +59,7 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
       in_rns:stuff => add_ne_to_rns_from_dn_if_better(stuff)
       not_in_rns =>
         check_if_ne_in_dns ;> cases
-          true => nothing
+          true => do_nothing
           false => add_ne_to_rns_from_dn
     where
     check_if_ne_in_rns : (InRNsPossibilities)FStateMan
@@ -116,7 +79,7 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
       = (d, other_rns) =>
         (new_d < d) -> cases
           true => set_rns(_) <- add((ne.name, new_d))to_rns(other_rns)
-          false => nothing
+          false => do_nothing
         where
         new_d : Dist
           = dn.dist + ne.dist
@@ -139,7 +102,7 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
 
 add_new_rns(_, _) : DoneNode x ListOf(Neighbor)s => StateMan
   = (dn, cases)
-    [] => nothing
+    [] => do_nothing
     [ne1, nes = ...] => update_neighbor(ne1)of(dn) ; add_new_rns(dn, nes)
 
 add(_)to_rns(_)
@@ -150,9 +113,6 @@ add(_)to_rns(_)
       (rn.dist < rn1.dist) -> cases
         true => rn + (rn1 + rns)
         false => rn1 + add(rn)to_rns(rns)
-
-nothing : StateMan
-  = wrap(the_one_val)
 
 test_graph : Graph
   = [ ('a', [('b', 2), ('d', 6)])

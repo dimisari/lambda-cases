@@ -821,8 +821,8 @@ instance ToHaskell NamePart where
 -- TypeTheo
 instance ToHaskell TypeTheo where
   to_haskell = \(TT (pnws, maybe_pnws, proof)) ->
-    "instance " ++ to_haskell pnws ++ mpnws_to_hs maybe_pnws ++ " where\n  " ++
-    to_haskell proof
+    "instance {-# OVERLAPS #-} " ++ to_haskell pnws ++
+    mpnws_to_hs maybe_pnws ++ " where\n  " ++ to_haskell proof
     where
     mpnws_to_hs :: Maybe PropNameWithSubs -> String
     mpnws_to_hs = \case

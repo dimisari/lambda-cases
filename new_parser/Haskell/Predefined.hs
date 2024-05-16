@@ -6,10 +6,36 @@ module Haskell.Predefined where
 
 import Prelude hiding (IO)
 import qualified Prelude as P
+import Control.Monad.State
 
+-- types
 type T0'FromIO = P.IO
 type IO = T0'FromIO ()
 type ListOf's = []
+type T0'FState'Man a b = State b a
+type State'Man a = T0'FState'Man () a
+
+-- values
+print_line' = putStrLn
+get_line = getLine
+split'to_words = words
+apply'to_all_in' = uncurry map
+throw_err' = error
+
+get_state :: State a a
+get_state = get
+
+set_state' :: s -> State s ()
+set_state' = put
+
+modify_state_with' :: (s -> s) -> State s ()
+modify_state_with' = modify
+
+result_of'on_init_state' :: (State s a, s) -> a
+result_of'on_init_state' = uncurry evalState
+
+final_state_of'on_init_state' :: (State s a, s) -> s
+final_state_of'on_init_state' = uncurry execState
 
 v0'div' :: Integral a => (a, a) -> a
 v0'div' = uncurry div
@@ -19,12 +45,6 @@ v0'mod' = uncurry mod
 
 print' :: Show a => a -> IO
 print' = print
-
-print_line' = putStrLn
-get_line = getLine
-split'to_words = words
-apply'to_all_in' = uncurry map
-throw_err' = error
 
 v0'length :: [a] -> Int
 v0'length = length
@@ -38,8 +58,8 @@ ignore'from' = uncurry drop
 take'from' :: (Int, [a]) -> [a]
 take'from' = uncurry take
 
-do_nothing :: IO
-do_nothing = return ()
+do_nothing :: Applicative f => f ()
+do_nothing = pure ()
 
 from_string' :: Read a => String -> a
 from_string' = read
@@ -179,3 +199,18 @@ instance FromTuple5 a b c d e (a, b, c, d, e) where
 -- MyShow class
 instance {-# OVERLAPS #-} Show String where
   show = id
+
+--
+class P0'Has_A_Wrapper t where
+  wrap' :: a -> t a
+
+instance Applicative f => P0'Has_A_Wrapper f where
+  wrap' = pure
+
+--
+class P0'Has_Internal_App t where
+  apply'inside' :: (a -> b, t a) -> t b
+
+instance Applicative f => P0'Has_Internal_App f where
+  apply'inside' = uncurry fmap
+

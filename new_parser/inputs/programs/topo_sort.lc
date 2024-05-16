@@ -8,56 +8,14 @@ type_nickname Children = ListOf(Char)s
 tuple_type State
 value (vns, dns) : ListOf(VisitedNode)s x ListOf(DoneNode)s
 
+type_nickname StateMan = State(State)Man
+
 type_nickname VisitedNode = Char
 
 type_nickname DoneNode = Char
 
 or_type AllDoneOutcome
 values not_all_done:Char | all_done
-
-or_type (T1)FStateMan
-values from_state_f:State => T1 x State
-
-or_type OneVal
-values the_one_val
-
-type_nickname StateMan = (OneVal)FStateMan
-
-get_state : (State)FStateMan
-  = from_state_f:(s => (s, s))
-
-modify_state(_) : (State => State) => StateMan
-  = f(_) => from_state_f:(s => (the_one_val, f(s)))
-
-type_theorem ((_)FStateMan)Has_Use
-proof
-  fsm ;> f(_) =
-    from_state_f:_ <- init_s =>
-    fsm -> cases
-      from_state_f:fsf1 =>
-        init_s -> fsf1 -> (a, s1) =>
-        f(a) -> cases
-          from_state_f:fsf2 =>
-            s1 -> fsf2
-
-type_theorem ((_)FStateMan)Has_Then
-proof fsm1 ; fsm2 = fsm1 ;> * => fsm2
-
-type_proposition (@T)Has_A_Wrapper
-needed wrap(_): T1 => @T(T1)
-
-type_theorem ((_)FStateMan)Has_A_Wrapper
-proof wrap(_) = x => from_state_f:(s => (x, s))
-
-final_state_of(_)on_init_state(_) : StateMan x State => State
-  = (cases, is)
-    from_state_f:fsf => is -> fsf -> _.2nd
-
-type_proposition (@T)Has_Internal_App
-needed apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)
-
-type_theorem ((_)FStateMan)Has_Internal_App
-proof apply(_)inside(_) = (f(_), fsm) => fsm ;> a => wrap(f(a))
 
 topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
   = g => final_state_of(topo_sort_from_state)on_init_state(is).dns
@@ -67,7 +25,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
 
     topo_sort_from_state : StateMan
       = get_state ;> _.dns o> check_all_done o> cases
-        all_done => nothing
+        all_done => do_nothing
         not_all_done:node_name =>
           topo_sort_on_node(node_name) ; topo_sort_from_state
         where
@@ -105,13 +63,13 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
                     false => get_children_from_list(ns)
 
         add_to_done : StateMan
-          = modify_state(s => (s.vns, node_name + s.dns))
+          = modify_state_with(s => (s.vns, node_name + s.dns))
 
         add_to_visited : StateMan
-          = modify_state(s => (node_name + s.vns, s.dns))
+          = modify_state_with(s => (node_name + s.vns, s.dns))
 
         remove_from_visited : StateMan
-          = modify_state(s => (remove_from(s.vns), s.dns))
+          = modify_state_with(s => (remove_from(s.vns), s.dns))
             where
             remove_from(_) : ListOf(VisitedNode)s => ListOf(VisitedNode)s
               = cases
@@ -123,23 +81,20 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
 
     topo_sort_on_children(_) : Children => StateMan
       = cases
-        [] => nothing
+        [] => do_nothing
         [c, cs = ...] =>
           topo_sort_on_child ; topo_sort_on_children(cs)
           where
           topo_sort_on_child : StateMan
             = check_not_in_visited_or_done ;> cases
               true => topo_sort_on_node(c)
-              false => nothing
+              false => do_nothing
 
-          check_not_in_visited_or_done : (Bool)FStateMan
+          check_not_in_visited_or_done : (Bool)FState(State)Man
             = apply(f)inside(get_state)
               where
               f : State => Bool
                 = s => not((c)is_in(s.vns) | (c)is_in(s.dns))
-
-nothing : StateMan
-  = wrap(the_one_val)
 
 test_graph : Graph
   = [ ('4', ['6'])
