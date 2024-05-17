@@ -73,6 +73,9 @@ v0'from_io = return
 not' :: Bool -> Bool
 not' = not
 
+for_all_in'' :: Monad m => ([a], a -> m b) -> m ()
+for_all_in'' = uncurry $ flip mapM_
+
 -- IsFirst'
 class IsFirst' a b | b -> a where
   p1st :: b -> a

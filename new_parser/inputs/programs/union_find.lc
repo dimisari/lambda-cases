@@ -1,0 +1,92 @@
+
+tuple_type Graph
+value (nodes, edges) : ListOf(Node)s x ListOf(Edge)s
+
+type_nickname Node = Int
+
+tuple_type Edge
+value (u, v) : Node^2
+
+or_type IsReprOrHasPar
+values is_repr:Rank | has_parent:Node
+
+type_nickname Rank = Int
+
+tuple_type Representative
+value (name, rank) : Node x Rank
+
+type_nickname State = ListOf(Info)s x ConnComps
+
+type_nickname Info = Node x IsReprOrHasPar
+
+type_nickname ConnComps = Int
+
+type_nickname StateMan = State(State)Man
+
+connected_components_of(_) : Graph => ConnComps
+  = g =>
+    for_all_in(g.edges, edge_union(_)) -> final_state_of(_)on_init_state(is) ->
+    _.2nd
+    where
+    is : State
+      = (apply((_, is_repr:1))to_all_in(g.nodes), (g.nodes)length)
+
+    edge_union(_) : Edge => StateMan
+      = e =>
+        find(e.u) ;> u_rep =>
+        find(e.v) ;> v_rep =>
+        (u_rep.name == v_rep.name) -> cases
+          true => do_nothing
+          false =>
+            decrease_cps ;
+            (u_rep.rank < v_rep.rank) -> cases
+              true => make(v_rep.name)parent_of(u_rep.name)with(new_rank)
+              false => make(u_rep.name)parent_of(v_rep.name)with(new_rank)
+            where
+            decrease_cps : StateMan
+              = modify_state_with((l, cps) => (l, cps - 1))
+
+            new_rank : Rank
+              = u_rep.rank + v_rep.rank
+
+    make(_)parent_of(_)with(_) : Node x Node x Rank => StateMan
+      = (pn, cn, new_rank) =>
+        modify_state_with((l, cps) => (change_node_list(l), cps))
+        where
+        change_node_list(_) : ListOf(Info)s => ListOf(Info)s
+          = apply(change_node(_)if_needed)to_all_in(_)
+
+        change_node(_)if_needed : Info => Info
+          = (n, irohp) =>
+            (n == pn) -> cases
+              true => (n, is_repr:new_rank)
+              false =>
+                (n == cn) -> cases
+                  true => (n, has_parent:pn)
+                  false => (n, irohp)
+
+    find(_) : Node => (Representative)FState(State)Man
+      = n =>
+        get_from_info_list ;> cases
+          is_repr:rank => wrap(_) <- (n, rank)
+          has_parent:p => find(p)
+        where
+        get_from_info_list : (IsReprOrHasPar)FState(State)Man
+          = apply(_.1st o> get_from_list(_))inside(get_state)
+            where
+            get_from_list(_)
+              : ListOf(Info)s => IsReprOrHasPar
+              = cases
+                [] => throw_err("I'm not in the list!")
+                [(n1, irohp1), rest = ...] =>
+                  (n == n1) -> cases
+                    true => irohp1
+                    false => get_from_list(rest)
+
+test_graph : Graph
+  = ( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    , [(1, 2), (2, 3), (2, 4), (3, 4), (5, 6), (5, 7), (9, 10)]
+    )
+
+main : IO
+  = connected_components_of(test_graph) -> print
