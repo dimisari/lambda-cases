@@ -1,0 +1,199 @@
+
+or_type (T1)Heap
+values two_cn_h:(T1)TwoChildHeap | empty_h
+
+tuple_type (T1)TwoChildHeap
+value (node, children, s) : (T1)Node x (T1)Children x Size
+
+tuple_type (T1)Node
+value (p, v) : Priority x T1
+
+type_nickname Priority = Int
+
+tuple_type (T1)Children
+value (l, r) : (T1)Heap^2
+
+type_nickname Size = Int
+
+type_nickname (T1)F(T2)HeapMan = (T1)FState((T2)Heap)Man
+
+type_nickname (T1)HeapMan = State((T1)Heap)Man
+
+insert(_)to(_) : (T1)Node x (T1)Heap => (T1)Heap
+  = (n, cases)
+    empty_h => two_cn_h:(n, (empty_h, empty_h), 1)
+    two_cn_h:tch =>
+      (tch.children.l, tch.children.r) -> cases
+        (empty_h, empty_h) => both_empty_new_heap
+        (empty_h, *) => throw_err("Should be impossible: right bigger")
+        (lc, empty_h) => right_empty_new_heap_with_lc(lc)
+        (two_cn_h:ltch, two_cn_h:rtch) =>
+          (ltch.s > rtch.s) -> cases
+            true => heap_with_new_right(insert_new_node_to(tch.children.r))
+            false => heap_with_new_left(insert_new_node_to(tch.children.l))
+      where
+      both_empty_new_heap : (T1)Heap
+        = new_par_w_children((new_node_heap, empty_h))and_size(2)
+
+      right_empty_new_heap_with_lc(_) : (T1)Heap => (T1)Heap
+        = lc => new_par_w_children((lc, new_node_heap))and_size(3)
+
+      heap_with_new_right(_) : (T1)Heap => (T1)Heap
+        = nrc => new_par_w_children((tch.children.l, nrc))and_size(tch.s + 1)
+
+      heap_with_new_left(_) : (T1)Heap => (T1)Heap
+        = nlc => new_par_w_children((nlc, tch.children.r))and_size(tch.s + 1)
+
+      new_par_w_children(_)and_size(_) : (T1)Children x Size => (T1)Heap
+        = (cn, si) => two_cn_h:(new_parent, cn, si)
+
+      new_node_heap : (T1)Heap
+        = insert_new_node_to(empty_h)
+
+      insert_new_node_to(_) : (T1)Heap => (T1)Heap
+        = insert(new_node_to_insert)to(_)
+
+      new_parent : (T1)Node
+        = new_parent_and_new_node.1st
+
+      new_node_to_insert : (T1)Node
+        = new_parent_and_new_node.2nd
+
+      new_parent_and_new_node : (T1)Node^2
+        = (n.p > tch.node.p) -> cases
+          true => (n, tch.node)
+          false => (tch.node, n)
+
+extract_max_from(_) : (T1)Heap => T1 x (T1)Heap
+  = extract_bottom_node_from(_) o> swap(_)with_max_of(_) o>
+    (max, h) => (max.v, restore_heap_property_of(h))
+
+extract_bottom_node_from(_) : (T1)Heap => (T1)Node x (T1)Heap
+  = cases
+    empty_h =>
+      throw_err("Error: trying to extract from empty")
+    two_cn_h:tch =>
+      (tch.children.l, tch.children.r) -> cases
+        (empty_h, empty_h) => (tch.node, empty_h)
+        (empty_h, *) => throw_err("Should be impossible: right bigger")
+        (lc, empty_h) => extract_from_left(lc)with_right(empty_h)
+        (two_cn_h:ltch, two_cn_h:rtch) => both_children_tch(ltch, rtch)
+      where
+      extract_from_left(_)with_right(_) : (T1)Heap^2 => (T1)Node x (T1)Heap
+        = (lc, rc) =>
+          extract_bottom_node_from(lc) -> (bn, nlc) =>
+          bottom_node(bn)and_heap_with_children((nlc, rc))
+
+      both_children_tch(_, _) : (T1)TwoChildHeap^2 => (T1)Node x (T1)Heap
+        = (ltch, rtch) =>
+          (ltch.s > rtch.s) -> cases
+            true =>
+              extract_from_left(tch.children.l)with_right(tch.children.r)
+            false =>
+              extract_from_right(tch.children.r)with_left(tch.children.l)
+
+      extract_from_right(_)with_left(_) : (T1)Heap^2 => (T1)Node x (T1)Heap
+        = (rc, lc) =>
+          extract_bottom_node_from(rc) -> (bn, nrc) =>
+          bottom_node(bn)and_heap_with_children((lc, nrc))
+
+      bottom_node(_)and_heap_with_children(_)
+        : (T1)Node x (T1)Children => (T1)Node x (T1)Heap
+        = (bn, cn) => (bn, two_cn_h:(tch.node, cn, tch.s - 1))
+
+swap(_)with_max_of(_) : (T1)Node x (T1)Heap => (T1)Node x (T1)Heap
+  = (n, cases)
+    empty_h => (n, empty_h)
+    two_cn_h:tch => (tch.node, two_cn_h:(n, tch.children, tch.s))
+
+restore_heap_property_of(_) : (T1)Heap => (T1)Heap
+  = cases
+    empty_h => empty_h
+    two_cn_h:tch =>
+      (tch.children.l, tch.children.r) -> cases
+        (empty_h, empty_h) => two_cn_h:tch
+        (empty_h, *) => throw_err("Should be impossible: right bigger")
+        (two_cn_h:ltch, empty_h) => swap_if_left_bigger(ltch)
+        (two_cn_h:ltch, two_cn_h:rtch) => swap_if_child_bigger(ltch, rtch)
+      where
+      swap_if_left_bigger(_) : (T1)TwoChildHeap => (T1)Heap
+        = ltch =>
+          (ltch.node.p > tch.node.p) -> cases
+            true => swap_with_left(ltch)
+            false => two_cn_h:tch
+
+      swap_with_left(_) : (T1)TwoChildHeap => (T1)Heap
+        = ltch => two_cn_h:new_tch
+          where
+          new_tch : (T1)TwoChildHeap
+            = ( ltch.node
+              , (two_cn_h:(tch.node, ltch.children, ltch.s), tch.children.r)
+              , tch.s
+              )
+
+      swap_if_child_bigger(_, _) : (T1)TwoChildHeap^2 => (T1)Heap
+        = (ltch, rtch) =>
+          (ltch.node.p > rtch.node.p) -> cases
+            true => swap_if_left_bigger(ltch)
+            false => swap_if_right_bigger(rtch)
+
+      swap_if_right_bigger(_) : (T1)TwoChildHeap => (T1)Heap
+        = rtch =>
+          (rtch.node.p > tch.node.p) -> cases
+            true => swap_with_right(rtch)
+            false => two_cn_h:tch
+
+      swap_with_right(_) : (T1)TwoChildHeap => (T1)Heap
+        = rtch => two_cn_h:new_tch
+          where
+          new_tch : (T1)TwoChildHeap
+            = ( rtch.node
+              , (tch.children.l, two_cn_h:(tch.node, rtch.children, rtch.s))
+              , tch.s
+              )
+
+insert(_) : (T1)Node => (T1)HeapMan
+  = n => modify_state_with(insert(n)to(_))
+
+extract_max : (T1)F(T1)HeapMan
+  = apply(extract_max_from(_))inside(get_state) ;> (n, new_state) =>
+    set_state(new_state) ; wrap(n)
+
+insert_list(_) : ListOf((T1)Node)s => (T1)HeapMan
+  = cases
+    [] => do_nothing
+    [n, ns = ...] => insert(n); insert_list(ns)
+
+extract_max(_)times : Int => (ListOf(T1)s)F(T1)HeapMan
+  = i =>
+    (i < 1) -> cases
+      true => wrap([])
+      false =>
+        extract_max ;> x => extract_max(i - 1)times ;> xs => wrap(x + xs)
+
+list1 : ListOf((Char)Node)s
+  = [(1, 'a'), (9, 'i'), (2, 'b'), (8, 'h')]
+
+list2 : ListOf((Char)Node)s
+  = [(3, 'c'), (7, 'g'), (4, 'd'), (6, 'f'), (5, 'e')]
+
+heap_after_insert1 : (Char)Heap
+  = final_state_of(insert_list(list1))on_init_state(empty_h)
+
+extracted_and_heap_after_extract1 : ListOf(Char)s x (Char)Heap
+  = run(extract_max(2)times)on_init_state(heap_after_insert1)
+
+extracted_after_extract1 : ListOf(Char)s
+  = extracted_and_heap_after_extract1.1st
+
+heap_after_extract1 : (Char)Heap
+  = extracted_and_heap_after_extract1.2nd
+
+heap_after_insert2 : (Char)Heap
+  = final_state_of(insert_list(list2))on_init_state(heap_after_extract1)
+
+extracted_after_extract2 : ListOf(Char)s
+  = result_of(extract_max(7)times)on_init_state(heap_after_insert2)
+
+main : IO
+  = print(extracted_after_extract1) ; print(extracted_after_extract2)

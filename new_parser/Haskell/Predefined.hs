@@ -37,6 +37,9 @@ result_of'on_init_state' = uncurry evalState
 final_state_of'on_init_state' :: (State s a, s) -> s
 final_state_of'on_init_state' = uncurry execState
 
+run'on_init_state' :: (State s a, s) -> (a, s)
+run'on_init_state' = uncurry runState
+
 v0'div' :: Integral a => (a, a) -> a
 v0'div' = uncurry div
 
