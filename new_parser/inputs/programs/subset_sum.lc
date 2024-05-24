@@ -1,0 +1,28 @@
+
+or_type Possibly(T1)
+values the_value:T1 | no_value
+
+sub_set_sum(_, _) : ListOf(Int)s x Int => Possibly(ListOf(Int)s)
+  = (cases, cases)
+    (*, 0) => the_value:[]
+    ([], *) => no_value
+    ([x, xs = ...], i) =>
+      (x > i) -> cases
+        true => sub_set_sum(xs, i)
+        false =>
+          sub_set_sum(xs, i - x) -> cases
+            the_value:ys => the_value:(x + ys)
+            no_value => sub_set_sum(xs, i)
+
+list : ListOf(Int)s
+  = [1, 9, 4, 5, 6]
+
+res_msg : Possibly(ListOf(Int)s) => String
+  = cases
+    no_value => "Not possible"
+    the_value:l => "Here is the subset: " + l
+
+main : IO
+  = print("Trying 17"); sub_set_sum(list, 17) -> res_msg -> print ;
+    print("Trying 20"); sub_set_sum(list, 20) -> res_msg -> print
+
