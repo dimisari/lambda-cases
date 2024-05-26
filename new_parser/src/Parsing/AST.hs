@@ -578,16 +578,13 @@ instance HasParser PropName where
   parser =
     NPStart1 <$> np_start_p <|> AHVIPStart <$> ahvip_start_p
     where
-    np_start_p :: Parser (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart)
+    np_start_p :: Parser (Char, [(NamePart, TypesInParen)], Maybe NamePart)
     np_start_p =
       upper ++< many1 (try $ parser ++< parser) +++< optionMaybe parser
 
     ahvip_start_p
-      :: Parser ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
+      :: Parser ([(TypesInParen, NamePart)], Maybe TypesInParen)
     ahvip_start_p = (many1 $ try $ parser ++< parser) ++< optionMaybe parser
-
-instance HasParser AdHocVarsInParen where
-  parser = AHVIP <$> in_paren (parser ++< many (comma *> parser))
 
 instance HasParser NamePart where
   parser =

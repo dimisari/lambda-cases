@@ -266,12 +266,10 @@ newtype RenamingPropDef = RPD (PropNameLine, PropName, [PropName])
 
 newtype PropNameLine = PNL PropName
 
-type NPStart1 = (Char, [(NamePart, AdHocVarsInParen)], Maybe NamePart)
-type AHVIPStart = ([(AdHocVarsInParen, NamePart)], Maybe AdHocVarsInParen)
+type NPStart1 = (Char, [(NamePart, TypesInParen)], Maybe NamePart)
+type AHVIPStart = ([(TypesInParen, NamePart)], Maybe TypesInParen)
 data PropName =
   NPStart1 NPStart1 | AHVIPStart AHVIPStart
-
-newtype AdHocVarsInParen = AHVIP (AdHocTVar, [AdHocTVar])
 
 newtype NamePart = NP String
 

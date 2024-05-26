@@ -173,9 +173,6 @@ instance HasQuotesLength SubsOrUndersInParen where
 instance HasQuotesLength ParamVarsInParen where
   quotes_length = \(PVIP (ptv, ptvs)) -> length $ ptv : ptvs
 
-instance HasQuotesLength AdHocVarsInParen where
-  quotes_length = \(AHVIP (ahtv, ahtvs)) -> length $ ahtv : ahtvs
-
 instance HasQuotesLength SubsInParen where
   quotes_length = \(SIP (tvs, tvss)) -> length $ tvs : tvss
 

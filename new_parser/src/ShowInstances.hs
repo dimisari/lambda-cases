@@ -527,14 +527,10 @@ instance Show PropNameLine where
 
 instance Show PropName where
   show = \case
-    NPStart1 (c, np_ahvip_pairs, maybe_np) ->
-      [c] ++ show_pair_list np_ahvip_pairs ++ show_maybe maybe_np
-    AHVIPStart (ahvip_np_pairs, maybe_ahvip) ->
-      show_pair_list ahvip_np_pairs ++ show_maybe maybe_ahvip
-
-instance Show AdHocVarsInParen where
-  show =
-    \(AHVIP (ahtv, ahtvs)) -> "(" ++ show ahtv ++ show_list_comma ahtvs ++ ")"
+    NPStart1 (c, np_tip_pairs, maybe_np) ->
+      [c] ++ show_pair_list np_tip_pairs ++ show_maybe maybe_np
+    AHVIPStart (tip_np_pairs, maybe_ahvip) ->
+      show_pair_list tip_np_pairs ++ show_maybe maybe_ahvip
 
 instance Show NamePart where
   show = \(NP str) -> str

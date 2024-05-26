@@ -2444,11 +2444,8 @@ essentially mean "and").
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
 <prop-name> ::=  ""\\""
-[A-Z] ( <name-part> <ad-hoc-vars-in-paren> )+ [ <name-part> ]
-\alt " "( <ad-hoc-vars-in-paren> <name-part> )+ [ <ad-hoc-vars-in-paren> ]
-
-<ad-hoc-vars-in-paren> ::=
-`(' [ `\ ' ] <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* [ `\ ' ] `)'
+[A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
+\alt " "( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \end{grammar}
@@ -3127,11 +3124,8 @@ the condition arrow (" \verb|-->| ") arrow.
 <prop-name-line> ::= `type_proposition\ ' <prop-name>
 
 <prop-name> ::=  ""\\""
-[A-Z] ( <name-part> <ad-hoc-vars-in-paren> )+ [ <name-part> ]
-\alt " "( <ad-hoc-vars-in-paren> <name-part> )+ [ <ad-hoc-vars-in-paren> ]
-
-<ad-hoc-vars-in-paren> ::=
-`(' [ `\ ' ] <ad-hoc-t-var> ( <comma> <ad-hoc-t-var> )* [ `\ ' ] `)'
+[A-Z] ( <name-part> <types-in-paren> )+ [ <name-part> ]
+\alt " "( <types-in-paren> <name-part> )+ [ <types-in-paren> ]
 
 <name-part> ::= ( [A-Za-z] | `_'[A-Z] )+
 \\

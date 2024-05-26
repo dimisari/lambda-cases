@@ -802,18 +802,15 @@ instance ToHaskell NPStart1 where
     [c] ++ nps_quotes_hs np_ahvip_pairs ++ to_hs_maybe_np maybe_np ++
     to_haskell ahvips
     where
-    ahvips :: [AdHocVarsInParen]
+    ahvips :: [TypesInParen]
     ahvips = map snd np_ahvip_pairs
 
 instance ToHaskell AHVIPStart where
   to_haskell (ahvip_np_pairs, maybe_ahvip) =
     quotes_nps_hs ahvip_np_pairs ++ to_haskell ahvips ++ to_haskell maybe_ahvip
     where
-    ahvips :: [AdHocVarsInParen]
+    ahvips :: [TypesInParen]
     ahvips = map fst ahvip_np_pairs
-
-instance ToHaskell AdHocVarsInParen where
-  to_haskell = \(AHVIP (ahtv, ahtvs)) -> to_hs_prepend_list " " $ ahtv : ahtvs
 
 instance ToHaskell NamePart where
   to_haskell = \(NP str) -> str

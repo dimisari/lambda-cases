@@ -9,11 +9,6 @@
 
 -------------------------------------------------------------- semantics
 
-- one tuple is the parameter tuple + another tuple is the argument tuple
-  - check if the same tuple
-  - if not -> - check if either is the first field of the other tuple
-  - if not -> - start checking fields one by one
-
 -------------------------------------------------------------- github
 
 - fix md files

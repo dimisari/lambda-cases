@@ -1,19 +1,8 @@
 
-- prop names can have simple types?
-  - probably only in conditions for values that use ad hoc values
-
 - ahtv in <type-app-sub-or-id> (like in <type-app-...>)?
-
-- simplify type-app?
-
-- param num state needs to be global?
-  - probably not
 
 - define arrays with power?
   - maybe good for one dimension +
     better with square brackets and commas (or x?) for multidimensional
-
-- παραπάνω από ένα underscores στα propnames με subs στο type_theo;
-  - αν ναι θέλει state για να πάρει το καθένα το δικό του variable
 
 # current_tasks.txt
