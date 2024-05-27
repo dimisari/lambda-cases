@@ -133,12 +133,12 @@ instance CollectParamTVars TypesInParen where
 
 instance CollectParamTVars TAIOAMiddle where
   collect_ptvs = \case
-    TIdStart (_, tip_str_pairs) -> mapM_ collect_ptvs $ tip_str_pairs
+    TIdStart1 (_, tip_str_pairs) -> mapM_ collect_ptvs $ tip_str_pairs
     AHTV2 _ -> do_nothing
 
 instance CollectParamTVars PowerBaseType where
   collect_ptvs = \case
-    PTV3 ptv -> modify (insert ptv)
+    PTV2 ptv -> modify (insert ptv)
     TAIOA2 taioa -> collect_ptvs taioa
     IPT ipt -> collect_ptvs ipt
 
@@ -149,7 +149,7 @@ instance CollectParamTVars FieldType where
 
 instance CollectParamTVars InOrOutType where
   collect_ptvs = \case
-    PTV4 ptv -> modify (insert ptv)
+    PTV3 ptv -> modify (insert ptv)
     TAIOA3 taioa -> collect_ptvs taioa
     PoT2 pt -> collect_ptvs pt
     PT2 pt -> collect_ptvs pt

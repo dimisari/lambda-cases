@@ -1822,11 +1822,7 @@ expression of a \textbf{polymorphic} type. The types of polymorphism that exist
 in lcases are \textbf{parametric polymorphism} and \textbf{ad hoc
 polymorphism}. Type variables for each of the two types have different syntax
 and they are described in the following paragraphs.
-\\\\
-\textit{Grammar}
-\begin{grammar}
-<type-var> ::= <param-t-var> | <ad-hoc-t-var> \\
-\end{grammar}
+
 \subparagraph{Parametric Type Variables}
 
 \begin{itemize}
@@ -2619,14 +2615,15 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <t-var-sub> ::=
-<type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
+<param-t-var> | <type-app-id-or-ahtv-sub> | <power-type-sub> | <prod-type-sub> |
 <func-type-sub>
 \\
 
-<type-app-sub-or-id> ::= ""\\""
-[ <subs-or-unders-in-paren> ]
-<type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )*
-[ <subs-or-unders-in-paren> ]
+<type-app-id-or-ahtv-sub> ::=
+[ <subs-or-unders-in-paren> ] <taioas-middle> [ <subs-or-unders-in-paren> ]
+
+<taioas-middle> ::=
+<type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )* | <ad-hoc-t-var>
 
 <subs-or-unders-in-paren> ::=
 `(' [ `\ ' ] <sub-or-under> ( <comma> <sub-or-under> )* [ `\ ' ] `)'
@@ -2637,7 +2634,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <power-type-sub> ::= <power-base-type-sub> `^' <int-greater-than-one>
 
 <power-base-type-sub> ::= ""\\
-`_' | <type-var> | <type-app-sub-or-id> |
+`_' | <param-t-var> | <type-app-id-or-ahtv-sub> |
 `(' [ `\ ' ] ( <prod-type-sub> | <func-type-sub> ) [ `\ ' ] `)'
 \\
 
@@ -2649,8 +2646,8 @@ the condition arrow (" \verb|-->| ") arrow.
 <func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
 
 <in-or-out-type-sub> ::= ""\\
-`_' | <type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
-`(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
+`_' | <param-t-var> | <type-app-id-or-ahtv-sub> | <power-type-sub> |
+<prod-type-sub> | `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
 <proof> ::=
@@ -3041,8 +3038,6 @@ the condition arrow (" \verb|-->| ") arrow.
 <type-id> ::= [A-Z] [A-Za-z]*
 \\
 
-<type-var> ::= <param-t-var> | <ad-hoc-t-var>
-
 <param-t-var> ::= `T' [0-9]
 
 <ad-hoc-t-var> ::= `@' [A-Z]
@@ -3144,14 +3139,15 @@ the condition arrow (" \verb|-->| ") arrow.
 \\
 
 <t-var-sub> ::=
-<type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
+<param-t-var> | <type-app-id-or-ahtv-sub> | <power-type-sub> | <prod-type-sub> |
 <func-type-sub>
 \\
 
-<type-app-sub-or-id> ::= ""\\""
-[ <subs-or-unders-in-paren> ]
-<type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )*
-[ <subs-or-unders-in-paren> ]
+<type-app-id-or-ahtv-sub> ::=
+[ <subs-or-unders-in-paren> ] <taioas-middle> [ <subs-or-unders-in-paren> ]
+
+<taioas-middle> ::=
+<type-id> ( <subs-or-unders-in-paren> [A-Za-z]+ )* | <ad-hoc-t-var>
 
 <subs-or-unders-in-paren> ::=
 `(' [ `\ ' ] <sub-or-under> ( <comma> <sub-or-under> )* [ `\ ' ] `)'
@@ -3162,7 +3158,7 @@ the condition arrow (" \verb|-->| ") arrow.
 <power-type-sub> ::= <power-base-type-sub> `^' <int-greater-than-one>
 
 <power-base-type-sub> ::= ""\\
-`_' | <type-var> | <type-app-sub-or-id> |
+`_' | <param-t-var> | <type-app-id-or-ahtv-sub> |
 `(' [ `\ ' ] ( <prod-type-sub> | <func-type-sub> ) [ `\ ' ] `)'
 \\
 
@@ -3174,8 +3170,8 @@ the condition arrow (" \verb|-->| ") arrow.
 <func-type-sub> ::= <in-or-out-type-sub> `\ =>\ ' <in-or-out-type-sub>
 
 <in-or-out-type-sub> ::= ""\\
-`_' | <type-var> | <type-app-sub-or-id> | <power-type-sub> | <prod-type-sub> |
-`(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
+`_' | <param-t-var> | <type-app-id-or-ahtv-sub> | <power-type-sub> |
+<prod-type-sub> | `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
 <proof> ::=

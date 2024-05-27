@@ -122,9 +122,6 @@ example_parse_func_pairs =
   , ( "type_id.txt"
     , (parse_func :: ParseFunc TypeId) .> extract_res_str
     )
-  , ( "type_var.txt"
-    , (parse_func :: ParseFunc TypeVar) .> extract_res_str
-    )
   , ( "func_type.txt"
     , (parse_func :: ParseFunc FuncType) .> extract_res_str
     )

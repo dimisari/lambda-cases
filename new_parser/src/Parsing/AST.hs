@@ -462,9 +462,6 @@ instance HasParser SimpleType where
 instance HasParser TypeId where
   parser = TId <$> upper >:< many (upper <|> lower)
 
-instance HasParser TypeVar where
-  parser = PTV2 <$> try parser <|> AHTV1 <$> parser
-
 instance HasParser ParamTVar where
   parser = PTV <$> (char 'T' *> mapf digit (\d -> read [d]))
 
@@ -477,7 +474,7 @@ instance HasParser TypeAppIdOrAHTV where
 instance HasParser TAIOAMiddle where
   parser =
     AHTV2 <$> parser <|>
-    TIdStart <$> parser ++< many (try $ parser ++< many1 (lower <|> upper))
+    TIdStart1 <$> parser ++< many (try $ parser ++< many1 (lower <|> upper))
 
 instance HasParser TypesInParen where
   parser = TIP <$> in_paren (parser ++< many (comma *> parser))
@@ -490,7 +487,7 @@ instance HasParser FieldType where
 
 instance HasParser PowerBaseType where
   parser =
-    PTV3 <$> parser <|>
+    PTV2 <$> parser <|>
     TAIOA2 <$> try parser <|>
     IPT <$> (in_paren $ FT3 <$> try parser <|> PT3 <$> parser)
 
@@ -503,7 +500,7 @@ instance HasParser FuncType where
 instance HasParser InOrOutType where
   parser =
     PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|>
-    PoT2 <$> try parser <|> PTV4 <$> try parser <|> TAIOA3 <$> parser
+    PoT2 <$> try parser <|> PTV3 <$> try parser <|> TAIOA3 <$> parser
 
 instance HasParser Condition where
   parser = Co <$> (parser <* string " --> ")
@@ -627,15 +624,15 @@ instance HasParser SubsInParen where
 instance HasParser TVarSub where
   parser =
     FTS1 <$> try parser <|> PTS1 <$> try parser <|> PoTS1 <$> try parser <|>
-    TV1 <$> try parser <|> TASOI1 <$> parser
+    PTV4 <$> try parser <|> TAIOAS1 <$> parser
 
-instance HasParser TypeAppSubOrId where
+instance HasParser TypeAppIdOrAHTVSub where
+  parser = TAIOAS <$> optionMaybe parser ++< parser +++< optionMaybe parser
+
+instance HasParser TAIOASMiddle where
   parser =
-    TASOI <$>
-      optionMaybe parser ++<
-      parser +++<
-      many (try $ parser ++< many1 (lower <|> upper)) ++++<
-      optionMaybe parser
+    AHTV3 <$> parser <|>
+    TIdStart2 <$> parser ++< many (try $ parser ++< many1 (lower <|> upper))
 
 instance HasParser SubsOrUndersInParen where
   parser = SOUIP <$> in_paren (parser ++< many (comma *> parser))
@@ -648,8 +645,8 @@ instance HasParser PowerTypeSub where
 
 instance HasParser PowerBaseTypeSub where
   parser =
-    IPTS1 <$> try (in_paren parser) <|> TASOI2 <$> try parser <|>
-    TV2 <$> parser <|> underscore *> return Underscore5
+    IPTS1 <$> try (in_paren parser) <|> TAIOAS2 <$> try parser <|>
+    PTV5 <$> parser <|> underscore *> return Underscore5
 
 instance HasParser InParenTSub where
   parser = FTS2 <$> try parser <|> PTS2 <$> parser
@@ -666,7 +663,7 @@ instance HasParser FuncTypeSub where
 instance HasParser InOrOutTypeSub where
   parser =
     FTS3 <$> try (in_paren parser) <|> PTS3 <$> try parser <|>
-    PoTS3 <$> try parser <|> TASOI3 <$> try parser <|> TV3 <$> parser <|>
+    PoTS3 <$> try parser <|> TAIOAS3 <$> try parser <|> PTV6 <$> parser <|>
     underscore *> return Underscore6
 
 instance HasParser Proof where

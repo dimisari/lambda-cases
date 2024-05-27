@@ -392,7 +392,7 @@ instance Show Type where
 
 instance Show SimpleType where
   show = \case
-    PTV1 tv -> show tv
+    PTV1 ptv -> show ptv
     TAIOA1 ta -> show ta
     PoT1 pt -> show pt
     PT1 pt -> show pt
@@ -400,11 +400,6 @@ instance Show SimpleType where
 
 instance Show TypeId where
   show = \(TId str) -> str
-
-instance Show TypeVar where
-  show = \case
-    PTV2 ptv -> show ptv
-    AHTV1 ahtv -> show ahtv
 
 instance Show ParamTVar where
   show = \(PTV i) -> "T" ++ show i
@@ -418,7 +413,7 @@ instance Show TypeAppIdOrAHTV where
 
 instance Show TAIOAMiddle where
   show = \case
-    TIdStart (tid, tip_str_pairs) ->
+    TIdStart1 (tid, tip_str_pairs) ->
       show tid ++ concatMap (\(tip, str) -> show tip ++ str) tip_str_pairs
     AHTV2 ahtv -> show ahtv
 
@@ -435,7 +430,7 @@ instance Show FieldType where
 
 instance Show PowerBaseType where
   show = \case
-    PTV3 ptv -> show ptv
+    PTV2 ptv -> show ptv
     TAIOA2 ta -> show ta
     IPT ipt -> show ipt
 
@@ -452,7 +447,7 @@ instance Show FuncType where
 
 instance Show InOrOutType where
   show = \case
-    PTV4 ptv -> show ptv
+    PTV3 ptv -> show ptv
     TAIOA3 ta -> show ta
     PoT2 pt -> show pt
     PT2 pt -> show pt
@@ -558,17 +553,22 @@ instance Show SubsInParen where
 
 instance Show TVarSub where
   show = \case
-    TV1 tv -> show tv
-    TASOI1 tas -> show tas
+    PTV4 ptv -> show ptv
+    TAIOAS1 tas -> show tas
     PoTS1 pts -> show pts
     PTS1 pts -> show pts
     FTS1 fts -> show fts
 
-instance Show TypeAppSubOrId where
-  show = \(TASOI (msouip1, tid, souip_str_pairs, msouip2)) ->
-    show_maybe msouip1 ++ show tid ++
-    concatMap (\(souip, str) -> show souip ++ str) souip_str_pairs ++
-    show_maybe msouip2
+instance Show TypeAppIdOrAHTVSub where
+  show = \(TAIOAS (msouip1, taioasm, msouip2)) ->
+    show_maybe msouip1 ++ show taioasm ++ show_maybe msouip2
+
+instance Show TAIOASMiddle where
+  show = \case
+    TIdStart2 (tid, souip_str_pairs) ->
+      show tid ++
+      concatMap (\(souip, str) -> show souip ++ str) souip_str_pairs
+    AHTV3 ahtv -> show ahtv
 
 instance Show SubsOrUndersInParen where
   show = \(SOUIP (sou, sous)) -> "(" ++ show sou ++ show_list_comma sous ++ ")"
@@ -584,8 +584,8 @@ instance Show PowerTypeSub where
 instance Show PowerBaseTypeSub where
   show = \case
     Underscore5 -> "_"
-    TV2 tid_or_var -> show tid_or_var
-    TASOI2 tas -> show tas
+    PTV5 ptv -> show ptv
+    TAIOAS2 tas -> show tas
     IPTS1 ipts -> "(" ++ show ipts ++ ")"
 
 instance Show InParenTSub where
@@ -607,8 +607,8 @@ instance Show FuncTypeSub where
 instance Show InOrOutTypeSub where
   show = \case
     Underscore6 -> "_"
-    TV3 tv -> show tv
-    TASOI3 tas -> show tas
+    PTV6 ptv -> show ptv
+    TAIOAS3 tas -> show tas
     PoTS3 pots -> show pots
     PTS3 pts -> show pts
     FTS3 fts -> show fts

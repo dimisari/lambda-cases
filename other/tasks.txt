@@ -22,6 +22,10 @@
   - .change for changing
     - (i, j) = ...
 
+- define arrays with power?
+  - maybe good for one dimension +
+    better with square brackets and commas (or x?) for multidimensional
+
 - printing tuples (json style or similar)
 
 - group type nicknames with "all"

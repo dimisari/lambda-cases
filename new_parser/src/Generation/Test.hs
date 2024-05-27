@@ -155,9 +155,6 @@ file_name_compile_func_pairs =
   , ( "type_id.txt"
     , (compile_example_func :: Compile TypeId) .> extract_res_str
     )
-  , ( "type_var.txt"
-    , (compile_example_func :: Compile TypeVar) .> extract_res_str
-    )
   , ( "func_type.txt"
     , (compile_example_func :: Compile FuncType) .> extract_res_str
     )

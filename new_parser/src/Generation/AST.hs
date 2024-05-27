@@ -586,11 +586,6 @@ instance ToHaskell (NeedsParenBool, SimpleType) where
 instance ToHaskell TypeId where
   to_haskell = \(TId str) -> str
 
-instance ToHaskell TypeVar where
-  to_haskell = \case
-    PTV2 ptv -> to_haskell ptv
-    AHTV1 ahtv -> to_haskell ahtv
-
 instance ToHaskell ParamTVar where
   to_haskell = \(PTV i) -> param_t_var_prefix ++ show i
 
@@ -605,7 +600,7 @@ instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTV) where
       tip_hs :: Haskell
       tip_hs = to_haskell mtip1 ++ to_haskell mtip2
 
-    TIdStart (tid, tip_str_pairs) ->
+    TIdStart1 (tid, tip_str_pairs) ->
       in_paren_if_needed tid_hs tip_hs
       where
       tid_hs :: Haskell
@@ -639,7 +634,7 @@ instance ToHaskell FieldType where
 
 instance ToHaskell PowerBaseType where
   to_haskell = \case
-    PTV3 ptv -> to_haskell ptv
+    PTV2 ptv -> to_haskell ptv
     TAIOA2 taioa -> to_haskell (NoParen, taioa)
     IPT ipt -> to_haskell ipt
 
@@ -657,7 +652,7 @@ instance ToHaskell FuncType where
 
 instance ToHaskell InOrOutType where
   to_haskell = \case
-    PTV4 ptv -> to_haskell ptv
+    PTV3 ptv -> to_haskell ptv
     TAIOA3 taioa -> to_haskell (NoParen, taioa)
     PoT2 pt -> to_haskell pt
     PT2 pt -> to_haskell pt
@@ -856,27 +851,39 @@ instance ToHaskell SubsInParen where
 
 instance ToHaskell TVarSub where
   to_haskell = \case
-    TV1 tv -> to_haskell tv
-    TASOI1 tasoi -> to_haskell (Paren, tasoi)
+    PTV4 tv -> to_haskell tv
+    TAIOAS1 tasoi -> to_haskell (Paren, tasoi)
     PoTS1 pts -> to_haskell pts
     PTS1 pts -> to_haskell pts
     FTS1 fts -> "(" ++ to_haskell fts  ++ ")"
 
-instance ToHaskell (NeedsParenBool, TypeAppSubOrId) where
-  to_haskell (needs_paren, TASOI (msouip1, tid, souip_str_pairs, msouip2)) =
-    case souip_hs of
-      "" -> tid_hs
-      _ -> in_paren_if needs_paren $ tid_hs ++ souip_hs
-    where
-    tid_hs :: Haskell
-    tid_hs =
-      prefix_maybe_quotes tid_prefix msouip1 ++ to_haskell tid ++
-      quotes_strs_hs souip_str_pairs ++ maybe_quotes msouip2
+instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTVSub) where
+  to_haskell (needs_paren, TAIOAS (msouip1, taioasm, msouip2)) =
+    case taioasm of
+      AHTV3 ahtv ->
+        in_paren_if_needed (to_haskell ahtv) souip_hs
+        where
+        souip_hs :: Haskell
+        souip_hs = to_haskell msouip1 ++ to_haskell msouip2
 
-    souip_hs :: Haskell
-    souip_hs =
-      to_haskell msouip1 ++ to_haskell (map fst souip_str_pairs) ++
-      to_haskell msouip2
+      TIdStart2 (tid, souip_str_pairs) ->
+        in_paren_if_needed tid_hs souip_hs
+        where
+        tid_hs :: Haskell
+        tid_hs =
+          prefix_maybe_quotes tid_prefix msouip1 ++ to_haskell tid ++
+          quotes_strs_hs souip_str_pairs ++ maybe_quotes msouip2
+
+        souip_hs :: Haskell
+        souip_hs =
+          to_haskell msouip1 ++ to_haskell (map fst souip_str_pairs) ++
+          to_haskell msouip2
+      where
+      in_paren_if_needed :: Haskell -> Haskell -> Haskell
+      in_paren_if_needed = \hs souip_hs ->
+        case souip_hs of
+          "" -> hs
+          _ -> in_paren_if needs_paren $ hs ++ souip_hs
 
 instance ToHaskell SubsOrUndersInParen where
   to_haskell = \(SOUIP (sou, sous)) -> to_haskell $ sou : sous
@@ -892,8 +899,8 @@ instance ToHaskell PowerTypeSub where
 instance ToHaskell PowerBaseTypeSub where
   to_haskell = \case
     Underscore5 -> undefined
-    TV2 tv -> to_haskell tv
-    TASOI2 tasoi -> to_haskell (NoParen, tasoi)
+    PTV5 tv -> to_haskell tv
+    TAIOAS2 tasoi -> to_haskell (NoParen, tasoi)
     IPTS1 ipts -> to_haskell ipts
 
 instance ToHaskell InParenTSub where
@@ -917,8 +924,8 @@ instance ToHaskell FuncTypeSub where
 instance ToHaskell InOrOutTypeSub where
   to_haskell = \case
     Underscore6 -> undefined
-    TV3 tv -> to_haskell tv
-    TASOI3 tasoi -> to_haskell (NoParen, tasoi)
+    PTV6 tv -> to_haskell tv
+    TAIOAS3 tasoi -> to_haskell (NoParen, tasoi)
     PoTS3 pots -> to_haskell pots
     PTS3 pts -> to_haskell pts
     FTS3 fts -> to_haskell fts

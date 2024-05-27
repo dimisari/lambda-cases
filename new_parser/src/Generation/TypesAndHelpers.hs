@@ -270,7 +270,7 @@ ft_to_st = \case
 
 pbt_to_st :: PowerBaseType -> SimpleType
 pbt_to_st = \case
-  PTV3 ptv -> PTV1 ptv
+  PTV2 ptv -> PTV1 ptv
   TAIOA2 taioa -> TAIOA1 taioa
   IPT ipt -> ipt_to_st ipt
 
