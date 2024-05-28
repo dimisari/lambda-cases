@@ -22,6 +22,8 @@ type DotChangeArgHs = Haskell
 -- Helper types
 data NeedsParenBool = Paren | NoParen
 
+data NeedsAnnotBool = Annot | NoAnnot
+
 data PossiblyWhereExpr = HasWhereExpr WhereExpr | NoWhereExpr
 
 newtype WholeParams = Whole Parameters

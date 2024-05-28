@@ -19,9 +19,12 @@ import Generation.Collect
 instance ToHaskell Char where
   to_haskell = (:[])
 
-instance ToHaskell Literal where
-  to_haskell = \case
-    Int i -> show i
+instance ToHaskell (NeedsAnnotBool, Literal) where
+  to_haskell = \(needs_annot, lit) -> case lit of
+    Int i ->
+      case needs_annot of
+        Annot -> "(" ++ show i ++ " :: Int)"
+        NoAnnot -> show i
     R r -> show r
     Ch c -> show c
     S s -> show s
@@ -86,7 +89,7 @@ instance ToHaskell BasicOrAppExpr where
 
 instance ToHaskell BasicExpr where
   to_haskell = \case
-    Lit1 lit -> to_haskell lit
+    Lit1 lit -> to_haskell (Annot, lit)
     PFAOI1 pfaoi -> to_haskell pfaoi
     T1 tuple -> to_haskell tuple
     L1 list -> to_haskell list
@@ -438,7 +441,7 @@ instance ToHaskell EndCaseParam where
 
 instance ToHaskell (NeedsParenBool, Matching) where
   to_haskell = \(needs_paren, m) -> case m of
-    Lit2 lit -> to_haskell lit
+    Lit2 lit -> to_haskell (NoAnnot, lit)
     PFM (pf, im) ->
       in_paren_if needs_paren $ to_haskell pf ++ " " ++ to_haskell (Paren, im)
     TM1 tm -> to_haskell tm
@@ -887,7 +890,8 @@ instance ToHaskell SubOrUnder where
     Underscore4 -> ""
 
 instance ToHaskell PowerTypeSub where
-  to_haskell = \(PoTS (pbts, i)) -> to_haskell pbts ++ "^" ++ show i
+  to_haskell = \(PoTS (pbts, i)) ->
+    "(" ++ (replicate i pbts &> map to_haskell &> intercalate ", ") ++ ")"
 
 instance ToHaskell PowerBaseTypeSub where
   to_haskell = \case

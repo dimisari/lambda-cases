@@ -195,10 +195,6 @@ instance FromTuple4 a b c d (a, b, c, d) where
 instance FromTuple5 a b c d e (a, b, c, d, e) where
   ft5 = id
 
--- MyShow class
-instance {-# OVERLAPS #-} Show String where
-  show = id
-
 --
 class A1Has_A_Wrapper t where
   wrap1a :: a -> t a
@@ -213,3 +209,6 @@ class A1Has_Internal_App t where
 instance Applicative f => A1Has_Internal_App f where
   apply1inside1a = uncurry fmap
 
+-- Show for string
+instance {-# OVERLAPS #-} Show String where
+  show = id

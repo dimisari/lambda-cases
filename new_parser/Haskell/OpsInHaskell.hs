@@ -109,9 +109,6 @@ instance (a ~ b, Num a) => A1And1Add_To a b a  where
 instance (a ~ b, Num b) => A1And1Add_To a b b where
   (!+) = (+)
 
-instance (a ~ Int, b ~ Int) => A1And1Add_To a b Int where
-  (!+) = (+)
-
 -- GeneralSubtraction
 instance (a ~ b, Num a) => GeneralSubtraction a a b where
   (!-) = (-)

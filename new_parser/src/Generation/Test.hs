@@ -94,7 +94,8 @@ extract_res_str = \(RS s) -> s
 file_name_compile_func_pairs :: [(FileName, CompileExFunc)]
 file_name_compile_func_pairs =
   [ ( "literals.txt"
-    , (compile_example_func :: Compile Literal) .> extract_res_str
+    , (compile_example_func :: Compile (NeedsAnnotBool, Literal)) .>
+      extract_res_str
     )
   , ( "identifiers.txt"
     , (compile_example_func :: Compile Identifier) .> extract_res_str
@@ -203,6 +204,9 @@ instance HasParser a => HasParser (a, PossiblyWhereExpr) where
 
 instance HasParser a => HasParser (NeedsParenBool, a) where
    parser = parser >$> \a -> (NoParen, a)
+
+instance HasParser a => HasParser (NeedsAnnotBool, a) where
+   parser = parser >$> \a -> (NoAnnot, a)
 
 -- For fast vim navigation
 -- TypesAndHelpers.hs
