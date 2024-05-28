@@ -9,75 +9,75 @@ import qualified Prelude as P
 import Control.Monad.State
 
 -- types
-type T0'FromIO = P.IO
-type IO = T0'FromIO ()
-type ListOf's = []
-type T0'FState'Man a b = State b a
-type State'Man a = T0'FState'Man () a
+type A1FromIO = P.IO
+type IO = A1FromIO ()
+type ListOf1s = []
+type A1FState1Man a b = State b a
+type State1Man a = A1FState1Man () a
 
 -- values
-print_line' = putStrLn
+print_line1a = putStrLn
 get_line = getLine
-split'to_words = words
-apply'to_all_in' = uncurry map
-throw_err' = error
+split1to_words = words
+apply1to_all_in1a = uncurry map
+throw_err1a = error
 
 get_state :: State a a
 get_state = get
 
-set_state' :: s -> State s ()
-set_state' = put
+set_state1a :: s -> State s ()
+set_state1a = put
 
-modify_state_with' :: (s -> s) -> State s ()
-modify_state_with' = modify
+modify_state_with1a :: (s -> s) -> State s ()
+modify_state_with1a = modify
 
-result_of'on_init_state' :: (State s a, s) -> a
-result_of'on_init_state' = uncurry evalState
+result_of1on_init_state1a :: (State s a, s) -> a
+result_of1on_init_state1a = uncurry evalState
 
-final_state_of'on_init_state' :: (State s a, s) -> s
-final_state_of'on_init_state' = uncurry execState
+final_state_of1on_init_state1a :: (State s a, s) -> s
+final_state_of1on_init_state1a = uncurry execState
 
-run'on_init_state' :: (State s a, s) -> (a, s)
-run'on_init_state' = uncurry runState
+run1on_init_state1a :: (State s a, s) -> (a, s)
+run1on_init_state1a = uncurry runState
 
-v0'div' :: Integral a => (a, a) -> a
-v0'div' = uncurry div
+a1div1a :: Integral a => (a, a) -> a
+a1div1a = uncurry div
 
-v0'mod' :: Integral a => (a, a) -> a
-v0'mod' = uncurry mod
+a1mod1a :: Integral a => (a, a) -> a
+a1mod1a = uncurry mod
 
-print' :: Show a => a -> IO
-print' = print
+print1a :: Show a => a -> IO
+print1a = print
 
-v0'length :: [a] -> Int
-v0'length = length
+a1length :: [a] -> Int
+a1length = length
 
-v0'is_in' :: Eq a => (a, [a]) -> Bool
-v0'is_in' = uncurry elem
+a1is_in1a :: Eq a => (a, [a]) -> Bool
+a1is_in1a = uncurry elem
 
-ignore'from' :: (Int, [a]) -> [a]
-ignore'from' = uncurry drop
+ignore1from1a :: (Int, [a]) -> [a]
+ignore1from1a = uncurry drop
 
-take'from' :: (Int, [a]) -> [a]
-take'from' = uncurry take
+take1from1a :: (Int, [a]) -> [a]
+take1from1a = uncurry take
 
 do_nothing :: Applicative f => f ()
 do_nothing = pure ()
 
-from_string' :: Read a => String -> a
-from_string' = read
+from_string1a :: Read a => String -> a
+from_string1a = read
 
 wrap :: Monad m => a -> m a
 wrap = return
 
-v0'from_io :: a -> P.IO a
-v0'from_io = return
+a1from_io :: a -> P.IO a
+a1from_io = return
 
-not' :: Bool -> Bool
-not' = not
+not1a :: Bool -> Bool
+not1a = not
 
-for_all_in'' :: Monad m => ([a], a -> m b) -> m ()
-for_all_in'' = uncurry $ flip mapM_
+for_all_in2a :: Monad m => ([a], a -> m b) -> m ()
+for_all_in2a = uncurry $ flip mapM_
 
 -- IsFirst'
 class IsFirst' a b | b -> a where
@@ -169,13 +169,6 @@ instance ChangeThirdTo' c (a, b, c, d) where
 instance ChangeThirdTo' c (a, b, c, d, e) where
   c3rd = \c (a, b, _, d, e) -> (a, b, c, d, e)
 
--- P0'Has_Str_Rep
-class P0'Has_Str_Rep a where
-  v0'to_string :: a -> String
-
-instance Show a => P0'Has_Str_Rep a where
-  v0'to_string = show
-
 -- FromTuple classes
 class FromTuple2 a b c | c -> a b where
   ft2 :: (a, b) -> c
@@ -207,16 +200,16 @@ instance {-# OVERLAPS #-} Show String where
   show = id
 
 --
-class P0'Has_A_Wrapper t where
-  wrap' :: a -> t a
+class A1Has_A_Wrapper t where
+  wrap1a :: a -> t a
 
-instance Applicative f => P0'Has_A_Wrapper f where
-  wrap' = pure
+instance Applicative f => A1Has_A_Wrapper f where
+  wrap1a = pure
 
 --
-class P0'Has_Internal_App t where
-  apply'inside' :: (a -> b, t a) -> t b
+class A1Has_Internal_App t where
+  apply1inside1a :: (a -> b, t a) -> t b
 
-instance Applicative f => P0'Has_Internal_App f where
-  apply'inside' = uncurry fmap
+instance Applicative f => A1Has_Internal_App f where
+  apply1inside1a = uncurry fmap
 

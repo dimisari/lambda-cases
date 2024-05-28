@@ -41,8 +41,8 @@ class ToHsWithParamNum a where
 class ToHsWithIndentLvl a where
   to_hs_wil :: a -> WithIndentLvl Haskell
 
-class HasQuotesLength a where
-  quotes_length :: a -> Int
+class HasArgsLength a where
+  args_length :: a -> Int
 
 -- automatic instances
 instance ToHaskell a => ToHaskell [a] where
@@ -137,49 +137,49 @@ indent_all_and_concat :: [Haskell] -> WithIndentLvl Haskell
 indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
--- Single quotes
-single_quotes :: HasQuotesLength a => a -> String
-single_quotes = \a -> replicate (quotes_length a) '\''
+-- Args length hs
+args_length_hs :: HasArgsLength a => a -> String
+args_length_hs = args_length .> show
 
-quotes_strs_hs :: HasQuotesLength a => [(a, String)] -> Haskell
-quotes_strs_hs = concatMap (\(a, str) -> single_quotes a ++ str)
+args_strs_hs :: HasArgsLength a => [(a, String)] -> Haskell
+args_strs_hs = concatMap (\(a, str) -> args_length_hs a ++ str)
 
-quotes_nps_hs :: HasQuotesLength a => [(a, NamePart)] -> Haskell
-quotes_nps_hs =
-  concatMap (\(a, NP str) -> single_quotes a ++ str) .> (prop_prefix ++)
+args_nps_hs :: HasArgsLength a => [(a, NamePart)] -> Haskell
+args_nps_hs =
+  concatMap (\(a, NP str) -> args_length_hs a ++ str) .> (upper_prefix ++)
 
-nps_quotes_hs :: HasQuotesLength a => [(NamePart, a)] -> Haskell
-nps_quotes_hs = concatMap (\(NP str, a) -> str ++ single_quotes a)
+nps_args_hs :: HasArgsLength a => [(NamePart, a)] -> Haskell
+nps_args_hs = concatMap (\(NP str, a) -> str ++ args_length_hs a)
 
-maybe_quotes :: HasQuotesLength a => Maybe a -> Haskell
-maybe_quotes = \case
+maybe_args_hs :: HasArgsLength a => Maybe a -> Haskell
+maybe_args_hs = \case
   Nothing -> ""
-  Just a -> single_quotes a
+  Just a -> args_length_hs a ++ "a"
 
-prefix_maybe_quotes :: HasQuotesLength a => String -> Maybe a -> Haskell
-prefix_maybe_quotes = \prefix -> \case
+maybe_prefix_args_hs :: HasArgsLength a => String -> Maybe a -> Haskell
+maybe_prefix_args_hs = \prefix -> \case
   Nothing -> ""
-  Just a -> prefix ++ single_quotes a
+  Just a -> prefix ++ args_length_hs a
 
-instance HasQuotesLength Arguments where
-  quotes_length = \(As (LEOUs (leou, leous))) -> length $ leou : leous
+instance HasArgsLength Arguments where
+  args_length = \(As (LEOUs (leou, leous))) -> length $ leou : leous
 
-instance HasQuotesLength TypesInParen where
-  quotes_length = \(TIP (st, sts)) -> length $ st : sts
+instance HasArgsLength TypesInParen where
+  args_length = \(TIP (st, sts)) -> length $ st : sts
 
-instance HasQuotesLength SubsOrUndersInParen where
-  quotes_length = \(SOUIP (sou, sous)) -> length $ sou : sous
+instance HasArgsLength SubsOrUndersInParen where
+  args_length = \(SOUIP (sou, sous)) -> length $ sou : sous
 
-instance HasQuotesLength ParamVarsInParen where
-  quotes_length = \(PVIP (ptv, ptvs)) -> length $ ptv : ptvs
+instance HasArgsLength ParamVarsInParen where
+  args_length = \(PVIP (ptv, ptvs)) -> length $ ptv : ptvs
 
-instance HasQuotesLength SubsInParen where
-  quotes_length = \(SIP (tvs, tvss)) -> length $ tvs : tvss
+instance HasArgsLength SubsInParen where
+  args_length = \(SIP (tvs, tvss)) -> length $ tvs : tvss
+
+instance HasArgsLength UndersInParen where
+  args_length = \(UIP i) -> i
 
 -- ParenFuncAppOrId helpers
-id_prefix :: Haskell
-id_prefix = "v0"
-
 type MargsPair = (Maybe Arguments, Maybe Arguments)
 add_margs_to_args_list :: MargsPair -> [Arguments] -> [Arguments]
 add_margs_to_args_list = \case
@@ -209,20 +209,20 @@ comb_sid_def_hs = \hs1 hs2 ->
   "\n" ++ hs1 ++ " = \\new x -> x { " ++ hs2 ++ " = new }"
 
 -- prefixes
-change_prefix :: Haskell
-change_prefix = "c0"
+lower_prefix :: Haskell
+lower_prefix = "a"
+
+upper_prefix :: Haskell
+upper_prefix = "A"
 
 spid_projection_prefix :: Haskell
 spid_projection_prefix = "p"
 
+change_prefix :: Haskell
+change_prefix = "c0"
+
 spid_change_prefix :: Haskell
 spid_change_prefix = "c"
-
-tid_prefix :: Haskell
-tid_prefix = "T0"
-
-prop_prefix :: Haskell
-prop_prefix = "P0"
 
 constructor_prefix :: Haskell
 constructor_prefix = "C"
@@ -257,8 +257,8 @@ under_pfarg_param = "x'"
 
 tn_to_tid_hs :: TypeName -> Haskell
 tn_to_tid_hs = \(TN (mpvip1, TId str, pvip_str_pairs, mpvip2)) ->
-  prefix_maybe_quotes tid_prefix mpvip1 ++ str ++
-  quotes_strs_hs pvip_str_pairs ++ maybe_quotes mpvip2
+  maybe_prefix_args_hs upper_prefix mpvip1 ++ str ++
+  args_strs_hs pvip_str_pairs ++ maybe_args_hs mpvip2
 
 tn_to_cons_hs :: TypeName -> Haskell
 tn_to_cons_hs = tn_to_tid_hs .> (++ "'")
@@ -281,12 +281,12 @@ ipt_to_st = \case
 
 change_prop_hs_if_needed :: Haskell -> Haskell
 change_prop_hs_if_needed = \case
-  "P0'Has_Str_Rep" -> "Show"
+  "A1Has_Str_Rep" -> "Show"
   hs -> hs
 
 change_id_hs_if_needed :: Haskell -> Haskell
 change_id_hs_if_needed = \case
-  "v0'to_string" -> "show"
+  "a1to_string" -> "show"
   hs -> hs
 
 -- GroupedValueDefs helpers

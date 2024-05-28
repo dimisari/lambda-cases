@@ -28,12 +28,8 @@ instance ToHaskell Literal where
 
 instance ToHaskell Identifier where
   to_haskell (Id (muip1, id_start, id_conts, mdigit, muip2)) =
-    muip1_hs ++ to_haskell id_start ++ to_haskell id_conts ++
-    to_haskell mdigit ++ to_haskell muip2
-    where
-    muip1_hs = case muip1 of
-      Nothing -> ""
-      Just uip -> id_prefix ++ to_haskell uip
+    maybe_prefix_args_hs lower_prefix muip1 ++ to_haskell id_start ++
+    to_haskell id_conts ++ to_haskell mdigit ++ maybe_args_hs muip2
 
 instance ToHaskell SimpleId where
   to_haskell = \(SId (id_start, mdigit)) ->
@@ -43,10 +39,7 @@ instance ToHaskell IdStart where
   to_haskell = \(IS str) -> str
 
 instance ToHaskell IdCont where
-  to_haskell = \(IC (uip, str)) -> to_haskell uip ++ str
-
-instance ToHaskell UndersInParen where
-  to_haskell = \(UIP i) -> replicate i '\''
+  to_haskell = \(IC (uip, str)) -> args_length_hs uip ++ str
 
 instance ToHaskell ParenExpr where
   to_haskell = \(PE ipe) -> "(" ++ to_haskell ipe ++ ")"
@@ -156,9 +149,9 @@ instance ToHaskell ParenFuncAppOrId where
 
       total_id_hs :: Haskell
       total_id_hs =
-        prefix_maybe_quotes id_prefix margs1 ++ to_haskell id_start ++
-        quotes_strs_hs args_str_pairs ++ to_haskell mdigit ++
-        maybe_quotes margs2
+        maybe_prefix_args_hs lower_prefix margs1 ++ to_haskell id_start ++
+        args_strs_hs args_str_pairs ++ to_haskell mdigit ++
+        maybe_args_hs margs2
 
 instance ToHsWithParamNum [Arguments] where
   to_hs_wpn = \args_l ->
@@ -605,8 +598,8 @@ instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTV) where
       where
       tid_hs :: Haskell
       tid_hs =
-        prefix_maybe_quotes tid_prefix mtip1 ++ to_haskell tid ++
-        quotes_strs_hs tip_str_pairs ++ maybe_quotes mtip2
+        maybe_prefix_args_hs upper_prefix mtip1 ++ to_haskell tid ++
+        args_strs_hs tip_str_pairs ++ maybe_args_hs mtip2
 
       tip_hs :: Haskell
       tip_hs =
@@ -794,7 +787,7 @@ instance ToHaskell PropName where
 
 instance ToHaskell NPStart1 where
   to_haskell (c, np_ahvip_pairs, maybe_np) =
-    [c] ++ nps_quotes_hs np_ahvip_pairs ++ to_hs_maybe_np maybe_np ++
+    [c] ++ nps_args_hs np_ahvip_pairs ++ to_hs_maybe_np maybe_np ++
     to_haskell ahvips
     where
     ahvips :: [TypesInParen]
@@ -802,7 +795,7 @@ instance ToHaskell NPStart1 where
 
 instance ToHaskell AHVIPStart where
   to_haskell (ahvip_np_pairs, maybe_ahvip) =
-    quotes_nps_hs ahvip_np_pairs ++ to_haskell ahvips ++ to_haskell maybe_ahvip
+    args_nps_hs ahvip_np_pairs ++ to_haskell ahvips ++ to_haskell maybe_ahvip
     where
     ahvips :: [TypesInParen]
     ahvips = map fst ahvip_np_pairs
@@ -831,7 +824,7 @@ instance ToHaskell NPStart2 where
     change_prop_hs_if_needed prop_hs ++ to_haskell sips
     where
     prop_hs :: Haskell
-    prop_hs = [c] ++ nps_quotes_hs np_sip_pairs ++ to_hs_maybe_np maybe_np
+    prop_hs = [c] ++ nps_args_hs np_sip_pairs ++ to_hs_maybe_np maybe_np
 
     sips :: [SubsInParen]
     sips = map snd np_sip_pairs
@@ -841,7 +834,7 @@ instance ToHaskell SIPStart where
     change_prop_hs_if_needed prop_hs ++ to_haskell sips ++ to_haskell maybe_sip
     where
     prop_hs :: Haskell
-    prop_hs = quotes_nps_hs sip_np_pairs
+    prop_hs = args_nps_hs sip_np_pairs
 
     sips :: [SubsInParen]
     sips = map fst sip_np_pairs
@@ -871,8 +864,8 @@ instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTVSub) where
         where
         tid_hs :: Haskell
         tid_hs =
-          prefix_maybe_quotes tid_prefix msouip1 ++ to_haskell tid ++
-          quotes_strs_hs souip_str_pairs ++ maybe_quotes msouip2
+          maybe_prefix_args_hs upper_prefix msouip1 ++ to_haskell tid ++
+          args_strs_hs souip_str_pairs ++ maybe_args_hs msouip2
 
         souip_hs :: Haskell
         souip_hs =

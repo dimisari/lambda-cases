@@ -38,7 +38,7 @@ class GeneralMultiplication a b c where
 class GeneralDivision a b c where
   (!/) :: a -> b -> c
 
-class P0'And'Add_To a b c where
+class A1And1Add_To a b c where
   (!+) :: a -> b -> c
 class GeneralSubtraction a b c where
   (!-) :: a -> b -> c
@@ -62,10 +62,10 @@ class HasAnd a where
 class HasOr a where
   (!|) :: a -> a -> a
 
-class P0'Has_Use u where
+class A1Has_Use u where
   (!>>=) :: u a -> (a -> u b) -> u b
 
-class P0'Has_Then t where
+class A1Has_Then t where
   (!>>) :: t a -> t b -> t b
 
 -- GeneralMultiplication
@@ -78,38 +78,38 @@ instance (a ~ b, Num a) => GeneralMultiplication a b a  where
 instance (a ~ b, Num b) => GeneralMultiplication a b b where
   (!*) = (*)
 
--- P0'And'Add_To
-instance Show a => P0'And'Add_To a String String where
+-- A1And1Add_To
+instance Show a => A1And1Add_To a String String where
   x !+ str = show x ++ str
 
-instance (Show a, b ~ String) => P0'And'Add_To String a b where
+instance (Show a, b ~ String) => A1And1Add_To String a b where
   str !+ x = str ++ show x
 
-instance (Show a, b ~ String) => P0'And'Add_To a String b where
+instance (Show a, b ~ String) => A1And1Add_To a String b where
   x !+ str = show x ++ str
 
-instance b ~ [a] => P0'And'Add_To [a] [a] b where
+instance b ~ [a] => A1And1Add_To [a] [a] b where
   (!+) = (++)
 
-instance b ~ [a] => P0'And'Add_To a [a] b where
+instance b ~ [a] => A1And1Add_To a [a] b where
   (!+) = (:)
 
-instance b ~ [a] => P0'And'Add_To [a] a b where
+instance b ~ [a] => A1And1Add_To [a] a b where
   l !+ a = l ++ [a]
 
-instance a ~ b => P0'And'Add_To a [b] [b] where
+instance a ~ b => A1And1Add_To a [b] [b] where
   (!+) = (:)
 
-instance (a ~ b, Num a) => P0'And'Add_To a a b where
+instance (a ~ b, Num a) => A1And1Add_To a a b where
   (!+) = (+)
 
-instance (a ~ b, Num a) => P0'And'Add_To a b a  where
+instance (a ~ b, Num a) => A1And1Add_To a b a  where
   (!+) = (+)
 
-instance (a ~ b, Num b) => P0'And'Add_To a b b where
+instance (a ~ b, Num b) => A1And1Add_To a b b where
   (!+) = (+)
 
-instance (a ~ Int, b ~ Int) => P0'And'Add_To a b Int where
+instance (a ~ Int, b ~ Int) => A1And1Add_To a b Int where
   (!+) = (+)
 
 -- GeneralSubtraction
@@ -137,12 +137,12 @@ instance Ord a => GeneralLessThan a a where
 instance (Int ~ a) => GeneralLessThan Int a where
   (!<) = (<)
 
--- P0'Has_Then
-instance Applicative f => P0'Has_Then f where
+-- A1Has_Then
+instance Applicative f => A1Has_Then f where
   (!>>) = (*>)
 
--- P0'Has_Use
-instance Monad m => P0'Has_Use m where
+-- A1Has_Use
+instance Monad m => A1Has_Use m where
   (!>>=) = (>>=)
 
 -- HasOr

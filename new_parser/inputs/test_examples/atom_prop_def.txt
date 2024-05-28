@@ -19,3 +19,6 @@ needed (_)first2: @B => @A#
 type_proposition (@T)Has_String_Repr_One
 needed (_)to_string1: @T => String#
 
+type_proposition Show(@T)
+needed show: @T => String#
+
