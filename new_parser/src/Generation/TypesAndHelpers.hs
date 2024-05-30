@@ -43,7 +43,7 @@ class ToHsWithParamNum a where
 class ToHsWithIndentLvl a where
   to_hs_wil :: a -> WithIndentLvl Haskell
 
-class HasArgsLength a where
+class HasArgs a where
   args_length :: a -> Int
 
 -- automatic instances
@@ -85,7 +85,7 @@ params_hs_gen = get >$> to_params_hs
 to_params_hs :: Int -> Haskell
 to_params_hs = \case
   0 -> ""
-  1 -> "\\x0' -> "
+  1 -> "\\" ++ to_param 0 ++ " -> "
   i -> case i > 1 of
     True -> "\\" ++ to_params_in_paren_hs i ++ " -> "
     False -> error "should be impossible: negative num of params"
@@ -95,7 +95,7 @@ to_params_in_paren_hs = \i ->
   "(" ++ ([0..i-1] &> map to_param &> intercalate ", ") ++ ")"
 
 to_param :: Int -> Haskell
-to_param = \j -> "x" ++ show j ++ "'"
+to_param = \j -> param_prefix ++ show j
 
 add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
@@ -114,7 +114,7 @@ add_params_to_list = \hs_list_gen ->
 case_of_inner_hs_gen :: WithParamNum Haskell
 case_of_inner_hs_gen =
   get >$> \case
-    1 -> "x0'"
+    1 -> to_param 0
     i -> case i > 1 of
       True -> to_params_in_paren_hs i
       False -> error "should be impossible: zero or negative cases params"
@@ -140,45 +140,45 @@ indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
 -- Args length hs
-args_length_hs :: HasArgsLength a => a -> String
-args_length_hs = args_length .> show
+singe_quotes_hs :: HasArgs a => a -> String
+singe_quotes_hs = args_length .> \i -> replicate i '\''
 
-args_strs_hs :: HasArgsLength a => [(a, String)] -> Haskell
-args_strs_hs = concatMap (\(a, str) -> args_length_hs a ++ str)
+args_strs_hs :: HasArgs a => [(a, String)] -> Haskell
+args_strs_hs = concatMap (\(a, str) -> singe_quotes_hs a ++ str)
 
-args_nps_hs :: HasArgsLength a => [(a, NamePart)] -> Haskell
+args_nps_hs :: HasArgs a => [(a, NamePart)] -> Haskell
 args_nps_hs =
-  concatMap (\(a, NP str) -> args_length_hs a ++ str) .> (upper_prefix ++)
+  concatMap (\(a, NP str) -> singe_quotes_hs a ++ str) .> (upper_prefix ++)
 
-nps_args_hs :: HasArgsLength a => [(NamePart, a)] -> Haskell
-nps_args_hs = concatMap (\(NP str, a) -> str ++ args_length_hs a)
+nps_args_hs :: HasArgs a => [(NamePart, a)] -> Haskell
+nps_args_hs = concatMap (\(NP str, a) -> str ++ singe_quotes_hs a)
 
-maybe_args_hs :: HasArgsLength a => Maybe a -> Haskell
+maybe_args_hs :: HasArgs a => Maybe a -> Haskell
 maybe_args_hs = \case
   Nothing -> ""
-  Just a -> args_length_hs a ++ "a"
+  Just a -> singe_quotes_hs a
 
-maybe_prefix_args_hs :: HasArgsLength a => String -> Maybe a -> Haskell
+maybe_prefix_args_hs :: HasArgs a => String -> Maybe a -> Haskell
 maybe_prefix_args_hs = \prefix -> \case
   Nothing -> ""
-  Just a -> prefix ++ args_length_hs a
+  Just a -> prefix ++ singe_quotes_hs a
 
-instance HasArgsLength Arguments where
+instance HasArgs Arguments where
   args_length = \(As (LEOUs (leou, leous))) -> length $ leou : leous
 
-instance HasArgsLength TypesInParen where
+instance HasArgs TypesInParen where
   args_length = \(TIP (st, sts)) -> length $ st : sts
 
-instance HasArgsLength SubsOrUndersInParen where
+instance HasArgs SubsOrUndersInParen where
   args_length = \(SOUIP (sou, sous)) -> length $ sou : sous
 
-instance HasArgsLength ParamVarsInParen where
+instance HasArgs ParamVarsInParen where
   args_length = \(PVIP (ptv, ptvs)) -> length $ ptv : ptvs
 
-instance HasArgsLength SubsInParen where
+instance HasArgs SubsInParen where
   args_length = \(SIP (tvs, tvss)) -> length $ tvs : tvss
 
-instance HasArgsLength UndersInParen where
+instance HasArgs UndersInParen where
   args_length = \(UIP i) -> i
 
 -- ParenFuncAppOrId helpers
@@ -235,6 +235,9 @@ param_t_var_prefix = "a"
 ad_hoc_t_var_prefix :: Haskell
 ad_hoc_t_var_prefix = "b"
 
+param_prefix :: Haskell
+param_prefix = "pA"
+
 -- other
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
@@ -283,12 +286,12 @@ ipt_to_st = \case
 
 change_prop_hs_if_needed :: Haskell -> Haskell
 change_prop_hs_if_needed = \case
-  "A1Has_Str_Rep" -> "Show"
+  "A'Has_Str_Rep" -> "Show"
   hs -> hs
 
 change_id_hs_if_needed :: Haskell -> Haskell
 change_id_hs_if_needed = \case
-  "a1to_string" -> "show"
+  "a'to_string" -> "show"
   hs -> hs
 
 -- GroupedValueDefs helpers

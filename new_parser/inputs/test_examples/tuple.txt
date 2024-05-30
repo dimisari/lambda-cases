@@ -1,3 +1,5 @@
+(x, y)#
+
 (1, "What's up, doc?")#
 
 (2, "Alrighty then!", 3.14)#

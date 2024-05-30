@@ -131,9 +131,6 @@ instance Ord a => GeneralGreaterThan a a where
 instance Ord a => GeneralLessThan a a where
   (!<) = (<)
 
-instance (Int ~ a) => GeneralLessThan Int a where
-  (!<) = (<)
-
 -- A1Has_Then
 instance Applicative f => A1Has_Then f where
   (!>>) = (*>)

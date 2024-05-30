@@ -42,7 +42,7 @@ instance ToHaskell IdStart where
   to_haskell = \(IS str) -> str
 
 instance ToHaskell IdCont where
-  to_haskell = \(IC (uip, str)) -> args_length_hs uip ++ str
+  to_haskell = \(IC (uip, str)) -> singe_quotes_hs uip ++ str
 
 instance ToHaskell ParenExpr where
   to_haskell = \(PE ipe) -> "(" ++ to_haskell ipe ++ ")"
