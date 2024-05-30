@@ -22,7 +22,9 @@
 
 \def\imgs{../Images}
 \def\H{Haskell}
-\def\r{$\Longleftrightarrow$}
+\def\r{$\Longleftrightarrow$\ }
+\def\lra{$\Longrightarrow$\ }
+\def\pend{\mbox{}\\\\}
 %\newcommand\_[_]{_}
 
 \renewcommand{\arraystretch}{1.5}
@@ -186,15 +188,15 @@ An identifier is the name of a value or a parameter. It is used in the
 definition of a value and in expressions that use that value, or in the
 parameters of a function and in the body of that function.
 \\\\
-An identifier starts with a lower case letter and is followed by lower case
-letters or underscores. It is also possible to have pairs of parentheses in the
-middle of an identifier (see "Parenthesis Function Application" section
-\ref{subsec:parenfuncapp} for why this can be useful).  Finally, an identifier
-can be ended with a digit.
+An identifier starts with a lower case letter, which can followed by lower case
+letters or underscores and/or ended with a digit. It is also possible to have
+underscores in parenthesis before, after or in the middle of an identifier (see
+"Parenthesis Function Application" section \ref{subsubsec:parenfuncapp} for why
+this can be useful).
 \\\\
-A simple identifier is an identifier without any parentheses in the middle.
-It used in expressions where parentheses in the middle don't make sense
-(e.g. "Prefix and Postfix Functions" \ref{subsubsec:prefixpostfix}).
+A simple identifier is an identifier without any underscores in parenthesis.
+It used in expressions where underscores in parenthesis don't make sense (e.g.
+"Prefix and Postfix Functions" \ref{subsubsec:prefixpostfix}).
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -343,9 +345,9 @@ questions : ListOf(String)s
   = ["the Ultimate Question of Life", "the Universe", "Everything"]
 
 answers_to : ListOf(String)s
-  = apply("The answer to " + _)to_all(questions)
+  = apply("The answer to " + _)to_all_in(questions)
 
->> apply((42, _))to_all(answers_to)
+>> apply((42, _))to_all_in(answers_to)
   : ListOf(Int x String)s
   ==> [ (42, "The answer to the Ultimate Question of Life")
       , (42, "The answer to the Universe")
@@ -461,7 +463,7 @@ my_big_list: ListOf(Int => IO)s
 
 \newpage
 \subsubsection{Parenthesis Function Application}
-\label{subsec:parenfuncapp}
+\label{subsubsec:parenfuncapp}
 
 \begin{itemize}
 \item \textit{Examples}
@@ -606,7 +608,7 @@ name.first_name
 list.head
 date.year
 tuple.1st
-apply(_.1st)to_all
+apply(_.1st)to_all_in(_)
 \end{verbatim}
 
 \item \textit{Description}
@@ -677,7 +679,7 @@ in the following paragraph.
 state.change{counter = counter + 1}
 tuple.change{1st = 42, 3rd = 17}
 point.change{x = 1.62, y = 2.72, z = 3.14}
-apply(_.change{1st = 1st + 1})to_all
+apply(_.change{1st = 1st + 1})to_all_in(_)
 x.change{1st = _, 3rd = _}
 \end{verbatim}
 
@@ -710,7 +712,7 @@ value (x, y, z) : Real^3
 point : Point
 
 
-apply(_.change{1st = 1st + 1})to_all
+apply(_.change{1st = 1st + 1})to_all_in(_)
   : (@A)And(Int)AddTo(@A), (@A)Is(@B)s_1st --> ListOf(@B)s => ListOf(@B)s
 
 
@@ -1080,8 +1082,7 @@ print_string("Nice to meet you " + name + "!")
   : (EmptyVal)WithIO
 \end{verbatim}
 
-\paragraph{Description}
-\mbox{} \\\\
+\paragraph{Description}\pend
 The environment action operators are used to combine values that do environment
 actions into values that do more complicated environment actions. Environment
 actions are type functions that take a type argument and produce a type (just
@@ -1814,8 +1815,7 @@ capital letter and is followed by capital or lowercase letters.
 \end{grammar}
 \end{itemize}
 
-\paragraph{Type Variables}
-\mbox{}\\\\
+\paragraph{Type Variables}\pend
 Type Variables are placeholders inside bigger type expressions that can be
 substituted with various types. This makes the bigger type expression an
 expression of a \textbf{polymorphic} type. The types of polymorphism that exist
@@ -2647,7 +2647,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <in-or-out-type-sub> ::= ""\\
 `_' | <param-t-var> | <type-app-id-or-ahtv-sub> | <power-type-sub> |
-<prod-type-sub> | `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
+<prod-type-sub> | \\`(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
 <proof> ::=
@@ -3171,7 +3171,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 <in-or-out-type-sub> ::= ""\\
 `_' | <param-t-var> | <type-app-id-or-ahtv-sub> | <power-type-sub> |
-<prod-type-sub> | `(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
+<prod-type-sub> | \\`(' [ `\ ' ] <func-type-sub> [ `\ ' ] `)'
 \\
 
 <proof> ::=
@@ -3323,8 +3323,7 @@ The package description in hackage is in the following url:
   Every AST type is the return type of the correspoding (sub)parser.
 \end{itemize}
 
-\paragraph{State type of the parser: ParserState}
-\mbox{} \\\\
+\paragraph{State type of the parser: ParserState}\pend
 Here's the actual code for it:
 \begin{verbatim}
 type IndentationLevel = Int
@@ -3526,23 +3525,333 @@ the grammar rule:
 "we_are_in_equal_line" and "we_are_not_in_equal_line" change the state
 to enforce rule 6 of the Indentation System.
 
-\section{Semantic Analysis}
-
-\subsection{Name resolution}
-
-\subsection{Type checking}
-
-\subsection{Error messages}
-
-\section{\H\ \ Generation}
+\newpage
+\section{Translation to \H}
 
 \subsection{High Level Overview}
 
-Lcases is essentially a subset of \H\ with different syntax and naming,
-sprinkled with few new constructs. Anything that is not mentioned in the
-following sections is more or less the same in \H\ and lcases.
+To avoid rewriting the whole \H\ type system, lcases is translated directly
+to \H\ without any semantic analysis, except for the bare minimum that is
+required for the translation. The high level phases for the translation are
+the following:
 
-\subsubsection{Correspondaces with \H}
+\begin{itemize}
+\item
+\textbf{Collect}\\\\
+In this phase we traverse the AST and following are collected:
+
+\begin{itemize}
+\item
+All the "\texttt{naked case}" identifiers of all the \texttt{or_types} in the
+program, where a naked case is a case which does not contain other values
+(e.g. \texttt{no_value} as opposed to \texttt{the_value:_}).
+\item
+All the field identifiers of the all the \texttt{tuple_types} in the program.
+\end{itemize}
+
+The above are used in the preprocess phase.
+
+\item
+\textbf{Preprocess}\\\\
+In this phase the AST generated by the parser is traversed and tweaked
+according to the following rules:
+
+\begin{itemize}
+\item
+If an identifier of a naked case is found in a value expression, add a 'C' (for
+constructor) in the front. This is going to be needed because \texttt{or_type}
+cases are translated to data constructors in \H. Data constructors need to
+start with an upper case letter whereas \texttt{or_type} cases don't
+(this is not needed for the \texttt{or_type} cases with internal values
+because we can identify them on the spot from the colon and handle them
+appropriately in the translate phase).
+\item
+If a field identifier is found in a value expression which is a subexpression
+of a "\verb|.change|" expression than the identifier is converted to a postfix
+function with the same argument as the "\verb|.change|". For example, if the
+AST has a part representing the former expression below, it is going be
+converted to represent the latter:\\
+\texttt{x.change\{f1 = f1 + 1\}} $\Longrightarrow$
+\texttt{x.change\{f1 = x.f1 + 1\}}\\
+The same applies to special identifiers:\\
+\texttt{x.change\{1st = 1st + 1\}} $\Longrightarrow$
+\texttt{x.change\{1st = x.1st + 1\}}
+\end{itemize}
+
+\item
+\textbf{Translate}\\\\
+In this phase the preprocessed AST is directly translated to \H. The details
+of how this is done are described in the following section.
+\end{itemize}
+
+\newpage
+\subsection{Translation Phase}
+
+For the translation phase every type of the AST has its implementation of
+one of the following 3 polymorphic functions:
+
+\begin{itemize}
+\item
+\texttt{to_haskell}:\\\\
+This function is for the AST types that need no state and can be directly
+translated to \H.
+\item
+\texttt{to_hs_wpn}: (to haskell with parameter number) \\\\
+This function is for the AST types that implicitly introduce extra
+parameters when translated to \H\ and therefore needs a state to keep track
+of how many parameters have been introduced.
+\item
+\texttt{to_hs_wil}: (to haskell with indentation level)\\\\
+This function is for the AST types that need indentation level information to
+be correctly indented when translated to \H. Therefore, a state to keep track
+of the indetation level is needed.\\
+\end{itemize}
+Here are the corresponding classes that define the above functions:
+
+\begin{itemize}
+\item
+\begin{verbatim}
+type Haskell = String
+
+class ToHaskell a where
+  to_haskell :: a -> Haskell
+\end{verbatim}
+
+\item
+\begin{verbatim}
+type WithParamNum = State Int
+
+class ToHsWithParamNum a where
+  to_hs_wpn :: a -> WithParamNum Haskell
+\end{verbatim}
+
+\item
+\begin{verbatim}
+type WithIndentLvl = State Int
+
+class ToHsWithIndentLvl a where
+  to_hs_wil :: a -> WithIndentLvl Haskell
+\end{verbatim}
+\end{itemize}
+In the following sections we dive into more detail for particular types.
+
+\newpage
+\subsection{Translation Phase: Basic Expressions}
+
+\subsubsection{Literals and Identifiers}
+\begin{itemize}
+\item
+\textbf{Literals}\\\\
+Literals are kept the same as they were parsed except for integer
+literals. Integer literals have explicit type annotations (when they are not a
+case of a "cases" function expression), so that they have type \texttt{Int}
+and not \texttt{Num a => a} for the \H\ compiler.
+
+\item
+\textbf{Identifiers}
+
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\texttt{x1} \lra \texttt{x1} \\
+\texttt{apply(_)to_all_in(_)} \lra \texttt{apply'to_all_in'} \\
+\texttt{(_)to_string} \lra \texttt{a'to_string} \\
+\texttt{f(_, _, _)} \lra \texttt{f'''}\\
+
+\item
+\textit{Description}\\\\
+For identifiers all underscores in parenthesis are replaced by an equal amount
+of single quotes. If there is a parenthesis in the beginning of the identifier,
+the letter 'a' is prepended to make it a valid \H\ identifier.
+
+\end{itemize}
+
+\end{itemize}
+
+\subsubsection{Parenthesis, Tuples and Lists}
+\label{subsubsec:parentuplist}
+
+\begin{itemize}
+\item
+\textbf{Parenthesis}\\\\
+The internal expression is put in parenthesis.\\
+
+\item
+\textbf{Tuples}
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\texttt{(x, y)} \lra \texttt{ft2(x, y)} \\
+\texttt{(_, 3.14, _)} \lra \verb|(\(pA0, pA1) -> ft3(pA0, 3.14, pA1))|\\
+\texttt{(_, _, "Hello from 3rd field")} \lra
+\verb|(\(pA0, pA1) -> ft3(pA0, pA1, "Hello from 3rd field"))|\\
+
+\item
+\textit{Description}
+\paragraph{ft\textit{n} function}\pend
+Every tuple is passed through the \textbf{ft\textit{n}} function where
+\textbf{\textit{n}} is the size of the tuple. This is a polymorphic function
+defined by the following class (for \textbf{\textit{n}} = 2 and with similar
+classes for 3, 4 and 5):
+\begin{verbatim}
+class FromTuple2 a b c | c -> a b where
+  ft2 :: (a, b) -> c
+\end{verbatim}
+This is because the same tuple may be of a \texttt{product type} or of a
+\texttt{tuple_type} depending on where it appears on the program.
+For product types we have the following instance:
+\begin{verbatim}
+instance FromTuple2 a b (a, b) where
+  ft2 = id
+\end{verbatim}
+And there is also a new instance automatically generated for every
+\texttt{tuple_type} definition.\\
+For example, for the following definition:
+\begin{verbatim}
+tuple_type Name
+value (first_name, last_name) : String^2
+\end{verbatim}
+Along with the definition itself which is described in section
+\ref{subsubsec:trantypedef} there will be the following instance:
+\begin{verbatim}
+instance FromTuple2 String String Name where
+  ft2 = \(x1, x2) -> Name' x1 x2
+\end{verbatim}
+With this mechanism the program will type check correctly on both cases.
+
+\paragraph{Parameters for the underscores}\pend
+If any of the fields of the tuples contain underscores, we generate a new
+parameter name  in place every underscore ("\texttt{pA\textit{<n - 1>}}" for
+the n-th underscore) and at the end we prepend the parameters to make it a
+function expression. "pA" stands for parameter and the A is uppercase to avoid
+collisions with regular identifiers.
+
+\paragraph{Big Tuples}\pend
+For big tuples, the original lines are kept and split in the same way.
+The \texttt{ft\textit{n}} function and the implicitly introduced parameters
+have their own seperate lines at the top as shown in the following example:
+\begin{verbatim}
+( "Hey, I'm the first field and I'm also a pretty big string."
+, "Hey, I'm the second field and I'm a smaller string."
+, _
+)
+\end{verbatim}
+Becomes:
+\begin{verbatim}
+\pA0 ->
+ft3
+( "Hey, I'm the first field and I'm also a pretty big string."
+, "Hey, I'm the second field and I'm a smaller string"
+, pA0
+)
+\end{verbatim}
+All of these lines are also indented to the same column according to the
+indentation level.
+
+\end{itemize}
+
+\item
+\textbf{Lists}
+
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\texttt{[1.61, 2.71, 3.14]} \lra \texttt{[1.61, 2.71, 3.14]} \\
+\texttt{[_, x, _]} \lra \verb|(\(pA0, pA1) -> [pA0, x, pA1])| \\
+
+\item
+\textit{Description}\\\\
+Lists work the same way as tuples except for the fact that they don't need
+the \texttt{ft\textit{n}} function.
+
+\end{itemize}
+
+\end{itemize}
+
+\newpage
+\subsubsection{Parenthesis Function Application}
+
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\texttt{f(x, y, z)} \lra \texttt{f'''(x, y, z)} \\
+\texttt{f(x, _, _)} \lra \verb|(\(pA0, pA1) -> f'''(x, pA0, pA1))| \\
+\texttt{(x)to_str} \lra \texttt{a'to_str(x)} \\
+\texttt{apply(f)to_all_in(_)} \lra \verb|(\pA0 -> apply'to_all_in'(f, pA0))| \\
+
+\item
+\textit{Description}\\\\
+For the parenthesis function application, we seperate the underlying function
+identifier by putting quotes in the place of the arguments (and prepending an
+'a' if needed) and we also collect the arguments in a tuple. From there, we can
+apply the function to the argument tuple. If any argument is an underscore, it
+implicitly introduces a parameter and it is treated similarly to how it treated
+in tuples (section
+\ref{subsubsec:parentuplist}).
+
+\end{itemize}
+
+\subsubsection{Prefix and Postfix Functions}
+
+
+\begin{itemize}
+\item
+\textbf{Prefix functions}
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\texttt{the_value:42} \lra \texttt{Cthe_value((42 ::\ Int))} \\
+\texttt{error:"this is an error message"} \lra
+\texttt{Cerror("this is an error message")} \\
+\texttt{the_value:_} \lra \verb|(\pA0 -> Cthe_value(pA0))| \\
+
+\item
+\textit{Description}\\\\
+desc
+\end{itemize}
+
+\item
+\textbf{Postfix functions}
+\end{itemize}
+
+\subsection{Translation Phase: Operators}
+
+\subsubsection{Function Application and Function Composition Operators}
+
+\subsubsection{Arithmetic, Comparison and Boolean Operators}
+
+\subsubsection{Environment Action Operators}
+
+\subsubsection{Operator Expressions}
+
+\subsection{Translation Phase: Function Expressions}
+
+\subsubsection{Regular Function Expressions}
+
+\subsubsection{"cases" Function Expressions}
+
+\subsection{Translation Phase: Value Definitions and "where" Expressions}
+
+\subsubsection{Value Definitions}
+
+\subsubsection{"where" Expressions}
+
+\subsection{Translation Phase: Types}
+
+\subsubsection{Type Expressions}
+
+\subsubsection{Type Definitions}
+\label{subsubsec:trantypedef}
+
+\subsubsection{Type Nicknames}
+
+\subsection{Translation Phase: Type Logic}
+
+\subsubsection{Proposition Definitions}
+
+\subsubsection{Theorems}
+
+\subsection{Correspondaces with \H}
 
 Here is the list of lcases constructs that have a \H\ correspondent:
 

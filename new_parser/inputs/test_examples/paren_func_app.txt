@@ -4,13 +4,15 @@ f(x, y, z)#
 
 (x)to_string#
 
-apply(f)to_all#
+apply(f)to_all_in(_)#
 
-apply(f)to_all(l)#
+apply(f)to_all_in(l)#
 
-apply(the_value:_)to_all#
+apply(the_value:_)to_all_in(_)#
 
-apply( _.1st )to_all#
+apply( _.1st )to_all_in(_)#
+
+apply((_)to_str)to_all_in(_)#
 
 f(_, y, z)#
 

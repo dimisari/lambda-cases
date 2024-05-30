@@ -4,9 +4,11 @@
 
 ["Hello World!", "What's up, doc?", "Alrighty then!"]#
 
-[x => x + 1, x => x + 2, x => x + 3]#
+[x => x + 1.61, x => x + 2.71, x => x + 3.14]#
 
 [x, y, z, w]#
 
 [ x, y, z, w ]#
+
+[_, x, _]#
 
