@@ -7,6 +7,7 @@
 \usepackage{syntax}
 \usepackage{array}
 \usepackage{multirow}
+\usepackage{mathtools}
 \usepackage[left=2cm, right=2cm, top=2cm]{geometry}
 
 \usepackage{biblatex}
@@ -25,6 +26,7 @@
 \def\r{$\Longleftrightarrow$\ }
 \def\lra{$\Longrightarrow$\ }
 \def\pend{\mbox{}\\\\}
+\def\prarr{$\xRightarrow{\text{preprocessing}}$\ }
 %\newcommand\_[_]{_}
 
 \renewcommand{\arraystretch}{1.5}
@@ -3785,9 +3787,8 @@ For the parenthesis function application, we seperate the underlying function
 identifier by putting quotes in the place of the arguments (and prepending an
 'a' if needed) and we also collect the arguments in a tuple. From there, we can
 apply the function to the argument tuple. If any argument is an underscore, it
-implicitly introduces a parameter and it is treated similarly to how it treated
-in tuples (section
-\ref{subsubsec:parentuplist}).
+implicitly introduces a parameter and it is treated similarly to how it is
+treated in tuples (section \ref{subsubsec:parentuplist}).
 
 \end{itemize}
 
@@ -3804,14 +3805,120 @@ in tuples (section
 \texttt{error:"this is an error message"} \lra
 \texttt{Cerror("this is an error message")} \\
 \texttt{the_value:_} \lra \verb|(\pA0 -> Cthe_value(pA0))| \\
+\texttt{the_value:result:true} \lra \texttt{Cthe_value(Cresult(True))} \\
 
 \item
 \textit{Description}\\\\
-desc
+Prefix functions are data constructors in \H\ which are introduced by the
+translation of the relevant \texttt{or_type} definition. They are prepended
+with an upper case 'C' to be valid data constructors and their argument is
+placed in parenthesis. The argument can be an underscore, in which case a new
+parameter name is put in its place, the appropriate lambda abstraction is
+prepended and the whole expression is put in parenthesis to limit the scope of
+the abstraction.
 \end{itemize}
 
 \item
 \textbf{Postfix functions}
+
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\texttt{date.year} \lra \texttt{year(date)} \\
+\texttt{tuple.1st} \lra \texttt{p1st(tuple)} \\
+\texttt{info.date.year} \lra \texttt{year(date(info))} \\
+\texttt{tuple.1st.2nd} \lra \texttt{p2nd(p1st(tuple))} \\
+
+\item
+\textit{Description}\\\\
+Postfix functions are projection functions that are generated automatically by
+the translation of the relevant \texttt{tuple_type} defintion or they are the
+projection functions for product types (\texttt{_.1st _.2nd etc}). They are
+translated into regular \H\ functions (like the record accessor functions of
+\H\ are) with their argument in parenthesis. For \texttt{_.1st _.2nd etc} a 'p'
+for "projection" is prepended to make it a valid \H\ function.
+\\\\
+The projection functions for product types are polymorphic and work on tuples
+of any size (in principle, for size $\leq$ 5 for now). This is achieved by
+making them polymorphic through the following class (for p1st and similar
+classes for the rest):
+\begin{verbatim}
+class IsFirst' a b | b -> a where
+  p1st :: b -> a
+\end{verbatim}
+And the following instances:
+
+\begin{verbatim}
+instance IsFirst' a (a, b) where
+  p1st = fst
+
+instance IsFirst' a (a, b, c) where
+  p1st = \(a, _, _) -> a
+
+instance IsFirst' a (a, b, c, d) where
+  p1st = \(a, _, _, _) -> a
+
+...
+\end{verbatim}
+\end{itemize}
+
+\item
+\textbf{The ”.change” Function}
+
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\texttt{state.change\{counter = counter + 1\}}\\
+\prarr
+\texttt{state.change\{counter = state.counter + 1\}}\\
+\lra
+\texttt{c0counter(counter(state) !+ (1 ::\ Int)) state}
+\\\\
+\texttt{tuple.change\{1st = 1.61, 3rd = 3.14\}} \lra
+\texttt{(c1st(1.61) .> c3rd(3.14)) tuple}
+\\\\
+\texttt{tuple.change\{x = _, y = _\}} \lra
+\verb|(\(pA0, pA1) -> (c0x(pA0) .> c0y(pA1)) tuple)| \\
+
+\item
+\textit{Description}\\\\
+For the "\texttt{.change}" function, similarly to the projection functions, a
+change function (in \H) is introduced for every field of every
+\texttt{tuple_type}. This function is the name of the field prepended by "c0"
+where the 'c' stands for "change" and the '0' is there so that there can be no
+collisions with other identifiers (numbers can only be at the end for lcases
+identifiers). For the product type fields, the change functions are
+"\texttt{c1st}", "\texttt{c2nd}", etc. The type of every change function
+has the form:
+\begin{verbatim}
+FieldType -> TupleOrProdType -> TupleOrProdType
+\end{verbatim}
+For every assignment inside the braces we use the change function of the
+assigned field with the expression of the assignment as the
+\texttt{FieldType} argument. By doing this we have all the functions
+of type:
+\begin{verbatim}
+TupleOrProdType -> TupleOrProdType
+\end{verbatim}
+we need to make the changes. We compose them all with the "\texttt{.>}"
+operator, which is a predefined operator for function composition from left to
+right (although the regular "\texttt{.}" should also do). Now we have one
+function of type:
+\begin{verbatim}
+TupleOrProdType -> TupleOrProdType
+\end{verbatim}
+that does all the changes. We apply it on the argument of the
+"\texttt{.change}" function and we are done.
+\\\\
+The change functions for product types work on tuples of any size
+(in principle, for size $\leq$ 5 for now). This works with appropriate type
+classes and instances, similarly to the way the \texttt{p1st}, \texttt{p2nd},
+etc functions work. Unfortunately, because of this fact the regular braces
+notation of \H\ for the same purpose cannot work, since \texttt{p1st},
+\texttt{p2nd}, etc are polymorphic functions and not "record selectors".
+
+\end{itemize}
+
 \end{itemize}
 
 \subsection{Translation Phase: Operators}

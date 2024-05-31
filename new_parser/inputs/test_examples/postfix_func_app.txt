@@ -6,9 +6,11 @@ date.year#
 
 tuple.1st#
 
-state.change{counter = counter + 1}#
+state.change{counter = state.counter + 1}#
 
 tuple.change{1st = 42, 3rd = 17}#
+
+tuple.change{1st = 1.61, 3rd = 3.14}#
 
 point.change{x = 1.61, y = 2.71, z = 3.14}#
 
@@ -22,5 +24,11 @@ x.change{ 1st=_, 3rd=_ }#
 
 x.y.z.change{ 1st=_, 3rd=_ }#
 
+tuple.change{x = _, y = _}#
+
 _.2nd#
+
+info.date.year#
+
+tuple.1st.2nd#
 
