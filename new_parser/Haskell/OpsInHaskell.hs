@@ -30,36 +30,37 @@ f <& x = f x
 (<.) :: (b -> c) -> (a -> b) -> a -> c
 (<.) = (.)
 
-class GeneralExponentiation a b c where
+
+class A1ToThe1Is1 a b c where
   (!^) :: a -> b -> c
 
-class GeneralMultiplication a b c where
+class A1And1Multiply_To1 a b c where
   (!*) :: a -> b -> c
-class GeneralDivision a b c where
+class A1Divided_By1Is1 a b c where
   (!/) :: a -> b -> c
 
-class A1And1Add_To a b c where
+class A1And1Add_To1 a b c where
   (!+) :: a -> b -> c
-class GeneralSubtraction a b c where
+class A1Minus1Is1 a b c where
   (!-) :: a -> b -> c
 
-class GeneralEquality a b where
+class A1And1Can_Be_Equal a b where
   (!==) :: a -> b -> Bool
-class GeneralInequality a b where
+class A1And1Can_Be_Unequal a b where
   (!!=) :: a -> b -> Bool
-class GeneralGreaterThan a b where
+class A1Can_Be_Greater_Than1 a b where
   (!>) :: a -> b -> Bool
-class GeneralLessThan a b where
+class A1Can_Be_Less_Than1 a b where
   (!<) :: a -> b -> Bool
-class GeneralGreaterEqual a b where
+class A1Can_Be_Gr_Or_Eq_To1 a b where
   (!>=) :: a -> b -> Bool
-class GeneralLessEqual a b where
+class A1Can_Be_Le_Or_Eq_To1 a b where
   (!<=) :: a -> b -> Bool
 
-class HasAnd a where
+class A1Has_And a where
   (!&) :: a -> a -> a
 
-class HasOr a where
+class A1Has_Or a where
   (!|) :: a -> a -> a
 
 class A1Has_Use u where
@@ -68,67 +69,67 @@ class A1Has_Use u where
 class A1Has_Then t where
   (!>>) :: t a -> t b -> t b
 
--- GeneralMultiplication
-instance (a ~ b, Num a) => GeneralMultiplication a a b where
+-- A1And1Multiply_To1
+instance (a ~ b, Num a) => A1And1Multiply_To1 a a b where
   (!*) = (*)
 
-instance (a ~ b, Num a) => GeneralMultiplication a b a  where
+instance (a ~ b, Num a) => A1And1Multiply_To1 a b a  where
   (!*) = (*)
 
-instance (a ~ b, Num b) => GeneralMultiplication a b b where
+instance (a ~ b, Num b) => A1And1Multiply_To1 a b b where
   (!*) = (*)
 
--- A1And1Add_To
-instance Show a => A1And1Add_To a String String where
+-- A1And1Add_To1
+instance Show a => A1And1Add_To1 a String String where
   x !+ str = show x ++ str
 
-instance (Show a, b ~ String) => A1And1Add_To String a b where
+instance (Show a, b ~ String) => A1And1Add_To1 String a b where
   str !+ x = str ++ show x
 
-instance (Show a, b ~ String) => A1And1Add_To a String b where
+instance (Show a, b ~ String) => A1And1Add_To1 a String b where
   x !+ str = show x ++ str
 
-instance b ~ [a] => A1And1Add_To [a] [a] b where
+instance b ~ [a] => A1And1Add_To1 [a] [a] b where
   (!+) = (++)
 
-instance b ~ [a] => A1And1Add_To a [a] b where
+instance b ~ [a] => A1And1Add_To1 a [a] b where
   (!+) = (:)
 
-instance b ~ [a] => A1And1Add_To [a] a b where
+instance b ~ [a] => A1And1Add_To1 [a] a b where
   l !+ a = l ++ [a]
 
-instance a ~ b => A1And1Add_To a [b] [b] where
+instance a ~ b => A1And1Add_To1 a [b] [b] where
   (!+) = (:)
 
-instance (a ~ b, Num a) => A1And1Add_To a a b where
+instance (a ~ b, Num a) => A1And1Add_To1 a a b where
   (!+) = (+)
 
-instance (a ~ b, Num a) => A1And1Add_To a b a  where
+instance (a ~ b, Num a) => A1And1Add_To1 a b a  where
   (!+) = (+)
 
-instance (a ~ b, Num b) => A1And1Add_To a b b where
+instance (a ~ b, Num b) => A1And1Add_To1 a b b where
   (!+) = (+)
 
--- GeneralSubtraction
-instance (a ~ b, Num a) => GeneralSubtraction a a b where
+-- A1Minus1Is1
+instance (a ~ b, Num a) => A1Minus1Is1 a a b where
   (!-) = (-)
 
-instance (a ~ b, Num a) => GeneralSubtraction a b a  where
+instance (a ~ b, Num a) => A1Minus1Is1 a b a  where
   (!-) = (-)
 
-instance (a ~ b, Num b) => GeneralSubtraction a b b where
+instance (a ~ b, Num b) => A1Minus1Is1 a b b where
   (!-) = (-)
 
--- GeneralEquality
-instance Eq a => GeneralEquality a a where
+-- A1And1Can_Be_Equal
+instance Eq a => A1And1Can_Be_Equal a a where
   (!==) = (==)
 
--- GeneralGreaterThan
-instance Ord a => GeneralGreaterThan a a where
+-- A1Can_Be_Greater_Than1
+instance Ord a => A1Can_Be_Greater_Than1 a a where
   (!>) = (>)
 
--- GeneralLessThan
-instance Ord a => GeneralLessThan a a where
+-- A1Can_Be_Less_Than1
+instance Ord a => A1Can_Be_Less_Than1 a a where
   (!<) = (<)
 
 -- A1Has_Then
@@ -140,6 +141,6 @@ instance Monad m => A1Has_Use m where
   (!>>=) = (>>=)
 
 -- HasOr
-instance HasOr Bool where
+instance A1Has_Or Bool where
   (!|) = (||)
 
