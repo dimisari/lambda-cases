@@ -2748,6 +2748,8 @@ the condition arrow (" \verb|-->| ") arrow.
   \item \verb|(@A)Can_Be_Le_Or_Eq_To(@B)|
   \item \verb|(@A)Can_Be_Greater_Than(@B)|
   \item \verb|(@A)Can_Be_Less_Than(@B)|
+  \item \verb|(@A)Has_And|
+  \item \verb|(@A)Has_Or|
   \item \verb|(@T)Has_Use|
   \item \verb|(@T)Has_Then|
   \end{itemize}
@@ -3916,12 +3918,128 @@ classes and instances, similarly to the way the \texttt{p1st}, \texttt{p2nd},
 etc functions work. Unfortunately, because of this fact the regular braces
 notation of \H\ for the same purpose cannot work, since \texttt{p1st},
 \texttt{p2nd}, etc are polymorphic functions and not "record selectors".
+\\\\
+If an a variable is assigned to an underscore, new parameters are introduced
+similarly to the way they are introduced to tuples.
 
 \end{itemize}
 
 \end{itemize}
 
 \subsection{Translation Phase: Operators}
+
+For each one of the lcases operators, a new \H\ operator is defined for it to
+be translated to. This allows for the use of the precedence and associativity
+mechanism for new user defined operators in \H\ instead of having to implement
+it from scratch in the parser, while also avoiding a lot of extra parentheses
+that the latter approach would need. Function application and function
+composition operators are defined as shown below. Every other operator is
+defined by a type class that matches the type described in table
+\ref{table:allops}.
+\\
+
+\begin{table}[ht]
+\hspace{0.5cm}
+\begin{minipage}{0.45\linewidth}\centering
+\begin{tabular}{ |c|c| }
+\hline
+lcases operator & \H\ operator
+\\
+\hline
+\hline
+\verb|->| & \verb|&>|
+\\
+\hline
+\verb|<-| & \verb|<&|
+\\
+\hline
+\verb|o>| & \verb|.>|
+\\
+\hline
+\verb|<o| & \verb|<.|
+\\
+\hline
+\verb|^| & \verb|!^|
+\\
+\hline
+\verb|*| & \verb|!*|
+\\
+\hline
+\verb|/| & \verb|!/|
+\\
+\hline
+\verb|+| & \verb|!+|
+\\
+\hline
+\verb|-| & \verb|!-|
+\\
+\hline
+\verb|==| & \verb|!==|
+\\
+\hline
+\verb|!=| & \verb|!!=|
+\\
+\hline
+\verb|>| & \verb|!>|
+\\
+\hline
+\verb|<| & \verb|!<|
+\\
+\hline
+\verb|>=| & \verb|!>=|
+\\
+\hline
+\verb|<=| & \verb|!<=|
+\\
+\hline
+\verb|&| & \verb|!&|
+\\
+\hline
+\texttt{|} & \texttt{!|}
+\\
+\hline
+\verb|;>| & \verb|!>>=|
+\\
+\hline
+\verb|;| & \verb|!>>|
+\\
+\hline
+\end{tabular}
+\end{minipage}
+\hspace{1cm}
+\begin{minipage}{0.45\linewidth}
+
+Precedence and associativity using \H:
+\begin{verbatim}
+infixl 9 &>
+infixr 8 <&
+infixl 7 .>, <.
+infixr 6 !^
+infixl 5 !*, !/
+infixl 4 !+, !-
+infix 3 !==, !!=, !>, !<, !>=, !<=
+infixr 2 !&
+infixr 1 !|
+infixr 0 !>>=, !>>
+\end{verbatim}
+
+Function application/composition operators
+\begin{verbatim}
+(&>) :: a -> (a -> b) -> b
+x &> f = f x
+
+(<&) :: (a -> b) -> a -> b
+f <& x = f x
+
+(.>) :: (a -> b) -> (b -> c) -> a -> c
+(.>) = flip (.)
+
+(<.) :: (b -> c) -> (a -> b) -> a -> c
+(<.) = (.)
+\end{verbatim}
+
+\end{minipage}
+\end{table}
 
 \subsubsection{Function Application and Function Composition Operators}
 
