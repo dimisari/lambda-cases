@@ -16,8 +16,6 @@ tos__prs=$(tos)\/$(prs)
 
 tis_prs=$(tis)/$(prs)
 
-tos_prs_pis=$(tos)/$(prs)/$(pis)
-
 #commands
 
 ghc=ghc -no-keep-hi-files -no-keep-o-files
@@ -27,37 +25,34 @@ hs_prs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(tos__prs)\/\1.hs/g")
 
 # rules: all .out .hs
 
-all: $(hs_prs) $(execs) grules
+all: dirs $(hs_prs) $(execs) grules
 
-$(tos_cps)/%.out: $(tos_prs)/%.hs $(tos_cps)
+dirs: $(tos_prs) $(tos_cps) $(grs) $(tos_prs)/$(pis)
+
+$(tos_prs):
+	mkdir -p $@
+
+$(tos_cps):
+	mkdir -p $@
+
+$(grs):
+	mkdir -p $@
+
+$(tos_prs)/$(pis):
+	ln -sf $(shell pwd)/$(pis) $(tos_prs)
+
+$(tos_cps)/%.out: $(tos_prs)/%.hs
 	$(ghc) $< -o $@
 
-$(tos_prs)/%.hs: lcc $(tis_prs)/%.lc $(tos_prs) $(tos_prs_pis)
+$(tos_prs)/%.hs: lcc $(tis_prs)/%.lc
 	./$< $(word 2, $^); mv $(basename $(word 2, $^)).hs $@
-
-# rules: dirs
-
-$(tos_cps): $(tos)
-	mkdir $@
-
-$(tos_prs): $(tos)
-	mkdir $@
-
-$(grs): $(tos)
-	mkdir $@
-
-$(tos_prs_pis): $(tos_prs)
-	ln -s $(shell pwd)/$(pis) $(tos_prs)
-
-$(tos):
-	mkdir $@
 
 # rules: lcc gruls
 
 lcc: src/lcc.hs
 	cd src; $(ghc) $@.hs -o ../$@
 
-grules: src/grules.hs $(grs)
+grules: src/grules.hs
 	cd src; $(ghc) $@.hs -o ../$@; cd ..; ./$@
 
 # rules: clean
