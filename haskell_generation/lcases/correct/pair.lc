@@ -1,8 +1,0 @@
-multiply, pair, product: (Int, Int) -> Int, Int x Int, Int
-  = (x, y) -> x * y, (1, 1), pair==>multiply
-
-multiply_by_2: Int -> Int
-  = 2==>multiply
-
-res: Int 
-  = multiply_by_2<==3

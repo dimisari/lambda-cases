@@ -1,5 +1,0 @@
-id: A -> A
-  = x -> x
-
-succ: Int -> Int
-  = x -> x + 1

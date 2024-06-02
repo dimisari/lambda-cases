@@ -1,5 +1,0 @@
-func()name: Int -> Int
-  = x -> x + 1
-
-res: Int 
-  = func(41)name

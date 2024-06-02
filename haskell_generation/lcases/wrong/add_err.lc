@@ -1,5 +1,0 @@
-or_type MyBool
-values my_t | my_f 
-
-a: Int
-  = 1 + my_t

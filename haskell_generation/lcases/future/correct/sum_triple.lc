@@ -1,8 +1,0 @@
-sum3ints: (Int, Int, Int) -> Int
-  = (x, y, z) -> x + y + z
-
-int_triple: Int x Int x Int
-  = (1, 2, 3)
-
-sum_of_triple: Int
-  = sum3ints<==int_triple

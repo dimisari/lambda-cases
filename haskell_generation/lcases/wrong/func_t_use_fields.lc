@@ -1,6 +1,0 @@
-
-or_type MyOrType
-values case1 | case2 | case3
-
-wrong_f: (MyOrType -> MyOrType) -> MyOrType
-  = use_fields -> case3
