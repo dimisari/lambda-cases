@@ -51,7 +51,7 @@ $(tos_prs)/%.hs: lcc $(tis_prs)/%.lc
 
 # rules: lcc gruls
 
-lcc: src/lcc.hs
+lcc: $(shell find src -type f)
 	cd src; $(ghc) $@.hs -o ../$@
 
 grules: src/grules.hs
