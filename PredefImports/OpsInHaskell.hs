@@ -141,6 +141,10 @@ instance (a ~ b, Num b) => A1Minus1Is1 a b b where
 instance Eq a => A1And1Can_Be_Equal a a where
   (!==) = (==)
 
+-- A1And1Can_Be_Unequal
+instance Eq a => A1And1Can_Be_Unequal a a where
+  (!!=) = (/=)
+
 -- A1Can_Be_Greater_Than1
 instance Ord a => A1Can_Be_Greater_Than1 a a where
   (!>) = (>)
@@ -148,6 +152,14 @@ instance Ord a => A1Can_Be_Greater_Than1 a a where
 -- A1Can_Be_Less_Than1
 instance Ord a => A1Can_Be_Less_Than1 a a where
   (!<) = (<)
+
+-- A1Can_Be_Gr_Or_Eq_To1
+instance Ord a => A1Can_Be_Gr_Or_Eq_To1 a a where
+  (!>=) = (>=)
+
+-- A1Can_Be_Le_Or_Eq_To1
+instance Ord a => A1Can_Be_Le_Or_Eq_To1 a a where
+  (!<=) = (<=)
 
 -- A1Has_Then
 instance Applicative f => A1Has_Then f where
@@ -157,7 +169,11 @@ instance Applicative f => A1Has_Then f where
 instance Monad m => A1Has_Use m where
   (!>>=) = (>>=)
 
--- HasOr
+-- A1Has_And
+instance A1Has_And Bool where
+  (!&) = (&&)
+
+-- A1Has_Or
 instance A1Has_Or Bool where
   (!|) = (||)
 

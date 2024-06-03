@@ -7,6 +7,8 @@ cps=compiled_progs
 grs=$(tos)/grammar_rules
 prs=programs
 pis=PredefImports/
+pi1=$(pis)/Predefined.hs
+pi2=$(pis)/OpsInHaskell.hs
 
 tos_cps=$(tos)/$(cps)
 tos__cps=$(tos)\/$(cps)
@@ -41,7 +43,7 @@ $(grs):
 $(tos_prs)/$(pis):
 	ln -sf $(shell pwd)/$(pis) $(tos_prs)
 
-$(tos_cps)/%.out: $(tos_prs)/%.hs
+$(tos_cps)/%.out: $(tos_prs)/%.hs $(pi1) $(pi2)
 	$(ghc) $< -o $@
 
 $(tos_prs)/%.hs: lcc $(tis_prs)/%.lc

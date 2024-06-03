@@ -209,6 +209,6 @@ class A'Has_Internal_App t where
 instance Applicative f => A'Has_Internal_App f where
   apply'inside' = uncurry fmap
 
--- Show for string
+-- Show for String
 instance {-# OVERLAPS #-} Show String where
   show = id

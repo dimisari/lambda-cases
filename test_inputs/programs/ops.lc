@@ -2,5 +2,14 @@ main : IO
   = print("2 to the 3 is: " + 2^3) ;
     print("6 times 7 is: " + 6*7) ;
     print("42 divided by 6 is: " + 42/6) ;
+    print("42 minus 378 is: " + (42 + 378)) ;
     print("42 minus 25 is: " + (42 - 25)) ;
-    print("2 to the 3 is: " + 2^3)
+    print("2 is equal to 3 is: " + (2 == 3)) ;
+    print("2 is not equal to 3 is: " + (2 != 3)) ;
+    print("2 is greater than 3 is: " + (2 > 3)) ;
+    print("2 is less than 3 is: " + (2 < 3)) ;
+    print("2 is greater than or equal to 3 is: " + (2 >= 3)) ;
+    print("2 is less than or equal 3 is: " + (2 <= 3)) ;
+    print("true and false is " + (true & false)) ;
+    print("true or false is " + (true | false)) ;
+    do_nothing
