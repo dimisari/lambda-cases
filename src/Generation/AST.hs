@@ -25,7 +25,10 @@ instance ToHaskell (NeedsAnnotBool, Literal) where
       case needs_annot of
         Annot -> "(" ++ show i ++ " :: Int)"
         NoAnnot -> show i
-    R r -> show r
+    R r ->
+      case needs_annot of
+        Annot -> "(" ++ show r ++ " :: Float)"
+        NoAnnot -> show r
     Ch c -> show c
     S s -> show s
 

@@ -12,4 +12,20 @@ main : IO
     print("2 is less than or equal 3 is: " + (2 <= 3)) ;
     print("true and false is " + (true & false)) ;
     print("true or false is " + (true | false)) ;
+    print("2 to the 3.14 is: " + 2^3.14) ;
+    print("3.14 to the 2 is: " + 3.14^2) ;
+    print("1.61 to the 3.14 is: " + 1.61^3.14) ;
+    print("2 times 3.14 is: " + 2*3.14) ;
+    print("3.14 times 2 is: " + 3.14*2) ;
+    print("5 times 'a' is: " + 5*'a') ;
+    print("5 times \"hi\" is: " + 5*"hi") ;
+    print("2 over 3.14 is: " + 2/3.14) ;
+    print("3.14 over 2 is: " + 3.14/2) ;
+    print("2 plus 3.14 is: " + (2 + 3.14)) ;
+    print("3.14 plus 2 is: " + (3.14 + 2)) ;
+    print("'a' plus 'b' is: " + ('a' + 'b')) ;
+    print("'w' plus \"ord\" is: " + ('w' + "ord")) ;
+    print("\"Hello \" plus \"World!\" is: " + ("Hello " + "World!")) ;
+    print("\"1,2,3\" minus ',' is: " + ("1,2,3" - ',')) ;
+    print("\"Hello!! World!!\" minus \"!!\" is: " + ("Hello!! World!!" - "!!")) ;
     do_nothing

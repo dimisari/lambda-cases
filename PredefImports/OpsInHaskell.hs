@@ -67,11 +67,17 @@ class A1Has_Then t where
   (!>>) :: t a -> t b -> t b
 
 -- A1ToThe1Is1
-instance (Integral b, Num a) => A1ToThe1Is1 a b a where
-  (!^) = (^)
+instance (Floating a, b ~ a) => A1ToThe1Is1 a a b where
+  (!^) = (**)
 
 instance a ~ Int => A1ToThe1Is1 Int Int a where
   (!^) = (^)
+
+instance a ~ Float => A1ToThe1Is1 Int Float a where
+  i !^ x = fromIntegral i ** x
+
+instance a ~ Float => A1ToThe1Is1 Float Int a where
+  x !^ i = x ** fromIntegral i
 
 -- A1And1Multiply_To1
 instance (a ~ b, Num a) => A1And1Multiply_To1 a a b where
@@ -82,6 +88,18 @@ instance (a ~ b, Num a) => A1And1Multiply_To1 a b a  where
 
 instance (a ~ b, Num b) => A1And1Multiply_To1 a b b where
   (!*) = (*)
+
+instance a ~ Float => A1And1Multiply_To1 Int Float a where
+  i !* x  = fromIntegral i * x
+
+instance a ~ Float => A1And1Multiply_To1 Float Int a where
+  x !* i = x * fromIntegral i
+
+instance a ~ String => A1And1Multiply_To1 Int Char a where
+  i !* c = replicate i c
+
+instance a ~ String => A1And1Multiply_To1 Int String a where
+  i !* s = concat $ replicate i s
 
 -- A1Divided_By1Is1
 instance (a ~ b, Fractional a) => A1Divided_By1Is1 a a b where
@@ -95,6 +113,12 @@ instance (a ~ b, Fractional b) => A1Divided_By1Is1 a b b where
 
 instance Fractional a => A1Divided_By1Is1 Int Int a where
   x !/ y = fromIntegral x / fromIntegral y
+
+instance a ~ Float => A1Divided_By1Is1 Int Float a where
+  i !/ x  = fromIntegral i / x
+
+instance a ~ Float => A1Divided_By1Is1 Float Int a where
+  x !/ i = x / fromIntegral i
 
 -- A1And1Add_To1
 instance Show a => A1And1Add_To1 a String String where
@@ -127,6 +151,18 @@ instance (a ~ b, Num a) => A1And1Add_To1 a b a  where
 instance (a ~ b, Num b) => A1And1Add_To1 a b b where
   (!+) = (+)
 
+instance a ~ Float => A1And1Add_To1 Int Float a where
+  i !+ x  = fromIntegral i + x
+
+instance a ~ Float => A1And1Add_To1 Float Int a where
+  x !+ i = x + fromIntegral i
+
+instance a ~ String => A1And1Add_To1 Char Char a where
+  c1 !+ c2 = c1 : [c2]
+
+instance a ~ String => A1And1Add_To1 Char String a where
+  (!+) = (:)
+
 -- A1Minus1Is1
 instance (a ~ b, Num a) => A1Minus1Is1 a a b where
   (!-) = (-)
@@ -136,6 +172,20 @@ instance (a ~ b, Num a) => A1Minus1Is1 a b a  where
 
 instance (a ~ b, Num b) => A1Minus1Is1 a b b where
   (!-) = (-)
+
+instance a ~ String => A1Minus1Is1 String Char a where
+  s !- c = filter (/= c) s
+
+instance (Eq a, b ~ [a]) => A1Minus1Is1 [a] [a] b where
+  l1 !- l2 = case length l2 > length l1 of
+    True -> l1
+    False ->
+      let
+      (l11, l12) = splitAt (length l2) l1
+      in
+      case l11 == l2 of
+        True -> l12 !- l2
+        False -> head l1 : (tail l1 !- l2)
 
 -- A1And1Can_Be_Equal
 instance Eq a => A1And1Can_Be_Equal a a where
