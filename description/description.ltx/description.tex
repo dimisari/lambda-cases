@@ -1522,12 +1522,6 @@ print_sentimental_bool(_): Bool => IO
 or_type TrafficLight
 values green | amber | red
 
-print_sentimental_traffic_light(_): TrafficLight => IO
-  = cases
-    green => print <- "It's green! Let's go!!! :)"
-    amber => print <- "Go go go, fast!"
-    red => print <- "Stop right now! You're going to kill us!!"
-
 (_)is_not_red: TrafficLight => Bool
   = cases
     green => true
@@ -1552,16 +1546,15 @@ gcd_of(_)and(_): Int^2 => Int
     0 => x
     y => gcd_of(y)and((x)mod(y))
 
-(_)is_empty: ListOf(T1)s => Bool
-  = cases
-    empty_l => true
-    non_empty_l:* => false
-
 apply(_)to_all_in(_): (T1 => T2) x ListOf(T1)s => ListOf(T2)s
   = (f, cases)
     empty_l => empty_l
     non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all_in(list.tail))
 
+cases
+  [x1, x2, xs = ...] =>
+    (x1 < x2) & (x2 + xs)is_sorted
+  ... => true
 \end{verbatim}
 
 \newpage
@@ -1593,7 +1586,22 @@ A function expression that uses the "\verb|cases|" syntax must contain the
 "\verb|cases|" keyword in at least one parameter. The number of matching
 expressions in all cases must be the same as the number of parameters with the
 "\verb|cases|" keyword.
+\\\\
+It also possible to use the following syntax to match on as many elements of a
+list as needed and optionally give a name to the rest of the list:
+\begin{verbatim}
+# no name for the rest of the list
+[x1, ...] => <case body>
+[x1, x2, ...] => <case body>
+[x1, x2, x3, ...] => <case body>
 
+# name for the rest of the list
+[x1, xs = ...] => <case body>
+[x1, x2, xs = ...] => <case body>
+[x1, x2, x3, xs = ...] => <case body>
+\end{verbatim}
+
+\newpage
 \item \textit{Grammar}
 \begin{grammar}
 <cases-func-expr> ::= <cases-params> <case>+ [ <end-case> ]
@@ -4114,22 +4122,160 @@ all of the above are done similarly to how they are done for tuples in
 \begin{itemize}
 \item
 \textit{Examples}\\\\
-\verb|_| \lra \verb|_|
+\verb|x => 17 * x + 42| \lra \verb|\x -> (17 :: Int) !* x !+ (42 :: Int)|
 \\\\
-\verb|_| \lra \verb|_|
+\verb|* => 42| \lra \verb|\_ -> (42 :: Int)|
 \\\\
-\verb|_| \lra \verb|_|
+\verb|(x, *, z) => x + z| \lra \verb|\(x, _, z) -> x !+ z|
 \\\\
-\verb|_| \lra \verb|_|
-\\\\
+\verb|((x1, y1), (x2, y2)) => (x1 + x2, y1 + y2)|\\
+\lra
+\verb|\((x1, y1), (x2, y2)) -> ft2(x1 !+ x2, y1 !+ y2)|\\
 
 \item
 \textit{Description}\\
 
+The followning are done to translate the parameters:
+\begin{itemize}
+\item
+A \verb|'\'| character is prepended
+\item
+The \verb|"=>"| arrow is replaced by the \verb|"->"| arrow
+\item
+A \verb|'*'| parameter becomes a \verb|'_'| parameter
 \end{itemize}
+The body of the function is translated according to expression it
+is.
+\\\\
+It is possible that the function expression is accompanied by a
+"\texttt{where}" expression below it. As shown in the example below:
+\begin{verbatim}
+  gac => print_line(message)
+  where
+  message: String
+    = "Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
+\end{verbatim}
+In that case, the "\texttt{where}" expression becomes a "\texttt{let-in}"
+expression as described in section \ref{subsec:tranvalwhere}. This
+"\texttt{let-in}" expression is placed between the parameters and the
+body of the function, to make the paramaters "visible" to the expressions
+in the "\texttt{let-in}" expression as shown below:
+\begin{verbatim}
+  \gac ->
+  let
+  message :: String
+  message =
+    "Gcd: " !+ gcd(gac) !+ "\nCoefficients: a = " !+ a(gac) !+ ", b = " !+ b(gac)
+  in
+  print_line'(message)
+\end{verbatim}
+where the "\verb|gac|" parameter is "visible" to the expression of
+"\verb|message|".
+
+\end{itemize}
+
+\newpage
 \subsubsection{"cases" Function Expressions}
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\begin{minipage}[t][12cm][t]{\linewidth}
+\begin{minipage}{0.55\linewidth}
+
+\begin{verbatim}
+cases
+  true => print("It's true!! :)")
+  false => print("It's false... :(")
+\end{verbatim}
+\lra
+\begin{verbatim}
+\pA0 ->
+case pA0 of
+  true -> print'("It's true!! :)")
+  false -> print'("It's false... :(")
+
+
+\end{verbatim}
+\begin{verbatim}
+(x, cases)
+  0 => x
+  y => gcd(y, x -> mod <- y)
+\end{verbatim}
+\lra
+\begin{verbatim}
+\(x, pA0) ->
+case pA0 of
+  0 -> x
+  y -> gcd''(y, x &> mod <& y)
+\end{verbatim}
+\end{minipage}
+\vspace{3cm}
+\begin{minipage}{0.30\linewidth}
+\begin{verbatim}
+
+
+(cases, cases)
+  (green, green) => true
+  (amber, amber) => true
+  (red, red) => true
+  ... => false
+\end{verbatim}
+\lra
+\begin{verbatim}
+\(pA0, pA1) ->
+case (pA0, pA1) of
+  (green, green) -> true
+  (amber, amber) -> true
+  (red, red) -> true
+  _ -> false
+
+\end{verbatim}
+
+\begin{verbatim}
+cases
+  [x1, x2, xs = ...] =>
+    (x1 < x2) & (x2 + xs)is_sorted
+  ... => true
+\end{verbatim}
+\lra
+\begin{verbatim}
+\pA0 ->
+case pA0 of
+  x1 : x2 : xs ->
+    (x1 !< x2) !& a'is_sorted(x2 !+ xs)
+  _ -> true
+\end{verbatim}
+\end{minipage}
+\end{minipage}
+\\
+\item
+\textit{Description}\\
+
+The parameters are translated similarly to how they are translated in regular
+function expressions, with the one difference being that all parameters that
+contain the word "\texttt{cases}" are translated to newly generated parameters.
+Every such parameter is then collected in a tuple that is pattern matched on by
+creating a new line of the form "\verb|case <tuple of new paramters> of|". For
+the last case, if we have "\verb|...|" then it is translated to "\verb|_|".
+When matching on the first few elements of a list the translations is done as
+follows:
+\\\\
+\verb|[x1, x2, ...] => <case body>|
+\lra
+\verb|x1 : x2 : _ -> <case body translation>|
+\\\\
+\verb|[x1, x2, xs = ...] => <case body>|
+\lra
+\verb|x1 : x2 : xs -> <case body translation>|
+\\
+
+where the the square brackets are removed and the commas become colons.
+If the rest of the list has a name that it is the only thing that is kept
+after the last colon and if it doesn't an undersore placed instead.
+\end{itemize}
 
 \subsection{Translation Phase: Value Definitions and "where" Expressions}
+\label{subsec:tranvalwhere}
 
 \subsubsection{Value Definitions}
 
@@ -4155,80 +4301,6 @@ all of the above are done similarly to how they are done for tuples in
 Here is the list of lcases constructs that have a \H\ correspondent:
 
 \begin{itemize}
-\item
-Prefix Functions \r Data Constructors (with arguments)
-\item
-Postfix Functions (except "\verb|.change|" and "\verb|.<special-id>|")
-\r
-Accessor Functions generated by the Record Syntax
-\item
-"\verb|.change|" function
-\r
-Accessor Functions generated by the Record Syntax
-\item
-Operators:
-\\
-Operators are not actually compiled to the corresponding ones in \H\ because
-the are some difference either in the precedence or in the types (in lcases
-they are more general). Nevertheless, they are similar enough to be considered
-"correspondances". Everything is compiled into function application in \H.
-(TODO will it?)
-\begin{itemize}
-\item
-Left function application operator "\verb|<-|" \r "\verb|$|" operator
-\\
-(althought it's not compiled to that due to difference in precedence)
-
-\item
-Left function application operator "\verb|->|" \r
-"\verb|&|" operator from Data.Function
-\\
-(althought it's not compiled to that due to difference in precedence)
-
-\item
-Left function composition operator "\verb|<o|" \r "\verb|.|" operator
-
-\item
-Right function composition operator "\verb|o>|" \r
-"\verb|>.>|" operator from GHC.Core.Map.Expr (or other equivalent ones from
-other esoteric libraries, why \H?)
-
-\item
-"\verb|!=|" operator \r "\verb|\=|" operator
-
-\item
-"\verb|&|" operator \r "\verb|&&|" operator
-
-\item
-"\texttt{|}" operator \r "\texttt{||}" operator
-
-\item
-"\verb|;>|" operator \r "\verb|>>=|" operator
-
-\item
-"\verb|;|" operator \r "\verb|>>|" operator
-
-\end{itemize}
-
-\item
-one parameter (one lambda abstraction) "\verb|a => ...|" \r
-"\verb|\a -> ...|"
-
-\item
-multiple parameters (multiple lambda abstractions) "\verb|(a, b) => ...|" \r
-"\verb|\a b -> ...|"
-
-\item
-"don't care" parameter
-"\verb|* => ...|" \r "\verb|\_ => ...|"
-\\
-or one "don't care" in many
-"\verb|(a, *, b) => ...|" \r "\verb|\a _ b => ...|"
-
-\item
-"cases" function expressions \r "\verb|\case|" syntax
-(LambdaCase extension) \\
-url: \url{https://typeclasses.com/ghc/lambda-case}
 
 \item
 "value definitions" are similar. In lcases the type and the expression are in

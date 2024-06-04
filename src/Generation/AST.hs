@@ -351,9 +351,7 @@ instance ToHaskell OptionalSpacesOp where
 -- Values: FuncExpr
 instance ToHsWithIndentLvl (FuncExpr, PossiblyWhereExpr) where
   to_hs_wil = \(fe, pwe) -> case fe of
-    LFE4 lfe -> case pwe of
-      NoWhereExpr -> return $ to_haskell lfe
-      HasWhereExpr we -> to_hs_wil (lfe, we)
+    LFE4 lfe -> to_hs_wil (lfe, pwe)
     BFE2 bfe -> to_hs_wil (bfe, pwe)
     CFE2 cfe -> to_hs_wil (cfe, pwe)
 
@@ -361,10 +359,13 @@ instance ToHaskell LineFuncExpr where
   to_haskell = \(LFE (params, lfb)) ->
     to_haskell (Whole params) ++ " " ++ to_haskell lfb
 
-instance ToHsWithIndentLvl (LineFuncExpr, WhereExpr) where
-  to_hs_wil = \(LFE (params, lfb), we) ->
-    (to_haskell (Whole params) ++ "\n") ++> to_hs_wil we >++<
-    indent <++ to_haskell lfb
+instance ToHsWithIndentLvl (LineFuncExpr, PossiblyWhereExpr) where
+  to_hs_wil = \(lfe@(LFE (params, lfb)), pwe) ->
+    case pwe of
+      NoWhereExpr -> return $ to_haskell lfe
+      HasWhereExpr we ->
+        (to_haskell (Whole params) ++ "\n") ++> to_hs_wil we >++<
+        indent <++ to_haskell lfb
 
 instance ToHsWithIndentLvl (BigFuncExpr, PossiblyWhereExpr) where
   to_hs_wil (BFE (params, bfb), pwe) =

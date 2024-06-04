@@ -20,11 +20,7 @@ cases
 (cases, cases)
   (green, green) => true
   (amber, amber) => true
-  (red, red) =>
-    a
-    where
-    a : Bool
-      = true
+  (red, red) => true
   ... => false#
 
 (x, cases)
@@ -44,8 +40,7 @@ cases
   non_empty_l:list => non_empty_l:(f(list.head), apply(f)to_all_in(list.tail))#
 
 cases
-  [] => []
-  [x1, x2, xs = ...] => xs
-  [x1, x2, ...] => x1
-  [head, tail = ...] => tail#
+  [x1, x2, xs = ...] =>
+    (x1 < x2) & (x2 + xs)is_sorted
+  ... => true#
 
