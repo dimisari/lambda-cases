@@ -4,7 +4,7 @@
 tis=test_inputs
 tos=test_outputs
 cps=compiled_progs
-grs=$(tos)/grammar_rules
+grs=grammar_rules
 prs=programs
 pis=PredefImports/
 pi1=$(pis)/Predefined.hs
@@ -16,7 +16,11 @@ tos__cps=$(tos)\/$(cps)
 tos_prs=$(tos)/$(prs)
 tos__prs=$(tos)\/$(prs)
 
+tos_grs=$(tos)/$(grs)
+tos__grs=$(tos)\/$(grs)
+
 tis_prs=$(tis)/$(prs)
+tis_grs=$(tis)/$(grs)
 
 #commands
 
@@ -24,12 +28,13 @@ ghc=ghc -no-keep-hi-files -no-keep-o-files
 
 execs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(tos__cps)\/\1.out/g")
 hs_prs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(tos__prs)\/\1.hs/g")
+hs_grs=$(shell ls $(tis_grs) | sed "s/\(.*\).txt/$(tos__grs)\/\1.hs/g")
 
 # rules: all .out .hs
 
-all: dirs $(hs_prs) $(execs) grules
+all: dirs $(hs_prs) $(execs) $(hs_grs)
 
-dirs: $(tos_prs) $(tos_cps) $(grs) $(tos_prs)/$(pis)
+dirs: $(tos_prs) $(tos_cps) $(tos_grs) $(tos_prs)/$(pis)
 
 $(tos_prs):
 	mkdir -p $@
@@ -37,7 +42,7 @@ $(tos_prs):
 $(tos_cps):
 	mkdir -p $@
 
-$(grs):
+$(tos_grs):
 	mkdir -p $@
 
 $(tos_prs)/$(pis):
@@ -49,18 +54,21 @@ $(tos_cps)/%.out: $(tos_prs)/%.hs $(pi1) $(pi2)
 $(tos_prs)/%.hs: lcc $(tis_prs)/%.lc
 	./$< $(word 2, $^); mv $(basename $(word 2, $^)).hs $@
 
+$(tos_grs)/%.hs: grules $(tis_grs)/%.txt
+	./$<
+
 # rules: lcc gruls
 
-lcc: $(shell find src -type f)
+lcc: $(shell find src -type f -not -name grules.hs)
 	cd src; $(ghc) $@.hs -o ../$@
 
 grules: src/grules.hs
-	cd src; $(ghc) $@.hs -o ../$@; cd ..; ./$@
+	cd src; $(ghc) $@.hs -o ../$@
 
 # rules: clean
 
 clean:
-	rm -rf lcc grules $(tos_cps)/* $(hs_prs) $(grs)/* $(tos)
+	rm -rf lcc grules $(tos_cps)/* $(hs_prs) $(tos_grs)/* $(tos)
 
 clean_execs:
 	rm $(tos_cps)/*
@@ -69,7 +77,7 @@ clean_hs_prs:
 	rm $(hs_prs)
 
 clean_grs:
-	rm $(grs)/*
+	rm $(tos_grs)/*
 
 # rules: test
 

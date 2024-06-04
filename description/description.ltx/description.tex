@@ -8,6 +8,7 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{mathtools}
+\usepackage{fancyvrb}
 \usepackage[left=2cm, right=2cm, top=2cm]{geometry}
 
 \usepackage{biblatex}
@@ -28,6 +29,7 @@
 \def\pend{\mbox{}\\\\}
 \def\prarr{$\xRightarrow{\text{preprocessing}}$\ }
 %\newcommand\_[_]{_}
+\newcommand{\mytilde}{$\sim$}
 
 \renewcommand{\arraystretch}{1.5}
 
@@ -3547,7 +3549,7 @@ In this phase we traverse the AST and following are collected:
 \begin{itemize}
 \item
 All the "\texttt{naked case}" identifiers of all the \texttt{or_types} in the
-program, where a naked case is a case which does not contain other values
+program, where a naked case is a case which does not contain an internal value
 (e.g. \texttt{no_value} as opposed to \texttt{the_value:_}).
 \item
 All the field identifiers of the all the \texttt{tuple_types} in the program.
@@ -3573,10 +3575,10 @@ appropriately in the translate phase).
 If a field identifier is found in a value expression which is a subexpression
 of a "\verb|.change|" expression than the identifier is converted to a postfix
 function with the same argument as the "\verb|.change|". For example, if the
-AST has a part representing the former expression below, it is going be
-converted to represent the latter:\\
+AST has a part representing the expression below, it is going be
+converted as follows:\\
 \texttt{x.change\{f1 = f1 + 1\}} $\Longrightarrow$
-\texttt{x.change\{f1 = x.f1 + 1\}}\\
+\texttt{x.change\{f1 = x.f1 + 1\}}\\\\
 The same applies to special identifiers:\\
 \texttt{x.change\{1st = 1st + 1\}} $\Longrightarrow$
 \texttt{x.change\{1st = x.1st + 1\}}
@@ -3602,7 +3604,7 @@ translated to \H.
 \item
 \texttt{to_hs_wpn}: (to haskell with parameter number) \\\\
 This function is for the AST types that implicitly introduce extra
-parameters when translated to \H\ and therefore needs a state to keep track
+parameters when translated to \H\ and therefore need a state to keep track
 of how many parameters have been introduced.
 \item
 \texttt{to_hs_wil}: (to haskell with indentation level)\\\\
@@ -3646,10 +3648,11 @@ In the following sections we dive into more detail for particular types.
 \begin{itemize}
 \item
 \textbf{Literals}\\\\
-Literals are kept the same as they were parsed except for integer
-literals. Integer literals have explicit type annotations (when they are not a
+Literals are kept the same as they were parsed except for number
+literals. Number literals have explicit type annotations (when they are not a
 case of a "cases" function expression), so that they have type \texttt{Int}
-and not \texttt{Num a => a} for the \H\ compiler.
+or \texttt{Float} and not \texttt{Num a => a} or \texttt{Fractional p => p}
+for the \H\ compiler.
 
 \item
 \textbf{Identifiers}
@@ -3883,7 +3886,8 @@ instance IsFirst' a (a, b, c, d) where
 \verb|(\(pA0, pA1) -> (c0x(pA0) .> c0y(pA1)) tuple)| \\
 
 \item
-\textit{Description}\\\\
+\textit{Description}\\
+
 For the "\texttt{.change}" function, similarly to the projection functions, a
 change function (in \H) is introduced for every field of every
 \texttt{tuple_type}. This function is the name of the field prepended by "c0"
@@ -3895,6 +3899,7 @@ has the form:
 \begin{verbatim}
 FieldType -> TupleOrProdType -> TupleOrProdType
 \end{verbatim}
+
 For every assignment inside the braces we use the change function of the
 assigned field with the expression of the assignment as the
 \texttt{FieldType} argument. By doing this we have all the functions
@@ -3902,6 +3907,7 @@ of type:
 \begin{verbatim}
 TupleOrProdType -> TupleOrProdType
 \end{verbatim}
+
 we need to make the changes. We compose them all with the "\texttt{.>}"
 operator, which is a predefined operator for function composition from left to
 right (although the regular "\texttt{.}" should also do). Now we have one
@@ -3909,6 +3915,7 @@ function of type:
 \begin{verbatim}
 TupleOrProdType -> TupleOrProdType
 \end{verbatim}
+
 that does all the changes. We apply it on the argument of the
 "\texttt{.change}" function and we are done.
 \\\\
@@ -3928,14 +3935,18 @@ similarly to the way they are introduced to tuples.
 
 \subsection{Translation Phase: Operators}
 
-For each one of the lcases operators, a new \H\ operator is defined for it to
+\subsubsection{Operators}
+
+For each one of the lcases operators, a new \H\ operator is defined, for it to
 be translated to. This allows for the use of the precedence and associativity
 mechanism for new user defined operators in \H\ instead of having to implement
-it from scratch in the parser, while also avoiding a lot of extra parentheses
+them from scratch in the parser, while also avoiding a lot of extra parentheses
 that the latter approach would need. Function application and function
 composition operators are defined as shown below. Every other operator is
 defined by a type class that matches the type described in table
-\ref{table:allops}.
+\ref{table:allops}. The implementaion of the operator for every combination of
+types is defined by an appropriate instance. The examples for the addition
+operator in the next page show the general structure.
 \\
 
 \begin{table}[ht]
@@ -4037,22 +4048,85 @@ f <& x = f x
 (<.) :: (b -> c) -> (a -> b) -> a -> c
 (<.) = (.)
 \end{verbatim}
-
 \end{minipage}
 \end{table}
+\newpage
+\begin{Verbatim}[commandchars=\\\{\}]
+# Type class for addition:
+class A1And1Add_To1 a b c where
+  (!+) :: a -> b -> c
 
-\subsubsection{Function Application and Function Composition Operators}
+# Some of the instances
 
-\subsubsection{Arithmetic, Comparison and Boolean Operators}
+# Adding 2 lists:
+instance b \mytilde [a] => A1And1Add_To1 [a] [a] b where
+  (!+) = (++)
 
-\subsubsection{Environment Action Operators}
+# Adding any type 'a' with a list of 'a' s
+instance b \mytilde [a] => A1And1Add_To1 a [a] b where
+  (!+) = (:)
+
+# Adding a String to a type 'a' with a Show instance without needing to call show
+instance (Show a, b \mytilde String) => A1And1Add_To1 String a b where
+  str !+ x = str ++ show x
+
+\end{Verbatim}
 
 \subsubsection{Operator Expressions}
 
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\verb|5 * 'a'| \lra \verb|(5 :: Int) !* 'a'|
+\\\\
+\verb|"Hello " + "World!"| \lra \verb|"Hello " !+ "World!"|
+\\\\
+\verb|_ - 1| \lra \verb|(\pA0 -> pA0 !- (1 :: Int))|
+\\\\
+\verb|_ + "string in the middle of the arguments" + _|
+\\\lra
+\verb|(\(pA0, pA1) -> pA0 !+ "string in the middle of the arguments" !+ pA1)|
+\\
+
+\item
+\textit{Description}\\
+
+In operator expressions, the operands are translated according to what operands
+they are (described in their respective section) and the operators are
+substituted by their respective \H\ operators. If an operand is an underscore
+than a new lambda abstraction is introduced, similarly to how this is done for
+tuples in \ref{subsubsec:parentuplist}.
+\\\\
+For big operator expression that span multiple lines, the lines are split the
+same way they are split in the source file and they are indented all the same
+according to the indentation level. If new lambda abstractrions are introduced,
+they are all placed in a new line on the top, also indented the same. Again,
+all of the above are done similarly to how they are done for tuples in
+\ref{subsubsec:parentuplist}.
+
+\end{itemize}
+
+\newpage
 \subsection{Translation Phase: Function Expressions}
 
 \subsubsection{Regular Function Expressions}
 
+\begin{itemize}
+\item
+\textit{Examples}\\\\
+\verb|_| \lra \verb|_|
+\\\\
+\verb|_| \lra \verb|_|
+\\\\
+\verb|_| \lra \verb|_|
+\\\\
+\verb|_| \lra \verb|_|
+\\\\
+
+\item
+\textit{Description}\\
+
+\end{itemize}
 \subsubsection{"cases" Function Expressions}
 
 \subsection{Translation Phase: Value Definitions and "where" Expressions}
