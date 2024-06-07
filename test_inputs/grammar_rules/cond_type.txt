@@ -8,3 +8,5 @@
 
 (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)#
 
+(@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)#
+

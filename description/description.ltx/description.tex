@@ -2256,7 +2256,7 @@ non_empty_ls(_)to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 
 \end{itemize}
 
-\subsubsection{Type Nicknames}
+\paragraph{Type Nicknames}
 
 \begin{itemize}
 
@@ -3806,6 +3806,7 @@ treated in tuples (section \ref{subsubsec:parentuplist}).
 \end{itemize}
 
 \subsubsection{Prefix and Postfix Functions}
+\label{subsubsec:prepostfuncs}
 
 
 \begin{itemize}
@@ -4180,7 +4181,7 @@ where the "\verb|gac|" parameter is "visible" to the expression of
 \item
 \textit{Examples}\\\\
 \begin{minipage}[t][12cm][t]{\linewidth}
-\begin{minipage}{0.55\linewidth}
+\begin{minipage}{0.42\linewidth}
 
 \begin{verbatim}
 cases
@@ -4191,11 +4192,10 @@ cases
 \begin{verbatim}
 \pA0 ->
 case pA0 of
-  true -> print'("It's true!! :)")
-  false -> print'("It's false... :(")
-
-
+  True -> print'("It's true!! :)")
+  False -> print'("It's false... :(")
 \end{verbatim}
+\noindent\rule[0.5ex]{\linewidth}{1pt}
 \begin{verbatim}
 (x, cases)
   0 => x
@@ -4209,11 +4209,9 @@ case pA0 of
   y -> gcd''(y, x &> mod <& y)
 \end{verbatim}
 \end{minipage}
-\vspace{3cm}
-\begin{minipage}{0.30\linewidth}
+\hfill\vline\hfill
+\begin{minipage}{0.45\linewidth}
 \begin{verbatim}
-
-
 (cases, cases)
   (green, green) => true
   (amber, amber) => true
@@ -4224,13 +4222,12 @@ case pA0 of
 \begin{verbatim}
 \(pA0, pA1) ->
 case (pA0, pA1) of
-  (green, green) -> true
-  (amber, amber) -> true
-  (red, red) -> true
-  _ -> false
-
+  (green, green) -> True
+  (amber, amber) -> True
+  (red, red) -> True
+  _ -> False
 \end{verbatim}
-
+\noindent\rule[0.5ex]{\linewidth}{1pt}
 \begin{verbatim}
 cases
   [x1, x2, xs = ...] =>
@@ -4243,7 +4240,7 @@ cases
 case pA0 of
   x1 : x2 : xs ->
     (x1 !< x2) !& a'is_sorted(x2 !+ xs)
-  _ -> true
+  _ -> True
 \end{verbatim}
 \end{minipage}
 \end{minipage}
@@ -4274,21 +4271,448 @@ If the rest of the list has a name that it is the only thing that is kept
 after the last colon and if it doesn't an undersore placed instead.
 \end{itemize}
 
+\newpage
 \subsection{Translation Phase: Value Definitions and "where" Expressions}
 \label{subsec:tranvalwhere}
 
-\subsubsection{Value Definitions}
+\begin{itemize}
+\item
+\textit{Examples}
+\begin{verbatim}
+foo: Int
+  = 42
+\end{verbatim}
+\lra
+\begin{verbatim}
+foo :: Int
+foo =
+  (42 :: Int)
+\end{verbatim}
+\noindent\rule[0.1ex]{\linewidth}{1pt}
+\begin{verbatim}
+dfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
+  = dfs_on_tree(_)with_num(1) o> _.tree
+    where
+    dfs_on_tree(_)with_num(_) : (T1)Tree x Int => (T1)ResultTreeAndNum
+      = <irrelevant stuff>
 
-\subsubsection{"where" Expressions}
+    <irrelevant stuff>
+\end{verbatim} \lra
+\begin{verbatim}
+dfs_on_tree' :: forall a1. A'Tree a1 -> A'Tree (Int, a1)
+dfs_on_tree' =
+  let
+  dfs_on_tree'with_num' :: (A'Tree a1, Int) -> A'ResultTreeAndNum a1
+  dfs_on_tree'with_num' = <irrelevant stuff>
 
+  <irrelevant stuff>
+  in
+  (\pA0 -> dfs_on_tree'with_num'(pA0, (1 :: Int))) .> (\x' -> tree(x'))
+\end{verbatim}
+\noindent\rule[0.5ex]{\linewidth}{1pt}
+\begin{verbatim}
+val1, val2, val3 : Int, Bool, Char
+  = 42, true, 'a'
+\end{verbatim} \lra
+\begin{verbatim}
+val1 :: Int
+val1 =
+  (42 :: Int)
+
+val2 :: Bool
+val2 =
+  True
+
+val3 :: Char
+val3 =
+  'a'
+\end{verbatim}
+
+\newpage
+
+\begin{verbatim}
+print_gcd_and_coeffs_of(_): GcdAndCoeffs => IO
+  = gac => print_line(message)
+    where
+    message: String
+      = "Gcd: " + gac.gcd_ + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
+\end{verbatim}
+\lra
+\begin{verbatim}
+print_gcd_and_coeffs_of' :: GcdAndCoeffs -> IO
+print_gcd_and_coeffs_of' =
+  \gac ->
+  let
+  message :: String
+  message =
+    "Gcd: " !+ gcd_(gac) !+ "\nCoefficients: a = " !+ a(gac) !+ ", b = " !+ b(gac)
+  in
+  print_line'(message)
+\end{verbatim}
+
+\textit{Description}\\
+
+The following are done to translate value definitions:
+
+\begin{itemize}
+\item
+The "has type" symbol is translated by doubling the colon
+
+\item
+The identifier is reused before the equal sign
+
+\item
+If the value definition is on indentaion level 0 the following steps are taken:
+
+\begin{itemize}
+\item
+Collect all the parametric type variables of the type
+\item
+Prepend the following to the translation of the type:
+\begin{verbatim}
+"forall " <translation of the parametric type variables seperated by spaces> '.'
+\end{verbatim}
+\end{itemize}
+
+This allows the use of the same type variable in the types inside the
+"\texttt{where}" expression if there is one. This is demonstrated in the 2nd
+example where \texttt{T1} (before translation or \texttt{a1} after) is used
+also in the type annotation of as \verb|dfs_on_tree(_)with_num(_)|. By default
+the "\texttt{a1}"s do not refer to the same type even if they have the same
+name.  The compiler extension \texttt{ScopedTypeVariables} is also needed for
+this to work.
+
+\item
+If the value expression is followed by a "\texttt{where}" expresssion, the
+"\texttt{where}" expresssion is translated to a "\texttt{let-in}" expresssion
+that is placed above the translation of the value expression (2nd example). The
+one exception to this rules happens when the value expression is a regular
+function expression where the "\texttt{let-in}" expresssion is placed between
+the parameters and the body (last example).
+
+\end{itemize}
+
+\end{itemize}
+
+\newpage
 \subsection{Translation Phase: Types}
 
 \subsubsection{Type Expressions}
 
+\paragraph{Type Identifiers}
+
+
+\begin{itemize}
+\item
+\textit{Examples}\\
+
+\verb|Int| \lra \verb|Int|\\\\
+\verb|String| \lra \verb|String|\\\\
+\verb|SelfReferencingType| \lra \verb|SelfReferencingType|\\
+\item
+\textit{Description}\\
+
+Type ids remaing the same.
+
+\end{itemize}
+
+\paragraph{Type Variables}
+
+
+\begin{itemize}
+
+\item
+Parametric Type Variables
+
+\begin{itemize}
+
+\item
+\textit{Examples}\\
+
+\verb|T1| \lra \verb|a1|\\\\
+\verb|T2| \lra \verb|a2|\\\\
+\verb|T3| \lra \verb|a3|\\
+
+\item
+\textit{Description}\\
+
+The 'T' becomes an 'a'.
+\end{itemize}
+
+\item
+Ad Hoc Type Variables
+
+\begin{itemize}
+\item
+\textit{Examples}\\
+
+\verb|@A| \lra \verb|b0|\\\\
+\verb|@B| \lra \verb|b1|\\\\
+\verb|@C| \lra \verb|b2|\\
+\item
+\textit{Description}\\
+
+The '@' becomes a 'b' and the capital letters map like so:
+A \lra 0, B \lra 1, etc
+\end{itemize}
+
+\end{itemize}
+
+\newpage
+\paragraph{Type Application Types}
+
+\begin{itemize}
+\item
+\textit{Examples}\\
+
+\verb|ListOf(Int)s| \lra \verb|ListOf's Int|\\\\
+\verb|Error(String)OrResult(Int)| \lra \verb|Error'OrResult' String Int|\\\\
+\verb|(Int)Tree| \lra \verb|A'Tree Int|\\\\
+\verb|ListOf(Int => Int)s| \lra \verb|ListOf's (Int -> Int)|\\\\
+\verb|Before(B,C)After| \lra \verb|Before''After B C|\\\\
+\verb|A(B(C))| \lra \verb|A' (B' C)|\\
+
+\item
+\textit{Description}\\
+
+For type application types, the type id for \H\ is extracted by replacing every
+parenthesis with as many single quotes as the number of type arguments it has.
+If the parenthesis is in the beginning, an 'A' (for argument) is prepended to
+make it a valid \H\ identifier.  The type arguments of all the parentheses are
+collected, translated, parenthesized if needed and appended to the type id
+seperated by spaces.
+
+\end{itemize}
+
+\paragraph{Product Types}
+
+\begin{itemize}
+\item
+\textit{Examples}\\
+
+\verb|Int x Real x String| \lra \verb|(Int, Real, String)|\\\\
+\verb|Int^2 x Int^2| \lra \verb|((Int, Int), (Int, Int))|\\\\
+\verb|(A^2 => A) x A x ListOf(A)s| \lra \verb|((A, A) -> A, A, ListOf's A)|\\
+\item
+\textit{Description}\\
+
+For the product types, all the field types and translated, seperated by commas
+and put in parenthesis.
+
+\end{itemize}
+
+\paragraph{Function Types}
+
+\begin{itemize}
+\item
+\textit{Examples}\\
+
+\verb|T1 => T1| \lra \verb|a1 -> a1|\\\\
+\verb|Int^2 => Int| \lra \verb|(Int, Int) -> Int|\\\\
+\verb|(A^2 => A) x A x ListOf(A)s => A|
+\lra \verb|((A, A) -> A, A, ListOf's A) -> A|\\
+
+\item
+\textit{Description}\\
+
+For the function types, the input and ouput types are translated and
+the arrow between them changes from "\verb|=>|" to "\verb|->|".
+
+\end{itemize}
+
+\newpage
+\paragraph{Conditional Types}
+
+\begin{itemize}
+\item
+\textit{Examples}\\
+
+\verb|(@T)Has_Str_Rep --> @T => String|
+\lra
+\verb|A'Has_Str_Rep b19 => b19 -> String|\\\\
+\verb|(@A)Is(@B)s_First --> @B => @A|
+\lra \verb|A'Is's_First b0 b1 => b1 -> b0|\\\\
+\verb|(@T)Has_Internal_App --> (T1 => T2) x @T(T1) => @T(T2)|
+\\
+\lra
+\\
+\verb|A'Has_Internal_App b19 => (a1 -> a2, b19 a1) -> b19 a2|\\
+
+\item
+\textit{Description}\\
+
+For conditional types, the condition is translated the similarly to how type
+application types are translated, with quotes replacing the parentheses and
+the type variables appended to the condition name and seperated by spaces.
+The simple type is translated according to what type it is and
+the arrow between the condition and the simple type changes from "\verb|-->|"
+to "\verb|=>|".
+
+\end{itemize}
+
+\newpage
 \subsubsection{Type Definitions}
 \label{subsubsec:trantypedef}
 
-\subsubsection{Type Nicknames}
+\paragraph{Tuple Types}
+
+\begin{itemize}
+\item
+\textit{Examples}
+
+\begin{verbatim}
+tuple_type Date
+value (day, month, year) : Int^3
+\end{verbatim}
+\lra
+\begin{verbatim}
+data Date =
+  Date' { day :: Int, month :: Int, year :: Int }
+
+instance FromTuple3 Int Int Int Date where
+  ft3 = \(x1, x2, x3) -> Date' x1 x2 x3
+
+c0day :: Int -> Date -> Date
+c0month :: Int -> Date -> Date
+c0year :: Int -> Date -> Date
+c0day = \new x -> x { day = new }
+c0month = \new x -> x { month = new }
+c0year = \new x -> x { year = new }
+
+\end{verbatim}
+\noindent\rule[0.5ex]{\linewidth}{1pt}
+\begin{verbatim}
+
+tuple_type Edge
+value (u, v) : Node^2
+\end{verbatim}
+\lra
+\begin{verbatim}
+data Edge =
+  Edge' { u :: Node, v :: Node }
+
+instance FromTuple2 Node Node Edge where
+  ft2 = \(x1, x2) -> Edge' x1 x2
+
+c0u :: Node -> Edge -> Edge
+c0v :: Node -> Edge -> Edge
+c0u = \new x -> x { u = new }
+c0v = \new x -> x { v = new }
+\end{verbatim}
+
+\newpage
+\begin{verbatim}
+tuple_type (T1)Tree
+value (root, subtrees) : T1 x (T1)Trees
+\end{verbatim}
+\lra
+\begin{verbatim}
+data A'Tree a1 =
+  A'Tree' { root :: a1, subtrees :: A'Trees a1 }
+
+instance FromTuple2 a1 (A'Trees a1) (A'Tree a1) where
+  ft2 = \(x1, x2) -> A'Tree' x1 x2
+
+c0root :: a1 -> A'Tree a1 -> A'Tree a1
+c0subtrees :: A'Trees a1 -> A'Tree a1 -> A'Tree a1
+c0root = \new x -> x { root = new }
+c0subtrees = \new x -> x { subtrees = new }
+\end{verbatim}
+\item
+\textit{Description}\\
+
+For tuple types the translation has the following steps:
+
+\begin{enumerate}
+
+\item
+"\texttt{tuple_type}" \lra "\texttt{data}"
+
+\item
+From the type name the \H\ type id is extracted by replacing the parametric
+type variables in the parenthesis with single quotes and the parametric type
+variables are appended seperated by spaces, similarly to how it is done in Type
+Application Types. An equal sign is appended to the above.
+
+\item
+"\texttt{value}" is discarded and the second line is indented and starts
+with the data constructor, which is the \H\ type id ended with a single quote.
+
+\item
+We add the \H\ record syntax with the fields seperated by commas and annotated
+with their respcetive types, which are translated from the product type that
+ends the "\texttt{tuple_type}" definition.
+
+\item
+In this step the instance for the \texttt{ft\textit{n}} function is defined
+where \textit{n} is the size of the tuple of the \texttt{tuple_type} which is
+required for the translation of tuples for reasons explained in section
+\ref{subsubsec:parentuplist}. This can be divided into the following substeps
+(where \textit{n} is the size of the tuple of the "\texttt{tuple_type}", not
+'n' verbatim):
+
+\begin{enumerate}
+\item
+"\texttt{instance FromTuple}\textit{n} "
+
+\item
+We append the translations (parenthesized if needed) of all the field types and
+the \texttt{tuple_type} name (in that order) seperated by spaces and followed
+by " \texttt{where}".
+
+\item
+The second line is indented and starts with \texttt{ft\textit{n} =}.
+
+\item
+A \verb|\| and a tuple parameter with internal parameters \texttt{x1} to
+\texttt{x\textit{n}} followed by "\texttt{ -> }" is appended.
+
+\item
+The data constructor of step 3 followed by the parameters \texttt{x1} to
+\texttt{x\textit{n}} seperated by commas are appended.
+
+\end{enumerate}
+
+\item
+The type annotations for the change function of each field (described in the
+"\texttt{.change}" section of \ref{subsubsec:prepostfuncs}) are generated by
+the following substeps for each change function:
+
+\begin{itemize}
+\item
+Prepend "\texttt{c0}" to the field identifier
+
+\item
+Append "\verb| :: |" followed by the type, which is of the following form:
+
+\begin{verbatim}
+<translation of field type> -> <name of the tuple_type> -> <name of the tuple_type>
+\end{verbatim}
+
+
+\end{itemize}
+
+\item
+The definitions for the change function of each field are generated by the
+following substeps for each change function:
+
+\begin{itemize}
+\item
+Prepend "\texttt{c0}" to the field identifier
+
+\item
+Append "\verb| = \new x -> x { <field id> = new }|"
+
+\end{itemize}
+
+\end{enumerate}
+
+\end{itemize}
+
+\newpage
+\paragraph{Or Types}
+
+\paragraph{Type Nicknames}
 
 \subsection{Translation Phase: Type Logic}
 
@@ -4301,30 +4725,6 @@ after the last colon and if it doesn't an undersore placed instead.
 Here is the list of lcases constructs that have a \H\ correspondent:
 
 \begin{itemize}
-
-\item
-"value definitions" are similar. In lcases the type and the expression are in
-one definition. This is technically possible in \H\ too, but the type must be
-after the expression and sometimes the expression must be put in parentheses
-for the type to extend to the whole expression. "value definitions" are
-compiled into a type annotation \textbf{and} a value definition in \H.
-
-\item
-"where" expressions are also similar. In lcases the values defined in a
-"where" expression can "see" the parameters of the outer expression when
-it is a function. "where" expressions in lcases are actually compiled to
-"let-in" expressions in \H.
-
-\item
-Type variables are almost the same. In lcases, there syntactic separation of ad
-hoc type variables (constrained type variables in \H) and parametric type
-variables whereas in \H\ they are all lower case letters.
-
-\item
-The condition (constaint in \H) arrow: "\verb|-->|" \r "\verb|=>|"
-
-\item
-The product type: "\verb|A x B x C|" \r "\verb|(A, B, C)|"
 
 \item
 Type definitions \r "data" statements

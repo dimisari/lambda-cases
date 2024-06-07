@@ -138,6 +138,12 @@ file_name_compile_func_pairs =
   , ( "type_theo.txt"
     , (compile_example_func :: Compile TypeTheo) .> extract_res_str
     )
+  , ( "param_tv.txt"
+    , (compile_example_func :: Compile ParamTVar) .> extract_res_str
+    )
+  , ( "ad_hoc_tv.txt"
+    , (compile_example_func :: Compile AdHocTVar) .> extract_res_str
+    )
   ]
 
 -- to have ToHaskell from ToHsWithIndentLvl and also HasParser

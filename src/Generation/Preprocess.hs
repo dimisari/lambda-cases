@@ -495,4 +495,4 @@ test = readFile in_file >>= test_parse .> change_prog_if_needed .> print
 
 -- ASTTypes.hs
 -- AST.hs
--- Test.hs
+-- ../lcc.hs

@@ -18,3 +18,5 @@ ListOf(T1)s => ListOf(T1)s#
 
 ListOf(ListOf(T1)s)s => ListOf(ListOf(T1)s)s#
 
+(A^2 => A) x A x ListOf(A)s => A#
+

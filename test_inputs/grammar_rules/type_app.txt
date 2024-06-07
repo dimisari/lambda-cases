@@ -1,6 +1,10 @@
 Possibly(Int)#
 
+(Int)Tree#
+
 ListOf(Real)s#
+
+ListOf(Int)s#
 
 TreeOf(String)s#
 
@@ -9,6 +13,8 @@ Error(String)OrResult(Int)#
 ListOf(Int => Int)s#
 
 ListOf(T1)s#
+
+Before(A => A, B)After#
 
 A(B(C))#
 

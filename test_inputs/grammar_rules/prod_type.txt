@@ -10,3 +10,5 @@ Real^3 x Real^3#
 
 (Int x T1)Tree x Int#
 
+(A^2 => A) x A x ListOf(A)s#
+

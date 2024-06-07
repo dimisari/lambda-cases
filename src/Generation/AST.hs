@@ -496,9 +496,8 @@ instance ToHsWithIndentLvl CaseBody where
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 instance ToHsWithIndentLvl ValueDef where
   to_hs_wil (VD (id, t, ve, maybe_we)) =
-    get >>= \il ->
-    indent <++
-    (to_haskell id ++ " :: " ++ forall_hs il ++ to_haskell t ++ "\n") >++<
+    indent <++ (to_haskell id ++ " :: ") >++<
+    (forall_hs <$> get) <++ (to_haskell t ++ "\n") >++<
     indent <++ (to_haskell id ++ " =\n") >++<
     deeper (to_hs_wil (ve, mwe_to_pwe maybe_we))
     where
