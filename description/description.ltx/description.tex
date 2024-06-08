@@ -1090,7 +1090,7 @@ print_string("Nice to meet you " + name + "!")
 The environment action operators are used to combine values that do environment
 actions into values that do more complicated environment actions. Environment
 actions are type functions that take a type argument and produce a type (just
-like ListOf(_)s). These type functions have the "then" operator (\verb|;|)
+like \verb|ListOf(_)s|). These type functions have the "then" operator (\verb|;|)
 and the "use" operator (\verb|;>|) defined for them.  A value of the type
 \verb|@E(T1)| where \verb|(@E)Has_Then| does an environment action of type
 \verb|@E| that produces a value of type \verb|T1| which can then be
@@ -3528,16 +3528,15 @@ instance HasParser ValueDef where
 In this example we see how the state of the parser is used to enforce the
 indentation rules. The "indent" parser parses $<$2 * the indentation level$>$
 spaces, getting the indentation level from the state (see Indentation System
-\ref{subsubsec:indsys}).  "increase_il_by" and "decrease_il_by" have a Parser
-type but they don't actually parse anything, they are "parsers" that only
-update the indentation level (but can also be combined with other parsers).
-They are used as described in rule 2 of the Indentation System
-(\ref{subsubsec:indsys}). "has_type_symbol" parses the following part of
-the grammar rule:
-( [ \lit{\ } ] \lit{:} [ \lit{\ } ]
-\verb||| \synt{nl} \synt{indent} \lit{:\ }).
-"we_are_in_equal_line" and "we_are_not_in_equal_line" change the state
-to enforce rule 6 of the Indentation System.
+\ref{subsubsec:indsys}).  "\verb|increase_il_by|" and "\verb|decrease_il_by|"
+have a Parser type but they don't actually parse anything, they are "parsers"
+that only update the indentation level (but can also be combined with other
+parsers).  They are used as described in rule 2 of the Indentation System
+(\ref{subsubsec:indsys}). "\verb|has_type_symbol|" parses the following part of
+the grammar rule: ( [ \lit{\ } ] \lit{:} [ \lit{\ } ] \verb||| \synt{nl}
+\synt{indent} \lit{:\ }).  "\verb|we_are_in_equal_line|" and
+"\verb|we_are_not_in_equal_line|" change the state to enforce rule 6 of the
+Indentation System.
 
 \newpage
 \section{Translation to \H}
@@ -3556,11 +3555,11 @@ In this phase we traverse the AST and following are collected:
 
 \begin{itemize}
 \item
-All the "\texttt{naked case}" identifiers of all the \texttt{or_types} in the
+All the "\texttt{naked case}" identifiers of all the \verb|or_types| in the
 program, where a naked case is a case which does not contain an internal value
-(e.g. \texttt{no_value} as opposed to \texttt{the_value:_}).
+(e.g. \verb|no_value| as opposed to \verb|the_value:_|).
 \item
-All the field identifiers of the all the \texttt{tuple_types} in the program.
+All the field identifiers of the all the \verb|tuple_types| in the program.
 \end{itemize}
 
 The above are used in the preprocess phase.
@@ -3573,10 +3572,10 @@ according to the following rules:
 \begin{itemize}
 \item
 If an identifier of a naked case is found in a value expression, add a 'C' (for
-constructor) in the front. This is going to be needed because \texttt{or_type}
+constructor) in the front. This is going to be needed because \verb|or_type|
 cases are translated to data constructors in \H. Data constructors need to
-start with an upper case letter whereas \texttt{or_type} cases don't
-(this is not needed for the \texttt{or_type} cases with internal values
+start with an upper case letter whereas \verb|or_type| cases don't
+(this is not needed for the \verb|or_type| cases with internal values
 because we can identify them on the spot from the colon and handle them
 appropriately in the translate phase).
 \item
@@ -3606,16 +3605,16 @@ one of the following 3 polymorphic functions:
 
 \begin{itemize}
 \item
-\texttt{to_haskell}:\\\\
+\verb|to_haskell|:\\\\
 This function is for the AST types that need no state and can be directly
 translated to \H.
 \item
-\texttt{to_hs_wpn}: (to haskell with parameter number) \\\\
+\verb|to_hs_wpn|: (to haskell with parameter number) \\\\
 This function is for the AST types that implicitly introduce extra
 parameters when translated to \H\ and therefore need a state to keep track
 of how many parameters have been introduced.
 \item
-\texttt{to_hs_wil}: (to haskell with indentation level)\\\\
+\verb|to_hs_wil|: (to haskell with indentation level)\\\\
 This function is for the AST types that need indentation level information to
 be correctly indented when translated to \H. Therefore, a state to keep track
 of the indetation level is needed.\\
@@ -3669,9 +3668,9 @@ for the \H\ compiler.
 \item
 \textit{Examples}\\\\
 \texttt{x1} \lra \texttt{x1} \\
-\texttt{apply(_)to_all_in(_)} \lra \texttt{apply'to_all_in'} \\
-\texttt{(_)to_string} \lra \texttt{a'to_string} \\
-\texttt{f(_, _, _)} \lra \texttt{f'''}\\
+\verb|apply(_)to_all_in(_)| \lra \verb|apply'to_all_in'| \\
+\verb|(_)to_string| \lra \verb|a'to_string| \\
+\verb|f(_, _, _)| \lra \texttt{f'''}\\
 
 \item
 \textit{Description}\\\\
@@ -3697,8 +3696,8 @@ The internal expression is put in parenthesis.\\
 \item
 \textit{Examples}\\\\
 \texttt{(x, y)} \lra \texttt{ft2(x, y)} \\
-\texttt{(_, 3.14, _)} \lra \verb|(\(pA0, pA1) -> ft3(pA0, 3.14, pA1))|\\
-\texttt{(_, _, "Hello from 3rd field")} \lra
+\verb|(_, 3.14, _)| \lra \verb|(\(pA0, pA1) -> ft3(pA0, 3.14, pA1))|\\
+\verb|(_, _, "Hello from 3rd field")| \lra
 \verb|(\(pA0, pA1) -> ft3(pA0, pA1, "Hello from 3rd field"))|\\
 
 \item
@@ -3713,14 +3712,14 @@ class FromTuple2 a b c | c -> a b where
   ft2 :: (a, b) -> c
 \end{verbatim}
 This is because the same tuple may be of a \texttt{product type} or of a
-\texttt{tuple_type} depending on where it appears on the program.
+\verb|tuple_type| depending on where it appears on the program.
 For product types we have the following instance:
 \begin{verbatim}
 instance FromTuple2 a b (a, b) where
   ft2 = id
 \end{verbatim}
 And there is also a new instance automatically generated for every
-\texttt{tuple_type} definition.\\
+\verb|tuple_type| definition.\\
 For example, for the following definition:
 \begin{verbatim}
 tuple_type Name
@@ -3772,7 +3771,7 @@ indentation level.
 \item
 \textit{Examples}\\\\
 \texttt{[1.61, 2.71, 3.14]} \lra \texttt{[1.61, 2.71, 3.14]} \\
-\texttt{[_, x, _]} \lra \verb|(\(pA0, pA1) -> [pA0, x, pA1])| \\
+\verb|[_, x, _]| \lra \verb|(\(pA0, pA1) -> [pA0, x, pA1])| \\
 
 \item
 \textit{Description}\\\\
@@ -3790,9 +3789,9 @@ the \texttt{ft\textit{n}} function.
 \item
 \textit{Examples}\\\\
 \texttt{f(x, y, z)} \lra \texttt{f'''(x, y, z)} \\
-\texttt{f(x, _, _)} \lra \verb|(\(pA0, pA1) -> f'''(x, pA0, pA1))| \\
-\texttt{(x)to_str} \lra \texttt{a'to_str(x)} \\
-\texttt{apply(f)to_all_in(_)} \lra \verb|(\pA0 -> apply'to_all_in'(f, pA0))| \\
+\verb|f(x, _, _)| \lra \verb|(\(pA0, pA1) -> f'''(x, pA0, pA1))| \\
+\verb|(x)to_str| \lra \verb|a'to_str(x)| \\
+\verb|apply(f)to_all_in(_)| \lra \verb|(\pA0 -> apply'to_all_in'(f, pA0))| \\
 
 \item
 \textit{Description}\\\\
@@ -3815,16 +3814,16 @@ treated in tuples (section \ref{subsubsec:parentuplist}).
 \begin{itemize}
 \item
 \textit{Examples}\\\\
-\texttt{the_value:42} \lra \texttt{Cthe_value((42 ::\ Int))} \\
+\verb|the_value:42| \lra \verb|Cthe_value((42 ::\ Int))| \\
 \texttt{error:"this is an error message"} \lra
 \texttt{Cerror("this is an error message")} \\
-\texttt{the_value:_} \lra \verb|(\pA0 -> Cthe_value(pA0))| \\
-\texttt{the_value:result:true} \lra \texttt{Cthe_value(Cresult(True))} \\
+\verb|the_value:_| \lra \verb|(\pA0 -> Cthe_value(pA0))| \\
+\verb|the_value:result:true| \lra \verb|Cthe_value(Cresult(True))| \\
 
 \item
 \textit{Description}\\\\
 Prefix functions are data constructors in \H\ which are introduced by the
-translation of the relevant \texttt{or_type} definition. They are prepended
+translation of the relevant \verb|or_type| definition. They are prepended
 with an upper case 'C' to be valid data constructors and their argument is
 placed in parenthesis. The argument can be an underscore, in which case a new
 parameter name is put in its place, the appropriate lambda abstraction is
@@ -3846,10 +3845,10 @@ the abstraction.
 \item
 \textit{Description}\\\\
 Postfix functions are projection functions that are generated automatically by
-the translation of the relevant \texttt{tuple_type} defintion or they are the
-projection functions for product types (\texttt{_.1st _.2nd etc}). They are
+the translation of the relevant \verb|tuple_type| defintion or they are the
+projection functions for product types (\verb|_.1st _.2nd etc|). They are
 translated into regular \H\ functions (like the record accessor functions of
-\H\ are) with their argument in parenthesis. For \texttt{_.1st _.2nd etc} a 'p'
+\H\ are) with their argument in parenthesis. For \verb|_.1st _.2nd etc| a 'p'
 for "projection" is prepended to make it a valid \H\ function.
 \\\\
 The projection functions for product types are polymorphic and work on tuples
@@ -3891,7 +3890,7 @@ instance IsFirst' a (a, b, c, d) where
 \texttt{tuple.change\{1st = 1.61, 3rd = 3.14\}} \lra
 \texttt{(c1st(1.61) .> c3rd(3.14)) tuple}
 \\\\
-\texttt{tuple.change\{x = _, y = _\}} \lra
+\verb|tuple.change{x = _, y = _}| \lra
 \verb|(\(pA0, pA1) -> (c0x(pA0) .> c0y(pA1)) tuple)| \\
 
 \item
@@ -3899,7 +3898,7 @@ instance IsFirst' a (a, b, c, d) where
 
 For the "\texttt{.change}" function, similarly to the projection functions, a
 change function (in \H) is introduced for every field of every
-\texttt{tuple_type}. This function is the name of the field prepended by "c0"
+\verb|tuple_type|. This function is the name of the field prepended by "c0"
 where the 'c' stands for "change" and the '0' is there so that there can be no
 collisions with other identifiers (numbers can only be at the end for lcases
 identifiers). For the product type fields, the change functions are
@@ -4195,7 +4194,9 @@ case pA0 of
   True -> print'("It's true!! :)")
   False -> print'("It's false... :(")
 \end{verbatim}
-\noindent\rule[0.5ex]{\linewidth}{1pt}
+
+\rule{\linewidth}{0.1pt}
+
 \begin{verbatim}
 (x, cases)
   0 => x
@@ -4227,7 +4228,9 @@ case (pA0, pA1) of
   (red, red) -> True
   _ -> False
 \end{verbatim}
-\noindent\rule[0.5ex]{\linewidth}{1pt}
+
+\rule{\linewidth}{0.1pt}
+
 \begin{verbatim}
 cases
   [x1, x2, xs = ...] =>
@@ -4288,7 +4291,9 @@ foo :: Int
 foo =
   (42 :: Int)
 \end{verbatim}
-\noindent\rule[0.1ex]{\linewidth}{1pt}
+
+\rule{\linewidth}{0.1pt}
+
 \begin{verbatim}
 dfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
   = dfs_on_tree(_)with_num(1) o> _.tree
@@ -4309,7 +4314,9 @@ dfs_on_tree' =
   in
   (\pA0 -> dfs_on_tree'with_num'(pA0, (1 :: Int))) .> (\x' -> tree(x'))
 \end{verbatim}
-\noindent\rule[0.5ex]{\linewidth}{1pt}
+
+\rule{\linewidth}{0.1pt}
+
 \begin{verbatim}
 val1, val2, val3 : Int, Bool, Char
   = 42, true, 'a'
@@ -4580,7 +4587,9 @@ c0month = \new x -> x { month = new }
 c0year = \new x -> x { year = new }
 
 \end{verbatim}
-\noindent\rule[0.5ex]{\linewidth}{1pt}
+
+\rule{\linewidth}{0.1pt}
+
 \begin{verbatim}
 
 tuple_type Edge
@@ -4626,7 +4635,7 @@ For tuple types the translation has the following steps:
 \begin{enumerate}
 
 \item
-"\texttt{tuple_type}" \lra "\texttt{data}"
+"\verb|tuple_type|" \lra "\texttt{data}"
 
 \item
 From the type name the \H\ type id is extracted by replacing the parametric
@@ -4641,14 +4650,14 @@ with the data constructor, which is the \H\ type id ended with a single quote.
 \item
 We add the \H\ record syntax with the fields seperated by commas and annotated
 with their respcetive types, which are translated from the product type that
-ends the "\texttt{tuple_type}" definition.
+ends the "\verb|tuple_type|" definition.
 
 \item
 In this step the instance for the \texttt{ft\textit{n}} function is defined
-where \textit{n} is the size of the tuple of the \texttt{tuple_type} which is
+where \textit{n} is the size of the tuple of the \verb|tuple_type| which is
 required for the translation of tuples for reasons explained in section
 \ref{subsubsec:parentuplist}. This can be divided into the following substeps
-(where \textit{n} is the size of the tuple of the "\texttt{tuple_type}", not
+(where \textit{n} is the size of the tuple of the "\verb|tuple_type|", not
 'n' verbatim):
 
 \begin{enumerate}
@@ -4657,7 +4666,7 @@ required for the translation of tuples for reasons explained in section
 
 \item
 We append the translations (parenthesized if needed) of all the field types and
-the \texttt{tuple_type} name (in that order) seperated by spaces and followed
+the \verb|tuple_type| name (in that order) seperated by spaces and followed
 by " \texttt{where}".
 
 \item
@@ -4712,8 +4721,132 @@ Append "\verb| = \new x -> x { <field id> = new }|"
 \newpage
 \paragraph{Or Types}
 
+
+\begin{itemize}
+
+\item
+\textit{Examples}
+
+\begin{minipage}[t][8cm][t]{\linewidth}
+\begin{minipage}{0.35\linewidth}
+\begin{verbatim}
+or_type Bool
+values true | false
+\end{verbatim}
+\lra
+\begin{verbatim}
+data Bool =
+  Ctrue |
+  Cfalse
+\end{verbatim}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+or_type Possibly(T1)
+values the_value:T1 | no_value
+\end{verbatim}
+\lra
+\begin{verbatim}
+data Possibly' a1 =
+  Cthe_value a1 |
+  Cno_value
+\end{verbatim}
+
+\end{minipage}
+\hfill\vline\hfill
+\begin{minipage}{0.45\linewidth}
+
+\begin{verbatim}
+or_type Error(T1)OrResult(T2)
+values error:T1 | result:T2
+\end{verbatim}
+\lra
+\begin{verbatim}
+data Error'OrResult' a1 a2 =
+  Cerror a1 |
+  Cresult a2
+\end{verbatim}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+or_type Comparison
+values lesser | equal | greater
+\end{verbatim}
+\lra
+\begin{verbatim}
+data Comparison =
+  Clesser |
+  Cequal |
+  Cgreater
+\end{verbatim}
+
+\end{minipage}
+
+\end{minipage}
+
+\item
+\textit{Description}\\
+
+For \verb|or_types| the translation has the following steps:
+
+\begin{enumerate}
+
+\item
+"\verb|tuple_type|" \lra "\texttt{data}"
+
+\item
+The type name is translated the same way as it is in tuple types.
+
+\item
+"\texttt{values}" is discarded and the lines from the 2nd onwards have the data
+constructors for each of the values of the \verb|or_type| (one in each). This
+is done as follows:
+
+\begin{enumerate}
+
+\item
+'C' is prepended to the identifier of the value to make it a data constructor.
+
+\item
+If there is an internal value, the type is translated and appended (seperated
+by a space).
+
+\item
+If it is not the last value, "\texttt{ |}" is appended.
+
+\end{enumerate}
+
+\end{enumerate}
+
+\end{itemize}
+
 \paragraph{Type Nicknames}
 
+
+\begin{itemize}
+\item
+\textit{Examples}\\
+
+\verb|type_nickname Ints = ListOf(Int)s| \lra \verb|type Ints = ListOf's Int|
+\\
+\\
+\verb|type_nickname ErrOrRes(T1) = Error(String)OrResult(T1)|
+\\
+\lra
+\verb|type ErrOrRes' a1 = Error'OrResult' String a1|
+\item
+\textit{Description}\\
+
+For type nicknames we replace "\verb|type_nickname|" with "\verb|type|",
+the type name (before the equal sign) with its translation and the
+type (after the equal sign) with its translation.
+
+\end{itemize}
+
+
+\newpage
 \subsection{Translation Phase: Type Logic}
 
 \subsubsection{Proposition Definitions}
@@ -4725,9 +4858,6 @@ Append "\verb| = \new x -> x { <field id> = new }|"
 Here is the list of lcases constructs that have a \H\ correspondent:
 
 \begin{itemize}
-
-\item
-Type definitions \r "data" statements
 
 \item
 Type nicknames \r "type" statements

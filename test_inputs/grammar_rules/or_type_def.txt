@@ -1,18 +1,15 @@
 or_type Bool
-values
-  true | false#
+values true | false#
 
 or_type Possibly(T1)
-values
-  the_value:T1 | no_value#
+values the_value:T1 | no_value#
+
+or_type Error(T1)OrResult(T2)
+values error:T1 | result:T2#
 
 or_type ListOf(T1)s
 values
   non_empty_l:NonEmptyListOf(T1)s | empty_l#
-
-or_type Error(T1)OrResult(T2)
-values
-  error:T1 | result:T2#
 
 or_type Bool
 values true|false#
