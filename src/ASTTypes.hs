@@ -8,8 +8,10 @@ newtype Identifier =
   Id (Maybe UndersInParen, IdStart, [IdCont], Maybe Char, Maybe UndersInParen)
 
 newtype SimpleId = SId (IdStart, Maybe Char)
+  deriving (Eq, Ord)
 
 newtype IdStart = IS String
+  deriving (Eq, Ord)
 
 newtype IdCont = IC (UndersInParen, String)
 
@@ -197,10 +199,13 @@ data SimpleType =
   FT1 FuncType
 
 newtype TypeId = TId String
+  deriving Eq
 
 newtype ParamTVar = PTV Int
+  deriving (Eq, Ord)
 
 newtype AdHocTVar = AHTV Char
+  deriving (Eq, Ord)
 
 newtype TypeAppIdOrAHTV =
   TAIOA (Maybe TypesInParen, TAIOAMiddle, Maybe TypesInParen)
@@ -269,10 +274,11 @@ data PropName =
   NPStart1 NPStart1 | AHVIPStart AHVIPStart
 
 newtype NamePart = NP String
+  deriving Eq
 
 -- TypeTheo
 newtype TypeTheo =
-  TT (PropNameWithSubs, Maybe PropNameWithSubs, Proof)
+  TT ([PropNameWithSubs], Maybe PropNameWithSubs, Proof)
 
 type NPStart2 = (Char, [(NamePart, SubsInParen)], Maybe NamePart)
 type SIPStart = ([(SubsInParen, NamePart)], Maybe SubsInParen)
@@ -299,7 +305,7 @@ data SubOrUnder =
 newtype PowerTypeSub = PoTS (PowerBaseTypeSub, Int)
 
 data PowerBaseTypeSub =
-  Underscore5 | PTV5 ParamTVar | TAIOAS2 TypeAppIdOrAHTVSub | IPTS1 InParenTSub
+  Underscore5 | PTV5 ParamTVar | TAIOAS2 TypeAppIdOrAHTVSub | IPTS InParenTSub
 
 data InParenTSub =
   PTS2 ProdTypeSub | FTS2 FuncTypeSub
@@ -339,5 +345,6 @@ data ProgramPart =
 -- Generation/TypesAndHelpers.hs
 -- Generation/Collect.hs
 -- Generation/Preprocess.hs
+-- Generation/CheckCompatibility.hs
 -- Generation/AST.hs
 -- test.hs

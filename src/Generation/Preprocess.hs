@@ -5,7 +5,7 @@
 
 module Generation.Preprocess where
 
-import Data.Set as S
+import qualified Data.Set as S
 import Control.Monad
 import Control.Monad.State
 
@@ -15,63 +15,70 @@ import ShowInstances
 
 import Parsing.AST
 import Generation.Collect
+import Generation.CheckCompatibility
 
 -- types
-data PossiblyInDC = InDotChange [PostFuncArg] | NotInDotChange
+data PossiblyInDC =
+  InDotChange [PostFuncArg] | NotInDotChange
 
-type DotChangeState = State (PossiblyInDC, FieldIds, NakedCases)
-type DCS = DotChangeState
+type StateTuple = (PossiblyInDC, FieldIds, NakedCases, RenamingProps)
+type PreprocessState = State StateTuple
+
+type PS = PreprocessState
 type PFAOI = ParenFuncAppOrId
 
 -- class
-class ChangeIfNeeded a where
-  ch_inside_if_needed :: a -> DotChangeState a
+class Preprocess a where
+  preprocess :: a -> PreprocessState a
 
--- change_prog_if_needed
-change_prog_if_needed :: Program -> Program
-change_prog_if_needed = \prog ->
-  evalState (ch_inside_if_needed prog) (init_state prog)
+-- preprocess_prog
+preprocess_prog :: Program -> Program
+preprocess_prog = \prog -> evalState (preprocess prog) (init_state prog)
 
 -- State helpers: init, get, put, pfarg if in dc, check
-init_state :: Program -> (PossiblyInDC, FieldIds, NakedCases)
-init_state = \prog -> (NotInDotChange, field_ids prog, naked_cases prog)
+init_state :: Program -> StateTuple
+init_state = \prog ->
+  (NotInDotChange, field_ids prog, naked_cases prog, renaming_props prog)
 
-get_pidc :: DotChangeState PossiblyInDC
-get_pidc = get >$> \(pidc, _, _) -> pidc
+get_pidc :: PreprocessState PossiblyInDC
+get_pidc = get >$> \(pidc, _, _, _) -> pidc
 
-get_fids :: DotChangeState FieldIds
-get_fids = get >$> \(_, fids, _) -> fids
+get_fids :: PreprocessState FieldIds
+get_fids = get >$> \(_, fids, _, _) -> fids
 
-get_ncs :: DotChangeState NakedCases
-get_ncs = get >$> \(_, _, ncs) -> ncs
+get_ncs :: PreprocessState NakedCases
+get_ncs = get >$> \(_, _, ncs, _) -> ncs
 
-put_new_pidc :: PossiblyInDC -> DotChangeState ()
-put_new_pidc = \pidc -> modify (\(_, fids, ncs) -> (pidc, fids, ncs))
+get_rps :: PreprocessState RenamingProps
+get_rps = get >$> \(_, _, _, rps) -> rps
 
-put_new_args :: [PostFuncArg] -> DotChangeState ()
+put_new_pidc :: PossiblyInDC -> PreprocessState ()
+put_new_pidc = \pidc -> modify (\(_, fids, ncs, rps) -> (pidc, fids, ncs, rps))
+
+put_new_args :: [PostFuncArg] -> PreprocessState ()
 put_new_args = \pfargs -> put_new_pidc $ InDotChange pfargs
 
-pfarg_if_in_dot_change :: DotChangeState (Maybe PostFuncArg)
+pfarg_if_in_dot_change :: PreprocessState (Maybe PostFuncArg)
 pfarg_if_in_dot_change =
   get_pidc >$> \case
     NotInDotChange -> Nothing
     InDotChange [] -> error "should not be possible"
     InDotChange (pfarg : pfargs) -> Just pfarg
 
-check_if_sid_in_fids :: SimpleId -> DotChangeState Bool
+check_if_sid_in_fids :: SimpleId -> PreprocessState Bool
 check_if_sid_in_fids = \sid -> S.member sid <$> get_fids
 
-check_if_sid_in_ncs :: SimpleId -> DotChangeState Bool
+check_if_sid_in_ncs :: SimpleId -> PreprocessState Bool
 check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
 
 -- State helpers: post func arg push/pop
-push_post_func_arg :: PostFuncArg -> DotChangeState ()
+push_post_func_arg :: PostFuncArg -> PreprocessState ()
 push_post_func_arg = \pfarg ->
   get_pidc >>= \case
     NotInDotChange -> put_new_args [pfarg]
     InDotChange pfargs -> put_new_args $ pfarg : pfargs
 
-pop_post_func_arg :: DotChangeState ()
+pop_post_func_arg :: PreprocessState ()
 pop_post_func_arg =
   get_pidc >>= \case
     InDotChange [pfarg] -> put_new_pidc NotInDotChange
@@ -80,31 +87,31 @@ pop_post_func_arg =
 
 -- change basic expr to post func app if it is a simple or special id and
 -- we are inside a dot change epxression
-change_be_if_needed :: BasicExpr -> DotChangeState BasicOrAppExpr
+change_be_if_needed :: BasicExpr -> PreprocessState BasicOrAppExpr
 change_be_if_needed = \be ->
   pfapp_if_be_needs_change be >>= \case
-    Nothing -> BE3 <$> ch_inside_if_needed be
+    Nothing -> BE3 <$> preprocess be
     Just pfapp -> return $ PoFA1 pfapp
 
-pfapp_if_be_needs_change :: BasicExpr -> DCS (Maybe PostFuncApp)
+pfapp_if_be_needs_change :: BasicExpr -> PS (Maybe PostFuncApp)
 pfapp_if_be_needs_change = \case
   PFAOI1 pfaoi -> pfapp_if_pfaoi_needs_change pfaoi
   SI1 spid -> pfapp_if_spid_needs_change spid
   _ -> return Nothing
 
-pfapp_if_pfaoi_needs_change :: PFAOI -> DCS (Maybe PostFuncApp)
+pfapp_if_pfaoi_needs_change :: PFAOI -> PS (Maybe PostFuncApp)
 pfapp_if_pfaoi_needs_change =
   check_if_pfaoi_is_sid .> \case
     Nothing -> return Nothing
     Just sid -> pfapp_if_sid_needs_change sid
 
-pfapp_if_spid_needs_change :: SpecialId -> DCS (Maybe PostFuncApp)
+pfapp_if_spid_needs_change :: SpecialId -> PS (Maybe PostFuncApp)
 pfapp_if_spid_needs_change = \spid ->
   pfarg_if_in_dot_change >$> \case
     Nothing -> Nothing
     Just pfarg -> Just $ pfarg_pf_to_pfapp (pfarg, SI2 spid)
 
-pfapp_if_sid_needs_change :: SimpleId -> DotChangeState (Maybe PostFuncApp)
+pfapp_if_sid_needs_change :: SimpleId -> PreprocessState (Maybe PostFuncApp)
 pfapp_if_sid_needs_change = \sid ->
   check_if_sid_in_fids sid >>= \in_fids ->
   pfarg_if_in_dot_change >>= \mpfarg ->
@@ -122,13 +129,13 @@ change_pfarg_if_under = \case
   other -> other
 
 -- helpers
-change_pfaoi_if_needed :: PFAOI -> DotChangeState (Maybe PFAOI)
+change_pfaoi_if_needed :: PFAOI -> PreprocessState (Maybe PFAOI)
 change_pfaoi_if_needed =
   check_if_pfaoi_is_sid .> \case
     Nothing -> return Nothing
     Just sid -> change_sid_if_needed sid >$> (sid_to_pfaoi .> Just)
 
-change_id_if_needed :: Identifier -> DotChangeState Identifier
+change_id_if_needed :: Identifier -> PreprocessState Identifier
 change_id_if_needed = \id ->
   case check_if_id_is_sid id of
     Nothing -> return id
@@ -144,7 +151,7 @@ check_if_id_is_sid = \case
   Id (Nothing, ids, [], mdigit, Nothing) -> Just $ SId (ids, mdigit)
   _ -> Nothing
 
-change_sid_if_needed :: SimpleId -> DotChangeState SimpleId
+change_sid_if_needed :: SimpleId -> PreprocessState SimpleId
 change_sid_if_needed = \sid ->
   check_if_sid_in_ncs sid >$> \case
     True -> add_c_to_sid sid
@@ -168,321 +175,332 @@ sid_to_id = \(SId (id_start, mdigit)) ->
   Id (Nothing, id_start, [], mdigit, Nothing)
 
 -- automatic instances
-instance ChangeIfNeeded a => ChangeIfNeeded [a] where
-  ch_inside_if_needed = traverse ch_inside_if_needed
+instance Preprocess a => Preprocess [a] where
+  preprocess = traverse preprocess
 
-instance ChangeIfNeeded a => ChangeIfNeeded (Maybe a) where
-  ch_inside_if_needed = \case
+instance Preprocess a => Preprocess (Maybe a) where
+  preprocess = \case
     Nothing -> return Nothing
-    Just a -> Just <$> ch_inside_if_needed a
+    Just a -> Just <$> preprocess a
 
--- ch_inside_if_needed for pairs and triples
-ch_inside_if_needed_pair
-  :: (ChangeIfNeeded a, ChangeIfNeeded b) => (a, b) -> DotChangeState (a, b)
+-- preprocess for pairs and triples
+preprocess_pair
+  :: (Preprocess a, Preprocess b) => (a, b) -> PreprocessState (a, b)
 
-ch_inside_if_needed_pair = \(a, b) ->
-  ch_inside_if_needed a ++< ch_inside_if_needed b
+preprocess_pair = \(a, b) ->
+  preprocess a ++< preprocess b
 
-ch_inside_if_needed_triple
-  :: (ChangeIfNeeded a, ChangeIfNeeded b, ChangeIfNeeded c) =>
-     (a, b, c) -> DotChangeState (a, b, c)
+preprocess_triple
+  :: (Preprocess a, Preprocess b, Preprocess c) =>
+     (a, b, c) -> PreprocessState (a, b, c)
 
-ch_inside_if_needed_triple = \(a, b, c) ->
-  ch_inside_if_needed a ++< ch_inside_if_needed b +++< ch_inside_if_needed c
+preprocess_triple = \(a, b, c) ->
+  preprocess a ++< preprocess b +++< preprocess c
 
-ch_inside_if_needed_first
-  :: ChangeIfNeeded a => (a, b) -> DotChangeState (a, b)
+preprocess_first
+  :: Preprocess a => (a, b) -> PreprocessState (a, b)
 
-ch_inside_if_needed_first = \(a, b) -> ch_inside_if_needed a >$> \a' -> (a', b)
+preprocess_first = \(a, b) -> preprocess a >$> \a' -> (a', b)
 
-ch_inside_if_needed_second
-  :: ChangeIfNeeded b => (a, b) -> DotChangeState (a, b)
+preprocess_second
+  :: Preprocess b => (a, b) -> PreprocessState (a, b)
 
-ch_inside_if_needed_second = \(a, b) ->
-  ch_inside_if_needed b >$> \b' -> (a, b')
+preprocess_second = \(a, b) ->
+  preprocess b >$> \b' -> (a, b')
 
 -- regular instances
-deriving instance ChangeIfNeeded ParenExpr
+deriving instance Preprocess ParenExpr
 
-instance ChangeIfNeeded InsideParenExpr where
-  ch_inside_if_needed = \case
-    LOE1 loe -> LOE1 <$> ch_inside_if_needed loe
-    LFE1 lfe -> LFE1 <$> ch_inside_if_needed lfe
+instance Preprocess InsideParenExpr where
+  preprocess = \case
+    LOE1 loe -> LOE1 <$> preprocess loe
+    LFE1 lfe -> LFE1 <$> preprocess lfe
 
-instance ChangeIfNeeded Tuple where
-  ch_inside_if_needed = \(T t) -> T <$> ch_inside_if_needed_pair t
+instance Preprocess Tuple where
+  preprocess = \(T t) -> T <$> preprocess_pair t
 
-instance ChangeIfNeeded LineExprOrUnders where
-  ch_inside_if_needed = \(LEOUs leous) ->
-    LEOUs <$> ch_inside_if_needed_pair leous
+instance Preprocess LineExprOrUnders where
+  preprocess = \(LEOUs leous) ->
+    LEOUs <$> preprocess_pair leous
 
-instance ChangeIfNeeded LineExprOrUnder where
-  ch_inside_if_needed = \case
-    LE1 le -> LE1 <$> ch_inside_if_needed le
+instance Preprocess LineExprOrUnder where
+  preprocess = \case
+    LE1 le -> LE1 <$> preprocess le
     Underscore1 -> return Underscore1
 
-instance ChangeIfNeeded LineExpr where
-  ch_inside_if_needed = \case
-    BOAE1 boae -> BOAE1 <$> ch_inside_if_needed boae
-    LOE2 loe -> LOE2 <$> ch_inside_if_needed loe
-    LFE2 lfe -> LFE2 <$> ch_inside_if_needed lfe
+instance Preprocess LineExpr where
+  preprocess = \case
+    BOAE1 boae -> BOAE1 <$> preprocess boae
+    LOE2 loe -> LOE2 <$> preprocess loe
+    LFE2 lfe -> LFE2 <$> preprocess lfe
 
-instance ChangeIfNeeded BasicOrAppExpr where
-  ch_inside_if_needed = \case
+instance Preprocess BasicOrAppExpr where
+  preprocess = \case
     BE3 be -> change_be_if_needed be
-    PrFA1 prfa -> PrFA1 <$> ch_inside_if_needed prfa
-    PoFA1 pofa -> PoFA1 <$> ch_inside_if_needed pofa
+    PrFA1 prfa -> PrFA1 <$> preprocess prfa
+    PoFA1 pofa -> PoFA1 <$> preprocess pofa
 
-instance ChangeIfNeeded BasicExpr where
-  ch_inside_if_needed = \case
+instance Preprocess BasicExpr where
+  preprocess = \case
     PFAOI1 pfaoi ->
       change_pfaoi_if_needed pfaoi >>= \case
         Just new_pfaoi -> return $ PFAOI1 new_pfaoi
-        _ -> PFAOI1 <$> ch_inside_if_needed pfaoi
-    T1 t -> T1 <$> ch_inside_if_needed t
-    L1 l -> L1 <$> ch_inside_if_needed l
+        _ -> PFAOI1 <$> preprocess pfaoi
+    T1 t -> T1 <$> preprocess t
+    L1 l -> L1 <$> preprocess l
     other -> return other
 
-instance ChangeIfNeeded BigTuple where
-  ch_inside_if_needed = \(BT (leou, bts, leous, leous_l)) ->
-    ch_inside_if_needed_triple (leou, leous, leous_l) >$>
+instance Preprocess BigTuple where
+  preprocess = \(BT (leou, bts, leous, leous_l)) ->
+    preprocess_triple (leou, leous, leous_l) >$>
     \(leou', leous', leous_l') -> BT (leou', bts, leous', leous_l')
 
-deriving instance ChangeIfNeeded List
+deriving instance Preprocess List
 
-instance ChangeIfNeeded BigList where
-  ch_inside_if_needed = \(BL bl) -> BL <$> ch_inside_if_needed_pair bl
+instance Preprocess BigList where
+  preprocess = \(BL bl) -> BL <$> preprocess_pair bl
 
-instance ChangeIfNeeded ArgsStr where
-  ch_inside_if_needed = ch_inside_if_needed_first
+instance Preprocess ArgsStr where
+  preprocess = preprocess_first
 
-instance ChangeIfNeeded ParenFuncAppOrId where
-  ch_inside_if_needed =
+instance Preprocess ParenFuncAppOrId where
+  preprocess =
     \(PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
-      ch_inside_if_needed_triple (margs1, args_str_pairs, margs2) >$>
+      preprocess_triple (margs1, args_str_pairs, margs2) >$>
         \(margs1', args_str_pairs', margs2') ->
         PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
 
-instance ChangeIfNeeded Arguments where
-  ch_inside_if_needed = \(As leous) -> As <$> ch_inside_if_needed leous
+instance Preprocess Arguments where
+  preprocess = \(As leous) -> As <$> preprocess leous
 
-instance ChangeIfNeeded PreFuncApp where
-  ch_inside_if_needed = \(PrFA prfa) ->
-    PrFA <$> ch_inside_if_needed_second prfa
+instance Preprocess PreFuncApp where
+  preprocess = \(PrFA prfa) ->
+    PrFA <$> preprocess_second prfa
 
-instance ChangeIfNeeded PostFuncApp where
-  ch_inside_if_needed = \(PoFA (pfarg, pfae)) ->
-    ch_inside_if_needed pfarg >>= \pfarg' ->
+instance Preprocess PostFuncApp where
+  preprocess = \(PoFA (pfarg, pfae)) ->
+    preprocess pfarg >>= \pfarg' ->
     push_post_func_arg pfarg >>
-    ch_inside_if_needed pfae >>= \pfae' ->
+    preprocess pfae >>= \pfae' ->
     pop_post_func_arg >>
     return (PoFA (pfarg', pfae'))
 
-instance ChangeIfNeeded PostFuncArg where
-  ch_inside_if_needed = \case
-    PE2 pe -> PE2 <$> ch_inside_if_needed pe
-    BE2 be -> BE2 <$> ch_inside_if_needed be
+instance Preprocess PostFuncArg where
+  preprocess = \case
+    PE2 pe -> PE2 <$> preprocess pe
+    BE2 be -> BE2 <$> preprocess be
     Underscore2 -> return Underscore2
 
-instance ChangeIfNeeded PostFuncAppEnd where
-  ch_inside_if_needed = \case
-    DC1 dc -> DC1 <$> ch_inside_if_needed dc
-    PFsMDC pfs_mdc -> PFsMDC <$> ch_inside_if_needed_second pfs_mdc
+instance Preprocess PostFuncAppEnd where
+  preprocess = \case
+    DC1 dc -> DC1 <$> preprocess dc
+    PFsMDC pfs_mdc -> PFsMDC <$> preprocess_second pfs_mdc
 
-instance ChangeIfNeeded DotChange where
-  ch_inside_if_needed = \(DC dc) -> DC <$> ch_inside_if_needed_pair dc
+instance Preprocess DotChange where
+  preprocess = \(DC dc) -> DC <$> preprocess_pair dc
 
-instance ChangeIfNeeded FieldChange where
-  ch_inside_if_needed = \(FC fc) -> FC <$> ch_inside_if_needed_second fc
+instance Preprocess FieldChange where
+  preprocess = \(FC fc) -> FC <$> preprocess_second fc
 
-instance ChangeIfNeeded OpExpr where
-  ch_inside_if_needed = \case
-    LOE3 loe -> LOE3 <$> ch_inside_if_needed loe
-    BOE1 boe -> BOE1 <$> ch_inside_if_needed boe
+instance Preprocess OpExpr where
+  preprocess = \case
+    LOE3 loe -> LOE3 <$> preprocess loe
+    BOE1 boe -> BOE1 <$> preprocess boe
 
-instance ChangeIfNeeded OpExprStart where
-  ch_inside_if_needed = \(OES oper_op_list) ->
-    OES <$> ch_inside_if_needed oper_op_list
+instance Preprocess OpExprStart where
+  preprocess = \(OES oper_op_list) ->
+    OES <$> preprocess oper_op_list
 
-instance ChangeIfNeeded (Operand, Op) where
-  ch_inside_if_needed = ch_inside_if_needed_first
+instance Preprocess (Operand, Op) where
+  preprocess = preprocess_first
 
-instance ChangeIfNeeded LineOpExpr where
-  ch_inside_if_needed = \(LOE loe) -> LOE <$> ch_inside_if_needed_pair loe
+instance Preprocess LineOpExpr where
+  preprocess = \(LOE loe) -> LOE <$> preprocess_pair loe
 
-instance ChangeIfNeeded LineOpExprEnd where
-  ch_inside_if_needed = \case
-    O1 o -> O1 <$> ch_inside_if_needed o
-    LFE3 lfe -> LFE3 <$> ch_inside_if_needed lfe
+instance Preprocess LineOpExprEnd where
+  preprocess = \case
+    O1 o -> O1 <$> preprocess o
+    LFE3 lfe -> LFE3 <$> preprocess lfe
 
-instance ChangeIfNeeded BigOpExpr where
-  ch_inside_if_needed = \case
-    BOEOS1 boeos -> BOEOS1 <$> ch_inside_if_needed boeos
-    BOEFS1 boefs -> BOEFS1 <$> ch_inside_if_needed boefs
+instance Preprocess BigOpExpr where
+  preprocess = \case
+    BOEOS1 boeos -> BOEOS1 <$> preprocess boeos
+    BOEFS1 boefs -> BOEFS1 <$> preprocess boefs
 
-instance ChangeIfNeeded BigOpExprOpSplit where
-  ch_inside_if_needed = \(BOEOS boeos) ->
-    BOEOS <$> ch_inside_if_needed_triple boeos
+instance Preprocess BigOpExprOpSplit where
+  preprocess = \(BOEOS boeos) ->
+    BOEOS <$> preprocess_triple boeos
 
-instance ChangeIfNeeded OpSplitLine where
-  ch_inside_if_needed = \case
-    OESMOFCO oesmofco -> OESMOFCO <$> ch_inside_if_needed_pair oesmofco
-    OFCO1 ofco -> OFCO1 <$> ch_inside_if_needed ofco
+instance Preprocess OpSplitLine where
+  preprocess = \case
+    OESMOFCO oesmofco -> OESMOFCO <$> preprocess_pair oesmofco
+    OFCO1 ofco -> OFCO1 <$> preprocess ofco
 
-instance ChangeIfNeeded OperFCO where
-  ch_inside_if_needed = \(OFCO oper_fco) ->
-    OFCO <$> ch_inside_if_needed_first oper_fco
+instance Preprocess OperFCO where
+  preprocess = \(OFCO oper_fco) ->
+    OFCO <$> preprocess_first oper_fco
 
-instance ChangeIfNeeded OpSplitEnd where
-  ch_inside_if_needed = \case
-    O2 o -> O2 <$> ch_inside_if_needed o
-    FE1 fe -> FE1 <$> ch_inside_if_needed fe
+instance Preprocess OpSplitEnd where
+  preprocess = \case
+    O2 o -> O2 <$> preprocess o
+    FE1 fe -> FE1 <$> preprocess fe
 
-instance ChangeIfNeeded BigOpExprFuncSplit where
-  ch_inside_if_needed = \(BOEFS boefs) ->
-    BOEFS <$> ch_inside_if_needed_pair boefs
+instance Preprocess BigOpExprFuncSplit where
+  preprocess = \(BOEFS boefs) ->
+    BOEFS <$> preprocess_pair boefs
 
-instance ChangeIfNeeded BigOrCasesFuncExpr where
-  ch_inside_if_needed = \case
-    BFE1 bfe -> BFE1 <$> ch_inside_if_needed bfe
-    CFE1 cfe -> CFE1 <$> ch_inside_if_needed cfe
+instance Preprocess BigOrCasesFuncExpr where
+  preprocess = \case
+    BFE1 bfe -> BFE1 <$> preprocess bfe
+    CFE1 cfe -> CFE1 <$> preprocess cfe
 
-instance ChangeIfNeeded Operand where
-  ch_inside_if_needed = \case
-    BOAE2 boae -> BOAE2 <$> ch_inside_if_needed boae
-    PE3 pe -> PE3 <$> ch_inside_if_needed pe
+instance Preprocess Operand where
+  preprocess = \case
+    BOAE2 boae -> BOAE2 <$> preprocess boae
+    PE3 pe -> PE3 <$> preprocess pe
     Underscore3 -> return Underscore3
 
-instance ChangeIfNeeded FuncExpr where
-  ch_inside_if_needed = \case
-    LFE4 lfe -> LFE4 <$> ch_inside_if_needed lfe
-    BFE2 bfe -> BFE2 <$> ch_inside_if_needed bfe
-    CFE2 cfe -> CFE2 <$> ch_inside_if_needed cfe
+instance Preprocess FuncExpr where
+  preprocess = \case
+    LFE4 lfe -> LFE4 <$> preprocess lfe
+    BFE2 bfe -> BFE2 <$> preprocess bfe
+    CFE2 cfe -> CFE2 <$> preprocess cfe
 
-instance ChangeIfNeeded LineFuncExpr where
-  ch_inside_if_needed = \(LFE lfe) -> LFE <$> ch_inside_if_needed_second lfe
+instance Preprocess LineFuncExpr where
+  preprocess = \(LFE lfe) -> LFE <$> preprocess_second lfe
 
-instance ChangeIfNeeded BigFuncExpr where
-  ch_inside_if_needed = \(BFE bfe) -> BFE <$> ch_inside_if_needed_second bfe
+instance Preprocess BigFuncExpr where
+  preprocess = \(BFE bfe) -> BFE <$> preprocess_second bfe
 
-instance ChangeIfNeeded LineFuncBody where
-  ch_inside_if_needed = \case
-    BOAE3 boae -> BOAE3 <$> ch_inside_if_needed boae
-    LOE4 loe -> LOE4 <$> ch_inside_if_needed loe
-    LFE5 lfe -> LFE5 <$> ch_inside_if_needed lfe
+instance Preprocess LineFuncBody where
+  preprocess = \case
+    BOAE3 boae -> BOAE3 <$> preprocess boae
+    LOE4 loe -> LOE4 <$> preprocess loe
+    LFE5 lfe -> LFE5 <$> preprocess lfe
 
-instance ChangeIfNeeded BigFuncBody where
-  ch_inside_if_needed = \case
-    BOAE4 boae -> BOAE4 <$> ch_inside_if_needed boae
-    OE1 oe -> OE1 <$> ch_inside_if_needed oe
-    LFE6 lfe -> LFE6 <$> ch_inside_if_needed lfe
+instance Preprocess BigFuncBody where
+  preprocess = \case
+    BOAE4 boae -> BOAE4 <$> preprocess boae
+    OE1 oe -> OE1 <$> preprocess oe
+    LFE6 lfe -> LFE6 <$> preprocess lfe
 
-instance ChangeIfNeeded CasesFuncExpr where
-  ch_inside_if_needed = \(CFE (cparams, cases, mec)) ->
-    ch_inside_if_needed_pair (cases, mec) >$> \(cases', mec') ->
+instance Preprocess CasesFuncExpr where
+  preprocess = \(CFE (cparams, cases, mec)) ->
+    preprocess_pair (cases, mec) >$> \(cases', mec') ->
     CFE (cparams, cases', mec')
 
-instance ChangeIfNeeded Case where
-  ch_inside_if_needed = \(Ca om_cb) -> Ca <$> ch_inside_if_needed_pair om_cb
+instance Preprocess Case where
+  preprocess = \(Ca om_cb) -> Ca <$> preprocess_pair om_cb
 
-instance ChangeIfNeeded EndCase where
-  ch_inside_if_needed = \(EC ecp_cb) ->
-    EC <$> ch_inside_if_needed_second ecp_cb
+instance Preprocess EndCase where
+  preprocess = \(EC ecp_cb) ->
+    EC <$> preprocess_second ecp_cb
 
-instance ChangeIfNeeded OuterMatching where
-  ch_inside_if_needed = \case
+instance Preprocess OuterMatching where
+  preprocess = \case
     SId3 sid -> SId3 <$> change_sid_if_needed sid
-    M1 m -> M1 <$> ch_inside_if_needed m
+    M1 m -> M1 <$> preprocess m
 
-instance ChangeIfNeeded Matching where
-  ch_inside_if_needed = \case
-    PFM pfm -> PFM <$> ch_inside_if_needed_second pfm
-    TM1 tm -> TM1 <$> ch_inside_if_needed tm
-    LM1 lm -> LM1 <$> ch_inside_if_needed lm
+instance Preprocess Matching where
+  preprocess = \case
+    PFM pfm -> PFM <$> preprocess_second pfm
+    TM1 tm -> TM1 <$> preprocess tm
+    LM1 lm -> LM1 <$> preprocess lm
     lit -> return lit
 
-instance ChangeIfNeeded InnerMatching where
-  ch_inside_if_needed = \case
+instance Preprocess InnerMatching where
+  preprocess = \case
     Star -> return Star
     Id2 id -> Id2 <$> change_id_if_needed id
-    M2 m -> M2 <$> ch_inside_if_needed m
+    M2 m -> M2 <$> preprocess m
 
-instance ChangeIfNeeded TupleMatching where
-  ch_inside_if_needed = \(TM ims) -> TM <$> ch_inside_if_needed_pair ims
+instance Preprocess TupleMatching where
+  preprocess = \(TM ims) -> TM <$> preprocess_pair ims
 
-instance ChangeIfNeeded ListMatching where
-  ch_inside_if_needed = \(LM m_list_internals) ->
-    LM <$> ch_inside_if_needed m_list_internals
+instance Preprocess ListMatching where
+  preprocess = \(LM m_list_internals) ->
+    LM <$> preprocess m_list_internals
 
 instance
-  ChangeIfNeeded (InnerMatching, [InnerMatching], Maybe RestListMatching)
+  Preprocess (InnerMatching, [InnerMatching], Maybe RestListMatching)
   where
-  ch_inside_if_needed = \(im, ims, mrlm) ->
-   ch_inside_if_needed_pair (im, ims) >$> \(im', ims') -> (im', ims', mrlm)
+  preprocess = \(im, ims, mrlm) ->
+   preprocess_pair (im, ims) >$> \(im', ims') -> (im', ims', mrlm)
 
-instance ChangeIfNeeded CaseBody where
-  ch_inside_if_needed = \case
-    LFB1 lfb -> LFB1 <$> ch_inside_if_needed lfb
-    BFB1 bfb -> BFB1 <$> ch_inside_if_needed_pair bfb
+instance Preprocess CaseBody where
+  preprocess = \case
+    LFB1 lfb -> LFB1 <$> preprocess lfb
+    BFB1 bfb -> BFB1 <$> preprocess_pair bfb
 
-instance ChangeIfNeeded ValueDef where
-  ch_inside_if_needed = \(VD (id, t, ve, mwe)) ->
-    ch_inside_if_needed_pair (ve, mwe) >$> \(ve', mwe') ->
+instance Preprocess ValueDef where
+  preprocess = \(VD (id, t, ve, mwe)) ->
+    preprocess_pair (ve, mwe) >$> \(ve', mwe') ->
     VD (id, t, ve', mwe')
 
-instance ChangeIfNeeded ValueExpr where
-  ch_inside_if_needed = \case
-    BOAE5 boae -> BOAE5 <$> ch_inside_if_needed boae
-    OE2 oe -> OE2 <$> ch_inside_if_needed oe
-    FE2 fe -> FE2 <$> ch_inside_if_needed fe
-    BT1 bt -> BT1 <$> ch_inside_if_needed bt
-    BL1 bl -> BL1 <$> ch_inside_if_needed bl
+instance Preprocess ValueExpr where
+  preprocess = \case
+    BOAE5 boae -> BOAE5 <$> preprocess boae
+    OE2 oe -> OE2 <$> preprocess oe
+    FE2 fe -> FE2 <$> preprocess fe
+    BT1 bt -> BT1 <$> preprocess bt
+    BL1 bl -> BL1 <$> preprocess bl
 
-instance ChangeIfNeeded GroupedValueDefs where
-  ch_inside_if_needed = \(GVDs (id, ids, ts, les, les_l)) ->
-    ch_inside_if_needed_pair (les, les_l) >$> \(les', les_l') ->
+instance Preprocess GroupedValueDefs where
+  preprocess = \(GVDs (id, ids, ts, les, les_l)) ->
+    preprocess_pair (les, les_l) >$> \(les', les_l') ->
     GVDs (id, ids, ts, les', les_l')
 
-instance ChangeIfNeeded LineExprs where
-  ch_inside_if_needed = \(LEs les) -> LEs <$> ch_inside_if_needed_pair les
+instance Preprocess LineExprs where
+  preprocess = \(LEs les) -> LEs <$> preprocess_pair les
 
-instance ChangeIfNeeded WhereExpr where
-  ch_inside_if_needed = \(WE we) -> WE <$> ch_inside_if_needed_pair we
+instance Preprocess WhereExpr where
+  preprocess = \(WE we) -> WE <$> preprocess_pair we
 
-instance ChangeIfNeeded WhereDefExpr where
-  ch_inside_if_needed = \case
-    VD1 vd -> VD1 <$> ch_inside_if_needed vd
-    GVDs1 gvds -> GVDs1 <$> ch_inside_if_needed gvds
+instance Preprocess WhereDefExpr where
+  preprocess = \case
+    VD1 vd -> VD1 <$> preprocess vd
+    GVDs1 gvds -> GVDs1 <$> preprocess gvds
 
-instance ChangeIfNeeded TypeTheo where
-  ch_inside_if_needed = \(TT (pnws, mpnws, proof)) ->
-    ch_inside_if_needed proof >$> \proof' -> TT (pnws, mpnws, proof')
+instance Preprocess TypeTheo where
+  preprocess = \(TT (pnws_l, mpnws, proof)) ->
+    preprocess proof >$> \proof' -> TT (pnws_l, mpnws, proof')
 
-instance ChangeIfNeeded Proof where
-  ch_inside_if_needed = \case
-    P1 iooe_le -> P1 <$> ch_inside_if_needed_second iooe_le
-    P2 iooe_ttve -> P2 <$> ch_inside_if_needed_second iooe_ttve
+instance Preprocess [PropNameWithSubs] where
+  preprocess = \case
+    [pnws] ->
+      get_rps >$> map (\rp -> (check_compat(fst rp, pnws), snd rp)) >$>
+      filter (fst .> (/= NotCompatible)) >$> \case
+        [] -> [pnws]
+        [(Compatible m, pns)] -> map (\pn -> evalState (add_subs pn) m) pns
+        _ -> error "proprocess pnws: more than one rps compatible"
+    _ ->
+      error "Should be impossible: many pnws at type theo before preprocessing"
 
-instance ChangeIfNeeded TTValueExpr where
-  ch_inside_if_needed = \case
-    LE2 le -> LE2 <$> ch_inside_if_needed le
-    VEMWE vemwe -> VEMWE <$> ch_inside_if_needed_pair vemwe
+instance Preprocess Proof where
+  preprocess = \case
+    P1 iooe_le -> P1 <$> preprocess_second iooe_le
+    P2 iooe_ttve -> P2 <$> preprocess_second iooe_ttve
 
-instance ChangeIfNeeded Program where
-  ch_inside_if_needed = \(P p) -> P <$> ch_inside_if_needed_pair p
+instance Preprocess TTValueExpr where
+  preprocess = \case
+    LE2 le -> LE2 <$> preprocess le
+    VEMWE vemwe -> VEMWE <$> preprocess_pair vemwe
 
-instance ChangeIfNeeded ProgramPart where
-  ch_inside_if_needed = \case
-    VD2 vd -> VD2 <$> ch_inside_if_needed vd
-    GVDs2 gvds -> GVDs2 <$> ch_inside_if_needed gvds
-    TT1 tt -> TT1 <$> ch_inside_if_needed tt
+instance Preprocess Program where
+  preprocess = \(P pps) -> P <$> preprocess_pair pps
+
+instance Preprocess ProgramPart where
+  preprocess = \case
+    VD2 vd -> VD2 <$> preprocess vd
+    GVDs2 gvds -> GVDs2 <$> preprocess gvds
+    TT1 tt -> TT1 <$> preprocess tt
     other -> return other
 
 -- testing
 
 in_file :: FilePath
 in_file =
-  "/home/gnostis/Desktop/lambda-cases/new_parser/inputs/programs/" ++
+  "/home/gnostis/Desktop/lambda-cases/test_inputs/programs/" ++
   "extended_euclidean.lc"
 
 test_parse :: String -> Program
@@ -491,8 +509,8 @@ test_parse = parse .> \case
   Right res -> res
 
 test :: IO ()
-test = readFile in_file >>= test_parse .> change_prog_if_needed .> print
+test = readFile in_file >>= test_parse .> preprocess_prog .> print
 
 -- ASTTypes.hs
 -- AST.hs
--- ../lcc.hs
+-- lcc.hs

@@ -586,7 +586,7 @@ instance Show PowerBaseTypeSub where
     Underscore5 -> "_"
     PTV5 ptv -> show ptv
     TAIOAS2 tas -> show tas
-    IPTS1 ipts -> "(" ++ show ipts ++ ")"
+    IPTS ipts -> "(" ++ show ipts ++ ")"
 
 instance Show InParenTSub where
   show = \case

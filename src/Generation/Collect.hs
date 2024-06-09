@@ -13,17 +13,23 @@ type FieldId = SimpleId
 
 type NakedCase = SimpleId
 
+type RenamingProp = (PropName, [PropName])
+
 type FieldIds = Set FieldId
 
 type NakedCases = Set NakedCase
 
 type ParamTVars = Set ParamTVar
 
+type RenamingProps = [RenamingProp]
+
 type FieldIdsState = State FieldIds ()
 
 type NakedCasesState = State NakedCases ()
 
 type ParamTVarsState = State ParamTVars ()
+
+type RenamingPropsState = State RenamingProps ()
 
 -- classes
 class CollectFieldIds a where
@@ -35,21 +41,18 @@ class CollectNakedCases a where
 class CollectParamTVars a where
   collect_ptvs :: a -> ParamTVarsState
 
--- Eq and Ord for Set
-deriving instance Eq IdStart
-deriving instance Eq SimpleId
-deriving instance Eq ParamTVar
+class CollectRenamingProps a where
+  collect_rps :: a -> RenamingPropsState
 
-deriving instance Ord IdStart
-deriving instance Ord SimpleId
-deriving instance Ord ParamTVar
-
---
+-- final functions
 field_ids :: Program -> FieldIds
 field_ids = \prog -> execState (collect_fids prog) empty
 
 naked_cases :: Program -> NakedCases
 naked_cases = \prog -> execState (collect_ncs prog) empty
+
+renaming_props :: Program -> RenamingProps
+renaming_props = \prog -> execState (collect_rps prog) []
 
 param_t_vars :: Type -> [ParamTVar]
 param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
@@ -163,6 +166,24 @@ instance CollectParamTVars InParenT where
     PT3 pt -> collect_ptvs pt
     FT3 ft -> collect_ptvs ft
 
+-- CollectRenamingProps
+instance CollectRenamingProps Program where
+  collect_rps = \(P (pp, pps)) -> mapM_ collect_rps $ pp : pps
+
+instance CollectRenamingProps ProgramPart where
+  collect_rps = \case
+    TPD tpd -> collect_rps tpd
+    _ -> do_nothing
+
+instance CollectRenamingProps TypePropDef where
+  collect_rps = \case
+    RPD1 rpd -> collect_rps rpd
+    _ -> do_nothing
+
+instance CollectRenamingProps RenamingPropDef where
+  collect_rps = \(RPD (PNL pn_key, pn1, pns)) ->
+    modify $ (:) (pn_key, pn1 : pns)
+
 -- Preprocess.hs
 -- AST.hs
--- Test.hs
+-- lcc.hs

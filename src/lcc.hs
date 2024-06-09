@@ -11,7 +11,7 @@ import Helpers
 
 import Parsing.AST (parse)
 
-import Generation.Preprocess (change_prog_if_needed)
+import Generation.Preprocess (preprocess_prog)
 import Generation.TypesAndHelpers
 import Generation.AST
 
@@ -22,10 +22,7 @@ main = getArgs >>= mapM_ compile_prog
 -- compile_prog
 compile_prog :: ProgramFileName -> IO ()
 compile_prog pfn =
-  readFile pfn >>= compile .> writeFile out_path
-  where
-  out_path :: FilePath
-  out_path = make_extension_hs pfn
+  readFile pfn >>= compile .> writeFile (make_extension_hs pfn)
 
 compile :: Lcases -> String
 compile =
@@ -37,7 +34,7 @@ compile =
     Right prog -> prog_to_hs prog
 
   prog_to_hs :: Program -> Haskell
-  prog_to_hs = change_prog_if_needed .> to_haskell .> (top_hs ++)
+  prog_to_hs = preprocess_prog .> to_haskell .> (top_hs ++)
 
 -- language extensions and imports
 top_hs :: Haskell
@@ -57,3 +54,4 @@ import_names :: [Haskell]
 import_names =
   ["Prelude hiding (IO)", "PredefImports.Predefined", "PredefImports.OpsInHaskell"]
 
+-- ASTTypes.hs

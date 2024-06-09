@@ -901,7 +901,7 @@ instance ToHaskell PowerBaseTypeSub where
     Underscore5 -> undefined
     PTV5 tv -> to_haskell tv
     TAIOAS2 tasoi -> to_haskell (NoParen, tasoi)
-    IPTS1 ipts -> to_haskell ipts
+    IPTS ipts -> to_haskell ipts
 
 instance ToHaskell InParenTSub where
   to_haskell = \case

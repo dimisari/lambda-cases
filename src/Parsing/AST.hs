@@ -598,8 +598,8 @@ instance HasParser TypeTheo where
   parser =
     TT <$> pnws_p ++< mpnws_p +++< proof_p
     where
-    pnws_p :: Parser PropNameWithSubs
-    pnws_p = try (string "type_theorem ") *> parser
+    pnws_p :: Parser [PropNameWithSubs]
+    pnws_p = try (string "type_theorem ") *> parser >$> (\x -> [x])
 
     mpnws_p :: Parser (Maybe PropNameWithSubs)
     mpnws_p = optionMaybe (string " --> " *> parser)
@@ -645,7 +645,7 @@ instance HasParser PowerTypeSub where
 
 instance HasParser PowerBaseTypeSub where
   parser =
-    IPTS1 <$> try (in_paren parser) <|> TAIOAS2 <$> try parser <|>
+    IPTS <$> try (in_paren parser) <|> TAIOAS2 <$> try parser <|>
     PTV5 <$> parser <|> underscore *> return Underscore5
 
 instance HasParser InParenTSub where
