@@ -6,10 +6,10 @@
 module Generation.CheckCompatibility where
 
 import qualified Data.Map.Strict as M
-import qualified Data.Set as S
 import Control.Monad.State
 
 import ASTTypes
+import ShowInstances
 import Helpers
 
 -- types
@@ -28,10 +28,7 @@ type WAHTVMap a = State AHTVMap a
 --helpers
 compat_union :: Compatibility -> Compatibility -> Compatibility
 compat_union = \c1 c2 -> case (c1, c2) of
-  (Compatible m1, Compatible m2) ->
-    case S.union (M.keysSet m1) (M.keysSet m2) == S.empty of
-      True -> Compatible $ M.union m1 m2
-      False -> NotCompatible
+  (Compatible m1, Compatible m2) -> Compatible $ M.union m1 m2
   _ -> NotCompatible
 
 compat_list_union :: [Compatibility] -> Compatibility
@@ -47,9 +44,12 @@ error_zip = \case
 class CheckCompatibility a b where
   check_compat :: (a, b) -> Compatibility
 
-instance CheckCompatibility a b => CheckCompatibility (Maybe a) (Maybe b) where
+instance
+  (Show a, Show b, CheckCompatibility a b) => CheckCompatibility (Maybe a) (Maybe b)
+  where
   check_compat = \case
     (Just a, Just b) -> check_compat(a, b)
+    (Nothing, Nothing) -> Compatible M.empty
     _ -> NotCompatible
 
 instance CheckCompatibility a b => CheckCompatibility [a] [b] where
@@ -58,7 +58,7 @@ instance CheckCompatibility a b => CheckCompatibility [a] [b] where
 instance CheckCompatibility PropName PropNameWithSubs where
   check_compat = \case
     (NPStart1 nps1, NPStart2 nps2) -> check_compat(nps1, nps2)
-    (AHVIPStart ahvips, SIPStart sips) -> check_compat(ahvips, sips)
+    (TIPStart tips, SIPStart sips) -> check_compat(tips, sips)
     _ -> NotCompatible
 
 instance CheckCompatibility NPStart1 NPStart2 where
@@ -67,7 +67,7 @@ instance CheckCompatibility NPStart1 NPStart2 where
       False -> NotCompatible
       True -> check_compat(np_tip_pairs, np_sip_pairs)
 
-instance CheckCompatibility AHVIPStart SIPStart where
+instance CheckCompatibility TIPStart SIPStart where
   check_compat ((tip_np_pairs, mtip), (sip_np_pairs, msip)) =
     compat_union pairs_compat mtip_msip_mcompat
     where
@@ -193,6 +193,114 @@ instance CheckCompatibility InParenT InParenTSub where
 class AddSubs a b where
   add_subs :: a -> WAHTVMap b
 
-instance AddSubs PropName PropNameWithSubs where
-  add_subs = undefined
+add_subs_pair :: (AddSubs a b, AddSubs c d) => (a, c) -> WAHTVMap (b, d)
+add_subs_pair = \(a, c) ->
+  add_subs a >>= \b -> add_subs c >>= \d -> return (b, d)
 
+add_subs_triple
+  :: (AddSubs a b, AddSubs c d, AddSubs e f) => (a, c, e) -> WAHTVMap (b, d, f)
+add_subs_triple = \(a, c, e) ->
+  add_subs a >>= \b -> add_subs c >>= \d -> add_subs e >>= \f ->
+  return (b, d, f)
+
+instance AddSubs a b => AddSubs (Maybe a) (Maybe b) where
+  add_subs = \case
+    Just a -> Just <$> add_subs a
+    Nothing -> return Nothing
+
+instance AddSubs a b => AddSubs [a] [b] where
+  add_subs = traverse add_subs
+
+instance AddSubs PropName PropNameWithSubs where
+  add_subs = \case
+    NPStart1 nps1 -> NPStart2 <$> add_subs nps1
+    TIPStart tips -> SIPStart <$> add_subs tips
+
+instance AddSubs NPStart1 NPStart2 where
+  add_subs = \(c, np_tip_pairs, mnp) ->
+    add_subs np_tip_pairs >$> \np_sip_pairs -> (c, np_sip_pairs, mnp)
+
+instance AddSubs TIPStart SIPStart where
+  add_subs = \(tip_np_pairs, mtip) -> add_subs_pair(tip_np_pairs, mtip)
+
+instance AddSubs NP_TIP_Pair NP_SIP_Pair where
+  add_subs = \(np, tip) -> add_subs tip >$> \sip -> (np, sip)
+
+instance AddSubs TIP_NP_Pair SIP_NP_Pair where
+  add_subs = \(tip, np) -> add_subs tip >$> \sip -> (sip, np)
+
+instance AddSubs TypesInParen SubsInParen where
+  add_subs = \(TIP sts) -> SIP <$> add_subs_pair sts
+
+instance AddSubs SimpleType TVarSub where
+  add_subs = \case
+    TAIOA1 (TAIOA (Nothing, AHTV2 ahtv, Nothing)) ->
+      get >$> M.lookup ahtv >$> \case
+        Just (TVS1 tvs) -> tvs
+        Just Underscore4 -> error "add_subs st tvs: ahtv is underscore"
+        Nothing -> error "add_subs st tvs: didn't find ahtv"
+    PTV1 ptv -> return $ PTV4 ptv
+    TAIOA1 taioa -> TAIOAS1 <$> add_subs taioa
+    PoT1 pt -> PoTS1 <$> add_subs pt
+    PT1 pt -> PTS1 <$> add_subs pt
+    FT1 ft -> FTS1 <$> add_subs ft
+
+instance AddSubs TypeAppIdOrAHTV TypeAppIdOrAHTVSub where
+  add_subs = \(TAIOA taioa) -> TAIOAS <$> add_subs_triple taioa
+
+instance AddSubs PowerType PowerTypeSub where
+  add_subs = \(PoT (pbt, i)) -> PoTS <$> (add_subs pbt >$> \pbts -> (pbts, i))
+
+instance AddSubs ProdType ProdTypeSub where
+  add_subs = \(PT fts) -> PTS <$> add_subs_pair fts
+
+instance AddSubs FuncType FuncTypeSub where
+  add_subs = \(FT it_ot) -> FTS <$> add_subs_pair it_ot
+
+instance AddSubs TAIOAMiddle TAIOASMiddle where
+  add_subs = \case
+    TIdStart1 (tid, tip_str_pairs) ->
+      add_subs tip_str_pairs >$> \souip_str_pairs ->
+      TIdStart2 (tid, souip_str_pairs)
+    AHTV2 ahtv -> undefined
+
+instance AddSubs TypesInParen SubsOrUndersInParen where
+  add_subs = \(TIP sts) -> SOUIP <$> add_subs_pair sts
+
+instance AddSubs PowerBaseType PowerBaseTypeSub where
+  add_subs = \case
+    PTV2 ptv -> return $ PTV5 ptv
+    TAIOA2 taioa -> TAIOAS2 <$> add_subs taioa
+    IPT ipt -> IPTS <$> add_subs ipt
+
+instance AddSubs FieldType FieldTypeSub where
+  add_subs = \case
+    PBT1 pbt -> PBTS1 <$> add_subs pbt
+    PoT3 pt -> PoTS2 <$> add_subs pt
+
+instance AddSubs InOrOutType InOrOutTypeSub where
+  add_subs = \case
+    PTV3 ptv -> return $ PTV6 ptv
+    TAIOA3 taioa -> TAIOAS3 <$> add_subs taioa
+    PoT2 pt -> PoTS3 <$> add_subs pt
+    PT2 pt -> PTS3 <$> add_subs pt
+    FT2 ft -> FTS3 <$> add_subs ft
+
+instance AddSubs TIP_STR SOUIP_STR where
+  add_subs = \(tip, str) -> add_subs tip >$> \souip -> (souip, str)
+
+instance AddSubs SimpleType SubOrUnder where
+  add_subs = \case
+    TAIOA1 (TAIOA (Nothing, AHTV2 ahtv, Nothing)) ->
+      get >$> M.lookup ahtv >$> \case
+        Just sou -> sou
+        Nothing -> error "add_subs st sou: didn't find ahtv"
+    st -> TVS1 <$> add_subs st
+
+instance AddSubs InParenT InParenTSub where
+  add_subs = \case
+    PT3 pt -> PTS2 <$> add_subs pt
+    FT3 ft -> FTS2 <$> add_subs ft
+
+-- ASTTypes.hs
+-- AST.hs

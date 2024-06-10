@@ -573,15 +573,15 @@ instance HasParser PropNameLine where
 
 instance HasParser PropName where
   parser =
-    NPStart1 <$> np_start_p <|> AHVIPStart <$> ahvip_start_p
+    NPStart1 <$> np_start_p <|> TIPStart <$> tip_start_p
     where
     np_start_p :: Parser (Char, [(NamePart, TypesInParen)], Maybe NamePart)
     np_start_p =
       upper ++< many1 (try $ parser ++< parser) +++< optionMaybe parser
 
-    ahvip_start_p
+    tip_start_p
       :: Parser ([(TypesInParen, NamePart)], Maybe TypesInParen)
-    ahvip_start_p = (many1 $ try $ parser ++< parser) ++< optionMaybe parser
+    tip_start_p = (many1 $ try $ parser ++< parser) ++< optionMaybe parser
 
 instance HasParser NamePart where
   parser =

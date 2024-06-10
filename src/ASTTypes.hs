@@ -269,9 +269,9 @@ newtype RenamingPropDef = RPD (PropNameLine, PropName, [PropName])
 newtype PropNameLine = PNL PropName
 
 type NPStart1 = (Char, [(NamePart, TypesInParen)], Maybe NamePart)
-type AHVIPStart = ([(TypesInParen, NamePart)], Maybe TypesInParen)
+type TIPStart = ([(TypesInParen, NamePart)], Maybe TypesInParen)
 data PropName =
-  NPStart1 NPStart1 | AHVIPStart AHVIPStart
+  NPStart1 NPStart1 | TIPStart TIPStart
 
 newtype NamePart = NP String
   deriving Eq

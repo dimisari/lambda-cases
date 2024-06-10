@@ -153,15 +153,15 @@ args_nps_hs =
 nps_args_hs :: HasArgs a => [(NamePart, a)] -> Haskell
 nps_args_hs = concatMap (\(NP str, a) -> str ++ singe_quotes_hs a)
 
-maybe_args_hs :: HasArgs a => Maybe a -> Haskell
-maybe_args_hs = \case
-  Nothing -> ""
-  Just a -> singe_quotes_hs a
-
 maybe_prefix_args_hs :: HasArgs a => String -> Maybe a -> Haskell
 maybe_prefix_args_hs = \prefix -> \case
   Nothing -> ""
   Just a -> prefix ++ singe_quotes_hs a
+
+instance HasArgs a => HasArgs (Maybe a) where
+  args_length = \case
+    Just a -> args_length a
+    Nothing -> 0
 
 instance HasArgs Arguments where
   args_length = \(As (LEOUs (leou, leous))) -> length $ leou : leous
@@ -263,7 +263,7 @@ under_pfarg_param = "x'"
 tn_to_tid_hs :: TypeName -> Haskell
 tn_to_tid_hs = \(TN (mpvip1, TId str, pvip_str_pairs, mpvip2)) ->
   maybe_prefix_args_hs upper_prefix mpvip1 ++ str ++
-  args_strs_hs pvip_str_pairs ++ maybe_args_hs mpvip2
+  args_strs_hs pvip_str_pairs ++ singe_quotes_hs mpvip2
 
 tn_to_cons_hs :: TypeName -> Haskell
 tn_to_cons_hs = tn_to_tid_hs .> (++ "'")

@@ -524,8 +524,8 @@ instance Show PropName where
   show = \case
     NPStart1 (c, np_tip_pairs, maybe_np) ->
       [c] ++ show_pair_list np_tip_pairs ++ show_maybe maybe_np
-    AHVIPStart (tip_np_pairs, maybe_ahvip) ->
-      show_pair_list tip_np_pairs ++ show_maybe maybe_ahvip
+    TIPStart (tip_np_pairs, maybe_tip) ->
+      show_pair_list tip_np_pairs ++ show_maybe maybe_tip
 
 instance Show NamePart where
   show = \(NP str) -> str

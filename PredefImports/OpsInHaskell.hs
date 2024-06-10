@@ -28,122 +28,122 @@ f <& x = f x
 (<.) :: (b -> c) -> (a -> b) -> a -> c
 (<.) = (.)
 
-class A1ToThe1Is1 a b c | a b -> c where
+class A'ToThe'Is' a b c | a b -> c where
   (!^) :: a -> b -> c
 
-class A1And1Multiply_To1 a b c | a b -> c where
+class A'And'Multiply_To' a b c | a b -> c where
   (!*) :: a -> b -> c
-class A1Divided_By1Is1 a b c | a b -> c  where
+class A'Divided_By'Is' a b c | a b -> c  where
   (!/) :: a -> b -> c
 
-class A1And1Add_To1 a b c | a b -> c where
+class A'And'Add_To' a b c | a b -> c where
   (!+) :: a -> b -> c
-class A1Minus1Is1 a b c | a b -> c where
+class A'Minus'Is' a b c | a b -> c where
   (!-) :: a -> b -> c
 
-class A1And1Can_Be_Equal a b where
+class A'And'Can_Be_Equal a b where
   (!==) :: a -> b -> Bool
-class A1And1Can_Be_Unequal a b where
+class A'And'Can_Be_Unequal a b where
   (!!=) :: a -> b -> Bool
-class A1Can_Be_Greater_Than1 a b where
+class A'Can_Be_Greater_Than' a b where
   (!>) :: a -> b -> Bool
-class A1Can_Be_Less_Than1 a b where
+class A'Can_Be_Less_Than' a b where
   (!<) :: a -> b -> Bool
-class A1Can_Be_Gr_Or_Eq_To1 a b where
+class A'Can_Be_Gr_Or_Eq_To' a b where
   (!>=) :: a -> b -> Bool
-class A1Can_Be_Le_Or_Eq_To1 a b where
+class A'Can_Be_Le_Or_Eq_To' a b where
   (!<=) :: a -> b -> Bool
 
-class A1Has_And a where
+class A'Has_And a where
   (!&) :: a -> a -> a
 
-class A1Has_Or a where
+class A'Has_Or a where
   (!|) :: a -> a -> a
 
-class A1Has_Use u where
+class A'Has_Use u where
   (!>>=) :: u a -> (a -> u b) -> u b
 
-class A1Has_Then t where
+class A'Has_Then t where
   (!>>) :: t a -> t b -> t b
 
--- A1ToThe1Is1
-instance Floating a => A1ToThe1Is1 a a a where
+-- A'ToThe'Is'
+instance Floating a => A'ToThe'Is' a a a where
   (!^) = (**)
 
-instance A1ToThe1Is1 Int Int Int where
+instance A'ToThe'Is' Int Int Int where
   (!^) = (^)
 
-instance A1ToThe1Is1 Int Float Float where
+instance A'ToThe'Is' Int Float Float where
   i !^ x = fromIntegral i ** x
 
-instance A1ToThe1Is1 Float Int Float where
+instance A'ToThe'Is' Float Int Float where
   x !^ i = x ** fromIntegral i
 
--- A1And1Multiply_To1
-instance Num a => A1And1Multiply_To1 a a a where
+-- A'And'Multiply_To'
+instance Num a => A'And'Multiply_To' a a a where
   (!*) = (*)
 
-instance A1And1Multiply_To1 Int Float Float where
+instance A'And'Multiply_To' Int Float Float where
   i !* x  = fromIntegral i * x
 
-instance A1And1Multiply_To1 Float Int Float where
+instance A'And'Multiply_To' Float Int Float where
   x !* i = x * fromIntegral i
 
-instance A1And1Multiply_To1 Int Char String where
+instance A'And'Multiply_To' Int Char String where
   i !* c = replicate i c
 
-instance A1And1Multiply_To1 Int String String where
+instance A'And'Multiply_To' Int String String where
   i !* s = concat $ replicate i s
 
--- A1Divided_By1Is1
-instance A1Divided_By1Is1 Int Int Float where
+-- A'Divided_By'Is'
+instance A'Divided_By'Is' Int Int Float where
   x !/ y = fromIntegral x / fromIntegral y
 
-instance A1Divided_By1Is1 Int Float Float where
+instance A'Divided_By'Is' Int Float Float where
   i !/ x  = fromIntegral i / x
 
-instance A1Divided_By1Is1 Float Int Float where
+instance A'Divided_By'Is' Float Int Float where
   x !/ i = x / fromIntegral i
 
--- A1And1Add_To1
-instance Show a => A1And1Add_To1 a String String where
+-- A'And'Add_To'
+instance Show a => A'And'Add_To' a String String where
   x !+ str = show x ++ str
 
-instance Show a => A1And1Add_To1 String a String where
+instance Show a => A'And'Add_To' String a String where
   str !+ x = str ++ show x
 
-instance A1And1Add_To1 [a] [a] [a] where
+instance A'And'Add_To' [a] [a] [a] where
   (!+) = (++)
 
-instance b ~ [a] => A1And1Add_To1 a [a] b where
+instance b ~ [a] => A'And'Add_To' a [a] b where
   (!+) = (:)
 
-instance b ~ [a] => A1And1Add_To1 [a] a b where
+instance b ~ [a] => A'And'Add_To' [a] a b where
   l !+ a = l ++ [a]
 
-instance Num a => A1And1Add_To1 a a a where
+instance Num a => A'And'Add_To' a a a where
   (!+) = (+)
 
-instance A1And1Add_To1 Int Float Float where
+instance A'And'Add_To' Int Float Float where
   i !+ x  = fromIntegral i + x
 
-instance A1And1Add_To1 Float Int Float where
+instance A'And'Add_To' Float Int Float where
   x !+ i = x + fromIntegral i
 
-instance (a ~ String) => A1And1Add_To1 Char Char a where
-  c1 !+ c2 = c1 : [c2]
+instance (a ~ String) => A'And'Add_To' Char Char a where
+  c' !+ c2 = c' : [c2]
 
-instance A1And1Add_To1 Char String String where
+instance A'And'Add_To' Char String String where
   (!+) = (:)
 
--- A1Minus1Is1
-instance Num a => A1Minus1Is1 a a a where
+-- A'Minus'Is'
+instance Num a => A'Minus'Is' a a a where
   (!-) = (-)
 
-instance A1Minus1Is1 String Char String where
+instance A'Minus'Is' String Char String where
   s !- c = filter (/= c) s
 
-instance Eq a => A1Minus1Is1 [a] [a] [a] where
+instance Eq a => A'Minus'Is' [a] [a] [a] where
   l1 !- l2 = case length l2 > length l1 of
     True -> l1
     False ->
@@ -154,43 +154,43 @@ instance Eq a => A1Minus1Is1 [a] [a] [a] where
         True -> l12 !- l2
         False -> head l1 : (tail l1 !- l2)
 
--- A1And1Can_Be_Equal
-instance Eq a => A1And1Can_Be_Equal a a where
+-- A'And'Can_Be_Equal
+instance Eq a => A'And'Can_Be_Equal a a where
   (!==) = (==)
 
--- A1And1Can_Be_Unequal
-instance Eq a => A1And1Can_Be_Unequal a a where
+-- A'And'Can_Be_Unequal
+instance Eq a => A'And'Can_Be_Unequal a a where
   (!!=) = (/=)
 
--- A1Can_Be_Greater_Than1
-instance Ord a => A1Can_Be_Greater_Than1 a a where
+-- A'Can_Be_Greater_Than'
+instance Ord a => A'Can_Be_Greater_Than' a a where
   (!>) = (>)
 
--- A1Can_Be_Less_Than1
-instance Ord a => A1Can_Be_Less_Than1 a a where
+-- A'Can_Be_Less_Than'
+instance Ord a => A'Can_Be_Less_Than' a a where
   (!<) = (<)
 
--- A1Can_Be_Gr_Or_Eq_To1
-instance Ord a => A1Can_Be_Gr_Or_Eq_To1 a a where
+-- A'Can_Be_Gr_Or_Eq_To'
+instance Ord a => A'Can_Be_Gr_Or_Eq_To' a a where
   (!>=) = (>=)
 
--- A1Can_Be_Le_Or_Eq_To1
-instance Ord a => A1Can_Be_Le_Or_Eq_To1 a a where
+-- A'Can_Be_Le_Or_Eq_To'
+instance Ord a => A'Can_Be_Le_Or_Eq_To' a a where
   (!<=) = (<=)
 
--- A1Has_Then
-instance Applicative f => A1Has_Then f where
+-- A'Has_Then
+instance Applicative f => A'Has_Then f where
   (!>>) = (*>)
 
--- A1Has_Use
-instance Monad m => A1Has_Use m where
+-- A'Has_Use
+instance Monad m => A'Has_Use m where
   (!>>=) = (>>=)
 
--- A1Has_And
-instance A1Has_And Bool where
+-- A'Has_And
+instance A'Has_And Bool where
   (!&) = (&&)
 
--- A1Has_Or
-instance A1Has_Or Bool where
+-- A'Has_Or
+instance A'Has_Or Bool where
   (!|) = (||)
 

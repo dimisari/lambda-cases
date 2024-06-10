@@ -463,18 +463,21 @@ instance Preprocess WhereDefExpr where
 
 instance Preprocess TypeTheo where
   preprocess = \(TT (pnws_l, mpnws, proof)) ->
-    preprocess proof >$> \proof' -> TT (pnws_l, mpnws, proof')
+    preprocess_pnws_l pnws_l >>= \pnws_l' ->
+    preprocess proof >>= \proof' ->
+    return $ TT (pnws_l', mpnws, proof')
 
-instance Preprocess [PropNameWithSubs] where
-  preprocess = \case
-    [pnws] ->
-      get_rps >$> map (\rp -> (check_compat(fst rp, pnws), snd rp)) >$>
-      filter (fst .> (/= NotCompatible)) >$> \case
-        [] -> [pnws]
-        [(Compatible m, pns)] -> map (\pn -> evalState (add_subs pn) m) pns
-        _ -> error "proprocess pnws: more than one rps compatible"
-    _ ->
-      error "Should be impossible: many pnws at type theo before preprocessing"
+preprocess_pnws_l :: [PropNameWithSubs] -> PreprocessState [PropNameWithSubs]
+preprocess_pnws_l = \case
+  [pnws] ->
+    get_rps >$> map (\rp -> (check_compat(fst rp, pnws), snd rp)) >$>
+    filter (fst .> (/= NotCompatible)) >$> \case
+      [] -> [pnws]
+      [(Compatible m, pns)] ->
+        map (\pn -> evalState (add_subs pn) m) pns
+      _ -> error "proprocess pnws: more than one rps compatible"
+  _ ->
+    error "Should be impossible: many pnws at type theo before preprocessing"
 
 instance Preprocess Proof where
   preprocess = \case
@@ -512,5 +515,6 @@ test :: IO ()
 test = readFile in_file >>= test_parse .> preprocess_prog .> print
 
 -- ASTTypes.hs
+-- CheckCompatibility.hs
 -- AST.hs
 -- lcc.hs
