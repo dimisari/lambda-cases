@@ -3558,8 +3558,13 @@ In this phase we traverse the AST and following are collected:
 All the "\texttt{naked case}" identifiers of all the \verb|or_types| in the
 program, where a naked case is a case which does not contain an internal value
 (e.g. \verb|no_value| as opposed to \verb|the_value:_|).
+
 \item
 All the field identifiers of the all the \verb|tuple_types| in the program.
+
+\item
+All the renaming type proposotions.
+
 \end{itemize}
 
 The above are used in the preprocess phase.
@@ -3577,7 +3582,8 @@ cases are translated to data constructors in \H. Data constructors need to
 start with an upper case letter whereas \verb|or_type| cases don't
 (this is not needed for the \verb|or_type| cases with internal values
 because we can identify them on the spot from the colon and handle them
-appropriately in the translate phase).
+appropriately in the translate phase).\\
+
 \item
 If a field identifier is found in a value expression which is a subexpression
 of a "\verb|.change|" expression than the identifier is converted to a postfix
@@ -3588,7 +3594,28 @@ converted as follows:\\
 \texttt{x.change\{f1 = x.f1 + 1\}}\\\\
 The same applies to special identifiers:\\
 \texttt{x.change\{1st = 1st + 1\}} $\Longrightarrow$
-\texttt{x.change\{1st = x.1st + 1\}}
+\texttt{x.change\{1st = x.1st + 1\}}\\
+
+\item
+If a renaming type proposition appears in the theorem of an implication before
+the arrow, it is substituted with the conjuction defined in its definition.
+All the subtitutions for its ad hoc type variables are also propagated to all
+of the propositions in the conjuction. For example if the following appear
+in the program:
+\begin{verbatim}
+type_proposition (@A)And(@B)Have_Eq_And_Gr
+equivalent (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
+
+type_theorem (@C)And(@D)Have_Eq_And_Gr --> (@C)Can_Be_Gr_Or_Eq_To(@D)
+proof a >= b = a == b | a > b
+\end{verbatim}
+the theorem becomes:
+\begin{verbatim}
+type_theorem (@C)And(@D)Can_Be_Equal, (@C)Can_Be_Greater_Than(@D) --> (@C)Can_Be_Gr_Or_Eq_To(@D)
+proof a >= b = a == b | a > b
+\end{verbatim}
+in the preprocessed AST.
+
 \end{itemize}
 
 \item
@@ -3597,7 +3624,6 @@ In this phase the preprocessed AST is directly translated to \H. The details
 of how this is done are described in the following section.
 \end{itemize}
 
-\newpage
 \subsection{Translation Phase}
 
 For the translation phase every type of the AST has its implementation of
@@ -3814,7 +3840,7 @@ treated in tuples (section \ref{subsubsec:parentuplist}).
 \begin{itemize}
 \item
 \textit{Examples}\\\\
-\verb|the_value:42| \lra \verb|Cthe_value((42 ::\ Int))| \\
+\verb|the_value:42| \lra \verb|Cthe_value((42 :: Int))| \\
 \texttt{error:"this is an error message"} \lra
 \texttt{Cerror("this is an error message")} \\
 \verb|the_value:_| \lra \verb|(\pA0 -> Cthe_value(pA0))| \\
@@ -3885,7 +3911,7 @@ instance IsFirst' a (a, b, c, d) where
 \prarr
 \texttt{state.change\{counter = state.counter + 1\}}\\
 \lra
-\texttt{c0counter(counter(state) !+ (1 ::\ Int)) state}
+\verb|c0counter(counter(state) !+ (1 :: Int)) state|
 \\\\
 \texttt{tuple.change\{1st = 1.61, 3rd = 3.14\}} \lra
 \texttt{(c1st(1.61) .> c3rd(3.14)) tuple}
@@ -4845,31 +4871,190 @@ type (after the equal sign) with its translation.
 
 \end{itemize}
 
-
 \newpage
 \subsection{Translation Phase: Type Logic}
 
 \subsubsection{Proposition Definitions}
 
-\subsubsection{Theorems}
-
-\subsection{Correspondaces with \H}
-
-Here is the list of lcases constructs that have a \H\ correspondent:
+Renaming proposition definitions do not have a translation as they only
+affect theorems during the preprocesssing phase. For atomic proposition
+definitions we have the following:
 
 \begin{itemize}
 
 \item
-Type nicknames \r "type" statements
+\textit{Examples}\\
+
+\begin{minipage}{0.55\linewidth}
+\begin{verbatim}
+type_proposition (@A)Is(@B)s_First
+needed (_)first : @B => @A
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+class A'Is's_First b0 b1 where
+  a'first :: b1 -> b0
+\end{verbatim}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+type_proposition (@T)Has_Internal_App
+needed
+  apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+class A'Has_Internal_App b19 where
+  apply'inside' :: (a1 -> a2, b19 a1) -> b19 a2
+
+\end{verbatim}
+\end{minipage}
+\hfill\vline\hfill
+\begin{minipage}{0.40\linewidth}
+\begin{verbatim}
+type_proposition (@T)Has_A_Wrapper
+needed wrap(_) : T1 => @T(T1)
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+class A'Has_A_Wrapper b19 where
+  wrap' :: a1 -> b19 a1
+\end{verbatim}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+type_proposition (@T)Has_String_Repr
+needed (_)to_string : @T => String
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+class A'Has_A_Wrapper b19 where
+  wrap' :: a1 -> b19 a1
+\end{verbatim}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+type_proposition (@A, @B)To(@C)
+needed ab_to_c: @A x @B => @C#
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+class A''To' b0 b1 b2 where
+  ab_to_c :: (b0, b1) -> b2
+\end{verbatim}
+
+\end{minipage}
 
 \item
-Atomic type propositions \r Type classes
+\textit{Description}\\
+
+The translation of atomic type proposition definitions is done with the
+following steps:
+
+\begin{itemize}
 
 \item
-Type theorems \r Type class instances
+"\texttt{type_proposition}" is replaced by "\texttt{class}".
+
+\item
+The name of the proposition is translated similarly to the type name in a type
+definition. All the parentheses are replaced by the same amount of single
+quotes as there are ad hoc type variables inside the parenthesis and if there
+is a parenthesis at the beginning we prepend an 'A' to make it a valid
+type class name in \H. The translations of the ad hoc type variables are then
+appended and seperated by spaces (in the same order of the appearances of
+the ad hoc type variables).
+
+\item
+"\texttt{ where}" is appended to the first line.
+
+\item
+"\texttt{needed}" is discarded and the second line is indented
+
+\item
+The identifier of the value needed is translated and followed by "\verb| :: |"
+and then the translation of its type
 
 \end{itemize}
 
+\end{itemize}
+
+\newpage
+\subsubsection{Theorems}
+
+\begin{itemize}
+
+\item
+\textit{Examples}
+
+\begin{verbatim}
+type_theorem (Possibly(_))Has_A_Wrapper
+proof wrap(_) = the_value:_
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+instance A'Has_A_Wrapper Possibly' where
+  wrap' = (\pA0 -> Cthe_value(pA0))
+\end{verbatim}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+type_theorem (ListOf(_)s)Has_A_Wrapper
+proof wrap(_) = [_]
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+instance A'Has_A_Wrapper ListOf's where
+  wrap' = (\pA0 -> [pA0])
+\end{verbatim}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+type_theorem (ListOf(_)s)Has_Internal_App
+proof
+  apply(_)inside(_) =
+    (f, cases)
+      [] => []
+      [head, tail = ...] => non_empty_l:(f <- head, apply(f)inside(tail))#
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+instance A'Has_Internal_App ListOf's where
+  apply'inside' =
+    \(f, pA0) ->
+    case pA0 of
+      [] -> []
+      head : tail -> Cnon_empty_l(ft2(f <& head, apply'inside'(f, tail)))
+
+\end{verbatim}
+
+\item
+\textit{Description}
+
+\end{itemize}
+
+\newpage
 \section{Running Examples}
 
 \section{Conclusion}
