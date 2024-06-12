@@ -40,10 +40,10 @@
       \field{title}{Parsec, a fast combinator parser}
       \field{year}{2001}
       \verb{urlraw}
-      \verb http://www.cs.uu.nl/~daan
+      \verb https://web.archive.org/web/20120401040711/http://legacy.cs.uu.nl/daan/download/parsec/parsec.pdf
       \endverb
       \verb{url}
-      \verb http://www.cs.uu.nl/~daan
+      \verb https://web.archive.org/web/20120401040711/http://legacy.cs.uu.nl/daan/download/parsec/parsec.pdf
       \endverb
     \endentry
   \enddatalist
