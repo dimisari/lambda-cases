@@ -3,6 +3,7 @@
 module Main where
 
 import System.Environment (getArgs)
+import System.Process (callCommand)
 import Data.List (intercalate)
 import Text.Parsec (ParseError)
 
@@ -15,16 +16,32 @@ import Generation.Preprocess (preprocess_prog)
 import Generation.TypesAndHelpers
 import Generation.AST
 
+
 -- main
 main :: IO ()
-main = getArgs >>= mapM_ compile_prog
+main = getArgs >>= \case
+  [] -> putStrLn "No arguments"
+  [program_file_name] ->  compile_to_exec program_file_name
+  ["-h", program_file_name] -> compile_to_hs program_file_name >> return ()
+  _  -> putStrLn "Weird arguments"
 
--- compile_prog
-compile_prog :: ProgramFileName -> IO ()
-compile_prog pfn =
-  readFile pfn >>= compile .> writeFile (make_extension_hs pfn)
+compile_to_exec :: ProgramFileName -> IO ()
+compile_to_exec pfn =
+  compile_to_hs pfn >>= \hs_file ->
+  callCommand (ghc_compile ++ hs_file) >>
+  callCommand ("rm " ++ hs_file)
+  where
+  ghc_compile :: String
+  ghc_compile = "ghc -no-keep-hi-files -no-keep-o-files "
 
-compile :: Lcases -> String
+compile_to_hs :: ProgramFileName -> IO HsFileName
+compile_to_hs pfn =
+  readFile pfn >>= compile .> writeFile hs_file >> return hs_file
+  where
+  hs_file :: String
+  hs_file = make_extension_hs pfn
+
+compile :: Lcases -> Haskell
 compile =
   parse .> parse_res_to_final_res
   where
@@ -54,6 +71,8 @@ imports = concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"
 
 import_names :: [Haskell]
 import_names =
-  ["Prelude hiding (IO)", "PredefImports.Predefined", "PredefImports.OpsInHaskell"]
+  [ "Prelude hiding (IO)", "PredefImports.Predefined"
+  , "PredefImports.OpsInHaskell"
+  ]
 
 -- ASTTypes.hs

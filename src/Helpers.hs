@@ -10,6 +10,7 @@ type Lcases = String
 type ProgramFileName = FileName
 type ProgramStr = String
 type FileName = String
+type HsFileName = String
 type FileString = String
 type TestExample = String
 

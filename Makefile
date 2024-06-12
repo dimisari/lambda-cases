@@ -48,16 +48,16 @@ $(tos_grs):
 $(tos_prs)/$(pis):
 	ln -sf $(shell pwd)/$(pis) $(tos_prs)
 
-$(tos_cps)/%.out: $(tos_prs)/%.hs $(pi1) $(pi2)
-	$(ghc) $< -o $@
+$(tos_cps)/%.out: lcc $(tis_prs)/%.lc
+	./$< $(word 2, $^); mv $(basename $(word 2, $^)) $@
 
 $(tos_prs)/%.hs: lcc $(tis_prs)/%.lc
-	./$< $(word 2, $^); mv $(basename $(word 2, $^)).hs $@
+	./$< -h $(word 2, $^); mv $(basename $(word 2, $^)).hs $@
 
 $(tos_grs)/%.hs: grules $(tis_grs)/%.txt
 	./$<
 
-# rules: lcc gruls
+# rules: lcc grules
 
 lcc: $(shell find src -type f -not -name grules.hs)
 	cd src; $(ghc) $@.hs -o ../$@
