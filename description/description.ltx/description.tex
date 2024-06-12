@@ -3611,7 +3611,9 @@ proof a >= b = a == b | a > b
 \end{verbatim}
 the theorem becomes:
 \begin{verbatim}
-type_theorem (@C)And(@D)Can_Be_Equal, (@C)Can_Be_Greater_Than(@D) --> (@C)Can_Be_Gr_Or_Eq_To(@D)
+# this is a representation of the AST after preprocessing not lcases syntax
+type_theorem
+  [(@C)And(@D)Can_Be_Equal, (@C)Can_Be_Greater_Than(@D)] --> (@C)Can_Be_Gr_Or_Eq_To(@D)
 proof a >= b = a == b | a > b
 \end{verbatim}
 in the preprocessed AST.
@@ -4998,7 +5000,9 @@ and then the translation of its type
 \begin{itemize}
 
 \item
-\textit{Examples}
+\textit{Examples}\\
+
+\begin{minipage}{0.45\linewidth}
 
 \begin{verbatim}
 type_theorem (Possibly(_))Has_A_Wrapper
@@ -5010,9 +5014,12 @@ proof wrap(_) = the_value:_
 \begin{verbatim}
 instance A'Has_A_Wrapper Possibly' where
   wrap' = (\pA0 -> Cthe_value(pA0))
+
 \end{verbatim}
 
-\rule{\linewidth}{0.1pt}
+\end{minipage}
+\hfill\vline\hfill
+\begin{minipage}{0.50\linewidth}
 
 \begin{verbatim}
 type_theorem (ListOf(_)s)Has_A_Wrapper
@@ -5024,7 +5031,33 @@ proof wrap(_) = [_]
 \begin{verbatim}
 instance A'Has_A_Wrapper ListOf's where
   wrap' = (\pA0 -> [pA0])
+
 \end{verbatim}
+
+\end{minipage}
+
+\rule{\linewidth}{0.1pt}
+
+\begin{verbatim}
+type_theorem (Possibly(_))Has_Internal_App
+proof
+  apply(_)inside(_) =
+    (f(_), cases)
+      no_value => no_value
+      the_value:x => the_value:f(x)
+\end{verbatim}
+
+\lra
+
+\begin{verbatim}
+instance A'Has_Internal_App Possibly' where
+  apply'inside' =
+    \(f', pA0) ->
+    case pA0 of
+      no_value -> no_value
+      Cthe_value x -> Cthe_value(f'(x))
+\end{verbatim}
+
 
 \rule{\linewidth}{0.1pt}
 
@@ -5034,7 +5067,7 @@ proof
   apply(_)inside(_) =
     (f, cases)
       [] => []
-      [head, tail = ...] => non_empty_l:(f <- head, apply(f)inside(tail))#
+      [head, tail = ...] => non_empty_l:(f <- head, apply(f)inside(tail))
 \end{verbatim}
 
 \lra
@@ -5049,8 +5082,64 @@ instance A'Has_Internal_App ListOf's where
 
 \end{verbatim}
 
+\newpage
+
+\begin{verbatim}
+type_proposition (@A)And(@B)Have_Eq_And_Gr
+equivalent (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
+
+type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
+proof a >= b = a == b | a > b
+\end{verbatim}
+\prarr
+\begin{verbatim}
+# this is a representation of the AST after preprocessing not lcases syntax
+type_theorem
+  [(@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)] --> (@A)Can_Be_Gr_Or_Eq_To(@B)
+proof a >= b = a == b | a > b
+\end{verbatim}
+$\xRightarrow{\text{translation}}$
+\begin{verbatim}
+instance
+  (A'And'Can_Be_Equal b0 b1, A'Can_Be_Greater_Than' b0 b1) => A'Can_Be_Gr_Or_Eq_To' b0 b1
+  where
+  a !>= b = a !== b !| a !> b
+\end{verbatim}
+
 \item
-\textit{Description}
+\textit{Description} \\
+
+The translation of type theorems is done with the following steps:
+
+\begin{itemize}
+
+\item
+"\texttt{type_theorem}" is replaced by "\texttt{instance}".
+
+\item
+All the type propositions with substitutions (before and after the arrow if
+there is one), are translated and the arrow changes from "\texttt{-->}" to
+"\texttt{=>}". The propositions with substitutions are translated the same way
+propositions are translated in proposition definitions. The only difference is
+that instead of ad hoc type variables there are type substitutions. These come
+in the form of type expressions where there might be underscores instead of
+type arguments (e.g \verb|ListOf(_)s| ). These type expressions are translated
+like regular type expressions except for the underscore type arguments which
+are not translated at all, so that the type constructor itself acts as a higher
+kinded type (e.g \verb|ListOf's| ).
+
+\item
+"\texttt{ where}" is appended to the above.
+
+\item
+"\texttt{proof}" is discarded and the second line is indented.
+
+\item
+The identifier of the value or the operator surrounded by two identifiers
+are translated, followed by "\texttt{ = }" and the translation of the value
+expression.
+
+\end{itemize}
 
 \end{itemize}
 

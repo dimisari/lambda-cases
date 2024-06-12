@@ -7,13 +7,9 @@ proof wrap(_) = [_]#
 type_theorem (Possibly(_))Has_Internal_App
 proof
   apply(_)inside(_) =
-    (f, cases)
+    (f(_), cases)
       no_value => no_value
-      the_value:the_value:x =>
-        the_value:f(x)
-        where
-        x : Int
-          = 1#
+      the_value:x => the_value:f(x)#
 
 type_theorem (ListOf(_)s)Has_Internal_App
 proof
