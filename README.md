@@ -43,6 +43,7 @@ creates "test_outputs" directory where
 "test_inputs/programs"
 - "test_outputs/grammar_rules" contains the Haskell translation of various
 examples for each grammar rule from "test_inputs/grammar_rules"
+
 also create "grules" executable that is run for "test_outputs/grammar_rules"
 
 ```bash
