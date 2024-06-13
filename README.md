@@ -52,3 +52,6 @@ also create "grules" executable that is run for "test_outputs/grammar_rules"
 make clean
 ```
 Removes: test_outputs, lcc, grules, hello_world, hello_world.hs
+
+## License
+[GPL-2.0 license](LICENSE)
