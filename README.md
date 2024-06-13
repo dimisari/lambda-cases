@@ -37,12 +37,12 @@ ghci my_lcases_program.hs
 make
 ```
 creates "test_outputs" directory where
-- test_outputs/compiled_progs:
+- test_outputs/compiled_progs
 <br /> contains the compiled executables of all "test_inputs/programs"
-- test_outputs/programs:
+- test_outputs/programs
 <br /> contains the Haskell translation of all
 "test_inputs/programs"
-- test_outputs/grammar_rules:
+- test_outputs/grammar_rules
 <br /> contains the Haskell translation of various
 examples for each grammar rule from "test_inputs/grammar_rules"
 
