@@ -46,7 +46,11 @@ examples for each grammar rule from "test_inputs/grammar_rules"
 
 also create "grules" executable that is run for "test_outputs/grammar_rules"
 
+## Clean
 ```bash
 make clean
 ```
-removes "test_outputs" "lcc" "grules"
+removes
+- test_outputs
+- lcc
+- grules
