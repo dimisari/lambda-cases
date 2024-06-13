@@ -1,4 +1,8 @@
-# lamda-cases compiler and language description
+# lamda-cases language description and compiler
+
+## Description
+description.pdf
+
 ## Create compiler executable
 ```bash
 make lcc
@@ -25,5 +29,6 @@ to run
 Creates executable "my_lcases_program.hs"
 
 ```bash
-./my_lcases_program
+ghci my_lcases_program.hs
 ```
+
