@@ -11,24 +11,24 @@ make lcc
 ## Compile lcases program to executable
 
 ```bash
-./lcc my_lcases_program.lc
+./lcc hello_world.lc
 ```
 
-Creates executable "my_lcases_program"
+Creates executable "hello_world"
 
 ```bash
-./my_lcases_program
+./hello_world
 ```
 
 ## Compile lcases program to Haskell
 ```bash
-./lcc -h my_lcases_program.lc
+./lcc -h hello_world.lc
 ```
 
-Creates executable "my_lcases_program.hs"
+Creates executable "hello_world.hs"
 
 ```bash
-ghci my_lcases_program.hs
+ghci hello_world.hs
 ```
 
 ## Run test_inputs
@@ -51,4 +51,4 @@ also create "grules" executable that is run for "test_outputs/grammar_rules"
 ```bash
 make clean
 ```
-Removes: test_outputs, lcc, grules
+Removes: test_outputs, lcc, grules, hello_world, hello_world.hs

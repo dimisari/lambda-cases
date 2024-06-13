@@ -68,7 +68,8 @@ grules: src/grules.hs
 # rules: clean
 
 clean:
-	rm -rf lcc grules $(tos_cps)/* $(hs_prs) $(tos_grs)/* $(tos)
+	rm -rf lcc grules $(tos_cps)/* $(hs_prs) $(tos_grs)/* $(tos) hello_world \
+	hello_world.hs
 
 clean_execs:
 	rm $(tos_cps)/*
