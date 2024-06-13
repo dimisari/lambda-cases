@@ -19,7 +19,6 @@ Creates executable "my_lcases_program"
 ```bash
 ./my_lcases_program
 ```
-to run
 
 ## Compile lcases program to Haskell
 ```bash
@@ -36,7 +35,7 @@ ghci my_lcases_program.hs
 ```bash
 make
 ```
-creates "test_outputs" directory where
+Creates "test_outputs" directory where
 - test_outputs/compiled_progs
 <br /> contains the compiled executables of all "test_inputs/programs"
 - test_outputs/programs
@@ -52,7 +51,4 @@ also create "grules" executable that is run for "test_outputs/grammar_rules"
 ```bash
 make clean
 ```
-removes
-- test_outputs
-- lcc
-- grules
+Removes: test_outputs, lcc, grules

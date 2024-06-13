@@ -5144,8 +5144,62 @@ expression.
 \end{itemize}
 
 \newpage
-\section{Running Examples}
+\section{Running}
 
+\begin{itemize}
+\item Create compiler executable \\
+
+\texttt{make lcc} \\
+
+\item Compile lcases program to executable \\
+
+\texttt{./lcc my_lcases_program.lc} \\
+
+Creates executable "my_lcases_program" \\
+
+\texttt{./my_lcases_program}
+
+\item Compile lcases program to Haskell \\
+
+\texttt{./lcc -h my_lcases_program.lc} \\
+
+Creates executable "my_lcases_program.hs" \\
+
+\texttt{ghci my_lcases_program.hs} \\
+
+\item Run test_inputs \\
+
+\texttt{make} \\
+
+Creates "test_outputs" directory where
+\begin{itemize}
+
+\item
+\textbf{test_outputs/compiled_progs} \\
+contains the compiled executables of all "test_inputs/programs"
+
+\item
+\textbf{test_outputs/programs} \\
+contains the Haskell translation of all "test_inputs/programs"
+
+\item
+\textbf{test_outputs/grammar_rules} \\
+contains the Haskell translation of various examples for each grammar rule from
+"test_inputs/grammar_rules"
+
+\end{itemize}
+
+also create "grules" executable that is run for "test_outputs/grammar_rules" \\
+
+\item Clean \\
+
+\texttt{make clean} \\
+
+Removes: test_outputs, lcc, grules
+
+\end{itemize}
+
+\newpage
 \section{Conclusion}
 
 \newpage
