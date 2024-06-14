@@ -25,7 +25,7 @@ Creates executable "hello_world"
 ./lcc -h hello_world.lc
 ```
 
-Creates executable "hello_world.hs"
+Creates Haskell file "hello_world.hs"
 
 ```bash
 ghci hello_world.hs
