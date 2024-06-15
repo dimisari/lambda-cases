@@ -49,7 +49,8 @@ $(tos_prs)/$(pis):
 	ln -sf $(shell pwd)/$(pis) $(tos_prs)
 
 $(tos_cps)/%.out: lcc $(tis_prs)/%.lc
-	./$< $(word 2, $^); mv $(basename $(word 2, $^)) $@
+	./$< $(word 2, $^); mv $(basename $(word 2, $^)) $@; \
+	rm -f $(basename $(word 2, $^)).hs
 
 $(tos_prs)/%.hs: lcc $(tis_prs)/%.lc
 	./$< -h $(word 2, $^); mv $(basename $(word 2, $^)).hs $@

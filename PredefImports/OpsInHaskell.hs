@@ -28,7 +28,7 @@ f <& x = f x
 (<.) :: (b -> c) -> (a -> b) -> a -> c
 (<.) = (.)
 
-class A'ToThe'Is' a b c | a b -> c where
+class A'To_The'Is' a b c | a b -> c where
   (!^) :: a -> b -> c
 
 class A'And'Multiply_To' a b c | a b -> c where
@@ -66,17 +66,17 @@ class A'Has_Use u where
 class A'Has_Then t where
   (!>>) :: t a -> t b -> t b
 
--- A'ToThe'Is'
-instance Floating a => A'ToThe'Is' a a a where
+-- A'To_The'Is'
+instance Floating a => A'To_The'Is' a a a where
   (!^) = (**)
 
-instance A'ToThe'Is' Int Int Int where
+instance A'To_The'Is' Int Int Int where
   (!^) = (^)
 
-instance A'ToThe'Is' Int Float Float where
+instance A'To_The'Is' Int Float Float where
   i !^ x = fromIntegral i ** x
 
-instance A'ToThe'Is' Float Int Float where
+instance A'To_The'Is' Float Int Float where
   x !^ i = x ** fromIntegral i
 
 -- A'And'Multiply_To'

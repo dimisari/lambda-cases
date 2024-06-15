@@ -498,9 +498,9 @@ the identifier}. For example, below is the definition of
 
 \begin{verbatim}
 apply(_)to_all_in(_) : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
-  = (f, cases)
-    empty_l => empty_l
-    non_empty_l:l => non_empty_l:(f <- l.head, apply(f)to_all_in(l.tail))
+  = (f(_), cases)
+    [] => []
+    [head, tail = ...] => f(head) + apply(f(_))to_all_in(tail)
 \end{verbatim}
 The actual definition doesn't matter at this point, what matters is that the
 identifier is "\verb|apply(_)to_all_in(_)|" with the parentheses
@@ -5203,6 +5203,172 @@ Removes: \verb|test_outputs|, \verb|lcc|, \verb|grules|, \verb|hello_world|,
 
 \newpage
 \section{Conclusion}
+
+A translator from lambda-cases to \H\ has been implemented. It is written in
+\H. The main differences from \H\ are:
+
+\begin{itemize}
+
+\item
+Function application is done with parentheses instead of spaces. \\
+Example: "\verb|f(x,y,z)|" instead of "\verb|f x y z|"
+
+\item
+Functions can be defined to expect arguments before or in the middle of the
+function identifier. \\
+Example:
+"\verb|apply(f)to_all_in(list)|" instead of "\verb|map f list|"
+
+\item
+Partial function application can be done for any of the arguments.
+\\\\
+Examples:\\
+"\verb|f(x, y, _)|" instead of "\verb|f x y|" for the regular \H\ use for
+a function that expects 3 arguments.
+\\
+In addition, the following are possible:
+
+\begin{itemize}
+
+\item
+"\verb|f(x, _, z)|" instead of "\verb|\y -> f x y z|"
+
+\item
+"\verb|f(_, y, z)|" instead of "\verb|\x -> f x y z|"
+
+\item
+"\verb|f(_, _, z)|" instead of "\verb|\x y -> f x y z|"
+
+\item
+etc
+
+\end{itemize}
+
+\item
+The above syntax for expected arguments with underscores is also possible
+for operands in operator expressions.
+\\\\
+Examples:\\
+"\verb|_ + 1|" instead of "\verb|(+ 1)|" for the regular \H\ use for expecting
+one operand.
+\\
+In addition, the following are possible:
+
+\begin{itemize}
+
+
+\item
+"\verb|"Hello " + _ + "! You look much younger than " + _ + "!"|"
+\\ instead of \\
+"\verb|\name age -> "Hello " ++ name ++ "! You look much younger than " + age + "!"|"
+
+\item
+"\verb|_^2 + _^2|" instead of "\verb|\x y -> x^2 + y^2|"
+
+\item
+etc
+
+\end{itemize}
+
+\item
+The above syntax for expected arguments with underscores is also possible
+for elements of tuples and lists.
+\\\\
+Examples:\\
+\begin{itemize}
+
+\item
+"\verb|(17, _, 42)|" instead of "\verb|\x -> (17, x, 42)|"
+
+\item
+"\verb|[17, _, 42]|" instead of "\verb|\x -> [17, x, 42]|"
+
+\end{itemize}
+
+\newpage
+\item
+No identifiers are needed for pattern matching on function parameters,
+the "\texttt{cases}" keyword is used instead.
+\\\\
+Examples:\\
+
+\begin{itemize}
+
+\item
+\begin{verbatim}
+cases
+  true => print("It's true!! :)")
+  false => print("It's false... :(")
+\end{verbatim}
+instead of
+\begin{verbatim}
+\b -> case b of
+  True -> putStrLn "It's true!! :)"
+  False -> putStrLn "It's false... :("
+\end{verbatim}
+This is also possible in \H\ with the LambdaCase extension like so:
+\begin{verbatim}
+\case
+  True => putStrLn "It's true!! :)"
+  False => putStrLn "It's false... :("
+\end{verbatim}
+This is where the name of the language comes from, the very frequent use
+of the LambdaCase. This idea is extended to any subset of any number of
+parameters as show in the following example (and in the examples of
+the ""cases" function expressions section" \ref{subsubsec:casessyntax})
+
+\item
+\begin{verbatim}
+(cases, cases)
+  (green, green) => true
+  (amber, amber) => true
+  (red, red) => true
+  ... => false
+\end{verbatim}
+instead of
+\begin{verbatim}
+\x y -> case (x, y) of
+  (Green, Green) => True
+  (Amber, Amber) => True
+  (Red, Red) => True
+  _ => False
+\end{verbatim}
+\end{itemize}
+
+\item Powers can be used on types.  For example:\\
+
+"\verb|Int^2|" instead of "\verb|Int x Int|" in lcases or "\verb|(Int, Int)|"
+in \H. \\
+
+\item Operators are generalized. \\\\
+Examples:
+
+\begin{itemize}
+
+\item
+"\verb|"Hello " + "World!"|" instead of "\verb|"Hello " ++ "World!"|"
+
+\item
+"\verb|5 * 'a'|" instead of "\verb|replicate 5 'a'|"
+
+\end{itemize}
+
+
+\end{itemize}
+
+\newpage
+\paragraph{Future Work}\pend
+Very little semantic analysis has been done and any error that is not a
+parsing error will be thrown by the \H\ compiler. For a more complete
+compiler/translator, a semantic analysis step is needed and error messages
+should refer to lambda-cases program and not the \H\ translation. This has not
+been implemented due to the complexity of the \H\ type system and the enormous
+work it would require to reimplement it. However, because lambda-cases forces
+the user to use type annotations, it might be possible to implement a simpler
+type system that is enough for what lamda-cases needs and/or throw an error
+message if type checking is not possible, to force the user to provide the
+relevant type annotations. This is what we will be working on in the future
+of the project.
 
 \newpage
 \printbibliography

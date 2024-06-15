@@ -1,3 +1,7 @@
+
+f(_, _) : (@A)To_The(Int)Is(Float) --> @A^2 => Float
+  = _^2 + _^2
+
 main : IO
   = print("2 to the 3 is: " + 2^3) ;
     print("6 times 7 is: " + 6*7) ;
@@ -28,4 +32,5 @@ main : IO
     print("\"Hello \" plus \"World!\" is: " + ("Hello " + "World!")) ;
     print("\"1,2,3\" minus ',' is: " + ("1,2,3" - ',')) ;
     print("\"Hello!! World!!\" minus \"!!\" is: " + ("Hello!! World!!" - "!!")) ;
+    print("f(1.0, 3.14) = " + f(1.0, 3.14)) ;
     do_nothing

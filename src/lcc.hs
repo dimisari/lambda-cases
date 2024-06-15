@@ -63,7 +63,7 @@ lang_exts = "{-# language " ++ intercalate ", " lang_ext_names ++ " #-}\n"
 lang_ext_names :: [Haskell]
 lang_ext_names =
   [ "FlexibleInstances", "MultiParamTypeClasses", "ScopedTypeVariables"
-  , "UndecidableInstances"
+  , "UndecidableInstances", "FlexibleContexts"
   ]
 
 imports :: Haskell
