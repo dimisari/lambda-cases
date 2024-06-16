@@ -76,7 +76,7 @@ gcd_of(_)and(_): Int^2 => Int
     y => gcd_of(y)and((x)mod(y))
 
 read_two_ints: (Int^2)FromIO
-  = print_line("Please give me 2 ints");
+  = print("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
       [x, y] => (from_string(x), from_string(y)) -> (_)with_io
       ... => throw_err("You didn't give me 2 ints")
@@ -89,7 +89,7 @@ nag(_)to_message: NumsAndGcd => String
 
 main: IO
   = read_two_ints ;> (i1, i2) =>
-    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_line(_)
+    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print(_)
 \end{verbatim}
 
 \paragraph{Program grammar}
@@ -1465,9 +1465,9 @@ a function expression in parenthesis.
 
 \begin{verbatim}
 (value1, value2, value3, value4, value5, value6, value7) =>
-print_line("value1 = " + value1 + ", value2 = " + value2 + ", value3 = " + value3) ;
-print_line("value4 = " + value4 + ", value5 = " + value5 + ", value6 = " + value6) ;
-print_line("value7 = " + value7)
+print("value1 = " + value1 + ", value2 = " + value2 + ", value3 = " + value3) ;
+print("value4 = " + value4 + ", value5 = " + value5 + ", value6 = " + value6) ;
+print("value7 = " + value7)
 \end{verbatim}
 
 \textbf{Description}
@@ -2669,7 +2669,7 @@ the condition arrow (" \verb|-->| ") arrow.
 
 \begin{itemize}
 
-\item Constants: \verb|undefined, pi|
+\item Constants: \verb|undefined, pi, empty_val|
 
 \item Functions
   \begin{itemize}
@@ -2694,22 +2694,20 @@ the condition arrow (" \verb|-->| ") arrow.
   \item List:\\
     \verb|(_)length, (_)is_in(_), apply(_)to_all_in(_), filter(_)with(_), |
     \\
-    \verb|take(_)from(_), ignore(_)from(_), zip(_)and(_), unzip(_), |
-    \verb|zip(_)and(_)with(_)|
+    \verb|take(_)from(_), ignore(_)from(_), zip(_)with(_), unzip(_), |
+    \verb|apply(_)to_zipped(_)with(_)|
 
   \item IO:
     \begin{itemize}
     \item Input: \verb|get_char, get_line, get_input, read_file(_)|
     \item Output:
-      \verb|print(_), print_string(_), print_line(_), write(_)in_file(_)|
+      \verb|print(_), print_string(_), write(_)in_file(_)|
     \end{itemize}
 
   \item Ad Hoc Polymorphic:\\
-  \verb|(_)first, (_)second, (_)third, (_)fourth, (_)fifth, wrap(_), |
+  \verb|wrap(_), |
   \\
   \verb|(_)to_string, from_string(_), apply(_)inside(_), |
-  \\
-  \verb|apply_wrapped(_)inside(_), (_)to_list, from_list(_)|
 
   \end{itemize}
 \end{itemize}
@@ -2718,13 +2716,12 @@ the condition arrow (" \verb|-->| ") arrow.
 
 \begin{itemize}
   \item
-  Basic: \verb|Int, Real, Char, String|
+  Basic: \verb|Int, Real, Char, String, (_)FromIO, (_)FState(_)Man|
   \item
-  Or Types: \verb|EmptyVal, Bool, Possibly(_), ListOf(_)s, Result(_)OrError(_)|
+  Or Types:
+  \verb|EmptyVal, Bool, Possibly(_), ListOf(_)s, Result(_)OrError(_)|
   \item
-  Tuple Types: \verb|NonEmptyListOf(_)s|
-  \item
-  Type Nicknames: \verb|IO, Z, R, C|
+  Type Nicknames: \verb|IO, State(_)Man, Z, R|
 \end{itemize}
 
 \newpage
@@ -2756,65 +2753,33 @@ the condition arrow (" \verb|-->| ") arrow.
 \item Function Propositions:
 
   \begin{itemize}
-  \item \verb|(@A)Is(@B)s_First|
-  \item \verb|(@A)Is(@B)s_Second|
-  \item \verb|(@A)Is(@B)s_Third|
-  \item \verb|(@A)Is(@B)s_Fourth|
-  \item \verb|(@A)Is(@B)s_Fifth|
   \item \verb|(@T)Has_A_Wrapper|
   \item \verb|(@T)Has_Str_Rep|
   \item \verb|(@T)Can_Be_Parsed|
   \item \verb|(@T)Has_Internal_App|
-  \item \verb|(@T)Has_Wrapped_Internal_App|
   \end{itemize}
 
-\item Renaming Propositions:
-
-  \begin{itemize}
-  \item \verb|(@T)Has_Exponentiation|
-  \item \verb|(@T)Has_Multiplication|
-  \item \verb|(@T)Has_Division|
-  \item \verb|(@T)Has_Addition|
-  \item \verb|(@T)Has_Subtraction|
-  \item \verb|(@T)Has_Equality|
-  \item \verb|(@T)Has_Non_Equality|
-  \item \verb|(@T)Has_Greater_Or_Equal|
-  \item \verb|(@T)Has_Less_Or_Equal|
-  \item \verb|(@T)Has_Greater|
-  \item \verb|(@T)Has_Less|
-  \end{itemize}
-
+\newpage
 \item Theorems:
 
   \begin{itemize}
-  \item \verb|(T1)Is(T1 x T2)s_First|
-  \item \verb|(T1)Is(T1 x T2 x T3)s_First|
-  \item \verb|(T1)Is(T1 x T2 x T3 x T4)s_First|
-  \item \verb|(T1)Is(T1 x T2 x T3 x T4 x T5)s_First|
-  \item \verb|(T1)Is(ListOf(T1)s)s_First|
-  \item \verb|(T2)Is(T1 x T2)s_Second|
-  \item \verb|(T2)Is(T1 x T2 x T3)s_Second|
-  \item \verb|(T2)Is(T1 x T2 x T3 x T4)s_Second|
-  \item \verb|(T2)Is(T1 x T2 x T3 x T4 x T5)s_Second|
-  \item \verb|(T1)Is(ListOf(T1)s)s_Second|
-  \item \verb|(T3)Is(T1 x T2 x T3)s_Third|
-  \item \verb|(T3)Is(T1 x T2 x T3 x T4)s_Third|
-  \item \verb|(T3)Is(T1 x T2 x T3 x T4 x T5)s_Third|
-  \item \verb|(T1)Is(ListOf(T1)s)s_Third|
-  \item \verb|(T4)Is(T1 x T2 x T3 x T4)s_Fourth|
-  \item \verb|(T4)Is(T1 x T2 x T3 x T4 x T5)s_Fourth|
-  \item \verb|(T1)Is(ListOf(T1)s)s_Fourth|
-  \item \verb|(T5)Is(T1 x T2 x T3 x T4 x T5)s_Fifth|
-  \item \verb|(T1)Is(ListOf(T1)s)s_Fifth|
-  \item \verb|TODO wrapper|
+  \item \verb|(Possibly(_))Has_A_Wrapper|
+  \item \verb|(ListOf(_)s)Has_A_Wrapper|
+  \item \verb|((_)FState(T1)Man)Has_A_Wrapper|
+  \item \verb|(Result(_)OrError(T1))Has_A_Wrapper|
   \item \verb|(Int)Has_Str_Rep|
   \item \verb|(Char)Has_Str_Rep|
   \item \verb|(Real)Has_Str_Rep|
   \item \verb|(@A)Has_Str_Rep --> (ListOf(@A)s)Has_Str_Rep|
-  \item \verb|TODO apply()inside|
-  \item \verb|TODO apply_wrapped()inside|
-  \item \verb|TODO ;>|
-  \item \verb|TODO ;|
+  \item \verb|(@A)Is_A_Product --> (@A)Has_Str_Rep|
+  \item \verb|(Possibly(_))Has_Internal_App|
+  \item \verb|(ListOf(_)s)Has_Internal_App|
+  \item \verb|((_)FState(T1)Man)Has_Internal_App|
+  \item \verb|(Result(_)OrError(T1))Has_Internal_App|
+  \item \verb|((_)FromIO)Has_Use|
+  \item \verb|((_)FState(T1)Man)Has_Use|
+  \item \verb|((_)FromIO)Has_Then|
+  \item \verb|((_)FState(T1)Man)Has_Then|
   \end{itemize}
 
 \end{itemize}
@@ -4167,7 +4132,7 @@ is.
 It is possible that the function expression is accompanied by a
 "\texttt{where}" expression below it. As shown in the example below:
 \begin{verbatim}
-  gac => print_line(message)
+  gac => print(message)
   where
   message: String
     = "Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
@@ -4184,7 +4149,7 @@ in the "\texttt{let-in}" expression as shown below:
   message =
     "Gcd: " !+ gcd(gac) !+ "\nCoefficients: a = " !+ a(gac) !+ ", b = " !+ b(gac)
   in
-  print_line'(message)
+  print'(message)
 \end{verbatim}
 where the "\verb|gac|" parameter is "visible" to the expression of
 "\verb|message|".
@@ -4356,7 +4321,7 @@ val3 =
 
 \begin{verbatim}
 print_gcd_and_coeffs_of(_): GcdAndCoeffs => IO
-  = gac => print_line(message)
+  = gac => print(message)
     where
     message: String
       = "Gcd: " + gac.gcd_ + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
@@ -4371,7 +4336,7 @@ print_gcd_and_coeffs_of' =
   message =
     "Gcd: " !+ gcd_(gac) !+ "\nCoefficients: a = " !+ a(gac) !+ ", b = " !+ b(gac)
   in
-  print_line'(message)
+  print'(message)
 \end{verbatim}
 
 \textit{Description}\\

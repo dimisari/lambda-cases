@@ -21,8 +21,8 @@ advance(_)and_print: FibsAndIndex => (FibsAndIndex)FromIO
       = (fai.cur, fai.prev + fai.cur, fai.cur_index + 1)
 
 print_fib(_,_): Int x Int => IO
-  = (index, number) => print_line("Fib num " + index + " = " + number)
+  = (index, number) => print("Fib num " + index + " = " + number)
 
 main: IO
-  = print_line("How many fibonacci numbers?");
+  = print("How many fibonacci numbers?");
     get_line ;> from_string(_) o> print(_)fib_nums

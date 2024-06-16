@@ -1,0 +1,23 @@
+
+main : (EmptyVal)FromIO
+  = print(pi); print(id(pi)); print(sqrt_of(pi)); print(abs_val_of(-1));
+    print(max_of(1)and(2)); print(min_of(1)and(2));
+    print(sin(pi)); print(cos(pi)); print(tan(pi));
+    print(asin(1.0)); print(acos(1.0)); print(atan(1.0));
+    print(gcd_of(42)and(18)); print(lcm_of(4)and(6));
+    print((2)is_odd); print((2)is_even);
+    print(truncate(1.1)); print(round(1.1));
+    print(floor(1.1)); print(ceiling(1.1));
+    print(exp(1.0)); print(ln(exp(1.0)));
+    print(log_of(1024.0)base(2.0));
+    print(take(2)from([1,2,3]));
+    print(ignore(2)from([1,2,3]));
+    print(filter([1,2,3])with(_ == 2));
+    print(zip([1,2,3])with([4,5,6]));
+    print(unzip([(1, 4), (2, 5), (3, 6)]));
+    print(apply(_ + _)to_zipped([1,2,3])with([6,5,4]));
+    (get_char ;> print(_));
+    (get_input ;> print(_));
+    (read_file("hello_world.txt") ;> write(_)in_file("out.txt"));
+    print_string("Hello "); print("World!");
+    undefined

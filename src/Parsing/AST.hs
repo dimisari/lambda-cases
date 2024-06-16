@@ -18,7 +18,7 @@ parse :: HasParser a => String -> Either ParseError a
 parse = runParser (parser <* eof) (0, False) ""
 
 -- HasParser: Literal
-instance HasParser Int where
+instance HasParser Integer where
   parser = read <$> option "" (string "-") >++< digits
 
 instance HasParser Double where
@@ -26,7 +26,7 @@ instance HasParser Double where
     read <$> int_p >++< string "." >++< digits >++< option "" exponent_p
     where
     int_p :: Parser String
-    int_p = show <$> (parser :: Parser Int)
+    int_p = show <$> (parser :: Parser Integer)
 
     exponent_p :: Parser String
     exponent_p = (char 'e' <|> char 'E') >:< int_p

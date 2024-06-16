@@ -37,5 +37,5 @@ initial: ListOf(Int)s
             = (seed * 137 + 236 - n)mod(101)
 
 main: IO
-  = print_line("Initial list = " + initial);
-    print_line("Sorted list = " + bubble_sort(initial))
+  = print("Initial list = " + initial);
+    print("Sorted list = " + bubble_sort(initial))

@@ -47,4 +47,4 @@ proof
     "\nsubtrees:\n" + (tree.subtrees)to_string + "\n"
 
 main: IO
-  = dfs_on_tree(test_tree) -> (_)to_string -> print_line(_)
+  = dfs_on_tree(test_tree) -> (_)to_string -> print(_)

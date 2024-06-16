@@ -1,11 +1,11 @@
 
-gcd_of(_)and(_): Int^2 => Int
+my_gcd_of(_)and(_): Int^2 => Int
   = (x, cases)
     0 => x
-    y => gcd_of(y)and((x)mod(y))
+    y => my_gcd_of(y)and((x)mod(y))
 
 read_two_ints: (Int^2)FromIO
-  = print_line("Please give me 2 ints");
+  = print("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
       [x, y] => (from_string(x), from_string(y)) -> (_)from_io
       ... => throw_err("You didn't give me 2 ints")
@@ -18,4 +18,5 @@ nag(_)to_message: NumsAndGcd => String
 
 main: IO
   = read_two_ints ;> (i1, i2) =>
-    (i1, i2, gcd_of(i1)and(i2)) -> nag(_)to_message -> print_line(_)
+    (i1, i2, my_gcd_of(i1)and(i2)) -> nag(_)to_message -> print(_)
+

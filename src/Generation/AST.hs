@@ -23,11 +23,11 @@ instance ToHaskell (NeedsAnnotBool, Literal) where
   to_haskell = \(needs_annot, lit) -> case lit of
     Int i ->
       case needs_annot of
-        Annot -> "(" ++ show i ++ " :: Int)"
+        Annot -> "(" ++ show i ++ " :: Integer)"
         NoAnnot -> show i
     R r ->
       case needs_annot of
-        Annot -> "(" ++ show r ++ " :: Float)"
+        Annot -> "(" ++ show r ++ " :: Double)"
         NoAnnot -> show r
     Ch c -> show c
     S s -> show s
@@ -170,7 +170,10 @@ instance ToHsWithParamNum Arguments where
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 instance ToHaskell PreFunc where
-  to_haskell = \(PF id) -> constructor_prefix ++ to_haskell id
+  to_haskell = \(PF id) ->
+    case id of
+      SId (IS "the_value", Nothing) -> "Just"
+      _ -> constructor_prefix ++ to_haskell id
 
 instance ToHaskell PreFuncApp where
   to_haskell = \(PrFA (pf, oper)) ->
@@ -593,7 +596,8 @@ instance ToHaskell AdHocTVar where
 
 instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTV) where
   to_haskell (needs_paren, TAIOA taioa) = case taioa of
-    (Nothing, TIdStart1 (TId "Real", []), Nothing) -> "Float"
+    (Nothing, TIdStart1 (TId "Real", []), Nothing) -> "Double"
+    (Nothing, TIdStart1 (TId "Int", []), Nothing) -> "Integer"
     (mtip1, taioam, mtip2) -> case taioam of
       AHTV2 ahtv ->
         in_paren_if_needed (to_haskell ahtv) tip_hs
@@ -646,7 +650,9 @@ instance ToHaskell InParenT where
 
 instance ToHaskell PowerType where
   to_haskell = \(PoT (ft, i)) ->
-    "(" ++ (replicate i ft &> map to_haskell &> intercalate ", ") ++ ")"
+    "(" ++
+    (replicate (fromIntegral i) ft &> map to_haskell &> intercalate ", ") ++
+    ")"
 
 instance ToHaskell FuncType where
   to_haskell = \(FT (it, ot)) -> to_haskell it ++ " -> " ++ to_haskell ot
@@ -711,7 +717,7 @@ instance ToHaskell TupleTypeDef where
     types_list :: [SimpleType]
     types_list = case popt of
       PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
-      PoT4 (PoT (pbt, i)) -> replicate i $ pbt_to_st pbt
+      PoT4 (PoT (pbt, i)) -> replicate (fromIntegral i) $ pbt_to_st pbt
 
     types_hs_list :: [Haskell]
     types_hs_list = map (\st -> to_haskell (NoParen, st)) types_list
@@ -867,8 +873,10 @@ instance ToHaskell TVarSub where
     FTS1 fts -> "(" ++ to_haskell fts  ++ ")"
 
 instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTVSub) where
-  to_haskell (needs_paren, TAIOAS (msouip1, taioasm, msouip2)) =
-    case taioasm of
+  to_haskell (needs_paren, TAIOAS taioas) = case taioas of
+    (Nothing, TIdStart2 (TId "Real", []), Nothing) -> "Double"
+    (Nothing, TIdStart2 (TId "Int", []), Nothing) -> "Integer"
+    (msouip1, taioasm, msouip2) -> case taioasm of
       AHTV3 ahtv ->
         in_paren_if_needed (to_haskell ahtv) souip_hs
         where
@@ -904,7 +912,9 @@ instance ToHaskell SubOrUnder where
 
 instance ToHaskell PowerTypeSub where
   to_haskell = \(PoTS (pbts, i)) ->
-    "(" ++ (replicate i pbts &> map to_haskell &> intercalate ", ") ++ ")"
+    "(" ++
+    (replicate (fromIntegral i) pbts &> map to_haskell &> intercalate ", ") ++
+    ")"
 
 instance ToHaskell PowerBaseTypeSub where
   to_haskell = \case

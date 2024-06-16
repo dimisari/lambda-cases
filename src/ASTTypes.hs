@@ -2,7 +2,7 @@ module ASTTypes where
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 data Literal =
-  Int Int | R Double | Ch Char | S String
+  Int Integer | R Double | Ch Char | S String
 
 newtype Identifier =
   Id (Maybe UndersInParen, IdStart, [IdCont], Maybe Char, Maybe UndersInParen)
@@ -226,7 +226,7 @@ data PowerBaseType =
 data InParenT =
   PT3 ProdType | FT3 FuncType
 
-newtype PowerType = PoT (PowerBaseType, Int)
+newtype PowerType = PoT (PowerBaseType, Integer)
 
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
@@ -302,7 +302,7 @@ newtype SubsOrUndersInParen = SOUIP (SubOrUnder, [SubOrUnder])
 data SubOrUnder =
   TVS1 TVarSub | Underscore4
 
-newtype PowerTypeSub = PoTS (PowerBaseTypeSub, Int)
+newtype PowerTypeSub = PoTS (PowerBaseTypeSub, Integer)
 
 data PowerBaseTypeSub =
   Underscore5 | PTV5 ParamTVar | TAIOAS2 TypeAppIdOrAHTVSub | IPTS InParenTSub

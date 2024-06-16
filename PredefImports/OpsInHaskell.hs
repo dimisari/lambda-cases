@@ -70,39 +70,39 @@ class A'Has_Then t where
 instance Floating a => A'To_The'Is' a a a where
   (!^) = (**)
 
-instance A'To_The'Is' Int Int Int where
+instance A'To_The'Is' Integer Integer Integer where
   (!^) = (^)
 
-instance A'To_The'Is' Int Float Float where
+instance A'To_The'Is' Integer Double Double where
   i !^ x = fromIntegral i ** x
 
-instance A'To_The'Is' Float Int Float where
+instance A'To_The'Is' Double Integer Double where
   x !^ i = x ** fromIntegral i
 
 -- A'And'Multiply_To'
 instance Num a => A'And'Multiply_To' a a a where
   (!*) = (*)
 
-instance A'And'Multiply_To' Int Float Float where
+instance A'And'Multiply_To' Integer Double Double where
   i !* x  = fromIntegral i * x
 
-instance A'And'Multiply_To' Float Int Float where
+instance A'And'Multiply_To' Double Integer Double where
   x !* i = x * fromIntegral i
 
-instance A'And'Multiply_To' Int Char String where
-  i !* c = replicate i c
+instance A'And'Multiply_To' Integer Char String where
+  i !* c = replicate (fromIntegral i) c
 
-instance A'And'Multiply_To' Int String String where
-  i !* s = concat $ replicate i s
+instance A'And'Multiply_To' Integer String String where
+  i !* s = concat $ replicate (fromIntegral i) s
 
 -- A'Divided_By'Is'
-instance A'Divided_By'Is' Int Int Float where
+instance A'Divided_By'Is' Integer Integer Double where
   x !/ y = fromIntegral x / fromIntegral y
 
-instance A'Divided_By'Is' Int Float Float where
+instance A'Divided_By'Is' Integer Double Double where
   i !/ x  = fromIntegral i / x
 
-instance A'Divided_By'Is' Float Int Float where
+instance A'Divided_By'Is' Double Integer Double where
   x !/ i = x / fromIntegral i
 
 -- A'And'Add_To'
@@ -124,10 +124,10 @@ instance b ~ [a] => A'And'Add_To' [a] a b where
 instance Num a => A'And'Add_To' a a a where
   (!+) = (+)
 
-instance A'And'Add_To' Int Float Float where
+instance A'And'Add_To' Integer Double Double where
   i !+ x  = fromIntegral i + x
 
-instance A'And'Add_To' Float Int Float where
+instance A'And'Add_To' Double Integer Double where
   x !+ i = x + fromIntegral i
 
 instance (a ~ String) => A'And'Add_To' Char Char a where

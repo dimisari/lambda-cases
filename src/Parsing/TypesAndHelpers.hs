@@ -79,7 +79,7 @@ opt_space_around = \a -> opt_space *> a <* opt_space
 in_paren :: Parser a -> Parser a
 in_paren = \a -> char '(' *> opt_space_around a <* char ')'
 
-err_if_less_than_2 :: Int -> Parser Int
+err_if_less_than_2 :: Integer -> Parser Integer
 err_if_less_than_2 =  \i -> case (i < 2) of
   True -> unexpected "integer in power type must be greater than 1"
   False -> return i

@@ -9,9 +9,9 @@ hanoi_with(_)rings_from(_)to(_)through(_)
       hanoi_with(n - 1)rings_from(auxiliary)to(target)through(source)
       where
       move_from(_)to(_): String^2 => IO
-        = print_line(_) <o ("Move from " + _ + " to " + _)
+        = print(_) <o ("Move from " + _ + " to " + _)
 
 main: IO
-  = print_line("Number of rings?");
+  = print("Number of rings?");
     get_line ;> from_string(_) o>
     hanoi_with(_)rings_from("left")to("right")through("middle")

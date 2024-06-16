@@ -155,15 +155,16 @@ change_sid_if_needed :: SimpleId -> PreprocessState SimpleId
 change_sid_if_needed = \sid ->
   check_if_sid_in_ncs sid >$> \case
     True -> add_c_to_sid sid
-    False -> change_if_bool_sid sid
+    False -> change_if_particular_sid sid
 
 add_c_to_sid :: SimpleId -> SimpleId
 add_c_to_sid = \(SId (IS str, mdigit)) -> SId (IS $ "C" ++ str, mdigit)
 
-change_if_bool_sid :: SimpleId -> SimpleId
-change_if_bool_sid = \case
+change_if_particular_sid :: SimpleId -> SimpleId
+change_if_particular_sid = \case
   SId (IS "true", Nothing) -> SId (IS "True", Nothing)
   SId (IS "false", Nothing) -> SId (IS "False", Nothing)
+  SId (IS "no_value", Nothing) -> SId (IS "Nothing", Nothing)
   sid -> sid
 
 sid_to_pfaoi :: SimpleId -> ParenFuncAppOrId

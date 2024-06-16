@@ -1,7 +1,4 @@
 
-or_type Possibly(T1)
-values the_value:T1 | no_value
-
 or_type Comparison
 values lesser | equal | greater
 
@@ -45,11 +42,11 @@ list : ListOf(Int)s
 
 result_msg(_) : Possibly(Int) => IO
   = cases
-    no_value => print_line("Target Not Found")
-    the_value:ind => print_line("Found! The index is: " + ind)
+    no_value => print("Target Not Found")
+    the_value:ind => print("Found! The index is: " + ind)
 
 try(_) : Int => IO
-  = i => print_line("Trying " + (i)to_string) ; result_msg(bin_search(list, i))
+  = i => print("Trying " + (i)to_string) ; result_msg(bin_search(list, i))
 
 try_list(_) : ListOf(Int)s => IO
   = cases

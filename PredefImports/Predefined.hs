@@ -10,10 +10,12 @@ import Control.Monad.State
 
 -- types
 type A'FromIO = P.IO
-type IO = A'FromIO ()
+type EmptyVal = ()
+type IO = A'FromIO EmptyVal
 type ListOf's = []
 type A'FState'Man a b = State b a
-type State'Man a = A'FState'Man () a
+type State'Man a = A'FState'Man EmptyVal a
+type Possibly' = Maybe
 
 -- values
 print_line' = putStrLn
@@ -21,14 +23,57 @@ get_line = getLine
 split'to_words = words
 apply'to_all_in' = uncurry map
 throw_err' = error
+id' = id
+sqrt_of' = sqrt
+sin' = sin
+cos' = cos
+tan' = tan
+asin' = asin
+acos' = acos
+atan' = atan
+a'is_odd = odd
+a'is_even = even
+truncate' = truncate
+round' = round
+floor' = floor
+ceiling' = ceiling
+exp' = exp
+ln' = log
+log_of'base' = uncurry (flip logBase)
+filter'with' = uncurry (flip filter)
+zip'with' = uncurry zip
+unzip' = unzip
+get_char = getChar
+get_input = getContents
+read_file' = readFile
+write'in_file' = uncurry (flip writeFile)
+print_string' = putStr
+empty_val = ()
+
+apply'to_zipped'with' = \(f, l1, l2) -> zipWith (curry f) l1 l2
+
+max_of'and' :: Ord a => (a, a) -> a
+max_of'and' = uncurry max
+
+min_of'and' :: Ord a => (a, a) -> a
+min_of'and' = uncurry min
+
+abs_val_of' :: Num a => a -> a
+abs_val_of' = abs
+
+gcd_of'and' :: Integral a => (a, a) -> a
+gcd_of'and' = uncurry gcd
+
+lcm_of'and' :: Integral a => (a, a) -> a
+lcm_of'and' = uncurry lcm
 
 get_state :: State a a
 get_state = get
 
-set_state' :: s -> State s ()
+set_state' :: s -> State s EmptyVal
 set_state' = put
 
-modify_state_with' :: (s -> s) -> State s ()
+modify_state_with' :: (s -> s) -> State s EmptyVal
 modify_state_with' = modify
 
 result_of'on_init_state' :: (State s a, s) -> a
@@ -49,26 +94,23 @@ a'mod' = uncurry mod
 print' :: Show a => a -> IO
 print' = print
 
-a'length :: [a] -> Int
-a'length = length
+a'length :: [a] -> Integer
+a'length = fromIntegral . length
 
 a'is_in' :: Eq a => (a, [a]) -> Bool
 a'is_in' = uncurry elem
 
-ignore'from' :: (Int, [a]) -> [a]
-ignore'from' = uncurry drop
+ignore'from' :: (Integer, [a]) -> [a]
+ignore'from' = uncurry drop . \(x, y) -> (fromIntegral x, y)
 
-take'from' :: (Int, [a]) -> [a]
-take'from' = uncurry take
+take'from' :: (Integer, [a]) -> [a]
+take'from' = uncurry take . \(x, y) -> (fromIntegral x, y)
 
-do_nothing :: Applicative f => f ()
-do_nothing = pure ()
+do_nothing :: Applicative f => f EmptyVal
+do_nothing = pure empty_val
 
 from_string' :: Read a => String -> a
 from_string' = read
-
-wrap :: Monad m => a -> m a
-wrap = return
 
 a'from_io :: a -> P.IO a
 a'from_io = return
@@ -76,7 +118,7 @@ a'from_io = return
 not' :: Bool -> Bool
 not' = not
 
-for_all_in'' :: Monad m => ([a], a -> m b) -> m ()
+for_all_in'' :: Monad m => ([a], a -> m b) -> m EmptyVal
 for_all_in'' = uncurry $ flip mapM_
 
 -- IsFirst'

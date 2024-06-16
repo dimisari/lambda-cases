@@ -48,7 +48,7 @@ $(tos_grs):
 $(tos_prs)/$(pis):
 	ln -sf $(shell pwd)/$(pis) $(tos_prs)
 
-$(tos_cps)/%.out: lcc $(tis_prs)/%.lc
+$(tos_cps)/%.out: lcc $(tis_prs)/%.lc $(pi1) $(pi2)
 	./$< $(word 2, $^); mv $(basename $(word 2, $^)) $@; \
 	rm -f $(basename $(word 2, $^)).hs
 
@@ -70,7 +70,7 @@ grules: src/grules.hs
 
 clean:
 	rm -rf lcc grules $(tos_cps)/* $(hs_prs) $(tos_grs)/* $(tos) hello_world \
-	hello_world.hs
+	hello_world.hs; find test_inputs/programs/ -name "*.hs" -delete
 
 clean_execs:
 	rm $(tos_cps)/*

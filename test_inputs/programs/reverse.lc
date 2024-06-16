@@ -7,4 +7,4 @@ my_int_list: ListOf(Int)s
   = [1, 2, 3, 4, 5]
 
 main: IO
-  = reverse(my_int_list) -> (_)to_string -> print_line(_)
+  = reverse(my_int_list) -> (_)to_string -> print(_)

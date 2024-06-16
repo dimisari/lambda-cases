@@ -1,7 +1,4 @@
 
-or_type Possibly(T1)
-values the_value:T1 | no_value
-
 sub_set_sum(_, _) : ListOf(Int)s x Int => Possibly(ListOf(Int)s)
   = (cases, cases)
     (*, 0) => the_value:[]
