@@ -1,5 +1,5 @@
 
-f(_, _) : (@A)To_The(Int)Is(Float) --> @A^2 => Float
+f(_, _) : (@A)To_The(Int)Is(Real) --> @A^2 => Real
   = _^2 + _^2
 
 main : IO

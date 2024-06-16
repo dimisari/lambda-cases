@@ -592,31 +592,33 @@ instance ToHaskell AdHocTVar where
   to_haskell = \(AHTV c) -> ad_hoc_t_var_prefix ++ show (ord c - 65)
 
 instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTV) where
-  to_haskell (needs_paren, TAIOA (mtip1, taioam, mtip2)) = case taioam of
-    AHTV2 ahtv ->
-      in_paren_if_needed (to_haskell ahtv) tip_hs
-      where
-      tip_hs :: Haskell
-      tip_hs = to_haskell mtip1 ++ to_haskell mtip2
+  to_haskell (needs_paren, TAIOA taioa) = case taioa of
+    (Nothing, TIdStart1 (TId "Real", []), Nothing) -> "Float"
+    (mtip1, taioam, mtip2) -> case taioam of
+      AHTV2 ahtv ->
+        in_paren_if_needed (to_haskell ahtv) tip_hs
+        where
+        tip_hs :: Haskell
+        tip_hs = to_haskell mtip1 ++ to_haskell mtip2
 
-    TIdStart1 (tid, tip_str_pairs) ->
-      in_paren_if_needed tid_hs tip_hs
-      where
-      tid_hs :: Haskell
-      tid_hs =
-        maybe_prefix_args_hs upper_prefix mtip1 ++ to_haskell tid ++
-        args_strs_hs tip_str_pairs ++ singe_quotes_hs mtip2
+      TIdStart1 (tid, tip_str_pairs) ->
+        in_paren_if_needed tid_hs tip_hs
+        where
+        tid_hs :: Haskell
+        tid_hs =
+          maybe_prefix_args_hs upper_prefix mtip1 ++ to_haskell tid ++
+          args_strs_hs tip_str_pairs ++ singe_quotes_hs mtip2
 
-      tip_hs :: Haskell
-      tip_hs =
-        to_haskell mtip1 ++ to_haskell (map fst tip_str_pairs) ++
-        to_haskell mtip2
-    where
-    in_paren_if_needed :: Haskell -> Haskell -> Haskell
-    in_paren_if_needed = \hs tip_hs ->
-      case tip_hs of
-        "" -> hs
-        _ -> in_paren_if needs_paren $ hs ++ tip_hs
+        tip_hs :: Haskell
+        tip_hs =
+          to_haskell mtip1 ++ to_haskell (map fst tip_str_pairs) ++
+          to_haskell mtip2
+      where
+      in_paren_if_needed :: Haskell -> Haskell -> Haskell
+      in_paren_if_needed = \hs tip_hs ->
+        case tip_hs of
+          "" -> hs
+          _ -> in_paren_if needs_paren $ hs ++ tip_hs
 
 instance ToHaskell TypesInParen where
   to_haskell = \(TIP (st, sts)) ->
