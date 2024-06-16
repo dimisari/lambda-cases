@@ -75,7 +75,7 @@ gcd_of(_)and(_): Int^2 => Int
     0 => x
     y => gcd_of(y)and((x)mod(y))
 
-read_two_ints: (Int^2)WithIO
+read_two_ints: (Int^2)FromIO
   = print_line("Please give me 2 ints");
     get_line ;> split(_)to_words o> cases
       [x, y] => (from_string(x), from_string(y)) -> (_)with_io
@@ -192,11 +192,11 @@ An identifier is the name of a value or a parameter. It is used in the
 definition of a value and in expressions that use that value, or in the
 parameters of a function and in the body of that function.
 \\\\
-An identifier starts with a lower case letter, which can followed by lower case
-letters or underscores and/or ended with a digit. It is also possible to have
-underscores in parenthesis before, after or in the middle of an identifier (see
-"Parenthesis Function Application" section \ref{subsubsec:parenfuncapp} for why
-this can be useful).
+An identifier starts with a lower case letter, which can be followed by lower
+case letters or underscores and/or ended with a digit. It is also possible to
+have underscores in parenthesis before, after or in the middle of an identifier
+(see "Parenthesis Function Application" section \ref{subsubsec:parenfuncapp}
+for why this can be useful).
 \\\\
 A simple identifier is an identifier without any underscores in parenthesis.
 It used in expressions where underscores in parenthesis don't make sense (e.g.
@@ -484,7 +484,7 @@ apply(f)to_all_in(l)
 Function application in lcases can be done in many different ways. In this
 section, we discuss the ways function application can be done with parenthesis.
 \\\\
-In the first two examples, we have the usual mathematical function application
+In the first two examples, the usual mathematical function application is used
 which is also used in most programming languages and should be familiar to the
 reader, i.e. function application is done with the arguments of the function in
 parenthesis seperated by commas and \textbf{appended} to the function
@@ -493,17 +493,14 @@ identifier.
 This idea can be extended by allowing the arguments to be \textbf{prepended} or
 to be \textbf{inside} to the function identifier (examples 3 and 4). This is
 only valid if the function has been \textbf{defined with these parentheses in
-the identifier}. For example, below is the definition of
-"\verb|apply(_)to_all_in(_)|":
-
+the identifier}. For example, the definition for
+"\verb|apply(_)to_all_in(_)|"
+starts like so:
 \begin{verbatim}
 apply(_)to_all_in(_) : (T1 => T2) x ListOf(T1)s => ListOf(T2)s
-  = (f(_), cases)
-    [] => []
-    [head, tail = ...] => f(head) + apply(f(_))to_all_in(tail)
+  = <...definition>
 \end{verbatim}
-The actual definition doesn't matter at this point, what matters is that the
-identifier is "\verb|apply(_)to_all_in(_)|" with the parentheses
+The identifier is "\verb|apply(_)to_all_in(_)|" with the parentheses
 \textbf{included}.  This is very useful for defining functions where the
 argument in the middle or before makes the function application look and sound
 more like natural language.
@@ -517,12 +514,12 @@ so on.
 \newpage
 \item \textit{Empty arguments in Parenthesis Function Application}
 \\\\
-It is possible to give a function only some of the arguments by putting an
+It is possible to provide a function with a subset its arguments by putting an
 underscore to all the missing arguments. The resulting expression is a function
 that expects the missing arguments to return the final result. Let's see
 this in action:
 \begin{verbatim}
-f : Char x Int x Real => String
+f(_, _, _) : Char x Int x Real => String
 c, i, r : Char, Int, Real
 
 f(c, i, r) : String
@@ -560,7 +557,6 @@ f(_, _, r) : Char x Int => String
 \item \textit{Examples}
 \begin{verbatim}
 the_value:1
-non_empty_l:l
 error:e
 result:r
 apply(the_value:_)to_all_in(_)
@@ -571,26 +567,25 @@ apply(the_value:_)to_all_in(_)
 Prefix functions are automatically generated from \verb|or_type| definitions
 (see "Or Types" in section \ref{subsubsec:tdefs}). They are functions that
 convert a value of a particular type to a value that is a case of an
-\verb|or_type| and has values of this type inside. For example in the
+\verb|or_type| and has values of the first type inside. For example in the
 first example above we have:
 \begin{verbatim}
 1 : Int
 the_value:1 : Possibly(Int)
 \end{verbatim}
-Where the function \verb|thevalue:_| is automatically generated from the
+Where the function \verb|the_value:_| is automatically generated from the
 definition of the \verb|Possibly| type:
 \begin{verbatim}
 or_type Possibly(T1)
-values
-  the_value:T1 | no_value
+values the_value:T1 | no_value
 \end{verbatim}
 And it has the type \verb|T1 => Possibly(T1)|.
 \\\\
-These functions are called prefix functions because they are prepended to
-their argument. However, they can also be used as arguments to other function
-with an underscore in their argument.
-An illustration of the aforementioned is the last example, where the function
-\verb|the_value:_| is an argument of the function \verb|apply(_)to_all_in(_)|.
+These functions are called prefix functions because they are prepended to their
+argument. However, they can also be used as arguments to other functions with
+an underscore in their argument.  This is illustrated in the last example,
+where the function \verb|the_value:_| is an argument of the function
+\verb|apply(_)to_all_in(_)|.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -652,12 +647,12 @@ _.2nd : (@A)Is(@B)s_2nd --> @B => @A
 ...
 \end{verbatim}
 These functions are called postfix functions because they are appended to their
-argument. However, they can also be used as arguments to other function with an
-underscore in their argument.  An illustration of the aforementioned is the
-last example, where the function "\verb|_.1st|" is an argument of the function
+argument. However, they can also be used as arguments to other functions with
+an underscore in their argument. This is illustrated in the last example, where
+the function "\verb|_.1st|" is an argument of the function
 "\verb|apply(_)to_all_in(_)|".
 \\\\
-The is a special postfix function called "\verb|_.change|" which is described
+There is a special postfix function called "\verb|_.change|" which is described
 in the following paragraph.
 
 \item \textit{Grammar}
@@ -691,12 +686,12 @@ x.change{1st = _, 3rd = _}
 \\\\
 The "\verb|_.change|" function is a special postfix function that works an all
 tuples. It returns a new tuple that is the same as the input tuple except for
-some fields that change. Which fields change and to what new value is specified
-inside curly brackets after the "\verb|_.change|". The following special
-identifiers can be used for referring to the fields:
+some changed fields. Which fields change and to what new value is specified
+inside curly brackets after the "\verb|.change|". The following special
+identifiers can be used for referring to the fields of product type tuples:
 "\verb|1st|", "\verb|2nd|", "\verb|3rd|", "\verb|4th|", "\verb|5th|"
 (2nd, 4th and 5th example). If the tuple is of a tuple type, the identifiers of
-the fields specified in the type definition can be used (1st and 3rd example).
+the fields specified in the type definition are used (1st and 3rd example).
 Therefore, we are assuming the following (or similar) if the examples are to
 type check:
 
@@ -720,7 +715,7 @@ apply(_.change{1st = 1st + 1})to_all_in(_)
   : (@A)And(Int)AddTo(@A), (@A)Is(@B)s_1st --> ListOf(@B)s => ListOf(@B)s
 
 
-assuming  x : Int x Real x String
+x : Int x Real x String
 x.change{1st = _, 3rd = _} : Int x String => Int x Real x String
 \end{verbatim}
 The changes of the fields have the following structure:
@@ -1000,92 +995,103 @@ Operator & Type
 
 \paragraph{Simple Example Program}
 \begin{verbatim}
-main: (EmptyVal)WithIO
+main: (EmptyVal)FromIO
   = print_string("I'll repeat the line") ; get_line ;> print_string(_)
 \end{verbatim}
 The example above demonstrates the use of the environment action operators with
-the \verb|WithIO| environment type, which is how IO is done in lcases. Some
+the \verb|FromIO| environment type, which is how IO is done in lcases. Some
 light can be shed on how this is done, if we take a look at the types (as
 always!):
 \begin{verbatim}
-print_string(_): String => (EmptyVal)WithIO
-print_string("I'll repeat the line"): (EmptyVal)WithIO
+print_string(_): String => (EmptyVal)FromIO
+print_string("I'll repeat the line"): (EmptyVal)FromIO
+get_line: (String)FromIO
 
-get_line: (String)WithIO
 
-# for the "then" operator we have:
-; : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2)
-
-# therefore in the following expression:
-#     print_string("I'll repeat the line") ; get_line
-# the only way to match the types is if @E = WithIO, T1 = EmptyVal, T2 = String
-# from which it follows that (WithIO)Has_Then
-# and the "then" operator (in this particular case) has type
-#     (EmptyVal)WithIO x (String)WithIO => (String)WithIO
-# for the whole expression we have:
+\end{verbatim}
+For the "then" operator we have:
+\verb|; : (@E)Has_Then --> @E(T1) x @E(T2) => @E(T2)|
+\\\\
+In the following expression:
+\verb|print_string("I'll repeat the line") ; get_line|
+\\
+the "then" operator has type:
+\verb|(EmptyVal)FromIO x (String)FromIO => SomeType|
+\\\\
+The only way to match the types is:
+\\
+\verb|  @E = FromIO, T1 = EmptyVal, T2 = String and SomeType = (String)FromIO|
+\\
+and it type checks because: \verb|(FromIO)Has_Then|
+\\\\
+For the whole expression we have:
+\begin{verbatim}
 print_string("I'll repeat the line") ; get_line
-  : (String)WithIO
+  : (String)FromIO
 
-print_string: String => (EmptyVal)WithIO
 
-# for the "use" operator we have:
-;> : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)
-
-# therefore in the following expression:
-#     print_string("I'll repeat the line") ; get_line ;> print_string(_)
-# the only way to match the types is if @E = WithIO, T1 = String, T2 = EmptyVal
-# from which it follows that (WithIO)Has_Use
-# and the "use" operator (in this particular case) has type
-#     (String)WithIO x (String => (EmptyVal)WithIO) => (EmptyVal)WithIO
-# for the whole expression we have:
+\end{verbatim}
+For the "use" operator we have:
+\verb|;> : (@E)Has_Use --> @E(T1) x (T1 => @E(T2)) => @E(T2)|
+\\\\
+In the following expression:
+\verb|print_string("I'll repeat the line") ; get_line ;> print_string(_)|
+\\
+the "use" operator has type:
+\verb|(String)FromIO x (String => (EmptyVal)FromIO) => SomeType|
+\\\\
+The only way to match the types is:
+\\
+\verb|  @E = FromIO, T1 = String, T2 = EmptyVal and SomeType = (EmptyVal)FromIO|
+\\
+and it type checks because: \verb|(FromIO)Has_Use|
+\\\\
+For the whole expression we have:
+\begin{verbatim}
 print_string("I'll repeat the line") ; get_line ;> print_string(_)
-  : (EmptyVal)WithIO
+  : (EmptyVal)FromIO
 \end{verbatim}
 
 \newpage
 \paragraph{Another Example Program}
 \begin{verbatim}
-main: (EmptyVal)WithIO
-  = print_string <- "Hello! What's your name?" ; get_line ;> name =>
-    print_string("Nice to meet you " + name + "!")
+main: (EmptyVal)FromIO
+  = print_string("Hello! What's your name?") ; get_line ;> name =>
+    print_string("And how old are you?") ; get_line ;> age =>
+    print_string("Oh! You don't look " + age + " " + name + "!")
 
-print_string(_): String => (EmptyVal)WithIO
-"Hello! What's your name?": String
-<- : (T1 => T2) x T1 => T2
+print_string(_): String => (EmptyVal)FromIO
 
-# matching the types: T1 = String, T2 = (EmptyVal)WithIO
-print_string <- "Hello! What's your name?"
-  : (EmptyVal)WithIO
+print_string("Hello! What's your name?") : (EmptyVal)FromIO
 
-# Similarly to the previous example program
-print_string <- "Hello! What's your name?" ; get_line
-  : (String)WithIO
+print_string("Hello! What's your name?"); get_line
+  : (String)FromIO
 
-name => print_string("Nice to meet you " + name + "!")
-  : String => (EmptyVal)WithIO
+print_string("And how old are you?"); get_line
+  : (String)FromIO
 
-# Here we have a function expression as the second operand
-# of the ";>" operator:
-#   print_string <- "Hello! What's your name?" ; get_line ;> name =>
-#   print_string("Nice to meet you " + name + "!")
-# Whenever this happens the function extends to the end of the expression.
-# So the expression:
-#   name => print_string("Nice to meet you " + name + "!")
-# is the second operand.
-# This is important to note as it could be longer and have other subexpressions
-# in it. For example it could be:
-#   name => print_string("Nice to...) ; print_string("How old are you?") ;
-#   get_line ;> age => print_string(...) ; ...
-# Here again the whole expression from "name => ..." till the end would be the
-# second operand to the ";>" operator (and as you can see it has more ";>"
-# operators and operands of those operators inside)
-#
-# Putting all together (similarly to the previous example program):
-print_string <- "Hello! What's your name?" ; get_line ;> name =>
-print_string("Nice to meet you " + name + "!")
-  : (EmptyVal)WithIO
+print_string("Oh! You don't look " + age + " " + name + "!")
+  : (EmptyVal)FromIO
+
+age => print_string("Oh! You don't look " + age + " " + name + "!")
+  : String => (EmptyVal)FromIO
+
+print_string("And how old are you?") ; get_line ;> age =>
+print_string("Oh! You don't look " + age + " " + name + "!")
+  : (EmptyVal)FromIO
+
+name =>
+print_string("And how old are you?") ; get_line ;> age =>
+print_string("Oh! You don't look " + age + " " + name + "!")
+  : String => (EmptyVal)FromIO
+
+print_string("Hello! What's your name?") ; get_line ;> name =>
+print_string("And how old are you?") ; get_line ;> age =>
+print_string("Oh! You don't look " + age + " " + name + "!")
+  : (EmptyVal)FromIO
 \end{verbatim}
 
+\newpage
 \paragraph{Description}\pend
 The environment action operators are used to combine values that do environment
 actions into values that do more complicated environment actions. Environment
@@ -1110,7 +1116,7 @@ second action) and therefore it is of type \verb|@E(T2)|.
 Note that the value of type \verb|T1| produced by the first action is not
 used anywhere. This happens mostly when \verb|T1 = EmptyVal| and it is
 because values of type \verb|@E(EmptyVal)| are used for their environment
-action only \\(e.g. \verb|print_string(...): (EmptyVal)WithIO|).
+action only \\(e.g. \verb|print_string(...): (EmptyVal)FromIO|).
 \\\\
 How the two environment actions of the \verb|@E(T1)| and \verb|@E(T2)|
 values are combined to produce the new environment action is specific to the
@@ -1176,8 +1182,7 @@ the types expected by the operator.
 \\\\
 It is possible for the second operand of an operator to be a function
 expression.  This is mostly useful with the "\verb|;>|" operator (see
-previous section: "Environment Operators"), but it is also possible with the
-following operators: "\verb|->|", "\verb|o>|", "\verb|<o|".
+previous section: "Environment Operators").
 \\\\
 It is possible to use an underscore as an operand. An operator expression with
 underscore operands becomes a function that expects those operands as
@@ -1189,8 +1194,8 @@ _ - 1 : Int => Int
 "Hello " + "it's me, " + _ : String => String
 "Hi, I am " + _ + " and I am " + _ + " years old" : String^2 => String
 \end{verbatim}
-Note: These are not the most general types for the examples but they are
-compatible and good enough for their illustration purposes.
+Note: These are not the most general types for these examples but they are
+compatible.
 
 \newpage
 
@@ -1211,7 +1216,7 @@ In that case:
 \begin{itemize}
 \item
 The operator expression must split in a new line after an operator (not an
-argument).
+operand).
 
 \item
 Every line after the first must be indented so that in begins at the column
@@ -1447,12 +1452,13 @@ their body.
 Parameters have identifiers. There is either only one parameter, in which case
 there is no parenthesis, or there are many, in which case they are in
 parentheses, seperated by commas. If a parameter is not needed it can be left
-empty by having an asterisk instead of an identifier (3rd and 4th example).
+empty by having an asterisk instead of an identifier (4th and 5th example).
 If a parameter is a tuple itself it can be matched further by using parentheses
 and giving identifiers to its fields (5th example).
 \\\\
 The parameters and the body are seperated by the funciton arrow
-("\verb|=>|"). The body is an operator or basic expression.
+("\verb|=>|"). The body is a basic expression, an operator expression or
+a function expression in parenthesis.
 
 \item \textit{Big Function Expressions}\\\\
 \textbf{Example}
@@ -1516,8 +1522,8 @@ The precise indentation rules are described in the section
 \begin{verbatim}
 print_sentimental_bool(_): Bool => IO
   = cases
-    true => print <- "It's true!! :)"
-    false => print <- "It's false... :("
+    true => print("It's true!! :)")
+    false => print("It's false... :(")
 
 or_type TrafficLight
 values green | amber | red
@@ -1547,13 +1553,12 @@ gcd_of(_)and(_): Int^2 => Int
     y => gcd_of(y)and((x)mod(y))
 
 apply(_)to_all_in(_): (T1 => T2) x ListOf(T1)s => ListOf(T2)s
-  = (f, cases)
-    empty_l => empty_l
-    non_empty_l:list => non_empty_l:(f <- list.head, apply(f)to_all_in(list.tail))
+  = (f(_), cases)
+    [] => []
+    [head, tail = ...] => f(head) + apply(f(_))to_all_in(tail)
 
 cases
-  [x1, x2, xs = ...] =>
-    (x1 < x2) & (x2 + xs)is_sorted
+  [x1, x2, xs = ...] => (x1 < x2) & (x2 + xs)is_sorted
   ... => true
 \end{verbatim}
 
@@ -1573,19 +1578,14 @@ remaining cases while dismissing the value (e.g.
 cases while being able to use the value with the name "\verb|some_id|"
 (e.g.  "\verb|y|" in "\verb|gcd|" example).
 \\\\
-It is possible to use the "\verb|cases|" keyword in multiple parameters to match on
-all of them. By doing that, each case represents a particular combination of
-values for the parameters involved\\(e.g. \verb|traffic_lights_match|
-example).
+It is possible to use "\verb|cases|" in multiple parameters to match on all of
+them combined. By doing that, each case represents a particular combination of
+values for the "\verb|cases|" parameters involved\\(e.g.
+\verb|traffic_lights_match| example).
 \\\\
 It is also possible to use a "\verb|where|" expression below a particular case.
 The "\verb|where|" expression must be indented two spaces more than than the
 line where that particular case begins.
-\\\\
-A function expression that uses the "\verb|cases|" syntax must contain the
-"\verb|cases|" keyword in at least one parameter. The number of matching
-expressions in all cases must be the same as the number of parameters with the
-"\verb|cases|" keyword.
 \\\\
 It also possible to use the following syntax to match on as many elements of a
 list as needed and optionally give a name to the rest of the list:
@@ -1726,11 +1726,12 @@ keyword "\verb|all|" to give the same type to all the values.
 \begin{verbatim}
 sort(_): ListOf(Int)s => ListOf(Int)s
   = cases
-    empty_l => empty_l
-    non_empty_l:l => sort(less_l) + l.head + sort(greater_l)
+    [] => []
+    [head, tail = ...] =>
+      sort(less_l) + head + sort(greater_l)
       where
       less_l, greater_l: all ListOf(Int)s
-        = filter(l.tail)with(_ < l.head), filter(l.tail)with(_ >= l.head)
+        = filter(tail)with(_ < head), filter(tail)with(_ >= head)
 
 sum_nodes(_): TreeOf(Int)s => Int
   = tree =>
@@ -1738,8 +1739,8 @@ sum_nodes(_): TreeOf(Int)s => Int
     where
     sum_list(_) : ListOf(Int)s => Int
       = cases
-        empty_l => 0
-        non_empty_l:l => l.head + sum_list(l.tail)
+        [] => 0
+        [head, tail = ...] => head + sum_list(tail)
 
 big_string : String
   = s1 + s2 + s3 + s4
@@ -1893,10 +1894,9 @@ A parametric type variable is written with capital "T" followed by a digit.
 
 \item \textit{Description}
 
-Ad hoc type variables are like parametric type variables with the difference
-that any type by which they are substituted must satisfy certain conditions in
-order for the program to type check. These conditions come in the form of type
-propositions (see Type Logic section \ref{subsec:typelogic}). Therefore, any ad
+Ad hoc type variables are type variables that can be substituted only by types
+that satisfy a condition. This condition comes in the form of a type
+proposition (see Type Logic section \ref{subsec:typelogic}). Therefore, any ad
 hoc type variable must also appear in the condition as shown in the examples.
 \\\\
 An ad hoc type variable is written with an '@' followed by any capital letter.
@@ -1922,20 +1922,22 @@ ListOf(T1)s
 
 \item \textit{Description}
 
-Type application types are types that are produced by passing arguments
-to a type function generated by a \verb|tuple_type| or an \verb|or_type|
-definition. For example, given the definition of \verb|ListOf(T1)s|:
+Type application types are types that are produced by passing type arguments to
+a type function generated by a \verb|tuple_type| definition, an \verb|or_type|
+definition or a \verb|type_nickname|. For example, given the definition of
+\verb|Possibly(T1)|:
 \begin{verbatim}
-or_type ListOf(T1)s
-values non_empty_l:NonEmptyListOf(T1)s | empty_l
+or_type Possibly(T1)
+values the_value:T1 | no_value
 \end{verbatim}
-We have that \verb|ListOf(_)s| is a type function that receives one type
-parameter and returns a resulting type. For example \verb|ListOf(Int)s| is
-the result of passing the type argument \verb|Int| to \verb|ListOf(_)s|.
+We have that \verb|Possibly(_)| is a type function that receives one type
+parameter and returns a resulting type. For example \verb|Possibly(Int)| is
+the result of passing the type argument \verb|Int| to \verb|Possibly(_)|.
 \\\\
-Type application types have the same form as the name in the
-\verb|tuple_type| or \verb|or_type| definition, with the difference that
-type parameters are substituted by the expressions of the type arguments.
+Type application types have the same form as the name in the \verb|tuple_type|
+definition, \verb|or_type| definition or \verb|type_nickname|, with the
+difference that type parameters are substituted by the expressions of the type
+arguments.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -1968,12 +1970,11 @@ Real^3 x Real^3
 
 Product types are the types of tuples. They are comprised of the expressions of
 the types of the fields seperated by the string " \verb|x| " (space '\verb|x|'
-space) because '\verb|x|' is very similar the symbol used in the cartesian
-product. If any of the fields is of a product or a function type then the
-corresponding type expression must be inside parentheses. A product type where
-all the fields are of the same type can be abbreviated with a power type
-expression which is comprised of the type, the power symbol '\verb|^|' and the
-number of times the type is repeated.
+space) to resemble the cartesian product. If any of the fields is of a product
+or a function type then the corresponding type expression must be inside
+parentheses. A product type where all the fields are of the same type can be
+abbreviated with a power type expression which is comprised of the type, the
+power symbol '\verb|^|' and the number of times the type is repeated.
 
 \item \textit{Grammar}
 \begin{grammar}
@@ -2015,6 +2016,7 @@ parentheses only if they are function type expressions.
 <func-type> ::= <in-or-out-type> `\ =>\ ' <in-or-out-type>
 
 <in-or-out-type> ::=
+""\\
 <param-t-var> | <type-app-id-or-ahtv> | <power-type> | <prod-type> |
 `(' [ `\ ' ] <func-type>  [ `\ ' ] `)'
 \end{grammar}
@@ -2127,7 +2129,7 @@ print_name_and_nat(_): MathematicianInfo => IO
   = ci => print(name(ci.name)to_string + "\nNationality: " + ci.nationality)
 
 sum_nodes(_): TreeOf(Int)s => Int
-  = tree => tree.root + apply(sum_nodes)to_all_in(tree.subtrees) -> sum_list
+  = tree => tree.root + apply(sum_nodes(_))to_all_in(tree.subtrees) -> sum_list(_)
 \end{verbatim}
 
 \item \textit{Description}
@@ -2173,15 +2175,11 @@ _.date_of_birth : MathematicianInfo => Date
 or_type Bool
 values true | false
 
+or_type TrafficLight
+values green | amber | red
+
 or_type Possibly(T1)
 values the_value:T1 | no_value
-
-// needed tuple_type for ListOf(T1)s
-tuple_type NonEmptyListOf(T1)s
-value (head, tail) : T1 x ListOf(T1)s
-
-or_type ListOf(T1)s
-values non_empty_l:NonEmptyListOf(T1)s | empty_l
 
 or_type Result(T1)OrError(T2)
 values result:T1 | error:T2
@@ -2190,20 +2188,17 @@ values result:T1 | error:T2
 \item \textit{Usage Examples}
 
 \begin{verbatim}
-(_)is_empty: ListOf(T1)s => Bool
-  = cases
-    empty_l => true
-    non_empty_l:* => false
+traffic_lights_match(_, _): TrafficLight^2 => Bool
+  = (cases, cases)
+    (green, green) => true
+    (amber, amber) => true
+    (red, red) => true
+    ... => false
 
-(_)head: ListOf(T1)s => Possibly(T1)
+err_if(_)is_no_value : Possibly(T1) => Result(T1)OrError(String)
   = cases
-    empty_l => no_value
-    non_empty_l:list => the_value:list.head
-
-sum_list(_): ListOf(Int)s => Int
-  = cases
-    empty_l => 0
-    non_empty_l:l => l.head + sum_list(l.tail)
+    no_value => throw_err("There is no value!")
+    the_value:val => result:val
 
 print_err(_)or_res(_): (@A)Has_Str_Rep --> Result(@A)OrError(String) => IO
   = cases
@@ -2211,37 +2206,26 @@ print_err(_)or_res(_): (@A)Has_Str_Rep --> Result(@A)OrError(String) => IO
     error:e => print("Error occured: " + e)
 \end{verbatim}
 
+\newpage
 \item \textit{Description}
 
 The values of an \verb|or_type| are split into cases. Some cases have other
 values inside.  The cases which have other values inside are followed by a
 colon and the type of the internal value. Similar syntax can be used for
 matching that particular case in a function using the "cases" syntax.  An
-\verb|or_type| definition automatically creates prefix functions for each
-case with an internal value (which are simply conversions from the type of the
+\verb|or_type| definition automatically creates prefix functions for each case
+with an internal value (which are simply conversions from the type of the
 internal value to the \verb|or_type|).  For example, for the case
-"\verb|non_empty_l|" of a list, the function "\verb|non_empty_l:_|" is
-automatically created from the definition for which we can say:
-\begin{verbatim}
-non_empty_l:_ : NonEmptyListOf(T1)s => ListOf(T1)s
-\end{verbatim}
-For example:
-\begin{verbatim}
-non_e_l : NonEmptyListOf(Int)s
-  = (1, [2, 3, 4])
->> non_empty_l:non_e_l
-  : ListOf(Int)s
-  ==> [1, 2, 3, 4]
-\end{verbatim}
-Similarly:
+"\verb|the_value|" of a "\verb|Possibly(T1)|" the function "\verb|the_value:_|"
+is automatically created from the definition for which we can say:
 \begin{verbatim}
 the_value:_ : T1 => Possibly(T1)
 \end{verbatim}
 These functions can be used like any other function as arguments to other
 functions.  For example:
 \begin{verbatim}
-non_empty_ls(_)to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
-  = apply(non_empty_l:_)to_all_in(_)
+(_)to_possiblies : ListOf(T1)s => ListOf(Possibly(T1))s
+  = apply(the_value:_)to_all_in(_)
 \end{verbatim}
 
 \item \textit{Grammar}
@@ -2265,14 +2249,14 @@ non_empty_ls(_)to_ls : ListOf(NonEmptyListOf(T1)s)s => ListOf(ListOf(T1)s)s
 \begin{verbatim}
 type_nickname Ints = ListOf(Int)s
 type_nickname IntStringPairs = ListOf(Int x String)s
-type_nickname IO = (EmptyVal)WithIO
+type_nickname IO = (EmptyVal)FromIO
 type_nickname Res(T1)OrErr = Result(T1)OrError(String)
 \end{verbatim}
 
 \item \textit{Description} \\\\
 Type nicknames are used to abbreviate or give a more descriptive name to a
 type.  They start with the keyword "\verb|type_nickname|", followed by the
-nickname, then an equal sign and they end with the type to be nicknamed.
+nickname, then an equal sign and the type to be nicknamed.
 Parametric type variables can be used in the nickname.
 
 \item \textit{Grammar}
@@ -2284,6 +2268,7 @@ Parametric type variables can be used in the nickname.
 
 \end{itemize}
 
+\newpage
 \subsection{Type Logic}
 \label{subsec:typelogic}
 
@@ -2376,8 +2361,8 @@ type_theorem (T1)Is(ListOf(T1)s)s_First
 proof
   (_)first =
     cases
-      empty_l => show_err("Tried to take the first element of an empty list")
-      non_empty_l:l => l.head
+      [] => throw_err("Tried to take the first element of an empty list")
+      [head, ...] => head
 \end{verbatim}
 
 \item Usage of the function
@@ -2424,14 +2409,14 @@ equivalent (@T)And(@T)Are_Comparable
 \item \textit{Description}
 
 A renaming proposition definition is used to abbreviate one or the conjunction
-of many propositions (i.e. AND of all of them) into one new proposition.
+of many propositions into a new proposition.
 \\\\
 A renaming proposition definition begins with the keyword
 "\verb|type_proposition|" followed by the name of the proposition (including
 the type parameters) in the first line. The second line begins with the keyword
 "\verb|equivalent|" followed by either one proposition or (if it is a
 conjunction) many propositions seperated by commas (where the commas
-essentially mean "and").
+mean "and").
 
 \end{itemize}
 
@@ -2580,18 +2565,22 @@ proof a >= b = a == b | a > b
 
 \item \textit{Description}
 
-A theorem of an implication proposition is very similar to a theorem of an
-atomic proposition in the sense that it also implements a value in the proof.
-The difference is that the implementation uses another ad hoc polymorphic value
-(or many). Therefore, the implementation does not prove the proposition
-associated to the value it implements, because it assumes that the polymorphic
-value(s) used in the implementation is(are) already defined. In other words it
-proves the following: "if this(these) ad hoc polymorphic value(s) is(are)
-defined then we can also define this other one". This can be translated into
-the following implication proposition: "if the proposition associated to the
-value(s) we are using is true then the proposition associated to the value we
-are defining is true", which can be condensed to the notation with the
-condition arrow (" \verb|-->| ") used in the examples.
+A theorem of an implication proposition is similar to a theorem of an atomic
+proposition but it also uses other ad hoc polymorphic values in the
+implementation. Therefore, the implementation does not prove the proposition
+associated to the value it implements unless the polymorphic values used in the
+implementation are already defined in their own theorems. In other words it
+proves the following: "if these ad hoc polymorphic values are defined then we
+can also define this other one". This can be translated into the following
+implication proposition: "if the propositions associated to the values we are
+using are true then the proposition associated to the value we are defining is
+true", which can be condensed to the notation with the condition arrow
+("\verb| --> |") used in the examples.
+\\\\
+When we are using many ad hoc values in the implimentation we need to
+group all their propositions into one conjunction proposition with
+a renaming proposition definition as it is done in the example of \\
+\verb|(@A)And(@B)Have_Eq_And_Gr|.
 \\\\
 The proof of an implication proposition allows the compiler to
 automatically create the definition for an ad hoc polymorphic value for a
@@ -5065,9 +5054,9 @@ instance A'Has_Internal_App Possibly' where
 type_theorem (ListOf(_)s)Has_Internal_App
 proof
   apply(_)inside(_) =
-    (f, cases)
+    (f(_), cases)
       [] => []
-      [head, tail = ...] => non_empty_l:(f <- head, apply(f)inside(tail))
+      [head, tail = ...] => f(head) + apply(f(_))inside(tail)
 \end{verbatim}
 
 \lra
