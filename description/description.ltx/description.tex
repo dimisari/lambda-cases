@@ -3229,7 +3229,7 @@ definition:
   \begin{enumerate}
 
   \item
-  After the the paremeters line: $il \leftarrow il + 1$.
+  After the paremeters line: $il \leftarrow il + 1$.
 
   \item
   At the end of the cases function expression: $il \leftarrow il - 1$.
@@ -3307,8 +3307,6 @@ The parser code is split into the following files:
 \verb|ShowInstances.hs|: String respresentations for each AST type
 \item
 \verb|Parsers.hs|: Parsers for each AST type
-\item
-\verb|Testing.hs|: Runs the parsers on the examples and prints the result
 \end{itemize}
 All of the above are written using the full grammar. The types correspond to
 non-terminal symbols. The parsers try to parse a string into the correspoding
@@ -3345,7 +3343,7 @@ grammar rule:
 The AST type for the literal is:
 \begin{verbatim}
 data Literal =
-  Int Int | R Double | Ch Char | S String
+  Int Integer | R Double | Ch Char | S String
 
 \end{verbatim}
 And here is the parser for the literal which is defined as an instance of
@@ -3359,9 +3357,15 @@ instance HasParser Literal where
 
 \end{verbatim}
 The Parser type is a Functor so the "\verb|<$>|" (fmap) operator passes each
-constructor inside the particular parser and the "\texttt{<|>}" operator means
-"this parser or that parser". Finally, the "\verb|<?>|" operator means "if
-all the parsers fail show this in the error message".
+constructor inside the particular parser. The "try" parser combinator does
+backtracking if the parser fails so that it does not consume any input. This is
+used if two parsers can parse the same input up to a point but the second one
+is the correct one. In this case a real number (a number with a decimal point)
+will parse an integer up to before the decimal point but will fail if there
+isn't one. In this case we need to backtrack and let the integer parser consume
+the input.  The "\texttt{<|>}" operator means "this parser or that parser".
+Finally, the "\verb|<?>|" operator means "if all the parsers fail show this
+error message".
 
 \newpage
 \subsubsection{Example 1: List}
@@ -3384,11 +3388,11 @@ instance HasParser List where
 \end{verbatim}
 Here we use the "\verb|*>|" and "\verb|<*|" operators which parse both of
 the parsers that they have as operands (from left to right) but only keep the
-result of the parser that the "point" to. "opt_space_around" parses one space
+result of the parser that they "point" to. "opt_space_around" parses one space
 optionally on each side of the text parsed by the argument parser and returns
 what was parsed by the argument parser.  "optionMaybe" is defined in the
 library and it optionally parses what its argument parser parses. If the
-argument parser succeeds at parsing the it returns a Just $<$whatever was
+argument parser succeeds at parsing then it returns a Just $<$whatever was
 parsed$>$, whereas if it fails it returns Nothing.
 
 \subsubsection{Example 2: Change}
@@ -3420,23 +3424,10 @@ two parsers as operands and creates a parser that uses them sequentially and
 puts the two results in a tuple. "field_change_p" parses a single field change.
 "many" is defined in the library, it parses with the argument parser as many
 times as possible and puts the results in a list (the Kleene star of the parser
-world).  Lastly, we also use the "try" parser combinator (defined in the
-library) which is used to avoid comsuming any input if the parser fails. For
-example if the input was "\verb|.change ...|", the parser would fail because we
-have a space instead of an opening bracket.  Without the "try" combinator it
-would consume the "\verb|.change|" part and leave only "\verb| ...|" after
-failing. This would result in the PostFuncAppEnd alternative parser below
-failing as well (the parser after "\verb|DC1 <$>|" is the Change parser).
-Whereas with the "try" combinator we avoid this problem and the parser after
-"\verb|PFsMDC <$>|" successfully parses ".change" as an alternative postfunc
-(get the "change" field of a tuple type value).
-
-\begin{verbatim}
-instance HasParser PostFuncAppEnd where
-  parser = DC1 <$> parser <|> PFsMDC <$> many1 parser +++ optionMaybe parser
-\end{verbatim}
+world).
 
 
+\newpage
 \subsubsection{Example 3: Value Definition}
 
 The grammar rule for the value definition is the following:
