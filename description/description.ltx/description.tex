@@ -2692,10 +2692,11 @@ the condition arrow (" \verb|-->| ") arrow.
     \end{itemize}
 
   \item List:\\
-    \verb|(_)length, (_)is_in(_), apply(_)to_all_in(_), filter(_)with(_), |
+    \verb|(_)length, (_)is_in(_), apply(_)to_all_in(_), filter(_)with(_),|
     \\
-    \verb|take(_)from(_), ignore(_)from(_), zip(_)with(_), unzip(_), |
-    \verb|apply(_)to_zipped(_)with(_)|
+    \verb|take(_)from(_), ignore(_)from(_), split(_)at(_),|
+    \\
+    \verb|zip(_)with(_), unzip(_), apply(_)to_all_in_zipped(_,_)|
 
   \item IO:
     \begin{itemize}
@@ -2705,9 +2706,7 @@ the condition arrow (" \verb|-->| ") arrow.
     \end{itemize}
 
   \item Ad Hoc Polymorphic:\\
-  \verb|wrap(_), |
-  \\
-  \verb|(_)to_string, from_string(_), apply(_)inside(_), |
+  \verb|wrap(_), (_)to_string, from_string(_), apply(_)inside(_), |
 
   \end{itemize}
 \end{itemize}
@@ -2755,7 +2754,6 @@ the condition arrow (" \verb|-->| ") arrow.
   \begin{itemize}
   \item \verb|(@T)Has_A_Wrapper|
   \item \verb|(@T)Has_Str_Rep|
-  \item \verb|(@T)Can_Be_Parsed|
   \item \verb|(@T)Has_Internal_App|
   \end{itemize}
 
@@ -2771,7 +2769,6 @@ the condition arrow (" \verb|-->| ") arrow.
   \item \verb|(Char)Has_Str_Rep|
   \item \verb|(Real)Has_Str_Rep|
   \item \verb|(@A)Has_Str_Rep --> (ListOf(@A)s)Has_Str_Rep|
-  \item \verb|(@A)Is_A_Product --> (@A)Has_Str_Rep|
   \item \verb|(Possibly(_))Has_Internal_App|
   \item \verb|(ListOf(_)s)Has_Internal_App|
   \item \verb|((_)FState(T1)Man)Has_Internal_App|

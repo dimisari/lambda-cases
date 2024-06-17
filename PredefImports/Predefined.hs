@@ -52,8 +52,7 @@ read_file' = readFile
 write'in_file' = uncurry (flip writeFile)
 print_string' = putStr
 empty_val = ()
-
-apply'to_zipped'with' = \(f, l1, l2) -> zipWith (curry f) l1 l2
+apply'to_all_in_zipped'' = \(f, l1, l2) -> zipWith (curry f) l1 l2
 
 max_of'and' :: Ord a => (a, a) -> a
 max_of'and' = uncurry max
@@ -108,6 +107,9 @@ ignore'from' = uncurry drop . \(x, y) -> (fromIntegral x, y)
 
 take'from' :: (Integer, [a]) -> [a]
 take'from' = uncurry take . \(x, y) -> (fromIntegral x, y)
+
+split'at' :: ([a], Integer) -> ([a], [a])
+split'at' = uncurry (flip splitAt) . \(l, i) -> (l, fromIntegral i)
 
 do_nothing :: Applicative f => f EmptyVal
 do_nothing = pure empty_val

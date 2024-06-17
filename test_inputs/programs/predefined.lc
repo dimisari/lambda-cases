@@ -40,7 +40,8 @@ main : (EmptyVal)FromIO
     print(filter([1,2,3])with(_ == 2));
     print(zip([1,2,3])with([4,5,6]));
     print(unzip([(1, 4), (2, 5), (3, 6)]));
-    print(apply(_ + _)to_zipped([1,2,3])with([6,5,4]));
+    print(apply(_ + _)to_all_in_zipped([1,2,3], [6,5,4]));
+    print(split([1,2,3,4,5,6])at(3));
     (get_char ;> print(_));
     (get_input ;> print(_));
     (read_file("../../hello_world.lc") ;> write(_)in_file("out.txt"));

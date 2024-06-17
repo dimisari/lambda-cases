@@ -11,19 +11,19 @@ compare(_)with(_) : Int x Int => Comparison
           true => equal
           false => greater
 
-split(_)at(_) : ListOf(T1)s x Int => Possibly(T1 x ListOf(T1)s^2)
+my_split(_)at(_) : ListOf(T1)s x Int => Possibly(T1 x ListOf(T1)s^2)
   = (cases, cases)
     ([], *) => no_value
     ([head, tail = ...], 0) => the_value:(head, ([], tail))
     ([head, tail = ...], n) =>
-      split(tail)at(n - 1) -> cases
+      my_split(tail)at(n - 1) -> cases
         no_value => no_value
         the_value:(item, (left_l, right_l)) =>
           the_value:(item, (head + left_l, right_l))
 
 bin_search(_, _) : ListOf(Int)s x Int => Possibly(Int)
   = (list, target) =>
-    split(list)at(middle_ind) -> cases
+    my_split(list)at(middle_ind) -> cases
       no_value => no_value
       the_value:(middle, (left_l, right_l)) =>
         compare(middle)with(target) -> cases
