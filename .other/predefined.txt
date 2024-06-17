@@ -1,14 +1,1 @@
-Result(_)OrError(_)
-Z
-R
-
-(@A)Is(@B)s_First
-(@A)Is(@B)s_Second
-(@A)Is(@B)s_Third
-(@A)Is(@B)s_Fourth
-(@A)Is(@B)s_Fifth
-
 (@T)Can_Be_Parsed
-
-(Result(_)OrError(T1))Has_A_Wrapper
-(Result(_)OrError(T1))Has_Internal_App

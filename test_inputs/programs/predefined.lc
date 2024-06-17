@@ -1,4 +1,29 @@
 
+forty_two_over(_) : Z => Result(R)OrError(String)
+  = cases
+    0 => error:"Dividing by 0! BOOM"
+    i => result:(42/i)
+
+forty_two_over(_)plus_forty_two_over(_) : Z^2 => Result(R)OrError(String)
+  = (x, y) =>
+    forty_two_over(x) ;> z =>
+    forty_two_over(y) ;> w =>
+    wrap(z + w)
+
+test1 : Result(R)OrError(String)
+  = forty_two_over(1)plus_forty_two_over(0)
+
+test2 : Result(R)OrError(String)
+  = forty_two_over(0)plus_forty_two_over(1)
+
+test3 : Result(R)OrError(String)
+  = forty_two_over(2)plus_forty_two_over(2)
+
+print_result(_) : Result(R)OrError(String) => IO
+  = cases
+    error:err => print(err)
+    result:res => print(res)
+
 main : (EmptyVal)FromIO
   = print(pi); print(id(pi)); print(sqrt_of(pi)); print(abs_val_of(-1));
     print(max_of(1)and(2)); print(min_of(1)and(2));
@@ -18,6 +43,7 @@ main : (EmptyVal)FromIO
     print(apply(_ + _)to_zipped([1,2,3])with([6,5,4]));
     (get_char ;> print(_));
     (get_input ;> print(_));
-    (read_file("hello_world.txt") ;> write(_)in_file("out.txt"));
+    (read_file("../../hello_world.lc") ;> write(_)in_file("out.txt"));
     print_string("Hello "); print("World!");
+    print_result(test1); print_result(test2); print_result(test3);
     undefined

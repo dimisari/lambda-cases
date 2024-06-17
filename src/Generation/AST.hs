@@ -173,6 +173,8 @@ instance ToHaskell PreFunc where
   to_haskell = \(PF id) ->
     case id of
       SId (IS "the_value", Nothing) -> "Just"
+      SId (IS "error", Nothing) -> "Left"
+      SId (IS "result", Nothing) -> "Right"
       _ -> constructor_prefix ++ to_haskell id
 
 instance ToHaskell PreFuncApp where

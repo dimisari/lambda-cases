@@ -16,6 +16,9 @@ type ListOf's = []
 type A'FState'Man a b = State b a
 type State'Man a = A'FState'Man EmptyVal a
 type Possibly' = Maybe
+type Result'OrError' a b = Either b a
+type Z = Integer
+type R = Double
 
 -- values
 print_line' = putStrLn
