@@ -4627,7 +4627,7 @@ ends the "\verb|tuple_type|" definition.
 
 \item
 In this step the instance for the \texttt{ft\textit{n}} function is defined
-where \textit{n} is the size of the tuple of the \verb|tuple_type| which is
+where \textit{n} is the size of the tuple of the \verb|tuple_type|. This is
 required for the translation of tuples for reasons explained in section
 \ref{subsubsec:parentuplist}. This can be divided into the following substeps
 (where \textit{n} is the size of the tuple of the "\verb|tuple_type|", not
@@ -4651,7 +4651,7 @@ A \verb|\| and a tuple parameter with internal parameters \texttt{x1} to
 
 \item
 The data constructor of step 3 followed by the parameters \texttt{x1} to
-\texttt{x\textit{n}} seperated by commas are appended.
+\texttt{x\textit{n}} seperated by spaces are appended.
 
 \end{enumerate}
 
@@ -4773,6 +4773,9 @@ For \verb|or_types| the translation has the following steps:
 The type name is translated the same way as it is in tuple types.
 
 \item
+"\texttt{ =}" is appended.
+
+\item
 "\texttt{values}" is discarded and the lines from the 2nd onwards have the data
 constructors for each of the values of the \verb|or_type| (one in each). This
 is done as follows:
@@ -4885,8 +4888,8 @@ needed (_)to_string : @T => String
 \lra
 
 \begin{verbatim}
-class A'Has_A_Wrapper b19 where
-  wrap' :: a1 -> b19 a1
+class A'Has_String_Repr b19 where
+  a'to_string :: b19 -> String
 \end{verbatim}
 
 \rule{\linewidth}{0.1pt}
@@ -4920,10 +4923,10 @@ following steps:
 The name of the proposition is translated similarly to the type name in a type
 definition. All the parentheses are replaced by the same amount of single
 quotes as there are ad hoc type variables inside the parenthesis and if there
-is a parenthesis at the beginning we prepend an 'A' to make it a valid
-type class name in \H. The translations of the ad hoc type variables are then
-appended and seperated by spaces (in the same order of the appearances of
-the ad hoc type variables).
+is a parenthesis at the beginning we prepend an 'A' to make it a valid type
+class name in \H. The translations of the ad hoc type variables are then
+appended and seperated by spaces (in the same order in which they appear in the
+proposition).
 
 \item
 "\texttt{ where}" is appended to the first line.
@@ -4933,7 +4936,7 @@ the ad hoc type variables).
 
 \item
 The identifier of the value needed is translated and followed by "\verb| :: |"
-and then the translation of its type
+and the translation of its type.
 
 \end{itemize}
 
@@ -4999,7 +5002,7 @@ instance A'Has_Internal_App Possibly' where
   apply'inside' =
     \(f', pA0) ->
     case pA0 of
-      no_value -> no_value
+      Cno_value -> Cno_value
       Cthe_value x -> Cthe_value(f'(x))
 \end{verbatim}
 
@@ -5020,10 +5023,10 @@ proof
 \begin{verbatim}
 instance A'Has_Internal_App ListOf's where
   apply'inside' =
-    \(f, pA0) ->
+    \(f', pA0) ->
     case pA0 of
       [] -> []
-      head : tail -> Cnon_empty_l(ft2(f <& head, apply'inside'(f, tail)))
+      head : tail -> f'(head) !+ apply'inside'((\pA0 -> f'(pA0)), tail)
 
 \end{verbatim}
 
@@ -5038,10 +5041,10 @@ proof a >= b = a == b | a > b
 \end{verbatim}
 \prarr
 \begin{verbatim}
-# this is a representation of the AST after preprocessing not lcases syntax
 type_theorem
   [(@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)] --> (@A)Can_Be_Gr_Or_Eq_To(@B)
 proof a >= b = a == b | a > b
+# this is a representation of the AST after preprocessing not lcases syntax
 \end{verbatim}
 $\xRightarrow{\text{translation}}$
 \begin{verbatim}
@@ -5081,7 +5084,7 @@ kinded type (e.g \verb|ListOf's| ).
 
 \item
 The identifier of the value or the operator surrounded by two identifiers
-are translated, followed by "\texttt{ = }" and the translation of the value
+are translated, followed by \\ "\texttt{ = }" and the translation of the value
 expression.
 
 \end{itemize}
@@ -5259,8 +5262,8 @@ This is also possible in \H\ with the LambdaCase extension like so:
 \end{verbatim}
 This is where the name of the language comes from, the very frequent use
 of the LambdaCase. This idea is extended to any subset of any number of
-parameters as show in the following example (and in the examples of
-the ""cases" function expressions section" \ref{subsubsec:casessyntax})
+parameters as shown in the following example (and in the examples of
+the "cases" function expressions section" \ref{subsubsec:casessyntax})
 
 \item
 \begin{verbatim}

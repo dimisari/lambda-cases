@@ -14,9 +14,9 @@ proof
 type_theorem (ListOf(_)s)Has_Internal_App
 proof
   apply(_)inside(_) =
-    (f, cases)
+    (f(_), cases)
       [] => []
-      [head, tail = ...] => non_empty_l:(f <- head, apply(f)inside(tail))#
+      [head, tail = ...] => f(head) + apply(f(_))inside(tail)#
 
 type_theorem (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
 proof a != b = not(a == b)#
