@@ -6,7 +6,7 @@ tos=test_outputs
 cps=compiled_progs
 grs=grammar_rules
 prs=programs
-pis=PredefImports/
+pis=src/PredefImports/
 pi1=$(pis)/Predefined.hs
 pi2=$(pis)/OpsInHaskell.hs
 
