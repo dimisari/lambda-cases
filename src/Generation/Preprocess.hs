@@ -17,6 +17,25 @@ import Parsing.AST
 import Generation.Collect
 import Generation.CheckCompatibility
 
+-- hardcoded
+true :: String
+true = "P.True"
+
+false :: String
+false = "P.False"
+
+pnothing :: String
+pnothing = "P.Nothing"
+
+pprint :: String
+pprint = "P.print"
+
+pundefined :: String
+pundefined = "P.undefined"
+
+ppi :: String
+ppi = "P.pi"
+
 -- types
 data PossiblyInDC =
   InDotChange [PostFuncArg] | NotInDotChange
@@ -162,10 +181,18 @@ add_c_to_sid = \(SId (IS str, mdigit)) -> SId (IS $ "C" ++ str, mdigit)
 
 change_if_particular_sid :: SimpleId -> SimpleId
 change_if_particular_sid = \case
-  SId (IS "true", Nothing) -> SId (IS "True", Nothing)
-  SId (IS "false", Nothing) -> SId (IS "False", Nothing)
-  SId (IS "no_value", Nothing) -> SId (IS "Nothing", Nothing)
+  SId (IS str, Nothing) -> str &> \case
+    "true" -> str_to_sid true
+    "false" -> str_to_sid false
+    "no_value" -> str_to_sid pnothing
+    "print" -> str_to_sid pprint
+    "undefined" -> str_to_sid pundefined
+    "pi" -> str_to_sid ppi
+    _ -> str_to_sid str
   sid -> sid
+
+str_to_sid :: String -> SimpleId
+str_to_sid = \str -> SId (IS str, Nothing)
 
 sid_to_pfaoi :: SimpleId -> ParenFuncAppOrId
 sid_to_pfaoi = \(SId (id_start, mdigit)) ->

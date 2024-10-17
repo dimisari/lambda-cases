@@ -16,6 +16,25 @@ import Generation.Preprocess (preprocess_prog)
 import Generation.TypesAndHelpers
 import Generation.AST
 
+-- lists
+predef_list :: [FilePath]
+predef_list =
+  [ "/home/gnostis/cloning/lambda-cases/PredefImports/OpsInHaskell.hs"
+  , "/home/gnostis/cloning/lambda-cases/PredefImports/Predefined.hs"
+  ]
+
+lang_ext_names :: [Haskell]
+lang_ext_names =
+  [ "FlexibleInstances", "MultiParamTypeClasses", "ScopedTypeVariables"
+  , "UndecidableInstances", "FlexibleContexts"
+  ]
+
+import_names :: [Haskell]
+import_names =
+  [ "qualified Prelude as P", "PredefImports.Predefined"
+  , "PredefImports.OpsInHaskell"
+  ]
+
 
 -- main
 main :: IO ()
@@ -32,7 +51,11 @@ compile_to_exec pfn =
   callCommand ("rm " ++ hs_file)
   where
   ghc_compile :: String
-  ghc_compile = "ghc -no-keep-hi-files -no-keep-o-files "
+  ghc_compile =
+    "ghc" ++ make_predef ++ "-no-keep-hi-files -no-keep-o-files "
+
+  make_predef :: String
+  make_predef = concatMap (" --make " ++) predef_list ++ " "
 
 compile_to_hs :: ProgramFileName -> IO HsFileName
 compile_to_hs pfn =
@@ -60,19 +83,5 @@ top_hs = lang_exts ++ imports
 lang_exts :: Haskell
 lang_exts = "{-# language " ++ intercalate ", " lang_ext_names ++ " #-}\n"
 
-lang_ext_names :: [Haskell]
-lang_ext_names =
-  [ "FlexibleInstances", "MultiParamTypeClasses", "ScopedTypeVariables"
-  , "UndecidableInstances", "FlexibleContexts"
-  ]
-
 imports :: Haskell
 imports = concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"
-
-import_names :: [Haskell]
-import_names =
-  [ "Prelude hiding (IO)", "PredefImports.Predefined"
-  , "PredefImports.OpsInHaskell"
-  ]
-
--- ASTTypes.hs

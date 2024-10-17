@@ -12,6 +12,16 @@ import Helpers
 
 import Generation.Collect
 
+-- hardcoded
+show_class :: String
+show_class = "P.Show"
+
+show_val1 :: String
+show_val1 = "show"
+
+show_val2 :: String
+show_val2 = "P.show"
+
 -- Haskell types
 type Haskell = String
 
@@ -286,12 +296,17 @@ ipt_to_st = \case
 
 change_prop_hs_if_needed :: Haskell -> Haskell
 change_prop_hs_if_needed = \case
-  "A'Has_Str_Rep" -> "Show"
+  "A'Has_Str_Rep" -> show_class
   hs -> hs
 
-change_id_hs_if_needed :: Haskell -> Haskell
-change_id_hs_if_needed = \case
-  "a'to_string" -> "show"
+change_id_hs_if_needed1 :: Haskell -> Haskell
+change_id_hs_if_needed1 = \case
+  "a'to_string" -> show_val1
+  hs -> hs
+
+change_id_hs_if_needed2 :: Haskell -> Haskell
+change_id_hs_if_needed2 = \case
+  "a'to_string" -> show_val2
   hs -> hs
 
 -- GroupedValueDefs helpers

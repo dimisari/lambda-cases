@@ -1,2 +1,2 @@
 main : IO
-  = print_line("Hello World!")
+  = print("Hello World!")

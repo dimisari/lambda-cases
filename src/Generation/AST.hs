@@ -15,6 +15,32 @@ import ShowInstances
 import Generation.TypesAndHelpers
 import Generation.Collect
 
+-- hardcoded
+
+bool :: String
+bool = "P.Bool"
+
+integer :: String
+integer = "P.Integer"
+
+double :: String
+double = "P.Double"
+
+char :: String
+char = "P.Char"
+
+string :: String
+string = "P.String"
+
+just :: String
+just = "P.Just"
+
+left :: String
+left = "P.Left"
+
+right :: String
+right = "P.Right"
+
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 instance ToHaskell Char where
   to_haskell = (:[])
@@ -23,11 +49,11 @@ instance ToHaskell (NeedsAnnotBool, Literal) where
   to_haskell = \(needs_annot, lit) -> case lit of
     Int i ->
       case needs_annot of
-        Annot -> "(" ++ show i ++ " :: Integer)"
+        Annot -> "(" ++ show i ++ " :: " ++ integer ++ ")"
         NoAnnot -> show i
     R r ->
       case needs_annot of
-        Annot -> "(" ++ show r ++ " :: Double)"
+        Annot -> "(" ++ show r ++ " :: " ++ double ++ ")"
         NoAnnot -> show r
     Ch c -> show c
     S s -> show s
@@ -150,7 +176,7 @@ instance ToHaskell ParenFuncAppOrId where
       where
       paren_func_app_or_id_hs_gen :: WithParamNum Haskell
       paren_func_app_or_id_hs_gen =
-        change_id_hs_if_needed total_id_hs ++>
+        change_id_hs_if_needed2 total_id_hs ++>
         to_hs_wpn (calc_args_list (margs1, margs2) args_str_pairs)
 
       total_id_hs :: Haskell
@@ -172,9 +198,9 @@ instance ToHsWithParamNum Arguments where
 instance ToHaskell PreFunc where
   to_haskell = \(PF id) ->
     case id of
-      SId (IS "the_value", Nothing) -> "Just"
-      SId (IS "error", Nothing) -> "Left"
-      SId (IS "result", Nothing) -> "Right"
+      SId (IS "the_value", Nothing) -> just
+      SId (IS "error", Nothing) -> left
+      SId (IS "result", Nothing) -> right
       _ -> constructor_prefix ++ to_haskell id
 
 instance ToHaskell PreFuncApp where
@@ -598,8 +624,15 @@ instance ToHaskell AdHocTVar where
 
 instance ToHaskell (NeedsParenBool, TypeAppIdOrAHTV) where
   to_haskell (needs_paren, TAIOA taioa) = case taioa of
-    (Nothing, TIdStart1 (TId "Real", []), Nothing) -> "Double"
-    (Nothing, TIdStart1 (TId "Int", []), Nothing) -> "Integer"
+    (Nothing, TIdStart1 (TId tid, []), Nothing) ->
+      tid &> \case
+        "Bool" -> bool
+        "Int" -> integer
+        "Real" -> double
+        "Char" -> char
+        "String" -> string
+        _ -> to_haskell tid
+
     (mtip1, taioam, mtip2) -> case taioam of
       AHTV2 ahtv ->
         in_paren_if_needed (to_haskell ahtv) tip_hs
@@ -959,7 +992,7 @@ instance ToHaskell Proof where
 
 instance ToHaskell IdOrOpEq where
   to_haskell (IOOE (id, maybe_op_id)) =
-    change_id_hs_if_needed (to_haskell id) ++ maybe_op_id_hs ++ " ="
+    change_id_hs_if_needed1 (to_haskell id) ++ maybe_op_id_hs ++ " ="
     where
     maybe_op_id_hs :: Haskell
     maybe_op_id_hs = case maybe_op_id of
