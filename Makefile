@@ -69,7 +69,7 @@ grules: src/grules.hs
 # rules: clean
 
 clean:
-	rm -rf lcc grules $(tos_cps)/* $(hs_prs) $(tos_grs)/* $(tos) hello_world \
+	rm -rf lcc grules $(tos) hello_world \
 	hello_world.hs; find test_inputs/programs/ -name "*.hs" -delete
 
 clean_execs:
