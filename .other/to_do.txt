@@ -1,5 +1,6 @@
 
-- αλλαγή του Path των PredefImports σε κάτι reproducible
+- όλα τα paths σε ένα κεντρικό μέρος
+  - grules και Makefile
 
 - printing tuples:
   - (a = 1, b = 2)

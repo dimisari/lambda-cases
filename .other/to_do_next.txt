@@ -1,4 +1,5 @@
 
-- ένα test dir
+- αλλαγή του Path των PredefImports σε κάτι reproducible
+  - home/.local/share/
 
 # to_do.txt

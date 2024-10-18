@@ -31,34 +31,27 @@ tis_grs=$(tis)/$(grs)
 
 ghc=ghc -no-keep-hi-files -no-keep-o-files
 
-execs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(esc_tos_cps)\/\1.out/g")
+mkd=@mkdir -p $(@D)
+
 hs_prs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(esc_tos_prs)\/\1.hs/g")
 hs_grs=$(shell ls $(tis_grs) | sed "s/\(.*\).txt/$(esc_tos_grs)\/\1.hs/g")
+execs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(esc_tos_cps)\/\1.out/g")
 
 # rules: all .out .hs
 
-all: dirs $(hs_prs) $(execs) $(hs_grs)
-
-dirs: $(tos_prs) $(tos_cps) $(tos_grs)
-
-$(tos_prs):
-	mkdir -p $@
-
-$(tos_cps):
-	mkdir -p $@
-
-$(tos_grs):
-	mkdir -p $@
+all: $(hs_prs) $(hs_grs) $(execs)
 
 $(tos_cps)/%.out: lcc $(tis_prs)/%.lc $(pi1) $(pi2)
-	./$< $(word 2, $^); mv $(basename $(word 2, $^)) $@; \
+	$(mkd)
+	./$< $(word 2, $^)
+	mv $(basename $(word 2, $^)) $@
 	rm -f $(basename $(word 2, $^)).hs
 
 $(tos_prs)/%.hs: lcc $(tis_prs)/%.lc
-	./$< -h $(word 2, $^); mv $(basename $(word 2, $^)).hs $@
+	$(mkd); ./$< -h $(word 2, $^); mv $(basename $(word 2, $^)).hs $@
 
 $(tos_grs)/%.hs: grules $(tis_grs)/%.txt
-	./$<
+	$(mkd); ./$<
 
 # rules: lcc grules
 
@@ -71,8 +64,8 @@ grules: src/grules.hs
 # rules: clean
 
 clean:
-	rm -rf lcc grules test/$(os) hello_world \
-	hello_world.hs; find $(tis_prs) -name "*.hs" -delete
+	rm -rf lcc grules hello_world $(tos) hello_world.hs
+	find $(tis_prs) -name "*.hs" -delete
 
 clean_execs:
 	rm $(tos_cps)/*
