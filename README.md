@@ -1,8 +1,5 @@
 # lamda-cases language description and compiler
 
-## Description
-[description.pdf](description/description.ltx/Pdf/description.pdf)
-
 ## Create compiler executable
 ```bash
 make lcc
