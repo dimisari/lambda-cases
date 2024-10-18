@@ -1,23 +1,28 @@
 
 # paths
 
-tis=test_inputs
-tos=test_outputs
+is=inputs
+os=outputs
+tis=test/$(is)
+tos=test/$(os)
+esc_tos=test\/$(os)
+
 cps=compiled_progs
 grs=grammar_rules
 prs=programs
+
 pis=src/PredefImports/
 pi1=$(pis)/Predefined.hs
 pi2=$(pis)/OpsInHaskell.hs
 
 tos_cps=$(tos)/$(cps)
-tos__cps=$(tos)\/$(cps)
+esc_tos_cps=$(esc_tos)\/$(cps)
 
 tos_prs=$(tos)/$(prs)
-tos__prs=$(tos)\/$(prs)
+esc_tos_prs=$(esc_tos)\/$(prs)
 
 tos_grs=$(tos)/$(grs)
-tos__grs=$(tos)\/$(grs)
+esc_tos_grs=$(esc_tos)\/$(grs)
 
 tis_prs=$(tis)/$(prs)
 tis_grs=$(tis)/$(grs)
@@ -26,15 +31,15 @@ tis_grs=$(tis)/$(grs)
 
 ghc=ghc -no-keep-hi-files -no-keep-o-files
 
-execs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(tos__cps)\/\1.out/g")
-hs_prs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(tos__prs)\/\1.hs/g")
-hs_grs=$(shell ls $(tis_grs) | sed "s/\(.*\).txt/$(tos__grs)\/\1.hs/g")
+execs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(esc_tos_cps)\/\1.out/g")
+hs_prs=$(shell ls $(tis_prs) | sed "s/\(.*\).lc/$(esc_tos_prs)\/\1.hs/g")
+hs_grs=$(shell ls $(tis_grs) | sed "s/\(.*\).txt/$(esc_tos_grs)\/\1.hs/g")
 
 # rules: all .out .hs
 
 all: dirs $(hs_prs) $(execs) $(hs_grs)
 
-dirs: $(tos_prs) $(tos_cps) $(tos_grs) $(tos_prs)/$(pis)
+dirs: $(tos_prs) $(tos_cps) $(tos_grs)
 
 $(tos_prs):
 	mkdir -p $@
@@ -44,9 +49,6 @@ $(tos_cps):
 
 $(tos_grs):
 	mkdir -p $@
-
-$(tos_prs)/$(pis):
-	ln -sf $(shell pwd)/$(pis) $(tos_prs)
 
 $(tos_cps)/%.out: lcc $(tis_prs)/%.lc $(pi1) $(pi2)
 	./$< $(word 2, $^); mv $(basename $(word 2, $^)) $@; \
@@ -69,8 +71,8 @@ grules: src/grules.hs
 # rules: clean
 
 clean:
-	rm -rf lcc grules $(tos) hello_world \
-	hello_world.hs; find test_inputs/programs/ -name "*.hs" -delete
+	rm -rf lcc grules test/$(os) hello_world \
+	hello_world.hs; find $(tis_prs) -name "*.hs" -delete
 
 clean_execs:
 	rm $(tos_cps)/*

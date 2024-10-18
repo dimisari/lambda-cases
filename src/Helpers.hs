@@ -19,10 +19,10 @@ grules_dir :: FilePath
 grules_dir = "grammar_rules/"
 
 in_dir :: FilePath
-in_dir = "test_inputs/"
+in_dir = "test/inputs/"
 
 out_dir :: FilePath
-out_dir = "test_outputs/"
+out_dir = "test/outputs/"
 
 -- func app/comp
 (.>) :: (a -> b) -> (b -> c) -> a -> c

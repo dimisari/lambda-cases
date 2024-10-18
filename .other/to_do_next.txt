@@ -1,2 +1,4 @@
 
+- ένα test dir
+
 # to_do.txt

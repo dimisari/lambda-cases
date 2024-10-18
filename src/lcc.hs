@@ -19,8 +19,8 @@ import Generation.AST
 -- lists
 predef_list :: [FilePath]
 predef_list =
-  [ "/home/gnostis/cloning/lambda-cases/src/PredefImports/OpsInHaskell.hs"
-  , "/home/gnostis/cloning/lambda-cases/src/PredefImports/Predefined.hs"
+  [ "/home/gnostis/Desktop/lambda-cases/src/PredefImports/OpsInHaskell.hs"
+  , "/home/gnostis/Desktop/lambda-cases/src/PredefImports/Predefined.hs"
   ]
 
 lang_ext_names :: [Haskell]
