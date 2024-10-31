@@ -1,4 +1,29 @@
 
+- αλλαγή του Path των PredefImports σε κάτι reproducible
+  - home/.local/share/lcases
+    - Να το φτιάξω από makefile και να του βάλω τα PredefImports
+      - rule που θα φτιάχνει το 2 PredefImports αρχεία
+      - τα οποία χρειάζονται από το lcc
+  - αλλαγή στο src/lcc.hs
+    - Να παίρνω το HOME env var ++ /.local/share/lcases/PredefImports
+
+- Έχω ξεχωριστά hardcoded τα:
+  - test/output/
+  - test/input/
+  στο src/grules.hs και στο Makefile
+  - Να τα περάσω σαν arguments από το Makefile στο src/grules.hs;
+    - Δεν είναι κακό
+
+- fix README
+
+- αλλαγή syntax:
+  - >> αντί για ;>
+  - ? αντί για cases
+  - tuple type: State = ListOf(DoneNode)s x ListOf(ReachableNode)s
+    field names: (dns, rns)
+  - or type: Possibly(T1)
+    possibilities: a_value.with:(the_value: T1) | no_value
+  - type nickname: ...
 
 - printing tuples:
   - (a = 1, b = 2)
@@ -22,5 +47,11 @@
   - is_case: OrType -> Bool
     put in map + generate definition
   - make it clearer
+
+- add imports
+
+- rewrite compiler in lcases?
+
+- translate some Haskell libraries?
 
 # to_do_next.txt

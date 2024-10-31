@@ -19,10 +19,10 @@ grules_dir :: FilePath
 grules_dir = "grammar_rules/"
 
 in_dir :: FilePath
-in_dir = "test/inputs/"
+in_dir = "../test/inputs/"
 
 out_dir :: FilePath
-out_dir = "test/outputs/"
+out_dir = "../test/outputs/"
 
 -- func app/comp
 (.>) :: (a -> b) -> (b -> c) -> a -> c
@@ -68,7 +68,18 @@ ind_lvl_to_spaces :: Int -> String
 ind_lvl_to_spaces = \i -> replicate (2 * i) ' '
 
 make_extension_hs :: FileName -> FileName
-make_extension_hs = takeWhile (/= '.') .> (++ ".hs")
+make_extension_hs =
+  reverse .> span (/= '.') .> \(reversed_extension, reversed_name) ->
+  let
+  extension :: String
+  extension = reverse reversed_extension
+  in
+  case elem extension ["lc", "txt"] of
+    True -> reversed_name &> tail &> reverse ++ ".hs"
+    False ->
+      error $
+        "make_extension_hs: did not receive .lc file\n" ++
+        "make_extension_hs: instead I got " ++ extension
 
 read_exs_file :: FileName -> IO FileString
 read_exs_file = \file_name -> readFile $ in_dir ++ grules_dir ++ file_name

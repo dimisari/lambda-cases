@@ -1,3 +1,3 @@
-lcc
-grules
+build/lcc
+build/grules
 test/outputs

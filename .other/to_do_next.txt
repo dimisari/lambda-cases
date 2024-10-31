@@ -1,17 +1,5 @@
 
-- αλλαγή του Path των PredefImports σε κάτι reproducible
-  - home/.local/share/lcases
-    - Να βάλω εδώ ένα αρχείο που θα χει όλα τα paths;
-      - Και θα τα διαβάζει και το Makefile και η Haskell;
-  - αλλαγή στο src/lcc.hs
-
-- όλα τα paths σε ένα κεντρικό μέρος
-  - Έχω ξεχωριστά hardcoded τα:
-    - test/output/
-    - test/input/
-    στο src/grules.hs και στο Makefile
-
-  - Να τα περάσω σαν arguments από το Makefile στο src/grules.hs;
-    - Δεν είναι κακό
+- Ξεχωριστά makefile μέσα στο build dir
+  - πρέπει να αλλάξω τα paths
 
 # to_do.txt

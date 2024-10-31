@@ -527,21 +527,6 @@ instance Preprocess ProgramPart where
     TT1 tt -> TT1 <$> preprocess tt
     other -> return other
 
--- testing
-
-in_file :: FilePath
-in_file =
-  "/home/gnostis/Desktop/lambda-cases/test_inputs/programs/" ++
-  "extended_euclidean.lc"
-
-test_parse :: String -> Program
-test_parse = parse .> \case
-  Left err -> error $ show err
-  Right res -> res
-
-test :: IO ()
-test = readFile in_file >>= test_parse .> preprocess_prog .> print
-
 -- ASTTypes.hs
 -- CheckCompatibility.hs
 -- AST.hs
