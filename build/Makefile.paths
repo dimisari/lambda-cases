@@ -4,14 +4,11 @@ test := ../test
 
 b_lcc := lcc
 b_grs := grules
-hw := ../hello_world
-hw_hs := $(hw).hs
 
 ins := inputs
 outs := outputs
 t_ins := $(test)/$(ins)
 t_outs := $(test)/$(outs)
-esc_t_outs := ..\/test\/$(outs)
 
 c_prs := compiled_progs
 grs := grammar_rules
@@ -21,15 +18,14 @@ p_imps := $(src)/PredefImports/
 p_imp_pr := $(p_imps)/Predefined.hs
 p_imp_ops := $(p_imps)/OpsInHaskell.hs
 
-t_outs_c_prs := $(t_outs)/$(c_prs)
-esc_t_outs_c_prs := $(esc_t_outs)\/$(c_prs)
-
 t_outs_prs := $(t_outs)/$(prs)
-esc_t_outs_prs := $(esc_t_outs)\/$(prs)
-
 t_outs_grs := $(t_outs)/$(grs)
-esc_t_outs_grs := $(esc_t_outs)\/$(grs)
+t_outs_c_prs := $(t_outs)/$(c_prs)
 
 t_ins_prs := $(t_ins)/$(prs)
 t_ins_grs := $(t_ins)/$(grs)
 
+# file names
+
+pr_names := $(shell ls $(t_ins_prs))
+gr_names := $(shell ls $(t_ins_grs))

@@ -1,5 +1,10 @@
 
-- Ξεχωριστά makefile μέσα στο build dir
-  - πρέπει να αλλάξω τα paths
+- αλλαγή του Path των PredefImports σε κάτι reproducible
+  - home/.local/share/lcases
+    - Να το φτιάξω από makefile και να του βάλω τα PredefImports
+      - rule που θα φτιάχνει το 2 PredefImports αρχεία
+      - τα οποία χρειάζονται από το lcc
+  - αλλαγή στο src/lcc.hs
+    - Να παίρνω το HOME env var ++ /.local/share/lcases/PredefImports
 
 # to_do.txt
