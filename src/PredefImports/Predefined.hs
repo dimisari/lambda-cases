@@ -111,6 +111,9 @@ take'from' = uncurry take . \(x, y) -> (fromIntegral x, y)
 split'at' :: ([a], Integer) -> ([a], [a])
 split'at' = uncurry (flip splitAt) . \(l, i) -> (l, fromIntegral i)
 
+concat_lists_in' :: [[a]] -> [a]
+concat_lists_in' = concat
+
 do_nothing :: Applicative f => f EmptyVal
 do_nothing = pure empty_val
 

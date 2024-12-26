@@ -1,8 +1,10 @@
 
 src := ../src
 test := ../test
+examples := ../examples
+local_stuff := $(HOME)/.local/share/lcases
 
-b_lcc := lcc
+b_lcc := $(HOME)/.local/bin/lcc
 b_grs := grules
 
 ins := inputs
@@ -18,6 +20,10 @@ p_imps := $(src)/PredefImports/
 p_imp_pr := $(p_imps)/Predefined.hs
 p_imp_ops := $(p_imps)/OpsInHaskell.hs
 
+p_imps_cp := $(local_stuff)/PredefImports/
+p_imp_cp_pr := $(p_imps_cp)/Predefined.hs
+p_imp_cp_ops := $(p_imps_cp)/OpsInHaskell.hs
+
 t_outs_prs := $(t_outs)/$(prs)
 t_outs_grs := $(t_outs)/$(grs)
 t_outs_c_prs := $(t_outs)/$(c_prs)
@@ -29,3 +35,4 @@ t_ins_grs := $(t_ins)/$(grs)
 
 pr_names := $(shell ls $(t_ins_prs))
 gr_names := $(shell ls $(t_ins_grs))
+hello := hello_world.lc

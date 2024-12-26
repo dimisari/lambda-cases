@@ -2,7 +2,7 @@
 
 module Main where
 
-import System.Environment (getArgs)
+import System.Environment (getArgs, getEnv)
 import System.Process (callCommand)
 import Data.List (intercalate)
 import Text.Parsec (ParseError)
@@ -17,10 +17,10 @@ import Generation.TypesAndHelpers
 import Generation.AST
 
 -- lists
-predef_list :: [FilePath]
+predef_list :: IO [FilePath]
 predef_list =
-  map ("/home/gnostis/Desktop/lambda-cases/src/PredefImports/" ++)
-    [ "OpsInHaskell.hs" , "Predefined.hs" ]
+  getEnv "HOME" >$> (++ "/.local/share/lcases/PredefImports/") >$> \x ->
+    map (x ++) [ "OpsInHaskell.hs", "Predefined.hs" ]
 
 lang_ext_names :: [Haskell]
 lang_ext_names =
@@ -34,27 +34,27 @@ import_names =
   , "PredefImports.OpsInHaskell"
   ]
 
-
 -- main
 main :: IO ()
 main = getArgs >>= \case
   [] -> putStrLn "No arguments"
-  [program_file_name] ->  compile_to_exec program_file_name
+  [program_file_name] -> compile_to_exec program_file_name
   ["-h", program_file_name] -> compile_to_hs program_file_name >> return ()
   _  -> putStrLn "Weird arguments"
 
 compile_to_exec :: ProgramFileName -> IO ()
 compile_to_exec pfn =
   compile_to_hs pfn >>= \hs_file ->
-  callCommand (ghc_compile ++ hs_file) >>
+  ghc_compile >>= \ghc_compile_bash ->
+  callCommand (ghc_compile_bash ++ hs_file) >>
   callCommand ("rm " ++ hs_file)
   where
-  ghc_compile :: String
+  ghc_compile :: IO String
   ghc_compile =
-    "ghc" ++ make_predef ++ "-no-keep-hi-files -no-keep-o-files "
+    make_predef >$> ("ghc" ++) >$> (++ "-no-keep-hi-files -no-keep-o-files ")
 
-  make_predef :: String
-  make_predef = concatMap (" --make " ++) predef_list ++ " "
+  make_predef :: IO String
+  make_predef = predef_list >$> concatMap (" --make " ++) >$> (++ " ")
 
 compile_to_hs :: ProgramFileName -> IO HsFileName
 compile_to_hs pfn =
