@@ -7,10 +7,8 @@ local_stuff := $(HOME)/.local/share/lcases
 b_lcc := $(HOME)/.local/bin/lcc
 b_grs := grules
 
-ins := inputs
-outs := outputs
-t_ins := $(test)/$(ins)
-t_outs := $(test)/$(outs)
+t_ins := $(test)/inputs
+t_outs := $(test)/outputs
 
 c_prs := compiled_progs
 grs := grammar_rules

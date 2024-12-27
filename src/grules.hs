@@ -18,6 +18,8 @@ type CompileExFunc = TestExample -> String
 type Compile a = Lcases -> ResultString a
 newtype ResultString a = RS String
 
+-- paths
+
 -- main
 main :: IO ()
 main = mapM_ compile_example file_name_compile_func_pairs
@@ -25,10 +27,12 @@ main = mapM_ compile_example file_name_compile_func_pairs
 -- compile_example
 compile_example :: (FileName, CompileExFunc) -> IO ()
 compile_example (file_name, comp_ex_func) =
-  read_examples file_name >>= concatMap comp_ex_func .> writeFile out_path
+  read_examples file_name >$> concatMap comp_ex_func >>= \ex_outs ->
+  get_out_path >>= \out_path ->
+  writeFile out_path ex_outs
   where
-  out_path :: FilePath
-  out_path = out_dir ++ grules_dir ++ make_extension_hs file_name
+  get_out_path :: IO FilePath
+  get_out_path = get_test_outputs_path >$> (++ make_extension_hs file_name)
 
 compile_example_func :: (HasParser a, ToHaskell a) => Compile a
 compile_example_func = parse .> parse_res_to_final_res

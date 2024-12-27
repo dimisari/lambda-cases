@@ -1,6 +1,7 @@
 module Helpers where
 
 import System.Directory
+import System.Environment (getArgs)
 import Control.Applicative
 import Control.Monad.State
 import Data.List.Split
@@ -15,14 +16,12 @@ type FileString = String
 type TestExample = String
 
 -- paths
-grules_dir :: FilePath
-grules_dir = "grammar_rules/"
 
-in_dir :: FilePath
-in_dir = "../test/inputs/"
+get_test_inputs_path :: IO FilePath
+get_test_inputs_path = getArgs >$> head >$> (++ "/")
 
-out_dir :: FilePath
-out_dir = "../test/outputs/"
+get_test_outputs_path :: IO FilePath
+get_test_outputs_path = getArgs >$> (!!1) >$> (++ "/")
 
 -- func app/comp
 (.>) :: (a -> b) -> (b -> c) -> a -> c
@@ -82,7 +81,8 @@ make_extension_hs =
         "make_extension_hs: instead I got " ++ extension
 
 read_exs_file :: FileName -> IO FileString
-read_exs_file = \file_name -> readFile $ in_dir ++ grules_dir ++ file_name
+read_exs_file = \file_name ->
+  get_test_inputs_path >$> (++ file_name) >>= readFile
 
 read_examples :: FileName -> IO [FileString]
 read_examples = \file_name -> read_exs_file file_name >$> file_str_to_examples

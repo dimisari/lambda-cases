@@ -1,21 +1,5 @@
 
-- Έχω ξεχωριστά hardcoded τα:
-  - test/output/
-  - test/input/
-  στο src/grules.hs και στο Makefile
-  - Να τα περάσω σαν arguments από το Makefile στο src/grules.hs;
-    - Δεν είναι κακό
-
 - fix README
-
-- αλλαγή syntax:
-  - >> αντί για ;>
-  - ? αντί για cases
-  - tuple type: State = ListOf(DoneNode)s x ListOf(ReachableNode)s
-    field names: (dns, rns)
-  - or type: Possibly(T1)
-    possibilities: a_value.with:(the_value: T1) | no_value
-  - type nickname: ...
 
 - printing tuples:
   - (a = 1, b = 2)

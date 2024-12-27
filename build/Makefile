@@ -36,7 +36,7 @@ $(t_outs_prs)/%.hs: $(b_lcc) $(t_ins_prs)/%.lc
 
 $(t_outs_grs)/%.hs: $(b_grs) $(t_ins_grs)/%.txt
 	$(mkd)
-	./$<
+	./$< $(t_ins_grs) $(t_outs_grs)
 
 # executables in $(execs)
 
