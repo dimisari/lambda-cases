@@ -2,16 +2,16 @@
 
 ## Create compiler executable
 ```bash
-make lcc
+cd build; make
 ```
 
 ## Compile lcases program to executable
 
 ```bash
-./lcc hello_world.lc
+cd ../examples; lcc hello_world.lc
 ```
 
-Creates executable "hello_world"
+Creates executable "hello_world", to run it
 
 ```bash
 ./hello_world
@@ -19,13 +19,13 @@ Creates executable "hello_world"
 
 ## Compile lcases program to Haskell
 ```bash
-./lcc -h hello_world.lc
+lcc -h hello_world.lc
 ```
 
 Creates Haskell file "hello_world.hs"
 
 ```bash
-ghci hello_world.hs
+ghci -i../src hello_world.hs
 ```
 
 ## Run test_inputs
