@@ -66,15 +66,8 @@ $(b_grs): $(grs_prereqs)
 # cleaning
 
 clean:
-	$(RM) -r $(b_lcc) $(b_grs) $(t_outs) $(hello) $(basename $(hello))
+	$(RM) -r $(b_lcc) $(b_grs) $(t_outs)
 	find $(examples) -name "*.hs" -delete
 
-clean_hello:
-	$(RM) $(hello) $(basename $(hello))
-
 # testing
-
-test_hello:
-	cp -u $(examples)/$(hello) .
-	lcc $(hello)
 

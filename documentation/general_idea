@@ -1,0 +1,74 @@
+Everything is a value with:
+- a name
+- a type
+- an expression
+
+
+For example the "Hello World!" program is
+
+main: Program
+  = print("Hello World!")
+
+the name is "main"
+the type is "Program"
+the expression is "print(\"Hello World!\")"
+
+
+On the other hand n is
+
+n : Integer
+  = 42
+
+the name is "n"
+the type is "Integer"
+the expression is "42"
+
+
+And the radius of a circle is
+
+area_of_circle_with_radius(_) : (@A)CanBeReal --> @A => Real
+  = radius => pi*real(radius)^2
+
+the name is "area_of_circle_with_radius(_)"
+the type is "(@A)CanBeReal --> @A => Real"
+the expression is "radius => pi*real(radius)^2"
+
+where
+
+real(_) : (@A)CanBeReal --> @A => Real
+
+
+The actual value is the evaluation of the written expression which is also an
+expression. This expression is derived from the written one by applying
+rewriting rules or evaluating arithmetic expressions. When no further rewriting
+rules are possible, the evaluation is complete and the final expression (the
+value) is said to be in normal form.
+
+
+For example we have circle42 where
+
+circle42 : Real
+  = area_of_circle_with_radius(n)
+
+we have the following rewrites
+
+"area_of_circle_with_radius(n)" ->
+substitute "42" for "n" -> "area_of_circle_with_radius(42)" ->
+apply "radius => pi*real(radius)^2" to "42" -> "pi*real(42)^2" ->
+apply "real(_)" to "42" -> "pi*42.^2" ->
+evaluate "42.^2" -> "pi*1764"
+evaluate "pi*1764" -> "5541.7694409324"
+
+
+and there are also rewrites for type checking
+
+check if "Integer" is valid argument of "(@A)CanBeReal --> @A => Real"
+-->
+the argument is of type "Integer" and the parameter of type "@A" so for the
+types to check we need "@A = Integer". Because (Integer)CanBeReal is a
+condition which is satisfied and so we can substitute "Integer" for "@A" and
+"Integer" is valid argument of "Integer => Real"
+-->
+The resulting type is "Real"
+
+which means that circle42 is correctly annotated as "Real"

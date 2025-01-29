@@ -44,7 +44,7 @@ main : (EmptyVal)FromIO
     print(split([1,2,3,4,5,6])at(3));
     (get_char ;> print(_));
     (get_input ;> print(_));
-    (read_file("../../hello_world.lc") ;> write(_)to_file("out.txt"));
+    (read_file("../programs/hello_world.hs") ;> write(_)to_file("out.txt"));
     print_string("Hello "); print("World!");
     print_result(test1); print_result(test2); print_result(test3);
     undefined

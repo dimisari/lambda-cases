@@ -5,10 +5,10 @@ value (n_name, neighbors) : Char x ListOf(Neighbor)s
 
 type_nickname Dist = Int
 
-type_nickname Neighbor = NameAndDist
-
 tuple_type NameAndDist
 value (name, dist) : Char x Dist
+
+type_nickname Neighbor = NameAndDist
 
 tuple_type State
 value (dns, rns) : ListOf(DoneNode)s x ListOf(ReachableNode)s
@@ -129,3 +129,4 @@ proof
 
 main : IO
   = dijkstra('a', test_graph) -> print
+

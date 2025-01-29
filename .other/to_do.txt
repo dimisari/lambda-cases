@@ -1,5 +1,5 @@
 
-- fix README
+- documentation
 
 - printing tuples:
   - (a = 1, b = 2)

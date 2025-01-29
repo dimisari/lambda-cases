@@ -33,4 +33,3 @@ t_ins_grs := $(t_ins)/$(grs)
 
 pr_names := $(shell ls $(t_ins_prs))
 gr_names := $(shell ls $(t_ins_grs))
-hello := hello_world.lc
