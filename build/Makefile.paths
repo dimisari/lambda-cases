@@ -2,7 +2,7 @@
 src := ../src
 test := ../test
 examples := ../examples
-local_stuff := $(HOME)/.local/share/lcases
+local_stuff := $(HOME)/.local/share/lcc
 
 b_lcc := $(HOME)/.local/bin/lcc
 b_grs := grules

@@ -1,4 +1,6 @@
 
+- configuration file maybe?
+
 - documentation
 
 - printing tuples:

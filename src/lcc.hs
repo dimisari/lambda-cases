@@ -19,7 +19,7 @@ import Generation.AST
 -- lists
 predef_list :: IO [FilePath]
 predef_list =
-  getEnv "HOME" >$> (++ "/.local/share/lcases/PredefImports/") >$> \x ->
+  getEnv "HOME" >$> (++ "/.local/share/lcc/PredefImports/") >$> \x ->
     map (x ++) [ "OpsInHaskell.hs", "Predefined.hs" ]
 
 lang_ext_names :: [Haskell]

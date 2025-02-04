@@ -1,14 +1,11 @@
 
 - διαφοροποίηση στο make
-  - make install
-  - make uninstall
   - make test
-  - make lcc
-  - Τι αρχεία φτιάχνω γενικά;
-    - Προγράμματα haskell
-    - Grammar rules σε haskell
-    - Εκτελέσιμα
-  - Άρα το lcc φτιάχνετε γιατί το χρειάζονται
+    - να κάνω διαφορετικά tests;
+    - Τι αρχεία φτιάχνω γενικά;
+      - Προγράμματα haskell
+      - Grammar rules σε haskell
+      - Εκτελέσιμα
 
 - αλλαγή syntax:
   - ? αντί για cases
