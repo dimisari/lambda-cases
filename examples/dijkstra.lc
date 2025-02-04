@@ -28,30 +28,31 @@ set_rns(_) : ListOf(ReachableNode)s => StateMan
   = rns => modify_state_with(s => (s.dns, rns))
 
 dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
-  = (source_name, g) => result_of(get_result)on_init_state(is)
+  = (source_name, g) => result_of(get_result(g))on_init_state(is)
     where
     is : State
       = ([], [(source_name, 0)])
 
-    get_result : (ListOf(DoneNode)s)FStateMan
-      = get_state ;> state =>
-        state.rns -> cases
-          [] => wrap(state.dns)
-          [rn1, rns = ...] =>
-            set_state((state.dns + rn1, rns)) ;
-            add_new_rns(rn1, get_neighbors(rn1)) ;
-            get_result
+get_result(_) : Graph => (ListOf(DoneNode)s)FStateMan
+  = g =>
+    get_state ;> state =>
+    state.rns -> cases
+      [] => wrap(state.dns)
+      [rn1, rns = ...] =>
+        set_state((state.dns + rn1, rns)) ;
+        add_new_rns(rn1, get_neighbors(rn1, g)) ;
+        get_result(g)
 
-    get_neighbors(_) : DoneNode => ListOf(Neighbor)s
-      = dn => get_neighbors_from_nodes(g)
-        where
-        get_neighbors_from_nodes(_) : ListOf(Node)s => ListOf(Neighbor)s
-          = cases
-            [] => throw_err("Should be impossible: I'm not in the nodes!")
-            [n, ns = ...] =>
-              (dn.name == n.n_name) -> cases
-                true => n.neighbors
-                false => get_neighbors_from_nodes(ns)
+get_neighbors(_, _) : DoneNode x Graph => ListOf(Neighbor)s
+  = (dn, g) => get_neighbors_from_nodes(g)
+    where
+    get_neighbors_from_nodes(_) : ListOf(Node)s => ListOf(Neighbor)s
+      = cases
+        [] => throw_err("Should be impossible: I'm not in the nodes!")
+        [n, ns = ...] =>
+          (dn.name == n.n_name) -> cases
+            true => n.neighbors
+            false => get_neighbors_from_nodes(ns)
 
 update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
   = (ne, dn) =>
