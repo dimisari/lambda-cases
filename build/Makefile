@@ -23,7 +23,10 @@ hs_prs := $(patsubst %.lc, $(t_outs_prs)/%.hs, $(pr_names))
 hs_grs := $(patsubst %.txt, $(t_outs_grs)/%.hs, $(gr_names))
 execs := $(patsubst %.lc, $(t_outs_c_prs)/%.out, $(pr_names))
 
-all: $(hs_prs) $(hs_grs) $(execs)
+.PHONY: all
+
+all:
+	make test_all
 
 install: $(b_lcc) $(p_imp_cp_pr) $(p_imp_cp_ops)
 
@@ -83,3 +86,10 @@ uninstall:
 
 # testing
 
+test_all: $(hs_prs) $(hs_grs) $(execs)
+
+test_haskell_progs: $(hs_prs)
+
+test_grammar_rules: $(hs_grs)
+
+test_executables: $(execs)
