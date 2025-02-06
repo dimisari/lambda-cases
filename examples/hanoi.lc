@@ -1,17 +1,17 @@
 
 hanoi_with(_)rings_from(_)to(_)through(_)
-  : Int x String x String x String => IO
-  = (cases, source, target, auxiliary)
+  : Int x String x String x String => Program
+  = (?, source, target, auxiliary)
     0 => do_nothing
     n =>
       hanoi_with(n - 1)rings_from(source)to(auxiliary)through(target);
       move_from(source)to(target);
       hanoi_with(n - 1)rings_from(auxiliary)to(target)through(source)
       where
-      move_from(_)to(_): String^2 => IO
+      move_from(_)to(_): String^2 => Program
         = print(_) <o ("Move from " + _ + " to " + _)
 
-main: IO
+main: Program
   = print("Number of rings?");
-    get_line ;> from_string(_) o>
+    get_line >> from_string(_) o>
     hanoi_with(_)rings_from("left")to("right")through("middle")

@@ -9,9 +9,9 @@ import qualified Prelude as P
 import Control.Monad.State
 
 -- types
-type A'FromIO = P.IO
+type ProgramWith' = P.IO
 type EmptyVal = ()
-type IO = A'FromIO EmptyVal
+type Program = ProgramWith' EmptyVal
 type ListOf's = []
 type A'FState'Man a b = State b a
 type State'Man a = A'FState'Man EmptyVal a
@@ -93,7 +93,7 @@ a'div' = uncurry div
 a'mod' :: Integral a => (a, a) -> a
 a'mod' = uncurry mod
 
-print' :: Show a => a -> IO
+print' :: Show a => a -> Program
 print' = print
 
 a'length :: [a] -> Integer
@@ -120,8 +120,8 @@ do_nothing = pure empty_val
 from_string' :: Read a => String -> a
 from_string' = read
 
-a'from_io :: a -> P.IO a
-a'from_io = return
+program_with' :: a -> P.IO a
+program_with' = return
 
 not' :: Bool -> Bool
 not' = not

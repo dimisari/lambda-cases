@@ -1,10 +1,10 @@
 reverse(_): ListOf(T1)s => ListOf(T1)s
-  = cases
+  = ?
     [] => []
     [head, tail = ...] => reverse(tail) + head
 
 my_int_list: ListOf(Int)s
   = [1, 2, 3, 4, 5]
 
-main: IO
+main: Program
   = reverse(my_int_list) -> (_)to_string -> print(_)

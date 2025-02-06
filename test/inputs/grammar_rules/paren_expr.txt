@@ -4,5 +4,5 @@
 
 (n => 3*n + 1)#
 
-(get_line ;> line => print("Line is: " + line))#
+(get_line >> line => print("Line is: " + line))#
 

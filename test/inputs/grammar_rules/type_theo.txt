@@ -7,14 +7,14 @@ proof wrap(_) = [_]#
 type_theorem (Possibly(_))Has_Internal_App
 proof
   apply(_)inside(_) =
-    (f(_), cases)
+    (f(_), ?)
       no_value => no_value
       the_value:x => the_value:f(x)#
 
 type_theorem (ListOf(_)s)Has_Internal_App
 proof
   apply(_)inside(_) =
-    (f(_), cases)
+    (f(_), ?)
       [] => []
       [head, tail = ...] => f(head) + apply(f(_))inside(tail)#
 
@@ -47,7 +47,7 @@ proof
 type_theorem (ListOf(T1)s)And(T1)Add_To(ListOf(T1)s)
 proof
   l + a =
-    l -> cases
+    l -> ?
       empty_l => non_empty_l:(a, empty_l)
       non_empty_l:(head, tail) => non_empty_l:(head, tail + a)#
 

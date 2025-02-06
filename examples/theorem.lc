@@ -16,5 +16,5 @@ equivalent (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
 type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
 proof a >= b = a == b | a > b
 
-main : IO
+main : Program
   = print("hi")

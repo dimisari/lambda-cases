@@ -33,13 +33,13 @@ connected_components_of(_) : Graph => ConnComps
 
     edge_union(_) : Edge => StateMan
       = e =>
-        find(e.u) ;> u_rep =>
-        find(e.v) ;> v_rep =>
-        (u_rep.name == v_rep.name) -> cases
+        find(e.u) >> u_rep =>
+        find(e.v) >> v_rep =>
+        (u_rep.name == v_rep.name) -> ?
           true => do_nothing
           false =>
             decrease_cps ;
-            (u_rep.rank < v_rep.rank) -> cases
+            (u_rep.rank < v_rep.rank) -> ?
               true => make(v_rep.name)parent_of(u_rep.name)with(new_rank)
               false => make(u_rep.name)parent_of(v_rep.name)with(new_rank)
             where
@@ -58,16 +58,16 @@ connected_components_of(_) : Graph => ConnComps
 
         change_node(_)if_needed : Info => Info
           = (n, irohp) =>
-            (n == pn) -> cases
+            (n == pn) -> ?
               true => (n, is_repr:new_rank)
               false =>
-                (n == cn) -> cases
+                (n == cn) -> ?
                   true => (n, has_parent:pn)
                   false => (n, irohp)
 
     find(_) : Node => (Representative)FState(State)Man
       = n =>
-        get_from_info_list ;> cases
+        get_from_info_list >> ?
           is_repr:rank => wrap(_) <- (n, rank)
           has_parent:p => find(p)
         where
@@ -76,10 +76,10 @@ connected_components_of(_) : Graph => ConnComps
             where
             get_from_list(_)
               : ListOf(Info)s => IsReprOrHasPar
-              = cases
+              = ?
                 [] => throw_err("I'm not in the list!")
                 [(n1, irohp1), rest = ...] =>
-                  (n == n1) -> cases
+                  (n == n1) -> ?
                     true => irohp1
                     false => get_from_list(rest)
 
@@ -88,5 +88,5 @@ test_graph : Graph
     , [(1, 2), (2, 3), (2, 4), (3, 4), (5, 6), (5, 7), (9, 10)]
     )
 
-main : IO
+main : Program
   = connected_components_of(test_graph) -> print

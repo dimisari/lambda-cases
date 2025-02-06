@@ -2,7 +2,7 @@
 f(_, _) : (@A)To_The(Int)Is(Real) --> @A^2 => Real
   = _^2 + _^2
 
-main : IO
+main : Program
   = print("2 to the 3 is: " + 2^3) ;
     print("6 times 7 is: " + 6*7) ;
     print("42 divided by 6 is: " + 42/6) ;

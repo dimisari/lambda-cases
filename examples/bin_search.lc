@@ -4,31 +4,31 @@ values lesser | equal | greater
 
 compare(_)with(_) : Int x Int => Comparison
   = (a, b) =>
-    (a < b) -> cases
+    (a < b) -> ?
       true => lesser
       false =>
-        (a == b) -> cases
+        (a == b) -> ?
           true => equal
           false => greater
 
 my_split(_)at(_) : ListOf(T1)s x Int => Possibly(T1 x ListOf(T1)s^2)
-  = (cases, cases)
+  = (?, ?)
     ([], *) => no_value
     ([head, tail = ...], 0) => the_value:(head, ([], tail))
     ([head, tail = ...], n) =>
-      my_split(tail)at(n - 1) -> cases
+      my_split(tail)at(n - 1) -> ?
         no_value => no_value
         the_value:(item, (left_l, right_l)) =>
           the_value:(item, (head + left_l, right_l))
 
 bin_search(_, _) : ListOf(Int)s x Int => Possibly(Int)
   = (list, target) =>
-    my_split(list)at(middle_ind) -> cases
+    my_split(list)at(middle_ind) -> ?
       no_value => no_value
       the_value:(middle, (left_l, right_l)) =>
-        compare(middle)with(target) -> cases
+        compare(middle)with(target) -> ?
           lesser =>
-            bin_search(right_l, target) -> cases
+            bin_search(right_l, target) -> ?
               no_value => no_value
               the_value:i => the_value:(middle_ind + 1 + i)
           equal => the_value:middle_ind
@@ -40,18 +40,18 @@ bin_search(_, _) : ListOf(Int)s x Int => Possibly(Int)
 list : ListOf(Int)s
   = [2, 4, 6, 8]
 
-result_msg(_) : Possibly(Int) => IO
-  = cases
+result_msg(_) : Possibly(Int) => Program
+  = ?
     no_value => print("Target Not Found")
     the_value:ind => print("Found! The index is: " + ind)
 
-try(_) : Int => IO
+try(_) : Int => Program
   = i => print("Trying " + (i)to_string) ; result_msg(bin_search(list, i))
 
-try_list(_) : ListOf(Int)s => IO
-  = cases
+try_list(_) : ListOf(Int)s => Program
+  = ?
     [] => do_nothing
     [i, is = ...] => try(i) ; try_list(is)
 
-main : IO
+main : Program
   = try_list([0,1,2,3,4,5,6,7,8])

@@ -24,7 +24,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
       = ([], [])
 
     topo_sort_from_state : StateMan
-      = get_state ;> _.dns o> check_all_done o> cases
+      = get_state >> _.dns o> check_all_done o> ?
         all_done => do_nothing
         not_all_done:node_name =>
           topo_sort_on_node(node_name) ; topo_sort_from_state
@@ -33,10 +33,10 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
           = dns => check_all_in_dns(node_names)
             where
             check_all_in_dns(_) : ListOf(Char)s => AllDoneOutcome
-              = cases
+              = ?
                 [] => all_done
                 [n1, ns = ...] =>
-                  (n1)is_in(dns) -> cases
+                  (n1)is_in(dns) -> ?
                     true => check_all_in_dns(ns)
                     false => not_all_done:n1
 
@@ -45,7 +45,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
 
     topo_sort_on_node(_) : Char => StateMan
       = node_name =>
-        children -> cases
+        children -> ?
           [] => add_to_done
           cs =>
             add_to_visited ; topo_sort_on_children(cs) ; remove_from_visited ;
@@ -55,10 +55,10 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
           = get_children_from_list(g)
             where
             get_children_from_list(_) : ListOf(Node)s => Children
-              = cases
+              = ?
                 [] => throw_err("Should be impossible: I'm not in the nodes!")
                 [n, ns = ...] =>
-                  (node_name == n.n_name) -> cases
+                  (node_name == n.n_name) -> ?
                     true => n.n_children
                     false => get_children_from_list(ns)
 
@@ -72,21 +72,21 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
           = modify_state_with(s => (remove_from(s.vns), s.dns))
             where
             remove_from(_) : ListOf(VisitedNode)s => ListOf(VisitedNode)s
-              = cases
+              = ?
                 [] => throw_err("Should be impossible: I'm not in visited")
                 [vn, vns = ...] =>
-                  (vn == node_name) -> cases
+                  (vn == node_name) -> ?
                     true => vns
                     false => vn + remove_from(vns)
 
     topo_sort_on_children(_) : Children => StateMan
-      = cases
+      = ?
         [] => do_nothing
         [c, cs = ...] =>
           topo_sort_on_child ; topo_sort_on_children(cs)
           where
           topo_sort_on_child : StateMan
-            = check_not_in_visited_or_done ;> cases
+            = check_not_in_visited_or_done >> ?
               true => topo_sort_on_node(c)
               false => do_nothing
 
@@ -108,5 +108,5 @@ test_graph : Graph
     , ('9', [])
     ]
 
-main : IO
+main : Program
   = topo_sort_on_graph(test_graph) -> print

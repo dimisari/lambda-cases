@@ -1,45 +1,45 @@
-cases
+?
   true => print("It's true!! :)")
   false => print("It's false... :(")#
 
-cases
+?
   green => print("It's green! Let's go!!! :)")
   amber => print("Go go go, fast!")
   red => print("Stop right now! You're going to kill us!!")#
 
-cases
+?
   green => true
   amber => true
   red => false#
 
-cases
+?
   17 => true
   42 => true
   ... => false#
 
-(cases, cases)
+(?, ?)
   (green, green) => true
   (amber, amber) => true
   (red, red) => true
   ... => false#
 
-(x, cases)
+(x, ?)
   0 => x
   y => gcd(y, x -> mod <- y)#
 
-cases
+?
   [*] => true
   ... => false#
 
-cases
+?
   empty_l => true
   non_empty_l:non_empty_l:* => false#
 
-(f, cases)
+(f, ?)
   empty_l => empty_l
   non_empty_l:list => non_empty_l:(f(list.head), apply(f)to_all_in(list.tail))#
 
-cases
+?
   [x1, x2, xs = ...] =>
     (x1 < x2) & (x2 + xs)is_sorted
   ... => true#

@@ -1,15 +1,5 @@
 
 - αλλαγή syntax:
-  - ? αντί για cases
-    - Πρέπει να βρω ποια σημεία θ'αλλάξω:
-      - Θέλω αλλαγές στο ASTTypes.hs ;
-      - Parsing/AST.hs 346
-        - try (string "cases") -> try (char '?')
-      - directories
-        - examples
-        - test/inputs/grammar_rules
-
-  - >> αντί για ;>
 
   - tuple type: State = ListOf(DoneNode)s x ListOf(ReachableNode)s
     field names: (dns, rns)
@@ -19,9 +9,8 @@
 
   - type nickname: ...
 
-  - IO => Program
-
-  - from_io => from_prog
+  - ? αντί για cases
+    - Αλλαγή ονομάτων στο ASTTypes.hs
 
 # to_do.txt
 

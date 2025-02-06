@@ -23,7 +23,7 @@ dfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
           = dfs_on_trees(tree.subtrees)with_num(num + 1)
 
     dfs_on_trees(_)with_num(_) : (T1)Trees x Int => (T1)ResultTreesAndNum
-      = (cases, num)
+      = (?, num)
         [] => ([], num)
         [tree1, other_trees = ...] =>
           (tree_res.tree + trees_res.trees, trees_res.ts_num)
@@ -46,5 +46,5 @@ proof
     "\nroot: " + (tree.root)to_string +
     "\nsubtrees:\n" + (tree.subtrees)to_string + "\n"
 
-main: IO
+main: Program
   = dfs_on_tree(test_tree) -> (_)to_string -> print(_)

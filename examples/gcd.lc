@@ -1,13 +1,13 @@
 
 my_gcd_of(_)and(_): Int^2 => Int
-  = (x, cases)
+  = (x, ?)
     0 => x
     y => my_gcd_of(y)and((x)mod(y))
 
-read_two_ints: (Int^2)FromIO
+read_two_ints: ProgramWith(Int^2)
   = print("Please give me 2 ints");
-    get_line ;> split(_)to_words o> cases
-      [x, y] => (from_string(x), from_string(y)) -> (_)from_io
+    get_line >> split(_)to_words o> ?
+      [x, y] => (from_string(x), from_string(y)) -> program_with(_)
       ... => throw_err("You didn't give me 2 ints")
 
 tuple_type NumsAndGcd
@@ -16,7 +16,7 @@ value (x, y, gcd_):Int^3
 nag(_)to_message: NumsAndGcd => String
   = nag => "The GCD of " + nag.x + " and " + nag.y + " is " + nag.gcd_
 
-main: IO
-  = read_two_ints ;> (i1, i2) =>
+main: Program
+  = read_two_ints >> (i1, i2) =>
     (i1, i2, my_gcd_of(i1)and(i2)) -> nag(_)to_message -> print(_)
 

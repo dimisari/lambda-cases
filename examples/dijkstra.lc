@@ -35,8 +35,8 @@ dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
 
 get_result(_) : Graph => (ListOf(DoneNode)s)FStateMan
   = g =>
-    get_state ;> state =>
-    state.rns -> cases
+    get_state >> state =>
+    state.rns -> ?
       [] => wrap(state.dns)
       [rn1, rns = ...] =>
         set_state((state.dns + rn1, rns)) ;
@@ -47,38 +47,38 @@ get_neighbors(_, _) : DoneNode x Graph => ListOf(Neighbor)s
   = (dn, g) => get_neighbors_from_nodes(g)
     where
     get_neighbors_from_nodes(_) : ListOf(Node)s => ListOf(Neighbor)s
-      = cases
+      = ?
         [] => throw_err("Should be impossible: I'm not in the nodes!")
         [n, ns = ...] =>
-          (dn.name == n.n_name) -> cases
+          (dn.name == n.n_name) -> ?
             true => n.neighbors
             false => get_neighbors_from_nodes(ns)
 
 update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
   = (ne, dn) =>
-    check_if_ne_in_rns ;> cases
+    check_if_ne_in_rns >> ?
       in_rns:stuff => add_ne_to_rns_from_dn_if_better(stuff)
       not_in_rns =>
-        check_if_ne_in_dns ;> cases
+        check_if_ne_in_dns >> ?
           true => do_nothing
           false => add_ne_to_rns_from_dn
     where
     check_if_ne_in_rns : (InRNsPossibilities)FStateMan
-      = get_state ;> _.rns o> check_ne_in_rns_rec([], _)
+      = get_state >> _.rns o> check_ne_in_rns_rec([], _)
         where
         check_ne_in_rns_rec(_, _)
           : ListOf(ReachableNode)s^2 => (InRNsPossibilities)FStateMan
-          = (checked, cases)
+          = (checked, ?)
             [] => wrap(not_in_rns)
             [rn1, rns = ...] =>
-              (ne.name == rn1.name) -> cases
+              (ne.name == rn1.name) -> ?
                 true => in_rns:(rn1.dist, checked + rns) -> wrap(_)
                 false => check_ne_in_rns_rec(checked + rn1, rns)
 
     add_ne_to_rns_from_dn_if_better(_)
       : Dist x ListOf(ReachableNode)s => StateMan
       = (d, other_rns) =>
-        (new_d < d) -> cases
+        (new_d < d) -> ?
           true => set_rns(_) <- add((ne.name, new_d))to_rns(other_rns)
           false => do_nothing
         where
@@ -86,32 +86,32 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
           = dn.dist + ne.dist
 
     check_if_ne_in_dns : (Bool)FStateMan
-      = get_state ;> _.dns o> check_ne_name_in(_)
+      = get_state >> _.dns o> check_ne_name_in(_)
         where
         check_ne_name_in(_)
           : ListOf(DoneNode)s => (Bool)FStateMan
-          = cases
+          = ?
             [] => wrap(false)
             [dn, dns = ... ] =>
-              (ne.name == dn.name) -> cases
+              (ne.name == dn.name) -> ?
                 true => wrap(true)
                 false => check_ne_name_in(dns)
 
     add_ne_to_rns_from_dn : StateMan
-      = get_state ;> _.rns o> add((ne.name, dn.dist + ne.dist))to_rns(_) o>
+      = get_state >> _.rns o> add((ne.name, dn.dist + ne.dist))to_rns(_) o>
         set_rns(_)
 
 add_new_rns(_, _) : DoneNode x ListOf(Neighbor)s => StateMan
-  = (dn, cases)
+  = (dn, ?)
     [] => do_nothing
     [ne1, nes = ...] => update_neighbor(ne1)of(dn) ; add_new_rns(dn, nes)
 
 add(_)to_rns(_)
   : ReachableNode x ListOf(ReachableNode)s => ListOf(ReachableNode)s
-  = (rn, cases)
+  = (rn, ?)
     [] => [rn]
     [rn1, rns = ...] =>
-      (rn.dist < rn1.dist) -> cases
+      (rn.dist < rn1.dist) -> ?
         true => rn + (rn1 + rns)
         false => rn1 + add(rn)to_rns(rns)
 
@@ -128,6 +128,6 @@ type_theorem (NameAndDist)Has_Str_Rep
 proof
   (_)to_string = nam => "(name = " + nam.name + ", dist = " + nam.dist + ")"
 
-main : IO
+main : Program
   = dijkstra('a', test_graph) -> print
 

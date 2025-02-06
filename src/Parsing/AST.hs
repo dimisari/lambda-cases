@@ -276,11 +276,11 @@ instance HasParser OptionalSpacesOp where
     string "!=" *> return NotEqual <|>
     try (string ">=") *> return GrEq <|>
     try (string "<=") *> return LeEq <|>
+    try (string ">>") *> return Use <|>
     string ">" *> return Greater <|>
     string "<" *> return Less <|>
     string "&" *> return And <|>
     string "|" *> return Or <|>
-    try (string ";>") *> return Use <|>
     string ";" *> return Then
 
 -- HasParser: FuncExpr
@@ -343,7 +343,7 @@ instance HasParser CasesFuncExpr where
 
 instance HasParser CasesParams where
   parser =
-    try (string "cases") *> return CasesKeyword <|>
+    try (char '?') *> return CasesKeyword <|>
     char '*' *> return Star2 <|> CParamId <$> try parser <|>
     CParams <$> in_paren (parser ++< many1 (comma *> parser))
 

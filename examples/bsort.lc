@@ -2,11 +2,11 @@
 type_nickname IsSorted = Bool
 
 bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x IsSorted
-  = cases
+  = ?
     [] => ([], true)
     [x] => ([x], true)
     [x1, x2, rest = ...] =>
-      (x1 > x2) -> cases
+      (x1 > x2) -> ?
         true => not_sorted(_) <- prepend(x2)to(bubble_sort_pass(x1 + rest))
         false => prepend(x1)to(bubble_sort_pass(x2 + rest))
       where
@@ -20,7 +20,7 @@ bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x IsSorted
 
 bubble_sort(_): ListOf(Int)s => ListOf(Int)s
   = bubble_sort_pass(_) o>
-    (l, cases)
+    (l, ?)
       true => l
       false => bubble_sort(l)
 
@@ -28,7 +28,7 @@ initial: ListOf(Int)s
   = compute_list(16, 65)
     where
     compute_list(_, _): Int^2 => ListOf(Int)s
-      = (cases, seed)
+      = (?, seed)
         0 => []
         n =>
           new_seed + compute_list(n - 1, new_seed)
@@ -36,6 +36,6 @@ initial: ListOf(Int)s
           new_seed: Int
             = (seed * 137 + 236 - n)mod(101)
 
-main: IO
+main: Program
   = print("Initial list = " + initial);
     print("Sorted list = " + bubble_sort(initial))

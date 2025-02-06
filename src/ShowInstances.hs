@@ -246,7 +246,7 @@ instance Show OptionalSpacesOp where
     LeEq -> "<="
     And -> "&"
     Or -> "|"
-    Use -> ";>"
+    Use -> ">>"
     Then -> ";"
 
 -- Values: FuncExpr
@@ -288,7 +288,7 @@ instance Show CasesFuncExpr where
 instance Show CasesParams where
   show = \case
     CParamId id -> show id
-    CasesKeyword -> "cases"
+    CasesKeyword -> "?"
     Star2 -> "*"
     CParams (cps, cps_l) -> "(" ++ show cps ++ show_list_comma cps_l ++ ")"
 

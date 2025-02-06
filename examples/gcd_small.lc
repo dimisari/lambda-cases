@@ -1,19 +1,19 @@
 
 my_gcd_of(_)and(_): Int^2 => Int
-  = (x, cases)
+  = (x, ?)
     0 => x
     y => my_gcd_of(y)and((x)mod(y))
 
-read_two_ints: (Int^2)FromIO
+read_two_ints: ProgramWith(Int^2)
   = print("Please give me 2 ints");
-    get_line ;> split(_)to_words o> cases
-      [s1, s2] => (from_string(s1), from_string(s2)) -> (_)from_io
+    get_line >> split(_)to_words o> ?
+      [s1, s2] => (from_string(s1), from_string(s2)) -> program_with(_)
       ... => throw_err("You didn't give me 2 ints")
 
 ints(_, _, _)to_message: Int^3 => String
   = (x, y, gcd) => "The GCD of " + x + " and " + y + " is " + gcd
 
-main: IO
-  = read_two_ints ;> (i1, i2) =>
+main: Program
+  = read_two_ints >> (i1, i2) =>
     ints(i1, i2, my_gcd_of(i1)and(i2))to_message -> print(_)
 
