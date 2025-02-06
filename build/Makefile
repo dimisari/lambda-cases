@@ -23,9 +23,12 @@ hs_prs := $(patsubst %.lc, $(t_outs_prs)/%.hs, $(pr_names))
 hs_grs := $(patsubst %.txt, $(t_outs_grs)/%.hs, $(gr_names))
 execs := $(patsubst %.lc, $(t_outs_c_prs)/%.out, $(pr_names))
 
+# rules
+
 .PHONY: all
 
 all:
+	make examples_clean
 	make test_all
 
 install: $(b_lcc) $(p_imp_cp_pr) $(p_imp_cp_ops)
@@ -37,13 +40,13 @@ $(b_lcc): $(lcc_prereqs)
 
 # predefined imports
 
-$(p_imp_cp_pr):
+$(p_imp_cp_pr): $(p_imp_pr)
 	$(mkd)
-	cp -u $(p_imp_pr) $@
+	cp -u $< $@
 
-$(p_imp_cp_ops):
+$(p_imp_cp_ops): $(p_imp_ops)
 	$(mkd)
-	cp -u $(p_imp_ops) $@
+	cp -u $< $@
 
 # haskell programs in $(hs_prs)
 
