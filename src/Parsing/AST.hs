@@ -512,9 +512,11 @@ instance HasParser TypeDef where
 instance HasParser TupleTypeDef where
   parser =
     TTD <$>
-      (try (string "tuple_type ") *> parser) ++<
-      (nl *> string "value" *> space_or_nl *> parser) +++<
-      (opt_space_around (string ":") *> parser)
+      (try (string "tuple type:") *> opt_space *> parser)
+      ++<
+      (opt_space_around (char '=') *> parser)
+      +++<
+      (nl *> string "field names:" *> space_or_nl *> parser)
 
 instance HasParser ProdOrPowerType where
   parser = PT4 <$> try parser <|> PoT4 <$> parser
@@ -530,7 +532,7 @@ instance HasParser TypeName where
 instance HasParser ParamVarsInParen where
   parser = PVIP <$> in_paren (parser ++< many (comma *> parser))
 
-instance HasParser IdTuple where
+instance HasParser FieldNames where
   parser = PCSIs <$> in_paren (parser ++< many1 (comma *> parser))
 
 instance HasParser OrTypeDef where

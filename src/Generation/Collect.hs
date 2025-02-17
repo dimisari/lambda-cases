@@ -72,9 +72,9 @@ instance CollectFieldIds TypeDef where
     _ -> do_nothing
 
 instance CollectFieldIds TupleTypeDef where
-  collect_fids = \(TTD (_, idt, _)) -> collect_fids idt
+  collect_fids = \(TTD (_, _, idt)) -> collect_fids idt
 
-instance CollectFieldIds IdTuple where
+instance CollectFieldIds FieldNames where
   collect_fids = \(PCSIs (si, sis)) -> mapM_ collect_fids $ si : sis
 
 instance CollectFieldIds SimpleId where

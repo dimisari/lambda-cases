@@ -240,7 +240,7 @@ newtype Condition = Co PropName
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
-newtype TupleTypeDef = TTD (TypeName, IdTuple, ProdOrPowerType)
+newtype TupleTypeDef = TTD (TypeName, ProdOrPowerType, FieldNames)
 
 data ProdOrPowerType =
   PT4 ProdType | PoT4 PowerType
@@ -251,7 +251,7 @@ newtype TypeName =
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
-newtype IdTuple = PCSIs (SimpleId, [SimpleId])
+newtype FieldNames = PCSIs (SimpleId, [SimpleId])
 
 newtype OrTypeDef =
   OTD (TypeName, SimpleId, Maybe SimpleType, [(SimpleId, Maybe SimpleType)])

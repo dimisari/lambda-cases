@@ -1,19 +1,19 @@
 
-tuple_type Graph
-value (nodes, edges) : ListOf(Node)s x ListOf(Edge)s
+tuple type: Graph = ListOf(Node)s x ListOf(Edge)s
+field names: (nodes, edges)
 
 type_nickname Node = Int
 
-tuple_type Edge
-value (u, v) : Node^2
+tuple type: Edge = Node^2
+field names: (u, v)
 
 or_type IsReprOrHasPar
 values is_repr:Rank | has_parent:Node
 
 type_nickname Rank = Int
 
-tuple_type Representative
-value (name, rank) : Node x Rank
+tuple type: Representative = Node x Rank
+field names: (name, rank)
 
 type_nickname State = ListOf(Info)s x ConnComps
 

@@ -1,14 +1,14 @@
 
-tuple_type (T1)Tree
-value (root, subtrees) : T1 x (T1)Trees
+tuple type: (T1)Tree = T1 x (T1)Trees
+field names: (root, subtrees)
 
 type_nickname (T1)Trees = ListOf((T1)Tree)s
 
-tuple_type (T1)ResultTreeAndNum
-value (tree, t_num) : (Int x T1)Tree x Int
+tuple type: (T1)ResultTreeAndNum = (Int x T1)Tree x Int
+field names: (tree, t_num)
 
-tuple_type (T1)ResultTreesAndNum
-value (trees, ts_num) : (Int x T1)Trees x Int
+tuple type: (T1)ResultTreesAndNum = (Int x T1)Trees x Int
+field names: (trees, ts_num)
 
 dfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
   = dfs_on_tree(_)with_num(1) o> _.tree

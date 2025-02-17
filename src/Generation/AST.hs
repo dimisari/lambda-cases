@@ -710,7 +710,7 @@ instance ToHaskell TypeDef where
     OTD1 otd -> to_haskell otd
 
 instance ToHaskell TupleTypeDef where
-  to_haskell (TTD (tn, PCSIs (si, sis), popt)) =
+  to_haskell (TTD (tn, popt, PCSIs (si, sis))) =
     data_hs ++ "\n\n" ++ instance_hs ++ "\n" ++
     change_types_hs ++ change_defs_hs
     where

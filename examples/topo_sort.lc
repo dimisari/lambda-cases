@@ -1,12 +1,12 @@
 type_nickname Graph = ListOf(Node)s
 
-tuple_type Node
-value (n_name, n_children) : Char x Children
+tuple type: Node = Char x Children
+field names: (n_name, n_children)
 
 type_nickname Children = ListOf(Char)s
 
-tuple_type State
-value (vns, dns) : ListOf(VisitedNode)s x ListOf(DoneNode)s
+tuple type: State = ListOf(VisitedNode)s x ListOf(DoneNode)s
+field names: (vns, dns)
 
 type_nickname StateMan = State(State)Man
 

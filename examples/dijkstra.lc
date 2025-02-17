@@ -1,17 +1,17 @@
 type_nickname Graph = ListOf(Node)s
 
-tuple_type Node
-value (n_name, neighbors) : Char x ListOf(Neighbor)s
+tuple type: Node = Char x ListOf(Neighbor)s
+field names: (n_name, neighbors)
 
 type_nickname Dist = Int
 
-tuple_type NameAndDist
-value (name, dist) : Char x Dist
+tuple type: NameAndDist = Char x Dist
+field names: (name, dist)
 
 type_nickname Neighbor = NameAndDist
 
-tuple_type State
-value (dns, rns) : ListOf(DoneNode)s x ListOf(ReachableNode)s
+tuple type: State = ListOf(DoneNode)s x ListOf(ReachableNode)s
+field names: (dns, rns)
 
 or_type InRNsPossibilities
 values in_rns:Dist x ListOf(ReachableNode)s | not_in_rns

@@ -481,7 +481,7 @@ instance Show TypeName where
 instance Show ParamVarsInParen where
   show = \(PVIP (ptv, ptvs)) -> "(" ++ show ptv ++ show_list_comma ptvs ++ ")"
 
-instance Show IdTuple where
+instance Show FieldNames where
   show = \(PCSIs (sid, sids)) -> "(" ++ show sid ++ show_list_comma sids ++ ")"
 
 instance Show OrTypeDef where
