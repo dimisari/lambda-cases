@@ -142,7 +142,7 @@ data BigFuncBody =
 newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
 
 data CasesParams =
-  CParamId Identifier | CasesKeyword | Star2 |
+  CParamId Identifier | QuestionMark | Star2 |
   CParams (CasesParams, [CasesParams])
 
 newtype Case = Ca (OuterMatching, CaseBody)

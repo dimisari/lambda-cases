@@ -337,13 +337,13 @@ instance HasParser CasesFuncExpr where
     count_cases_keywords :: CasesParams -> Parser Int
     count_cases_keywords = \case
       CParamId _ -> return 0
-      CasesKeyword -> return 1
+      QuestionMark -> return 1
       Star2 -> return 0
       CParams (cp, cps) -> mapM count_cases_keywords (cp : cps) >$> sum
 
 instance HasParser CasesParams where
   parser =
-    try (char '?') *> return CasesKeyword <|>
+    try (char '?') *> return QuestionMark <|>
     char '*' *> return Star2 <|> CParamId <$> try parser <|>
     CParams <$> in_paren (parser ++< many1 (comma *> parser))
 

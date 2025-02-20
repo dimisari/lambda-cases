@@ -6,8 +6,5 @@
 
   - type nickname: ...
 
-  - ? αντί για cases
-    - Αλλαγή ονομάτων στο ASTTypes.hs
-
 # to_do.txt
 

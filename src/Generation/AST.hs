@@ -450,7 +450,7 @@ instance ToHsWithIndentLvl ([Case], Maybe EndCase) where
 instance ToHsWithParamNum CasesParams where
   to_hs_wpn = \case
     CParamId id -> return $ to_haskell id
-    CasesKeyword -> get_next_param
+    QuestionMark -> get_next_param
     Star2 -> return "_"
     CParams (cps, cps_l) ->
       to_hs_wpn_list (cps : cps_l) >$> \cps_l_hs ->
