@@ -500,7 +500,7 @@ instance Show OrTypeDef where
     show_id_mst_pair = \(sid, mst) -> " | " ++ show sid ++ show_mst mst
 
 instance Show TypeNickname where
-  show = \(TNN (tn, st)) -> "type_nickname " ++ show tn ++ " = " ++ show st
+  show = \(TNN (tn, st)) -> "type nickname: " ++ show tn ++ " = " ++ show st
 
 -- TypePropDef
 instance Show TypePropDef where

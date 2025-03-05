@@ -550,7 +550,9 @@ instance HasParser OrTypeDef where
 
 instance HasParser TypeNickname where
   parser =
-    TNN <$> (try (string "type_nickname ") *> parser) ++< (equals *> parser)
+    TNN <$>
+      (try (string "type nickname:") *> opt_space *> parser) ++<
+      (equals *> parser)
 
 -- HasParser: TypePropDef
 instance HasParser TypePropDef where

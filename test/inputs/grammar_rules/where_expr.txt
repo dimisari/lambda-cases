@@ -16,5 +16,5 @@ s1, s2, s3, s4 : all String
   = "Hello, my name is Struggling Programmer."
   , "I have tried way too many times to fit a big chunk of text"
   , "inside my program, without it hitting the half-screen mark!"
-  , "I am so glad I finally discovered l?!"#
+  , "I am so glad I finally discovered lcases!"#
 

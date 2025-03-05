@@ -1,18 +1,18 @@
-type_nickname Graph = ListOf(Node)s
+type nickname: Graph = ListOf(Node)s
 
 tuple type: Node = Char x Children
 field names: (n_name, n_children)
 
-type_nickname Children = ListOf(Char)s
+type nickname: Children = ListOf(Char)s
 
 tuple type: State = ListOf(VisitedNode)s x ListOf(DoneNode)s
 field names: (vns, dns)
 
-type_nickname StateMan = State(State)Man
+type nickname: StateMan = State(State)Man
 
-type_nickname VisitedNode = Char
+type nickname: VisitedNode = Char
 
-type_nickname DoneNode = Char
+type nickname: DoneNode = Char
 
 or_type AllDoneOutcome
 values not_all_done:Char | all_done

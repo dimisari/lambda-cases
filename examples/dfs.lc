@@ -2,7 +2,7 @@
 tuple type: (T1)Tree = T1 x (T1)Trees
 field names: (root, subtrees)
 
-type_nickname (T1)Trees = ListOf((T1)Tree)s
+type nickname: (T1)Trees = ListOf((T1)Tree)s
 
 tuple type: (T1)ResultTreeAndNum = (Int x T1)Tree x Int
 field names: (tree, t_num)

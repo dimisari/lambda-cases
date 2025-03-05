@@ -1,14 +1,14 @@
-type_nickname Graph = ListOf(Node)s
+type nickname: Graph = ListOf(Node)s
 
 tuple type: Node = Char x ListOf(Neighbor)s
 field names: (n_name, neighbors)
 
-type_nickname Dist = Int
+type nickname: Dist = Int
 
 tuple type: NameAndDist = Char x Dist
 field names: (name, dist)
 
-type_nickname Neighbor = NameAndDist
+type nickname: Neighbor = NameAndDist
 
 tuple type: State = ListOf(DoneNode)s x ListOf(ReachableNode)s
 field names: (dns, rns)
@@ -16,13 +16,13 @@ field names: (dns, rns)
 or_type InRNsPossibilities
 values in_rns:Dist x ListOf(ReachableNode)s | not_in_rns
 
-type_nickname DoneNode = NameAndDist
+type nickname: DoneNode = NameAndDist
 
-type_nickname ReachableNode = NameAndDist
+type nickname: ReachableNode = NameAndDist
 
-type_nickname (T1)FStateMan = (T1)FState(State)Man
+type nickname: (T1)FStateMan = (T1)FState(State)Man
 
-type_nickname StateMan = State(State)Man
+type nickname: StateMan = State(State)Man
 
 set_rns(_) : ListOf(ReachableNode)s => StateMan
   = rns => modify_state_with(s => (s.dns, rns))

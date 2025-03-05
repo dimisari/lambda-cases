@@ -4,7 +4,5 @@
   - or type: Possibly(T1)
     possibilities: a_value.with:(the_value: T1) | no_value
 
-  - type nickname: ...
-
 # to_do.txt
 
