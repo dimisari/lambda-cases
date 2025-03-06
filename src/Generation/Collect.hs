@@ -148,13 +148,13 @@ instance CollectParamTVars PowerBaseType where
 instance CollectParamTVars FieldType where
   collect_ptvs = \case
     PBT1 pbt -> collect_ptvs pbt
-    PoT3 pt -> collect_ptvs pt
+    PoT2 pt -> collect_ptvs pt
 
 instance CollectParamTVars InOrOutType where
   collect_ptvs = \case
     PTV3 ptv -> modify (insert ptv)
     TAIOA3 taioa -> collect_ptvs taioa
-    PoT2 pt -> collect_ptvs pt
+    PoT4 pt -> collect_ptvs pt
     PT2 pt -> collect_ptvs pt
     FT2 ft -> collect_ptvs ft
 
@@ -164,6 +164,7 @@ instance CollectParamTVars (TypesInParen, String) where
 instance CollectParamTVars InParenT where
   collect_ptvs = \case
     PT3 pt -> collect_ptvs pt
+    PoT3 pt -> collect_ptvs pt
     FT3 ft -> collect_ptvs ft
 
 -- CollectRenamingProps

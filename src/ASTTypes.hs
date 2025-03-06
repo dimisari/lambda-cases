@@ -218,20 +218,20 @@ newtype TypesInParen = TIP (SimpleType, [SimpleType])
 newtype ProdType = PT (FieldType, [FieldType])
 
 data FieldType =
-  PBT1 PowerBaseType | PoT3 PowerType
+  PBT1 PowerBaseType | PoT2 PowerType
 
 data PowerBaseType =
   PTV2 ParamTVar | TAIOA2 TypeAppIdOrAHTV | IPT InParenT
 
 data InParenT =
-  PT3 ProdType | FT3 FuncType
+  PT3 ProdType | FT3 FuncType | PoT3 PowerType
 
 newtype PowerType = PoT (PowerBaseType, Integer)
 
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
 data InOrOutType =
-  PTV3 ParamTVar | TAIOA3 TypeAppIdOrAHTV | PoT2 PowerType | PT2 ProdType |
+  PTV3 ParamTVar | TAIOA3 TypeAppIdOrAHTV | PoT4 PowerType | PT2 ProdType |
   FT2 FuncType
 
 newtype Condition = Co PropName
@@ -243,7 +243,7 @@ data TypeDef =
 newtype TupleTypeDef = TTD (TypeName, ProdOrPowerType, FieldNames)
 
 data ProdOrPowerType =
-  PT4 ProdType | PoT4 PowerType
+  PT4 ProdType | PoT5 PowerType
 
 type PVIPStr = (ParamVarsInParen, String)
 newtype TypeName =

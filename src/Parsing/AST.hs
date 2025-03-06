@@ -483,13 +483,15 @@ instance HasParser ProdType where
   parser = PT <$> parser ++< (many1 $ try (string " x ") *> parser)
 
 instance HasParser FieldType where
-  parser = PoT3 <$> try parser <|> PBT1 <$> parser
+  parser = PoT2 <$> try parser <|> PBT1 <$> parser
 
 instance HasParser PowerBaseType where
+  parser = PTV2 <$> parser <|> TAIOA2 <$> try parser <|> IPT <$> parser
+
+instance HasParser InParenT where
   parser =
-    PTV2 <$> parser <|>
-    TAIOA2 <$> try parser <|>
-    IPT <$> (in_paren $ FT3 <$> try parser <|> PT3 <$> parser)
+    in_paren $
+      FT3 <$> try parser <|> PT3 <$> try parser <|> PoT3 <$> try parser
 
 instance HasParser PowerType where
   parser = PoT <$> parser ++< (string "^" *> parser >>= err_if_less_than_2)
@@ -500,7 +502,7 @@ instance HasParser FuncType where
 instance HasParser InOrOutType where
   parser =
     PT2 <$> try parser <|> FT2 <$> try (in_paren parser) <|>
-    PoT2 <$> try parser <|> PTV3 <$> try parser <|> TAIOA3 <$> parser
+    PoT4 <$> try parser <|> PTV3 <$> try parser <|> TAIOA3 <$> parser
 
 instance HasParser Condition where
   parser = Co <$> (parser <* string " --> ")
@@ -519,7 +521,7 @@ instance HasParser TupleTypeDef where
       (nl *> string "field names:" *> space_or_nl *> parser)
 
 instance HasParser ProdOrPowerType where
-  parser = PT4 <$> try parser <|> PoT4 <$> parser
+  parser = PT4 <$> try parser <|> PoT5 <$> parser
 
 instance HasParser TypeName where
   parser =

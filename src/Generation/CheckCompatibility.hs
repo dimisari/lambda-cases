@@ -155,14 +155,14 @@ instance CheckCompatibility PowerBaseType PowerBaseTypeSub where
 instance CheckCompatibility FieldType FieldTypeSub where
   check_compat = \case
     (PBT1 pbt, PBTS1 pbts) -> check_compat(pbt, pbts)
-    (PoT3 pt, PoTS2 pts) -> check_compat(pt, pts)
+    (PoT2 pt, PoTS2 pts) -> check_compat(pt, pts)
     _ -> NotCompatible
 
 instance CheckCompatibility InOrOutType InOrOutTypeSub where
   check_compat = \case
     (PTV3 _, PTV6 _) -> Compatible M.empty
     (TAIOA3 taioa, TAIOAS3 taioas) -> check_compat(taioa, taioas)
-    (PoT2 pt, PoTS3 pts) -> check_compat(pt, pts)
+    (PoT4 pt, PoTS3 pts) -> check_compat(pt, pts)
     (PT2 pt, PTS3 pts) -> check_compat(pt, pts)
     (FT2 ft, FTS3 fts) -> check_compat(ft, fts)
     _ -> NotCompatible
@@ -276,13 +276,13 @@ instance AddSubs PowerBaseType PowerBaseTypeSub where
 instance AddSubs FieldType FieldTypeSub where
   add_subs = \case
     PBT1 pbt -> PBTS1 <$> add_subs pbt
-    PoT3 pt -> PoTS2 <$> add_subs pt
+    PoT2 pt -> PoTS2 <$> add_subs pt
 
 instance AddSubs InOrOutType InOrOutTypeSub where
   add_subs = \case
     PTV3 ptv -> return $ PTV6 ptv
     TAIOA3 taioa -> TAIOAS3 <$> add_subs taioa
-    PoT2 pt -> PoTS3 <$> add_subs pt
+    PoT4 pt -> PoTS3 <$> add_subs pt
     PT2 pt -> PTS3 <$> add_subs pt
     FT2 ft -> FTS3 <$> add_subs ft
 

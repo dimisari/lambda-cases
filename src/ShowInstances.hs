@@ -426,7 +426,7 @@ instance Show ProdType where
 instance Show FieldType where
   show = \case
     PBT1 ft -> show ft
-    PoT3 pt -> show pt
+    PoT2 pt -> show pt
 
 instance Show PowerBaseType where
   show = \case
@@ -449,7 +449,7 @@ instance Show InOrOutType where
   show = \case
     PTV3 ptv -> show ptv
     TAIOA3 ta -> show ta
-    PoT2 pt -> show pt
+    PoT4 pt -> show pt
     PT2 pt -> show pt
     FT2 ft -> "(" ++ show ft ++ ")"
 
@@ -470,7 +470,7 @@ instance Show TupleTypeDef where
 instance Show ProdOrPowerType where
   show = \case
     PT4 pt -> show pt
-    PoT4 pt -> show pt
+    PoT5 pt -> show pt
 
 instance Show TypeName where
   show = \(TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) ->

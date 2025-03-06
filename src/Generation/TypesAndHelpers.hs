@@ -281,7 +281,7 @@ tn_to_cons_hs = tn_to_tid_hs .> (++ "'")
 ft_to_st :: FieldType -> SimpleType
 ft_to_st = \case
   PBT1 pbt -> pbt_to_st pbt
-  PoT3 pt -> PoT1 pt
+  PoT2 pt -> PoT1 pt
 
 pbt_to_st :: PowerBaseType -> SimpleType
 pbt_to_st = \case

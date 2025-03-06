@@ -670,7 +670,7 @@ instance ToHaskell ProdType where
 instance ToHaskell FieldType where
   to_haskell = \case
     PBT1 ft -> to_haskell ft
-    PoT3 pt -> to_haskell pt
+    PoT2 pt -> to_haskell pt
 
 instance ToHaskell PowerBaseType where
   to_haskell = \case
@@ -681,6 +681,7 @@ instance ToHaskell PowerBaseType where
 instance ToHaskell InParenT where
   to_haskell = \case
     PT3 pt -> to_haskell pt
+    PoT3 pt -> to_haskell pt
     FT3 ft -> to_haskell ft
 
 instance ToHaskell PowerType where
@@ -696,7 +697,7 @@ instance ToHaskell InOrOutType where
   to_haskell = \case
     PTV3 ptv -> to_haskell ptv
     TAIOA3 taioa -> to_haskell (NoParen, taioa)
-    PoT2 pt -> to_haskell pt
+    PoT4 pt -> to_haskell pt
     PT2 pt -> to_haskell pt
     FT2 ft -> "(" ++ to_haskell ft ++ ")"
 
@@ -752,7 +753,7 @@ instance ToHaskell TupleTypeDef where
     types_list :: [SimpleType]
     types_list = case popt of
       PT4 (PT (ft, fts)) -> map ft_to_st $ ft : fts
-      PoT4 (PoT (pbt, i)) -> replicate (fromIntegral i) $ pbt_to_st pbt
+      PoT5 (PoT (pbt, i)) -> replicate (fromIntegral i) $ pbt_to_st pbt
 
     types_hs_list :: [Haskell]
     types_hs_list = map (\st -> to_haskell (NoParen, st)) types_list
@@ -780,7 +781,7 @@ instance ToHaskell TupleTypeDef where
 instance ToHaskell ProdOrPowerType where
   to_haskell = \case
     PT4 pt -> to_haskell pt
-    PoT4 pt -> to_haskell pt
+    PoT5 pt -> to_haskell pt
 
 instance ToHaskell (NeedsParenBool, TypeName) where
   to_haskell (needs_paren, tn@(TN (mpvip1, _, pvip_str_pairs, mpvip2))) =
