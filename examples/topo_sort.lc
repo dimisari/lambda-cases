@@ -14,8 +14,8 @@ type nickname: VisitedNode = Char
 
 type nickname: DoneNode = Char
 
-or_type AllDoneOutcome
-values not_all_done:Char | all_done
+or type: AllDoneOutcome
+values: not_all_done--<node_to_do : Char> | all_done
 
 topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
   = g => final_state_of(topo_sort_from_state)on_init_state(is).dns
@@ -26,8 +26,8 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
     topo_sort_from_state : StateMan
       = get_state >> _.dns o> check_all_done o> ?
         all_done => do_nothing
-        not_all_done:node_name =>
-          topo_sort_on_node(node_name) ; topo_sort_from_state
+        not_all_done--node_to_do =>
+          topo_sort_on_node(node_to_do) ; topo_sort_from_state
         where
         check_all_done : ListOf(DoneNode)s => AllDoneOutcome
           = dns => check_all_in_dns(node_names)
@@ -38,7 +38,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
                 [n1, ns = ...] =>
                   (n1)is_in(dns) -> ?
                     true => check_all_in_dns(ns)
-                    false => not_all_done:n1
+                    false => not_all_done--n1
 
         node_names : ListOf(Char)s
           = apply(_.n_name)to_all_in(g)

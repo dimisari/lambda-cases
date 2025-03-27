@@ -7,8 +7,8 @@ type nickname: Node = Int
 tuple type: Edge = Node^2
 field names: (u, v)
 
-or_type IsReprOrHasPar
-values is_repr:Rank | has_parent:Node
+or type: IsReprOrHasPar
+values: is_repr--<rank : Rank> | has_parent--<parent : Node>
 
 type nickname: Rank = Int
 
@@ -29,7 +29,7 @@ connected_components_of(_) : Graph => ConnComps
     _.2nd
     where
     is : State
-      = (apply((_, is_repr:1))to_all_in(g.nodes), (g.nodes)length)
+      = (apply((_, is_repr--1))to_all_in(g.nodes), (g.nodes)length)
 
     edge_union(_) : Edge => StateMan
       = e =>
@@ -59,17 +59,17 @@ connected_components_of(_) : Graph => ConnComps
         change_node(_)if_needed : Info => Info
           = (n, irohp) =>
             (n == pn) -> ?
-              true => (n, is_repr:new_rank)
+              true => (n, is_repr--new_rank)
               false =>
                 (n == cn) -> ?
-                  true => (n, has_parent:pn)
+                  true => (n, has_parent--pn)
                   false => (n, irohp)
 
     find(_) : Node => (Representative)FState(State)Man
       = n =>
         get_from_info_list >> ?
-          is_repr:rank => wrap(_) <- (n, rank)
-          has_parent:p => find(p)
+          is_repr--rank => wrap(_) <- (n, rank)
+          has_parent--parent => find(parent)
         where
         get_from_info_list : (IsReprOrHasPar)FState(State)Man
           = apply(_.1st o> get_from_list(_))inside(get_state)

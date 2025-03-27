@@ -1,25 +1,25 @@
-or_type Bool
-values true | false#
+or type: Bool
+values: true | false#
 
-or_type Possibly(T1)
-values the_value:T1 | no_value#
+or type: Possibly(T1)
+values: a_value--<the_value : T1> | no_value#
 
-or_type Error(T1)OrResult(T2)
-values error:T1 | result:T2#
+or type: Error(T1)OrResult(T2)
+values: error--<error_value : T1> | result--<result_value : T2>#
 
-or_type ListOf(T1)s
-values
-  non_empty_l:NonEmptyListOf(T1)s | empty_l#
+or type: ListOf(T1)s
+values:
+  non_empty_list--<ne_list : NonEmptyListOf(T1)s> | empty_list#
 
-or_type Bool
-values true|false#
+or type: Bool
+values: true|false#
 
-or_type Possibly(T1)
-values the_value:T1 | no_value#
+or type: Possibly(T1)
+values: a_value--<the_value : T1> | no_value#
 
-or_type ListOf(T1)s
-values non_empty_l:NonEmptyListOf(T1)s |empty_l#
+or type: ListOf(T1)s
+values: non_empty_list--<ne_list : NonEmptyListOf(T1)s> |empty_l#
 
-or_type (T1)Or(T2)
-values t1:T1 | t2:T2#
+or type: (T1)Or(T2)
+values: t1--<val1 : T1> | t2--<val2 : T2>#
 

@@ -164,7 +164,7 @@ instance HasParser Arguments where
 
 -- HasParser: PreFunc, PostFunc, BasicExpr, Change
 instance HasParser PreFunc where
-  parser = PF <$> parser <* char ':'
+  parser = PF <$> parser <* string "--"
 
 instance HasParser PreFuncApp where
   parser = PrFA <$> parser ++< parser
@@ -540,15 +540,18 @@ instance HasParser FieldNames where
 instance HasParser OrTypeDef where
   parser =
     OTD <$>
-      (try (string "or_type ") *> parser) ++<
-      (nl *> string "values" *> space_or_nl *> parser) +++<
-      optionMaybe (char ':' *> parser) ++++<
-      many id_mst_p
-    where
-    id_mst_p :: Parser (SimpleId, Maybe SimpleType)
-    id_mst_p =
-      (opt_space_around (string "|") *> parser) ++<
-      (optionMaybe $ char ':' *> parser)
+      (try (string "or type:") *> opt_space *> parser) ++<
+      (nl *> string "values:" *> space_or_nl *> parser) +++<
+      many (opt_space_around (string "|") *> parser)
+
+instance HasParser PossibleValue where
+  parser =
+    PV <$>
+      parser ++<
+      ( optionMaybe $
+        (string "--<" *> parser <* opt_space_around (char ':')) ++<
+        (parser <* char '>')
+      )
 
 instance HasParser TypeNickname where
   parser =

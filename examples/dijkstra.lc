@@ -13,8 +13,9 @@ type nickname: Neighbor = NameAndDist
 tuple type: State = ListOf(DoneNode)s x ListOf(ReachableNode)s
 field names: (dns, rns)
 
-or_type InRNsPossibilities
-values in_rns:Dist x ListOf(ReachableNode)s | not_in_rns
+or type: InRNsPossibilities
+values:
+  in_rns--<dist_and_rns : Dist x ListOf(ReachableNode)s> | not_in_rns
 
 type nickname: DoneNode = NameAndDist
 
@@ -57,7 +58,7 @@ get_neighbors(_, _) : DoneNode x Graph => ListOf(Neighbor)s
 update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
   = (ne, dn) =>
     check_if_ne_in_rns >> ?
-      in_rns:stuff => add_ne_to_rns_from_dn_if_better(stuff)
+      in_rns--dist_and_rns => add_ne_to_rns_from_dn_if_better(dist_and_rns)
       not_in_rns =>
         check_if_ne_in_dns >> ?
           true => do_nothing
@@ -72,7 +73,7 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
             [] => wrap(not_in_rns)
             [rn1, rns = ...] =>
               (ne.name == rn1.name) -> ?
-                true => in_rns:(rn1.dist, checked + rns) -> wrap(_)
+                true => in_rns--(rn1.dist, checked + rns) -> wrap(_)
                 false => check_ne_in_rns_rec(checked + rn1, rns)
 
     add_ne_to_rns_from_dn_if_better(_)

@@ -2,7 +2,8 @@
 - αλλαγή syntax:
 
   - or type: Possibly(T1)
-    possibilities: a_value.with:(the_value: T1) | no_value
+    values: a_value--<the_value : T1> | no_value
+    - Possibly is predefined as Maybe
 
 # to_do.txt
 

@@ -486,18 +486,15 @@ instance Show FieldNames where
 
 instance Show OrTypeDef where
   show =
-    \(OTD (tn, sid, mst, id_mst_pairs)) ->
-    "or_type " ++ show tn ++
-    "\nvalues\n  " ++ show sid ++ show_mst mst ++
-    concatMap show_id_mst_pair id_mst_pairs
-    where
-    show_mst :: Maybe SimpleType -> String
-    show_mst = \case
-      Nothing -> ""
-      Just st -> ":" ++ show st
+    \(OTD (tn, pv, pvs)) ->
+    "or type: " ++ show tn ++
+    "\nvalues:\n  " ++ show pv ++ show_list_sep " | " pvs
 
-    show_id_mst_pair :: (SimpleId, Maybe SimpleType) -> String
-    show_id_mst_pair = \(sid, mst) -> " | " ++ show sid ++ show_mst mst
+instance Show PossibleValue where
+  show = \(PV (sid, maybe_with_val)) ->
+    show sid ++ case maybe_with_val of
+      Nothing -> ""
+      Just (id, st) -> "--<" ++ show id ++ " : " ++ show st ++ ">"
 
 instance Show TypeNickname where
   show = \(TNN (tn, st)) -> "type nickname: " ++ show tn ++ " = " ++ show st

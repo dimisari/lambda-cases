@@ -15,6 +15,7 @@ type NakedCase = SimpleId
 
 type RenamingProp = (PropName, [PropName])
 
+
 type FieldIds = Set FieldId
 
 type NakedCases = Set NakedCase
@@ -23,6 +24,7 @@ type ParamTVars = Set ParamTVar
 
 type RenamingProps = [RenamingProp]
 
+
 type FieldIdsState = State FieldIds ()
 
 type NakedCasesState = State NakedCases ()
@@ -30,6 +32,7 @@ type NakedCasesState = State NakedCases ()
 type ParamTVarsState = State ParamTVars ()
 
 type RenamingPropsState = State RenamingProps ()
+
 
 -- classes
 class CollectFieldIds a where
@@ -44,7 +47,9 @@ class CollectParamTVars a where
 class CollectRenamingProps a where
   collect_rps :: a -> RenamingPropsState
 
+
 -- final functions
+
 field_ids :: Program -> FieldIds
 field_ids = \prog -> execState (collect_fids prog) empty
 
@@ -57,7 +62,9 @@ renaming_props = \prog -> execState (collect_rps prog) []
 param_t_vars :: Type -> [ParamTVar]
 param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
 
+
 -- CollectFieldIds
+
 instance CollectFieldIds Program where
   collect_fids = \(P (pp, pps)) -> mapM_ collect_fids $ pp : pps
 
@@ -80,7 +87,9 @@ instance CollectFieldIds FieldNames where
 instance CollectFieldIds SimpleId where
   collect_fids = \sid -> modify (insert sid)
 
+
 -- CollectNakedCases
+
 instance CollectNakedCases Program where
   collect_ncs = \(P (pp, pps)) -> mapM_ collect_ncs $ pp : pps
 
@@ -95,15 +104,16 @@ instance CollectNakedCases TypeDef where
     _ -> do_nothing
 
 instance CollectNakedCases OrTypeDef where
-  collect_ncs = \(OTD (_, sid, mst, sid_mst_pairs)) ->
-    mapM_ collect_ncs $ (sid, mst) : sid_mst_pairs
+  collect_ncs = \(OTD (_, pv, pvs)) -> mapM_ collect_ncs $ pv : pvs
 
-instance CollectNakedCases (SimpleId, Maybe SimpleType) where
-  collect_ncs = \case
+instance CollectNakedCases PossibleValue where
+  collect_ncs = \(PV pv) -> case pv of
     (sid, Nothing) -> modify (insert sid)
     _ -> do_nothing
 
+
 -- CollectParamTVars
+
 instance CollectParamTVars SimpleType where
   collect_ptvs = \case
     PTV1 ptv -> modify (insert ptv)
@@ -167,7 +177,9 @@ instance CollectParamTVars InParenT where
     PoT3 pt -> collect_ptvs pt
     FT3 ft -> collect_ptvs ft
 
+
 -- CollectRenamingProps
+
 instance CollectRenamingProps Program where
   collect_rps = \(P (pp, pps)) -> mapM_ collect_rps $ pp : pps
 
@@ -184,6 +196,7 @@ instance CollectRenamingProps TypePropDef where
 instance CollectRenamingProps RenamingPropDef where
   collect_rps = \(RPD (PNL pn_key, pn1, pns)) ->
     modify $ (:) (pn_key, pn1 : pns)
+
 
 -- Preprocess.hs
 -- AST.hs

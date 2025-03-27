@@ -1,6 +1,7 @@
 module ASTTypes where
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
+
 data Literal =
   Int Integer | R Double | Ch Char | S String
 
@@ -54,7 +55,9 @@ newtype ParenFuncAppOrId =
 
 newtype Arguments = As LineExprOrUnders
 
+
 -- Values: PreFunc, PostFunc, BasicExpr, Change
+
 newtype PreFunc = PF SimpleId
 
 newtype PreFuncApp = PrFA (PreFunc, Operand)
@@ -81,6 +84,7 @@ data Field =
   SId2 SimpleId | SI3 SpecialId
 
 -- Values: OpExpr
+
 data OpExpr =
   LOE3 LineOpExpr | BOE1 BigOpExpr
 
@@ -122,7 +126,9 @@ data OptionalSpacesOp =
   RightApp | LeftApp | Power | Mult | Div | Plus | Minus | Equal | NotEqual |
   Greater | Less | GrEq | LeEq | And | Or | Use | Then
 
+
 -- Values: FuncExpr
+
 data FuncExpr =
   LFE4 LineFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
 
@@ -172,7 +178,9 @@ newtype RestListMatching = RLM (Maybe SimpleId)
 data CaseBody =
   LFB1 LineFuncBody | BFB1 (BigFuncBody, Maybe WhereExpr)
 
+
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
+
 newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
 
 data ValueExpr =
@@ -191,7 +199,9 @@ newtype WhereExpr = WE (WhereDefExpr, [WhereDefExpr])
 data WhereDefExpr =
   VD1 ValueDef | GVDs1 GroupedValueDefs
 
+
 -- Type
+
 newtype Type = Ty (Maybe Condition, SimpleType)
 
 data SimpleType =
@@ -236,7 +246,9 @@ data InOrOutType =
 
 newtype Condition = Co PropName
 
+
 -- TypeDef, TypeNickname
+
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
@@ -254,11 +266,16 @@ newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 newtype FieldNames = PCSIs (SimpleId, [SimpleId])
 
 newtype OrTypeDef =
-  OTD (TypeName, SimpleId, Maybe SimpleType, [(SimpleId, Maybe SimpleType)])
+  OTD (TypeName, PossibleValue, [PossibleValue])
+
+newtype PossibleValue =
+  PV (SimpleId, Maybe (Identifier, SimpleType))
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 
+
 -- TypePropDef
+
 data TypePropDef =
   APD1 AtomPropDef | RPD1 RenamingPropDef
 
@@ -276,7 +293,9 @@ data PropName =
 newtype NamePart = NP String
   deriving Eq
 
+
 -- TypeTheo
+
 newtype TypeTheo =
   TT ([PropNameWithSubs], Maybe PropNameWithSubs, Proof)
 
@@ -329,7 +348,9 @@ newtype IdOrOpEq = IOOE (Identifier, Maybe (Op, Identifier))
 data TTValueExpr =
   LE2 LineExpr | VEMWE (ValueExpr, Maybe WhereExpr)
 
+
 -- Program
+
 newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart =

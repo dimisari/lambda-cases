@@ -198,7 +198,7 @@ instance ToHsWithParamNum Arguments where
 instance ToHaskell PreFunc where
   to_haskell = \(PF id) ->
     case id of
-      SId (IS "the_value", Nothing) -> just
+      SId (IS "a_value", Nothing) -> just
       SId (IS "error", Nothing) -> left
       SId (IS "result", Nothing) -> right
       _ -> constructor_prefix ++ to_haskell id
@@ -799,15 +799,15 @@ instance ToHaskell ParamVarsInParen where
   to_haskell = \(PVIP (ptv, ptvs)) -> to_hs_prepend_list " " $ ptv : ptvs
 
 instance ToHaskell OrTypeDef where
-  to_haskell (OTD (tn, id, mst, id_mst_pairs)) =
+  to_haskell (OTD (tn, pv, pvs)) =
     "data " ++ to_haskell (NoParen, tn) ++ " =\n  " ++
-    (map id_mst_to_hs ((id, mst) : id_mst_pairs) &> intercalate " |\n  ")
-    where
-    id_mst_to_hs :: (SimpleId, Maybe SimpleType) -> Haskell
-    id_mst_to_hs = \(id, mst) ->
-      constructor_prefix ++ to_haskell id ++ case mst of
-        Nothing -> ""
-        Just st -> " " ++ to_haskell (Paren, st)
+    (map to_haskell (pv : pvs) &> intercalate " |\n  ")
+
+instance ToHaskell PossibleValue where
+  to_haskell = \(PV (sid, maybe_with_val)) ->
+    constructor_prefix ++ to_haskell sid ++ case maybe_with_val of
+      Nothing -> ""
+      Just (id, st) -> " " ++ to_haskell (Paren, st)
 
 instance ToHaskell TypeNickname where
   to_haskell = \(TNN (tn, st)) ->

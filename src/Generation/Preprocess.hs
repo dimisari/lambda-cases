@@ -453,7 +453,7 @@ instance
   Preprocess (InnerMatching, [InnerMatching], Maybe RestListMatching)
   where
   preprocess = \(im, ims, mrlm) ->
-   preprocess_pair (im, ims) >$> \(im', ims') -> (im', ims', mrlm)
+    preprocess_pair (im, ims) >$> \(im', ims') -> (im', ims', mrlm)
 
 instance Preprocess CaseBody where
   preprocess = \case
