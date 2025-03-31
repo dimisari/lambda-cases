@@ -25,7 +25,7 @@ instance Eq Compatibility where
 
 type WAHTVMap a = State AHTVMap a
 
---helpers
+-- helpers
 compat_union :: Compatibility -> Compatibility -> Compatibility
 compat_union = \c1 c2 -> case (c1, c2) of
   (Compatible m1, Compatible m2) -> Compatible $ M.union m1 m2

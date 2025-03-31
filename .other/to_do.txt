@@ -1,4 +1,8 @@
 
+- Να γράφω τα errors των grammar rules σε άλλο αρχείο
+
+- μετονομασία cases func expr σε qmark func expr
+
 - configuration file maybe?
 
 - documentation

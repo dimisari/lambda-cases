@@ -8,7 +8,7 @@ apply(f)to_all_in(_)#
 
 apply(f)to_all_in(l)#
 
-apply(the_value:_)to_all_in(_)#
+apply(the_value--_)to_all_in(_)#
 
 apply( _.1st )to_all_in(_)#
 

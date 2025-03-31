@@ -1,29 +1,28 @@
-tuple_type Name
-value (first_name, last_name) : String^2#
+tuple type: Name = String^2
+field names: (first_name, last_name)#
 
-tuple_type Date
-value (day, month, year) : Int^3#
+tuple type: Date = Int^3
+field names: (day, month, year)#
 
-tuple_type MathematicianInfo
-value
-  (name, nationality, date_of_birth) : Name x String x Date#
+tuple type: MathematicianInfo = Name x String x Date
+field names:
+  (name, nationality, date_of_birth)#
 
-tuple_type TreeOf(T1)s
-value (root, subtrees) : T1 x ListOf(TreeOf(T1)s)s#
+tuple type: TreeOf(T1)s = T1 x ListOf(TreeOf(T1)s)s
+field names: (root, subtrees)#
 
-tuple_type Indexed(T1)
-value
-  (index, val) : Int x T1#
+tuple type: Indexed(T1) = Int x T1
+field names: (index, val)#
 
-tuple_type Name
-value (first_name, last_name):String^2#
+tuple type: Name =String^2
+field names: (first_name, last_name)#
 
-tuple_type Date
-value (day, month, year):Int^3#
+tuple type: Date =Int^3
+field names: (day, month, year)#
 
-tuple_type MathematicianInfo
-value (name, nationality, date_of_birth):Name x String x Date#
+tuple type: MathematicianInfo =Name x String x Date
+field names: (name, nationality, date_of_birth)#
 
-tuple_type NonEmptyListOf(T1)s
-value (head, tail) : T1 x ListOf(T1)s#
+tuple type: NonEmptyListOf(T1)s = T1 x ListOf(T1)s
+field names: (head, tail)#
 

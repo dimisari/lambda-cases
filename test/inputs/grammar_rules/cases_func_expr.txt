@@ -33,11 +33,11 @@
 
 ?
   empty_l => true
-  non_empty_l:non_empty_l:* => false#
+  non_empty_l--non_empty_l--* => false#
 
 (f, ?)
   empty_l => empty_l
-  non_empty_l:list => non_empty_l:(f(list.head), apply(f)to_all_in(list.tail))#
+  non_empty_l--list => non_empty_l--(f(list.head), apply(f)to_all_in(list.tail))#
 
 ?
   [x1, x2, xs = ...] =>

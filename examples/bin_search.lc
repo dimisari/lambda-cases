@@ -12,7 +12,7 @@ compare(_)with(_) : Int x Int => Comparison
           false => greater
 
 my_split(_)at(_) : ListOf(T1)s x Int => Possibly(T1 x ListOf(T1)s^2)
-  = (?, ?)
+  = ?
     ([], *) => no_value
     ([head, tail = ...], 0) => a_value--(head, ([], tail))
     ([head, tail = ...], n) =>
@@ -55,3 +55,4 @@ try_list(_) : ListOf(Int)s => Program
 
 main : Program
   = try_list([0,1,2,3,4,5,6,7,8])
+

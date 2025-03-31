@@ -8,7 +8,7 @@ where
 sum_list : ListOf(Int)s => Int
   = ?
     empty_l => 0
-    non_empty_l:l => l.head + sum_list(l.tail)#
+    non_empty_l--l => l.head + sum_list(l.tail)#
 
 
 where

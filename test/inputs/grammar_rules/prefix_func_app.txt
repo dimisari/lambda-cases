@@ -1,12 +1,12 @@
-the_value:42#
+the_value--42#
 
-non_empty_l:l#
+non_empty_l--l#
 
-error:"this is an error message"#
+error--"this is an error message"#
 
-result:res#
+result--res#
 
-the_value:_#
+the_value--_#
 
-the_value:result:true#
+the_value--result--true#
 
