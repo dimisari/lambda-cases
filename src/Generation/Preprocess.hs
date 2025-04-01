@@ -6,6 +6,7 @@
 module Generation.Preprocess where
 
 import qualified Data.Set as S
+import qualified Data.Map as M
 import Control.Monad
 import Control.Monad.State
 
@@ -16,6 +17,7 @@ import ShowInstances
 import Parsing.AST
 import Generation.Collect
 import Generation.CheckCompatibility
+import Generation.TypesAndHelpers
 
 -- hardcoded
 true :: String
@@ -40,39 +42,49 @@ ppi = "P.pi"
 data PossiblyInDC =
   InDotChange [PostFuncArg] | NotInDotChange
 
-type StateTuple = (PossiblyInDC, FieldIds, NakedCases, RenamingProps)
+type StateTuple =
+  (PossiblyInDC, FieldIds, NakedCases, RenamingProps, OrValuesMap)
 type PreprocessState = State StateTuple
 
 type PS = PreprocessState
 type PFAOI = ParenFuncAppOrId
 
 -- class
+
 class Preprocess a where
   preprocess :: a -> PreprocessState a
 
 -- preprocess_prog
+
 preprocess_prog :: Program -> Program
 preprocess_prog = \prog -> evalState (preprocess prog) (init_state prog)
 
 -- State helpers: init, get, put, pfarg if in dc, check
+
 init_state :: Program -> StateTuple
 init_state = \prog ->
-  (NotInDotChange, field_ids prog, naked_cases prog, renaming_props prog)
+  ( NotInDotChange, field_ids prog, naked_cases prog, renaming_props prog
+  , or_values_map prog
+  )
 
 get_pidc :: PreprocessState PossiblyInDC
-get_pidc = get >$> \(pidc, _, _, _) -> pidc
+get_pidc = get >$> \(pidc, _, _, _, _) -> pidc
 
 get_fids :: PreprocessState FieldIds
-get_fids = get >$> \(_, fids, _, _) -> fids
+get_fids = get >$> \(_, fids, _, _, _) -> fids
 
 get_ncs :: PreprocessState NakedCases
-get_ncs = get >$> \(_, _, ncs, _) -> ncs
+get_ncs = get >$> \(_, _, ncs, _, _) -> ncs
 
 get_rps :: PreprocessState RenamingProps
-get_rps = get >$> \(_, _, _, rps) -> rps
+get_rps = get >$> \(_, _, _, rps, _) -> rps
+
+get_ovm :: PreprocessState OrValuesMap
+get_ovm = get >$> \(_, _, _, _, ovm) -> ovm
 
 put_new_pidc :: PossiblyInDC -> PreprocessState ()
-put_new_pidc = \pidc -> modify (\(_, fids, ncs, rps) -> (pidc, fids, ncs, rps))
+put_new_pidc = \pidc ->
+  modify (\(_, fids, ncs, rps, ovm) -> (pidc, fids, ncs, rps, ovm))
 
 put_new_args :: [PostFuncArg] -> PreprocessState ()
 put_new_args = \pfargs -> put_new_pidc $ InDotChange pfargs
@@ -89,6 +101,9 @@ check_if_sid_in_fids = \sid -> S.member sid <$> get_fids
 
 check_if_sid_in_ncs :: SimpleId -> PreprocessState Bool
 check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
+
+lookup_sid_in_ovm :: SimpleId -> PreprocessState (Maybe Identifier)
+lookup_sid_in_ovm = \sid -> M.lookup sid <$> get_ovm
 
 -- State helpers: post func arg push/pop
 push_post_func_arg :: PostFuncArg -> PreprocessState ()
@@ -181,18 +196,20 @@ add_c_to_sid = \(SId (IS str, mdigit)) -> SId (IS $ "C" ++ str, mdigit)
 
 change_if_particular_sid :: SimpleId -> SimpleId
 change_if_particular_sid = \case
-  SId (IS str, Nothing) -> str &> \case
-    "true" -> str_to_sid true
-    "false" -> str_to_sid false
-    "no_value" -> str_to_sid pnothing
-    "print" -> str_to_sid pprint
-    "undefined" -> str_to_sid pundefined
-    "pi" -> str_to_sid ppi
-    _ -> str_to_sid str
-  sid -> sid
+  SId (IS str, Nothing) ->
+    str &> change_if_particular_str &> str_to_sid
+    where
+    change_if_particular_str :: String -> String
+    change_if_particular_str = \case
+      "true" -> true
+      "false" -> false
+      "no_value" -> pnothing
+      "print" -> pprint
+      "undefined" -> pundefined
+      "pi" -> ppi
+      _ -> str
 
-str_to_sid :: String -> SimpleId
-str_to_sid = \str -> SId (IS str, Nothing)
+  sid -> sid
 
 sid_to_pfaoi :: SimpleId -> ParenFuncAppOrId
 sid_to_pfaoi = \(SId (id_start, mdigit)) ->
@@ -426,7 +443,10 @@ instance Preprocess EndCase where
 
 instance Preprocess OuterMatching where
   preprocess = \case
-    SId3 sid -> SId3 <$> change_sid_if_needed sid
+    SId3 sid ->
+      lookup_sid_in_ovm sid >>= \case
+        Just id -> return $ M1 $ PFM (PF sid, Id2 id)
+        Nothing -> SId3 <$> change_sid_if_needed sid
     M1 m -> M1 <$> preprocess m
 
 instance Preprocess Matching where

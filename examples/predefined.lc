@@ -21,8 +21,8 @@ test3 : Result(R)OrError(String)
 
 print_result(_) : Result(R)OrError(String) => Program
   = ?
-    error--err => print(err)
-    result--res => print(res)
+    error => print(err)
+    result => print(res)
 
 main : ProgramWith(EmptyVal)
   = print(pi); print(id(pi)); print(sqrt_of(pi)); print(abs_val_of(-1));

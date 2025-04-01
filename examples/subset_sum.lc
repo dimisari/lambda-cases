@@ -17,7 +17,7 @@ list : ListOf(Int)s
 res_msg : Possibly(ListOf(Int)s) => String
   = ?
     no_value => "Not possible"
-    a_value--the_value => "Here is the subset: " + the_value
+    a_value => "Here is the subset: " + the_value
 
 main : Program
   = print("Trying 17"); sub_set_sum(list, 17) -> res_msg -> print ;

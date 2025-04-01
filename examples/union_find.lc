@@ -68,8 +68,8 @@ connected_components_of(_) : Graph => ConnComps
     find(_) : Node => (Representative)FState(State)Man
       = n =>
         get_from_info_list >> ?
-          is_repr--rank => wrap(_) <- (n, rank)
-          has_parent--parent => find(parent)
+          is_repr => wrap(_) <- (n, rank)
+          has_parent => find(parent)
         where
         get_from_info_list : (IsReprOrHasPar)FState(State)Man
           = apply(_.1st o> get_from_list(_))inside(get_state)

@@ -26,8 +26,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
     topo_sort_from_state : StateMan
       = get_state >> _.dns o> check_all_done o> ?
         all_done => do_nothing
-        not_all_done--node_to_do =>
-          topo_sort_on_node(node_to_do) ; topo_sort_from_state
+        not_all_done => topo_sort_on_node(node_to_do) ; topo_sort_from_state
         where
         check_all_done : ListOf(DoneNode)s => AllDoneOutcome
           = dns => check_all_in_dns(node_names)

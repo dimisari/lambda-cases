@@ -10,8 +10,6 @@ import qualified Data.Set as S
 import ASTTypes
 import Helpers
 
-import Generation.Collect
-
 -- hardcoded
 show_class :: String
 show_class = "P.Show"
@@ -309,7 +307,12 @@ change_id_hs_if_needed2 = \case
   "a'to_string" -> show_val2
   hs -> hs
 
--- GroupedValueDefs helpers
+str_to_sid :: String -> SimpleId
+str_to_sid = \str -> SId (IS str, Nothing)
+
+str_to_id :: String -> Identifier
+str_to_id = \str -> Id (Nothing, IS str, [], Nothing, Nothing)
+
 -- ASTTypes.hs
 -- Collect.hs
 -- AST.hs

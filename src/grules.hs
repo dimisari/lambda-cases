@@ -18,8 +18,6 @@ type CompileExFunc = TestExample -> String
 type Compile a = Lcases -> ResultString a
 newtype ResultString a = RS String
 
--- paths
-
 -- main
 main :: IO ()
 main = mapM_ compile_example file_name_compile_func_pairs

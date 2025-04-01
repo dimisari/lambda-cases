@@ -2,13 +2,17 @@
 
 module Generation.Collect where
 
-import Data.Set
+import qualified Data.Map.Strict as M
+import Data.Set hiding (map)
 import Control.Monad.State
 
 import ASTTypes
 import Helpers
 
+import Generation.TypesAndHelpers
+
 -- types
+
 type FieldId = SimpleId
 
 type NakedCase = SimpleId
@@ -24,6 +28,8 @@ type ParamTVars = Set ParamTVar
 
 type RenamingProps = [RenamingProp]
 
+type OrValuesMap = M.Map SimpleId Identifier
+
 
 type FieldIdsState = State FieldIds ()
 
@@ -33,8 +39,10 @@ type ParamTVarsState = State ParamTVars ()
 
 type RenamingPropsState = State RenamingProps ()
 
+type OrValuesMapState = State OrValuesMap ()
 
 -- classes
+
 class CollectFieldIds a where
   collect_fids :: a -> FieldIdsState
 
@@ -47,6 +55,9 @@ class CollectParamTVars a where
 class CollectRenamingProps a where
   collect_rps :: a -> RenamingPropsState
 
+class CollectOrValuesMap a where
+  collect_ovms :: a -> OrValuesMapState
+
 
 -- final functions
 
@@ -58,6 +69,9 @@ naked_cases = \prog -> execState (collect_ncs prog) empty
 
 renaming_props :: Program -> RenamingProps
 renaming_props = \prog -> execState (collect_rps prog) []
+
+or_values_map :: Program -> OrValuesMap
+or_values_map = \prog -> execState (collect_ovms prog) init_or_val_map
 
 param_t_vars :: Type -> [ParamTVar]
 param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
@@ -196,6 +210,37 @@ instance CollectRenamingProps TypePropDef where
 instance CollectRenamingProps RenamingPropDef where
   collect_rps = \(RPD (PNL pn_key, pn1, pns)) ->
     modify $ (:) (pn_key, pn1 : pns)
+
+-- CollectOrValuesMap
+
+init_or_val_map :: OrValuesMap
+init_or_val_map =
+  M.fromList $ map (\(s1, s2) -> (str_to_sid s1, str_to_id s2)) predefined
+
+predefined :: [(String, String)]
+predefined =
+  [("a_value", "the_value"), ("error", "err"), ("result", "res")]
+
+instance CollectOrValuesMap Program where
+  collect_ovms = \(P (pp, pps)) -> mapM_ collect_ovms $ pp : pps
+
+instance CollectOrValuesMap ProgramPart where
+  collect_ovms = \case
+    TD td -> collect_ovms td
+    _ -> do_nothing
+
+instance CollectOrValuesMap TypeDef where
+  collect_ovms = \case
+    OTD1 otd -> collect_ovms otd
+    _ -> do_nothing
+
+instance CollectOrValuesMap OrTypeDef where
+  collect_ovms = \(OTD (_, pv, pvs)) -> mapM_ collect_ovms $ pv : pvs
+
+instance CollectOrValuesMap PossibleValue where
+  collect_ovms = \(PV (sid, maybe_id_st)) -> case maybe_id_st of
+    Just (id, _) -> modify $ M.insert sid id
+    _ -> do_nothing
 
 
 -- Preprocess.hs

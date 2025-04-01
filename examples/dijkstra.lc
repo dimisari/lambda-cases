@@ -58,7 +58,7 @@ get_neighbors(_, _) : DoneNode x Graph => ListOf(Neighbor)s
 update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
   = (ne, dn) =>
     check_if_ne_in_rns >> ?
-      in_rns--dist_and_rns => add_ne_to_rns_from_dn_if_better(dist_and_rns)
+      in_rns => add_ne_to_rns_from_dn_if_better(dist_and_rns)
       not_in_rns =>
         check_if_ne_in_dns >> ?
           true => do_nothing

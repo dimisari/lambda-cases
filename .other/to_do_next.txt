@@ -1,17 +1,5 @@
 
-- ?
-  a_value--the_value => print("Found! The index is: " + the_value)
-  ^^ change to
-  a_value => print("Found! The index is: " + the_value)
-  - Μαζεύω τα ids των or values που έχουν εσωτερική τιμή
-    - Βρίσκονται στο outer matching
-  - Κρατάω το id της εσωτερικής τιμής
-  - Όταν βρω αυτό το id σε έκφραση με ? βάζω το id της εσωτερικής
-    τιμής στο pattern matching
-
-  - Αρχεία που αλλάζω
-    - examples dir
-    - /test/inputs/grammar_rules/cases_func_expr.txt
+-
 
 # to_do.txt
 
