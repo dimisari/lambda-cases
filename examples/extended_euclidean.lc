@@ -3,7 +3,7 @@ tuple type: Coeffs = Int^2
 field names: (prev, curr)
 
 tuple type: GcdAndCoeffs = Int^3
-field names: (gcd_, a, b)
+field names: (gcd, a, b)
 
 extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
   = ee_recursion(init_a_coeffs, init_b_coeffs, _)
@@ -30,7 +30,7 @@ print_gcd_and_coeffs_of(_): GcdAndCoeffs => Program
   = gac => print(message)
     where
     message: String
-      = "Gcd: " + gac.gcd_ + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
+      = "Gcd: " + gac.gcd + "\nCoefficients: a = " + gac.a + ", b = " + gac.b
 
 main: Program
   = read_two_ints >>

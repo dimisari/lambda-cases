@@ -89,4 +89,4 @@ test_graph : Graph
     )
 
 main : Program
-  = connected_components_of(test_graph) -> print
+  = connected_components_of(test_graph) -> print(_)

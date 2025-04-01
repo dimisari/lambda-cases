@@ -8,7 +8,7 @@ sub_set_sum(_, _) : ListOf(Int)s x Int => Possibly(ListOf(Int)s)
         true => sub_set_sum(xs, i)
         false =>
           sub_set_sum(xs, i - x) -> ?
-            a_value--the_value => a_value--(x + the_value)
+            a_value => a_value--(x + the_value)
             no_value => sub_set_sum(xs, i)
 
 list : ListOf(Int)s
@@ -19,7 +19,21 @@ res_msg : Possibly(ListOf(Int)s) => String
     no_value => "Not possible"
     a_value => "Here is the subset: " + the_value
 
-main : Program
-  = print("Trying 17"); sub_set_sum(list, 17) -> res_msg -> print ;
-    print("Trying 20"); sub_set_sum(list, 20) -> res_msg -> print
+try_the_number(_) : Int => Program
+  = i =>
+    print("Trying " + (i)to_string) ;
+    sub_set_sum(list, i) -> res_msg -> print(_)
 
+try_the_list(_) : ListOf(Int)s => Program
+  = ?
+    [] => do_nothing
+    [i, is = ...] => try_the_number(i) ; try_the_list(is)
+
+from(_)to(_) : Int^2 => ListOf(Int)s
+  = (i, j) =>
+    (i > j) -> ?
+      true => []
+      false => i + from(i + 1)to(j)
+
+main : Program
+  = try_the_list(from(15)to(25))

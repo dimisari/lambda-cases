@@ -11,10 +11,10 @@ read_two_ints: ProgramWith(Int^2)
       ... => throw_err("You didn't give me 2 ints")
 
 tuple type: NumsAndGcd = Int^3
-field names: (x, y, gcd_)
+field names: (x, y, gcd)
 
 nag(_)to_message: NumsAndGcd => String
-  = nag => "The GCD of " + nag.x + " and " + nag.y + " is " + nag.gcd_
+  = nag => "The GCD of " + nag.x + " and " + nag.y + " is " + nag.gcd
 
 main: Program
   = read_two_ints >> (i1, i2) =>
