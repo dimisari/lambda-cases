@@ -1,3 +1,9 @@
+{-
+This file contains the main function.
+It receives the haskell translation of the program and adds imports and
+language extensions.
+It spits out haskell or an executable depending on the program arguments.
+-}
 {-# language LambdaCase #-}
 
 module Main where
@@ -16,7 +22,13 @@ import Generation.Preprocess (preprocess_prog)
 import Generation.TypesAndHelpers
 import Generation.AST
 
+-- types
+
+type ProgramFileName = FileName
+type HsFileName = String
+
 -- lists
+
 predef_list :: IO [FilePath]
 predef_list =
   getEnv "HOME" >$> (++ "/.local/share/lcc/PredefImports/") >$> \x ->
@@ -35,6 +47,7 @@ import_names =
   ]
 
 -- main
+
 main :: IO ()
 main = getArgs >>= \case
   [] -> putStrLn "No arguments"
@@ -76,6 +89,7 @@ compile =
   prog_to_hs = preprocess_prog .> to_haskell .> (top_hs ++)
 
 -- language extensions and imports
+
 top_hs :: Haskell
 top_hs = lang_exts ++ imports
 

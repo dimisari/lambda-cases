@@ -1,7 +1,19 @@
+{-
+This file contains:
+- Types and values that can be used in every lcases program.
+  Most of it is simply renaming standard haskell stuff.
+- Type classes for implementing .1st, .2nd, ... and .change when translating to
+  haskell.
+- The FromTuple[n] type classes for not needing to use constuctors when
+  defining a tuple of a tuple type in lcases. Constructors are automatically
+  added when translating.
+-}
+
 {-# language
   MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies,
   UndecidableInstances
 #-}
+
 module PredefImports.Predefined where
 
 import Prelude hiding (IO)
@@ -9,6 +21,7 @@ import qualified Prelude as P
 import Control.Monad.State
 
 -- types
+
 type ProgramWith' = P.IO
 type EmptyVal = ()
 type Program = ProgramWith' EmptyVal
@@ -21,6 +34,7 @@ type Z = Integer
 type R = Double
 
 -- values
+
 print_line' = putStrLn
 get_line = getLine
 split'to_words = words
@@ -130,6 +144,7 @@ for_all_in'' :: Monad m => ([a], a -> m b) -> m EmptyVal
 for_all_in'' = uncurry $ flip mapM_
 
 -- IsFirst'
+
 class IsFirst' a b | b -> a where
   p1st :: b -> a
 
@@ -146,6 +161,7 @@ instance IsFirst' a (a, b, c, d, e) where
   p1st = \(a, _, _, _, _) -> a
 
 -- IsSecond'
+
 class IsSecond' a b | b -> a where
   p2nd :: b -> a
 
@@ -162,6 +178,7 @@ instance IsSecond' b (a, b, c, d, e) where
   p2nd = \(_, b, _, _, _) -> b
 
 -- IsThird'
+
 class IsThird' a b | b -> a where
   p3rd :: b -> a
 
@@ -175,6 +192,7 @@ instance IsThird' c (a, b, c, d, e) where
   p3rd = \(_, _, c, _, _) -> c
 
 -- ChangeFirst'
+
 class ChangeFirstTo' a b | b -> a where
   c1st :: a -> b -> b
 
@@ -191,6 +209,7 @@ instance ChangeFirstTo' a (a, b, c, d, e) where
   c1st = \a (_, b, c, d, e) -> (a, b, c, d, e)
 
 -- ChangeSecond'
+
 class ChangeSecondTo' a b | b -> a where
   c2nd :: a -> b -> b
 
@@ -207,6 +226,7 @@ instance ChangeSecondTo' b (a, b, c, d, e) where
   c2nd = \b (a, _, c, d, e) -> (a, b, c, d, e)
 
 -- ChangeThird'
+
 class ChangeThirdTo' a b | b -> a where
   c3rd :: a -> b -> b
 
@@ -220,6 +240,7 @@ instance ChangeThirdTo' c (a, b, c, d, e) where
   c3rd = \c (a, b, _, d, e) -> (a, b, c, d, e)
 
 -- FromTuple classes
+
 class FromTuple2 a b c | c -> a b where
   ft2 :: (a, b) -> c
 
@@ -232,7 +253,8 @@ class FromTuple4 a b c d e | e -> a b c d where
 class FromTuple5 a b c d e f | f -> a b c d e where
   ft5 :: (a, b, c, d, e) -> f
 
--- FromTuple classes for regular tuples
+-- FromTuple instances for regular tuples
+
 instance FromTuple2 a b (a, b) where
   ft2 = id
 
@@ -245,20 +267,24 @@ instance FromTuple4 a b c d (a, b, c, d) where
 instance FromTuple5 a b c d e (a, b, c, d, e) where
   ft5 = id
 
---
+-- Isolate the "pure" function into a new type class and call it "wrap"
+
 class A'Has_A_Wrapper t where
   wrap' :: a -> t a
 
 instance Applicative f => A'Has_A_Wrapper f where
   wrap' = pure
 
---
+-- Renaming functor
+
 class A'Has_Internal_App t where
   apply'inside' :: (a -> b, t a) -> t b
 
-instance Applicative f => A'Has_Internal_App f where
+instance Functor f => A'Has_Internal_App f where
   apply'inside' = uncurry fmap
 
--- Show for String
+-- override Show for String
+
 instance {-# OVERLAPS #-} Show String where
   show = id
+

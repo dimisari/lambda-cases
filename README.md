@@ -32,6 +32,7 @@ ghci -i../src hello_world.hs
 ```bash
 make
 ```
+
 Creates "test_outputs" directory where
 - test_outputs/compiled_progs
 <br /> contains the compiled executables of all "test_inputs/programs"

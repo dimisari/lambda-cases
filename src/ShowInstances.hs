@@ -1,3 +1,7 @@
+{-
+This file implements a Show instance for every type of the AST
+-}
+
 {-# LANGUAGE LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
 
 module ShowInstances where
@@ -6,6 +10,7 @@ import ASTTypes
 import Data.List
 
 -- helpers
+
 show_maybe :: Show a => Maybe a -> String
 show_maybe = \case
   Nothing -> ""
@@ -29,6 +34,7 @@ show_md = \case
   Just c -> [c]
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
+
 instance Show Literal where
   show = \case
     Int i -> show i

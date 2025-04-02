@@ -13,6 +13,7 @@ type IndentationLevel = Int
 type InEqualLine = Bool
 
 -- state parsers: indentation level
+
 get_il :: Parser Int
 get_il = fst <$> getState
 
@@ -38,6 +39,7 @@ twice_deeper :: Parser a -> Parser a
 twice_deeper = deeper_num 2
 
 -- state parsers: equal line
+
 are_we_in_equal_line :: Parser Bool
 are_we_in_equal_line = snd <$> getState
 
@@ -51,6 +53,7 @@ deeper_if_not_in_equal_line = \parser ->
     False -> deeper parser
 
 -- helper parsers
+
 [nl, nl_indent, space_or_nl, opt_space, comma, equals]
   = [ many (char ' ' <|> char '\t') *> char '\n' *> nothing
     , nl *> indent
@@ -85,6 +88,7 @@ err_if_less_than_2 =  \i -> case (i < 2) of
   False -> return i
 
 -- reserved words
+
 reserved_words :: [String]
 reserved_words = ["cases", "where"]
 
@@ -99,6 +103,7 @@ err_if_reserved = \id_str -> case elem id_str reserved_words of
 -- (this could have been way faster)
 
 -- char literal
+
 charLiteral :: Parser Char
 charLiteral =
   (between (char '\'') (char '\'' <?> "end of character") characterChar)
@@ -121,6 +126,7 @@ charEsc =
   escMap = zip ("ntr0\\\"\'") ("\n\t\r\0\\\"\'")
 
 -- string literal
+
 stringLiteral :: Parser String
 stringLiteral =
   between (char '"') (char '"' <?> "end of string") (many stringChar)

@@ -1,3 +1,5 @@
+-- This file contains all the types that make up the AST
+
 module ASTTypes where
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId

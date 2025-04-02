@@ -1,8 +1,17 @@
+{-
+This file reads all the examples from the text files of the
+/test/inputs/grammar_rules directory, compiles them and writes the compiled
+version into identically named files in the /test/outputs/grammar_rules
+directory
+-}
+
 {-# LANGUAGE LambdaCase, FlexibleInstances #-}
 
 module Main where
 
+import System.Environment (getArgs)
 import Text.Parsec (runParser, eof, ParseError)
+import Data.List.Split (endBy)
 
 import Helpers
 import ASTTypes
@@ -13,24 +22,33 @@ import Generation.TypesAndHelpers
 import Generation.AST
 
 -- types
+
+type FileString = String
+type TestExample = String
+
 type CompileExFunc = TestExample -> String
 
 type Compile a = Lcases -> ResultString a
 newtype ResultString a = RS String
 
 -- main
-main :: IO ()
-main = mapM_ compile_example file_name_compile_func_pairs
 
--- compile_example
-compile_example :: (FileName, CompileExFunc) -> IO ()
-compile_example (file_name, comp_ex_func) =
+main :: IO ()
+main = mapM_ compile_examples file_name_compile_func_pairs
+
+-- compile the examples of a file
+
+compile_examples :: (FileName, CompileExFunc) -> IO ()
+compile_examples (file_name, comp_ex_func) =
   read_examples file_name >$> concatMap comp_ex_func >>= \ex_outs ->
   get_out_path >>= \out_path ->
   writeFile out_path ex_outs
   where
   get_out_path :: IO FilePath
   get_out_path = get_test_outputs_path >$> (++ make_extension_hs file_name)
+
+get_test_outputs_path :: IO FilePath
+get_test_outputs_path = getArgs >$> (!!1) >$> (++ "/")
 
 compile_example_func :: (HasParser a, ToHaskell a) => Compile a
 compile_example_func = parse .> parse_res_to_final_res
@@ -43,7 +61,24 @@ parse_res_to_final_res = RS . (++ "\n\n") . \case
 extract_res_str :: ResultString a -> Haskell
 extract_res_str = \(RS s) -> s
 
--- file_name_compile_func_pairs
+-- Reading the examples from a file
+
+read_examples :: FileName -> IO [FileString]
+read_examples = \file_name -> read_exs_file file_name >$> file_str_to_examples
+
+read_exs_file :: FileName -> IO FileString
+read_exs_file = \file_name ->
+  get_test_inputs_path >$> (++ file_name) >>= readFile
+
+get_test_inputs_path :: IO FilePath
+get_test_inputs_path = getArgs >$> head >$> (++ "/")
+
+file_str_to_examples :: FileString -> [ TestExample ]
+file_str_to_examples = endBy "#\n\n"
+
+-- Pairs of file names and the correcsponding compile function for
+-- each example in the file
+
 file_name_compile_func_pairs :: [(FileName, CompileExFunc)]
 file_name_compile_func_pairs =
   [ ( "literals.txt"
@@ -150,6 +185,7 @@ file_name_compile_func_pairs =
 
 -- to have ToHaskell from ToHsWithIndentLvl and also HasParser
 -- for compile_example_func
+
 newtype THWIL a = THWIL a
 
 instance ToHsWithIndentLvl a => ToHaskell (THWIL a) where

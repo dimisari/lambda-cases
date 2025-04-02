@@ -11,6 +11,7 @@ import Helpers
 import Parsing.TypesAndHelpers
 
 -- HasParser class + parse
+
 class HasParser a where
   parser :: Parser a
 
@@ -18,6 +19,7 @@ parse :: HasParser a => String -> Either ParseError a
 parse = runParser (parser <* eof) (0, False) ""
 
 -- HasParser: Literal
+
 instance HasParser Integer where
   parser = read <$> option "" (string "-") >++< digits
 
@@ -43,6 +45,7 @@ instance HasParser Literal where
     "Literal"
 
 -- HasParser: Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
+
 instance HasParser Identifier where
   parser =
     id_p >>= check_not_reserved
@@ -163,6 +166,7 @@ instance HasParser Arguments where
   parser = As <$> in_paren parser
 
 -- HasParser: PreFunc, PostFunc, BasicExpr, Change
+
 instance HasParser PreFunc where
   parser = PF <$> parser <* string "--"
 
@@ -205,6 +209,7 @@ instance HasParser DotChange where
     field_p = SId2 <$> parser <|> SI3 <$> parser
 
 -- HasParser: OpExpr
+
 instance HasParser OpExpr where
   parser = BOE1 <$> try parser <|> LOE3 <$> parser
 
@@ -284,6 +289,7 @@ instance HasParser OptionalSpacesOp where
     string ";" *> return Then
 
 -- HasParser: FuncExpr
+
 instance HasParser FuncExpr where
   parser = CFE2 <$> try parser <|> BFE2 <$> try parser <|> LFE4 <$> parser
 
@@ -390,6 +396,7 @@ instance HasParser CaseBody where
   parser = BFB1 <$> try parser ++< optionMaybe (try parser) <|> LFB1 <$> parser
 
 -- HasParser: ValueDef, WhereExpr
+
 instance HasParser ValueDef where
   parser =
     indent *> parser >>= \identifier ->
@@ -451,6 +458,7 @@ instance HasParser WhereExpr where
     where_def_expr_p = VD1 <$> try parser <|> GVDs1 <$> parser
 
 -- HasParser: Type
+
 instance HasParser Type where
   parser = Ty <$> (optionMaybe $ try parser) ++< parser
 
@@ -508,6 +516,7 @@ instance HasParser Condition where
   parser = Co <$> (parser <* string " --> ")
 
 -- HasParser: TypeDef, TypeNickname
+
 instance HasParser TypeDef where
   parser = TTD1 <$> parser <|> OTD1 <$> parser
 
@@ -560,6 +569,7 @@ instance HasParser TypeNickname where
       (equals *> parser)
 
 -- HasParser: TypePropDef
+
 instance HasParser TypePropDef where
   parser = APD1 <$> try parser <|> RPD1 <$> parser
 
@@ -603,6 +613,7 @@ instance HasParser NamePart where
     under_upper = underscore >:< fmap (:[]) upper
 
 -- HasParser: TypeTheo
+
 instance HasParser TypeTheo where
   parser =
     TT <$> pnws_p ++< mpnws_p +++< proof_p
@@ -692,6 +703,7 @@ instance HasParser TTValueExpr where
     vemwe_p = twice_deeper (try nl_indent *> parser ++< optionMaybe parser)
 
 -- HasParser: Program
+
 instance HasParser Program where
   parser =
     P <$>

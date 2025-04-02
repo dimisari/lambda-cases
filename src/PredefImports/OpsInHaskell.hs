@@ -1,9 +1,18 @@
+{-
+This file defines equivalents of every lcases operator for haskell:
+- precedence and associativity
+- definitions or type classes according to the operator
+- particular instances for operators defined by a type class
+-}
+
 {-# LANGUAGE
   MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
   UndecidableInstances, FunctionalDependencies, GADTs, IncoherentInstances
 #-}
 
 module PredefImports.OpsInHaskell where
+
+-- precedence and associativity
 
 infixl 9 &>
 infixr 8 <&
@@ -15,6 +24,8 @@ infix 3 !==, !!=, !>, !<, !>=, !<=
 infixr 2 !&
 infixr 1 !|
 infixr 0 !>>=, !>>
+
+-- function application/composition
 
 (&>) :: a -> (a -> b) -> b
 x &> f = f x
@@ -28,31 +39,44 @@ f <& x = f x
 (<.) :: (b -> c) -> (a -> b) -> a -> c
 (<.) = (.)
 
+-- arithmetic operators
+
 class A'To_The'Is' a b c | a b -> c where
   (!^) :: a -> b -> c
 
 class A'And'Multiply_To' a b c | a b -> c where
   (!*) :: a -> b -> c
+
 class A'Divided_By'Is' a b c | a b -> c  where
   (!/) :: a -> b -> c
 
 class A'And'Add_To' a b c | a b -> c where
   (!+) :: a -> b -> c
+
 class A'Minus'Is' a b c | a b -> c where
   (!-) :: a -> b -> c
 
+-- comparison operators
+
 class A'And'Can_Be_Equal a b where
   (!==) :: a -> b -> Bool
+
 class A'And'Can_Be_Unequal a b where
   (!!=) :: a -> b -> Bool
+
 class A'Can_Be_Greater_Than' a b where
   (!>) :: a -> b -> Bool
+
 class A'Can_Be_Less_Than' a b where
   (!<) :: a -> b -> Bool
+
 class A'Can_Be_Gr_Or_Eq_To' a b where
   (!>=) :: a -> b -> Bool
+
 class A'Can_Be_Le_Or_Eq_To' a b where
   (!<=) :: a -> b -> Bool
+
+-- boolean operators
 
 class A'Has_And a where
   (!&) :: a -> a -> a
@@ -60,13 +84,17 @@ class A'Has_And a where
 class A'Has_Or a where
   (!|) :: a -> a -> a
 
+-- environment operators
+
 class A'Has_Use u where
   (!>>=) :: u a -> (a -> u b) -> u b
 
 class A'Has_Then t where
   (!>>) :: t a -> t b -> t b
 
--- A'To_The'Is'
+-- Instances
+--   A'To_The'Is'
+
 instance Floating a => A'To_The'Is' a a a where
   (!^) = (**)
 
@@ -79,7 +107,8 @@ instance A'To_The'Is' Integer Double Double where
 instance A'To_The'Is' Double Integer Double where
   x !^ i = x ** fromIntegral i
 
--- A'And'Multiply_To'
+--   A'And'Multiply_To'
+
 instance Num a => A'And'Multiply_To' a a a where
   (!*) = (*)
 
@@ -95,7 +124,8 @@ instance A'And'Multiply_To' Integer Char String where
 instance A'And'Multiply_To' Integer String String where
   i !* s = concat $ replicate (fromIntegral i) s
 
--- A'Divided_By'Is'
+--   A'Divided_By'Is'
+
 instance A'Divided_By'Is' Integer Integer Double where
   x !/ y = fromIntegral x / fromIntegral y
 
@@ -105,7 +135,8 @@ instance A'Divided_By'Is' Integer Double Double where
 instance A'Divided_By'Is' Double Integer Double where
   x !/ i = x / fromIntegral i
 
--- A'And'Add_To'
+--   A'And'Add_To'
+
 instance Show a => A'And'Add_To' a String String where
   x !+ str = show x ++ str
 
@@ -136,7 +167,8 @@ instance (a ~ String) => A'And'Add_To' Char Char a where
 instance A'And'Add_To' Char String String where
   (!+) = (:)
 
--- A'Minus'Is'
+--   A'Minus'Is'
+
 instance Num a => A'Minus'Is' a a a where
   (!-) = (-)
 
@@ -154,43 +186,53 @@ instance Eq a => A'Minus'Is' [a] [a] [a] where
         True -> l12 !- l2
         False -> head l1 : (tail l1 !- l2)
 
--- A'And'Can_Be_Equal
+--   A'And'Can_Be_Equal
+
 instance Eq a => A'And'Can_Be_Equal a a where
   (!==) = (==)
 
--- A'And'Can_Be_Unequal
+--   A'And'Can_Be_Unequal
+
 instance Eq a => A'And'Can_Be_Unequal a a where
   (!!=) = (/=)
 
--- A'Can_Be_Greater_Than'
+--   A'Can_Be_Greater_Than'
+
 instance Ord a => A'Can_Be_Greater_Than' a a where
   (!>) = (>)
 
--- A'Can_Be_Less_Than'
+--   A'Can_Be_Less_Than'
+
 instance Ord a => A'Can_Be_Less_Than' a a where
   (!<) = (<)
 
--- A'Can_Be_Gr_Or_Eq_To'
+--   A'Can_Be_Gr_Or_Eq_To'
+
 instance Ord a => A'Can_Be_Gr_Or_Eq_To' a a where
   (!>=) = (>=)
 
--- A'Can_Be_Le_Or_Eq_To'
+--   A'Can_Be_Le_Or_Eq_To'
+
 instance Ord a => A'Can_Be_Le_Or_Eq_To' a a where
   (!<=) = (<=)
 
--- A'Has_Then
+--   A'Has_Then
+
 instance Applicative f => A'Has_Then f where
   (!>>) = (*>)
 
--- A'Has_Use
+--   A'Has_Use
+
 instance Monad m => A'Has_Use m where
   (!>>=) = (>>=)
 
--- A'Has_And
+--   A'Has_And
+
 instance A'Has_And Bool where
   (!&) = (&&)
 
--- A'Has_Or
+--   A'Has_Or
+
 instance A'Has_Or Bool where
   (!|) = (||)
 
