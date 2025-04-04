@@ -25,7 +25,7 @@ data PossiblyInDC =
   InDotChange [PostFuncArg] | NotInDotChange
 
 type StateTuple =
-  (PossiblyInDC, FieldIds, NakedCases, RenamingProps, OrValuesMap)
+  (PossiblyInDC, FieldIds, EmptyOrValues, RenamingProps, FullOrValuesMap)
 type PreprocessState = State StateTuple
 
 type PS = PreprocessState
@@ -45,8 +45,9 @@ preprocess_prog = \prog -> evalState (preprocess prog) (init_state prog)
 
 init_state :: Program -> StateTuple
 init_state = \prog ->
-  ( NotInDotChange, field_ids prog, naked_cases prog, renaming_props prog
-  , or_values_map prog
+  or_values prog &> \(empty_or_values, full_or_values_map) ->
+  ( NotInDotChange, field_ids prog, empty_or_values, renaming_props prog
+  , full_or_values_map
   )
 
 get_pidc :: PreprocessState PossiblyInDC
@@ -55,13 +56,13 @@ get_pidc = get >$> \(pidc, _, _, _, _) -> pidc
 get_fids :: PreprocessState FieldIds
 get_fids = get >$> \(_, fids, _, _, _) -> fids
 
-get_ncs :: PreprocessState NakedCases
+get_ncs :: PreprocessState EmptyOrValues
 get_ncs = get >$> \(_, _, ncs, _, _) -> ncs
 
 get_rps :: PreprocessState RenamingProps
 get_rps = get >$> \(_, _, _, rps, _) -> rps
 
-get_ovm :: PreprocessState OrValuesMap
+get_ovm :: PreprocessState FullOrValuesMap
 get_ovm = get >$> \(_, _, _, _, ovm) -> ovm
 
 put_new_pidc :: PossiblyInDC -> PreprocessState ()

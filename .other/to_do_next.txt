@@ -1,5 +1,9 @@
 
 - finish comments and descriptions
+  - CheckCompatibility.hs
+  - Collect.hs
+  - Preprocess.hs
+  - TypesAndHelpers.hs
 
 # to_do.txt
 

@@ -1,3 +1,7 @@
+{-
+This file contains code that traverses the AST and collects stuff:
+-}
+
 {-# language LambdaCase, StandaloneDeriving, FlexibleInstances #-}
 
 module Generation.Collect where
@@ -11,70 +15,63 @@ import Helpers
 
 import Generation.TypesAndHelpers
 
--- types
+-- CollectFieldIds types, class and final function
 
 type FieldId = SimpleId
 
-type NakedCase = SimpleId
-
-type RenamingProp = (PropName, [PropName])
-
-
 type FieldIds = Set FieldId
 
-type NakedCases = Set NakedCase
-
-type ParamTVars = Set ParamTVar
-
-type RenamingProps = [RenamingProp]
-
-type OrValuesMap = M.Map SimpleId Identifier
-
-
 type FieldIdsState = State FieldIds ()
-
-type NakedCasesState = State NakedCases ()
-
-type ParamTVarsState = State ParamTVars ()
-
-type RenamingPropsState = State RenamingProps ()
-
-type OrValuesMapState = State OrValuesMap ()
-
--- classes
 
 class CollectFieldIds a where
   collect_fids :: a -> FieldIdsState
 
-class CollectNakedCases a where
-  collect_ncs :: a -> NakedCasesState
+field_ids :: Program -> FieldIds
+field_ids = \prog -> execState (collect_fids prog) empty
+
+-- CollectParamTVars types, class and final function
+
+type ParamTVars = Set ParamTVar
+
+type ParamTVarsState = State ParamTVars ()
 
 class CollectParamTVars a where
   collect_ptvs :: a -> ParamTVarsState
 
+param_t_vars :: Type -> [ParamTVar]
+param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
+
+-- CollectRenamingProps types, class and final function
+
+type RenamingProp = (PropName, [PropName])
+
+type RenamingProps = [RenamingProp]
+
+type RenamingPropsState = State RenamingProps ()
+
 class CollectRenamingProps a where
   collect_rps :: a -> RenamingPropsState
-
-class CollectOrValuesMap a where
-  collect_ovms :: a -> OrValuesMapState
-
-
--- final functions
-
-field_ids :: Program -> FieldIds
-field_ids = \prog -> execState (collect_fids prog) empty
-
-naked_cases :: Program -> NakedCases
-naked_cases = \prog -> execState (collect_ncs prog) empty
 
 renaming_props :: Program -> RenamingProps
 renaming_props = \prog -> execState (collect_rps prog) []
 
-or_values_map :: Program -> OrValuesMap
-or_values_map = \prog -> execState (collect_ovms prog) init_or_val_map
+-- CollectOrValues types, class and final function
 
-param_t_vars :: Type -> [ParamTVar]
-param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
+type OrValue = SimpleId
+
+type EmptyOrValues = Set OrValue
+
+type FullOrValuesMap = M.Map OrValue Identifier
+
+type OrValues = (EmptyOrValues, FullOrValuesMap)
+
+type OrValuesState = State OrValues ()
+
+class CollectOrValues a where
+  collect_ovms :: a -> OrValuesState
+
+or_values :: Program -> OrValues
+or_values = \prog -> execState (collect_ovms prog) (empty, init_or_val_map)
 
 
 -- CollectFieldIds
@@ -100,30 +97,6 @@ instance CollectFieldIds FieldNames where
 
 instance CollectFieldIds SimpleId where
   collect_fids = \sid -> modify (insert sid)
-
-
--- CollectNakedCases
-
-instance CollectNakedCases Program where
-  collect_ncs = \(P (pp, pps)) -> mapM_ collect_ncs $ pp : pps
-
-instance CollectNakedCases ProgramPart where
-  collect_ncs = \case
-    TD td -> collect_ncs td
-    _ -> do_nothing
-
-instance CollectNakedCases TypeDef where
-  collect_ncs = \case
-    OTD1 otd -> collect_ncs otd
-    _ -> do_nothing
-
-instance CollectNakedCases OrTypeDef where
-  collect_ncs = \(OTD (_, pv, pvs)) -> mapM_ collect_ncs $ pv : pvs
-
-instance CollectNakedCases PossibleValue where
-  collect_ncs = \(PV pv) -> case pv of
-    (sid, Nothing) -> modify (insert sid)
-    _ -> do_nothing
 
 
 -- CollectParamTVars
@@ -211,9 +184,9 @@ instance CollectRenamingProps RenamingPropDef where
   collect_rps = \(RPD (PNL pn_key, pn1, pns)) ->
     modify $ (:) (pn_key, pn1 : pns)
 
--- CollectOrValuesMap
+-- CollectOrValues
 
-init_or_val_map :: OrValuesMap
+init_or_val_map :: FullOrValuesMap
 init_or_val_map =
   M.fromList $ map (\(s1, s2) -> (str_to_sid s1, str_to_id s2)) predefined
 
@@ -221,28 +194,35 @@ predefined :: [(String, String)]
 predefined =
   [("a_value", "the_value"), ("error", "err"), ("result", "res")]
 
-instance CollectOrValuesMap Program where
+instance CollectOrValues Program where
   collect_ovms = \(P (pp, pps)) -> mapM_ collect_ovms $ pp : pps
 
-instance CollectOrValuesMap ProgramPart where
+instance CollectOrValues ProgramPart where
   collect_ovms = \case
     TD td -> collect_ovms td
     _ -> do_nothing
 
-instance CollectOrValuesMap TypeDef where
+instance CollectOrValues TypeDef where
   collect_ovms = \case
     OTD1 otd -> collect_ovms otd
     _ -> do_nothing
 
-instance CollectOrValuesMap OrTypeDef where
+instance CollectOrValues OrTypeDef where
   collect_ovms = \(OTD (_, pv, pvs)) -> mapM_ collect_ovms $ pv : pvs
 
-instance CollectOrValuesMap PossibleValue where
-  collect_ovms = \(PV (sid, maybe_id_st)) -> case maybe_id_st of
-    Just (id, _) -> modify $ M.insert sid id
-    _ -> do_nothing
+instance CollectOrValues PossibleValue where
+  collect_ovms = \(PV (ov, maybe_id_st)) -> case maybe_id_st of
+    Just (id, _) -> modify $ \(nc, fovm) -> (nc, M.insert ov id fovm)
+    Nothing -> modify $ \(nc, fovm) -> (insert ov nc, fovm)
 
+{-
+Potential changes:
+EmptyOrValues and FullOrValuesMap could be joined together since the both exist
+on or type definitions
+-}
 
--- Preprocess.hs
--- AST.hs
--- lcc.hs
+{-
+For fast vim file navigation:
+Preprocess.hs
+AST.hs
+-}
