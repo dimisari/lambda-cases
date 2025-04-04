@@ -1,4 +1,9 @@
 
+- Καινούργιο AST μετά το AST του parsing
+  - Αλλαγές
+    - Identifier
+      - Κάπως να βρω ένα καλύτερο representation με το UndersInParen
+
 - Να γράφω τα errors των grammar rules σε άλλο αρχείο
 
 - μετονομασία cases func expr σε qmark func expr

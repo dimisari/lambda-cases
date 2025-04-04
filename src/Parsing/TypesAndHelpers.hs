@@ -1,4 +1,13 @@
-{-# LANGUAGE LambdaCase, FlexibleContexts #-}
+{-
+This file defines:
+- types for parsing
+- parsers that only affect the state for manipulating the indentation level and
+  checking whether we are in the equal line of a value definition
+- helper parsers for spaces, commas, equal symbols, arrows, parentheses etc
+- parser for char and string literals
+-}
+
+{-# language LambdaCase, FlexibleContexts #-}
 
 module Parsing.TypesAndHelpers where
 
@@ -6,6 +15,8 @@ import Text.Parsec
 import Text.Parsec.Token hiding (comma, charLiteral, stringLiteral)
 
 import Helpers
+
+-- types
 
 type Parser = Parsec String ParserState
 type ParserState = (IndentationLevel, InEqualLine)
@@ -20,14 +31,11 @@ get_il = fst <$> getState
 indent :: Parser ()
 indent = get_il >$> ind_lvl_to_spaces >>= string >> nothing
 
-modify_il :: (Int -> Int) -> Parser ()
-modify_il = \f -> modifyState $ \(il, b) -> (f il, b)
-
 increase_il_by :: Int -> Parser ()
-increase_il_by = \i -> modify_il (+i)
+increase_il_by = \i -> modifyState $ \(il, b) -> (il + i, b)
 
 decrease_il_by :: Int -> Parser ()
-decrease_il_by = \i -> modify_il $ \il -> il - i
+decrease_il_by = \i -> increase_il_by (-i)
 
 deeper_num :: Int -> Parser a -> Parser a
 deeper_num = \i p -> increase_il_by i *> p <* decrease_il_by i

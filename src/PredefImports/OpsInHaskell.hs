@@ -5,7 +5,7 @@ This file defines equivalents of every lcases operator for haskell:
 - particular instances for operators defined by a type class
 -}
 
-{-# LANGUAGE
+{-# language
   MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
   UndecidableInstances, FunctionalDependencies, GADTs, IncoherentInstances
 #-}

@@ -1,4 +1,6 @@
--- This file contains all the types that make up the AST
+{-
+This file contains all the types that make up the AST
+-}
 
 module ASTTypes where
 
@@ -359,15 +361,15 @@ data ProgramPart =
   VD2 ValueDef | GVDs2 GroupedValueDefs | TD TypeDef | TNN1 TypeNickname |
   TPD TypePropDef | TT1 TypeTheo
 
--- For fast vim navigation
--- Helpers.hs
--- ShowInstances.hs
--- Parsing/TypesAndHelpers.hs
--- Parsing/AST.hs
--- Parsing/Test.hs
--- Generation/TypesAndHelpers.hs
--- Generation/Collect.hs
--- Generation/Preprocess.hs
--- Generation/CheckCompatibility.hs
--- Generation/AST.hs
--- test.hs
+{-
+For fast vim file navigation:
+Helpers.hs
+ShowInstances.hs
+Parsing/TypesAndHelpers.hs
+Parsing/AST.hs
+Generation/TypesAndHelpers.hs
+Generation/Collect.hs
+Generation/Preprocess.hs
+Generation/CheckCompatibility.hs
+Generation/AST.hs
+-}

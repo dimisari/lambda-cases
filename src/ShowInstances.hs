@@ -2,7 +2,7 @@
 This file implements a Show instance for every type of the AST
 -}
 
-{-# LANGUAGE LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
+{-# language LambdaCase, TypeSynonymInstances, FlexibleInstances #-}
 
 module ShowInstances where
 
@@ -648,8 +648,9 @@ instance Show ProgramPart where
     TPD tpd -> show tpd
     TT1 tt -> show tt
 
--- For fast vim navigation
--- Parsing/TypesAndHelpers.hs
--- Parsing/AST.hs
--- Parsing/Test.hs
--- ASTTypes.hs
+{-
+For fast vim file navigation:
+Parsing/TypesAndHelpers.hs
+Parsing/AST.hs
+ASTTypes.hs
+-}

@@ -5,7 +5,7 @@ version into identically named files in the /test/outputs/grammar_rules
 directory
 -}
 
-{-# LANGUAGE LambdaCase, FlexibleInstances #-}
+{-# language LambdaCase, FlexibleInstances #-}
 
 module Main where
 
@@ -203,9 +203,7 @@ instance HasParser a => HasParser (NeedsParenBool, a) where
 instance HasParser a => HasParser (NeedsAnnotBool, a) where
    parser = parser >$> \a -> (NoAnnot, a)
 
--- For fast vim navigation
--- TypesAndHelpers.hs
--- Collect.hs
--- Preprocess.hs
--- AST.hs
--- ASTTypes.hs
+{-
+For fast vim file navigation:
+ASTTypes.hs
+-}

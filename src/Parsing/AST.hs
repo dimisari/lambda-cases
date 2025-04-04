@@ -1,4 +1,9 @@
-{-# LANGUAGE LambdaCase, FlexibleInstances, FlexibleContexts #-}
+{-
+This file implements a parser for every type of the AST by implementing an
+instance of the HasParser type class
+-}
+
+{-# language LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
 module Parsing.AST where
 
@@ -714,6 +719,3 @@ instance HasParser ProgramPart where
     TD <$> parser <|> TNN1 <$> parser <|> TT1 <$> parser <|>
     TPD <$> parser <|> GVDs2 <$> try parser <|> VD2 <$> parser
 
--- For fast vim navigation
--- ShowInstances.hs
--- ASTTypes.hs

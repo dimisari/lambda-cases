@@ -13,6 +13,7 @@ import ShowInstances
 import Helpers
 
 -- types
+
 type AHTVMap = M.Map AdHocTVar SubOrUnder
 
 data Compatibility =
@@ -26,6 +27,7 @@ instance Eq Compatibility where
 type WAHTVMap a = State AHTVMap a
 
 -- helpers
+
 compat_union :: Compatibility -> Compatibility -> Compatibility
 compat_union = \c1 c2 -> case (c1, c2) of
   (Compatible m1, Compatible m2) -> Compatible $ M.union m1 m2
@@ -41,6 +43,7 @@ error_zip = \case
   _ -> error "error_zip: lists not the same length"
 
 -- CheckCompatibility class
+
 class CheckCompatibility a b where
   check_compat :: (a, b) -> Compatibility
 
@@ -302,5 +305,7 @@ instance AddSubs InParenT InParenTSub where
     PT3 pt -> PTS2 <$> add_subs pt
     FT3 ft -> FTS2 <$> add_subs ft
 
--- ASTTypes.hs
--- AST.hs
+{-
+For fast vim file navigation:
+AST.hs
+-}

@@ -1,4 +1,15 @@
-{-# LANGUAGE LambdaCase, FlexibleInstances #-}
+{-
+This file contains instances for every AST type for one of the following
+classes:
+- ToHaskell: simply outputs the final haskell code for the AST type
+- ToHsWithParamNum: outputs the final haskell code but also keeps track
+  of how many new parameters need to be created in the haskell code
+- ToHsWithIndentLvl: outputs the final haskell code but also keeps track
+  of the indentation level of every line in the output
+The AST provided to this code as the preprocessed AST.
+-}
+
+{-# language LambdaCase, FlexibleInstances #-}
 
 module Generation.AST where
 
@@ -15,46 +26,15 @@ import ShowInstances
 import Generation.TypesAndHelpers
 import Generation.Collect
 
--- hardcoded
-
-bool :: String
-bool = "P.Bool"
-
-integer :: String
-integer = "P.Integer"
-
-double :: String
-double = "P.Double"
-
-char :: String
-char = "P.Char"
-
-string :: String
-string = "P.String"
-
-just :: String
-just = "P.Just"
-
-left :: String
-left = "P.Left"
-
-right :: String
-right = "P.Right"
-
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
+
 instance ToHaskell Char where
   to_haskell = (:[])
 
 instance ToHaskell (NeedsAnnotBool, Literal) where
   to_haskell = \(needs_annot, lit) -> case lit of
-    Int i ->
-      case needs_annot of
-        Annot -> "(" ++ show i ++ " :: " ++ integer ++ ")"
-        NoAnnot -> show i
-    R r ->
-      case needs_annot of
-        Annot -> "(" ++ show r ++ " :: " ++ double ++ ")"
-        NoAnnot -> show r
+    Int i -> to_hs_needs_annot needs_annot i integer
+    R r -> to_hs_needs_annot needs_annot r double
     Ch c -> show c
     S s -> show s
 
@@ -195,6 +175,7 @@ instance ToHsWithParamNum Arguments where
   to_hs_wpn = \(As leous) -> to_hs_wpn leous
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
+
 instance ToHaskell PreFunc where
   to_haskell = \(PF id) ->
     case id of
@@ -272,6 +253,7 @@ instance ToHaskell Field where
     SI3 spid -> spid_change_prefix ++ to_haskell spid
 
 -- Values: OpExpr
+
 instance ToHsWithIndentLvl OpExpr where
   to_hs_wil = \case
     LOE3 loe -> indent <++ to_haskell loe
@@ -380,6 +362,7 @@ instance ToHaskell OptionalSpacesOp where
     Then -> "!>>"
 
 -- Values: FuncExpr
+
 instance ToHsWithIndentLvl (FuncExpr, PossiblyWhereExpr) where
   to_hs_wil = \(fe, pwe) -> case fe of
     LFE4 lfe -> to_hs_wil (lfe, pwe)
@@ -434,9 +417,9 @@ instance ToHsWithIndentLvl (CasesFuncExpr, PossiblyWhereExpr) where
     deeper (to_hs_wil (cs, maybe_ec))
     where
     (params_hs, case_of_hs) = run_generator params_and_case_of_hs_gen
-      :: HsPair
+      :: (Haskell, Haskell)
 
-    params_and_case_of_hs_gen :: WithParamNum HsPair
+    params_and_case_of_hs_gen :: WithParamNum (Haskell, Haskell)
     params_and_case_of_hs_gen =
       to_hs_wpn cps >>= \cps_hs ->
       case_of_inner_hs_gen >>= \case_of_inner_hs ->
@@ -525,6 +508,7 @@ instance ToHsWithIndentLvl CaseBody where
     BFB1 (bfb, maybe_we) -> "\n" ++> to_hs_wil maybe_we >++< to_hs_wil bfb
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
+
 instance ToHsWithIndentLvl ValueDef where
   to_hs_wil (VD (id, t, ve, maybe_we)) =
     indent <++ (to_haskell id ++ " :: ") >++<
@@ -601,6 +585,7 @@ instance ToHsWithIndentLvl WhereDefExpr where
     GVDs1 gvd -> to_hs_wil gvd
 
 -- Type
+
 instance ToHaskell Type where
   to_haskell = \(Ty (maybe_c, st)) ->
     to_haskell maybe_c ++ to_haskell (NoParen, st)
@@ -705,6 +690,7 @@ instance ToHaskell Condition where
   to_haskell = \(Co pn) -> to_haskell pn ++ " => "
 
 -- TypeDef, TypeNickname
+
 instance ToHaskell TypeDef where
   to_haskell = \case
     TTD1 ttd -> to_haskell ttd
@@ -814,6 +800,7 @@ instance ToHaskell TypeNickname where
     "type " ++ to_haskell (NoParen, tn) ++ " = " ++ to_haskell (NoParen, st)
 
 -- TypePropDef
+
 instance ToHaskell TypePropDef where
   to_haskell = \case
     APD1 apd -> to_haskell apd
@@ -855,6 +842,7 @@ instance ToHaskell NamePart where
   to_haskell = \(NP str) -> str
 
 -- TypeTheo
+
 instance ToHaskell TypeTheo where
   to_haskell (TT (pnws_l, maybe_pnws, proof)) =
     "instance " ++ pnws_l_hs ++
@@ -1008,6 +996,7 @@ instance ToHaskell TTValueExpr where
       run_generator (twice_deeper (to_hs_wil (ve, mwe_to_pwe maybe_we)))
 
 -- Program
+
 instance ToHaskell Program where
   to_haskell = \(P (pp, pps)) -> to_haskell pp ++ to_hs_prepend_list "\n\n" pps
 
@@ -1021,13 +1010,14 @@ instance ToHaskell ProgramPart where
     TT1 tt -> to_haskell tt
 
 -- Helper instances
+
 instance ToHsWithIndentLvl PossiblyWhereExpr where
   to_hs_wil = \case
     NoWhereExpr -> return ""
     HasWhereExpr we -> to_hs_wil we
 
--- For fast vim navigation
--- ASTTypes.hs
--- TypesAndHelpers.hs
--- Preprocess.hs
--- Test.hs
+{-
+For fast vim file navigation:
+TypesAndHelpers.hs
+Preprocess.hs
+-}

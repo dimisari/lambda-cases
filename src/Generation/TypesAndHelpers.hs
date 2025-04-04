@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, FlexibleInstances, FlexibleContexts #-}
+{-# language LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
 module Generation.TypesAndHelpers where
 
@@ -10,24 +10,13 @@ import qualified Data.Set as S
 import ASTTypes
 import Helpers
 
--- hardcoded
-show_class :: String
-show_class = "P.Show"
+-- types
 
-show_val1 :: String
-show_val1 = "show"
-
-show_val2 :: String
-show_val2 = "P.show"
-
--- Haskell types
 type Haskell = String
-
-type HsPair = (Haskell, Haskell)
 
 type DotChangeArgHs = Haskell
 
--- Helper types
+
 data NeedsParenBool = Paren | NoParen
 
 data NeedsAnnotBool = Annot | NoAnnot
@@ -36,12 +25,13 @@ data PossiblyWhereExpr = HasWhereExpr WhereExpr | NoWhereExpr
 
 newtype WholeParams = Whole Parameters
 
--- State types
+
 type WithParamNum = State Int
 
 type WithIndentLvl = State Int
 
 -- classes
+
 class ToHaskell a where
   to_haskell :: a -> Haskell
 
@@ -55,6 +45,7 @@ class HasArgs a where
   args_length :: a -> Int
 
 -- automatic instances
+
 instance ToHaskell a => ToHaskell [a] where
   to_haskell = concatMap to_haskell
 
@@ -74,6 +65,7 @@ instance ToHsWithIndentLvl a => ToHsWithIndentLvl (Maybe a) where
     Just a -> to_hs_wil a
 
 -- list helpers
+
 to_hs_prepend_list :: ToHaskell a => String -> [a] -> Haskell
 to_hs_prepend_list = \prepend_hs -> concatMap ((prepend_hs ++) . to_haskell)
 
@@ -84,6 +76,7 @@ to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
 to_hs_wil_list = traverse to_hs_wil
 
 -- Params helpers
+
 get_next_param :: WithParamNum Haskell
 get_next_param = get >$> to_param <* modify (+1)
 
@@ -128,6 +121,7 @@ case_of_inner_hs_gen =
       False -> error "should be impossible: zero or negative cases params"
 
 -- Indentation helpers
+
 change_il :: Int -> WithIndentLvl ()
 change_il = \i -> modify (+i)
 
@@ -148,6 +142,7 @@ indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
 -- Args length hs
+
 singe_quotes_hs :: HasArgs a => a -> String
 singe_quotes_hs = args_length .> \i -> replicate i '\''
 
@@ -190,6 +185,7 @@ instance HasArgs UndersInParen where
   args_length = \(UIP i) -> i
 
 -- ParenFuncAppOrId helpers
+
 type MargsPair = (Maybe Arguments, Maybe Arguments)
 add_margs_to_args_list :: MargsPair -> [Arguments] -> [Arguments]
 add_margs_to_args_list = \case
@@ -203,6 +199,7 @@ calc_args_list = \margs_pair args_str_pairs ->
   add_margs_to_args_list margs_pair $ map fst args_str_pairs
 
 -- TupleTypeDef helpers
+
 combine_with_ts :: [Haskell] -> [Haskell] -> Haskell
 combine_with_ts = \sid_hs_list types_hs_list ->
   zipWith comb_sid_t_hs sid_hs_list types_hs_list &> concat
@@ -219,6 +216,7 @@ comb_sid_def_hs = \hs1 hs2 ->
   "\n" ++ hs1 ++ " = \\new x -> x { " ++ hs2 ++ " = new }"
 
 -- prefixes
+
 lower_prefix :: Haskell
 lower_prefix = "a"
 
@@ -246,7 +244,61 @@ ad_hoc_t_var_prefix = "b"
 param_prefix :: Haskell
 param_prefix = "pA"
 
+-- hardcoded
+
+show_class :: String
+show_class = "P.Show"
+
+show_val1 :: String
+show_val1 = "show"
+
+show_val2 :: String
+show_val2 = "P.show"
+
+bool :: String
+bool = "P.Bool"
+
+integer :: String
+integer = "P.Integer"
+
+double :: String
+double = "P.Double"
+
+char :: String
+char = "P.Char"
+
+string :: String
+string = "P.String"
+
+just :: String
+just = "P.Just"
+
+left :: String
+left = "P.Left"
+
+right :: String
+right = "P.Right"
+
+true :: String
+true = "P.True"
+
+false :: String
+false = "P.False"
+
+pnothing :: String
+pnothing = "P.Nothing"
+
+pprint :: String
+pprint = "P.print"
+
+pundefined :: String
+pundefined = "P.undefined"
+
+ppi :: String
+ppi = "P.pi"
+
 -- other
+
 run_generator :: State Int a -> a
 run_generator = \hs_gen -> evalState hs_gen 0
 
@@ -313,7 +365,13 @@ str_to_sid = \str -> SId (IS str, Nothing)
 str_to_id :: String -> Identifier
 str_to_id = \str -> Id (Nothing, IS str, [], Nothing, Nothing)
 
--- ASTTypes.hs
--- Collect.hs
--- AST.hs
--- Test.hs
+to_hs_needs_annot :: Show a => NeedsAnnotBool -> a -> String -> Haskell
+to_hs_needs_annot = \needs_annot a str -> case needs_annot of
+  Annot -> "(" ++ show a ++ " :: " ++ str ++ ")"
+  NoAnnot -> show a
+
+{-
+For fast vim file navigation:
+Collect.hs
+AST.hs
+-}

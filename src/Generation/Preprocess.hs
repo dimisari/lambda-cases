@@ -19,26 +19,8 @@ import Generation.Collect
 import Generation.CheckCompatibility
 import Generation.TypesAndHelpers
 
--- hardcoded
-true :: String
-true = "P.True"
-
-false :: String
-false = "P.False"
-
-pnothing :: String
-pnothing = "P.Nothing"
-
-pprint :: String
-pprint = "P.print"
-
-pundefined :: String
-pundefined = "P.undefined"
-
-ppi :: String
-ppi = "P.pi"
-
 -- types
+
 data PossiblyInDC =
   InDotChange [PostFuncArg] | NotInDotChange
 
@@ -106,6 +88,7 @@ lookup_sid_in_ovm :: SimpleId -> PreprocessState (Maybe Identifier)
 lookup_sid_in_ovm = \sid -> M.lookup sid <$> get_ovm
 
 -- State helpers: post func arg push/pop
+
 push_post_func_arg :: PostFuncArg -> PreprocessState ()
 push_post_func_arg = \pfarg ->
   get_pidc >>= \case
@@ -121,6 +104,7 @@ pop_post_func_arg =
 
 -- change basic expr to post func app if it is a simple or special id and
 -- we are inside a dot change epxression
+
 change_be_if_needed :: BasicExpr -> PreprocessState BasicOrAppExpr
 change_be_if_needed = \be ->
   pfapp_if_be_needs_change be >>= \case
@@ -163,6 +147,7 @@ change_pfarg_if_under = \case
   other -> other
 
 -- helpers
+
 change_pfaoi_if_needed :: PFAOI -> PreprocessState (Maybe PFAOI)
 change_pfaoi_if_needed =
   check_if_pfaoi_is_sid .> \case
@@ -220,6 +205,7 @@ sid_to_id = \(SId (id_start, mdigit)) ->
   Id (Nothing, id_start, [], mdigit, Nothing)
 
 -- automatic instances
+
 instance Preprocess a => Preprocess [a] where
   preprocess = traverse preprocess
 
@@ -229,6 +215,7 @@ instance Preprocess a => Preprocess (Maybe a) where
     Just a -> Just <$> preprocess a
 
 -- preprocess for pairs and triples
+
 preprocess_pair
   :: (Preprocess a, Preprocess b) => (a, b) -> PreprocessState (a, b)
 
@@ -254,6 +241,7 @@ preprocess_second = \(a, b) ->
   preprocess b >$> \b' -> (a, b')
 
 -- regular instances
+
 deriving instance Preprocess ParenExpr
 
 instance Preprocess InsideParenExpr where
@@ -547,7 +535,8 @@ instance Preprocess ProgramPart where
     TT1 tt -> TT1 <$> preprocess tt
     other -> return other
 
--- ASTTypes.hs
--- CheckCompatibility.hs
--- AST.hs
--- lcc.hs
+{-
+For fast vim file navigation:
+CheckCompatibility.hs
+AST.hs
+-}

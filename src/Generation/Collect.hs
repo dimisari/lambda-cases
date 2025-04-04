@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, StandaloneDeriving, FlexibleInstances #-}
+{-# language LambdaCase, StandaloneDeriving, FlexibleInstances #-}
 
 module Generation.Collect where
 
