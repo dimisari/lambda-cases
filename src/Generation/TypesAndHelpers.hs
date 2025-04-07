@@ -1,3 +1,15 @@
+{-
+This file contains various things:
+- Most notable are the definitions and some helper functions for the following
+  classes:
+  - ToHaskell, ToHsWithParamNum, ToHsWithIndentLvl
+  These are the classes for which AST.hs is just instances of
+- Another interesting class is the class HasArgs
+  - For points where arguments are expected in lcases identifiers there needs
+    to be a mechanism to show that in the equivalent haskell identifiers. This
+    is done by inlining an equal amount of single quotes
+-}
+
 {-# language LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
 module Generation.TypesAndHelpers where
@@ -9,42 +21,14 @@ import qualified Data.Set as S
 
 import ASTTypes
 import Helpers
+import Generation.PrefixesAndHardcoded
 
--- types
+-- ToHaskell
 
 type Haskell = String
 
-type DotChangeArgHs = Haskell
-
-
-data NeedsParenBool = Paren | NoParen
-
-data NeedsAnnotBool = Annot | NoAnnot
-
-data PossiblyWhereExpr = HasWhereExpr WhereExpr | NoWhereExpr
-
-newtype WholeParams = Whole Parameters
-
-
-type WithParamNum = State Int
-
-type WithIndentLvl = State Int
-
--- classes
-
 class ToHaskell a where
   to_haskell :: a -> Haskell
-
-class ToHsWithParamNum a where
-  to_hs_wpn :: a -> WithParamNum Haskell
-
-class ToHsWithIndentLvl a where
-  to_hs_wil :: a -> WithIndentLvl Haskell
-
-class HasArgs a where
-  args_length :: a -> Int
-
--- automatic instances
 
 instance ToHaskell a => ToHaskell [a] where
   to_haskell = concatMap to_haskell
@@ -54,49 +38,45 @@ instance ToHaskell a => ToHaskell (Maybe a) where
     Nothing -> ""
     Just a -> to_haskell a
 
+to_hs_prepend_list :: ToHaskell a => String -> [a] -> Haskell
+to_hs_prepend_list = \prepend_hs -> concatMap ((prepend_hs ++) . to_haskell)
+
+-- WithParamNum
+
+type WithParamNum = State Int
+
+class ToHsWithParamNum a where
+  to_hs_wpn :: a -> WithParamNum Haskell
+
 instance ToHsWithParamNum a => ToHsWithParamNum (Maybe a) where
   to_hs_wpn = \case
     Nothing -> return ""
     Just a -> to_hs_wpn a
 
-instance ToHsWithIndentLvl a => ToHsWithIndentLvl (Maybe a) where
-  to_hs_wil = \case
-    Nothing -> return ""
-    Just a -> to_hs_wil a
-
--- list helpers
-
-to_hs_prepend_list :: ToHaskell a => String -> [a] -> Haskell
-to_hs_prepend_list = \prepend_hs -> concatMap ((prepend_hs ++) . to_haskell)
-
 to_hs_wpn_list :: ToHsWithParamNum a => [a] -> WithParamNum [Haskell]
 to_hs_wpn_list = traverse to_hs_wpn
 
-to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
-to_hs_wil_list = traverse to_hs_wil
-
--- Params helpers
-
-get_next_param :: WithParamNum Haskell
-get_next_param = get >$> to_param <* modify (+1)
+generate_next_param :: WithParamNum Haskell
+generate_next_param = get >$> int_to_param <* modify (+1)
 
 params_hs_gen :: WithParamNum Haskell
-params_hs_gen = get >$> to_params_hs
+params_hs_gen =
+  get >$> int_to_params
+  where
+  int_to_params :: Int -> Haskell
+  int_to_params = \case
+    0 -> ""
+    1 -> "\\" ++ int_to_param 0 ++ " -> "
+    i -> case i > 1 of
+      True -> "\\" ++ int_to_params_in_paren i ++ " -> "
+      False -> error "should be impossible: negative num of params"
 
-to_params_hs :: Int -> Haskell
-to_params_hs = \case
-  0 -> ""
-  1 -> "\\" ++ to_param 0 ++ " -> "
-  i -> case i > 1 of
-    True -> "\\" ++ to_params_in_paren_hs i ++ " -> "
-    False -> error "should be impossible: negative num of params"
+int_to_params_in_paren :: Int -> Haskell
+int_to_params_in_paren = \i ->
+  "(" ++ ([0..i-1] &> map int_to_param &> intercalate ", ") ++ ")"
 
-to_params_in_paren_hs :: Int -> Haskell
-to_params_in_paren_hs = \i ->
-  "(" ++ ([0..i-1] &> map to_param &> intercalate ", ") ++ ")"
-
-to_param :: Int -> Haskell
-to_param = \j -> param_prefix ++ show j
+int_to_param :: Int -> Haskell
+int_to_param = \j -> param_prefix ++ show j
 
 add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
 add_params_to = \hs_gen ->
@@ -115,18 +95,35 @@ add_params_to_list = \hs_list_gen ->
 case_of_inner_hs_gen :: WithParamNum Haskell
 case_of_inner_hs_gen =
   get >$> \case
-    1 -> to_param 0
+    1 -> int_to_param 0
     i -> case i > 1 of
-      True -> to_params_in_paren_hs i
+      True -> int_to_params_in_paren i
       False -> error "should be impossible: zero or negative cases params"
 
--- Indentation helpers
+-- WithIndentLvl
 
-change_il :: Int -> WithIndentLvl ()
-change_il = \i -> modify (+i)
+type WithIndentLvl = State Int
+
+class ToHsWithIndentLvl a where
+  to_hs_wil :: a -> WithIndentLvl Haskell
+
+instance ToHsWithIndentLvl a => ToHsWithIndentLvl (Maybe a) where
+  to_hs_wil = \case
+    Nothing -> return ""
+    Just a -> to_hs_wil a
+
+to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
+to_hs_wil_list = traverse to_hs_wil
+
+increase_il_by :: Int -> WithIndentLvl ()
+increase_il_by = \i -> modify (+i)
+
+decrease_il_by :: Int -> WithIndentLvl ()
+decrease_il_by = \i -> increase_il_by (-i)
 
 deeper_with_num :: Int -> WithIndentLvl Haskell -> WithIndentLvl Haskell
-deeper_with_num = \i hs_gen -> change_il i *> hs_gen <* change_il (-i)
+deeper_with_num = \i hs_gen ->
+  increase_il_by i *> hs_gen <* decrease_il_by i
 
 deeper :: WithIndentLvl Haskell -> WithIndentLvl Haskell
 deeper = deeper_with_num 1
@@ -141,25 +138,10 @@ indent_all_and_concat :: [Haskell] -> WithIndentLvl Haskell
 indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> map (indent_hs ++) hs_list &> intercalate "\n"
 
--- Args length hs
+-- HasArgs
 
-singe_quotes_hs :: HasArgs a => a -> String
-singe_quotes_hs = args_length .> \i -> replicate i '\''
-
-args_strs_hs :: HasArgs a => [(a, String)] -> Haskell
-args_strs_hs = concatMap (\(a, str) -> singe_quotes_hs a ++ str)
-
-args_nps_hs :: HasArgs a => [(a, NamePart)] -> Haskell
-args_nps_hs =
-  concatMap (\(a, NP str) -> singe_quotes_hs a ++ str) .> (upper_prefix ++)
-
-nps_args_hs :: HasArgs a => [(NamePart, a)] -> Haskell
-nps_args_hs = concatMap (\(NP str, a) -> str ++ singe_quotes_hs a)
-
-maybe_prefix_args_hs :: HasArgs a => String -> Maybe a -> Haskell
-maybe_prefix_args_hs = \prefix -> \case
-  Nothing -> ""
-  Just a -> prefix ++ singe_quotes_hs a
+class HasArgs a where
+  args_length :: a -> Int
 
 instance HasArgs a => HasArgs (Maybe a) where
   args_length = \case
@@ -183,6 +165,57 @@ instance HasArgs SubsInParen where
 
 instance HasArgs UndersInParen where
   args_length = \(UIP i) -> i
+
+singe_quotes_hs :: HasArgs a => a -> String
+singe_quotes_hs = args_length .> \i -> replicate i '\''
+
+args_strs_hs :: HasArgs a => [(a, String)] -> Haskell
+args_strs_hs = concatMap (\(a, str) -> singe_quotes_hs a ++ str)
+
+args_nps_hs :: HasArgs a => [(a, NamePart)] -> Haskell
+args_nps_hs =
+  concatMap (\(a, NP str) -> singe_quotes_hs a ++ str) .> (upper_prefix ++)
+
+nps_args_hs :: HasArgs a => [(NamePart, a)] -> Haskell
+nps_args_hs = concatMap (\(NP str, a) -> str ++ singe_quotes_hs a)
+
+maybe_prefix_args_hs :: HasArgs a => String -> Maybe a -> Haskell
+maybe_prefix_args_hs = \prefix -> \case
+  Nothing -> ""
+  Just a -> prefix ++ singe_quotes_hs a
+
+-- types
+
+type DotChangeArgHs = Haskell
+
+newtype WholeParams = Whole Parameters
+
+-- NeedsParenBool
+
+data NeedsParenBool = Paren | NoParen
+
+in_paren_if :: NeedsParenBool -> Haskell -> Haskell
+in_paren_if = \case
+  NoParen -> id
+  Paren -> \hs -> "(" ++ hs ++ ")"
+
+-- NeedsAnnotBool
+
+data NeedsAnnotBool = Annot | NoAnnot
+
+to_hs_needs_annot :: Show a => NeedsAnnotBool -> a -> String -> Haskell
+to_hs_needs_annot = \needs_annot a str -> case needs_annot of
+  Annot -> "(" ++ show a ++ " :: " ++ str ++ ")"
+  NoAnnot -> show a
+
+-- PossiblyWhereExpr
+
+data PossiblyWhereExpr = HasWhereExpr WhereExpr | NoWhereExpr
+
+mwe_to_pwe :: Maybe WhereExpr -> PossiblyWhereExpr
+mwe_to_pwe = \case
+  Nothing -> NoWhereExpr
+  Just we -> HasWhereExpr we
 
 -- ParenFuncAppOrId helpers
 
@@ -215,88 +248,6 @@ comb_sid_def_hs :: Haskell -> Haskell -> Haskell
 comb_sid_def_hs = \hs1 hs2 ->
   "\n" ++ hs1 ++ " = \\new x -> x { " ++ hs2 ++ " = new }"
 
--- prefixes
-
-lower_prefix :: Haskell
-lower_prefix = "a"
-
-upper_prefix :: Haskell
-upper_prefix = "A"
-
-spid_projection_prefix :: Haskell
-spid_projection_prefix = "p"
-
-change_prefix :: Haskell
-change_prefix = "c0"
-
-spid_change_prefix :: Haskell
-spid_change_prefix = "c"
-
-constructor_prefix :: Haskell
-constructor_prefix = "C"
-
-param_t_var_prefix :: Haskell
-param_t_var_prefix = "a"
-
-ad_hoc_t_var_prefix :: Haskell
-ad_hoc_t_var_prefix = "b"
-
-param_prefix :: Haskell
-param_prefix = "pA"
-
--- hardcoded
-
-show_class :: String
-show_class = "P.Show"
-
-show_val1 :: String
-show_val1 = "show"
-
-show_val2 :: String
-show_val2 = "P.show"
-
-bool :: String
-bool = "P.Bool"
-
-integer :: String
-integer = "P.Integer"
-
-double :: String
-double = "P.Double"
-
-char :: String
-char = "P.Char"
-
-string :: String
-string = "P.String"
-
-just :: String
-just = "P.Just"
-
-left :: String
-left = "P.Left"
-
-right :: String
-right = "P.Right"
-
-true :: String
-true = "P.True"
-
-false :: String
-false = "P.False"
-
-pnothing :: String
-pnothing = "P.Nothing"
-
-pprint :: String
-pprint = "P.print"
-
-pundefined :: String
-pundefined = "P.undefined"
-
-ppi :: String
-ppi = "P.pi"
-
 -- other
 
 run_generator :: State Int a -> a
@@ -307,19 +258,6 @@ to_hs_maybe_np = \case
   Nothing -> ""
   Just (NP str) -> "'" ++ str
 
-in_paren_if :: NeedsParenBool -> Haskell -> Haskell
-in_paren_if = \case
-  NoParen -> id
-  Paren -> \hs -> "(" ++ hs ++ ")"
-
-mwe_to_pwe :: Maybe WhereExpr -> PossiblyWhereExpr
-mwe_to_pwe = \case
-  Nothing -> NoWhereExpr
-  Just we -> HasWhereExpr we
-
-under_pfarg_param :: Haskell
-under_pfarg_param = "x'"
-
 tn_to_tid_hs :: TypeName -> Haskell
 tn_to_tid_hs = \(TN (mpvip1, TId str, pvip_str_pairs, mpvip2)) ->
   maybe_prefix_args_hs upper_prefix mpvip1 ++ str ++
@@ -327,6 +265,23 @@ tn_to_tid_hs = \(TN (mpvip1, TId str, pvip_str_pairs, mpvip2)) ->
 
 tn_to_cons_hs :: TypeName -> Haskell
 tn_to_cons_hs = tn_to_tid_hs .> (++ "'")
+
+change_prop_hs_if_needed :: Haskell -> Haskell
+change_prop_hs_if_needed = \case
+  "A'Has_Str_Rep" -> show_class
+  hs -> hs
+
+change_id_hs_if_needed1 :: Haskell -> Haskell
+change_id_hs_if_needed1 = \case
+  "a'to_string" -> show_val1
+  hs -> hs
+
+change_id_hs_if_needed2 :: Haskell -> Haskell
+change_id_hs_if_needed2 = \case
+  "a'to_string" -> show_val2
+  hs -> hs
+
+-- type conversion
 
 ft_to_st :: FieldType -> SimpleType
 ft_to_st = \case
@@ -344,20 +299,7 @@ ipt_to_st = \case
   PT3 pt -> PT1 pt
   FT3 ft -> FT1 ft
 
-change_prop_hs_if_needed :: Haskell -> Haskell
-change_prop_hs_if_needed = \case
-  "A'Has_Str_Rep" -> show_class
-  hs -> hs
-
-change_id_hs_if_needed1 :: Haskell -> Haskell
-change_id_hs_if_needed1 = \case
-  "a'to_string" -> show_val1
-  hs -> hs
-
-change_id_hs_if_needed2 :: Haskell -> Haskell
-change_id_hs_if_needed2 = \case
-  "a'to_string" -> show_val2
-  hs -> hs
+-- string to id
 
 str_to_sid :: String -> SimpleId
 str_to_sid = \str -> SId (IS str, Nothing)
@@ -365,13 +307,9 @@ str_to_sid = \str -> SId (IS str, Nothing)
 str_to_id :: String -> Identifier
 str_to_id = \str -> Id (Nothing, IS str, [], Nothing, Nothing)
 
-to_hs_needs_annot :: Show a => NeedsAnnotBool -> a -> String -> Haskell
-to_hs_needs_annot = \needs_annot a str -> case needs_annot of
-  Annot -> "(" ++ show a ++ " :: " ++ str ++ ")"
-  NoAnnot -> show a
-
 {-
 For fast vim file navigation:
 Collect.hs
 AST.hs
+PrefixesAndHardcoded.hs
 -}

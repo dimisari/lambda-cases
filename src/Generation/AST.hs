@@ -25,6 +25,7 @@ import ShowInstances
 
 import Generation.TypesAndHelpers
 import Generation.Collect
+import Generation.PrefixesAndHardcoded
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 
@@ -82,7 +83,7 @@ instance ToHsWithParamNum LineExprOrUnders where
 instance ToHsWithParamNum LineExprOrUnder where
   to_hs_wpn = \case
     LE1 le -> return $ to_haskell le
-    Underscore1 -> get_next_param
+    Underscore1 -> generate_next_param
 
 instance ToHaskell LineExpr where
   to_haskell = \case
@@ -329,7 +330,7 @@ instance ToHsWithParamNum Operand where
   to_hs_wpn = \case
     BOAE2 boae -> return $ to_haskell boae
     PE3 pe -> return $ to_haskell pe
-    Underscore3 -> get_next_param
+    Underscore3 -> generate_next_param
 
 instance ToHaskell Op where
   to_haskell = \case
@@ -433,7 +434,7 @@ instance ToHsWithIndentLvl ([Case], Maybe EndCase) where
 instance ToHsWithParamNum CasesParams where
   to_hs_wpn = \case
     CParamId id -> return $ to_haskell id
-    QuestionMark -> get_next_param
+    QuestionMark -> generate_next_param
     Star2 -> return "_"
     CParams (cps, cps_l) ->
       to_hs_wpn_list (cps : cps_l) >$> \cps_l_hs ->

@@ -4,7 +4,7 @@ This file defines:
 - parsers that only affect the state for manipulating the indentation level and
   checking whether we are in the equal line of a value definition
 - helper parsers for spaces, commas, equal symbols, arrows, parentheses etc
-- parser for char and string literals
+- parsers for char and string literals
 -}
 
 {-# language LambdaCase, FlexibleContexts #-}
@@ -146,5 +146,7 @@ stringChar = stringLetter <|> charEscape <?> "string character"
 stringLetter :: Parser Char
 stringLetter = satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
--- ASTTypes.hs
--- AST.hs
+{-
+For fast vim file navigation:
+AST.hs
+-}

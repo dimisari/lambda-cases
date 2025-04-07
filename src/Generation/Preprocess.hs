@@ -18,6 +18,7 @@ import Parsing.AST
 import Generation.Collect
 import Generation.CheckCompatibility
 import Generation.TypesAndHelpers
+import Generation.PrefixesAndHardcoded
 
 -- types
 

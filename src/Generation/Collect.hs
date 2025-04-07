@@ -1,5 +1,12 @@
 {-
-This file contains code that traverses the AST and collects stuff:
+This file contains code that traverses the AST and collects stuff to be
+used in the preprocessing phase:
+- field ids
+- ranaming propositions
+- or values (empty and full)
+and code that collects stuff from particular AST types in the translation
+phase:
+- parametric type variables
 -}
 
 {-# language LambdaCase, StandaloneDeriving, FlexibleInstances #-}
@@ -29,18 +36,6 @@ class CollectFieldIds a where
 field_ids :: Program -> FieldIds
 field_ids = \prog -> execState (collect_fids prog) empty
 
--- CollectParamTVars types, class and final function
-
-type ParamTVars = Set ParamTVar
-
-type ParamTVarsState = State ParamTVars ()
-
-class CollectParamTVars a where
-  collect_ptvs :: a -> ParamTVarsState
-
-param_t_vars :: Type -> [ParamTVar]
-param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
-
 -- CollectRenamingProps types, class and final function
 
 type RenamingProp = (PropName, [PropName])
@@ -55,7 +50,7 @@ class CollectRenamingProps a where
 renaming_props :: Program -> RenamingProps
 renaming_props = \prog -> execState (collect_rps prog) []
 
--- CollectOrValues types, class and final function
+-- CollectOrValues types, class, initial map and final function
 
 type OrValue = SimpleId
 
@@ -70,11 +65,34 @@ type OrValuesState = State OrValues ()
 class CollectOrValues a where
   collect_ovms :: a -> OrValuesState
 
+init_or_val_map :: FullOrValuesMap
+init_or_val_map =
+  M.fromList $ map (\(s1, s2) -> (str_to_sid s1, str_to_id s2)) predefined
+  where
+  predefined :: [(String, String)]
+  predefined =
+    [("a_value", "the_value"), ("error", "err"), ("result", "res")]
+
 or_values :: Program -> OrValues
 or_values = \prog -> execState (collect_ovms prog) (empty, init_or_val_map)
 
+-- CollectParamTVars types, class and final function
 
--- CollectFieldIds
+type ParamTVars = Set ParamTVar
+
+type ParamTVarsState = State ParamTVars ()
+
+class CollectParamTVars a where
+  collect_ptvs :: a -> ParamTVarsState
+
+param_t_vars :: Type -> [ParamTVar]
+param_t_vars = \(Ty (_, st)) -> execState (collect_ptvs st) empty &> toList
+
+{-
+Below are all the instances
+-}
+
+-- CollectFieldIds instances
 
 instance CollectFieldIds Program where
   collect_fids = \(P (pp, pps)) -> mapM_ collect_fids $ pp : pps
@@ -98,8 +116,7 @@ instance CollectFieldIds FieldNames where
 instance CollectFieldIds SimpleId where
   collect_fids = \sid -> modify (insert sid)
 
-
--- CollectParamTVars
+-- CollectParamTVars instances
 
 instance CollectParamTVars SimpleType where
   collect_ptvs = \case
@@ -164,8 +181,7 @@ instance CollectParamTVars InParenT where
     PoT3 pt -> collect_ptvs pt
     FT3 ft -> collect_ptvs ft
 
-
--- CollectRenamingProps
+-- CollectRenamingProps instances
 
 instance CollectRenamingProps Program where
   collect_rps = \(P (pp, pps)) -> mapM_ collect_rps $ pp : pps
@@ -184,15 +200,7 @@ instance CollectRenamingProps RenamingPropDef where
   collect_rps = \(RPD (PNL pn_key, pn1, pns)) ->
     modify $ (:) (pn_key, pn1 : pns)
 
--- CollectOrValues
-
-init_or_val_map :: FullOrValuesMap
-init_or_val_map =
-  M.fromList $ map (\(s1, s2) -> (str_to_sid s1, str_to_id s2)) predefined
-
-predefined :: [(String, String)]
-predefined =
-  [("a_value", "the_value"), ("error", "err"), ("result", "res")]
+-- CollectOrValues instances
 
 instance CollectOrValues Program where
   collect_ovms = \(P (pp, pps)) -> mapM_ collect_ovms $ pp : pps
@@ -214,12 +222,6 @@ instance CollectOrValues PossibleValue where
   collect_ovms = \(PV (ov, maybe_id_st)) -> case maybe_id_st of
     Just (id, _) -> modify $ \(nc, fovm) -> (nc, M.insert ov id fovm)
     Nothing -> modify $ \(nc, fovm) -> (insert ov nc, fovm)
-
-{-
-Potential changes:
-EmptyOrValues and FullOrValuesMap could be joined together since the both exist
-on or type definitions
--}
 
 {-
 For fast vim file navigation:
