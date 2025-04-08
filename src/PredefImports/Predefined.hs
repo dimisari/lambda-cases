@@ -1,12 +1,18 @@
 {-
 This file contains:
-- Types and values that can be used in every lcases program.
-  Most of it is simply renaming standard haskell stuff.
+- Types and values that can be used in every lcases program.  Most of it is
+  simply renaming standard haskell stuff.
 - Type classes for implementing .1st, .2nd, ... and .change when translating to
-  haskell.
-- The FromTuple[n] type classes for not needing to use constuctors when
-  defining a tuple of a tuple type in lcases. Constructors are automatically
-  added when translating.
+  haskell. This is done by a class that defines a function that gives you the
+  n-th element for any tuple that has size >= n (and <= 5 for now). Similarly,
+  there is class that changes the n-th element. (For now n <= 3)
+- Type classes for automatically calling constructors in the translation of
+  tuples. This is done by a class that defines a function from a product type
+  of size n to any equivalent tuple type (and it is implemented automatically
+  during the translation of the tuple type by calling its constructor). This
+  allows to simply call that function when translating tuples without needing
+  to know to which of potentially many equivalent tuple types it belongs to
+  (or of it's simply a tuple of the equivalent product type).
 -}
 
 {-# language

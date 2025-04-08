@@ -1,8 +1,9 @@
 
 - finish comments and descriptions
-  - CheckCompatibility.hs
-  - Preprocess.hs
-  - TypesAndHelpers.hs
+  - Generation
+    - Preprocess.hs
+    - CheckCompatibility.hs
+    - add README.md
 
 # to_do.txt
 

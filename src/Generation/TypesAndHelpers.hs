@@ -5,9 +5,10 @@ This file contains various things:
   - ToHaskell, ToHsWithParamNum, ToHsWithIndentLvl
   These are the classes for which AST.hs is just instances of
 - Another interesting class is the class HasArgs
-  - For points where arguments are expected in lcases identifiers there needs
+  - For identifiers where arguments are expected in lcases there needs
     to be a mechanism to show that in the equivalent haskell identifiers. This
-    is done by inlining an equal amount of single quotes
+    is done by substituting the arguments with an equal amount of single quotes
+    in the translation
 -}
 
 {-# language LambdaCase, FlexibleInstances, FlexibleContexts #-}
@@ -281,7 +282,8 @@ change_id_hs_if_needed2 = \case
   "a'to_string" -> show_val2
   hs -> hs
 
--- type conversion
+-- AST conversions
+--   types
 
 ft_to_st :: FieldType -> SimpleType
 ft_to_st = \case
@@ -299,13 +301,33 @@ ipt_to_st = \case
   PT3 pt -> PT1 pt
   FT3 ft -> FT1 ft
 
--- string to id
+--   identifiers
 
 str_to_sid :: String -> SimpleId
 str_to_sid = \str -> SId (IS str, Nothing)
 
 str_to_id :: String -> Identifier
 str_to_id = \str -> Id (Nothing, IS str, [], Nothing, Nothing)
+
+sid_to_pfaoi :: SimpleId -> ParenFuncAppOrId
+sid_to_pfaoi = \(SId (id_start, mdigit)) ->
+  PFAOI (Nothing, id_start, [], mdigit, Nothing)
+
+sid_to_id :: SimpleId -> Identifier
+sid_to_id = \(SId (id_start, mdigit)) ->
+  Id (Nothing, id_start, [], mdigit, Nothing)
+
+-- AST checks
+
+check_if_pfaoi_is_sid :: ParenFuncAppOrId -> Maybe SimpleId
+check_if_pfaoi_is_sid = \case
+  PFAOI (Nothing, id_strt, [], mdigit, Nothing) -> Just $ SId (id_strt, mdigit)
+  _ -> Nothing
+
+check_if_id_is_sid :: Identifier -> Maybe SimpleId
+check_if_id_is_sid = \case
+  Id (Nothing, ids, [], mdigit, Nothing) -> Just $ SId (ids, mdigit)
+  _ -> Nothing
 
 {-
 For fast vim file navigation:
