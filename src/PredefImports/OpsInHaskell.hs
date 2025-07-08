@@ -146,6 +146,9 @@ instance Show a => A'And'Add_To' String a String where
 instance A'And'Add_To' [a] [a] [a] where
   (!+) = (++)
 
+instance A'And'Add_To' [Char] [Char] [Char] where
+  (!+) = (++)
+
 instance b ~ [a] => A'And'Add_To' a [a] b where
   (!+) = (:)
 

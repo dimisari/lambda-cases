@@ -48,7 +48,7 @@ result_msg(_) : Possibly(Int) => Program
     a_value => print("Found! The index is: " + the_value)
 
 try(_) : Int => Program
-  = i => print("Trying " + (i)to_string) ; result_msg(bin_search(list, i))
+  = i => print("Trying " + i) ; result_msg(bin_search(list, i))
 
 try_list(_) : ListOf(Int)s => Program
   = ?

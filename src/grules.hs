@@ -9,6 +9,8 @@ directory
 
 module Main where
 
+-- imports
+
 import System.Environment (getArgs)
 import Text.Parsec (runParser, eof, ParseError)
 import Data.List.Split (endBy)
@@ -203,7 +205,7 @@ instance HasParser a => HasParser (NeedsParenBool, a) where
 instance HasParser a => HasParser (NeedsAnnotBool, a) where
    parser = parser >$> \a -> (NoAnnot, a)
 
+-- For fast vim file navigation:
 {-
-For fast vim file navigation:
 ASTTypes.hs
 -}

@@ -8,6 +8,8 @@ It spits out haskell or an executable depending on the program arguments.
 
 module Main where
 
+-- imports
+
 import System.Environment (getArgs, getEnv)
 import System.Process (callCommand)
 import Data.List (intercalate)

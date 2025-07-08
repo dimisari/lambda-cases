@@ -1,6 +1,11 @@
 
-- Καινούργιο AST μετά το AST του parsing
+- group error messages in seperate file
+
+- Να φτιάξω 2 διαφορετικά ASTs με διφορετικά types
+  (πριν και μετά το preprocessing)
   - Αλλαγές
+    - TypeTheo να έχει μόνο ένα PropNameWithSubs στο 1ο και όχι λίστα
+      - Η λίστα χρειάζεται για το 2o
     - Identifier
       - Κάπως να βρω ένα καλύτερο representation με το UndersInParen
 

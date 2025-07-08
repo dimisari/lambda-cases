@@ -1,3 +1,14 @@
+
 - repl
 - imports
 - package manager
+
+It seems like it should be an interpreter in order for the code to be the
+program. Otherwise, the executable is the program. This introduces too many
+complexities for my humble mind to be able to wrap itself around.
+
+All imports should have some kind of hash output attached for full
+compatibility and all software writers should accordingly release their
+software with hash outputs instead of versions.
+
+# to_do_next.txt

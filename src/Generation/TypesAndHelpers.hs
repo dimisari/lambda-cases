@@ -301,6 +301,10 @@ ipt_to_st = \case
   PT3 pt -> PT1 pt
   FT3 ft -> FT1 ft
 
+taioasm_to_sou :: TAIOASMiddle -> SubOrUnder
+taioasm_to_sou = \taioasm ->
+  TVS1 $ TAIOAS1 $ TAIOAS (Nothing, taioasm, Nothing)
+
 --   identifiers
 
 str_to_sid :: String -> SimpleId

@@ -21,7 +21,7 @@ type nickname: DoneNode = NameAndDist
 
 type nickname: ReachableNode = NameAndDist
 
-type nickname: (T1)FStateMan = (T1)FState(State)Man
+type nickname: StateManipulationWith(T1) = (T1)FState(State)Man
 
 type nickname: StateMan = State(State)Man
 
@@ -34,7 +34,7 @@ dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
     is : State
       = ([], [(source_name, 0)])
 
-get_result(_) : Graph => (ListOf(DoneNode)s)FStateMan
+get_result(_) : Graph => StateManipulationWith(ListOf(DoneNode)s)
   = g =>
     get_state >> state =>
     state.rns -> ?
@@ -64,11 +64,11 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
           true => do_nothing
           false => add_ne_to_rns_from_dn
     where
-    check_if_ne_in_rns : (InRNsPossibilities)FStateMan
+    check_if_ne_in_rns : StateManipulationWith(InRNsPossibilities)
       = get_state >> _.rns o> check_ne_in_rns_rec([], _)
         where
         check_ne_in_rns_rec(_, _)
-          : ListOf(ReachableNode)s^2 => (InRNsPossibilities)FStateMan
+          : ListOf(ReachableNode)s^2 => StateManipulationWith(InRNsPossibilities)
           = (checked, ?)
             [] => wrap(not_in_rns)
             [rn1, rns = ...] =>
@@ -86,11 +86,11 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
         new_d : Dist
           = dn.dist + ne.dist
 
-    check_if_ne_in_dns : (Bool)FStateMan
+    check_if_ne_in_dns : StateManipulationWith(Bool)
       = get_state >> _.dns o> check_ne_name_in(_)
         where
         check_ne_name_in(_)
-          : ListOf(DoneNode)s => (Bool)FStateMan
+          : ListOf(DoneNode)s => StateManipulationWith(Bool)
           = ?
             [] => wrap(false)
             [dn, dns = ... ] =>

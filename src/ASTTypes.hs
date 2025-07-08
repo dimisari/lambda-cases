@@ -22,10 +22,12 @@ newtype IdCont = IC (UndersInParen, String)
 
 newtype UndersInParen = UIP Int
 
+
 newtype ParenExpr = PE InsideParenExpr
 
 data InsideParenExpr =
   LOE1 LineOpExpr | LFE1 LineFuncExpr
+
 
 newtype Tuple = T (LineExprOrUnder, LineExprOrUnders)
 
@@ -48,6 +50,7 @@ newtype BigTuple =
 
 data BigTupleSplit =
   Split | NoSplit
+
 
 newtype List = L (Maybe LineExprOrUnders)
 
@@ -87,10 +90,12 @@ newtype FieldChange = FC (Field, LineExprOrUnder)
 data Field =
   SId2 SimpleId | SI3 SpecialId
 
+
 -- Values: OpExpr
 
 data OpExpr =
   LOE3 LineOpExpr | BOE1 BigOpExpr
+
 
 newtype OpExprStart = OES [(Operand, Op)]
 
@@ -361,8 +366,9 @@ data ProgramPart =
   VD2 ValueDef | GVDs2 GroupedValueDefs | TD TypeDef | TNN1 TypeNickname |
   TPD TypePropDef | TT1 TypeTheo
 
+
+-- For fast vim file navigation:
 {-
-For fast vim file navigation:
 Helpers.hs
 ShowInstances.hs
 Parsing/TypesAndHelpers.hs
