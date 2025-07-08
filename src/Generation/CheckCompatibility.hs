@@ -12,6 +12,8 @@ import ASTTypes
 import ShowInstances
 import Helpers
 
+import Generation.TypesAndHelpers
+
 -- types
 
 type AHTVMap = M.Map AdHocTVar SubOrUnder
@@ -24,32 +26,12 @@ instance Eq Compatibility where
     (NotCompatible, NotCompatible) -> True
     _ -> False
 
-type WAHTVMap a = State AHTVMap a
-
--- helpers
-
-compat_union :: Compatibility -> Compatibility -> Compatibility
-compat_union = \c1 c2 -> case (c1, c2) of
-  (Compatible m1, Compatible m2) -> Compatible $ M.union m1 m2
-  _ -> NotCompatible
-
-compat_list_union :: [Compatibility] -> Compatibility
-compat_list_union = foldr compat_union $ Compatible M.empty
-
-error_zip :: ([a], [b]) -> [(a, b)]
-error_zip = \case
-  ([], []) -> []
-  (a : as, b : bs) -> (a, b) : error_zip(as, bs)
-  _ -> error "error_zip: lists not the same length"
-
 -- CheckCompatibility class
 
 class CheckCompatibility a b where
   check_compat :: (a, b) -> Compatibility
 
-instance
-  (Show a, Show b, CheckCompatibility a b) => CheckCompatibility (Maybe a) (Maybe b)
-  where
+instance CheckCompatibility a b => CheckCompatibility (Maybe a) (Maybe b) where
   check_compat = \case
     (Just a, Just b) -> check_compat(a, b)
     (Nothing, Nothing) -> Compatible M.empty
@@ -85,7 +67,9 @@ instance CheckCompatibility TypesInParen SubsInParen where
     check_compat(st1 : sts, tvs1 : tvss)
 
 type NP_TIP_Pair = (NamePart, TypesInParen)
+
 type NP_SIP_Pair = (NamePart, SubsInParen)
+
 instance CheckCompatibility NP_TIP_Pair NP_SIP_Pair where
   check_compat = \((np1, tip), (np2, sip)) ->
     case np1 == np2 of
@@ -93,7 +77,9 @@ instance CheckCompatibility NP_TIP_Pair NP_SIP_Pair where
       True -> check_compat(tip, sip)
 
 type TIP_NP_Pair = (TypesInParen, NamePart)
+
 type SIP_NP_Pair = (SubsInParen, NamePart)
+
 instance CheckCompatibility TIP_NP_Pair SIP_NP_Pair where
   check_compat = \((tip, np1), (sip, np2)) ->
     case np1 == np2 of
@@ -138,10 +124,7 @@ instance CheckCompatibility TypesInParen SubsOrUndersInParen where
 instance CheckCompatibility TAIOAMiddle TAIOASMiddle where
   check_compat = \case
     (AHTV2 ahtv, taioasm) ->
-      Compatible $ M.singleton ahtv taioasm_sou
-      where
-      taioasm_sou :: SubOrUnder
-      taioasm_sou = TVS1 $ TAIOAS1 $ TAIOAS (Nothing, taioasm, Nothing)
+      Compatible $ M.singleton ahtv $ taioasm_to_sou taioasm
     (TIdStart1 (tid1, tip_str_pairs), TIdStart2 (tid2, souip_str_pairs)) ->
       case tid1 == tid2 of
         False -> NotCompatible
@@ -178,7 +161,9 @@ instance CheckCompatibility SimpleType SubOrUnder where
     _ -> NotCompatible
 
 type TIP_STR = (TypesInParen, String)
+
 type SOUIP_STR = (SubsOrUndersInParen, String)
+
 instance CheckCompatibility TIP_STR SOUIP_STR where
   check_compat = \((tip, str1), (souip, str2)) ->
     case str1 == str2 of
@@ -192,6 +177,8 @@ instance CheckCompatibility InParenT InParenTSub where
     _ -> NotCompatible
 
 -- AddSubs Class
+
+type WAHTVMap a = State AHTVMap a
 
 class AddSubs a b where
   add_subs :: a -> WAHTVMap b
@@ -207,9 +194,7 @@ add_subs_triple = \(a, c, e) ->
   return (b, d, f)
 
 instance AddSubs a b => AddSubs (Maybe a) (Maybe b) where
-  add_subs = \case
-    Just a -> Just <$> add_subs a
-    Nothing -> return Nothing
+  add_subs = traverse add_subs
 
 instance AddSubs a b => AddSubs [a] [b] where
   add_subs = traverse add_subs
@@ -305,7 +290,24 @@ instance AddSubs InParenT InParenTSub where
     PT3 pt -> PTS2 <$> add_subs pt
     FT3 ft -> FTS2 <$> add_subs ft
 
+-- helpers
+
+compat_union :: Compatibility -> Compatibility -> Compatibility
+compat_union = \c1 c2 -> case (c1, c2) of
+  (Compatible m1, Compatible m2) -> Compatible $ M.union m1 m2
+  _ -> NotCompatible
+
+compat_list_union :: [Compatibility] -> Compatibility
+compat_list_union = foldr compat_union $ Compatible M.empty
+
+error_zip :: ([a], [b]) -> [(a, b)]
+error_zip = \case
+  ([], []) -> []
+  (a : as, b : bs) -> (a, b) : error_zip(as, bs)
+  _ -> error "error_zip: lists not the same length"
+
 {-
 For fast vim file navigation:
 AST.hs
+Preprocess.hs
 -}

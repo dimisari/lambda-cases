@@ -1,5 +1,8 @@
 {-
-This file contains code that
+This file contains code that changes the AST from the parsing step into a new
+more haskell-like AST for the translation step. This is done mainly by
+instances of the Preprocess type class which are instances that change all the
+AST nodes that need to be changed.
 -}
 
 {-# language
@@ -33,10 +36,14 @@ type StateTuple =
   (PossiblyInDC, FieldIds, EmptyOrValues, RenamingProps, FullOrValuesMap)
 type PreprocessState = State StateTuple
 
--- Preprocess class, automatic instances and
+-- Preprocess class, general preprocess function, automatic instances
+--   and instances for pairs and triples
 
 class Preprocess a where
   preprocess :: a -> PreprocessState a
+
+preprocess_prog :: Program -> Program
+preprocess_prog = \prog -> evalState (preprocess prog) (init_state prog)
 
 instance Preprocess a => Preprocess [a] where
   preprocess = traverse preprocess
@@ -44,61 +51,9 @@ instance Preprocess a => Preprocess [a] where
 instance Preprocess a => Preprocess (Maybe a) where
   preprocess = traverse preprocess
 
-preprocess_prog :: Program -> Program
-preprocess_prog = \prog -> evalState (preprocess prog) (init_state prog)
-
--- change basic expr to post func app if it is a simple or special id and
--- we are inside a dot change epxression
-
-class ToMaybePostFuncApp a where
-  to_maybe_post_func_app :: a -> PreprocessState (Maybe PostFuncApp)
-
-instance ToMaybePostFuncApp BasicExpr where
-  to_maybe_post_func_app = \case
-    PFAOI1 pfaoi -> to_maybe_post_func_app pfaoi
-    SI1 spid -> to_maybe_post_func_app spid
-    _ -> return Nothing
-
-instance ToMaybePostFuncApp ParenFuncAppOrId where
-  to_maybe_post_func_app =
-    check_if_pfaoi_is_sid .> \case
-      Nothing -> return Nothing
-      Just sid -> to_maybe_post_func_app sid
-
-instance ToMaybePostFuncApp SpecialId where
-  to_maybe_post_func_app = \spid -> to_maybe_post_func_app $ SI2 spid
-
-instance ToMaybePostFuncApp SimpleId where
-  to_maybe_post_func_app = \sid ->
-    check_if_sid_in_fids sid >>= \case
-      True -> to_maybe_post_func_app $ SId1 sid
-      _ -> return Nothing
-
-instance ToMaybePostFuncApp PostFunc where
-  to_maybe_post_func_app = \pf ->
-    get_pfarg_if_in_dot_change >$>
-    fmap (\pfarg -> pfarg_pf_to_pfapp (pfarg, pf))
-
-pfarg_pf_to_pfapp :: (PostFuncArg, PostFunc) -> PostFuncApp
-pfarg_pf_to_pfapp = \(pfarg, pf) ->
-  PoFA (change_pfarg_if_under pfarg, PFsMDC ([pf], Nothing))
-
-change_pfarg_if_under :: PostFuncArg -> PostFuncArg
-change_pfarg_if_under = \case
-  Underscore2 -> BE2 $ PFAOI1 $ sid_to_pfaoi (SId (IS "x'", Nothing))
-  other -> other
-
--- preprocess for pairs and triples
-
 preprocess_pair
   :: (Preprocess a, Preprocess b) => (a, b) -> PreprocessState (a, b)
 preprocess_pair = \(a, b) -> preprocess a ++< preprocess b
-
-preprocess_triple
-  :: (Preprocess a, Preprocess b, Preprocess c) =>
-     (a, b, c) -> PreprocessState (a, b, c)
-preprocess_triple = \(a, b, c) ->
-  preprocess a ++< preprocess b +++< preprocess c
 
 preprocess_first :: Preprocess a => (a, b) -> PreprocessState (a, b)
 preprocess_first = \(a, b) -> preprocess a >$> \a' -> (a', b)
@@ -106,7 +61,13 @@ preprocess_first = \(a, b) -> preprocess a >$> \a' -> (a', b)
 preprocess_second :: Preprocess b => (a, b) -> PreprocessState (a, b)
 preprocess_second = \(a, b) -> preprocess b >$> \b' -> (a, b')
 
--- regular instances
+preprocess_triple
+  :: (Preprocess a, Preprocess b, Preprocess c) =>
+     (a, b, c) -> PreprocessState (a, b, c)
+preprocess_triple = \(a, b, c) ->
+  preprocess a ++< preprocess b +++< preprocess c
+
+-- regular Preprocess instances
 
 instance Preprocess Identifier where
   preprocess = \id ->
@@ -117,7 +78,7 @@ instance Preprocess Identifier where
 instance Preprocess SimpleId where
   preprocess = \sid ->
     check_if_sid_in_ncs sid >$> \case
-      True -> add_c_to_sid sid
+      True -> add_constructor_prefix sid
       False -> change_if_particular_sid sid
 
 deriving instance Preprocess ParenExpr
@@ -183,8 +144,7 @@ instance Preprocess ParenFuncAppOrId where
         \(margs1', args_str_pairs', margs2') ->
         PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
 
-instance Preprocess Arguments where
-  preprocess = \(As leous) -> As <$> preprocess leous
+deriving instance Preprocess Arguments
 
 instance Preprocess PreFuncApp where
   preprocess = \(PrFA prfa) -> PrFA <$> preprocess_second prfa
@@ -219,8 +179,7 @@ instance Preprocess OpExpr where
     LOE3 loe -> LOE3 <$> preprocess loe
     BOE1 boe -> BOE1 <$> preprocess boe
 
-instance Preprocess OpExprStart where
-  preprocess = \(OES oper_op_list) -> OES <$> preprocess oper_op_list
+deriving instance Preprocess OpExprStart
 
 instance Preprocess (Operand, Op) where
   preprocess = preprocess_first
@@ -327,8 +286,7 @@ instance Preprocess InnerMatching where
 instance Preprocess TupleMatching where
   preprocess = \(TM ims) -> TM <$> preprocess_pair ims
 
-instance Preprocess ListMatching where
-  preprocess = \(LM m_list_internals) -> LM <$> preprocess m_list_internals
+deriving instance Preprocess ListMatching
 
 instance
   Preprocess (InnerMatching, [InnerMatching], Maybe RestListMatching)
@@ -407,6 +365,37 @@ instance Preprocess ProgramPart where
     TT1 tt -> TT1 <$> preprocess tt
     other -> return other
 
+-- ToMaybePostFuncApp class and instances
+
+class ToMaybePostFuncApp a where
+  to_maybe_post_func_app :: a -> PreprocessState (Maybe PostFuncApp)
+
+instance ToMaybePostFuncApp BasicExpr where
+  to_maybe_post_func_app = \case
+    PFAOI1 pfaoi -> to_maybe_post_func_app pfaoi
+    SI1 spid -> to_maybe_post_func_app spid
+    _ -> return Nothing
+
+instance ToMaybePostFuncApp ParenFuncAppOrId where
+  to_maybe_post_func_app =
+    check_if_pfaoi_is_sid .> \case
+      Nothing -> return Nothing
+      Just sid -> to_maybe_post_func_app sid
+
+instance ToMaybePostFuncApp SpecialId where
+  to_maybe_post_func_app = \spid -> to_maybe_post_func_app $ SI2 spid
+
+instance ToMaybePostFuncApp SimpleId where
+  to_maybe_post_func_app = \sid ->
+    check_if_sid_in_fids sid >>= \case
+      True -> to_maybe_post_func_app $ SId1 sid
+      _ -> return Nothing
+
+instance ToMaybePostFuncApp PostFunc where
+  to_maybe_post_func_app = \pf ->
+    get_pfarg_if_in_dot_change >$>
+    fmap (\pfarg -> pfarg_pf_to_pfapp (pfarg, pf))
+
 -- State helpers
 --   initial state
 
@@ -479,8 +468,9 @@ get_pfarg_if_in_dot_change =
 
 -- helpers
 
-add_c_to_sid :: SimpleId -> SimpleId
-add_c_to_sid = \(SId (IS str, mdigit)) -> SId (IS $ "C" ++ str, mdigit)
+add_constructor_prefix :: SimpleId -> SimpleId
+add_constructor_prefix = \(SId (IS str, mdigit)) ->
+  SId (IS $ constructor_prefix ++ str, mdigit)
 
 change_if_particular_sid :: SimpleId -> SimpleId
 change_if_particular_sid = \case
@@ -497,8 +487,19 @@ change_if_particular_str = \case
   "pi" -> ppi
   str -> str
 
+pfarg_pf_to_pfapp :: (PostFuncArg, PostFunc) -> PostFuncApp
+pfarg_pf_to_pfapp = \(pfarg, pf) ->
+  PoFA (change_pfarg_if_under pfarg, PFsMDC ([pf], Nothing))
+
+change_pfarg_if_under :: PostFuncArg -> PostFuncArg
+change_pfarg_if_under = \case
+  Underscore2 ->
+    BE2 $ PFAOI1 $ sid_to_pfaoi (SId (IS under_pfarg_param, Nothing))
+  other -> other
+
 {-
 For fast vim file navigation:
+Collect.hs
 CheckCompatibility.hs
 AST.hs
 -}
