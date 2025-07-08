@@ -1,0 +1,9 @@
+
+- arrays how?
+
+- rewrite compiler in lcases?
+
+- translate some Haskell libraries?
+
+- configuration file maybe?
+

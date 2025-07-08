@@ -5,5 +5,6 @@
     - Preprocess.hs
     - add README.md
 
-# to_do.txt
+- undefined without needing to write the "= line"
 
+# to_do.txt

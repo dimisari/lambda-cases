@@ -25,6 +25,8 @@ module PredefImports.Predefined where
 import Prelude hiding (IO)
 import qualified Prelude as P
 import Control.Monad.State
+import Data.List.Split
+import qualified Data.HashMap.Strict as HM
 
 -- types
 
@@ -38,12 +40,14 @@ type Possibly' = Maybe
 type Result'OrError' a b = Either b a
 type Z = Integer
 type R = Double
+type HashMapFrom'to' = HM.HashMap
 
 -- values
 
 print_line' = putStrLn
 get_line = getLine
 split'to_words = words
+split'to_lines = lines
 apply'to_all_in' = uncurry map
 throw_err' = error
 id' = id
@@ -128,8 +132,11 @@ ignore'from' = uncurry drop . \(x, y) -> (fromIntegral x, y)
 take'from' :: (Integer, [a]) -> [a]
 take'from' = uncurry take . \(x, y) -> (fromIntegral x, y)
 
-split'at' :: ([a], Integer) -> ([a], [a])
-split'at' = uncurry (flip splitAt) . \(l, i) -> (l, fromIntegral i)
+split'at_index' :: ([a], Integer) -> ([a], [a])
+split'at_index' = uncurry (flip splitAt) . \(l, i) -> (l, fromIntegral i)
+
+split'at_str' :: (String, String) -> [String]
+split'at_str' = uncurry $ flip splitOn
 
 concat_lists_in' :: [[a]] -> [a]
 concat_lists_in' = concat
@@ -148,6 +155,16 @@ not' = not
 
 for_all_in'' :: Monad m => ([a], a -> m b) -> m EmptyVal
 for_all_in'' = uncurry $ flip mapM_
+
+--
+empty_hash_map :: HM.HashMap a b
+empty_hash_map = HM.empty
+
+insert'to_hash_map' :: ((String, v), HM.HashMap String v) -> HM.HashMap String v
+insert'to_hash_map' = \((s,v), m) -> HM.insert s v m
+
+look_for'in_hash_map' :: (String, HM.HashMap String v) -> Maybe v
+look_for'in_hash_map' = \(s,m) -> HM.lookup s m
 
 -- IsFirst'
 
