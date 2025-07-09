@@ -40,7 +40,7 @@ type Possibly' = Maybe
 type Result'OrError' a b = Either b a
 type Z = Integer
 type R = Double
-type HashMapFrom'to' = HM.HashMap
+type HMapFrom'To' = HM.HashMap
 
 -- values
 
@@ -156,15 +156,16 @@ not' = not
 for_all_in'' :: Monad m => ([a], a -> m b) -> m EmptyVal
 for_all_in'' = uncurry $ flip mapM_
 
---
-empty_hash_map :: HM.HashMap a b
-empty_hash_map = HM.empty
+-- Hash map
 
-insert'to_hash_map' :: ((String, v), HM.HashMap String v) -> HM.HashMap String v
-insert'to_hash_map' = \((s,v), m) -> HM.insert s v m
+empty_hmap :: HMapFrom'To' a b
+empty_hmap = HM.empty
 
-look_for'in_hash_map' :: (String, HM.HashMap String v) -> Maybe v
-look_for'in_hash_map' = \(s,m) -> HM.lookup s m
+insert'to_hmap' :: ((String, v), HMapFrom'To' String v) -> HMapFrom'To' String v
+insert'to_hmap' = \((s,v), m) -> HM.insert s v m
+
+look_for'in_hmap' :: (String, HMapFrom'To' String v) -> Maybe v
+look_for'in_hmap' = \(s,m) -> HM.lookup s m
 
 -- IsFirst'
 
