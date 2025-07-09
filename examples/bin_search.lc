@@ -2,6 +2,10 @@
 or type: Comparison
 values: lesser | equal | greater
 
+type nickname: ArrayWihtLength = ArrayOf(Int)s x Int
+
+type nickname: Index = Int
+
 compare(_)with(_) : Int x Int => Comparison
   = (a, b) =>
     (a < b) -> ?
@@ -11,50 +15,45 @@ compare(_)with(_) : Int x Int => Comparison
           true => equal
           false => greater
 
-my_split(_)at(_) : ListOf(T1)s x Int => Possibly(T1 x ListOf(T1)s^2)
-  = ?
-    ([], *) => no_value
-    ([head, tail = ...], 0) => a_value--(head, ([], tail))
-    ([head, tail = ...], n) =>
-      my_split(tail)at(n - 1) -> ?
-        no_value => no_value
-        a_value =>
-          the_value -> (item, (left_l, right_l)) =>
-          a_value--(item, (head + left_l, right_l))
+list : ListOf(Int)s
+  = [3, 4, 7, 8, 10, 12, 15, 17, 20, 23, 28, 35]
 
-bin_search(_, _) : ListOf(Int)s x Int => Possibly(Int)
-  = (list, target) =>
-    my_split(list)at(middle_ind) -> ?
-      no_value => no_value
-      a_value =>
-        the_value -> (middle, (left_l, right_l)) =>
-        compare(middle)with(target) -> ?
-          lesser =>
-            bin_search(right_l, target) -> ?
-              no_value => no_value
-              a_value => a_value--(middle_ind + 1 + the_value)
-          equal => a_value--middle_ind
-          greater => bin_search(left_l, target)
+array : ArrayWihtLength
+  = zip(indexes)with(list) -> array_from_list(_) -> (_, ll)
+    where
+    ll : Int
+      = (list)length
+
+    indexes : ListOf(Int)s
+      = from(0)to(ll - 1)
+
+arr_bin_search(_, _, _) : Index x ArrayWihtLength x Int => Possibly(Int)
+  = (ind, arr, target) =>
+    (arr.2nd == 0) -> ?
+      true => no_value
+      false =>
+        index(middle_ind)of_array(arr.1st) -> ?
+          no_value => no_value
+          a_value =>
+            compare(the_value)with(target) -> ?
+              lesser => arr_bin_search(middle_ind + 1, new_arr, target)
+              greater => arr_bin_search(ind, new_arr, target)
+              equal => a_value--middle_ind
     where
     middle_ind : Int
-      = ((list)length - 1)div(2)
+      = ind + (arr.2nd - 1)div(2)
 
-list : ListOf(Int)s
-  = [2, 4, 6, 8]
-
-result_msg(_) : Possibly(Int) => Program
-  = ?
-    no_value => print("Target Not Found")
-    a_value => print("Found! The index is: " + the_value)
+    new_arr : ArrayWihtLength
+      = (arr.1st, (arr.2nd)div(2))
 
 try(_) : Int => Program
-  = i => print("Trying " + i) ; result_msg(bin_search(list, i))
-
-try_list(_) : ListOf(Int)s => Program
-  = ?
-    [] => do_nothing
-    [i, is = ...] => try(i) ; try_list(is)
+  = i => print("Trying " + i) ; result_msg(arr_bin_search(0,array, i))
+    where
+    result_msg(_) : Possibly(Int) => Program
+      = ?
+        no_value => print("Target Not Found")
+        a_value => print("Found! The index is: " + the_value)
 
 main : Program
-  = try_list([0,1,2,3,4,5,6,7,8])
+  = for_all_in(from(0)to(40), try(_))
 
