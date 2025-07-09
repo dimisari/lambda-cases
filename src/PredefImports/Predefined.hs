@@ -191,7 +191,7 @@ array_size = toInteger . IM.size
 from'to' :: (Integer, Integer) -> [Integer]
 from'to' = \(i1, i2) -> case i1 < i2 of
   True -> [i1..i2]
-  _ -> [i2..i1]
+  _ -> reverse [i2..i1]
 
 -- IsFirst'
 
