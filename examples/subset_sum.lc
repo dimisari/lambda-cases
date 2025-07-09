@@ -29,11 +29,5 @@ try_the_list(_) : ListOf(Int)s => Program
     [] => do_nothing
     [i, is = ...] => try_the_number(i) ; try_the_list(is)
 
-from(_)to(_) : Int^2 => ListOf(Int)s
-  = (i, j) =>
-    (i > j) -> ?
-      true => []
-      false => i + from(i + 1)to(j)
-
 main : Program
   = try_the_list(from(15)to(25))

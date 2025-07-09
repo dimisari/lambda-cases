@@ -27,6 +27,7 @@ import qualified Prelude as P
 import Control.Monad.State
 import Data.List.Split
 import qualified Data.HashMap.Strict as HM
+import qualified Data.IntMap.Strict as IM
 
 -- types
 
@@ -41,6 +42,7 @@ type Result'OrError' a b = Either b a
 type Z = Integer
 type R = Double
 type HMapFrom'To' = HM.HashMap
+type ArrayOf's = IM.IntMap
 
 -- values
 
@@ -166,6 +168,30 @@ insert'to_hmap' = \((s,v), m) -> HM.insert s v m
 
 look_for'in_hmap' :: (String, HMapFrom'To' String v) -> Maybe v
 look_for'in_hmap' = \(s,m) -> HM.lookup s m
+
+-- int map
+
+empty_array :: ArrayOf's v
+empty_array = IM.empty
+
+insert'to_array' :: ((Integer, v), ArrayOf's v) -> ArrayOf's v
+insert'to_array' = \((i, v), m) -> IM.insert (fromInteger i) v m
+
+index'of_array' :: (Integer, ArrayOf's v) -> Maybe v
+index'of_array' = \(i, m) -> IM.lookup (fromInteger i) m
+
+array_from_list' :: ListOf's (Integer, v) -> ArrayOf's v
+array_from_list' = IM.fromList . map (\(i, v) -> (fromInteger i, v))
+
+array_size :: ArrayOf's v -> Integer
+array_size = toInteger . IM.size
+
+--
+
+from'to' :: (Integer, Integer) -> [Integer]
+from'to' = \(i1, i2) -> case i1 < i2 of
+  True -> [i1..i2]
+  _ -> [i2..i1]
 
 -- IsFirst'
 
