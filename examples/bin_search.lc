@@ -2,7 +2,7 @@
 or type: Comparison
 values: lesser | equal | greater
 
-type nickname: ArrayWihtLength = ArrayOf(Int)s x Int
+type nickname: ArrayWithLength = ArrayOf(Int)s x Int
 
 type nickname: Index = Int
 
@@ -18,7 +18,7 @@ compare(_)with(_) : Int x Int => Comparison
 list : ListOf(Int)s
   = [3, 4, 7, 8, 10, 12, 15, 17, 20, 23, 28, 35]
 
-array : ArrayWihtLength
+array : ArrayWithLength
   = zip(indexes)with(list) -> array_from_list(_) -> (_, ll)
     where
     ll : Int
@@ -27,7 +27,7 @@ array : ArrayWihtLength
     indexes : ListOf(Int)s
       = from(0)to(ll - 1)
 
-arr_bin_search(_, _, _) : Index x ArrayWihtLength x Int => Possibly(Index)
+arr_bin_search(_, _, _) : Index x ArrayWithLength x Int => Possibly(Index)
   = (ind, arr, target) =>
     (arr.2nd == 0) -> ?
       true => no_value
@@ -43,7 +43,7 @@ arr_bin_search(_, _, _) : Index x ArrayWihtLength x Int => Possibly(Index)
     middle_ind : Index
       = ind + (arr.2nd - 1)div(2)
 
-    new_arr : ArrayWihtLength
+    new_arr : ArrayWithLength
       = (arr.1st, (arr.2nd)div(2))
 
 try(_) : Int => Program
