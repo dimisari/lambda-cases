@@ -96,3 +96,5 @@ test_haskell_progs: $(hs_prs)
 test_grammar_rules: $(hs_grs)
 
 test_executables: $(execs)
+
+# Makefile.paths
