@@ -4,35 +4,39 @@ field names: (root, subtrees)
 
 type nickname: (T1)Trees = ListOf((T1)Tree)s
 
-tuple type: (T1)ResultTreeAndNum = (Int x T1)Tree x Int
-field names: (tree, t_num)
+type nickname: IndexAnd(T1) = Int x T1
 
-tuple type: (T1)ResultTreesAndNum = (Int x T1)Trees x Int
-field names: (trees, ts_num)
+type nickname: Done(T1)Tree = (IndexAnd(T1))Tree
 
-dfs_on_tree(_) : (T1)Tree => (Int x T1)Tree
-  = dfs_on_tree(_)with_num(1) o> _.tree
+tuple type: (T1)DoneTreeAndNext = Done(T1)Tree x Int
+field names: (tree, t_next)
+
+tuple type: (T1)DoneTreesAndNext = (IndexAnd(T1))Trees x Int
+field names: (trees, ts_next)
+
+dfs_on_tree(_) : (T1)Tree => Done(T1)Tree
+  = dfs_on_tree(_)with_next(1) o> _.tree
     where
-    dfs_on_tree(_)with_num(_) : (T1)Tree x Int => (T1)ResultTreeAndNum
-      = (tree, num) => (new_tree, subtrees_res.ts_num)
+    dfs_on_tree(_)with_next(_) : (T1)Tree x Int => (T1)DoneTreeAndNext
+      = (tree, next) => (new_tree, subtrees_res.ts_next)
         where
-        new_tree : (Int x T1)Tree
-          = ((num, tree.root), subtrees_res.trees)
+        new_tree : Done(T1)Tree
+          = ((next, tree.root), subtrees_res.trees)
 
-        subtrees_res : (T1)ResultTreesAndNum
-          = dfs_on_trees(tree.subtrees)with_num(num + 1)
+        subtrees_res : (T1)DoneTreesAndNext
+          = dfs_on_trees(tree.subtrees)with_next(next + 1)
 
-    dfs_on_trees(_)with_num(_) : (T1)Trees x Int => (T1)ResultTreesAndNum
-      = (?, num)
-        [] => ([], num)
+    dfs_on_trees(_)with_next(_) : (T1)Trees x Int => (T1)DoneTreesAndNext
+      = (?, next)
+        [] => ([], next)
         [tree1, other_trees = ...] =>
-          (tree_res.tree + trees_res.trees, trees_res.ts_num)
+          (tree_res.tree + trees_res.trees, trees_res.ts_next)
           where
-          tree_res : (T1)ResultTreeAndNum
-            = dfs_on_tree(tree1)with_num(num)
+          tree_res : (T1)DoneTreeAndNext
+            = dfs_on_tree(tree1)with_next(next)
 
-          trees_res : (T1)ResultTreesAndNum
-            = dfs_on_trees(other_trees)with_num(tree_res.t_num)
+          trees_res : (T1)DoneTreesAndNext
+            = dfs_on_trees(other_trees)with_next(tree_res.t_next)
 
 test_tree : (Char)Tree
   = ( 'a'
@@ -42,9 +46,7 @@ test_tree : (Char)Tree
 type_theorem (@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
 proof
   (_)to_string =
-    tree =>
-    "\nroot: " + (tree.root)to_string +
-    "\nsubtrees:\n" + (tree.subtrees)to_string + "\n"
+    tree => "\nroot: " + tree.root + "\nsubtrees:\n" + tree.subtrees + "\n"
 
 main: Program
-  = dfs_on_tree(test_tree) -> (_)to_string -> print(_)
+  = dfs_on_tree(test_tree) -> print(_)
