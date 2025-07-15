@@ -24,7 +24,7 @@ array : ArrayWithLength
     ll : Int
       = (list)length
 
-    indexes : ListOf(Int)s
+    indexes : ListOf(Index)s
       = from(0)to(ll - 1)
 
 arr_bin_search(_, _, _) : Index x ArrayWithLength x Int => Possibly(Index)

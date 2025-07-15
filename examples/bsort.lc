@@ -7,7 +7,7 @@ bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x IsSorted
     [x] => ([x], true)
     [x1, x2, rest = ...] =>
       (x1 > x2) -> ?
-        true => not_sorted(_) <- prepend(x2)to(bubble_sort_pass(x1 + rest))
+        true => prepend(x2)to(bubble_sort_pass(x1 + rest)) -> not_sorted(_)
         false => prepend(x1)to(bubble_sort_pass(x2 + rest))
       where
       not_sorted(_)

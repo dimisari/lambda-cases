@@ -1,4 +1,8 @@
 
+- how to use graphviz?
+  - every AST should be shown in graphviz during testing
+  - Maybe a complete rewrite of ShowInstances?
+
 - arrays how?
 
 - rewrite compiler in lcases?
