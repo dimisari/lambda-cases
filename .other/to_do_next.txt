@@ -1,4 +1,7 @@
 
+- test/outputs/trees
+  - ASTs using dot
+
 - finish comments and descriptions
   - Generation
     - CheckCompatibility.hs
