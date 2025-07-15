@@ -1,4 +1,8 @@
 
+- test/outputs
+  - types (+ propositions and theoreams) only
+  - values only
+
 - group PredefImports one file per module
   - currently importing things from prelude in 2 ways
     - one is by importing PredefImports.Predefined which contains a lot of
