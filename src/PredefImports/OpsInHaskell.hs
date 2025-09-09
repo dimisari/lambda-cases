@@ -23,7 +23,7 @@ infixl 4 !+, !-
 infix 3 !==, !!=, !>, !<, !>=, !<=
 infixr 2 !&
 infixr 1 !|
-infixr 0 !>>=, !>>
+infixl 0 !>>=, !>>
 
 -- function application/composition
 

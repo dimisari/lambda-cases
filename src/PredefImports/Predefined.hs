@@ -22,11 +22,9 @@ This file contains:
 
 module PredefImports.Predefined where
 
-import Prelude hiding (IO)
 import qualified Prelude as P
-import Control.Monad.State
-import Data.List.Split
-import Data.Hashable
+import qualified Control.Monad.State as MS
+import qualified Data.List.Split as LS
 import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as IM
 
@@ -36,141 +34,142 @@ type ProgramWith' = P.IO
 type EmptyVal = ()
 type Program = ProgramWith' EmptyVal
 type ListOf's = []
-type A'FState'Man a b = State b a
+type A'FState'Man a b = MS.State b a
 type State'Man a = A'FState'Man EmptyVal a
-type Possibly' = Maybe
-type Result'OrError' a b = Either b a
-type Z = Integer
-type R = Double
-type SMapTo' = HM.HashMap String
+type Possibly' = P.Maybe
+type Result'OrError' a b = P.Either b a
+type Z = P.Integer
+type R = P.Double
+type SMapTo' = HM.HashMap P.String
 type ArrayOf's = IM.IntMap
 
 -- values
 
-print_line' = putStrLn
-get_line = getLine
-split'to_words = words
-split'to_lines = lines
-apply'to_all_in' = uncurry map
-throw_err' = error
-id' = id
-sqrt_of' = sqrt
-sin' = sin
-cos' = cos
-tan' = tan
-asin' = asin
-acos' = acos
-atan' = atan
-a'is_odd = odd
-a'is_even = even
-truncate' = truncate
-round' = round
-floor' = floor
-ceiling' = ceiling
-exp' = exp
-ln' = log
-log_of'base' = uncurry (flip logBase)
-filter'with' = uncurry (flip filter)
-zip'with' = uncurry zip
-unzip' = unzip
-get_char = getChar
-get_input = getContents
-read_file' = readFile
-write'to_file' = uncurry (flip writeFile)
-print_string' = putStr
+print_line' = P.putStrLn
+get_line = P.getLine
+split'to_words = P.words
+split'to_lines = P.lines
+apply'to_all_in' = P.uncurry P.map
+throw_err' = P.error
+id' = P.id
+sqrt_of' = P.sqrt
+sin' = P.sin
+cos' = P.cos
+tan' = P.tan
+asin' = P.asin
+acos' = P.acos
+atan' = P.atan
+a'is_odd = P.odd
+a'is_even = P.even
+truncate' = P.truncate
+round' = P.round
+floor' = P.floor
+ceiling' = P.ceiling
+exp' = P.exp
+ln' = P.log
+log_of'base' = P.uncurry (P.flip P.logBase)
+filter'with' = P.uncurry (P.flip P.filter)
+zip'with' = P.uncurry P.zip
+unzip' = P.unzip
+get_char = P.getChar
+get_input = P.getContents
+read_file' = P.readFile
+write'to_file' = P.uncurry (P.flip P.writeFile)
+print_string' = P.putStr
 empty_val = ()
-apply'to_all_in_zipped'' = \(f, l1, l2) -> zipWith (curry f) l1 l2
+apply'to_all_in_zipped'' = \(f, l1, l2) -> P.zipWith (P.curry f) l1 l2
 
-max_of'and' :: Ord a => (a, a) -> a
-max_of'and' = uncurry max
+max_of'and' :: P.Ord a => (a, a) -> a
+max_of'and' = P.uncurry P.max
 
-min_of'and' :: Ord a => (a, a) -> a
-min_of'and' = uncurry min
+min_of'and' :: P.Ord a => (a, a) -> a
+min_of'and' = P.uncurry P.min
 
-abs_val_of' :: Num a => a -> a
-abs_val_of' = abs
+abs_val_of' :: P.Num a => a -> a
+abs_val_of' = P.abs
 
-gcd_of'and' :: Integral a => (a, a) -> a
-gcd_of'and' = uncurry gcd
+gcd_of'and' :: P.Integral a => (a, a) -> a
+gcd_of'and' = P.uncurry P.gcd
 
-lcm_of'and' :: Integral a => (a, a) -> a
-lcm_of'and' = uncurry lcm
+lcm_of'and' :: P.Integral a => (a, a) -> a
+lcm_of'and' = P.uncurry P.lcm
 
-get_state :: State a a
-get_state = get
+get_state :: MS.State a a
+get_state = MS.get
 
-set_state' :: s -> State s EmptyVal
-set_state' = put
+set_state' :: s -> MS.State s EmptyVal
+set_state' = MS.put
 
-modify_state_with' :: (s -> s) -> State s EmptyVal
-modify_state_with' = modify
+modify_state_with' :: (s -> s) -> MS.State s EmptyVal
+modify_state_with' = MS.modify
 
-result_of'on_init_state' :: (State s a, s) -> a
-result_of'on_init_state' = uncurry evalState
+result_of'on_init_state' :: (MS.State s a, s) -> a
+result_of'on_init_state' = P.uncurry MS.evalState
 
-final_state_of'on_init_state' :: (State s a, s) -> s
-final_state_of'on_init_state' = uncurry execState
+final_state_of'on_init_state' :: (MS.State s a, s) -> s
+final_state_of'on_init_state' = P.uncurry MS.execState
 
-run'on_init_state' :: (State s a, s) -> (a, s)
-run'on_init_state' = uncurry runState
+run'on_init_state' :: (MS.State s a, s) -> (a, s)
+run'on_init_state' = P.uncurry MS.runState
 
-a'div' :: Integral a => (a, a) -> a
-a'div' = uncurry div
+a'div' :: P.Integral a => (a, a) -> a
+a'div' = P.uncurry P.div
 
-a'mod' :: Integral a => (a, a) -> a
-a'mod' = uncurry mod
+a'mod' :: P.Integral a => (a, a) -> a
+a'mod' = P.uncurry P.mod
 
-print' :: Show a => a -> Program
-print' = print
+print' :: P.Show a => a -> Program
+print' = P.print
 
-a'length :: [a] -> Integer
-a'length = fromIntegral . length
+a'length :: [a] -> P.Integer
+a'length = P.fromIntegral P.. P.length
 
-a'is_in' :: Eq a => (a, [a]) -> Bool
-a'is_in' = uncurry elem
+a'is_in' :: P.Eq a => (a, [a]) -> P.Bool
+a'is_in' = P.uncurry P.elem
 
-ignore'from' :: (Integer, [a]) -> [a]
-ignore'from' = uncurry drop . \(x, y) -> (fromIntegral x, y)
+ignore'from' :: (P.Integer, [a]) -> [a]
+ignore'from' = P.uncurry P.drop P.. \(x, y) -> (P.fromIntegral x, y)
 
-take'from' :: (Integer, [a]) -> [a]
-take'from' = uncurry take . \(x, y) -> (fromIntegral x, y)
+take'from' :: (P.Integer, [a]) -> [a]
+take'from' = P.uncurry P.take P.. \(x, y) -> (P.fromIntegral x, y)
 
-split'at_index' :: ([a], Integer) -> ([a], [a])
-split'at_index' = uncurry (flip splitAt) . \(l, i) -> (l, fromIntegral i)
+split'at_index' :: ([a], P.Integer) -> ([a], [a])
+split'at_index' =
+  P.uncurry (P.flip P.splitAt) P.. \(l, i) -> (l, P.fromIntegral i)
 
-split'at_str' :: (String, String) -> [String]
-split'at_str' = uncurry $ flip splitOn
+split'at_str' :: (P.String, P.String) -> [P.String]
+split'at_str' = P.uncurry P.$ P.flip LS.splitOn
 
 concat_lists_in' :: [[a]] -> [a]
-concat_lists_in' = concat
+concat_lists_in' = P.concat
 
-do_nothing :: Applicative f => f EmptyVal
-do_nothing = pure empty_val
+do_nothing :: P.Applicative f => f EmptyVal
+do_nothing = P.pure empty_val
 
-from_string' :: Read a => String -> a
-from_string' = read
+from_string' :: P.Read a => P.String -> a
+from_string' = P.read
 
 program_with' :: a -> P.IO a
-program_with' = return
+program_with' = P.return
 
-not' :: Bool -> Bool
-not' = not
+not' :: P.Bool -> P.Bool
+not' = P.not
 
-for_all_in'' :: Monad m => ([a], a -> m b) -> m EmptyVal
-for_all_in'' = uncurry $ flip mapM_
+for_all_in'' :: P.Monad m => ([a], a -> m b) -> m EmptyVal
+for_all_in'' = P.uncurry P.$ P.flip P.mapM_
 
 -- Hash map
 
 empty_smap :: SMapTo' v
 empty_smap = HM.empty
 
-insert'to_smap' :: ((String, v), SMapTo' v) -> SMapTo' v
+insert'to_smap' :: ((P.String, v), SMapTo' v) -> SMapTo' v
 insert'to_smap' = \((s,v), m) -> HM.insert s v m
 
-look_for'in_smap' :: (String, SMapTo' v) -> Maybe v
+look_for'in_smap' :: (P.String, SMapTo' v) -> P.Maybe v
 look_for'in_smap' = \(s,m) -> HM.lookup s m
 
-smap_from_list' :: [(String, v)] -> SMapTo' v
+smap_from_list' :: [(P.String, v)] -> SMapTo' v
 smap_from_list' = HM.fromList
 
 -- int map
@@ -178,24 +177,24 @@ smap_from_list' = HM.fromList
 empty_array :: ArrayOf's v
 empty_array = IM.empty
 
-insert'to_array' :: ((Integer, v), ArrayOf's v) -> ArrayOf's v
-insert'to_array' = \((i, v), m) -> IM.insert (fromInteger i) v m
+insert'to_array' :: ((P.Integer, v), ArrayOf's v) -> ArrayOf's v
+insert'to_array' = \((i, v), m) -> IM.insert (P.fromInteger i) v m
 
-index'of_array' :: (Integer, ArrayOf's v) -> Maybe v
-index'of_array' = \(i, m) -> IM.lookup (fromInteger i) m
+index'of_array' :: (P.Integer, ArrayOf's v) -> P.Maybe v
+index'of_array' = \(i, m) -> IM.lookup (P.fromInteger i) m
 
-array_from_list' :: ListOf's (Integer, v) -> ArrayOf's v
-array_from_list' = IM.fromList . map (\(i, v) -> (fromInteger i, v))
+array_from_list' :: ListOf's (P.Integer, v) -> ArrayOf's v
+array_from_list' = IM.fromList P.. P.map (\(i, v) -> (P.fromInteger i, v))
 
-array_size :: ArrayOf's v -> Integer
-array_size = toInteger . IM.size
+array_size :: ArrayOf's v -> P.Integer
+array_size = P.toInteger P.. IM.size
 
 --
 
-from'to' :: (Integer, Integer) -> [Integer]
-from'to' = \(i1, i2) -> case i1 < i2 of
-  True -> [i1..i2]
-  _ -> reverse [i2..i1]
+from'to' :: (P.Integer, P.Integer) -> [P.Integer]
+from'to' = \(i1, i2) -> case i1 P.< i2 of
+  P.True -> [i1..i2]
+  _ -> P.reverse [i2..i1]
 
 -- IsFirst'
 
@@ -203,7 +202,7 @@ class IsFirst' a b | b -> a where
   p1st :: b -> a
 
 instance IsFirst' a (a, b) where
-  p1st = fst
+  p1st = P.fst
 
 instance IsFirst' a (a, b, c) where
   p1st = \(a, _, _) -> a
@@ -220,7 +219,7 @@ class IsSecond' a b | b -> a where
   p2nd :: b -> a
 
 instance IsSecond' b (a, b) where
-  p2nd = snd
+  p2nd = P.snd
 
 instance IsSecond' b (a, b, c) where
   p2nd = \(_, b, _) -> b
@@ -310,35 +309,35 @@ class FromTuple5 a b c d e f | f -> a b c d e where
 -- FromTuple instances for regular tuples
 
 instance FromTuple2 a b (a, b) where
-  ft2 = id
+  ft2 = P.id
 
 instance FromTuple3 a b c (a, b, c) where
-  ft3 = id
+  ft3 = P.id
 
 instance FromTuple4 a b c d (a, b, c, d) where
-  ft4 = id
+  ft4 = P.id
 
 instance FromTuple5 a b c d e (a, b, c, d, e) where
-  ft5 = id
+  ft5 = P.id
 
 -- Isolate the "pure" function into a new type class and call it "wrap"
 
 class A'Has_A_Wrapper t where
   wrap' :: a -> t a
 
-instance Applicative f => A'Has_A_Wrapper f where
-  wrap' = pure
+instance P.Applicative f => A'Has_A_Wrapper f where
+  wrap' = P.pure
 
 -- Renaming functor
 
 class A'Has_Internal_App t where
   apply'inside' :: (a -> b, t a) -> t b
 
-instance Functor f => A'Has_Internal_App f where
-  apply'inside' = uncurry fmap
+instance P.Functor f => A'Has_Internal_App f where
+  apply'inside' = P.uncurry P.fmap
 
--- override Show for String
+-- override P.Show for P.String
 
-instance {-# OVERLAPS #-} Show String where
-  show = id
+instance {-# OVERLAPS #-} P.Show P.String where
+  show = P.id
 
