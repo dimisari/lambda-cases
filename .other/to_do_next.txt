@@ -1,12 +1,12 @@
 
-- test/outputs/trees
-  - ASTs using dot
-
 - finish comments and descriptions
   - Generation
     - CheckCompatibility.hs
     - Preprocess.hs
     - add README.md
+
+- test/outputs/trees
+  - ASTs using dot
 
 - undefined without needing to write the "= line"
 

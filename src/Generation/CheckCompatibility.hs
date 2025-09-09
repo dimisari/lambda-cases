@@ -1,3 +1,9 @@
+{-
+This file is imported by Generation.Preprocess.
+It contains the instances for the CheckCompatibility and AddSubs classes.
+The CheckCompatibility class checks whether two arbitrary types are compatible
+via a map from ad hoc type variables to substitutions or underscores.
+-}
 {-# language
   LambdaCase, MultiParamTypeClasses, FunctionalDependencies,
   TypeSynonymInstances, FlexibleInstances, UndecidableInstances

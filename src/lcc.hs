@@ -84,7 +84,7 @@ compile =
   where
   parse_res_to_final_res :: Either ParseError Program -> String
   parse_res_to_final_res = \case
-    Left err -> "Error :( ==>" ++ show err
+    Left err -> "Error :( ==> " ++ show err
     Right prog -> prog_to_hs prog
 
   prog_to_hs :: Program -> Haskell

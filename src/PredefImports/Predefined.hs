@@ -26,6 +26,7 @@ import Prelude hiding (IO)
 import qualified Prelude as P
 import Control.Monad.State
 import Data.List.Split
+import Data.Hashable
 import qualified Data.HashMap.Strict as HM
 import qualified Data.IntMap.Strict as IM
 
@@ -41,7 +42,7 @@ type Possibly' = Maybe
 type Result'OrError' a b = Either b a
 type Z = Integer
 type R = Double
-type HMapFrom'To' = HM.HashMap
+type SMapTo' = HM.HashMap String
 type ArrayOf's = IM.IntMap
 
 -- values
@@ -160,14 +161,17 @@ for_all_in'' = uncurry $ flip mapM_
 
 -- Hash map
 
-empty_hmap :: HMapFrom'To' a b
-empty_hmap = HM.empty
+empty_smap :: SMapTo' v
+empty_smap = HM.empty
 
-insert'to_hmap' :: ((String, v), HMapFrom'To' String v) -> HMapFrom'To' String v
-insert'to_hmap' = \((s,v), m) -> HM.insert s v m
+insert'to_smap' :: ((String, v), SMapTo' v) -> SMapTo' v
+insert'to_smap' = \((s,v), m) -> HM.insert s v m
 
-look_for'in_hmap' :: (String, HMapFrom'To' String v) -> Maybe v
-look_for'in_hmap' = \(s,m) -> HM.lookup s m
+look_for'in_smap' :: (String, SMapTo' v) -> Maybe v
+look_for'in_smap' = \(s,m) -> HM.lookup s m
+
+smap_from_list' :: [(String, v)] -> SMapTo' v
+smap_from_list' = HM.fromList
 
 -- int map
 

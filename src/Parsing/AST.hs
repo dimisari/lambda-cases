@@ -494,13 +494,13 @@ instance HasParser TypesInParen where
   parser = TIP <$> in_paren (parser ++< many (comma *> parser))
 
 instance HasParser ProdType where
-  parser = PT <$> parser ++< (many1 $ try (string " x ") *> parser)
+  parser = PT <$> parser ++< (many1 $ try $ string " x " *> parser)
 
 instance HasParser FieldType where
   parser = PoT2 <$> try parser <|> PBT1 <$> parser
 
 instance HasParser PowerBaseType where
-  parser = PTV2 <$> parser <|> TAIOA2 <$> try parser <|> IPT <$> parser
+  parser = PTV2 <$> try parser <|> TAIOA2 <$> try parser <|> IPT <$> parser
 
 instance HasParser InParenT where
   parser =
