@@ -17,16 +17,18 @@ This file contains:
 
 {-# language
   MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies,
-  UndecidableInstances
+  UndecidableInstances, IncoherentInstances
 #-}
 
 module PredefImports.Predefined where
 
-import qualified Prelude as P
-import qualified Control.Monad.State as MS
-import qualified Data.List.Split as LS
-import qualified Data.HashMap.Strict as HM
-import qualified Data.IntMap.Strict as IM
+import Prelude qualified as P
+import Control.Monad.State qualified as MS
+import Data.List.Split qualified as LS
+import Data.HashMap.Strict qualified as HM
+import Data.IntMap.Strict qualified as IM
+import Data.ByteString qualified as BS
+import Data.ByteString.Char8 qualified as C
 
 -- types
 
@@ -73,8 +75,8 @@ zip'with' = P.uncurry P.zip
 unzip' = P.unzip
 get_char = P.getChar
 get_input = P.getContents
-read_file' = P.readFile
-write'to_file' = P.uncurry (P.flip P.writeFile)
+read_file' = BS.readFile
+write'to_file' = P.uncurry (P.flip BS.writeFile)
 print_string' = P.putStr
 empty_val = ()
 apply'to_all_in_zipped'' = \(f, l1, l2) -> P.zipWith (P.curry f) l1 l2
@@ -117,9 +119,6 @@ a'div' = P.uncurry P.div
 
 a'mod' :: P.Integral a => (a, a) -> a
 a'mod' = P.uncurry P.mod
-
-print' :: P.Show a => a -> Program
-print' = P.print
 
 a'length :: [a] -> P.Integer
 a'length = P.fromIntegral P.. P.length
@@ -338,6 +337,15 @@ instance P.Functor f => A'Has_Internal_App f where
 
 -- override P.Show for P.String
 
-instance {-# OVERLAPS #-} P.Show P.String where
+class Print a where
+  print' :: a -> Program
+
+instance Print BS.ByteString where
+  print' = C.putStrLn
+
+instance P.Show a => Print a where
+  print' = P.print
+
+instance {- OVERLAPS -} P.Show P.String where
   show = P.id
 

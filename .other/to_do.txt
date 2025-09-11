@@ -1,44 +1,46 @@
 
-- test/outputs
-  - types (+ propositions and theoreams) only
-  - values only
+* undefined without needing to write the "= line"
 
-- group PredefImports one file per module
-  - currently importing things from prelude in 2 ways
-    - one is by importing PredefImports.Predefined which contains a lot of
+* test/outputs
+  * types (+ propositions and theoreams) only
+  * values only
+
+* group PredefImports one file per module
+  * currently importing things from prelude in 2 ways
+    * one is by importing PredefImports.Predefined which contains a lot of
       renamed values
-    - one is by "P.<whatever is needed>"
-    - maybe choose one of the two?
+    * one is by "P.<whatever is needed>"
+    * maybe choose one of the two?
 
-- group error messages in seperate file
+* group error messages in seperate file
 
-- Να φτιάξω 2 διαφορετικά ASTs με διφορετικά types
+* Να φτιάξω 2 διαφορετικά ASTs με διφορετικά types
   (πριν και μετά το preprocessing)
-  - Αλλαγές
-    - TypeTheo να έχει μόνο ένα PropNameWithSubs στο 1ο και όχι λίστα
-      - Η λίστα χρειάζεται για το 2o
-    - Identifier
-      - Κάπως να βρω ένα καλύτερο representation με το UndersInParen
+  * Αλλαγές
+    * TypeTheo να έχει μόνο ένα PropNameWithSubs στο 1ο και όχι λίστα
+      * Η λίστα χρειάζεται για το 2o
+    * Identifier
+      * Κάπως να βρω ένα καλύτερο representation με το UndersInParen
 
-- Να γράφω τα errors των grammar rules σε άλλο αρχείο
+* Να γράφω τα errors των grammar rules σε άλλο αρχείο
 
-- μετονομασία cases func expr σε qmark func expr
+* μετονομασία cases func expr σε qmark func expr
 
-- default printing tuples:
-  - (a = 1, b = 2)
+* default printing tuples:
+  * (a = 1, b = 2)
 
-- group type nicknames with "all"
+* group type nicknames with "all"
 
-- comments (do we really need them?)
-  - line: #
-    - can also close in the same line with second #
-  - multiline: ## and close with second ##
+* comments (do we really need them?)
+  * line: #
+    * can also close in the same line with second #
+  * multiline: ## and close with second ##
 
-- add element index mechanism
-  - .<int-lit> for element
-  - .change for changing
-    - (i, j) = ...
+* add element index mechanism
+  * .<int*lit> for element
+  * .change for changing
+    * (i, j) = ...
 
-- add imports
+* add imports
 
 # to_do_next.txt
