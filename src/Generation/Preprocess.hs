@@ -482,7 +482,6 @@ change_if_particular_str = \case
   "true" -> true
   "false" -> false
   "no_value" -> pnothing
-  "print" -> pprint
   "undefined" -> pundefined
   "pi" -> ppi
   str -> str

@@ -130,5 +130,5 @@ proof
   (_)to_string = nam => "(name = " + nam.name + ", dist = " + nam.dist + ")"
 
 main : Program
-  = dijkstra('a', test_graph) -> print
+  = dijkstra('a', test_graph) -> print(_)
 

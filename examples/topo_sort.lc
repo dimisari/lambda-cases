@@ -108,4 +108,4 @@ test_graph : Graph
     ]
 
 main : Program
-  = topo_sort_on_graph(test_graph) -> print
+  = topo_sort_on_graph(test_graph) -> print(_)
