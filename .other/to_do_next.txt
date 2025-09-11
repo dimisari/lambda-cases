@@ -10,4 +10,7 @@
 
 - undefined without needing to write the "= line"
 
+- reading files into bytestring instead of string
+  - src/lcc
+
 # to_do.txt
