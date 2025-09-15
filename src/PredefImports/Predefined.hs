@@ -17,7 +17,7 @@ This file contains:
 
 {-# language
   MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies,
-  UndecidableInstances, IncoherentInstances
+  UndecidableInstances, IncoherentInstances, LambdaCase
 #-}
 
 module PredefImports.Predefined where
@@ -29,6 +29,8 @@ import Data.HashMap.Strict qualified as HM
 import Data.IntMap.Strict qualified as IM
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C
+import System.Exit qualified as E
+import System.Console.ANSI qualified as ANSI
 
 -- types
 
@@ -48,38 +50,78 @@ type ArrayOf's = IM.IntMap
 -- values
 
 print_line' = P.putStrLn
+
 get_line = P.getLine
+
 split'to_words = P.words
+
 split'to_lines = P.lines
+
 apply'to_all_in' = P.uncurry P.map
+
 throw_err' = P.error
+
 id' = P.id
+
 sqrt_of' = P.sqrt
+
 sin' = P.sin
+
 cos' = P.cos
+
 tan' = P.tan
+
 asin' = P.asin
+
 acos' = P.acos
+
 atan' = P.atan
+
 a'is_odd = P.odd
+
 a'is_even = P.even
+
 truncate' = P.truncate
+
 round' = P.round
+
 floor' = P.floor
+
 ceiling' = P.ceiling
+
 exp' = P.exp
+
 ln' = P.log
+
 log_of'base' = P.uncurry (P.flip P.logBase)
+
 filter'with' = P.uncurry (P.flip P.filter)
+
 zip'with' = P.uncurry P.zip
+
 unzip' = P.unzip
+
 get_char = P.getChar
+
 get_input = P.getContents
+
 read_file' = BS.readFile
+
 write'to_file' = P.uncurry (P.flip BS.writeFile)
+
 print_string' = P.putStr
+
 empty_val = ()
+
 apply'to_all_in_zipped'' = \(f, l1, l2) -> P.zipWith (P.curry f) l1 l2
+
+success = E.exitSuccess
+
+clear_screen :: Program
+clear_screen =
+  ANSI.getCursorPosition P.>>= \case
+    P.Just (l, _) -> ANSI.scrollPageUp l P.>> ANSI.setCursorPosition 0 4
+    P.Nothing -> throw_err' "Could not get cursor position"
 
 max_of'and' :: P.Ord a => (a, a) -> a
 max_of'and' = P.uncurry P.max
@@ -341,7 +383,7 @@ class Print a where
   print' :: a -> Program
 
 instance Print BS.ByteString where
-  print' = C.putStrLn
+  print' = C.putStr
 
 instance P.Show a => Print a where
   print' = P.print
