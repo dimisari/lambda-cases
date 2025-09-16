@@ -5,12 +5,12 @@
     * Preprocess.hs
     * add README.md
 
+* test/expected_outs
+  * run all compiled programs with some automated interaction and check against
+    previous results are default ones
+
 * test/outputs/trees
   * ASTs using dot
-
-* reading files into bytestring instead of string
-  * src/lcc
-
-* test compiled progs outputs against expected ones
+    * I can literally graph the whole AST and all subtrees
 
 # to_do.txt

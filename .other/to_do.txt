@@ -43,4 +43,7 @@
 
 * add imports
 
+* reading files into bytestring instead of string?
+  * src/lcc
+
 # to_do_next.txt

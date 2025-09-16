@@ -31,6 +31,7 @@ import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C
 import System.Exit qualified as E
 import System.Console.ANSI qualified as ANSI
+import System.Process qualified as SP
 
 -- types
 
@@ -49,73 +50,107 @@ type ArrayOf's = IM.IntMap
 
 -- values
 
-print_line' = P.putStrLn
-
+get_line :: ProgramWith' P.String
 get_line = P.getLine
 
+split'to_words :: P.String -> [P.String]
 split'to_words = P.words
 
+split'to_lines :: P.String -> [P.String]
 split'to_lines = P.lines
 
+apply'to_all_in' :: (a -> b, [a]) -> [b]
 apply'to_all_in' = P.uncurry P.map
 
+throw_err' :: P.String -> a
 throw_err' = P.error
 
+id' :: a -> a
 id' = P.id
 
+sqrt_of' :: P.Floating a => a -> a
 sqrt_of' = P.sqrt
 
+sin' :: P.Floating a => a -> a
 sin' = P.sin
 
+cos' :: P.Floating a => a -> a
 cos' = P.cos
 
+tan' :: P.Floating a => a -> a
 tan' = P.tan
 
+asin' :: P.Floating a => a -> a
 asin' = P.asin
 
+acos' :: P.Floating a => a -> a
 acos' = P.acos
 
+atan' :: P.Floating a => a -> a
 atan' = P.atan
 
+a'is_odd :: P.Integral a => a -> P.Bool
 a'is_odd = P.odd
 
+a'is_even :: P.Integral a => a -> P.Bool
 a'is_even = P.even
 
+truncate' :: (P.RealFrac a, P.Integral b) => a -> b
 truncate' = P.truncate
 
+round' :: (P.RealFrac a, P.Integral b) => a -> b
 round' = P.round
 
+floor' :: (P.RealFrac a, P.Integral b) => a -> b
 floor' = P.floor
 
+ceiling' :: (P.RealFrac a, P.Integral b) => a -> b
 ceiling' = P.ceiling
 
+exp' :: P.Floating a => a -> a
 exp' = P.exp
 
+ln' :: P.Floating a => a -> a
 ln' = P.log
 
+log_of'base' :: P.Floating a => (a, a) -> a
 log_of'base' = P.uncurry (P.flip P.logBase)
 
+filter'with' :: ([a], a -> P.Bool) -> [a]
 filter'with' = P.uncurry (P.flip P.filter)
 
+zip'with' :: ([a], [b]) -> [(a, b)]
 zip'with' = P.uncurry P.zip
 
+unzip' :: [(a, b)] -> ([a], [b])
 unzip' = P.unzip
 
+get_char :: ProgramWith' P.Char
 get_char = P.getChar
 
+get_input :: ProgramWith' P.String
 get_input = P.getContents
 
+read_file' :: P.String -> ProgramWith' BS.ByteString
 read_file' = BS.readFile
 
+write'to_file' :: (C.ByteString, P.String) -> Program
 write'to_file' = P.uncurry (P.flip BS.writeFile)
 
+print_string' :: P.String -> Program
 print_string' = P.putStr
 
+empty_val :: ()
 empty_val = ()
 
+apply'to_all_in_zipped'' :: ((a, b) -> c, [a], [b]) -> [c]
 apply'to_all_in_zipped'' = \(f, l1, l2) -> P.zipWith (P.curry f) l1 l2
 
+success :: Program
 success = E.exitSuccess
+
+run' :: P.String -> Program
+run' = SP.callCommand
 
 clear_screen :: Program
 clear_screen =
@@ -230,7 +265,7 @@ array_from_list' = IM.fromList P.. P.map (\(i, v) -> (P.fromInteger i, v))
 array_size :: ArrayOf's v -> P.Integer
 array_size = P.toInteger P.. IM.size
 
---
+-- mine
 
 from'to' :: (P.Integer, P.Integer) -> [P.Integer]
 from'to' = \(i1, i2) -> case i1 P.< i2 of
@@ -377,7 +412,7 @@ class A'Has_Internal_App t where
 instance P.Functor f => A'Has_Internal_App f where
   apply'inside' = P.uncurry P.fmap
 
--- override P.Show for P.String
+-- Print class
 
 class Print a where
   print' :: a -> Program
