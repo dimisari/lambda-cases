@@ -12,6 +12,10 @@ This file defines equivalents of every lcases operator for haskell:
 
 module PredefImports.OpsInHaskell where
 
+import Prelude ((.), (^), (**), (*), ($), (/), (++), (+), (-), (==), (/=), (>))
+import Prelude ((<), (>=), (<=), (*>), (>>=), (&&), (||))
+import Prelude qualified as P
+
 -- precedence and associativity
 
 infixl 9 &>
@@ -34,7 +38,7 @@ x &> f = f x
 f <& x = f x
 
 (.>) :: (a -> b) -> (b -> c) -> a -> c
-(.>) = flip (.)
+(.>) = P.flip (.)
 
 (<.) :: (b -> c) -> (a -> b) -> a -> c
 (<.) = (.)
@@ -59,22 +63,22 @@ class A'Minus'Is' a b c | a b -> c where
 -- comparison operators
 
 class A'And'Can_Be_Equal a b where
-  (!==) :: a -> b -> Bool
+  (!==) :: a -> b -> P.Bool
 
 class A'And'Can_Be_Unequal a b where
-  (!!=) :: a -> b -> Bool
+  (!!=) :: a -> b -> P.Bool
 
 class A'Can_Be_Greater_Than' a b where
-  (!>) :: a -> b -> Bool
+  (!>) :: a -> b -> P.Bool
 
 class A'Can_Be_Less_Than' a b where
-  (!<) :: a -> b -> Bool
+  (!<) :: a -> b -> P.Bool
 
 class A'Can_Be_Gr_Or_Eq_To' a b where
-  (!>=) :: a -> b -> Bool
+  (!>=) :: a -> b -> P.Bool
 
 class A'Can_Be_Le_Or_Eq_To' a b where
-  (!<=) :: a -> b -> Bool
+  (!<=) :: a -> b -> P.Bool
 
 -- boolean operators
 
@@ -95,58 +99,58 @@ class A'Has_Then t where
 -- Instances
 --   A'To_The'Is'
 
-instance Floating a => A'To_The'Is' a a a where
+instance P.Floating a => A'To_The'Is' a a a where
   (!^) = (**)
 
-instance A'To_The'Is' Integer Integer Integer where
+instance A'To_The'Is' P.Integer P.Integer P.Integer where
   (!^) = (^)
 
-instance A'To_The'Is' Integer Double Double where
-  i !^ x = fromIntegral i ** x
+instance A'To_The'Is' P.Integer P.Double P.Double where
+  i !^ x = P.fromIntegral i ** x
 
-instance A'To_The'Is' Double Integer Double where
-  x !^ i = x ** fromIntegral i
+instance A'To_The'Is' P.Double P.Integer P.Double where
+  x !^ i = x ** P.fromIntegral i
 
 --   A'And'Multiply_To'
 
-instance Num a => A'And'Multiply_To' a a a where
+instance P.Num a => A'And'Multiply_To' a a a where
   (!*) = (*)
 
-instance A'And'Multiply_To' Integer Double Double where
-  i !* x  = fromIntegral i * x
+instance A'And'Multiply_To' P.Integer P.Double P.Double where
+  i !* x  = P.fromIntegral i * x
 
-instance A'And'Multiply_To' Double Integer Double where
-  x !* i = x * fromIntegral i
+instance A'And'Multiply_To' P.Double P.Integer P.Double where
+  x !* i = x * P.fromIntegral i
 
-instance A'And'Multiply_To' Integer Char String where
-  i !* c = replicate (fromIntegral i) c
+instance A'And'Multiply_To' P.Integer P.Char P.String where
+  i !* c = P.replicate (P.fromIntegral i) c
 
-instance A'And'Multiply_To' Integer String String where
-  i !* s = concat $ replicate (fromIntegral i) s
+instance A'And'Multiply_To' P.Integer P.String P.String where
+  i !* s = P.concat $ P.replicate (P.fromIntegral i) s
 
 --   A'Divided_By'Is'
 
-instance A'Divided_By'Is' Integer Integer Double where
-  x !/ y = fromIntegral x / fromIntegral y
+instance A'Divided_By'Is' P.Integer P.Integer P.Double where
+  x !/ y = P.fromIntegral x / P.fromIntegral y
 
-instance A'Divided_By'Is' Integer Double Double where
-  i !/ x  = fromIntegral i / x
+instance A'Divided_By'Is' P.Integer P.Double P.Double where
+  i !/ x  = P.fromIntegral i / x
 
-instance A'Divided_By'Is' Double Integer Double where
-  x !/ i = x / fromIntegral i
+instance A'Divided_By'Is' P.Double P.Integer P.Double where
+  x !/ i = x / P.fromIntegral i
 
 --   A'And'Add_To'
 
-instance Show a => A'And'Add_To' a String String where
-  x !+ str = show x ++ str
+instance P.Show a => A'And'Add_To' a P.String P.String where
+  x !+ str = P.show x ++ str
 
-instance Show a => A'And'Add_To' String a String where
-  str !+ x = str ++ show x
+instance P.Show a => A'And'Add_To' P.String a P.String where
+  str !+ x = str ++ P.show x
 
 instance A'And'Add_To' [a] [a] [a] where
   (!+) = (++)
 
-instance A'And'Add_To' [Char] [Char] [Char] where
+instance A'And'Add_To' [P.Char] [P.Char] [P.Char] where
   (!+) = (++)
 
 instance b ~ [a] => A'And'Add_To' a [a] b where
@@ -155,87 +159,87 @@ instance b ~ [a] => A'And'Add_To' a [a] b where
 instance b ~ [a] => A'And'Add_To' [a] a b where
   l !+ a = l ++ [a]
 
-instance Num a => A'And'Add_To' a a a where
+instance P.Num a => A'And'Add_To' a a a where
   (!+) = (+)
 
-instance A'And'Add_To' Integer Double Double where
-  i !+ x  = fromIntegral i + x
+instance A'And'Add_To' P.Integer P.Double P.Double where
+  i !+ x  = P.fromIntegral i + x
 
-instance A'And'Add_To' Double Integer Double where
-  x !+ i = x + fromIntegral i
+instance A'And'Add_To' P.Double P.Integer P.Double where
+  x !+ i = x + P.fromIntegral i
 
-instance (a ~ String) => A'And'Add_To' Char Char a where
+instance (a ~ P.String) => A'And'Add_To' P.Char P.Char a where
   c' !+ c2 = c' : [c2]
 
-instance A'And'Add_To' Char String String where
+instance A'And'Add_To' P.Char P.String P.String where
   (!+) = (:)
 
 --   A'Minus'Is'
 
-instance Num a => A'Minus'Is' a a a where
+instance P.Num a => A'Minus'Is' a a a where
   (!-) = (-)
 
-instance A'Minus'Is' String Char String where
-  s !- c = filter (/= c) s
+instance A'Minus'Is' P.String P.Char P.String where
+  s !- c = P.filter (/= c) s
 
-instance Eq a => A'Minus'Is' [a] [a] [a] where
-  l1 !- l2 = case length l2 > length l1 of
-    True -> l1
-    False ->
+instance P.Eq a => A'Minus'Is' [a] [a] [a] where
+  l1 !- l2 = case P.length l2 > P.length l1 of
+    P.True -> l1
+    P.False ->
       let
-      (l11, l12) = splitAt (length l2) l1
+      (l11, l12) = P.splitAt (P.length l2) l1
       in
       case l11 == l2 of
-        True -> l12 !- l2
-        False -> head l1 : (tail l1 !- l2)
+        P.True -> l12 !- l2
+        P.False -> P.head l1 : (P.tail l1 !- l2)
 
 --   A'And'Can_Be_Equal
 
-instance Eq a => A'And'Can_Be_Equal a a where
+instance P.Eq a => A'And'Can_Be_Equal a a where
   (!==) = (==)
 
 --   A'And'Can_Be_Unequal
 
-instance Eq a => A'And'Can_Be_Unequal a a where
+instance P.Eq a => A'And'Can_Be_Unequal a a where
   (!!=) = (/=)
 
 --   A'Can_Be_Greater_Than'
 
-instance Ord a => A'Can_Be_Greater_Than' a a where
+instance P.Ord a => A'Can_Be_Greater_Than' a a where
   (!>) = (>)
 
 --   A'Can_Be_Less_Than'
 
-instance Ord a => A'Can_Be_Less_Than' a a where
+instance P.Ord a => A'Can_Be_Less_Than' a a where
   (!<) = (<)
 
 --   A'Can_Be_Gr_Or_Eq_To'
 
-instance Ord a => A'Can_Be_Gr_Or_Eq_To' a a where
+instance P.Ord a => A'Can_Be_Gr_Or_Eq_To' a a where
   (!>=) = (>=)
 
 --   A'Can_Be_Le_Or_Eq_To'
 
-instance Ord a => A'Can_Be_Le_Or_Eq_To' a a where
+instance P.Ord a => A'Can_Be_Le_Or_Eq_To' a a where
   (!<=) = (<=)
 
 --   A'Has_Then
 
-instance Applicative f => A'Has_Then f where
+instance P.Applicative f => A'Has_Then f where
   (!>>) = (*>)
 
 --   A'Has_Use
 
-instance Monad m => A'Has_Use m where
+instance P.Monad m => A'Has_Use m where
   (!>>=) = (>>=)
 
 --   A'Has_And
 
-instance A'Has_And Bool where
+instance A'Has_And P.Bool where
   (!&) = (&&)
 
 --   A'Has_Or
 
-instance A'Has_Or Bool where
+instance A'Has_Or P.Bool where
   (!|) = (||)
 

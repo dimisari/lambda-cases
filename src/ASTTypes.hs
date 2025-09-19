@@ -4,23 +4,28 @@ This file contains all the types that make up the AST
 
 module ASTTypes where
 
+import Prelude qualified as P
+
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 
 data Literal =
-  Int Integer | R Double | Ch Char | S String
+  Int P.Integer | R P.Double | Ch P.Char | S P.String
 
 newtype Identifier =
-  Id (Maybe UndersInParen, IdStart, [IdCont], Maybe Char, Maybe UndersInParen)
+  Id
+  ( P.Maybe UndersInParen, IdStart, [IdCont], P.Maybe P.Char
+  , P.Maybe UndersInParen
+  )
 
-newtype SimpleId = SId (IdStart, Maybe Char)
-  deriving (Eq, Ord)
+newtype SimpleId = SId (IdStart, P.Maybe P.Char)
+  deriving (P.Eq, P.Ord)
 
-newtype IdStart = IS String
-  deriving (Eq, Ord)
+newtype IdStart = IS P.String
+  deriving (P.Eq, P.Ord)
 
-newtype IdCont = IC (UndersInParen, String)
+newtype IdCont = IC (UndersInParen, P.String)
 
-newtype UndersInParen = UIP Int
+newtype UndersInParen = UIP P.Int
 
 
 newtype ParenExpr = PE InsideParenExpr
@@ -52,13 +57,14 @@ data BigTupleSplit =
   Split | NoSplit
 
 
-newtype List = L (Maybe LineExprOrUnders)
+newtype List = L (P.Maybe LineExprOrUnders)
 
 newtype BigList = BL (LineExprOrUnders, [LineExprOrUnders])
 
-type ArgsStr = (Arguments, String)
+type ArgsStr = (Arguments, P.String)
 newtype ParenFuncAppOrId =
-  PFAOI (Maybe Arguments, IdStart, [ArgsStr], Maybe Char, Maybe Arguments)
+  PFAOI
+    (P.Maybe Arguments, IdStart, [ArgsStr], P.Maybe P.Char, P.Maybe Arguments)
 
 newtype Arguments = As LineExprOrUnders
 
@@ -81,7 +87,7 @@ data PostFuncArg =
   PE2 ParenExpr | BE2 BasicExpr | Underscore2
 
 data PostFuncAppEnd =
-  DC1 DotChange | PFsMDC ([PostFunc], Maybe DotChange)
+  DC1 DotChange | PFsMDC ([PostFunc], P.Maybe DotChange)
 
 newtype DotChange = DC (FieldChange, [FieldChange])
 
@@ -107,10 +113,10 @@ data LineOpExprEnd =
 data BigOpExpr =
   BOEOS1 BigOpExprOpSplit | BOEFS1 BigOpExprFuncSplit
 
-newtype BigOpExprOpSplit = BOEOS ([OpSplitLine], Maybe OpExprStart, OpSplitEnd)
+newtype BigOpExprOpSplit = BOEOS ([OpSplitLine], P.Maybe OpExprStart, OpSplitEnd)
 
 data OpSplitLine =
-  OESMOFCO (OpExprStart, Maybe OperFCO) | OFCO1 OperFCO
+  OESMOFCO (OpExprStart, P.Maybe OperFCO) | OFCO1 OperFCO
 
 newtype OperFCO = OFCO (Operand, FuncCompOp)
 
@@ -154,7 +160,7 @@ data LineFuncBody =
 data BigFuncBody =
   BOAE4 BasicOrAppExpr | OE1 OpExpr | LFE6 LineFuncExpr
 
-newtype CasesFuncExpr = CFE (CasesParams, [Case], Maybe EndCase)
+newtype CasesFuncExpr = CFE (CasesParams, [Case], P.Maybe EndCase)
 
 data CasesParams =
   CParamId Identifier | QuestionMark | Star2 |
@@ -180,17 +186,17 @@ data InnerMatching =
 newtype TupleMatching = TM (InnerMatching, [InnerMatching])
 
 newtype ListMatching =
-  LM (Maybe (InnerMatching, [InnerMatching], Maybe RestListMatching))
+  LM (P.Maybe (InnerMatching, [InnerMatching], P.Maybe RestListMatching))
 
-newtype RestListMatching = RLM (Maybe SimpleId)
+newtype RestListMatching = RLM (P.Maybe SimpleId)
 
 data CaseBody =
-  LFB1 LineFuncBody | BFB1 (BigFuncBody, Maybe WhereExpr)
+  LFB1 LineFuncBody | BFB1 (BigFuncBody, P.Maybe WhereExpr)
 
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
-newtype ValueDef = VD (Identifier, Type, ValueExpr, Maybe WhereExpr)
+newtype ValueDef = VD (Identifier, Type, ValueExpr, P.Maybe WhereExpr)
 
 data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
@@ -211,26 +217,26 @@ data WhereDefExpr =
 
 -- Type
 
-newtype Type = Ty (Maybe Condition, SimpleType)
+newtype Type = Ty (P.Maybe Condition, SimpleType)
 
 data SimpleType =
   PTV1 ParamTVar | TAIOA1 TypeAppIdOrAHTV | PoT1 PowerType | PT1 ProdType |
   FT1 FuncType
 
-newtype TypeId = TId String
-  deriving Eq
+newtype TypeId = TId P.String
+  deriving P.Eq
 
-newtype ParamTVar = PTV Int
-  deriving (Eq, Ord)
+newtype ParamTVar = PTV P.Int
+  deriving (P.Eq, P.Ord)
 
-newtype AdHocTVar = AHTV Char
-  deriving (Eq, Ord)
+newtype AdHocTVar = AHTV P.Char
+  deriving (P.Eq, P.Ord)
 
 newtype TypeAppIdOrAHTV =
-  TAIOA (Maybe TypesInParen, TAIOAMiddle, Maybe TypesInParen)
+  TAIOA (P.Maybe TypesInParen, TAIOAMiddle, P.Maybe TypesInParen)
 
 data TAIOAMiddle =
-  TIdStart1 (TypeId, [(TypesInParen, String)]) | AHTV2 AdHocTVar
+  TIdStart1 (TypeId, [(TypesInParen, P.String)]) | AHTV2 AdHocTVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
 
@@ -245,7 +251,7 @@ data PowerBaseType =
 data InParenT =
   PT3 ProdType | FT3 FuncType | PoT3 PowerType
 
-newtype PowerType = PoT (PowerBaseType, Integer)
+newtype PowerType = PoT (PowerBaseType, P.Integer)
 
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
@@ -266,9 +272,9 @@ newtype TupleTypeDef = TTD (TypeName, ProdOrPowerType, FieldNames)
 data ProdOrPowerType =
   PT4 ProdType | PoT5 PowerType
 
-type PVIPStr = (ParamVarsInParen, String)
+type PVIPStr = (ParamVarsInParen, P.String)
 newtype TypeName =
-  TN (Maybe ParamVarsInParen, TypeId, [PVIPStr], Maybe ParamVarsInParen)
+  TN (P.Maybe ParamVarsInParen, TypeId, [PVIPStr], P.Maybe ParamVarsInParen)
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
@@ -278,7 +284,7 @@ newtype OrTypeDef =
   OTD (TypeName, PossibleValue, [PossibleValue])
 
 newtype PossibleValue =
-  PV (SimpleId, Maybe (Identifier, SimpleType))
+  PV (SimpleId, P.Maybe (Identifier, SimpleType))
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 
@@ -294,22 +300,22 @@ newtype RenamingPropDef = RPD (PropNameLine, PropName, [PropName])
 
 newtype PropNameLine = PNL PropName
 
-type NPStart1 = (Char, [(NamePart, TypesInParen)], Maybe NamePart)
-type TIPStart = ([(TypesInParen, NamePart)], Maybe TypesInParen)
+type NPStart1 = (P.Char, [(NamePart, TypesInParen)], P.Maybe NamePart)
+type TIPStart = ([(TypesInParen, NamePart)], P.Maybe TypesInParen)
 data PropName =
   NPStart1 NPStart1 | TIPStart TIPStart
 
-newtype NamePart = NP String
-  deriving Eq
+newtype NamePart = NP P.String
+  deriving P.Eq
 
 
 -- TypeTheo
 
 newtype TypeTheo =
-  TT ([PropNameWithSubs], Maybe PropNameWithSubs, Proof)
+  TT ([PropNameWithSubs], P.Maybe PropNameWithSubs, Proof)
 
-type NPStart2 = (Char, [(NamePart, SubsInParen)], Maybe NamePart)
-type SIPStart = ([(SubsInParen, NamePart)], Maybe SubsInParen)
+type NPStart2 = (P.Char, [(NamePart, SubsInParen)], P.Maybe NamePart)
+type SIPStart = ([(SubsInParen, NamePart)], P.Maybe SubsInParen)
 data PropNameWithSubs =
   NPStart2 NPStart2 | SIPStart SIPStart
 
@@ -320,17 +326,17 @@ data TVarSub =
   PTS1 ProdTypeSub | FTS1 FuncTypeSub
 
 newtype TypeAppIdOrAHTVSub =
-  TAIOAS (Maybe SubsOrUndersInParen, TAIOASMiddle, Maybe SubsOrUndersInParen)
+  TAIOAS (P.Maybe SubsOrUndersInParen, TAIOASMiddle, P.Maybe SubsOrUndersInParen)
 
 data TAIOASMiddle =
-  TIdStart2 (TypeId, [(SubsOrUndersInParen, String)]) | AHTV3 AdHocTVar
+  TIdStart2 (TypeId, [(SubsOrUndersInParen, P.String)]) | AHTV3 AdHocTVar
 
 newtype SubsOrUndersInParen = SOUIP (SubOrUnder, [SubOrUnder])
 
 data SubOrUnder =
   TVS1 TVarSub | Underscore4
 
-newtype PowerTypeSub = PoTS (PowerBaseTypeSub, Integer)
+newtype PowerTypeSub = PoTS (PowerBaseTypeSub, P.Integer)
 
 data PowerBaseTypeSub =
   Underscore5 | PTV5 ParamTVar | TAIOAS2 TypeAppIdOrAHTVSub | IPTS InParenTSub
@@ -352,10 +358,10 @@ data InOrOutTypeSub =
 data Proof =
   P1 (IdOrOpEq, LineExpr) | P2 (IdOrOpEq, TTValueExpr)
 
-newtype IdOrOpEq = IOOE (Identifier, Maybe (Op, Identifier))
+newtype IdOrOpEq = IOOE (Identifier, P.Maybe (Op, Identifier))
 
 data TTValueExpr =
-  LE2 LineExpr | VEMWE (ValueExpr, Maybe WhereExpr)
+  LE2 LineExpr | VEMWE (ValueExpr, P.Maybe WhereExpr)
 
 
 -- Program

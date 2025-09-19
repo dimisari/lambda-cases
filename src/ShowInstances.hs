@@ -6,647 +6,658 @@ This file implements a Show instance for every type of the AST
 
 module ShowInstances where
 
-import ASTTypes
-import Data.List
+import Prelude ((++), (-), (.))
+import Prelude qualified as P
+import Data.List qualified as L
+
+import ASTTypes qualified as T
 
 -- helpers
 
-show_maybe :: Show a => Maybe a -> String
+show_maybe :: P.Show a => P.Maybe a -> P.String
 show_maybe = \case
-  Nothing -> ""
-  Just a -> show a
+  P.Nothing -> ""
+  P.Just a -> P.show a
 
-show_list :: Show a => [a] -> String
-show_list = concatMap show
+show_list :: P.Show a => [a] -> P.String
+show_list = P.concatMap P.show
 
-show_list_sep :: Show a => String -> [a] -> String
-show_list_sep = \sep -> concatMap ((sep ++) . show)
+show_list_sep :: P.Show a => P.String -> [a] -> P.String
+show_list_sep = \sep -> P.concatMap ((sep ++) . P.show)
 
-show_list_comma :: Show a => [a] -> String
+show_list_comma :: P.Show a => [a] -> P.String
 show_list_comma = show_list_sep ", "
 
-show_pair_list :: (Show a, Show b) => [(a, b)] -> String
-show_pair_list = concatMap (\(a, b) -> show a ++ show b)
+show_pair_list :: (P.Show a, P.Show b) => [(a, b)] -> P.String
+show_pair_list = P.concatMap (\(a, b) -> P.show a ++ P.show b)
 
-show_md :: Maybe Char -> String
+show_md :: P.Maybe P.Char -> P.String
 show_md = \case
-  Nothing -> ""
-  Just c -> [c]
+  P.Nothing -> ""
+  P.Just c -> [c]
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncApp
 
-instance Show Literal where
+instance P.Show T.Literal where
   show = \case
-    Int i -> show i
-    R r -> show r
-    Ch c -> show c
-    S s -> show s
+    T.Int i -> P.show i
+    T.R r -> P.show r
+    T.Ch c -> P.show c
+    T.S s -> P.show s
 
-instance Show Identifier where
-  show = \(Id (maybe_uip1, id_start, id_conts, maybe_digit, maybe_uip2)) ->
-    show_maybe maybe_uip1 ++ show id_start ++ show_list id_conts ++
+instance P.Show T.Identifier where
+  show = \(T.Id (maybe_uip1, id_start, id_conts, maybe_digit, maybe_uip2)) ->
+    show_maybe maybe_uip1 ++ P.show id_start ++ show_list id_conts ++
     show_md maybe_digit ++ show_maybe maybe_uip2
 
-instance Show SimpleId where
-  show = \(SId (id_start, maybe_digit)) -> show id_start ++ show_md maybe_digit
+instance P.Show T.SimpleId where
+  show = \(T.SId (id_start, maybe_digit)) ->
+    P.show id_start ++ show_md maybe_digit
 
-instance Show IdStart where
-  show = \(IS str) -> str
+instance P.Show T.IdStart where
+  show = \(T.IS str) -> str
 
-instance Show IdCont where
-  show = \(IC (uip, str)) -> show uip ++ str
+instance P.Show T.IdCont where
+  show = \(T.IC (uip, str)) -> P.show uip ++ str
 
-instance Show UndersInParen where
-  show = \(UIP i) -> "(_" ++ concat (replicate (i-1) ", _") ++")"
+instance P.Show T.UndersInParen where
+  show = \(T.UIP i) -> "(_" ++ P.concat (P.replicate (i-1) ", _") ++")"
 
-instance Show ParenExpr where
-  show = \(PE pei) -> "(" ++ show pei ++ ")"
+instance P.Show T.ParenExpr where
+  show = \(T.PE pei) -> "(" ++ P.show pei ++ ")"
 
-instance Show InsideParenExpr where
+instance P.Show T.InsideParenExpr where
   show = \case
-    LOE1 soe -> show soe
-    LFE1 sfe -> show sfe
+    T.LOE1 soe -> P.show soe
+    T.LFE1 sfe -> P.show sfe
 
-instance Show Tuple where
-  show = \(T (loue, loues)) -> "(" ++ show loue ++ ", " ++ show loues ++ ")"
+instance P.Show T.Tuple where
+  show = \(T.T (loue, loues)) ->
+    "(" ++ P.show loue ++ ", " ++ P.show loues ++ ")"
 
-instance Show LineExprOrUnders where
-  show = \(LEOUs (loue, loues)) -> show loue ++ show_list_comma loues
+instance P.Show T.LineExprOrUnders where
+  show = \(T.LEOUs (loue, loues)) -> P.show loue ++ show_list_comma loues
 
-instance Show LineExprOrUnder where
+instance P.Show T.LineExprOrUnder where
   show = \case
-    LE1 le -> show le
-    Underscore1 -> "_"
+    T.LE1 le -> P.show le
+    T.Underscore1 -> "_"
 
-instance Show LineExpr where
+instance P.Show T.LineExpr where
   show = \case
-    BOAE1 npoa -> show npoa
-    LOE2 soe -> show soe
-    LFE2 sfe -> show sfe
+    T.BOAE1 npoa -> P.show npoa
+    T.LOE2 soe -> P.show soe
+    T.LFE2 sfe -> P.show sfe
 
-instance Show BasicOrAppExpr where
+instance P.Show T.BasicOrAppExpr where
   show = \case
-    BE3 be -> show be
-    PrFA1 prfa -> show prfa
-    PoFA1 pofa -> show pofa
+    T.BE3 be -> P.show be
+    T.PrFA1 prfa -> P.show prfa
+    T.PoFA1 pofa -> P.show pofa
 
-instance Show BasicExpr where
+instance P.Show T.BasicExpr where
   show = \case
-    Lit1 lit -> show lit
-    PFAOI1 pfaoi -> show pfaoi
-    T1 tuple -> show tuple
-    L1 list -> show list
-    SI1 sid -> show sid
+    T.Lit1 lit -> P.show lit
+    T.PFAOI1 pfaoi -> P.show pfaoi
+    T.T1 tuple -> P.show tuple
+    T.L1 list -> P.show list
+    T.SI1 sid -> P.show sid
 
-instance Show BigTuple where
-  show = \(BT (loue, btsplit, loues, loues_l)) ->
-    "( " ++ show loue ++ show btsplit ++ ", " ++ show loues ++
+instance P.Show T.BigTuple where
+  show = \(T.BT (loue, btsplit, loues, loues_l)) ->
+    "( " ++ P.show loue ++ P.show btsplit ++ ", " ++ P.show loues ++
     show_list_sep "\n, " loues_l ++ "\n)"
 
-instance Show BigTupleSplit where
+instance P.Show T.BigTupleSplit where
   show = \case
-    NoSplit -> ""
-    Split -> "\n"
+    T.NoSplit -> ""
+    T.Split -> "\n"
 
-instance Show List where
-  show = \(L maybe_loues) -> "[" ++ show_maybe maybe_loues ++ "]"
+instance P.Show T.List where
+  show = \(T.L maybe_loues) -> "[" ++ show_maybe maybe_loues ++ "]"
 
-instance Show BigList where
-  show = \(BL (loues, loues_l)) ->
-    "[ " ++ show loues ++ show_list_sep "\n, " loues_l ++ "\n]"
+instance P.Show T.BigList where
+  show = \(T.BL (loues, loues_l)) ->
+    "[ " ++ P.show loues ++ show_list_sep "\n, " loues_l ++ "\n]"
 
-show_as :: ArgsStr -> String
-show_as = \(args, str) -> show args ++ str
+show_as :: T.ArgsStr -> P.String
+show_as = \(args, str) -> P.show args ++ str
 
-instance Show ParenFuncAppOrId where
-  show = \(PFAOI (margs1, id_start, args_str_pairs, maybe_digit, margs2)) ->
-    show_maybe margs1 ++ show id_start ++
-    concatMap show_as args_str_pairs ++ show_md maybe_digit ++
+instance P.Show T.ParenFuncAppOrId where
+  show = \(T.PFAOI (margs1, id_start, args_str_pairs, maybe_digit, margs2)) ->
+    show_maybe margs1 ++ P.show id_start ++
+    P.concatMap show_as args_str_pairs ++ show_md maybe_digit ++
     show_maybe margs2
 
-instance Show Arguments where
-  show = \(As loues) -> "(" ++ show loues ++ ")"
+instance P.Show T.Arguments where
+  show = \(T.As loues) -> "(" ++ P.show loues ++ ")"
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
-instance Show PreFunc where
-  show = \(PF sid) -> show sid ++ ":"
+instance P.Show T.PreFunc where
+  show = \(T.PF sid) -> P.show sid ++ ":"
 
-instance Show PreFuncApp where
-  show = \(PrFA (pf, oper)) -> show pf ++ show oper
+instance P.Show T.PreFuncApp where
+  show = \(T.PrFA (pf, oper)) -> P.show pf ++ P.show oper
 
-instance Show PostFunc where
+instance P.Show T.PostFunc where
   show = \case
-    SId1 sid -> "." ++ show sid
-    SI2 sid -> "." ++ show sid
+    T.SId1 sid -> "." ++ P.show sid
+    T.SI2 sid -> "." ++ P.show sid
 
-instance Show SpecialId where
+instance P.Show T.SpecialId where
   show = \case
-    First -> "1st"
-    Second -> "2nd"
-    Third -> "3rd"
-    Fourth -> "4th"
-    Fifth -> "5th"
+    T.First -> "1st"
+    T.Second -> "2nd"
+    T.Third -> "3rd"
+    T.Fourth -> "4th"
+    T.Fifth -> "5th"
 
-instance Show PostFuncApp where
-  show = \(PoFA (pfa, pfae)) -> show pfa ++ show pfae
+instance P.Show T.PostFuncApp where
+  show = \(T.PoFA (pfa, pfae)) -> P.show pfa ++ P.show pfae
 
-instance Show PostFuncArg where
+instance P.Show T.PostFuncArg where
   show = \case
-    PE2 pe -> show pe
-    BE2 be -> show be
-    Underscore2 -> "_"
+    T.PE2 pe -> P.show pe
+    T.BE2 be -> P.show be
+    T.Underscore2 -> "_"
 
-instance Show PostFuncAppEnd where
+instance P.Show T.PostFuncAppEnd where
   show = \case
-    DC1 dc -> show dc
-    PFsMDC (pfs, mdc) -> show_list pfs ++ show_maybe mdc
+    T.DC1 dc -> P.show dc
+    T.PFsMDC (pfs, mdc) -> show_list pfs ++ show_maybe mdc
 
-instance Show DotChange where
-  show = \(DC (fc, fcs)) -> ".change{" ++ show fc ++ show_list_comma fcs ++ "}"
+instance P.Show T.DotChange where
+  show = \(T.DC (fc, fcs)) ->
+    ".change{" ++ P.show fc ++ show_list_comma fcs ++ "}"
 
-instance Show FieldChange where
-  show = \(FC (f, le)) -> show f ++ " = " ++ show le
+instance P.Show T.FieldChange where
+  show = \(T.FC (f, le)) -> P.show f ++ " = " ++ P.show le
 
-instance Show Field where
+instance P.Show T.Field where
   show = \case
-    SId2 sid -> show sid
-    SI3 sid -> show sid
+    T.SId2 sid -> P.show sid
+    T.SI3 sid -> P.show sid
 
 -- Values: OpExpr
-instance Show OpExpr where
+instance P.Show T.OpExpr where
   show = \case
-    LOE3 soe -> show soe
-    BOE1 boe -> show boe
+    T.LOE3 soe -> P.show soe
+    T.BOE1 boe -> P.show boe
 
-instance Show OpExprStart where
-  show = \(OES oper_op_pairs) -> show_pair_list oper_op_pairs
+instance P.Show T.OpExprStart where
+  show = \(T.OES oper_op_pairs) -> show_pair_list oper_op_pairs
 
-instance Show LineOpExpr where
-  show = \(LOE (oes, loee)) -> show oes ++ show loee
+instance P.Show T.LineOpExpr where
+  show = \(T.LOE (oes, loee)) -> P.show oes ++ P.show loee
 
-instance Show LineOpExprEnd where
+instance P.Show T.LineOpExprEnd where
   show = \case
-    O1 o -> show o
-    LFE3 sfe -> show sfe
+    T.O1 o -> P.show o
+    T.LFE3 sfe -> P.show sfe
 
-instance Show BigOpExpr where
+instance P.Show T.BigOpExpr where
   show = \case
-    BOEOS1 boeos -> show boeos
-    BOEFS1 boefs -> show boefs
+    T.BOEOS1 boeos -> P.show boeos
+    T.BOEFS1 boefs -> P.show boefs
 
-instance Show BigOpExprOpSplit where
-  show = \(BOEOS (osls, maybe_oes, ose)) ->
-    show_list osls ++ show_maybe maybe_oes ++ show ose
+instance P.Show T.BigOpExprOpSplit where
+  show = \(T.BOEOS (osls, maybe_oes, ose)) ->
+    show_list osls ++ show_maybe maybe_oes ++ P.show ose
 
-instance Show OpSplitLine where
+instance P.Show T.OpSplitLine where
   show = \case
-    OESMOFCO (oes, mofco) -> show oes ++ show_maybe mofco ++ "\n  "
-    OFCO1 ofco -> show ofco ++ "\n  "
+    T.OESMOFCO (oes, mofco) -> P.show oes ++ show_maybe mofco ++ "\n  "
+    T.OFCO1 ofco -> P.show ofco ++ "\n  "
 
-instance Show OperFCO where
-  show = \(OFCO (oper, fco)) -> show oper ++ " " ++ show fco
+instance P.Show T.OperFCO where
+  show = \(T.OFCO (oper, fco)) -> P.show oper ++ " " ++ P.show fco
 
-instance Show OpSplitEnd where
+instance P.Show T.OpSplitEnd where
   show = \case
-    O2 o -> show o
-    FE1 fe -> show fe
+    T.O2 o -> P.show o
+    T.FE1 fe -> P.show fe
 
-instance Show BigOpExprFuncSplit where
-  show = \(BOEFS (oes, boefs)) -> show oes ++ show boefs
+instance P.Show T.BigOpExprFuncSplit where
+  show = \(T.BOEFS (oes, boefs)) -> P.show oes ++ P.show boefs
 
-instance Show BigOrCasesFuncExpr where
+instance P.Show T.BigOrCasesFuncExpr where
   show = \case
-    BFE1 bfe -> show bfe
-    CFE1 cfe -> show cfe
+    T.BFE1 bfe -> P.show bfe
+    T.CFE1 cfe -> P.show cfe
 
-instance Show Operand where
+instance P.Show T.Operand where
   show = \case
-    BOAE2 npoa -> show npoa
-    PE3 pe -> show pe
-    Underscore3 -> "_"
+    T.BOAE2 npoa -> P.show npoa
+    T.PE3 pe -> P.show pe
+    T.Underscore3 -> "_"
 
-instance Show Op where
+instance P.Show T.Op where
   show = \case
-    FCO3 co -> " " ++ show co ++ " "
-    OSO oso -> " " ++ show oso ++ " "
+    T.FCO3 co -> " " ++ P.show co ++ " "
+    T.OSO oso -> " " ++ P.show oso ++ " "
 
-instance Show FuncCompOp where
+instance P.Show T.FuncCompOp where
   show = \case
-    RightComp -> "o>"
-    LeftComp -> "<o"
+    T.RightComp -> "o>"
+    T.LeftComp -> "<o"
 
-instance Show OptionalSpacesOp where
+instance P.Show T.OptionalSpacesOp where
   show = \case
-    RightApp -> "->"
-    LeftApp -> "<-"
-    Power -> "^"
-    Mult -> "*"
-    Div -> "/"
-    Plus -> "+"
-    Minus -> "-"
-    Equal -> "=="
-    NotEqual -> "/="
-    Greater -> ">"
-    Less -> "<"
-    GrEq -> ">="
-    LeEq -> "<="
-    And -> "&"
-    Or -> "|"
-    Use -> ">>"
-    Then -> ";"
+    T.RightApp -> "->"
+    T.LeftApp -> "<-"
+    T.Power -> "^"
+    T.Mult -> "*"
+    T.Div -> "/"
+    T.Plus -> "+"
+    T.Minus -> "-"
+    T.Equal -> "=="
+    T.NotEqual -> "/="
+    T.Greater -> ">"
+    T.Less -> "<"
+    T.GrEq -> ">="
+    T.LeEq -> "<="
+    T.And -> "&"
+    T.Or -> "|"
+    T.Use -> ">>"
+    T.Then -> ";"
 
 -- Values: FuncExpr
-instance Show FuncExpr where
+instance P.Show T.FuncExpr where
   show = \case
-    LFE4 sfe -> show sfe
-    BFE2 bfe -> show bfe
-    CFE2 cfe -> show cfe
+    T.LFE4 sfe -> P.show sfe
+    T.BFE2 bfe -> P.show bfe
+    T.CFE2 cfe -> P.show cfe
 
-instance Show LineFuncExpr where
-  show = \(LFE (params, lfb)) -> show params ++ " =>" ++ show lfb
+instance P.Show T.LineFuncExpr where
+  show = \(T.LFE (params, lfb)) -> P.show params ++ " =>" ++ P.show lfb
 
-instance Show BigFuncExpr where
-  show = \(BFE (params, bfb)) -> show params ++ " =>" ++ show bfb
+instance P.Show T.BigFuncExpr where
+  show = \(T.BFE (params, bfb)) -> P.show params ++ " =>" ++ P.show bfb
 
-instance Show Parameters where
+instance P.Show T.Parameters where
   show = \case
-    ParamId id -> show id
-    Star1 -> "*"
-    Params (params, params_l) ->
-      "(" ++ show params ++ show_list_comma params_l ++ ")"
+    T.ParamId id -> P.show id
+    T.Star1 -> "*"
+    T.Params (params, params_l) ->
+      "(" ++ P.show params ++ show_list_comma params_l ++ ")"
 
-instance Show LineFuncBody where
+instance P.Show T.LineFuncBody where
   show = \case
-    BOAE3 npoa -> " " ++ show npoa
-    LOE4 soe -> " " ++ show soe
-    LFE5 lfe -> " (" ++ show lfe ++ ")"
+    T.BOAE3 npoa -> " " ++ P.show npoa
+    T.LOE4 soe -> " " ++ P.show soe
+    T.LFE5 lfe -> " (" ++ P.show lfe ++ ")"
 
-instance Show BigFuncBody where
+instance P.Show T.BigFuncBody where
   show = \case
-    BOAE4 npoa -> "\n" ++ show npoa
-    OE1 oe -> "\n" ++ show oe
-    LFE6 lfe -> "\n(" ++ show lfe ++ ")"
+    T.BOAE4 npoa -> "\n" ++ P.show npoa
+    T.OE1 oe -> "\n" ++ P.show oe
+    T.LFE6 lfe -> "\n(" ++ P.show lfe ++ ")"
 
-instance Show CasesFuncExpr where
-  show = \(CFE (cps, cs, maybe_ec)) ->
-    show cps ++ show_list cs ++ show_maybe maybe_ec
+instance P.Show T.CasesFuncExpr where
+  show = \(T.CFE (cps, cs, maybe_ec)) ->
+    P.show cps ++ show_list cs ++ show_maybe maybe_ec
 
-instance Show CasesParams where
+instance P.Show T.CasesParams where
   show = \case
-    CParamId id -> show id
-    QuestionMark -> "?"
-    Star2 -> "*"
-    CParams (cps, cps_l) -> "(" ++ show cps ++ show_list_comma cps_l ++ ")"
+    T.CParamId id -> P.show id
+    T.QuestionMark -> "?"
+    T.Star2 -> "*"
+    T.CParams (cps, cps_l) -> "(" ++ P.show cps ++ show_list_comma cps_l ++ ")"
 
-instance Show Case where
-  show = \(Ca (om, cb)) -> "\n" ++ show om ++ " =>" ++ show cb
+instance P.Show T.Case where
+  show = \(T.Ca (om, cb)) -> "\n" ++ P.show om ++ " =>" ++ P.show cb
 
-instance Show EndCase where
-  show = \(EC (ecp, cb)) -> "\n" ++ show ecp ++ " =>" ++ show cb
+instance P.Show T.EndCase where
+  show = \(T.EC (ecp, cb)) -> "\n" ++ P.show ecp ++ " =>" ++ P.show cb
 
-instance Show OuterMatching where
+instance P.Show T.OuterMatching where
   show = \case
-    SId3 sid -> show sid
-    M1 m -> show m
+    T.SId3 sid -> P.show sid
+    T.M1 m -> P.show m
 
-instance Show EndCaseParam where
+instance P.Show T.EndCaseParam where
   show = \case
-    Id1 id -> show id
-    Ellipsis -> "..."
+    T.Id1 id -> P.show id
+    T.Ellipsis -> "..."
 
-instance Show Matching where
+instance P.Show T.Matching where
   show = \case
-    Lit2 lit -> show lit
-    PFM (pf, mos) -> show pf ++ show mos
-    TM1 tm -> show tm
-    LM1 lm -> show lm
+    T.Lit2 lit -> P.show lit
+    T.PFM (pf, mos) -> P.show pf ++ P.show mos
+    T.TM1 tm -> P.show tm
+    T.LM1 lm -> P.show lm
 
-instance Show InnerMatching where
+instance P.Show T.InnerMatching where
   show = \case
-    Star -> "*"
-    Id2 id -> show id
-    M2 m -> show m
+    T.Star -> "*"
+    T.Id2 id -> P.show id
+    T.M2 m -> P.show m
 
-instance Show TupleMatching where
-  show = \(TM (mos, mos_l)) -> "(" ++ show mos ++ show_list_comma mos_l ++ ")"
+instance P.Show T.TupleMatching where
+  show = \(T.TM (mos, mos_l)) ->
+   "(" ++ P.show mos ++ show_list_comma mos_l ++ ")"
 
-instance Show ListMatching where
-  show (LM (maybe_inside_list)) =
+instance P.Show T.ListMatching where
+  show (T.LM (maybe_inside_list)) =
     "[" ++ maybe_inside_list_str ++ "]"
     where
-    maybe_inside_list_str :: String
+    maybe_inside_list_str :: P.String
     maybe_inside_list_str =
       case maybe_inside_list of
-        Nothing -> ""
-        Just (mos, mos_l, maybe_rlm) ->
-          show mos ++ show_list_comma mos_l ++ show_maybe maybe_rlm
+        P.Nothing -> ""
+        P.Just (mos, mos_l, maybe_rlm) ->
+          P.show mos ++ show_list_comma mos_l ++ show_maybe maybe_rlm
 
-instance Show RestListMatching where
-  show (RLM maybe_sid) =
+instance P.Show T.RestListMatching where
+  show (T.RLM maybe_sid) =
     ", " ++ maybe_sid_str ++ "..."
     where
-    maybe_sid_str :: String
+    maybe_sid_str :: P.String
     maybe_sid_str =
       case maybe_sid of
-        Nothing -> ""
-        Just sid -> show sid ++ " = "
+        P.Nothing -> ""
+        P.Just sid -> P.show sid ++ " = "
 
-instance Show CaseBody where
+instance P.Show T.CaseBody where
   show = \case
-    LFB1 lfb -> show lfb
-    BFB1 (bfb, maybe_we) -> show bfb ++ show_maybe maybe_we
+    T.LFB1 lfb -> P.show lfb
+    T.BFB1 (bfb, maybe_we) -> P.show bfb ++ show_maybe maybe_we
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
-instance Show ValueDef where
-  show = \(VD (id, t, ve, maybe_we)) ->
-    show id ++ "\n  : " ++ show t ++ "\n  = " ++ show ve ++ show_maybe maybe_we
+instance P.Show T.ValueDef where
+  show = \(T.VD (id, t, ve, maybe_we)) ->
+    P.show id ++ "\n  : " ++ P.show t ++ "\n  = " ++ P.show ve ++
+    show_maybe maybe_we
 
-instance Show ValueExpr where
+instance P.Show T.ValueExpr where
   show = \case
-    BOAE5 npoa -> show npoa
-    OE2 oe -> show oe
-    FE2 fe -> show fe
-    BT1 bt -> show bt
-    BL1 bl -> show bl
+    T.BOAE5 npoa -> P.show npoa
+    T.OE2 oe -> P.show oe
+    T.FE2 fe -> P.show fe
+    T.BT1 bt -> P.show bt
+    T.BL1 bl -> P.show bl
 
-instance Show GroupedValueDefs where
-  show = \(GVDs (id, ids, ts, csles, csles_l)) ->
-    show id ++ show_list_comma ids ++
-    "\n  : " ++ show ts ++
-    "\n  = " ++ show csles ++ show_list_sep "\n  , " csles_l
+instance P.Show T.GroupedValueDefs where
+  show = \(T.GVDs (id, ids, ts, csles, csles_l)) ->
+    P.show id ++ show_list_comma ids ++
+    "\n  : " ++ P.show ts ++
+    "\n  = " ++ P.show csles ++ show_list_sep "\n  , " csles_l
 
-instance Show Types where
+instance P.Show T.Types where
   show = \case
-    Ts (t, ts) -> show t ++ show_list_comma ts
-    All t -> "all " ++ show t
+    T.Ts (t, ts) -> P.show t ++ show_list_comma ts
+    T.All t -> "all " ++ P.show t
 
-instance Show LineExprs where
-  show = \(LEs (le, les)) -> show le ++ show_list_comma les
+instance P.Show T.LineExprs where
+  show = \(T.LEs (le, les)) -> P.show le ++ show_list_comma les
 
-instance Show WhereExpr where
+instance P.Show T.WhereExpr where
   show =
-    \(WE (wde, wdes)) -> "\nwhere\n" ++ show wde ++ show_list_sep "\n\n" wdes
+    \(T.WE (wde, wdes)) -> "\nwhere\n" ++ P.show wde ++ show_list_sep "\n\n" wdes
 
-instance Show WhereDefExpr where
+instance P.Show T.WhereDefExpr where
   show = \case
-    VD1 vd -> show vd
-    GVDs1 gvd -> show gvd
+    T.VD1 vd -> P.show vd
+    T.GVDs1 gvd -> P.show gvd
 
 -- Type
-instance Show Type where
-  show = \(Ty (maybe_c, st)) -> show_maybe maybe_c ++ show st
+instance P.Show T.Type where
+  show = \(T.Ty (maybe_c, st)) -> show_maybe maybe_c ++ P.show st
 
-instance Show SimpleType where
+instance P.Show T.SimpleType where
   show = \case
-    PTV1 ptv -> show ptv
-    TAIOA1 ta -> show ta
-    PoT1 pt -> show pt
-    PT1 pt -> show pt
-    FT1 ft -> show ft
+    T.PTV1 ptv -> P.show ptv
+    T.TAIOA1 ta -> P.show ta
+    T.PoT1 pt -> P.show pt
+    T.PT1 pt -> P.show pt
+    T.FT1 ft -> P.show ft
 
-instance Show TypeId where
-  show = \(TId str) -> str
+instance P.Show T.TypeId where
+  show = \(T.TId str) -> str
 
-instance Show ParamTVar where
-  show = \(PTV i) -> "T" ++ show i
+instance P.Show T.ParamTVar where
+  show = \(T.PTV i) -> "T" ++ P.show i
 
-instance Show AdHocTVar where
-  show = \(AHTV c) -> "@" ++ [c]
+instance P.Show T.AdHocTVar where
+  show = \(T.AHTV c) -> "@" ++ [c]
 
-instance Show TypeAppIdOrAHTV where
-  show = \(TAIOA (mtip1, taioam, mtip2)) ->
-    show_maybe mtip1 ++ show taioam ++ show_maybe mtip2
+instance P.Show T.TypeAppIdOrAHTV where
+  show = \(T.TAIOA (mtip1, taioam, mtip2)) ->
+    show_maybe mtip1 ++ P.show taioam ++ show_maybe mtip2
 
-instance Show TAIOAMiddle where
+instance P.Show T.TAIOAMiddle where
   show = \case
-    TIdStart1 (tid, tip_str_pairs) ->
-      show tid ++ concatMap (\(tip, str) -> show tip ++ str) tip_str_pairs
-    AHTV2 ahtv -> show ahtv
+    T.TIdStart1 (tid, tip_str_pairs) ->
+      P.show tid ++ P.concatMap (\(tip, str) -> P.show tip ++ str) tip_str_pairs
+    T.AHTV2 ahtv -> P.show ahtv
 
-instance Show TypesInParen where
-  show = \(TIP (st, sts)) -> "(" ++ show st ++ show_list_comma sts ++ ")"
+instance P.Show T.TypesInParen where
+  show = \(T.TIP (st, sts)) -> "(" ++ P.show st ++ show_list_comma sts ++ ")"
 
-instance Show ProdType where
-  show = \(PT (fopt, fopts)) -> show fopt ++ show_list_sep " x " fopts
+instance P.Show T.ProdType where
+  show = \(T.PT (fopt, fopts)) -> P.show fopt ++ show_list_sep " x " fopts
 
-instance Show FieldType where
+instance P.Show T.FieldType where
   show = \case
-    PBT1 ft -> show ft
-    PoT2 pt -> show pt
+    T.PBT1 ft -> P.show ft
+    T.PoT2 pt -> P.show pt
 
-instance Show PowerBaseType where
+instance P.Show T.PowerBaseType where
   show = \case
-    PTV2 ptv -> show ptv
-    TAIOA2 ta -> show ta
-    IPT ipt -> show ipt
+    T.PTV2 ptv -> P.show ptv
+    T.TAIOA2 ta -> P.show ta
+    T.IPT ipt -> P.show ipt
 
-instance Show InParenT where
+instance P.Show T.InParenT where
   show = \case
-    PT3 pt -> "(" ++ show pt ++ ")"
-    FT3 ft -> "(" ++ show ft ++ ")"
+    T.PT3 pt -> "(" ++ P.show pt ++ ")"
+    T.FT3 ft -> "(" ++ P.show ft ++ ")"
 
-instance Show PowerType where
-  show = \(PoT (ft, i)) -> show ft ++ "^" ++ show i
+instance P.Show T.PowerType where
+  show = \(T.PoT (ft, i)) -> P.show ft ++ "^" ++ P.show i
 
-instance Show FuncType where
-  show = \(FT (it, ot)) -> show it ++ " => " ++ show ot
+instance P.Show T.FuncType where
+  show = \(T.FT (it, ot)) -> P.show it ++ " => " ++ P.show ot
 
-instance Show InOrOutType where
+instance P.Show T.InOrOutType where
   show = \case
-    PTV3 ptv -> show ptv
-    TAIOA3 ta -> show ta
-    PoT4 pt -> show pt
-    PT2 pt -> show pt
-    FT2 ft -> "(" ++ show ft ++ ")"
+    T.PTV3 ptv -> P.show ptv
+    T.TAIOA3 ta -> P.show ta
+    T.PoT4 pt -> P.show pt
+    T.PT2 pt -> P.show pt
+    T.FT2 ft -> "(" ++ P.show ft ++ ")"
 
-instance Show Condition where
-  show = \(Co pn) -> show pn ++ " ==> "
+instance P.Show T.Condition where
+  show = \(T.Co pn) -> P.show pn ++ " ==> "
 
 -- TypeDef, TypeNickname
-instance Show TypeDef where
+instance P.Show T.TypeDef where
   show = \case
-    TTD1 ttd -> show ttd
-    OTD1 otd -> show otd
+    T.TTD1 ttd -> P.show ttd
+    T.OTD1 otd -> P.show otd
 
-instance Show TupleTypeDef where
-  show = \(TTD (tn, pcsis, ttde)) ->
-    "tuple_type " ++ show tn ++ "\nvalue\n  " ++ show pcsis ++ " : " ++
-    show ttde
+instance P.Show T.TupleTypeDef where
+  show = \(T.TTD (tn, pcsis, ttde)) ->
+    "tuple_type " ++ P.show tn ++ "\nvalue\n  " ++ P.show pcsis ++ " : " ++
+    P.show ttde
 
-instance Show ProdOrPowerType where
+instance P.Show T.ProdOrPowerType where
   show = \case
-    PT4 pt -> show pt
-    PoT5 pt -> show pt
+    T.PT4 pt -> P.show pt
+    T.PoT5 pt -> P.show pt
 
-instance Show TypeName where
-  show = \(TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) ->
-    show_maybe maybe_pvip1 ++ show tid ++
-    concatMap (\(pvip, str) -> show pvip ++ str) pvip_str_pairs ++
+instance P.Show T.TypeName where
+  show = \(T.TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) ->
+    show_maybe maybe_pvip1 ++ P.show tid ++
+    P.concatMap (\(pvip, str) -> P.show pvip ++ str) pvip_str_pairs ++
     show_maybe maybe_pvip2
 
-instance Show ParamVarsInParen where
-  show = \(PVIP (ptv, ptvs)) -> "(" ++ show ptv ++ show_list_comma ptvs ++ ")"
+instance P.Show T.ParamVarsInParen where
+  show = \(T.PVIP (ptv, ptvs)) ->
+    "(" ++ P.show ptv ++ show_list_comma ptvs ++ ")"
 
-instance Show FieldNames where
-  show = \(PCSIs (sid, sids)) -> "(" ++ show sid ++ show_list_comma sids ++ ")"
+instance P.Show T.FieldNames where
+  show = \(T.PCSIs (sid, sids)) ->
+    "(" ++ P.show sid ++ show_list_comma sids ++ ")"
 
-instance Show OrTypeDef where
-  show =
-    \(OTD (tn, pv, pvs)) ->
-    "or type: " ++ show tn ++
-    "\nvalues:\n  " ++ show pv ++ show_list_sep " | " pvs
+instance P.Show T.OrTypeDef where
+  show = \(T.OTD (tn, pv, pvs)) ->
+    "or type: " ++ P.show tn ++
+    "\nvalues:\n  " ++ P.show pv ++ show_list_sep " | " pvs
 
-instance Show PossibleValue where
-  show = \(PV (sid, maybe_with_val)) ->
-    show sid ++ case maybe_with_val of
-      Nothing -> ""
-      Just (id, st) -> "--<" ++ show id ++ " : " ++ show st ++ ">"
+instance P.Show T.PossibleValue where
+  show = \(T.PV (sid, maybe_with_val)) ->
+    P.show sid ++ case maybe_with_val of
+      P.Nothing -> ""
+      P.Just (id, st) -> "--<" ++ P.show id ++ " : " ++ P.show st ++ ">"
 
-instance Show TypeNickname where
-  show = \(TNN (tn, st)) -> "type nickname: " ++ show tn ++ " = " ++ show st
+instance P.Show T.TypeNickname where
+  show = \(T.TNN (tn, st)) ->
+    "type nickname: " ++ P.show tn ++ " = " ++ P.show st
 
 -- TypePropDef
-instance Show TypePropDef where
+instance P.Show T.TypePropDef where
   show = \case
-    APD1 apd -> show apd
-    RPD1 rpd -> show rpd
+    T.APD1 apd -> P.show apd
+    T.RPD1 rpd -> P.show rpd
 
-instance Show AtomPropDef where
-  show = \(APD (pnl, id, st)) ->
-    show pnl ++ "\nvalue\n  " ++ show id ++ " : " ++ show st
+instance P.Show T.AtomPropDef where
+  show = \(T.APD (pnl, id, st)) ->
+    P.show pnl ++ "\nvalue\n  " ++ P.show id ++ " : " ++ P.show st
 
-instance Show RenamingPropDef where
-  show = \(RPD (pnl, pn, pns)) ->
-    show pnl ++ "\nequivalent\n  " ++ show pn ++ show_list_comma pns
+instance P.Show T.RenamingPropDef where
+  show = \(T.RPD (pnl, pn, pns)) ->
+    P.show pnl ++ "\nequivalent\n  " ++ P.show pn ++ show_list_comma pns
 
-instance Show PropNameLine where
-  show = \(PNL pn) ->
-    "type_proposition " ++ show pn
+instance P.Show T.PropNameLine where
+  show = \(T.PNL pn) ->
+    "type_proposition " ++ P.show pn
 
-instance Show PropName where
+instance P.Show T.PropName where
   show = \case
-    NPStart1 (c, np_tip_pairs, maybe_np) ->
+    T.NPStart1 (c, np_tip_pairs, maybe_np) ->
       [c] ++ show_pair_list np_tip_pairs ++ show_maybe maybe_np
-    TIPStart (tip_np_pairs, maybe_tip) ->
+    T.TIPStart (tip_np_pairs, maybe_tip) ->
       show_pair_list tip_np_pairs ++ show_maybe maybe_tip
 
-instance Show NamePart where
-  show = \(NP str) -> str
+instance P.Show T.NamePart where
+  show = \(T.NP str) -> str
 
 -- TypeTheo
-instance Show TypeTheo where
-  show = \(TT (pnws, maybe_pnws, proof)) ->
-    "type_theorem " ++ show pnws ++ show_mpnws maybe_pnws ++
-    "\nproof" ++ show proof
+instance P.Show T.TypeTheo where
+  show = \(T.TT (pnws, maybe_pnws, proof)) ->
+    "type_theorem " ++ P.show pnws ++ show_mpnws maybe_pnws ++
+    "\nproof" ++ P.show proof
     where
-    show_mpnws :: Maybe PropNameWithSubs -> String
+    show_mpnws :: P.Maybe T.PropNameWithSubs -> P.String
     show_mpnws = \case
-      Nothing -> ""
-      Just pnws -> " => " ++ show pnws
+      P.Nothing -> ""
+      P.Just pnws -> " => " ++ P.show pnws
 
-instance Show PropNameWithSubs where
+instance P.Show T.PropNameWithSubs where
   show = \case
-    NPStart2 (c, np_sip_pairs, maybe_np) ->
+    T.NPStart2 (c, np_sip_pairs, maybe_np) ->
       [c] ++ show_pair_list np_sip_pairs ++ show_maybe maybe_np
-    SIPStart (sip_np_pairs, maybe_sip) ->
+    T.SIPStart (sip_np_pairs, maybe_sip) ->
       show_pair_list sip_np_pairs ++ show_maybe maybe_sip
 
-instance Show SubsInParen where
-  show = \(SIP (tvs, tvss)) -> "(" ++ show tvs ++ show_list_comma tvss ++ ")"
+instance P.Show T.SubsInParen where
+  show = \(T.SIP (tvs, tvss)) -> "(" ++ P.show tvs ++ show_list_comma tvss ++ ")"
 
-instance Show TVarSub where
+instance P.Show T.TVarSub where
   show = \case
-    PTV4 ptv -> show ptv
-    TAIOAS1 tas -> show tas
-    PoTS1 pts -> show pts
-    PTS1 pts -> show pts
-    FTS1 fts -> show fts
+    T.PTV4 ptv -> P.show ptv
+    T.TAIOAS1 tas -> P.show tas
+    T.PoTS1 pts -> P.show pts
+    T.PTS1 pts -> P.show pts
+    T.FTS1 fts -> P.show fts
 
-instance Show TypeAppIdOrAHTVSub where
-  show = \(TAIOAS (msouip1, taioasm, msouip2)) ->
-    show_maybe msouip1 ++ show taioasm ++ show_maybe msouip2
+instance P.Show T.TypeAppIdOrAHTVSub where
+  show = \(T.TAIOAS (msouip1, taioasm, msouip2)) ->
+    show_maybe msouip1 ++ P.show taioasm ++ show_maybe msouip2
 
-instance Show TAIOASMiddle where
+instance P.Show T.TAIOASMiddle where
   show = \case
-    TIdStart2 (tid, souip_str_pairs) ->
-      show tid ++
-      concatMap (\(souip, str) -> show souip ++ str) souip_str_pairs
-    AHTV3 ahtv -> show ahtv
+    T.TIdStart2 (tid, souip_str_pairs) ->
+      P.show tid ++
+      P.concatMap (\(souip, str) -> P.show souip ++ str) souip_str_pairs
+    T.AHTV3 ahtv -> P.show ahtv
 
-instance Show SubsOrUndersInParen where
-  show = \(SOUIP (sou, sous)) -> "(" ++ show sou ++ show_list_comma sous ++ ")"
+instance P.Show T.SubsOrUndersInParen where
+  show = \(T.SOUIP (sou, sous)) ->
+    "(" ++ P.show sou ++ show_list_comma sous ++ ")"
 
-instance Show SubOrUnder where
+instance P.Show T.SubOrUnder where
   show = \case
-    TVS1 tvs -> show tvs
-    Underscore4 -> "_"
+    T.TVS1 tvs -> P.show tvs
+    T.Underscore4 -> "_"
 
-instance Show PowerTypeSub where
-  show = \(PoTS (pbts, i)) -> show pbts ++ "^" ++ show i
+instance P.Show T.PowerTypeSub where
+  show = \(T.PoTS (pbts, i)) -> P.show pbts ++ "^" ++ P.show i
 
-instance Show PowerBaseTypeSub where
+instance P.Show T.PowerBaseTypeSub where
   show = \case
-    Underscore5 -> "_"
-    PTV5 ptv -> show ptv
-    TAIOAS2 tas -> show tas
-    IPTS ipts -> "(" ++ show ipts ++ ")"
+    T.Underscore5 -> "_"
+    T.PTV5 ptv -> P.show ptv
+    T.TAIOAS2 tas -> P.show tas
+    T.IPTS ipts -> "(" ++ P.show ipts ++ ")"
 
-instance Show InParenTSub where
+instance P.Show T.InParenTSub where
   show = \case
-    PTS2 pts -> show pts
-    FTS2 fts -> show fts
+    T.PTS2 pts -> P.show pts
+    T.FTS2 fts -> P.show fts
 
-instance Show ProdTypeSub where
-  show = \(PTS (fts, fts_l)) -> show fts ++ show_list_sep " x " fts_l
+instance P.Show T.ProdTypeSub where
+  show = \(T.PTS (fts, fts_l)) -> P.show fts ++ show_list_sep " x " fts_l
 
-instance Show FieldTypeSub where
+instance P.Show T.FieldTypeSub where
   show = \case
-    PBTS1 pbts -> show pbts
-    PoTS2 pots -> show pots
+    T.PBTS1 pbts -> P.show pbts
+    T.PoTS2 pots -> P.show pots
 
-instance Show FuncTypeSub where
-  show = \(FTS (ioots1, ioots2)) -> show ioots1 ++ " => " ++ show ioots2
+instance P.Show T.FuncTypeSub where
+  show = \(T.FTS (ioots1, ioots2)) -> P.show ioots1 ++ " => " ++ P.show ioots2
 
-instance Show InOrOutTypeSub where
+instance P.Show T.InOrOutTypeSub where
   show = \case
-    Underscore6 -> "_"
-    PTV6 ptv -> show ptv
-    TAIOAS3 tas -> show tas
-    PoTS3 pots -> show pots
-    PTS3 pts -> show pts
-    FTS3 fts -> show fts
+    T.Underscore6 -> "_"
+    T.PTV6 ptv -> P.show ptv
+    T.TAIOAS3 tas -> P.show tas
+    T.PoTS3 pots -> P.show pots
+    T.PTS3 pts -> P.show pts
+    T.FTS3 fts -> P.show fts
 
-instance Show Proof where
+instance P.Show T.Proof where
   show = \case
-    P1 (iooe, le) -> " " ++ show iooe ++ " " ++ show le
-    P2 (iooe, ttve) -> "\n  " ++ show iooe ++ show ttve
+    T.P1 (iooe, le) -> " " ++ P.show iooe ++ " " ++ P.show le
+    T.P2 (iooe, ttve) -> "\n  " ++ P.show iooe ++ P.show ttve
 
-instance Show IdOrOpEq where
-  show = \(IOOE (id, maybe_op_id)) ->
-    show id ++ show_moi maybe_op_id ++ " ="
+instance P.Show T.IdOrOpEq where
+  show = \(T.IOOE (id, maybe_op_id)) ->
+    P.show id ++ show_moi maybe_op_id ++ " ="
     where
-    show_moi :: Maybe (Op, Identifier) -> String
+    show_moi :: P.Maybe (T.Op, T.Identifier) -> P.String
     show_moi = \case
-      Nothing -> ""
-      Just (op, id) -> show op ++ show id
+      P.Nothing -> ""
+      P.Just (op, id) -> P.show op ++ P.show id
 
-instance Show TTValueExpr where
+instance P.Show T.TTValueExpr where
   show = \case
-    LE2 le -> " " ++ show le
-    VEMWE (ve, mwe) -> "\n    " ++ show ve ++ show_maybe mwe
+    T.LE2 le -> " " ++ P.show le
+    T.VEMWE (ve, mwe) -> "\n    " ++ P.show ve ++ show_maybe mwe
 
 -- Program
-instance Show Program where
-  show = \(P (pp, pps)) -> show pp ++ show_list_sep "\n\n" pps
+instance P.Show T.Program where
+  show = \(T.P (pp, pps)) -> P.show pp ++ show_list_sep "\n\n" pps
 
-instance Show ProgramPart where
+instance P.Show T.ProgramPart where
   show = \case
-    VD2 vd -> show vd
-    GVDs2 gvds -> show gvds
-    TD td -> show td
-    TNN1 tnn -> show tnn
-    TPD tpd -> show tpd
-    TT1 tt -> show tt
+    T.VD2 vd -> P.show vd
+    T.GVDs2 gvds -> P.show gvds
+    T.TD td -> P.show td
+    T.TNN1 tnn -> P.show tnn
+    T.TPD tpd -> P.show tpd
+    T.TT1 tt -> P.show tt
 
 {-
 For fast vim file navigation:

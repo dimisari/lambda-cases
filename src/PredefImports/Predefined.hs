@@ -22,6 +22,7 @@ This file contains:
 
 module PredefImports.Predefined where
 
+import Prelude ((.), (<), (>>), (>>=))
 import Prelude qualified as P
 import Control.Monad.State qualified as MS
 import Data.List.Split qualified as LS
@@ -154,8 +155,8 @@ run' = SP.callCommand
 
 clear_screen :: Program
 clear_screen =
-  ANSI.getCursorPosition P.>>= \case
-    P.Just (l, _) -> ANSI.scrollPageUp l P.>> ANSI.setCursorPosition 0 4
+  ANSI.getCursorPosition >>= \case
+    P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 4
     P.Nothing -> throw_err' "Could not get cursor position"
 
 max_of'and' :: P.Ord a => (a, a) -> a
@@ -198,20 +199,20 @@ a'mod' :: P.Integral a => (a, a) -> a
 a'mod' = P.uncurry P.mod
 
 a'length :: [a] -> P.Integer
-a'length = P.fromIntegral P.. P.length
+a'length = P.fromIntegral . P.length
 
 a'is_in' :: P.Eq a => (a, [a]) -> P.Bool
 a'is_in' = P.uncurry P.elem
 
 ignore'from' :: (P.Integer, [a]) -> [a]
-ignore'from' = P.uncurry P.drop P.. \(x, y) -> (P.fromIntegral x, y)
+ignore'from' = P.uncurry P.drop . \(x, y) -> (P.fromIntegral x, y)
 
 take'from' :: (P.Integer, [a]) -> [a]
-take'from' = P.uncurry P.take P.. \(x, y) -> (P.fromIntegral x, y)
+take'from' = P.uncurry P.take . \(x, y) -> (P.fromIntegral x, y)
 
 split'at_index' :: ([a], P.Integer) -> ([a], [a])
 split'at_index' =
-  P.uncurry (P.flip P.splitAt) P.. \(l, i) -> (l, P.fromIntegral i)
+  P.uncurry (P.flip P.splitAt) . \(l, i) -> (l, P.fromIntegral i)
 
 split'at_str' :: (P.String, P.String) -> [P.String]
 split'at_str' = P.uncurry P.$ P.flip LS.splitOn
@@ -260,15 +261,15 @@ index'of_array' :: (P.Integer, ArrayOf's v) -> P.Maybe v
 index'of_array' = \(i, m) -> IM.lookup (P.fromInteger i) m
 
 array_from_list' :: ListOf's (P.Integer, v) -> ArrayOf's v
-array_from_list' = IM.fromList P.. P.map (\(i, v) -> (P.fromInteger i, v))
+array_from_list' = IM.fromList . P.map (\(i, v) -> (P.fromInteger i, v))
 
 array_size :: ArrayOf's v -> P.Integer
-array_size = P.toInteger P.. IM.size
+array_size = P.toInteger . IM.size
 
 -- mine
 
 from'to' :: (P.Integer, P.Integer) -> [P.Integer]
-from'to' = \(i1, i2) -> case i1 P.< i2 of
+from'to' = \(i1, i2) -> case i1 < i2 of
   P.True -> [i1..i2]
   _ -> P.reverse [i2..i1]
 
