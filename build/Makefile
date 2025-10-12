@@ -97,4 +97,7 @@ test_grammar_rules: $(hs_grs)
 
 test_executables: $(execs)
 
+run_executables:
+	for f in $(execs); do echo "$$f start\n"; ./$$f; echo "\n$$f finish\n" ; done
+
 # Makefile.paths

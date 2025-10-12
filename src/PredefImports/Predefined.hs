@@ -22,7 +22,7 @@ This file contains:
 
 module PredefImports.Predefined where
 
-import Prelude ((.), (<), (>>), (>>=))
+import Prelude ((.), (<), (>>), (>>=), (++))
 import Prelude qualified as P
 import Control.Monad.State qualified as MS
 import Data.List.Split qualified as LS
@@ -30,9 +30,11 @@ import Data.HashMap.Strict qualified as HM
 import Data.IntMap.Strict qualified as IM
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C
+import Data.ByteString.UTF8 qualified as U
 import System.Exit qualified as E
 import System.Console.ANSI qualified as ANSI
 import System.Process qualified as SP
+import PredefImports.OpsInHaskell ((.>))
 
 -- types
 
@@ -132,14 +134,18 @@ get_char = P.getChar
 get_input :: ProgramWith' P.String
 get_input = P.getContents
 
-read_file' :: P.String -> ProgramWith' BS.ByteString
-read_file' = BS.readFile
+read_file' :: P.String -> ProgramWith' P.String
+read_file' = BS.readFile .> P.fmap U.toString
 
-write'to_file' :: (C.ByteString, P.String) -> Program
-write'to_file' = P.uncurry (P.flip BS.writeFile)
+write'to_file' :: (P.String, P.String) -> Program
+write'to_file' =
+  P.uncurry (P.flip write_file)
+  where
+  write_file :: P.String -> P.String -> Program
+  write_file = \pn str -> BS.writeFile pn (U.fromString str)
 
 print_string' :: P.String -> Program
-print_string' = P.putStr
+print_string' = U.fromString .> BS.putStr
 
 empty_val :: ()
 empty_val = ()
@@ -153,10 +159,16 @@ success = E.exitSuccess
 run' :: P.String -> Program
 run' = SP.callCommand
 
+clear_screen4 :: Program
+clear_screen4 =
+  ANSI.getCursorPosition >>= \case
+    P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 4
+    P.Nothing -> throw_err' "Could not get cursor position"
+
 clear_screen :: Program
 clear_screen =
   ANSI.getCursorPosition >>= \case
-    P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 4
+    P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 0
     P.Nothing -> throw_err' "Could not get cursor position"
 
 max_of'and' :: P.Ord a => (a, a) -> a
@@ -226,7 +238,7 @@ do_nothing = P.pure empty_val
 from_string' :: P.Read a => P.String -> a
 from_string' = P.read
 
-program_with' :: a -> P.IO a
+program_with' :: a -> ProgramWith' a
 program_with' = P.return
 
 not' :: P.Bool -> P.Bool
@@ -418,12 +430,9 @@ instance P.Functor f => A'Has_Internal_App f where
 class Print a where
   print' :: a -> Program
 
-instance Print BS.ByteString where
-  print' = C.putStr
-
-instance P.Show a => Print a where
-  print' = P.print
-
 instance {- OVERLAPS -} P.Show P.String where
   show = P.id
+
+instance P.Show a => Print a where
+  print' = P.show .> (++ "\n") .> print_string'
 

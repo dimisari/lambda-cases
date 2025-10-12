@@ -1,4 +1,9 @@
 
+* fix file reading and writing
+  * reading gives a bytestring type for utf8 compatibility but then it cannot
+    be used for string functions
+    * give example
+
 * finish comments and descriptions
   * Generation
     * CheckCompatibility.hs

@@ -547,8 +547,6 @@ instance GTH.ToHsWithIndentLvl (T.ValueExpr, GTH.PossiblyWhereExpr) where
         T.OE2 oe -> GTH.to_hs_wil oe
         T.BT1 bt -> GTH.to_hs_wil bt
         T.BL1 bl -> GTH.to_hs_wil bl
-        _ ->
-          P.error "should be impossible: value expr possibilities not exhausted"
 
 instance GTH.ToHsWithIndentLvl T.GroupedValueDefs where
   to_hs_wil (T.GVDs (id, ids, ts, les, les_l)) =
