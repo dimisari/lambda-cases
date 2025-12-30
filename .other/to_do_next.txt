@@ -1,9 +1,4 @@
 
-* fix file reading and writing
-  * reading gives a bytestring type for utf8 compatibility but then it cannot
-    be used for string functions
-    * give example
-
 * finish comments and descriptions
   * Generation
     * CheckCompatibility.hs
@@ -12,7 +7,7 @@
 
 * test/expected_outs
   * run all compiled programs with some automated interaction and check against
-    previous results are default ones
+    correct results
 
 * test/outputs/trees
   * ASTs using dot

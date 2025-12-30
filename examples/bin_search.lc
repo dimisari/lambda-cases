@@ -47,7 +47,7 @@ arr_bin_search(_, _, _) : Index x ArrayWithLength x Int => Possibly(Index)
       = (arr.1st, (arr.2nd)div(2))
 
 try(_) : Int => Program
-  = i => print("Trying " + i) ; result_msg(arr_bin_search(0,array, i))
+  = i => print("Trying " + i) ; result_msg(arr_bin_search(0, array, i))
     where
     result_msg(_) : Possibly(Index) => Program
       = ?

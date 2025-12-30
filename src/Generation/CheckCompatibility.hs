@@ -4,6 +4,7 @@ It contains the instances for the CheckCompatibility and AddSubs classes.
 The CheckCompatibility class checks whether two arbitrary types are compatible
 via a map from ad hoc type variables to substitutions or underscores.
 -}
+
 {-# language
   LambdaCase, MultiParamTypeClasses, FunctionalDependencies,
   TypeSynonymInstances, FlexibleInstances, UndecidableInstances
@@ -230,16 +231,19 @@ instance AddSubs T.TypesInParen T.SubsInParen where
 
 instance AddSubs T.SimpleType T.TVarSub where
   add_subs = \case
-    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)) ->
-      MS.get >$> M.lookup ahtv >$> \case
-        P.Just (T.TVS1 tvs) -> tvs
-        P.Just T.Underscore4 -> P.error "add_subs st tvs: ahtv is underscore"
-        P.Nothing -> P.error "add_subs st tvs: didn't find ahtv"
+    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)) -> add_subs ahtv
     T.PTV1 ptv -> P.return $ T.PTV4 ptv
     T.TAIOA1 taioa -> T.TAIOAS1 <$> add_subs taioa
     T.PoT1 pt -> T.PoTS1 <$> add_subs pt
     T.PT1 pt -> T.PTS1 <$> add_subs pt
     T.FT1 ft -> T.FTS1 <$> add_subs ft
+
+instance AddSubs T.AdHocTVar T.TVarSub where
+  add_subs = \ahtv ->
+    MS.get >$> M.lookup ahtv >$> \case
+      P.Just (T.TVS1 tvs) -> tvs
+      P.Just T.Underscore4 -> P.error "add_subs st tvs: ahtv is underscore"
+      P.Nothing -> P.error "add_subs st tvs: didn't find ahtv"
 
 instance AddSubs T.TypeAppIdOrAHTV T.TypeAppIdOrAHTVSub where
   add_subs = \(T.TAIOA taioa) -> T.TAIOAS <$> add_subs_triple taioa
@@ -288,11 +292,14 @@ instance AddSubs TIP_STR SOUIP_STR where
 
 instance AddSubs T.SimpleType T.SubOrUnder where
   add_subs = \case
-    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)) ->
-      MS.get >$> M.lookup ahtv >$> \case
-        P.Just sou -> sou
-        P.Nothing -> P.error "add_subs st sou: didn't find ahtv"
+    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)) -> add_subs ahtv
     st -> T.TVS1 <$> add_subs st
+
+instance AddSubs T.AdHocTVar T.SubOrUnder where
+  add_subs = \ahtv ->
+    MS.get >$> M.lookup ahtv >$> \case
+      P.Just sou -> sou
+      P.Nothing -> P.error "add_subs st sou: didn't find ahtv"
 
 instance AddSubs T.InParenT T.InParenTSub where
   add_subs = \case

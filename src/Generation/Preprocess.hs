@@ -334,22 +334,32 @@ instance Preprocess T.WhereDefExpr where
     T.GVDs1 gvds -> T.GVDs1 <$> preprocess gvds
 
 instance Preprocess T.TypeTheo where
-  preprocess (T.TT (pnws_l, mpnws, proof)) =
-    preprocess_pair (pnws_l, proof) >$> \(pnws_l', proof') ->
-    T.TT (pnws_l', mpnws, proof')
-
-instance {-# OVERLAPS #-} Preprocess [T.PropNameWithSubs] where
-  preprocess = \case
+  preprocess (T.TT (pnws_l, mpnws, proof)) = case pnws_l of
     [pnws] ->
-      get_rps >$> P.map (\rp -> (GCC.check_compat(P.fst rp, pnws), P.snd rp)) >$>
-      P.filter (P.fst .> (/= GCC.NotCompatible)) >$> \case
-        [] -> [pnws]
-        [(GCC.Compatible m, pns)] ->
-          P.map (\pn -> MS.evalState (GCC.add_subs pn) m) pns
-        _ -> P.error "proprocess pnws: more than one rps compatible"
+      preprocess_pnws pnws >>= \pnws_l' ->
+      preprocess proof >>= \proof' ->
+      P.return $ T.TT (pnws_l', mpnws, proof')
     _ ->
-      P.error
-      "Should be impossible: many pnws at type theo before preprocessing"
+      P.error "Should be impossible: many pnws at type theo before preprocessing"
+
+
+type CompatAndPNs = (GCC.Compatibility, [T.PropName])
+
+preprocess_pnws :: T.PropNameWithSubs -> PreprocessState [T.PropNameWithSubs]
+preprocess_pnws pnws =
+  get_rps >$> P.map rp_compat >$> keep_compat >$> \case
+    [] -> [pnws]
+    [(GCC.Compatible m, pns)] -> P.map (add_subs_with_map m) pns
+    _ -> P.error "proprocess pnws: more than one rps compatible"
+  where
+  rp_compat :: GC.RenamingProp -> CompatAndPNs
+  rp_compat = \rp -> (GCC.check_compat(P.fst rp, pnws), P.snd rp)
+
+  keep_compat :: [CompatAndPNs] -> [CompatAndPNs]
+  keep_compat = P.filter (P.fst .> (/= GCC.NotCompatible))
+
+  add_subs_with_map :: GCC.AHTVMap -> T.PropName -> T.PropNameWithSubs
+  add_subs_with_map = \m pn -> MS.evalState (GCC.add_subs pn) m
 
 instance Preprocess T.Proof where
   preprocess = \case
@@ -480,12 +490,11 @@ add_constructor_prefix = \(T.SId (T.IS str, mdigit)) ->
 
 change_if_particular_sid :: T.SimpleId -> T.SimpleId
 change_if_particular_sid = \case
-  T.SId (T.IS str, P.Nothing) ->
-    str &> change_if_particular_str &> GTH.str_to_sid
+  T.SId (T.IS str, P.Nothing) -> str &> change_if_particular &> GTH.str_to_sid
   sid -> sid
 
-change_if_particular_str :: P.String -> P.String
-change_if_particular_str = \case
+change_if_particular :: P.String -> P.String
+change_if_particular = \case
   "true" -> GPH.true
   "false" -> GPH.false
   "no_value" -> GPH.pnothing
