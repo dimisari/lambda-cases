@@ -531,7 +531,7 @@ instance P.Show T.RenamingPropDef where
 
 instance P.Show T.PropNameLine where
   show = \(T.PNL pn) ->
-    "type_proposition " ++ P.show pn
+    "type proposition: " ++ P.show pn
 
 instance P.Show T.PropName where
   show = \case

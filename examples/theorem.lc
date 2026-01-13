@@ -1,16 +1,16 @@
-type_proposition (@A)Has_Internal_Appl
+type proposition: (@A)Has_Internal_Appl
 needed apply(_)inside1(_) : (T1 => T2) x @A(T1) => @A(T2)
 
-type_proposition (@A)Has_Wrapped_Internal_App
+type proposition: (@A)Has_Wrapped_Internal_App
 needed apply_wrp(_)inside(_) : @A(T1 => T2) x @A(T1) => @A(T2)
 
-type_proposition (@A)Has_Wrapped_Intern_App_And_Wrapper
+type proposition: (@A)Has_Wrapped_Intern_App_And_Wrapper
 equivalent (@A)Has_Wrapped_Internal_App, (@A)Has_A_Wrapper
 
 type_theorem (@A)Has_Wrapped_Intern_App_And_Wrapper --> (@A)Has_Internal_Appl
 proof apply(_)inside1(_) = (f, x) => apply_wrp(wrap(f))inside(x)
 
-type_proposition (@A)And(@B)Have_Eq_And_Gr
+type proposition: (@A)And(@B)Have_Eq_And_Gr
 equivalent (@A)And(@B)Can_Be_Equal, (@A)Can_Be_Greater_Than(@B)
 
 type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)

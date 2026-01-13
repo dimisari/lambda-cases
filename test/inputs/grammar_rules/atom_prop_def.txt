@@ -1,28 +1,28 @@
-type_proposition (@A)Is(@B)s_First
+type proposition: (@A)Is(@B)s_First
 needed (_)first : @B => @A#
 
-type_proposition (@T)Has_String_Repr
+type proposition: (@T)Has_String_Repr
 needed (_)to_string : @T => String#
 
-type_proposition (@T)Has_A_Wrapper
+type proposition: (@T)Has_A_Wrapper
 needed wrap(_) : T1 => @T(T1)#
 
-type_proposition (@T)Has_Internal_App
+type proposition: (@T)Has_Internal_App
 needed
   apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)#
 
-type_proposition (@A)Is(@B)s_First_One
+type proposition: (@A)Is(@B)s_First_One
 needed (_)first1 :@B => @A#
 
-type_proposition (@A)Is(@B)s_First_Two
+type proposition: (@A)Is(@B)s_First_Two
 needed (_)first2: @B => @A#
 
-type_proposition (@T)Has_String_Repr_One
+type proposition: (@T)Has_String_Repr_One
 needed (_)to_string1: @T => String#
 
-type_proposition Show(@T)
+type proposition: Show(@T)
 needed show: @T => String#
 
-type_proposition (@A, @B)To(@C)
+type proposition: (@A, @B)To(@C)
 needed ab_to_c: @A x @B => @C#
 

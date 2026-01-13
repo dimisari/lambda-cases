@@ -633,7 +633,8 @@ instance HasParser T.RenamingPropDef where
       TP.many (PT.comma *> parser)
 
 instance HasParser T.PropNameLine where
-  parser = T.PNL <$> (TP.try (TP.string "type_proposition ") *> parser)
+  parser =
+    T.PNL <$> (TP.try (TP.string "type proposition:") *> PT.opt_space *> parser)
 
 instance HasParser T.PropName where
   parser =
