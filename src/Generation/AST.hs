@@ -27,7 +27,7 @@ import Helpers qualified as H
 import ShowInstances qualified as S
 
 import Generation.TypesAndHelpers qualified as GTH
-import Generation.Collect qualified as C
+import Preprocessing.Collect qualified as C
 import Generation.PrefixesAndHardcoded qualified as GPH
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId

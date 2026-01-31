@@ -2,7 +2,9 @@
 This file contains code that changes the AST from the parsing step into a new
 more haskell-like AST for the translation step. This is done mainly by
 instances of the Preprocess type class which are instances that change all the
-AST nodes that need to be changed.
+AST nodes that need to be changed. A basic expression may be preprocessed into
+a post function application under certain circumstances, this is accomplished
+by the ToMaybePostFuncApp class.
 -}
 
 {-# language
@@ -10,7 +12,7 @@ AST nodes that need to be changed.
   GeneralizedNewtypeDeriving
 #-}
 
-module Generation.Preprocess where
+module Preprocessing.Preprocess where
 
 import Prelude (($), (++), (>>=), (<$>), (/=), (>>))
 import Prelude qualified as P
@@ -25,8 +27,8 @@ import Helpers qualified as H
 import ShowInstances qualified as S
 
 import Parsing.AST qualified as PA
-import Generation.Collect qualified as GC
-import Generation.CheckCompatibility qualified as GCC
+import Preprocessing.Collect qualified as PC
+import Preprocessing.CheckCompatibility qualified as PCC
 import Generation.TypesAndHelpers qualified as GTH
 import Generation.PrefixesAndHardcoded qualified as GPH
 
@@ -36,13 +38,13 @@ data PossiblyInDC =
   InDotChange [T.PostFuncArg] | NotInDotChange
 
 type StateTuple =
-  ( PossiblyInDC, GC.FieldIds, GC.EmptyOrValues, GC.RenamingProps
-  , GC.FullOrValuesMap
+  ( PossiblyInDC, PC.FieldIds, PC.EmptyOrValues, PC.RenamingProps
+  , PC.FullOrValuesMap
   )
 
 type PreprocessState = MS.State StateTuple
 
--- Preprocess class, general preprocess function, automatic instances
+-- Preprocess class, general preprocess functions, automatic instances
 --   and instances for pairs and triples
 
 class Preprocess a where
@@ -343,23 +345,23 @@ instance Preprocess T.TypeTheo where
       P.error "Should be impossible: many pnws at type theo before preprocessing"
 
 
-type CompatAndPNs = (GCC.Compatibility, [T.PropName])
+type CompatAndPNs = (PCC.Compatibility, [T.PropName])
 
 preprocess_pnws :: T.PropNameWithSubs -> PreprocessState [T.PropNameWithSubs]
 preprocess_pnws pnws =
   get_rps >$> P.map rp_compat >$> keep_compat >$> \case
     [] -> [pnws]
-    [(GCC.Compatible m, pns)] -> P.map (add_subs_with_map m) pns
+    [(PCC.Compatible m, pns)] -> P.map (add_subs_with_map m) pns
     _ -> P.error "proprocess pnws: more than one rps compatible"
   where
-  rp_compat :: GC.RenamingProp -> CompatAndPNs
-  rp_compat = \rp -> (GCC.check_compat(P.fst rp, pnws), P.snd rp)
+  rp_compat :: PC.RenamingProp -> CompatAndPNs
+  rp_compat = \rp -> (PCC.check_compat(P.fst rp, pnws), P.snd rp)
 
   keep_compat :: [CompatAndPNs] -> [CompatAndPNs]
-  keep_compat = P.filter (P.fst .> (/= GCC.NotCompatible))
+  keep_compat = P.filter (P.fst .> (/= PCC.NotCompatible))
 
-  add_subs_with_map :: GCC.AHTVMap -> T.PropName -> T.PropNameWithSubs
-  add_subs_with_map = \m pn -> MS.evalState (GCC.add_subs pn) m
+  add_subs_with_map :: PCC.AHTVMap -> T.PropName -> T.PropNameWithSubs
+  add_subs_with_map = \m pn -> MS.evalState (PCC.add_subs pn) m
 
 instance Preprocess T.Proof where
   preprocess = \case
@@ -417,8 +419,8 @@ instance ToMaybePostFuncApp T.PostFunc where
 
 init_state :: T.Program -> StateTuple
 init_state = \prog ->
-  GC.or_values prog &> \(empty_or_values, full_or_values_map) ->
-  ( NotInDotChange, GC.field_ids prog, empty_or_values, GC.renaming_props prog
+  PC.or_values prog &> \(empty_or_values, full_or_values_map) ->
+  ( NotInDotChange, PC.field_ids prog, empty_or_values, PC.renaming_props prog
   , full_or_values_map
   )
 
@@ -427,16 +429,16 @@ init_state = \prog ->
 get_pidc :: PreprocessState PossiblyInDC
 get_pidc = MS.get >$> \(pidc, _, _, _, _) -> pidc
 
-get_fids :: PreprocessState GC.FieldIds
+get_fids :: PreprocessState PC.FieldIds
 get_fids = MS.get >$> \(_, fids, _, _, _) -> fids
 
-get_ncs :: PreprocessState GC.EmptyOrValues
+get_ncs :: PreprocessState PC.EmptyOrValues
 get_ncs = MS.get >$> \(_, _, ncs, _, _) -> ncs
 
-get_rps :: PreprocessState GC.RenamingProps
+get_rps :: PreprocessState PC.RenamingProps
 get_rps = MS.get >$> \(_, _, _, rps, _) -> rps
 
-get_ovm :: PreprocessState GC.FullOrValuesMap
+get_ovm :: PreprocessState PC.FullOrValuesMap
 get_ovm = MS.get >$> \(_, _, _, _, ovm) -> ovm
 
 --   checking membership and lookup
@@ -482,7 +484,7 @@ get_pfarg_if_in_dot_change =
     InDotChange [] -> P.error "should not be possible"
     InDotChange (pfarg : pfargs) -> P.Just pfarg
 
--- helpers
+-- other helpers
 
 add_constructor_prefix :: T.SimpleId -> T.SimpleId
 add_constructor_prefix = \(T.SId (T.IS str, mdigit)) ->

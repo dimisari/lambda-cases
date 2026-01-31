@@ -1,8 +1,6 @@
 
 * finish comments and descriptions
   * Generation
-    * CheckCompatibility.hs
-    * Preprocess.hs
     * add README.md
 
 * test/expected_outs

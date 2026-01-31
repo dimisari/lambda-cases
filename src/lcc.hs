@@ -24,7 +24,7 @@ import Helpers qualified as H
 
 import Parsing.AST qualified as PA
 
-import Generation.Preprocess qualified as GP
+import Preprocessing.Preprocess qualified as GP
 import Generation.TypesAndHelpers qualified as GTH
 import Generation.AST qualified as GA
 

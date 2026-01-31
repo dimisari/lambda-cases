@@ -11,7 +11,7 @@ phase:
 
 {-# language LambdaCase, StandaloneDeriving, FlexibleInstances #-}
 
-module Generation.Collect where
+module Preprocessing.Collect where
 
 import Prelude (($), (>>))
 import Prelude qualified as P

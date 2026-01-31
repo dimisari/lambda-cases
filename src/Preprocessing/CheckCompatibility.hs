@@ -1,8 +1,10 @@
 {-
-This file is imported by Generation.Preprocess.
-It contains the instances for the CheckCompatibility and AddSubs classes.
-The CheckCompatibility class checks whether two arbitrary types are compatible
-via a map from ad hoc type variables to substitutions or underscores.
+This file is imported by Preprocessing.Preprocess.  It contains the instances for
+the CheckCompatibility and AddSubs classes.  The CheckCompatibility class
+checks whether two types are compatible via a map from ad hoc type variables to
+substitutions or underscores and if they are it creates the map.  The AddSubs
+class converts a type to another by using the map created by
+CheckCompatibility.
 -}
 
 {-# language
@@ -10,7 +12,7 @@ via a map from ad hoc type variables to substitutions or underscores.
   TypeSynonymInstances, FlexibleInstances, UndecidableInstances
 #-}
 
-module Generation.CheckCompatibility where
+module Preprocessing.CheckCompatibility where
 
 import Prelude (($), (<$>), (>>=), (==), (&&))
 import Prelude qualified as P
