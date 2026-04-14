@@ -30,7 +30,7 @@ ghci -i../src hello_world.hs
 
 ## Run test_inputs
 ```bash
-make
+cd ../build; make
 ```
 
 Creates "test_outputs" directory where

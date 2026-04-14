@@ -55,7 +55,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
             where
             get_children_from_list(_) : ListOf(Node)s => Children
               = ?
-                [] => throw_err("Should be impossible: I'm not in the nodes!")
+                [] => error("Should be impossible: I'm not in the nodes!")
                 [n, ns = ...] =>
                   (node_name == n.n_name) -> ?
                     true => n.n_children
@@ -72,7 +72,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
             where
             remove_from(_) : ListOf(VisitedNode)s => ListOf(VisitedNode)s
               = ?
-                [] => throw_err("Should be impossible: I'm not in visited")
+                [] => error("Should be impossible: I'm not in visited")
                 [vn, vns = ...] =>
                   (vn == node_name) -> ?
                     true => vns

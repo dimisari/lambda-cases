@@ -31,6 +31,7 @@ import Data.IntMap.Strict qualified as IM
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as C
 import Data.ByteString.UTF8 qualified as U
+import Data.Char qualified as CH
 import System.Exit qualified as E
 import System.Console.ANSI qualified as ANSI
 import System.Process qualified as SP
@@ -65,8 +66,8 @@ split'to_lines = P.lines
 apply'to_all_in' :: (a -> b, [a]) -> [b]
 apply'to_all_in' = P.uncurry P.map
 
-throw_err' :: P.String -> a
-throw_err' = P.error
+error' :: P.String -> a
+error' = P.error
 
 id' :: a -> a
 id' = P.id
@@ -97,6 +98,9 @@ a'is_odd = P.odd
 
 a'is_even :: P.Integral a => a -> P.Bool
 a'is_even = P.even
+
+a'is_lower :: P.Char -> P.Bool
+a'is_lower = CH.isLower
 
 truncate' :: (P.RealFrac a, P.Integral b) => a -> b
 truncate' = P.truncate
@@ -163,13 +167,13 @@ clear_screen4 :: Program
 clear_screen4 =
   ANSI.getCursorPosition >>= \case
     P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 4
-    P.Nothing -> throw_err' "Could not get cursor position"
+    P.Nothing -> error' "Could not get cursor position"
 
 clear_screen :: Program
 clear_screen =
   ANSI.getCursorPosition >>= \case
     P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 0
-    P.Nothing -> throw_err' "Could not get cursor position"
+    P.Nothing -> error' "Could not get cursor position"
 
 max_of'and' :: P.Ord a => (a, a) -> a
 max_of'and' = P.uncurry P.max
@@ -226,8 +230,8 @@ split'at_index' :: ([a], P.Integer) -> ([a], [a])
 split'at_index' =
   P.uncurry (P.flip P.splitAt) . \(l, i) -> (l, P.fromIntegral i)
 
-split'at_str' :: (P.String, P.String) -> [P.String]
-split'at_str' = P.uncurry P.$ P.flip LS.splitOn
+split'at_string' :: (P.String, P.String) -> [P.String]
+split'at_string' = P.uncurry P.$ P.flip LS.splitOn
 
 concat_lists_in' :: [[a]] -> [a]
 concat_lists_in' = P.concat

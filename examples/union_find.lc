@@ -77,7 +77,7 @@ connected_components_of(_) : Graph => ConnComps
             get_from_list(_)
               : ListOf(Info)s => IsReprOrHasPar
               = ?
-                [] => throw_err("I'm not in the list!")
+                [] => error("I'm not in the list!")
                 [(n1, irohp1), rest = ...] =>
                   (n == n1) -> ?
                     true => irohp1

@@ -49,7 +49,7 @@ get_neighbors(_, _) : DoneNode x Graph => ListOf(Neighbor)s
     where
     get_neighbors_from_nodes(_) : ListOf(Node)s => ListOf(Neighbor)s
       = ?
-        [] => throw_err("Should be impossible: I'm not in the nodes!")
+        [] => error("Should be impossible: I'm not in the nodes!")
         [n, ns = ...] =>
           (dn.name == n.n_name) -> ?
             true => n.neighbors

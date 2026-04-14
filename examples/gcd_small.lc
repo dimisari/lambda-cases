@@ -8,7 +8,7 @@ read_two_ints: ProgramWith(Int^2)
   = print("Please give me 2 ints");
     get_line >> split(_)to_words o> ?
       [s1, s2] => (from_string(s1), from_string(s2)) -> program_with(_)
-      ... => throw_err("You didn't give me 2 ints")
+      ... => error("You didn't give me 2 ints")
 
 ints(_, _, _)to_message: Int^3 => String
   = (x, y, gcd) => "The GCD of " + x + " and " + y + " is " + gcd
