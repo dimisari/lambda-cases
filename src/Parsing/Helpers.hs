@@ -9,7 +9,7 @@ This file defines:
 
 {-# language LambdaCase, FlexibleContexts #-}
 
-module Parsing.TypesAndHelpers where
+module Parsing.Helpers where
 
 import Prelude ((<$>), (>), (&&), (/=), (++), ($), (<), (<*), (*>), (>>=), (+))
 import Prelude ((>>))
@@ -20,46 +20,40 @@ import Text.Parsec.Token qualified as TPT
 
 import Helpers ((>$>))
 import Helpers qualified as H
-
--- types
-
-type Parser = TP.Parsec P.String ParserState
-type ParserState = (IndentationLevel, InEqualLine)
-type IndentationLevel = P.Int
-type InEqualLine = P.Bool
+import Parsing.TypesAndClasses qualified as PTC
 
 -- state parsers: indentation level
 
-get_il :: Parser P.Int
+get_il :: PTC.Parser P.Int
 get_il = P.fst <$> TP.getState
 
-indent :: Parser ()
+indent :: PTC.Parser ()
 indent = get_il >$> H.ind_lvl_to_spaces >>= TP.string >> H.nothing
 
-increase_il_by :: P.Int -> Parser ()
+increase_il_by :: P.Int -> PTC.Parser ()
 increase_il_by = \i -> TP.modifyState $ \(il, b) -> (il + i, b)
 
-decrease_il_by :: P.Int -> Parser ()
+decrease_il_by :: P.Int -> PTC.Parser ()
 decrease_il_by = \i -> increase_il_by (-i)
 
-deeper_num :: P.Int -> Parser a -> Parser a
+deeper_num :: P.Int -> PTC.Parser a -> PTC.Parser a
 deeper_num = \i p -> increase_il_by i *> p <* decrease_il_by i
 
-deeper :: Parser a -> Parser a
+deeper :: PTC.Parser a -> PTC.Parser a
 deeper = deeper_num 1
 
-twice_deeper :: Parser a -> Parser a
+twice_deeper :: PTC.Parser a -> PTC.Parser a
 twice_deeper = deeper_num 2
 
 -- state parsers: equal line
 
-are_we_in_equal_line :: Parser P.Bool
+are_we_in_equal_line :: PTC.Parser P.Bool
 are_we_in_equal_line = P.snd <$> TP.getState
 
-set_in_equal_line :: P.Bool -> Parser ()
+set_in_equal_line :: P.Bool -> PTC.Parser ()
 set_in_equal_line = \b -> TP.modifyState (\(il, _) -> (il, b))
 
-deeper_if_not_in_equal_line :: Parser a -> Parser a
+deeper_if_not_in_equal_line :: PTC.Parser a -> PTC.Parser a
 deeper_if_not_in_equal_line = \parser ->
   are_we_in_equal_line >>= \case
     P.True -> parser
@@ -75,28 +69,28 @@ deeper_if_not_in_equal_line = \parser ->
     , TP.char ',' *> opt_space
     , opt_space_around (TP.string "=") *> H.nothing
     ]
-  :: [Parser ()]
+  :: [PTC.Parser ()]
 
 [underscore, lower_under]
   = [TP.char '_', TP.lower <|> underscore]
-  :: [Parser P.Char]
+  :: [PTC.Parser P.Char]
 
 [digits, func_arr]
   = [TP.many1 TP.digit, opt_space *> TP.string "=>"]
-  :: [Parser P.String]
+  :: [PTC.Parser P.String]
 
-has_type_symbol :: Parser ()
+has_type_symbol :: PTC.Parser ()
 has_type_symbol =
   (TP.try nl_indent *> TP.string ": " <|> opt_space_around (TP.string ":")) *>
   H.nothing
 
-opt_space_around :: Parser a -> Parser a
+opt_space_around :: PTC.Parser a -> PTC.Parser a
 opt_space_around = \a -> opt_space *> a <* opt_space
 
-in_paren :: Parser a -> Parser a
+in_paren :: PTC.Parser a -> PTC.Parser a
 in_paren = \a -> TP.char '(' *> opt_space_around a <* TP.char ')'
 
-err_if_less_than_2 :: P.Integer -> Parser P.Integer
+err_if_less_than_2 :: P.Integer -> PTC.Parser P.Integer
 err_if_less_than_2 =  \i -> case (i < 2) of
   P.True -> TP.unexpected "integer in power type must be greater than 1"
   P.False -> P.return i
@@ -106,7 +100,7 @@ err_if_less_than_2 =  \i -> case (i < 2) of
 reserved_words :: [P.String]
 reserved_words = ["cases", "where"]
 
-err_if_reserved :: P.String -> Parser ()
+err_if_reserved :: P.String -> PTC.Parser ()
 err_if_reserved = \id_str -> case P.elem id_str reserved_words of
   P.True -> TP.unexpected $ "cannot use " ++ id_str ++ " as an identifier"
   P.False -> H.nothing
@@ -118,21 +112,21 @@ err_if_reserved = \id_str -> case P.elem id_str reserved_words of
 
 -- char literal
 
-charLiteral :: Parser P.Char
+charLiteral :: PTC.Parser P.Char
 charLiteral =
   (TP.between (TP.char '\'') (TP.char '\'' <?> "end of character") characterChar)
   <?> "character"
 
-characterChar :: Parser P.Char
+characterChar :: PTC.Parser P.Char
 characterChar = charLetter <|> charEscape <?> "literal character"
 
-charLetter :: Parser P.Char
+charLetter :: PTC.Parser P.Char
 charLetter = TP.satisfy (\c -> (c /= '\'') && (c /= '\\') && (c > '\026'))
 
-charEscape :: Parser P.Char
+charEscape :: PTC.Parser P.Char
 charEscape = do{ _ <- TP.char '\\'; charEsc <?> "escape code" }
 
-charEsc :: Parser P.Char
+charEsc :: PTC.Parser P.Char
 charEsc =
   TP.choice (P.map parseEsc escMap)
   where
@@ -141,15 +135,15 @@ charEsc =
 
 -- string literal
 
-stringLiteral :: Parser P.String
+stringLiteral :: PTC.Parser P.String
 stringLiteral =
   TP.between (TP.char '"') (TP.char '"' <?> "end of string") (TP.many stringChar)
   <?> "string literal"
 
-stringChar :: Parser P.Char
+stringChar :: PTC.Parser P.Char
 stringChar = stringLetter <|> charEscape <?> "string character"
 
-stringLetter :: Parser P.Char
+stringLetter :: PTC.Parser P.Char
 stringLetter = TP.satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
 
 {-

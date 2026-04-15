@@ -84,9 +84,7 @@ data PossiblyInDC =
   InDotChange [T.PostFuncArg] | NotInDotChange
 
 type StateTuple =
-  ( PossiblyInDC, FieldIds, EmptyOrValues, RenamingProps
-  , FullOrValuesMap
-  )
+  (PossiblyInDC, FieldIds, EmptyOrValues, RenamingProps , FullOrValuesMap)
 
 type PreprocessState = MS.State StateTuple
 

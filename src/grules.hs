@@ -21,6 +21,7 @@ import Helpers ((>$>), (.>), (&>))
 import Helpers qualified as H
 import ASTTypes qualified as T
 
+import Parsing.TypesAndClasses qualified as PTC
 import Parsing.AST qualified as PA
 
 import Generation.TypesAndHelpers qualified as GTH
@@ -55,7 +56,7 @@ compile_examples (file_name, comp_ex_func) =
 get_test_outputs_path :: P.IO P.FilePath
 get_test_outputs_path = SE.getArgs >$> (!!1) >$> (++ "/")
 
-compile_example_func :: (PA.HasParser a, GTH.ToHaskell a) => Compile a
+compile_example_func :: (PTC.HasParser a, GTH.ToHaskell a) => Compile a
 compile_example_func = PA.parse .> parse_res_to_final_res
 
 parse_res_to_final_res ::
@@ -190,7 +191,7 @@ file_name_compile_func_pairs =
     )
   ]
 
--- to have GTH.ToHaskell from GTH.ToHsWithIndentLvl and also PA.HasParser
+-- to have GTH.ToHaskell from GTH.ToHsWithIndentLvl and also PTC.HasParser
 -- for compile_example_func
 
 newtype THWIL a = THWIL a
@@ -198,17 +199,17 @@ newtype THWIL a = THWIL a
 instance GTH.ToHsWithIndentLvl a => GTH.ToHaskell (THWIL a) where
    to_haskell (THWIL a) = GTH.to_hs_wil a &> GTH.run_generator
 
-instance PA.HasParser a => PA.HasParser (THWIL a) where
-   parser = THWIL <$> PA.parser
+instance PTC.HasParser a => PTC.HasParser (THWIL a) where
+   parser = THWIL <$> PTC.parser
 
-instance PA.HasParser a => PA.HasParser (a, GTH.PossiblyWhereExpr) where
-   parser = PA.parser >$> \a -> (a, GTH.NoWhereExpr)
+instance PTC.HasParser a => PTC.HasParser (a, GTH.PossiblyWhereExpr) where
+   parser = PTC.parser >$> \a -> (a, GTH.NoWhereExpr)
 
-instance PA.HasParser a => PA.HasParser (GTH.NeedsParenBool, a) where
-   parser = PA.parser >$> \a -> (GTH.NoParen, a)
+instance PTC.HasParser a => PTC.HasParser (GTH.NeedsParenBool, a) where
+   parser = PTC.parser >$> \a -> (GTH.NoParen, a)
 
-instance PA.HasParser a => PA.HasParser (GTH.NeedsAnnotBool, a) where
-   parser = PA.parser >$> \a -> (GTH.NoAnnot, a)
+instance PTC.HasParser a => PTC.HasParser (GTH.NeedsAnnotBool, a) where
+   parser = PTC.parser >$> \a -> (GTH.NoAnnot, a)
 
 -- For fast vim file navigation:
 {-
