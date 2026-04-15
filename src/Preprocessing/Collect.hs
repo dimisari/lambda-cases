@@ -24,51 +24,21 @@ import Helpers ((&>))
 import Helpers qualified as H
 
 import Generation.TypesAndHelpers qualified as GTH
+import Preprocessing.TypesAndClasses qualified as PTC
 
--- CollectFieldIds types, class and final function
+-- CollectFieldIds final function
 
-type FieldId = T.SimpleId
+field_ids :: T.Program -> PTC.FieldIds
+field_ids = \prog -> MS.execState (PTC.collect_fids prog) S.empty
 
-type FieldIds = S.Set FieldId
+-- CollectRenamingProps final function
 
-type FieldIdsState = MS.State FieldIds ()
+renaming_props :: T.Program -> PTC.RenamingProps
+renaming_props = \prog -> MS.execState (PTC.collect_rps prog) []
 
-class CollectFieldIds a where
-  collect_fids :: a -> FieldIdsState
+-- CollectOrValues initial map and final function
 
-field_ids :: T.Program -> FieldIds
-field_ids = \prog -> MS.execState (collect_fids prog) S.empty
-
--- CollectRenamingProps types, class and final function
-
-type RenamingProp = (T.PropName, [T.PropName])
-
-type RenamingProps = [RenamingProp]
-
-type RenamingPropsState = MS.State RenamingProps ()
-
-class CollectRenamingProps a where
-  collect_rps :: a -> RenamingPropsState
-
-renaming_props :: T.Program -> RenamingProps
-renaming_props = \prog -> MS.execState (collect_rps prog) []
-
--- CollectOrValues types, class, initial map and final function
-
-type OrValue = T.SimpleId
-
-type EmptyOrValues = S.Set OrValue
-
-type FullOrValuesMap = M.Map OrValue T.Identifier
-
-type OrValues = (EmptyOrValues, FullOrValuesMap)
-
-type OrValuesState = MS.State OrValues ()
-
-class CollectOrValues a where
-  collect_ovms :: a -> OrValuesState
-
-init_or_val_map :: FullOrValuesMap
+init_or_val_map :: PTC.FullOrValuesMap
 init_or_val_map =
   M.fromList $
     P.map (\(s1, s2) -> (GTH.str_to_sid s1, GTH.str_to_id s2)) predefined
@@ -77,153 +47,143 @@ init_or_val_map =
   predefined =
     [("a_value", "the_value"), ("error", "err"), ("result", "res")]
 
-or_values :: T.Program -> OrValues
-or_values = \prog -> MS.execState (collect_ovms prog) (S.empty, init_or_val_map)
+or_values :: T.Program -> PTC.OrValues
+or_values =
+  \prog -> MS.execState (PTC.collect_ovms prog) (S.empty, init_or_val_map)
 
--- CollectParamTVars types, class and final function
-
-type ParamTVars = S.Set T.ParamTVar
-
-type ParamTVarsState = MS.State ParamTVars ()
-
-class CollectParamTVars a where
-  collect_ptvs :: a -> ParamTVarsState
+-- CollectParamTVars final function
 
 param_t_vars :: T.Type -> [T.ParamTVar]
 param_t_vars =
-  \(T.Ty (_, st)) -> MS.execState (collect_ptvs st) S.empty &> S.toList
-
-{-
-Below are all the instances
--}
+  \(T.Ty (_, st)) -> MS.execState (PTC.collect_ptvs st) S.empty &> S.toList
 
 -- CollectFieldIds instances
 
-instance CollectFieldIds T.Program where
-  collect_fids = \(T.P (pp, pps)) -> P.mapM_ collect_fids $ pp : pps
+instance PTC.CollectFieldIds T.Program where
+  collect_fids = \(T.P (pp, pps)) -> P.mapM_ PTC.collect_fids $ pp : pps
 
-instance CollectFieldIds T.ProgramPart where
+instance PTC.CollectFieldIds T.ProgramPart where
   collect_fids = \case
-    T.TD td -> collect_fids td
+    T.TD td -> PTC.collect_fids td
     _ -> H.do_nothing
 
-instance CollectFieldIds T.TypeDef where
+instance PTC.CollectFieldIds T.TypeDef where
   collect_fids = \case
-    T.TTD1 ttd -> collect_fids ttd
+    T.TTD1 ttd -> PTC.collect_fids ttd
     _ -> H.do_nothing
 
-instance CollectFieldIds T.TupleTypeDef where
-  collect_fids = \(T.TTD (_, _, idt)) -> collect_fids idt
+instance PTC.CollectFieldIds T.TupleTypeDef where
+  collect_fids = \(T.TTD (_, _, idt)) -> PTC.collect_fids idt
 
-instance CollectFieldIds T.FieldNames where
-  collect_fids = \(T.PCSIs (si, sis)) -> P.mapM_ collect_fids $ si : sis
+instance PTC.CollectFieldIds T.FieldNames where
+  collect_fids = \(T.PCSIs (si, sis)) -> P.mapM_ PTC.collect_fids $ si : sis
 
-instance CollectFieldIds T.SimpleId where
+instance PTC.CollectFieldIds T.SimpleId where
   collect_fids = \sid -> MS.modify (S.insert sid)
 
 -- CollectParamTVars instances
 
-instance CollectParamTVars T.SimpleType where
+instance PTC.CollectParamTVars T.SimpleType where
   collect_ptvs = \case
     T.PTV1 ptv -> MS.modify (S.insert ptv)
-    T.TAIOA1 taioa -> collect_ptvs taioa
-    T.PoT1 pt -> collect_ptvs pt
-    T.PT1 pt -> collect_ptvs pt
-    T.FT1 ft -> collect_ptvs ft
+    T.TAIOA1 taioa -> PTC.collect_ptvs taioa
+    T.PoT1 pt -> PTC.collect_ptvs pt
+    T.PT1 pt -> PTC.collect_ptvs pt
+    T.FT1 ft -> PTC.collect_ptvs ft
 
-instance CollectParamTVars T.TypeAppIdOrAHTV where
+instance PTC.CollectParamTVars T.TypeAppIdOrAHTV where
   collect_ptvs = \(T.TAIOA (mtip1, taioam, mtip2)) ->
-    collect_ptvs mtip1 >> collect_ptvs taioam >> collect_ptvs mtip2
+    PTC.collect_ptvs mtip1 >> PTC.collect_ptvs taioam >> PTC.collect_ptvs mtip2
 
-instance CollectParamTVars T.PowerType where
-  collect_ptvs = \(T.PoT (pbt, _)) -> collect_ptvs pbt
+instance PTC.CollectParamTVars T.PowerType where
+  collect_ptvs = \(T.PoT (pbt, _)) -> PTC.collect_ptvs pbt
 
-instance CollectParamTVars T.ProdType where
-  collect_ptvs = \(T.PT (ft, fts)) -> P.mapM_ collect_ptvs $ ft : fts
+instance PTC.CollectParamTVars T.ProdType where
+  collect_ptvs = \(T.PT (ft, fts)) -> P.mapM_ PTC.collect_ptvs $ ft : fts
 
-instance CollectParamTVars T.FuncType where
+instance PTC.CollectParamTVars T.FuncType where
   collect_ptvs = \(T.FT (ioot1, ioot2)) ->
-    collect_ptvs ioot1 >> collect_ptvs ioot2
+    PTC.collect_ptvs ioot1 >> PTC.collect_ptvs ioot2
 
-instance CollectParamTVars (P.Maybe T.TypesInParen) where
+instance PTC.CollectParamTVars (P.Maybe T.TypesInParen) where
   collect_ptvs = \case
     P.Nothing -> H.do_nothing
-    P.Just tip -> collect_ptvs tip
+    P.Just tip -> PTC.collect_ptvs tip
 
-instance CollectParamTVars T.TypesInParen where
-  collect_ptvs = \(T.TIP (st, sts)) -> P.mapM_ collect_ptvs $ st : sts
+instance PTC.CollectParamTVars T.TypesInParen where
+  collect_ptvs = \(T.TIP (st, sts)) -> P.mapM_ PTC.collect_ptvs $ st : sts
 
-instance CollectParamTVars T.TAIOAMiddle where
+instance PTC.CollectParamTVars T.TAIOAMiddle where
   collect_ptvs = \case
-    T.TIdStart1 (_, tip_str_pairs) -> P.mapM_ collect_ptvs $ tip_str_pairs
+    T.TIdStart1 (_, tip_str_pairs) -> P.mapM_ PTC.collect_ptvs $ tip_str_pairs
     T.AHTV2 _ -> H.do_nothing
 
-instance CollectParamTVars T.PowerBaseType where
+instance PTC.CollectParamTVars T.PowerBaseType where
   collect_ptvs = \case
     T.PTV2 ptv -> MS.modify (S.insert ptv)
-    T.TAIOA2 taioa -> collect_ptvs taioa
-    T.IPT ipt -> collect_ptvs ipt
+    T.TAIOA2 taioa -> PTC.collect_ptvs taioa
+    T.IPT ipt -> PTC.collect_ptvs ipt
 
-instance CollectParamTVars T.FieldType where
+instance PTC.CollectParamTVars T.FieldType where
   collect_ptvs = \case
-    T.PBT1 pbt -> collect_ptvs pbt
-    T.PoT2 pt -> collect_ptvs pt
+    T.PBT1 pbt -> PTC.collect_ptvs pbt
+    T.PoT2 pt -> PTC.collect_ptvs pt
 
-instance CollectParamTVars T.InOrOutType where
+instance PTC.CollectParamTVars T.InOrOutType where
   collect_ptvs = \case
     T.PTV3 ptv -> MS.modify (S.insert ptv)
-    T.TAIOA3 taioa -> collect_ptvs taioa
-    T.PoT4 pt -> collect_ptvs pt
-    T.PT2 pt -> collect_ptvs pt
-    T.FT2 ft -> collect_ptvs ft
+    T.TAIOA3 taioa -> PTC.collect_ptvs taioa
+    T.PoT4 pt -> PTC.collect_ptvs pt
+    T.PT2 pt -> PTC.collect_ptvs pt
+    T.FT2 ft -> PTC.collect_ptvs ft
 
-instance CollectParamTVars (T.TypesInParen, P.String) where
-  collect_ptvs = \(tip, _) -> collect_ptvs tip
+instance PTC.CollectParamTVars (T.TypesInParen, P.String) where
+  collect_ptvs = \(tip, _) -> PTC.collect_ptvs tip
 
-instance CollectParamTVars T.InParenT where
+instance PTC.CollectParamTVars T.InParenT where
   collect_ptvs = \case
-    T.PT3 pt -> collect_ptvs pt
-    T.PoT3 pt -> collect_ptvs pt
-    T.FT3 ft -> collect_ptvs ft
+    T.PT3 pt -> PTC.collect_ptvs pt
+    T.PoT3 pt -> PTC.collect_ptvs pt
+    T.FT3 ft -> PTC.collect_ptvs ft
 
 -- CollectRenamingProps instances
 
-instance CollectRenamingProps T.Program where
-  collect_rps = \(T.P (pp, pps)) -> P.mapM_ collect_rps $ pp : pps
+instance PTC.CollectRenamingProps T.Program where
+  collect_rps = \(T.P (pp, pps)) -> P.mapM_ PTC.collect_rps $ pp : pps
 
-instance CollectRenamingProps T.ProgramPart where
+instance PTC.CollectRenamingProps T.ProgramPart where
   collect_rps = \case
-    T.TPD tpd -> collect_rps tpd
+    T.TPD tpd -> PTC.collect_rps tpd
     _ -> H.do_nothing
 
-instance CollectRenamingProps T.TypePropDef where
+instance PTC.CollectRenamingProps T.TypePropDef where
   collect_rps = \case
-    T.RPD1 rpd -> collect_rps rpd
+    T.RPD1 rpd -> PTC.collect_rps rpd
     _ -> H.do_nothing
 
-instance CollectRenamingProps T.RenamingPropDef where
+instance PTC.CollectRenamingProps T.RenamingPropDef where
   collect_rps = \(T.RPD (T.PNL pn_key, pn1, pns)) ->
     MS.modify $ (:) (pn_key, pn1 : pns)
 
 -- CollectOrValues instances
 
-instance CollectOrValues T.Program where
-  collect_ovms = \(T.P (pp, pps)) -> P.mapM_ collect_ovms $ pp : pps
+instance PTC.CollectOrValues T.Program where
+  collect_ovms = \(T.P (pp, pps)) -> P.mapM_ PTC.collect_ovms $ pp : pps
 
-instance CollectOrValues T.ProgramPart where
+instance PTC.CollectOrValues T.ProgramPart where
   collect_ovms = \case
-    T.TD td -> collect_ovms td
+    T.TD td -> PTC.collect_ovms td
     _ -> H.do_nothing
 
-instance CollectOrValues T.TypeDef where
+instance PTC.CollectOrValues T.TypeDef where
   collect_ovms = \case
-    T.OTD1 otd -> collect_ovms otd
+    T.OTD1 otd -> PTC.collect_ovms otd
     _ -> H.do_nothing
 
-instance CollectOrValues T.OrTypeDef where
-  collect_ovms = \(T.OTD (_, pv, pvs)) -> P.mapM_ collect_ovms $ pv : pvs
+instance PTC.CollectOrValues T.OrTypeDef where
+  collect_ovms = \(T.OTD (_, pv, pvs)) -> P.mapM_ PTC.collect_ovms $ pv : pvs
 
-instance CollectOrValues T.PossibleValue where
+instance PTC.CollectOrValues T.PossibleValue where
   collect_ovms = \(T.PV (ov, maybe_id_st)) -> case maybe_id_st of
     P.Just (id, _) -> MS.modify $ \(nc, fovm) -> (nc, M.insert ov id fovm)
     P.Nothing -> MS.modify $ \(nc, fovm) -> (S.insert ov nc, fovm)

@@ -6,7 +6,7 @@ classes:
   of how many new parameters need to be created in the haskell code
 - GTH.ToHsWithIndentLvl: outputs the final haskell code but also keeps track
   of the indentation level of every line in the output
-The AST provided to this code as the preprocessed AST.
+The AST provided to this code is the preprocessed AST.
 -}
 
 {-# language LambdaCase, FlexibleInstances #-}

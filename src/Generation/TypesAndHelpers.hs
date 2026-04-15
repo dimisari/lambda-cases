@@ -27,7 +27,7 @@ import Helpers ((.>), (&>), (>$>))
 import Helpers qualified as H
 import Generation.PrefixesAndHardcoded qualified as GPH
 
--- ToHaskell
+-- ToHaskell class and helper instances
 
 type Haskell = P.String
 
@@ -45,7 +45,7 @@ instance ToHaskell a => ToHaskell (P.Maybe a) where
 to_hs_prepend_list :: ToHaskell a => P.String -> [a] -> Haskell
 to_hs_prepend_list = \prepend_hs -> P.concatMap ((prepend_hs ++) . to_haskell)
 
--- WithParamNum
+-- ToHsWithParamNum class and helper instances
 
 type WithParamNum = MS.State P.Int
 
@@ -104,7 +104,7 @@ case_of_inner_hs_gen =
       P.True -> int_to_params_in_paren i
       P.False -> P.error "should be impossible: zero or negative cases params"
 
--- WithIndentLvl
+-- ToHsWithIndentLvl class, helper instance and related functions
 
 type WithIndentLvl = MS.State P.Int
 
@@ -142,7 +142,7 @@ indent_all_and_concat :: [Haskell] -> WithIndentLvl Haskell
 indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> P.map (indent_hs ++) hs_list &> L.intercalate "\n"
 
--- HasArgs
+-- HasArgs class, instances and related functions
 
 class HasArgs a where
   args_length :: a -> P.Int
@@ -270,6 +270,8 @@ tn_to_tid_hs = \(T.TN (mpvip1, T.TId str, pvip_str_pairs, mpvip2)) ->
 tn_to_cons_hs :: T.TypeName -> Haskell
 tn_to_cons_hs = tn_to_tid_hs .> (++ "'")
 
+-- Changed specific parts of the generated haskell
+
 change_prop_hs_if_needed :: Haskell -> Haskell
 change_prop_hs_if_needed = \case
   "A'Has_Str_Rep" -> GPH.show_class
@@ -285,8 +287,7 @@ change_id_hs_if_needed2 = \case
   "a'to_string" -> GPH.show_val2
   hs -> hs
 
--- AST conversions
---   types
+-- AST conversions between different type nodes
 
 ft_to_st :: T.FieldType -> T.SimpleType
 ft_to_st = \case
@@ -308,7 +309,7 @@ taioasm_to_sou :: T.TAIOASMiddle -> T.SubOrUnder
 taioasm_to_sou = \taioasm ->
   T.TVS1 $ T.TAIOAS1 $ T.TAIOAS (P.Nothing, taioasm, P.Nothing)
 
---   identifiers
+-- String and identifier functions
 
 str_to_sid :: P.String -> T.SimpleId
 str_to_sid = \str -> T.SId (T.IS str, P.Nothing)
@@ -324,7 +325,7 @@ sid_to_id :: T.SimpleId -> T.Identifier
 sid_to_id = \(T.SId (id_start, mdigit)) ->
   T.Id (P.Nothing, id_start, [], mdigit, P.Nothing)
 
--- AST checks
+-- check if node can symplify to a SimpleId
 
 check_if_pfaoi_is_sid :: T.ParenFuncAppOrId -> P.Maybe T.SimpleId
 check_if_pfaoi_is_sid = \case
