@@ -13,7 +13,7 @@ This file contains various things:
 
 {-# language LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
-module Generation.TypesAndHelpers where
+module Generation.Helpers where
 
 import Prelude (($), (++), (<*), (*>), (+), (>), (>>=), (-), (.))
 import Prelude qualified as P
@@ -25,49 +25,41 @@ import Data.Set qualified as S
 import ASTTypes qualified as T
 import Helpers ((.>), (&>), (>$>))
 import Helpers qualified as H
+import Generation.TypesAndClasses qualified as GTC
 import Generation.PrefixesAndHardcoded qualified as GPH
 
 -- ToHaskell class and helper instances
 
-type Haskell = P.String
+instance GTC.ToHaskell a => GTC.ToHaskell [a] where
+  to_haskell = P.concatMap GTC.to_haskell
 
-class ToHaskell a where
-  to_haskell :: a -> Haskell
-
-instance ToHaskell a => ToHaskell [a] where
-  to_haskell = P.concatMap to_haskell
-
-instance ToHaskell a => ToHaskell (P.Maybe a) where
+instance GTC.ToHaskell a => GTC.ToHaskell (P.Maybe a) where
   to_haskell = \case
     P.Nothing -> ""
-    P.Just a -> to_haskell a
+    P.Just a -> GTC.to_haskell a
 
-to_hs_prepend_list :: ToHaskell a => P.String -> [a] -> Haskell
-to_hs_prepend_list = \prepend_hs -> P.concatMap ((prepend_hs ++) . to_haskell)
+to_hs_prepend_list :: GTC.ToHaskell a => P.String -> [a] -> GTC.Haskell
+to_hs_prepend_list =
+  \prepend_hs -> P.concatMap ((prepend_hs ++) . GTC.to_haskell)
 
 -- ToHsWithParamNum class and helper instances
 
-type WithParamNum = MS.State P.Int
-
-class ToHsWithParamNum a where
-  to_hs_wpn :: a -> WithParamNum Haskell
-
-instance ToHsWithParamNum a => ToHsWithParamNum (P.Maybe a) where
+instance GTC.ToHsWithParamNum a => GTC.ToHsWithParamNum (P.Maybe a) where
   to_hs_wpn = \case
     P.Nothing -> P.return ""
-    P.Just a -> to_hs_wpn a
+    P.Just a -> GTC.to_hs_wpn a
 
-to_hs_wpn_list :: ToHsWithParamNum a => [a] -> WithParamNum [Haskell]
-to_hs_wpn_list = P.traverse to_hs_wpn
+to_hs_wpn_list :: GTC.ToHsWithParamNum a => [a] -> GTC.WithParamNum [GTC.Haskell]
+to_hs_wpn_list = P.traverse GTC.to_hs_wpn
 
-generate_next_param :: WithParamNum Haskell
+generate_next_param :: GTC.WithParamNum GTC.Haskell
 generate_next_param = MS.get >$> int_to_param <* MS.modify (+1)
 
-params_hs_gen :: WithParamNum Haskell
+params_hs_gen :: GTC.WithParamNum GTC.Haskell
 params_hs_gen =
   MS.get >$> int_to_params
   where
-  int_to_params :: P.Int -> Haskell
+  int_to_params :: P.Int -> GTC.Haskell
   int_to_params = \case
     0 -> ""
     1 -> "\\" ++ int_to_param 0 ++ " -> "
@@ -75,28 +67,29 @@ params_hs_gen =
       P.True -> "\\" ++ int_to_params_in_paren i ++ " -> "
       P.False -> P.error "should be impossible: negative num of params"
 
-int_to_params_in_paren :: P.Int -> Haskell
+int_to_params_in_paren :: P.Int -> GTC.Haskell
 int_to_params_in_paren = \i ->
   "(" ++ ([0..i-1] &> P.map int_to_param &> L.intercalate ", ") ++ ")"
 
-int_to_param :: P.Int -> Haskell
+int_to_param :: P.Int -> GTC.Haskell
 int_to_param = \j -> GPH.param_prefix ++ P.show j
 
-add_params_to :: WithParamNum Haskell -> WithParamNum Haskell
+add_params_to :: GTC.WithParamNum GTC.Haskell -> GTC.WithParamNum GTC.Haskell
 add_params_to = \hs_gen ->
   hs_gen >>= \hs ->
   params_hs_gen >$> \case
     "" -> hs
     params_hs -> "(" ++ params_hs ++ hs ++ ")"
 
-add_params_to_list :: WithParamNum [Haskell] -> WithParamNum [Haskell]
+add_params_to_list
+  :: GTC.WithParamNum [GTC.Haskell] -> GTC.WithParamNum [GTC.Haskell]
 add_params_to_list = \hs_list_gen ->
   hs_list_gen >>= \hs_list ->
   params_hs_gen >$> \case
     "" -> hs_list
     params_hs -> params_hs : hs_list
 
-case_of_inner_hs_gen :: WithParamNum Haskell
+case_of_inner_hs_gen :: GTC.WithParamNum GTC.Haskell
 case_of_inner_hs_gen =
   MS.get >$> \case
     1 -> int_to_param 0
@@ -106,149 +99,133 @@ case_of_inner_hs_gen =
 
 -- ToHsWithIndentLvl class, helper instance and related functions
 
-type WithIndentLvl = MS.State P.Int
-
-class ToHsWithIndentLvl a where
-  to_hs_wil :: a -> WithIndentLvl Haskell
-
-instance ToHsWithIndentLvl a => ToHsWithIndentLvl (P.Maybe a) where
+instance GTC.ToHsWithIndentLvl a => GTC.ToHsWithIndentLvl (P.Maybe a) where
   to_hs_wil = \case
     P.Nothing -> P.return ""
-    P.Just a -> to_hs_wil a
+    P.Just a -> GTC.to_hs_wil a
 
-to_hs_wil_list :: ToHsWithIndentLvl a => [a] -> WithIndentLvl [Haskell]
-to_hs_wil_list = P.traverse to_hs_wil
+to_hs_wil_list
+  :: GTC.ToHsWithIndentLvl a => [a] -> GTC.WithIndentLvl [GTC.Haskell]
+to_hs_wil_list = P.traverse GTC.to_hs_wil
 
-increase_il_by :: P.Int -> WithIndentLvl ()
+increase_il_by :: P.Int -> GTC.WithIndentLvl ()
 increase_il_by = \i -> MS.modify (+i)
 
-decrease_il_by :: P.Int -> WithIndentLvl ()
+decrease_il_by :: P.Int -> GTC.WithIndentLvl ()
 decrease_il_by = \i -> increase_il_by (-i)
 
-deeper_with_num :: P.Int -> WithIndentLvl Haskell -> WithIndentLvl Haskell
+deeper_with_num
+  :: P.Int -> GTC.WithIndentLvl GTC.Haskell -> GTC.WithIndentLvl GTC.Haskell
 deeper_with_num = \i hs_gen ->
   increase_il_by i *> hs_gen <* decrease_il_by i
 
-deeper :: WithIndentLvl Haskell -> WithIndentLvl Haskell
+deeper :: GTC.WithIndentLvl GTC.Haskell -> GTC.WithIndentLvl GTC.Haskell
 deeper = deeper_with_num 1
 
-twice_deeper :: WithIndentLvl Haskell -> WithIndentLvl Haskell
+twice_deeper :: GTC.WithIndentLvl GTC.Haskell -> GTC.WithIndentLvl GTC.Haskell
 twice_deeper = deeper_with_num 2
 
-indent :: WithIndentLvl Haskell
+indent :: GTC.WithIndentLvl GTC.Haskell
 indent = MS.get >$> H.ind_lvl_to_spaces
 
-indent_all_and_concat :: [Haskell] -> WithIndentLvl Haskell
+indent_all_and_concat :: [GTC.Haskell] -> GTC.WithIndentLvl GTC.Haskell
 indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> P.map (indent_hs ++) hs_list &> L.intercalate "\n"
 
 -- HasArgs class, instances and related functions
 
-class HasArgs a where
-  args_length :: a -> P.Int
-
-instance HasArgs a => HasArgs (P.Maybe a) where
+instance GTC.HasArgs a => GTC.HasArgs (P.Maybe a) where
   args_length = \case
-    P.Just a -> args_length a
+    P.Just a -> GTC.args_length a
     P.Nothing -> 0
 
-instance HasArgs T.Arguments where
+instance GTC.HasArgs T.Arguments where
   args_length = \(T.As (T.LEOUs (leou, leous))) -> P.length $ leou : leous
 
-instance HasArgs T.TypesInParen where
+instance GTC.HasArgs T.TypesInParen where
   args_length = \(T.TIP (st, sts)) -> P.length $ st : sts
 
-instance HasArgs T.SubsOrUndersInParen where
+instance GTC.HasArgs T.SubsOrUndersInParen where
   args_length = \(T.SOUIP (sou, sous)) -> P.length $ sou : sous
 
-instance HasArgs T.ParamVarsInParen where
+instance GTC.HasArgs T.ParamVarsInParen where
   args_length = \(T.PVIP (ptv, ptvs)) -> P.length $ ptv : ptvs
 
-instance HasArgs T.SubsInParen where
+instance GTC.HasArgs T.SubsInParen where
   args_length = \(T.SIP (tvs, tvss)) -> P.length $ tvs : tvss
 
-instance HasArgs T.UndersInParen where
+instance GTC.HasArgs T.UndersInParen where
   args_length = \(T.UIP i) -> i
 
-single_quotes_hs :: HasArgs a => a -> P.String
-single_quotes_hs = args_length .> \i -> L.replicate i '\''
+single_quotes_hs :: GTC.HasArgs a => a -> P.String
+single_quotes_hs = GTC.args_length .> \i -> L.replicate i '\''
 
-args_strs_hs :: HasArgs a => [(a, P.String)] -> Haskell
+args_strs_hs :: GTC.HasArgs a => [(a, P.String)] -> GTC.Haskell
 args_strs_hs = P.concatMap (\(a, str) -> single_quotes_hs a ++ str)
 
-args_nps_hs :: HasArgs a => [(a, T.NamePart)] -> Haskell
+args_nps_hs :: GTC.HasArgs a => [(a, T.NamePart)] -> GTC.Haskell
 args_nps_hs =
   P.concatMap (\(a, T.NP str) -> single_quotes_hs a ++ str) .> (GPH.upper_prefix ++)
 
-nps_args_hs :: HasArgs a => [(T.NamePart, a)] -> Haskell
+nps_args_hs :: GTC.HasArgs a => [(T.NamePart, a)] -> GTC.Haskell
 nps_args_hs = P.concatMap (\(T.NP str, a) -> str ++ single_quotes_hs a)
 
-maybe_prefix_args_hs :: HasArgs a => P.String -> P.Maybe a -> Haskell
+maybe_prefix_args_hs :: GTC.HasArgs a => P.String -> P.Maybe a -> GTC.Haskell
 maybe_prefix_args_hs = \prefix -> \case
   P.Nothing -> ""
   P.Just a -> prefix ++ single_quotes_hs a
 
 -- types
 
-type DotChangeArgHs = Haskell
-
-newtype WholeParams = Whole T.Parameters
-
 -- NeedsParenBool
 
-data NeedsParenBool = Paren | NoParen
-
-in_paren_if :: NeedsParenBool -> Haskell -> Haskell
+in_paren_if :: GTC.NeedsParenBool -> GTC.Haskell -> GTC.Haskell
 in_paren_if = \case
-  NoParen -> P.id
-  Paren -> \hs -> "(" ++ hs ++ ")"
+  GTC.NoParen -> P.id
+  GTC.Paren -> \hs -> "(" ++ hs ++ ")"
 
 -- NeedsAnnotBool
 
-data NeedsAnnotBool = Annot | NoAnnot
-
-to_hs_needs_annot :: P.Show a => NeedsAnnotBool -> a -> P.String -> Haskell
+to_hs_needs_annot
+  :: P.Show a => GTC.NeedsAnnotBool -> a -> P.String -> GTC.Haskell
 to_hs_needs_annot = \needs_annot a str -> case needs_annot of
-  Annot -> "(" ++ P.show a ++ " :: " ++ str ++ ")"
-  NoAnnot -> P.show a
+  GTC.Annot -> "(" ++ P.show a ++ " :: " ++ str ++ ")"
+  GTC.NoAnnot -> P.show a
 
 -- PossiblyWhereExpr
 
-data PossiblyWhereExpr = HasWhereExpr T.WhereExpr | NoWhereExpr
-
-mwe_to_pwe :: P.Maybe T.WhereExpr -> PossiblyWhereExpr
+mwe_to_pwe :: P.Maybe T.WhereExpr -> GTC.PossiblyWhereExpr
 mwe_to_pwe = \case
-  P.Nothing -> NoWhereExpr
-  P.Just we -> HasWhereExpr we
+  P.Nothing -> GTC.NoWhereExpr
+  P.Just we -> GTC.HasWhereExpr we
 
 -- ParenFuncAppOrId helpers
 
-type MargsPair = (P.Maybe T.Arguments, P.Maybe T.Arguments)
-add_margs_to_args_list :: MargsPair -> [T.Arguments] -> [T.Arguments]
+add_margs_to_args_list :: GTC.MargsPair -> [T.Arguments] -> [T.Arguments]
 add_margs_to_args_list = \case
   (P.Nothing, P.Nothing) -> P.id
   (P.Just args, P.Nothing) -> ([args] ++)
   (P.Nothing, P.Just args) -> (++ [args])
   (P.Just args1, P.Just args2) -> \args_list -> [args1] ++ args_list ++ [args2]
 
-calc_args_list :: MargsPair -> [T.ArgsStr] -> [T.Arguments]
+calc_args_list :: GTC.MargsPair -> [T.ArgsStr] -> [T.Arguments]
 calc_args_list = \margs_pair args_str_pairs ->
   add_margs_to_args_list margs_pair $ P.map P.fst args_str_pairs
 
 -- TupleTypeDef helpers
 
-combine_with_ts :: [Haskell] -> [Haskell] -> Haskell
+combine_with_ts :: [GTC.Haskell] -> [GTC.Haskell] -> GTC.Haskell
 combine_with_ts = \sid_hs_list types_hs_list ->
   P.zipWith comb_sid_t_hs sid_hs_list types_hs_list &> P.concat
 
-combine_with_defs :: [Haskell] -> [Haskell] -> Haskell
+combine_with_defs :: [GTC.Haskell] -> [GTC.Haskell] -> GTC.Haskell
 combine_with_defs = \sid_hs_list defs_hs_list ->
   P.zipWith comb_sid_def_hs sid_hs_list defs_hs_list &> P.concat
 
-comb_sid_t_hs :: Haskell -> Haskell -> Haskell
+comb_sid_t_hs :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
 comb_sid_t_hs = \hs1 hs2 -> "\n" ++ hs1 ++ " :: " ++ hs2
 
-comb_sid_def_hs :: Haskell -> Haskell -> Haskell
+comb_sid_def_hs :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
 comb_sid_def_hs = \hs1 hs2 ->
   "\n" ++ hs1 ++ " = \\new x -> x { " ++ hs2 ++ " = new }"
 
@@ -257,32 +234,32 @@ comb_sid_def_hs = \hs1 hs2 ->
 run_generator :: MS.State P.Int a -> a
 run_generator = \hs_gen -> MS.evalState hs_gen 0
 
-to_hs_maybe_np :: P.Maybe T.NamePart -> Haskell
+to_hs_maybe_np :: P.Maybe T.NamePart -> GTC.Haskell
 to_hs_maybe_np = \case
   P.Nothing -> ""
   P.Just (T.NP str) -> "'" ++ str
 
-tn_to_tid_hs :: T.TypeName -> Haskell
+tn_to_tid_hs :: T.TypeName -> GTC.Haskell
 tn_to_tid_hs = \(T.TN (mpvip1, T.TId str, pvip_str_pairs, mpvip2)) ->
   maybe_prefix_args_hs GPH.upper_prefix mpvip1 ++ str ++
   args_strs_hs pvip_str_pairs ++ single_quotes_hs mpvip2
 
-tn_to_cons_hs :: T.TypeName -> Haskell
+tn_to_cons_hs :: T.TypeName -> GTC.Haskell
 tn_to_cons_hs = tn_to_tid_hs .> (++ "'")
 
 -- Changed specific parts of the generated haskell
 
-change_prop_hs_if_needed :: Haskell -> Haskell
+change_prop_hs_if_needed :: GTC.Haskell -> GTC.Haskell
 change_prop_hs_if_needed = \case
   "A'Has_Str_Rep" -> GPH.show_class
   hs -> hs
 
-change_id_hs_if_needed1 :: Haskell -> Haskell
+change_id_hs_if_needed1 :: GTC.Haskell -> GTC.Haskell
 change_id_hs_if_needed1 = \case
   "a'to_string" -> GPH.show_val1
   hs -> hs
 
-change_id_hs_if_needed2 :: Haskell -> Haskell
+change_id_hs_if_needed2 :: GTC.Haskell -> GTC.Haskell
 change_id_hs_if_needed2 = \case
   "a'to_string" -> GPH.show_val2
   hs -> hs

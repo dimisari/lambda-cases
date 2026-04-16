@@ -1,10 +1,10 @@
 {-
 This file contains instances for every AST type for one of the following
 classes:
-- GTH.ToHaskell: simply outputs the final haskell code for the AST type
-- GTH.ToHsWithParamNum: outputs the final haskell code but also keeps track
+- GH.ToHaskell: simply outputs the final haskell code for the AST type
+- GH.ToHsWithParamNum: outputs the final haskell code but also keeps track
   of how many new parameters need to be created in the haskell code
-- GTH.ToHsWithIndentLvl: outputs the final haskell code but also keeps track
+- GH.ToHsWithIndentLvl: outputs the final haskell code but also keeps track
   of the indentation level of every line in the output
 The AST provided to this code is the preprocessed AST.
 -}
@@ -26,101 +26,103 @@ import Helpers ((&>), (<++), (>++<), (>$>), (++>))
 import Helpers qualified as H
 import ShowInstances qualified as S
 
-import Generation.TypesAndHelpers qualified as GTH
+import Generation.TypesAndClasses qualified as GTC
+import Generation.Helpers qualified as GH
 import Preprocessing.Collect qualified as C
 import Generation.PrefixesAndHardcoded qualified as GPH
 
 -- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 
-instance GTH.ToHaskell P.Char where
+instance GTC.ToHaskell P.Char where
   to_haskell = (:[])
 
-instance GTH.ToHaskell (GTH.NeedsAnnotBool, T.Literal) where
+instance GTC.ToHaskell (GTC.NeedsAnnotBool, T.Literal) where
   to_haskell = \(needs_annot, lit) -> case lit of
-    T.Int i -> GTH.to_hs_needs_annot needs_annot i GPH.integer
-    T.R r -> GTH.to_hs_needs_annot needs_annot r GPH.double
+    T.Int i -> GH.to_hs_needs_annot needs_annot i GPH.integer
+    T.R r -> GH.to_hs_needs_annot needs_annot r GPH.double
     T.Ch c -> P.show c
     T.S s -> P.show s
 
-instance GTH.ToHaskell T.Identifier where
+instance GTC.ToHaskell T.Identifier where
   to_haskell (T.Id (muip1, id_start, id_conts, mdigit, muip2)) =
-    GTH.maybe_prefix_args_hs GPH.lower_prefix muip1 ++ GTH.to_haskell id_start ++
-    GTH.to_haskell id_conts ++ GTH.to_haskell mdigit ++ GTH.single_quotes_hs muip2
+    GH.maybe_prefix_args_hs GPH.lower_prefix muip1 ++ GTC.to_haskell id_start ++
+    GTC.to_haskell id_conts ++ GTC.to_haskell mdigit ++
+    GH.single_quotes_hs muip2
 
-instance GTH.ToHaskell T.SimpleId where
+instance GTC.ToHaskell T.SimpleId where
   to_haskell = \(T.SId (id_start, mdigit)) ->
-    GTH.to_haskell id_start ++ GTH.to_haskell mdigit
+    GTC.to_haskell id_start ++ GTC.to_haskell mdigit
 
-instance GTH.ToHaskell T.IdStart where
+instance GTC.ToHaskell T.IdStart where
   to_haskell = \(T.IS str) -> str
 
-instance GTH.ToHaskell T.IdCont where
-  to_haskell = \(T.IC (uip, str)) -> GTH.single_quotes_hs uip ++ str
+instance GTC.ToHaskell T.IdCont where
+  to_haskell = \(T.IC (uip, str)) -> GH.single_quotes_hs uip ++ str
 
-instance GTH.ToHaskell T.ParenExpr where
-  to_haskell = \(T.PE ipe) -> "(" ++ GTH.to_haskell ipe ++ ")"
+instance GTC.ToHaskell T.ParenExpr where
+  to_haskell = \(T.PE ipe) -> "(" ++ GTC.to_haskell ipe ++ ")"
 
-instance GTH.ToHaskell T.InsideParenExpr where
+instance GTC.ToHaskell T.InsideParenExpr where
   to_haskell = \case
-    T.LOE1 loe -> GTH.to_haskell loe
-    T.LFE1 lfe -> GTH.to_haskell lfe
+    T.LOE1 loe -> GTC.to_haskell loe
+    T.LFE1 lfe -> GTC.to_haskell lfe
 
-instance GTH.ToHaskell T.Tuple where
+instance GTC.ToHaskell T.Tuple where
   to_haskell (T.T (leou, leous)) =
-    GTH.run_generator $ GTH.add_params_to tuple_hs_gen
+    GH.run_generator $ GH.add_params_to tuple_hs_gen
     where
-    tuple_hs_gen :: GTH.WithParamNum GTH.Haskell
+    tuple_hs_gen :: GTC.WithParamNum GTC.Haskell
     tuple_hs_gen =
-      GTH.to_hs_wpn leou >>= \leou_hs ->
-      GTH.to_hs_wpn leous >>= \leous_hs ->
+      GTC.to_hs_wpn leou >>= \leou_hs ->
+      GTC.to_hs_wpn leous >>= \leous_hs ->
       P.return $ "ft" ++ P.show size ++ "(" ++ leou_hs ++ ", " ++ leous_hs ++ ")"
 
     size :: P.Int
     size = case leous of
       T.LEOUs (_, l) -> P.length l + 2
 
-instance GTH.ToHsWithParamNum T.LineExprOrUnders where
+instance GTC.ToHsWithParamNum T.LineExprOrUnders where
   to_hs_wpn = \(T.LEOUs (leou, leous)) ->
-    GTH.to_hs_wpn_list (leou : leous) >$> L.intercalate ", "
+    GH.to_hs_wpn_list (leou : leous) >$> L.intercalate ", "
 
-instance GTH.ToHsWithParamNum T.LineExprOrUnder where
+instance GTC.ToHsWithParamNum T.LineExprOrUnder where
   to_hs_wpn = \case
-    T.LE1 le -> P.return $ GTH.to_haskell le
-    T.Underscore1 -> GTH.generate_next_param
+    T.LE1 le -> P.return $ GTC.to_haskell le
+    T.Underscore1 -> GH.generate_next_param
 
-instance GTH.ToHaskell T.LineExpr where
+instance GTC.ToHaskell T.LineExpr where
   to_haskell = \case
-    T.BOAE1 boae -> GTH.to_haskell boae
-    T.LOE2 loe -> GTH.to_haskell loe
-    T.LFE2 lfe -> GTH.to_haskell lfe
+    T.BOAE1 boae -> GTC.to_haskell boae
+    T.LOE2 loe -> GTC.to_haskell loe
+    T.LFE2 lfe -> GTC.to_haskell lfe
 
-instance GTH.ToHaskell T.BasicOrAppExpr where
+instance GTC.ToHaskell T.BasicOrAppExpr where
   to_haskell = \case
-    T.BE3 be -> GTH.to_haskell be
-    T.PrFA1 prfa -> GTH.to_haskell prfa
-    T.PoFA1 pofa -> GTH.to_haskell pofa
+    T.BE3 be -> GTC.to_haskell be
+    T.PrFA1 prfa -> GTC.to_haskell prfa
+    T.PoFA1 pofa -> GTC.to_haskell pofa
 
-instance GTH.ToHaskell T.BasicExpr where
+instance GTC.ToHaskell T.BasicExpr where
   to_haskell = \case
-    T.Lit1 lit -> GTH.to_haskell (GTH.Annot, lit)
-    T.PFAOI1 pfaoi -> GTH.to_haskell pfaoi
-    T.T1 tuple -> GTH.to_haskell tuple
-    T.L1 list -> GTH.to_haskell list
+    T.Lit1 lit -> GTC.to_haskell (GTC.Annot, lit)
+    T.PFAOI1 pfaoi -> GTC.to_haskell pfaoi
+    T.T1 tuple -> GTC.to_haskell tuple
+    T.L1 list -> GTC.to_haskell list
     T.SI1 spid -> P.error $ "special id in basic expr:" ++ P.show spid
 
-instance GTH.ToHsWithIndentLvl T.BigTuple where
+instance GTC.ToHsWithIndentLvl T.BigTuple where
   to_hs_wil (T.BT (leou, btsplit, leous, leous_l)) =
-    GTH.indent_all_and_concat big_tuple_hs_list
+    GH.indent_all_and_concat big_tuple_hs_list
     where
-    big_tuple_hs_list :: [GTH.Haskell]
+    big_tuple_hs_list :: [GTC.Haskell]
     big_tuple_hs_list =
-      GTH.run_generator $ GTH.add_params_to_list big_tuple_hs_list_gen
+      GH.run_generator $ GH.add_params_to_list big_tuple_hs_list_gen
 
-    big_tuple_hs_list_gen :: GTH.WithParamNum [GTH.Haskell]
+    big_tuple_hs_list_gen :: GTC.WithParamNum [GTC.Haskell]
     big_tuple_hs_list_gen =
-      GTH.to_hs_wpn leou >>= \leou_hs ->
-      GTH.to_hs_wpn leous >>= \leous_hs ->
-      GTH.to_hs_wpn_list leous_l >>= \leous_hs_l ->
+      GTC.to_hs_wpn leou >>= \leou_hs ->
+      GTC.to_hs_wpn leous >>= \leous_hs ->
+      GH.to_hs_wpn_list leous_l >>= \leous_hs_l ->
       P.return $ ["ft" ++ P.show size] ++
         case btsplit of
           T.NoSplit ->
@@ -136,69 +138,69 @@ instance GTH.ToHsWithIndentLvl T.BigTuple where
     leous_size :: T.LineExprOrUnders -> P.Int
     leous_size = \(T.LEOUs (_, l)) -> P.length l + 1
 
-instance GTH.ToHaskell T.List where
+instance GTC.ToHaskell T.List where
   to_haskell (T.L maybe_leous) =
-    GTH.run_generator $ GTH.add_params_to $ "[" ++> GTH.to_hs_wpn maybe_leous <++ "]"
+    GH.run_generator $ GH.add_params_to $ "[" ++> GTC.to_hs_wpn maybe_leous <++ "]"
 
-instance GTH.ToHsWithIndentLvl T.BigList where
+instance GTC.ToHsWithIndentLvl T.BigList where
   to_hs_wil (T.BL (leous, leous_l)) =
-    GTH.indent_all_and_concat big_list_hs_list
+    GH.indent_all_and_concat big_list_hs_list
     where
-    big_list_hs_list :: [GTH.Haskell]
-    big_list_hs_list = GTH.run_generator $ GTH.add_params_to_list big_list_hs_list_gen
+    big_list_hs_list :: [GTC.Haskell]
+    big_list_hs_list = GH.run_generator $ GH.add_params_to_list big_list_hs_list_gen
 
-    big_list_hs_list_gen :: GTH.WithParamNum [GTH.Haskell]
+    big_list_hs_list_gen :: GTC.WithParamNum [GTC.Haskell]
     big_list_hs_list_gen =
-      GTH.to_hs_wpn leous >>= \leous_hs ->
-      GTH.to_hs_wpn_list leous_l >>= \leous_hs_l ->
+      GTC.to_hs_wpn leous >>= \leous_hs ->
+      GH.to_hs_wpn_list leous_l >>= \leous_hs_l ->
       P.return $ ["[ " ++ leous_hs] ++ P.map (", " ++) leous_hs_l ++ ["]"]
 
-instance GTH.ToHaskell T.ParenFuncAppOrId where
+instance GTC.ToHaskell T.ParenFuncAppOrId where
   to_haskell = \case
     (T.PFAOI (margs1, id_start, args_str_pairs, mdigit, margs2)) ->
-      GTH.run_generator $ GTH.add_params_to paren_func_app_or_id_hs_gen
+      GH.run_generator $ GH.add_params_to paren_func_app_or_id_hs_gen
       where
-      paren_func_app_or_id_hs_gen :: GTH.WithParamNum GTH.Haskell
+      paren_func_app_or_id_hs_gen :: GTC.WithParamNum GTC.Haskell
       paren_func_app_or_id_hs_gen =
-        GTH.change_id_hs_if_needed2 total_id_hs ++>
-        GTH.to_hs_wpn (GTH.calc_args_list (margs1, margs2) args_str_pairs)
+        GH.change_id_hs_if_needed2 total_id_hs ++>
+        GTC.to_hs_wpn (GH.calc_args_list (margs1, margs2) args_str_pairs)
 
-      total_id_hs :: GTH.Haskell
+      total_id_hs :: GTC.Haskell
       total_id_hs =
-        GTH.maybe_prefix_args_hs GPH.lower_prefix margs1 ++ GTH.to_haskell id_start ++
-        GTH.args_strs_hs args_str_pairs ++ GTH.to_haskell mdigit ++
-        GTH.single_quotes_hs margs2
+        GH.maybe_prefix_args_hs GPH.lower_prefix margs1 ++ GTC.to_haskell id_start ++
+        GH.args_strs_hs args_str_pairs ++ GTC.to_haskell mdigit ++
+        GH.single_quotes_hs margs2
 
-instance GTH.ToHsWithParamNum [T.Arguments] where
+instance GTC.ToHsWithParamNum [T.Arguments] where
   to_hs_wpn = \args_l ->
-    GTH.to_hs_wpn_list args_l >$> \case
+    GH.to_hs_wpn_list args_l >$> \case
       [] -> ""
       args_hs_list -> "(" ++ L.intercalate ", " args_hs_list ++ ")"
 
-instance GTH.ToHsWithParamNum T.Arguments where
-  to_hs_wpn = \(T.As leous) -> GTH.to_hs_wpn leous
+instance GTC.ToHsWithParamNum T.Arguments where
+  to_hs_wpn = \(T.As leous) -> GTC.to_hs_wpn leous
 
 -- Values: PreFunc, PostFunc, BasicExpr, Change
 
-instance GTH.ToHaskell T.PreFunc where
+instance GTC.ToHaskell T.PreFunc where
   to_haskell = \(T.PF id) ->
     case id of
       T.SId (T.IS "a_value", P.Nothing) -> GPH.just
       T.SId (T.IS "error", P.Nothing) -> GPH.left
       T.SId (T.IS "result", P.Nothing) -> GPH.right
-      _ -> GPH.constructor_prefix ++ GTH.to_haskell id
+      _ -> GPH.constructor_prefix ++ GTC.to_haskell id
 
-instance GTH.ToHaskell T.PreFuncApp where
+instance GTC.ToHaskell T.PreFuncApp where
   to_haskell = \(T.PrFA (pf, oper)) ->
-    GTH.run_generator $
-    GTH.add_params_to $ (GTH.to_haskell pf ++ "(") ++> GTH.to_hs_wpn oper <++ ")"
+    GH.run_generator $
+    GH.add_params_to $ (GTC.to_haskell pf ++ "(") ++> GTC.to_hs_wpn oper <++ ")"
 
-instance GTH.ToHaskell T.PostFunc where
+instance GTC.ToHaskell T.PostFunc where
   to_haskell = \case
-    T.SId1 sid -> GTH.to_haskell sid
-    T.SI2 spid -> GPH.spid_projection_prefix ++ GTH.to_haskell spid
+    T.SId1 sid -> GTC.to_haskell sid
+    T.SI2 spid -> GPH.spid_projection_prefix ++ GTC.to_haskell spid
 
-instance GTH.ToHaskell T.SpecialId where
+instance GTC.ToHaskell T.SpecialId where
   to_haskell = \case
     T.First -> "1st"
     T.Second -> "2nd"
@@ -206,146 +208,147 @@ instance GTH.ToHaskell T.SpecialId where
     T.Fourth -> "4th"
     T.Fifth -> "5th"
 
-instance GTH.ToHaskell T.PostFuncApp where
+instance GTC.ToHaskell T.PostFuncApp where
   to_haskell (T.PoFA (pfa, pfae)) =
     case pfa of
       T.Underscore2 -> "(\\" ++ GPH.under_pfarg_param ++ " -> " ++ inside_hs ++")"
       _ -> inside_hs
     where
-    pfa_hs :: GTH.Haskell
-    pfa_hs = GTH.to_haskell pfa
+    pfa_hs :: GTC.Haskell
+    pfa_hs = GTC.to_haskell pfa
 
-    inside_hs :: GTH.Haskell
+    inside_hs :: GTC.Haskell
     inside_hs = case pfae of
-      T.DC1 dc -> GTH.to_haskell (dc, pfa_hs)
+      T.DC1 dc -> GTC.to_haskell (dc, pfa_hs)
       T.PFsMDC (pfs, mdc) -> case mdc of
         P.Nothing -> pfa_pfs_hs
-        P.Just dc -> GTH.to_haskell (dc, pfa_pfs_hs)
+        P.Just dc -> GTC.to_haskell (dc, pfa_pfs_hs)
         where
-        pfa_pfs_hs :: GTH.Haskell
+        pfa_pfs_hs :: GTC.Haskell
         pfa_pfs_hs = pfa_pfs_to_hs $ P.reverse pfs
 
-        pfa_pfs_to_hs :: [T.PostFunc] -> GTH.Haskell
+        pfa_pfs_to_hs :: [T.PostFunc] -> GTC.Haskell
         pfa_pfs_to_hs = \case
           [] -> pfa_hs
-          pf : pfs -> GTH.to_haskell pf ++ "(" ++ pfa_pfs_to_hs pfs ++ ")"
+          pf : pfs -> GTC.to_haskell pf ++ "(" ++ pfa_pfs_to_hs pfs ++ ")"
 
-instance GTH.ToHaskell T.PostFuncArg where
+instance GTC.ToHaskell T.PostFuncArg where
   to_haskell = \case
-    T.PE2 pe -> GTH.to_haskell pe
-    T.BE2 be -> GTH.to_haskell be
+    T.PE2 pe -> GTC.to_haskell pe
+    T.BE2 be -> GTC.to_haskell be
     T.Underscore2 -> GPH.under_pfarg_param
 
-instance GTH.ToHaskell (T.DotChange, GTH.DotChangeArgHs) where
+instance GTC.ToHaskell (T.DotChange, GTC.DotChangeArgHs) where
   to_haskell (T.DC (fc, fcs), dcahs) =
-    GTH.run_generator $ GTH.add_params_to (change_hs_gen <++ (" " ++ dcahs))
+    GH.run_generator $ GH.add_params_to (change_hs_gen <++ (" " ++ dcahs))
     where
-    change_hs_gen :: GTH.WithParamNum GTH.Haskell
+    change_hs_gen :: GTC.WithParamNum GTC.Haskell
     change_hs_gen =
-      GTH.to_hs_wpn_list (fc : fcs) >$> \case
+      GH.to_hs_wpn_list (fc : fcs) >$> \case
         [] -> P.error "should be impossible"
         [fc_hs] -> fc_hs
         fcs_hs_list -> "(" ++ L.intercalate " .> " fcs_hs_list ++ ")"
 
-instance GTH.ToHsWithParamNum T.FieldChange where
+instance GTC.ToHsWithParamNum T.FieldChange where
   to_hs_wpn = \(T.FC (f, leou)) ->
-    (GTH.to_haskell f ++ "(") ++> GTH.to_hs_wpn leou <++ ")"
+    (GTC.to_haskell f ++ "(") ++> GTC.to_hs_wpn leou <++ ")"
 
-instance GTH.ToHaskell T.Field where
+instance GTC.ToHaskell T.Field where
   to_haskell = \case
-    T.SId2 id -> GPH.change_prefix ++ GTH.to_haskell id
-    T.SI3 spid -> GPH.spid_change_prefix ++ GTH.to_haskell spid
+    T.SId2 id -> GPH.change_prefix ++ GTC.to_haskell id
+    T.SI3 spid -> GPH.spid_change_prefix ++ GTC.to_haskell spid
 
 -- Values: OpExpr
 
-instance GTH.ToHsWithIndentLvl T.OpExpr where
+instance GTC.ToHsWithIndentLvl T.OpExpr where
   to_hs_wil = \case
-    T.LOE3 loe -> GTH.indent <++ GTH.to_haskell loe
-    T.BOE1 boe -> GTH.to_hs_wil boe
+    T.LOE3 loe -> GH.indent <++ GTC.to_haskell loe
+    T.BOE1 boe -> GTC.to_hs_wil boe
 
-instance GTH.ToHsWithParamNum T.OpExprStart where
-  to_hs_wpn (T.OES oper_op_pairs) = GTH.to_hs_wpn_list oper_op_pairs >$> P.concat
+instance GTC.ToHsWithParamNum T.OpExprStart where
+  to_hs_wpn (T.OES oper_op_pairs) = GH.to_hs_wpn_list oper_op_pairs >$> P.concat
 
-instance GTH.ToHsWithParamNum (T.Operand, T.Op) where
-  to_hs_wpn = \(oper, op) -> GTH.to_hs_wpn oper <++ GTH.to_haskell op
+instance GTC.ToHsWithParamNum (T.Operand, T.Op) where
+  to_hs_wpn = \(oper, op) -> GTC.to_hs_wpn oper <++ GTC.to_haskell op
 
-instance GTH.ToHaskell T.LineOpExpr where
+instance GTC.ToHaskell T.LineOpExpr where
   to_haskell = \(T.LOE (oes, loee)) ->
-    GTH.run_generator $ GTH.add_params_to $ GTH.to_hs_wpn oes >++< GTH.to_hs_wpn loee
+    GH.run_generator $ GH.add_params_to $
+    GTC.to_hs_wpn oes >++< GTC.to_hs_wpn loee
 
-instance GTH.ToHsWithParamNum T.LineOpExprEnd where
+instance GTC.ToHsWithParamNum T.LineOpExprEnd where
   to_hs_wpn = \case
-    T.O1 o -> GTH.to_hs_wpn o
-    T.LFE3 lfe -> P.return $ GTH.to_haskell lfe
+    T.O1 o -> GTC.to_hs_wpn o
+    T.LFE3 lfe -> P.return $ GTC.to_haskell lfe
 
-instance GTH.ToHsWithIndentLvl T.BigOpExpr where
+instance GTC.ToHsWithIndentLvl T.BigOpExpr where
   to_hs_wil = \case
-    T.BOEOS1 boeos -> GTH.to_hs_wil boeos
-    T.BOEFS1 boefs -> GTH.to_hs_wil boefs
+    T.BOEOS1 boeos -> GTC.to_hs_wil boeos
+    T.BOEFS1 boefs -> GTC.to_hs_wil boefs
 
-instance GTH.ToHsWithIndentLvl T.BigOpExprOpSplit where
+instance GTC.ToHsWithIndentLvl T.BigOpExprOpSplit where
   to_hs_wil (T.BOEOS (osls, maybe_oes, ose)) =
-    GTH.indent_all_and_concat boeos_hs_list >++< GTH.to_hs_wil ose
+    GH.indent_all_and_concat boeos_hs_list >++< GTC.to_hs_wil ose
     where
-    boeos_hs_list :: [GTH.Haskell]
-    boeos_hs_list = GTH.run_generator $ GTH.add_params_to_list boeos_hs_list_gen
+    boeos_hs_list :: [GTC.Haskell]
+    boeos_hs_list = GH.run_generator $ GH.add_params_to_list boeos_hs_list_gen
 
-    boeos_hs_list_gen :: GTH.WithParamNum [GTH.Haskell]
+    boeos_hs_list_gen :: GTC.WithParamNum [GTC.Haskell]
     boeos_hs_list_gen =
-      GTH.to_hs_wpn_list osls >>= \osls_hs ->
-      GTH.to_hs_wpn maybe_oes >>= \maybe_oes_hs ->
-      GTH.to_hs_wpn ose >>= \ose_hs ->
+      GH.to_hs_wpn_list osls >>= \osls_hs ->
+      GTC.to_hs_wpn maybe_oes >>= \maybe_oes_hs ->
+      GTC.to_hs_wpn ose >>= \ose_hs ->
       P.return $ osls_hs ++ [maybe_oes_hs ++ ose_hs]
 
-instance GTH.ToHsWithParamNum T.OpSplitLine where
+instance GTC.ToHsWithParamNum T.OpSplitLine where
   to_hs_wpn = \case
-    T.OESMOFCO (oes, mofco) -> GTH.to_hs_wpn oes >++< GTH.to_hs_wpn mofco
-    T.OFCO1 ofco -> GTH.to_hs_wpn ofco
+    T.OESMOFCO (oes, mofco) -> GTC.to_hs_wpn oes >++< GTC.to_hs_wpn mofco
+    T.OFCO1 ofco -> GTC.to_hs_wpn ofco
 
-instance GTH.ToHsWithParamNum T.OperFCO where
+instance GTC.ToHsWithParamNum T.OperFCO where
   to_hs_wpn = \(T.OFCO (oper, fco)) ->
-    GTH.to_hs_wpn oper <++ (" " ++ GTH.to_haskell fco ++ " ")
+    GTC.to_hs_wpn oper <++ (" " ++ GTC.to_haskell fco ++ " ")
 
-instance GTH.ToHsWithParamNum T.OpSplitEnd where
+instance GTC.ToHsWithParamNum T.OpSplitEnd where
   to_hs_wpn = \case
-    T.O2 o -> GTH.to_hs_wpn o
+    T.O2 o -> GTC.to_hs_wpn o
     _ -> P.return ""
 
-instance GTH.ToHsWithIndentLvl T.OpSplitEnd where
+instance GTC.ToHsWithIndentLvl T.OpSplitEnd where
   to_hs_wil = \case
-    T.FE1 fe -> GTH.to_hs_wil (fe, GTH.NoWhereExpr)
+    T.FE1 fe -> GTC.to_hs_wil (fe, GTC.NoWhereExpr)
     _ -> P.return ""
 
-instance GTH.ToHsWithIndentLvl T.BigOpExprFuncSplit where
+instance GTC.ToHsWithIndentLvl T.BigOpExprFuncSplit where
   to_hs_wil (T.BOEFS (oes, bocfe)) =
-    GTH.indent_all_and_concat params_and_oes_hs_list >++< GTH.to_hs_wil bocfe
+    GH.indent_all_and_concat params_and_oes_hs_list >++< GTC.to_hs_wil bocfe
     where
-    params_and_oes_hs_list :: [GTH.Haskell]
+    params_and_oes_hs_list :: [GTC.Haskell]
     params_and_oes_hs_list =
-      GTH.run_generator $ GTH.add_params_to_list $ GTH.to_hs_wpn_list [oes]
+      GH.run_generator $ GH.add_params_to_list $ GH.to_hs_wpn_list [oes]
 
-instance GTH.ToHsWithIndentLvl T.BigOrCasesFuncExpr where
+instance GTC.ToHsWithIndentLvl T.BigOrCasesFuncExpr where
   to_hs_wil = \case
-    T.BFE1 bfe -> GTH.to_hs_wil (bfe, GTH.NoWhereExpr)
-    T.CFE1 cfe -> GTH.to_hs_wil (cfe, GTH.NoWhereExpr)
+    T.BFE1 bfe -> GTC.to_hs_wil (bfe, GTC.NoWhereExpr)
+    T.CFE1 cfe -> GTC.to_hs_wil (cfe, GTC.NoWhereExpr)
 
-instance GTH.ToHsWithParamNum T.Operand where
+instance GTC.ToHsWithParamNum T.Operand where
   to_hs_wpn = \case
-    T.BOAE2 boae -> P.return $ GTH.to_haskell boae
-    T.PE3 pe -> P.return $ GTH.to_haskell pe
-    T.Underscore3 -> GTH.generate_next_param
+    T.BOAE2 boae -> P.return $ GTC.to_haskell boae
+    T.PE3 pe -> P.return $ GTC.to_haskell pe
+    T.Underscore3 -> GH.generate_next_param
 
-instance GTH.ToHaskell T.Op where
+instance GTC.ToHaskell T.Op where
   to_haskell = \case
-    T.FCO3 fco -> " " ++ GTH.to_haskell fco ++ " "
-    T.OSO oso -> " " ++ GTH.to_haskell oso ++ " "
+    T.FCO3 fco -> " " ++ GTC.to_haskell fco ++ " "
+    T.OSO oso -> " " ++ GTC.to_haskell oso ++ " "
 
-instance GTH.ToHaskell T.FuncCompOp where
+instance GTC.ToHaskell T.FuncCompOp where
   to_haskell = \case
     T.RightComp -> ".>"
     T.LeftComp -> "<."
 
-instance GTH.ToHaskell T.OptionalSpacesOp where
+instance GTC.ToHaskell T.OptionalSpacesOp where
   to_haskell = \case
     T.RightApp -> "&>"
     T.LeftApp -> "<&"
@@ -367,167 +370,167 @@ instance GTH.ToHaskell T.OptionalSpacesOp where
 
 -- Values: FuncExpr
 
-instance GTH.ToHsWithIndentLvl (T.FuncExpr, GTH.PossiblyWhereExpr) where
+instance GTC.ToHsWithIndentLvl (T.FuncExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil = \(fe, pwe) -> case fe of
-    T.LFE4 lfe -> GTH.to_hs_wil (lfe, pwe)
-    T.BFE2 bfe -> GTH.to_hs_wil (bfe, pwe)
-    T.CFE2 cfe -> GTH.to_hs_wil (cfe, pwe)
+    T.LFE4 lfe -> GTC.to_hs_wil (lfe, pwe)
+    T.BFE2 bfe -> GTC.to_hs_wil (bfe, pwe)
+    T.CFE2 cfe -> GTC.to_hs_wil (cfe, pwe)
 
-instance GTH.ToHaskell T.LineFuncExpr where
+instance GTC.ToHaskell T.LineFuncExpr where
   to_haskell = \(T.LFE (params, lfb)) ->
-    GTH.to_haskell (GTH.Whole params) ++ " " ++ GTH.to_haskell lfb
+    GTC.to_haskell (GTC.Whole params) ++ " " ++ GTC.to_haskell lfb
 
-instance GTH.ToHsWithIndentLvl (T.LineFuncExpr, GTH.PossiblyWhereExpr) where
+instance GTC.ToHsWithIndentLvl (T.LineFuncExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil = \(lfe@(T.LFE (params, lfb)), pwe) ->
     case pwe of
-      GTH.NoWhereExpr -> P.return $ GTH.to_haskell lfe
-      GTH.HasWhereExpr we ->
-        (GTH.to_haskell (GTH.Whole params) ++ "\n") ++> GTH.to_hs_wil we >++<
-        GTH.indent <++ GTH.to_haskell lfb
+      GTC.NoWhereExpr -> P.return $ GTC.to_haskell lfe
+      GTC.HasWhereExpr we ->
+        (GTC.to_haskell (GTC.Whole params) ++ "\n") ++> GTC.to_hs_wil we >++<
+        GH.indent <++ GTC.to_haskell lfb
 
-instance GTH.ToHsWithIndentLvl (T.BigFuncExpr, GTH.PossiblyWhereExpr) where
+instance GTC.ToHsWithIndentLvl (T.BigFuncExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil (T.BFE (params, bfb), pwe) =
-    params_hs ++> GTH.to_hs_wil pwe >++< GTH.to_hs_wil bfb
+    params_hs ++> GTC.to_hs_wil pwe >++< GTC.to_hs_wil bfb
     where
-    params_hs :: GTH.Haskell
-    params_hs = GTH.to_haskell (GTH.Whole params) ++ "\n"
+    params_hs :: GTC.Haskell
+    params_hs = GTC.to_haskell (GTC.Whole params) ++ "\n"
 
-instance GTH.ToHaskell GTH.WholeParams where
-  to_haskell = \(GTH.Whole params) -> "\\" ++ GTH.to_haskell params ++ " ->"
+instance GTC.ToHaskell GTC.WholeParams where
+  to_haskell = \(GTC.Whole params) -> "\\" ++ GTC.to_haskell params ++ " ->"
 
-instance GTH.ToHaskell T.Parameters where
+instance GTC.ToHaskell T.Parameters where
   to_haskell = \case
-    T.ParamId id -> GTH.to_haskell id
+    T.ParamId id -> GTC.to_haskell id
     T.Star1 -> "_"
     T.Params (params, params_l) ->
-      "(" ++ GTH.to_haskell params ++ GTH.to_hs_prepend_list ", " params_l ++ ")"
+      "(" ++ GTC.to_haskell params ++ GH.to_hs_prepend_list ", " params_l ++ ")"
 
-instance GTH.ToHaskell T.LineFuncBody where
+instance GTC.ToHaskell T.LineFuncBody where
   to_haskell = \case
-    T.BOAE3 boae -> GTH.to_haskell boae
-    T.LOE4 loe -> GTH.to_haskell loe
-    T.LFE5 lfe -> "(" ++ GTH.to_haskell lfe ++ ")"
+    T.BOAE3 boae -> GTC.to_haskell boae
+    T.LOE4 loe -> GTC.to_haskell loe
+    T.LFE5 lfe -> "(" ++ GTC.to_haskell lfe ++ ")"
 
-instance GTH.ToHsWithIndentLvl T.BigFuncBody where
+instance GTC.ToHsWithIndentLvl T.BigFuncBody where
   to_hs_wil = \case
-    T.BOAE4 boae -> GTH.indent <++ GTH.to_haskell boae
-    T.OE1 oe -> GTH.to_hs_wil oe
-    T.LFE6 lfe -> GTH.indent <++ ("(" ++ GTH.to_haskell lfe ++ ")")
+    T.BOAE4 boae -> GH.indent <++ GTC.to_haskell boae
+    T.OE1 oe -> GTC.to_hs_wil oe
+    T.LFE6 lfe -> GH.indent <++ ("(" ++ GTC.to_haskell lfe ++ ")")
 
-instance GTH.ToHsWithIndentLvl (T.CasesFuncExpr, GTH.PossiblyWhereExpr) where
+instance GTC.ToHsWithIndentLvl (T.CasesFuncExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil (T.CFE (cps, cs, maybe_ec), pwe) =
-    params_hs ++> GTH.to_hs_wil pwe >++<
-    GTH.indent <++ case_of_hs >++<
-    GTH.deeper (GTH.to_hs_wil (cs, maybe_ec))
+    params_hs ++> GTC.to_hs_wil pwe >++<
+    GH.indent <++ case_of_hs >++<
+    GH.deeper (GTC.to_hs_wil (cs, maybe_ec))
     where
-    (params_hs, case_of_hs) = GTH.run_generator params_and_case_of_hs_gen
-      :: (GTH.Haskell, GTH.Haskell)
+    (params_hs, case_of_hs) = GH.run_generator params_and_case_of_hs_gen
+      :: (GTC.Haskell, GTC.Haskell)
 
-    params_and_case_of_hs_gen :: GTH.WithParamNum (GTH.Haskell, GTH.Haskell)
+    params_and_case_of_hs_gen :: GTC.WithParamNum (GTC.Haskell, GTC.Haskell)
     params_and_case_of_hs_gen =
-      GTH.to_hs_wpn cps >>= \cps_hs ->
-      GTH.case_of_inner_hs_gen >>= \case_of_inner_hs ->
+      GTC.to_hs_wpn cps >>= \cps_hs ->
+      GH.case_of_inner_hs_gen >>= \case_of_inner_hs ->
       P.return $
         ("\\" ++ cps_hs ++ " ->\n", "case " ++ case_of_inner_hs ++ " of")
 
-instance GTH.ToHsWithIndentLvl ([T.Case], P.Maybe T.EndCase) where
+instance GTC.ToHsWithIndentLvl ([T.Case], P.Maybe T.EndCase) where
   to_hs_wil = \(cs, maybe_ec) ->
-    GTH.to_hs_wil_list cs >$> P.concat >++< GTH.to_hs_wil maybe_ec
+    GH.to_hs_wil_list cs >$> P.concat >++< GTC.to_hs_wil maybe_ec
 
-instance GTH.ToHsWithParamNum T.CasesParams where
+instance GTC.ToHsWithParamNum T.CasesParams where
   to_hs_wpn = \case
-    T.CParamId id -> P.return $ GTH.to_haskell id
-    T.QuestionMark -> GTH.generate_next_param
+    T.CParamId id -> P.return $ GTC.to_haskell id
+    T.QuestionMark -> GH.generate_next_param
     T.Star2 -> P.return "_"
     T.CParams (cps, cps_l) ->
-      GTH.to_hs_wpn_list (cps : cps_l) >$> \cps_l_hs ->
+      GH.to_hs_wpn_list (cps : cps_l) >$> \cps_l_hs ->
       "(" ++ L.intercalate ", " cps_l_hs ++ ")"
 
-instance GTH.ToHsWithIndentLvl T.Case where
+instance GTC.ToHsWithIndentLvl T.Case where
   to_hs_wil = \(T.Ca (om, cb)) ->
-    "\n" ++> GTH.indent <++ (GTH.to_haskell om ++ " ->") >++<
-    GTH.deeper (GTH.to_hs_wil cb)
+    "\n" ++> GH.indent <++ (GTC.to_haskell om ++ " ->") >++<
+    GH.deeper (GTC.to_hs_wil cb)
 
-instance GTH.ToHsWithIndentLvl T.EndCase where
+instance GTC.ToHsWithIndentLvl T.EndCase where
   to_hs_wil = \(T.EC (ecp, cb)) ->
-    "\n" ++> GTH.indent <++ (GTH.to_haskell ecp ++ " ->") >++<
-    GTH.deeper (GTH.to_hs_wil cb)
+    "\n" ++> GH.indent <++ (GTC.to_haskell ecp ++ " ->") >++<
+    GH.deeper (GTC.to_hs_wil cb)
 
-instance GTH.ToHaskell T.OuterMatching where
+instance GTC.ToHaskell T.OuterMatching where
   to_haskell = \case
-    T.SId3 sid -> GTH.to_haskell sid
-    T.M1 m -> GTH.to_haskell (GTH.NoParen, m)
+    T.SId3 sid -> GTC.to_haskell sid
+    T.M1 m -> GTC.to_haskell (GTC.NoParen, m)
 
-instance GTH.ToHaskell T.EndCaseParam where
+instance GTC.ToHaskell T.EndCaseParam where
   to_haskell = \case
-    T.Id1 id -> GTH.to_haskell id
+    T.Id1 id -> GTC.to_haskell id
     T.Ellipsis -> "_"
 
-instance GTH.ToHaskell (GTH.NeedsParenBool, T.Matching) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.Matching) where
   to_haskell = \(needs_paren, m) -> case m of
-    T.Lit2 lit -> GTH.to_haskell (GTH.NoAnnot, lit)
+    T.Lit2 lit -> GTC.to_haskell (GTC.NoAnnot, lit)
     T.PFM (pf, im) ->
-      GTH.in_paren_if needs_paren $
-        GTH.to_haskell pf ++ " " ++ GTH.to_haskell (GTH.Paren, im)
-    T.TM1 tm -> GTH.to_haskell tm
-    T.LM1 lm -> GTH.to_haskell lm
+      GH.in_paren_if needs_paren $
+        GTC.to_haskell pf ++ " " ++ GTC.to_haskell (GTC.Paren, im)
+    T.TM1 tm -> GTC.to_haskell tm
+    T.LM1 lm -> GTC.to_haskell lm
 
-instance GTH.ToHaskell (GTH.NeedsParenBool, T.InnerMatching) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.InnerMatching) where
   to_haskell = \(needs_paren, im) -> case im of
     T.Star -> "_"
-    T.Id2 id -> GTH.to_haskell id
-    T.M2 m -> GTH.to_haskell (needs_paren, m)
+    T.Id2 id -> GTC.to_haskell id
+    T.M2 m -> GTC.to_haskell (needs_paren, m)
 
-instance GTH.ToHaskell T.TupleMatching where
+instance GTC.ToHaskell T.TupleMatching where
   to_haskell (T.TM (im, im_l)) =
     "(" ++ ims_hs ++ ")"
     where
-    ims_hs :: GTH.Haskell
+    ims_hs :: GTC.Haskell
     ims_hs =
-      (im : im_l) &> P.map (\im -> GTH.to_haskell (GTH.NoParen, im)) &>
+      (im : im_l) &> P.map (\im -> GTC.to_haskell (GTC.NoParen, im)) &>
       L.intercalate ", "
 
-instance GTH.ToHaskell T.ListMatching where
+instance GTC.ToHaskell T.ListMatching where
   to_haskell (T.LM m_list_internals) =
     case m_list_internals of
       P.Nothing -> "[]"
       P.Just (im, im_l, P.Nothing) -> "[" ++ commas_ims_hs (im, im_l) ++ "]"
       P.Just (im, im_l, P.Just rlm) ->
-        colons_ims_hs (im, im_l) ++ GTH.to_haskell rlm
+        colons_ims_hs (im, im_l) ++ GTC.to_haskell rlm
     where
-    commas_ims_hs :: (T.InnerMatching, [T.InnerMatching]) -> GTH.Haskell
+    commas_ims_hs :: (T.InnerMatching, [T.InnerMatching]) -> GTC.Haskell
     commas_ims_hs = \(im, im_l) ->
-      (im : im_l) &> P.map (\im -> GTH.to_haskell (GTH.NoParen, im)) &>
+      (im : im_l) &> P.map (\im -> GTC.to_haskell (GTC.NoParen, im)) &>
       L.intercalate ", "
 
-    colons_ims_hs :: (T.InnerMatching, [T.InnerMatching]) -> GTH.Haskell
+    colons_ims_hs :: (T.InnerMatching, [T.InnerMatching]) -> GTC.Haskell
     colons_ims_hs = \(im, im_l) ->
-      (im : im_l) &> P.map (\im -> GTH.to_haskell (GTH.Paren, im)) &>
+      (im : im_l) &> P.map (\im -> GTC.to_haskell (GTC.Paren, im)) &>
       P.concatMap (++ " : ")
 
 
-instance GTH.ToHaskell T.RestListMatching where
+instance GTC.ToHaskell T.RestListMatching where
   to_haskell = \(T.RLM msid) ->
     case msid of
       P.Nothing -> "_"
-      P.Just sid -> GTH.to_haskell sid
+      P.Just sid -> GTC.to_haskell sid
 
-instance GTH.ToHsWithIndentLvl T.CaseBody where
+instance GTC.ToHsWithIndentLvl T.CaseBody where
   to_hs_wil = \case
-    T.LFB1 lfb -> P.return $ " " ++ GTH.to_haskell lfb
+    T.LFB1 lfb -> P.return $ " " ++ GTC.to_haskell lfb
     T.BFB1 (bfb, maybe_we) ->
-      "\n" ++> GTH.to_hs_wil maybe_we >++< GTH.to_hs_wil bfb
+      "\n" ++> GTC.to_hs_wil maybe_we >++< GTC.to_hs_wil bfb
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
-instance GTH.ToHsWithIndentLvl T.ValueDef where
+instance GTC.ToHsWithIndentLvl T.ValueDef where
   to_hs_wil (T.VD (id, t, ve, maybe_we)) =
-    GTH.indent <++ (GTH.to_haskell id ++ " :: ") >++<
-    (forall_hs <$> MS.get) <++ (GTH.to_haskell t ++ "\n") >++<
-    GTH.indent <++ (GTH.to_haskell id ++ " =\n") >++<
-    GTH.deeper (GTH.to_hs_wil (ve, GTH.mwe_to_pwe maybe_we))
+    GH.indent <++ (GTC.to_haskell id ++ " :: ") >++<
+    (forall_hs <$> MS.get) <++ (GTC.to_haskell t ++ "\n") >++<
+    GH.indent <++ (GTC.to_haskell id ++ " =\n") >++<
+    GH.deeper (GTC.to_hs_wil (ve, GH.mwe_to_pwe maybe_we))
     where
-    forall_hs :: P.Int -> GTH.Haskell
+    forall_hs :: P.Int -> GTC.Haskell
     forall_hs = \case
       0 ->
         case P.concatMap (" " ++) param_t_vars_hs_list of
@@ -535,22 +538,22 @@ instance GTH.ToHsWithIndentLvl T.ValueDef where
           hs -> "forall" ++ hs ++ ". "
       _ -> ""
 
-    param_t_vars_hs_list :: [GTH.Haskell]
-    param_t_vars_hs_list = C.param_t_vars t &> P.map GTH.to_haskell
+    param_t_vars_hs_list :: [GTC.Haskell]
+    param_t_vars_hs_list = C.param_t_vars t &> P.map GTC.to_haskell
 
-instance GTH.ToHsWithIndentLvl (T.ValueExpr, GTH.PossiblyWhereExpr) where
+instance GTC.ToHsWithIndentLvl (T.ValueExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil = \(ve, pwe) -> case ve of
-    T.FE2 fe -> GTH.indent >++< GTH.to_hs_wil (fe, pwe)
+    T.FE2 fe -> GH.indent >++< GTC.to_hs_wil (fe, pwe)
     _ ->
-      GTH.to_hs_wil pwe >++< case ve of
-        T.BOAE5 boae -> GTH.indent <++ GTH.to_haskell boae
-        T.OE2 oe -> GTH.to_hs_wil oe
-        T.BT1 bt -> GTH.to_hs_wil bt
-        T.BL1 bl -> GTH.to_hs_wil bl
+      GTC.to_hs_wil pwe >++< case ve of
+        T.BOAE5 boae -> GH.indent <++ GTC.to_haskell boae
+        T.OE2 oe -> GTC.to_hs_wil oe
+        T.BT1 bt -> GTC.to_hs_wil bt
+        T.BL1 bl -> GTC.to_hs_wil bl
 
-instance GTH.ToHsWithIndentLvl T.GroupedValueDefs where
+instance GTC.ToHsWithIndentLvl T.GroupedValueDefs where
   to_hs_wil (T.GVDs (id, ids, ts, les, les_l)) =
-    GTH.to_hs_wil_list vd_list >$> L.intercalate "\n\n"
+    GH.to_hs_wil_list vd_list >$> L.intercalate "\n\n"
     where
     vd_list :: [T.ValueDef]
     vd_list = to_val_def_list (total_ids, t_list, total_le_list)
@@ -582,41 +585,41 @@ instance GTH.ToHsWithIndentLvl T.GroupedValueDefs where
       T.LOE2 loe -> T.OE2 $ T.LOE3 loe
       T.LFE2 lfe -> T.FE2 $ T.LFE4 lfe
 
-instance GTH.ToHsWithIndentLvl T.WhereExpr where
+instance GTC.ToHsWithIndentLvl T.WhereExpr where
   to_hs_wil (T.WE (wde, wdes)) =
-    GTH.indent <++ "let\n" >++<
-    (GTH.to_hs_wil_list (wde : wdes) >$> L.intercalate "\n\n") <++ "\n" >++<
-    GTH.indent <++ "in\n"
+    GH.indent <++ "let\n" >++<
+    (GH.to_hs_wil_list (wde : wdes) >$> L.intercalate "\n\n") <++ "\n" >++<
+    GH.indent <++ "in\n"
 
-instance GTH.ToHsWithIndentLvl T.WhereDefExpr where
+instance GTC.ToHsWithIndentLvl T.WhereDefExpr where
   to_hs_wil = \case
-    T.VD1 vd -> GTH.to_hs_wil vd
-    T.GVDs1 gvd -> GTH.to_hs_wil gvd
+    T.VD1 vd -> GTC.to_hs_wil vd
+    T.GVDs1 gvd -> GTC.to_hs_wil gvd
 
 -- Type
 
-instance GTH.ToHaskell T.Type where
+instance GTC.ToHaskell T.Type where
   to_haskell = \(T.Ty (maybe_c, st)) ->
-    GTH.to_haskell maybe_c ++ GTH.to_haskell (GTH.NoParen, st)
+    GTC.to_haskell maybe_c ++ GTC.to_haskell (GTC.NoParen, st)
 
-instance GTH.ToHaskell (GTH.NeedsParenBool, T.SimpleType) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.SimpleType) where
   to_haskell = \(needs_paren, st) -> case st of
-    T.PTV1 ptv -> GTH.to_haskell ptv
-    T.TAIOA1 taioa -> GTH.to_haskell (needs_paren, taioa)
-    T.PoT1 pt -> GTH.to_haskell pt
-    T.PT1 pt -> GTH.to_haskell pt
-    T.FT1 ft -> GTH.in_paren_if needs_paren $ GTH.to_haskell ft
+    T.PTV1 ptv -> GTC.to_haskell ptv
+    T.TAIOA1 taioa -> GTC.to_haskell (needs_paren, taioa)
+    T.PoT1 pt -> GTC.to_haskell pt
+    T.PT1 pt -> GTC.to_haskell pt
+    T.FT1 ft -> GH.in_paren_if needs_paren $ GTC.to_haskell ft
 
-instance GTH.ToHaskell T.TypeId where
+instance GTC.ToHaskell T.TypeId where
   to_haskell = \(T.TId str) -> str
 
-instance GTH.ToHaskell T.ParamTVar where
+instance GTC.ToHaskell T.ParamTVar where
   to_haskell = \(T.PTV i) -> GPH.param_t_var_prefix ++ P.show i
 
-instance GTH.ToHaskell T.AdHocTVar where
+instance GTC.ToHaskell T.AdHocTVar where
   to_haskell = \(T.AHTV c) -> GPH.ad_hoc_t_var_prefix ++ P.show (CH.ord c - 65)
 
-instance GTH.ToHaskell (GTH.NeedsParenBool, T.TypeAppIdOrAHTV) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
   to_haskell (needs_paren, T.TAIOA taioa) = case taioa of
     (P.Nothing, T.TIdStart1 (T.TId tid, []), P.Nothing) ->
       tid &> \case
@@ -625,411 +628,411 @@ instance GTH.ToHaskell (GTH.NeedsParenBool, T.TypeAppIdOrAHTV) where
         "Real" -> GPH.double
         "Char" -> GPH.char
         "String" -> GPH.string
-        _ -> GTH.to_haskell tid
+        _ -> GTC.to_haskell tid
 
     (mtip1, taioam, mtip2) -> case taioam of
       T.AHTV2 ahtv ->
-        in_paren_if_needed (GTH.to_haskell ahtv) tip_hs
+        in_paren_if_needed (GTC.to_haskell ahtv) tip_hs
         where
-        tip_hs :: GTH.Haskell
-        tip_hs = GTH.to_haskell mtip1 ++ GTH.to_haskell mtip2
+        tip_hs :: GTC.Haskell
+        tip_hs = GTC.to_haskell mtip1 ++ GTC.to_haskell mtip2
 
       T.TIdStart1 (tid, tip_str_pairs) ->
         in_paren_if_needed tid_hs tip_hs
         where
-        tid_hs :: GTH.Haskell
+        tid_hs :: GTC.Haskell
         tid_hs =
-          GTH.maybe_prefix_args_hs GPH.upper_prefix mtip1 ++ GTH.to_haskell tid ++
-          GTH.args_strs_hs tip_str_pairs ++ GTH.single_quotes_hs mtip2
+          GH.maybe_prefix_args_hs GPH.upper_prefix mtip1 ++ GTC.to_haskell tid ++
+          GH.args_strs_hs tip_str_pairs ++ GH.single_quotes_hs mtip2
 
-        tip_hs :: GTH.Haskell
+        tip_hs :: GTC.Haskell
         tip_hs =
-          GTH.to_haskell mtip1 ++ GTH.to_haskell (P.map P.fst tip_str_pairs) ++
-          GTH.to_haskell mtip2
+          GTC.to_haskell mtip1 ++ GTC.to_haskell (P.map P.fst tip_str_pairs) ++
+          GTC.to_haskell mtip2
       where
-      in_paren_if_needed :: GTH.Haskell -> GTH.Haskell -> GTH.Haskell
+      in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
       in_paren_if_needed = \hs tip_hs ->
         case tip_hs of
           "" -> hs
-          _ -> GTH.in_paren_if needs_paren $ hs ++ tip_hs
+          _ -> GH.in_paren_if needs_paren $ hs ++ tip_hs
 
-instance GTH.ToHaskell T.TypesInParen where
+instance GTC.ToHaskell T.TypesInParen where
   to_haskell = \(T.TIP (st, sts)) ->
-    GTH.to_hs_prepend_list " " $ P.map (\st -> (GTH.Paren, st)) $ st : sts
+    GH.to_hs_prepend_list " " $ P.map (\st -> (GTC.Paren, st)) $ st : sts
 
-instance GTH.ToHaskell T.ProdType where
+instance GTC.ToHaskell T.ProdType where
   to_haskell = \(T.PT (ft, fts)) ->
-    "(" ++ ((ft : fts) &> P.map GTH.to_haskell &> L.intercalate ", ") ++ ")"
+    "(" ++ ((ft : fts) &> P.map GTC.to_haskell &> L.intercalate ", ") ++ ")"
 
-instance GTH.ToHaskell T.FieldType where
+instance GTC.ToHaskell T.FieldType where
   to_haskell = \case
-    T.PBT1 ft -> GTH.to_haskell ft
-    T.PoT2 pt -> GTH.to_haskell pt
+    T.PBT1 ft -> GTC.to_haskell ft
+    T.PoT2 pt -> GTC.to_haskell pt
 
-instance GTH.ToHaskell T.PowerBaseType where
+instance GTC.ToHaskell T.PowerBaseType where
   to_haskell = \case
-    T.PTV2 ptv -> GTH.to_haskell ptv
-    T.TAIOA2 taioa -> GTH.to_haskell (GTH.NoParen, taioa)
-    T.IPT ipt -> GTH.to_haskell ipt
+    T.PTV2 ptv -> GTC.to_haskell ptv
+    T.TAIOA2 taioa -> GTC.to_haskell (GTC.NoParen, taioa)
+    T.IPT ipt -> GTC.to_haskell ipt
 
-instance GTH.ToHaskell T.InParenT where
+instance GTC.ToHaskell T.InParenT where
   to_haskell = \case
-    T.PT3 pt -> GTH.to_haskell pt
-    T.PoT3 pt -> GTH.to_haskell pt
-    T.FT3 ft -> GTH.to_haskell ft
+    T.PT3 pt -> GTC.to_haskell pt
+    T.PoT3 pt -> GTC.to_haskell pt
+    T.FT3 ft -> GTC.to_haskell ft
 
-instance GTH.ToHaskell T.PowerType where
+instance GTC.ToHaskell T.PowerType where
   to_haskell = \(T.PoT (ft, i)) ->
     "(" ++
-    (L.replicate (P.fromIntegral i) ft &> P.map GTH.to_haskell &> L.intercalate ", ") ++
+    (L.replicate (P.fromIntegral i) ft &> P.map GTC.to_haskell &> L.intercalate ", ") ++
     ")"
 
-instance GTH.ToHaskell T.FuncType where
+instance GTC.ToHaskell T.FuncType where
   to_haskell = \(T.FT (it, ot)) ->
-    GTH.to_haskell it ++ " -> " ++ GTH.to_haskell ot
+    GTC.to_haskell it ++ " -> " ++ GTC.to_haskell ot
 
-instance GTH.ToHaskell T.InOrOutType where
+instance GTC.ToHaskell T.InOrOutType where
   to_haskell = \case
-    T.PTV3 ptv -> GTH.to_haskell ptv
-    T.TAIOA3 taioa -> GTH.to_haskell (GTH.NoParen, taioa)
-    T.PoT4 pt -> GTH.to_haskell pt
-    T.PT2 pt -> GTH.to_haskell pt
-    T.FT2 ft -> "(" ++ GTH.to_haskell ft ++ ")"
+    T.PTV3 ptv -> GTC.to_haskell ptv
+    T.TAIOA3 taioa -> GTC.to_haskell (GTC.NoParen, taioa)
+    T.PoT4 pt -> GTC.to_haskell pt
+    T.PT2 pt -> GTC.to_haskell pt
+    T.FT2 ft -> "(" ++ GTC.to_haskell ft ++ ")"
 
-instance GTH.ToHaskell T.Condition where
-  to_haskell = \(T.Co pn) -> GTH.to_haskell pn ++ " => "
+instance GTC.ToHaskell T.Condition where
+  to_haskell = \(T.Co pn) -> GTC.to_haskell pn ++ " => "
 
 -- TypeDef, TypeNickname
 
-instance GTH.ToHaskell T.TypeDef where
+instance GTC.ToHaskell T.TypeDef where
   to_haskell = \case
-    T.TTD1 ttd -> GTH.to_haskell ttd
-    T.OTD1 otd -> GTH.to_haskell otd
+    T.TTD1 ttd -> GTC.to_haskell ttd
+    T.OTD1 otd -> GTC.to_haskell otd
 
-instance GTH.ToHaskell T.TupleTypeDef where
+instance GTC.ToHaskell T.TupleTypeDef where
   to_haskell (T.TTD (tn, popt, T.PCSIs (si, sis))) =
     data_hs ++ "\n\n" ++ instance_hs ++ "\n" ++
     change_types_hs ++ change_defs_hs
     where
-    data_hs :: GTH.Haskell
+    data_hs :: GTC.Haskell
     data_hs =
       "data " ++ tn_hs ++ " =\n  " ++ cons_hs ++
       " { " ++ projections_and_types_hs ++ " }"
 
-    instance_hs :: GTH.Haskell
+    instance_hs :: GTC.Haskell
     instance_hs =
       "instance FromTuple" ++ size_hs ++ types_hs ++ " " ++
-      GTH.to_haskell (GTH.Paren, tn) ++ " where\n" ++
+      GTC.to_haskell (GTC.Paren, tn) ++ " where\n" ++
       "  ft" ++ size_hs ++
       " = \\(" ++ L.intercalate ", " params_list ++ ") -> " ++
       cons_hs ++ P.concatMap (" " ++) params_list
 
-    change_types_hs :: GTH.Haskell
-    change_types_hs = GTH.combine_with_ts change_hs_list change_types_hs_list
+    change_types_hs :: GTC.Haskell
+    change_types_hs = GH.combine_with_ts change_hs_list change_types_hs_list
 
-    change_defs_hs :: GTH.Haskell
-    change_defs_hs = GTH.combine_with_defs change_hs_list sid_hs_list
+    change_defs_hs :: GTC.Haskell
+    change_defs_hs = GH.combine_with_defs change_hs_list sid_hs_list
 
-    sid_hs_list :: [GTH.Haskell]
-    sid_hs_list = P.map GTH.to_haskell $ si : sis
+    sid_hs_list :: [GTC.Haskell]
+    sid_hs_list = P.map GTC.to_haskell $ si : sis
 
-    change_hs_list :: [GTH.Haskell]
+    change_hs_list :: [GTC.Haskell]
     change_hs_list = P.map (GPH.change_prefix ++) sid_hs_list
 
-    change_types_hs_list :: [GTH.Haskell]
+    change_types_hs_list :: [GTC.Haskell]
     change_types_hs_list = P.map to_change_type [0..4]
 
-    to_change_type :: P.Int -> GTH.Haskell
+    to_change_type :: P.Int -> GTC.Haskell
     to_change_type = \i ->
       (types_hs_list !! i) ++ " -> " ++ tn_hs  ++ " -> " ++ tn_hs
 
-    tn_hs :: GTH.Haskell
-    tn_hs = GTH.to_haskell (GTH.NoParen, tn)
+    tn_hs :: GTC.Haskell
+    tn_hs = GTC.to_haskell (GTC.NoParen, tn)
 
     types_list :: [T.SimpleType]
     types_list = case popt of
-      T.PT4 (T.PT (ft, fts)) -> P.map GTH.ft_to_st $ ft : fts
-      T.PoT5 (T.PoT (pbt, i)) -> L.replicate (P.fromIntegral i) $ GTH.pbt_to_st pbt
+      T.PT4 (T.PT (ft, fts)) -> P.map GH.ft_to_st $ ft : fts
+      T.PoT5 (T.PoT (pbt, i)) -> L.replicate (P.fromIntegral i) $ GH.pbt_to_st pbt
 
-    types_hs_list :: [GTH.Haskell]
-    types_hs_list = P.map (\st -> GTH.to_haskell (GTH.NoParen, st)) types_list
+    types_hs_list :: [GTC.Haskell]
+    types_hs_list = P.map (\st -> GTC.to_haskell (GTC.NoParen, st)) types_list
 
-    types_hs :: GTH.Haskell
-    types_hs = P.concatMap (\st -> " " ++ GTH.to_haskell (GTH.Paren, st)) types_list
+    types_hs :: GTC.Haskell
+    types_hs = P.concatMap (\st -> " " ++ GTC.to_haskell (GTC.Paren, st)) types_list
 
     size :: P.Int
     size = P.length types_hs_list
 
-    size_hs :: GTH.Haskell
+    size_hs :: GTC.Haskell
     size_hs = P.show size
 
-    projections_and_types_hs :: GTH.Haskell
+    projections_and_types_hs :: GTC.Haskell
     projections_and_types_hs =
       P.zipWith (\a b -> a ++ " :: " ++ b) sid_hs_list types_hs_list &>
       L.intercalate ", "
 
-    cons_hs :: GTH.Haskell
-    cons_hs = GTH.tn_to_cons_hs tn
+    cons_hs :: GTC.Haskell
+    cons_hs = GH.tn_to_cons_hs tn
 
-    params_list :: [GTH.Haskell]
+    params_list :: [GTC.Haskell]
     params_list = [1..size] &> P.map (\i -> "x" ++ P.show i)
 
-instance GTH.ToHaskell T.ProdOrPowerType where
+instance GTC.ToHaskell T.ProdOrPowerType where
   to_haskell = \case
-    T.PT4 pt -> GTH.to_haskell pt
-    T.PoT5 pt -> GTH.to_haskell pt
+    T.PT4 pt -> GTC.to_haskell pt
+    T.PoT5 pt -> GTC.to_haskell pt
 
-instance GTH.ToHaskell (GTH.NeedsParenBool, T.TypeName) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeName) where
   to_haskell (needs_paren, tn@(T.TN (mpvip1, _, pvip_str_pairs, mpvip2))) =
     case pvips_hs of
-      "" -> GTH.tn_to_tid_hs tn
-      _ -> GTH.in_paren_if needs_paren $ GTH.tn_to_tid_hs tn ++ pvips_hs
+      "" -> GH.tn_to_tid_hs tn
+      _ -> GH.in_paren_if needs_paren $ GH.tn_to_tid_hs tn ++ pvips_hs
     where
-    pvips_hs :: GTH.Haskell
+    pvips_hs :: GTC.Haskell
     pvips_hs =
-      GTH.to_haskell mpvip1 ++ GTH.to_haskell pvips ++ GTH.to_haskell mpvip2
+      GTC.to_haskell mpvip1 ++ GTC.to_haskell pvips ++ GTC.to_haskell mpvip2
 
     pvips :: [T.ParamVarsInParen]
     pvips = P.map P.fst pvip_str_pairs
 
-instance GTH.ToHaskell T.ParamVarsInParen where
-  to_haskell = \(T.PVIP (ptv, ptvs)) -> GTH.to_hs_prepend_list " " $ ptv : ptvs
+instance GTC.ToHaskell T.ParamVarsInParen where
+  to_haskell = \(T.PVIP (ptv, ptvs)) -> GH.to_hs_prepend_list " " $ ptv : ptvs
 
-instance GTH.ToHaskell T.OrTypeDef where
+instance GTC.ToHaskell T.OrTypeDef where
   to_haskell (T.OTD (tn, pv, pvs)) =
-    "data " ++ GTH.to_haskell (GTH.NoParen, tn) ++ " =\n  " ++
-    (P.map GTH.to_haskell (pv : pvs) &> L.intercalate " |\n  ")
+    "data " ++ GTC.to_haskell (GTC.NoParen, tn) ++ " =\n  " ++
+    (P.map GTC.to_haskell (pv : pvs) &> L.intercalate " |\n  ")
 
-instance GTH.ToHaskell T.PossibleValue where
+instance GTC.ToHaskell T.PossibleValue where
   to_haskell = \(T.PV (sid, maybe_with_val)) ->
-    GPH.constructor_prefix ++ GTH.to_haskell sid ++ case maybe_with_val of
+    GPH.constructor_prefix ++ GTC.to_haskell sid ++ case maybe_with_val of
       P.Nothing -> ""
-      P.Just (id, st) -> " " ++ GTH.to_haskell (GTH.Paren, st)
+      P.Just (id, st) -> " " ++ GTC.to_haskell (GTC.Paren, st)
 
-instance GTH.ToHaskell T.TypeNickname where
+instance GTC.ToHaskell T.TypeNickname where
   to_haskell = \(T.TNN (tn, st)) ->
-    "type " ++ GTH.to_haskell (GTH.NoParen, tn) ++ " = " ++
-    GTH.to_haskell (GTH.NoParen, st)
+    "type " ++ GTC.to_haskell (GTC.NoParen, tn) ++ " = " ++
+    GTC.to_haskell (GTC.NoParen, st)
 
 -- TypePropDef
 
-instance GTH.ToHaskell T.TypePropDef where
+instance GTC.ToHaskell T.TypePropDef where
   to_haskell = \case
-    T.APD1 apd -> GTH.to_haskell apd
-    T.RPD1 rpd -> GTH.to_haskell rpd
+    T.APD1 apd -> GTC.to_haskell apd
+    T.RPD1 rpd -> GTC.to_haskell rpd
 
-instance GTH.ToHaskell T.AtomPropDef where
+instance GTC.ToHaskell T.AtomPropDef where
   to_haskell = \(T.APD (pnl, id, st)) ->
-    "class " ++ GTH.to_haskell pnl ++ " where\n  " ++
-    GTH.to_haskell id ++ " :: " ++ GTH.to_haskell (GTH.NoParen, st)
+    "class " ++ GTC.to_haskell pnl ++ " where\n  " ++
+    GTC.to_haskell id ++ " :: " ++ GTC.to_haskell (GTC.NoParen, st)
 
-instance GTH.ToHaskell T.RenamingPropDef where
+instance GTC.ToHaskell T.RenamingPropDef where
   to_haskell = \_ -> ""
 
-instance GTH.ToHaskell T.PropNameLine where
-  to_haskell = \(T.PNL pn) -> GTH.to_haskell pn
+instance GTC.ToHaskell T.PropNameLine where
+  to_haskell = \(T.PNL pn) -> GTC.to_haskell pn
 
-instance GTH.ToHaskell T.PropName where
+instance GTC.ToHaskell T.PropName where
   to_haskell = \case
-    T.NPStart1 np_start -> GTH.to_haskell np_start
-    T.TIPStart tip_start -> GTH.to_haskell tip_start
+    T.NPStart1 np_start -> GTC.to_haskell np_start
+    T.TIPStart tip_start -> GTC.to_haskell tip_start
 
-instance GTH.ToHaskell T.NPStart1 where
+instance GTC.ToHaskell T.NPStart1 where
   to_haskell (c, np_tip_pairs, maybe_np) =
-    [c] ++ GTH.nps_args_hs np_tip_pairs ++ GTH.to_hs_maybe_np maybe_np ++
-    GTH.to_haskell tips
+    [c] ++ GH.nps_args_hs np_tip_pairs ++ GH.to_hs_maybe_np maybe_np ++
+    GTC.to_haskell tips
     where
     tips :: [T.TypesInParen]
     tips = P.map P.snd np_tip_pairs
 
-instance GTH.ToHaskell T.TIPStart where
+instance GTC.ToHaskell T.TIPStart where
   to_haskell (tip_np_pairs, maybe_tip) =
-    GTH.args_nps_hs tip_np_pairs ++ GTH.single_quotes_hs maybe_tip ++
-    GTH.to_haskell tips ++ GTH.to_haskell maybe_tip
+    GH.args_nps_hs tip_np_pairs ++ GH.single_quotes_hs maybe_tip ++
+    GTC.to_haskell tips ++ GTC.to_haskell maybe_tip
     where
     tips :: [T.TypesInParen]
     tips = P.map P.fst tip_np_pairs
 
-instance GTH.ToHaskell T.NamePart where
+instance GTC.ToHaskell T.NamePart where
   to_haskell = \(T.NP str) -> str
 
 -- TypeTheo
 
-instance GTH.ToHaskell T.TypeTheo where
+instance GTC.ToHaskell T.TypeTheo where
   to_haskell (T.TT (pnws_l, maybe_pnws, proof)) =
     "instance " ++ pnws_l_hs ++
-    mpnws_to_hs maybe_pnws ++ " where\n  " ++ GTH.to_haskell proof
+    mpnws_to_hs maybe_pnws ++ " where\n  " ++ GTC.to_haskell proof
     where
-    pnws_l_hs :: GTH.Haskell
+    pnws_l_hs :: GTC.Haskell
     pnws_l_hs = case pnws_l of
       [] -> P.error "to_haskell type_theo: no pnws before arrow"
-      [pnws] -> GTH.to_haskell pnws
-      _ -> P.map GTH.to_haskell pnws_l &> L.intercalate ", " &> \x -> "(" ++ x ++ ")"
+      [pnws] -> GTC.to_haskell pnws
+      _ -> P.map GTC.to_haskell pnws_l &> L.intercalate ", " &> \x -> "(" ++ x ++ ")"
 
     mpnws_to_hs :: P.Maybe T.PropNameWithSubs -> P.String
     mpnws_to_hs = \case
       P.Nothing -> ""
-      P.Just pnws -> " => " ++ GTH.to_haskell pnws
+      P.Just pnws -> " => " ++ GTC.to_haskell pnws
 
-instance GTH.ToHaskell T.PropNameWithSubs where
+instance GTC.ToHaskell T.PropNameWithSubs where
   to_haskell = \case
-    T.NPStart2 np_start -> GTH.to_haskell np_start
-    T.SIPStart sip_start -> GTH.to_haskell sip_start
+    T.NPStart2 np_start -> GTC.to_haskell np_start
+    T.SIPStart sip_start -> GTC.to_haskell sip_start
 
-instance GTH.ToHaskell T.NPStart2 where
+instance GTC.ToHaskell T.NPStart2 where
   to_haskell (c, np_sip_pairs, maybe_np) =
-    GTH.change_prop_hs_if_needed prop_hs ++ GTH.to_haskell sips
+    GH.change_prop_hs_if_needed prop_hs ++ GTC.to_haskell sips
     where
-    prop_hs :: GTH.Haskell
-    prop_hs = [c] ++ GTH.nps_args_hs np_sip_pairs ++ GTH.to_hs_maybe_np maybe_np
+    prop_hs :: GTC.Haskell
+    prop_hs = [c] ++ GH.nps_args_hs np_sip_pairs ++ GH.to_hs_maybe_np maybe_np
 
     sips :: [T.SubsInParen]
     sips = P.map P.snd np_sip_pairs
 
-instance GTH.ToHaskell T.SIPStart where
+instance GTC.ToHaskell T.SIPStart where
   to_haskell (sip_np_pairs, maybe_sip) =
-    GTH.change_prop_hs_if_needed prop_hs ++ GTH.single_quotes_hs maybe_sip ++
-    GTH.to_haskell sips ++ GTH.to_haskell maybe_sip
+    GH.change_prop_hs_if_needed prop_hs ++ GH.single_quotes_hs maybe_sip ++
+    GTC.to_haskell sips ++ GTC.to_haskell maybe_sip
     where
-    prop_hs :: GTH.Haskell
-    prop_hs = GTH.args_nps_hs sip_np_pairs
+    prop_hs :: GTC.Haskell
+    prop_hs = GH.args_nps_hs sip_np_pairs
 
     sips :: [T.SubsInParen]
     sips = P.map P.fst sip_np_pairs
 
-instance GTH.ToHaskell T.SubsInParen where
-  to_haskell = \(T.SIP (tvs, tvss)) -> GTH.to_hs_prepend_list " " $ tvs : tvss
+instance GTC.ToHaskell T.SubsInParen where
+  to_haskell = \(T.SIP (tvs, tvss)) -> GH.to_hs_prepend_list " " $ tvs : tvss
 
-instance GTH.ToHaskell T.TVarSub where
+instance GTC.ToHaskell T.TVarSub where
   to_haskell = \case
-    T.PTV4 tv -> GTH.to_haskell tv
-    T.TAIOAS1 tasoi -> GTH.to_haskell (GTH.Paren, tasoi)
-    T.PoTS1 pts -> GTH.to_haskell pts
-    T.PTS1 pts -> GTH.to_haskell pts
-    T.FTS1 fts -> "(" ++ GTH.to_haskell fts  ++ ")"
+    T.PTV4 tv -> GTC.to_haskell tv
+    T.TAIOAS1 tasoi -> GTC.to_haskell (GTC.Paren, tasoi)
+    T.PoTS1 pts -> GTC.to_haskell pts
+    T.PTS1 pts -> GTC.to_haskell pts
+    T.FTS1 fts -> "(" ++ GTC.to_haskell fts  ++ ")"
 
-instance GTH.ToHaskell (GTH.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
   to_haskell (needs_paren, T.TAIOAS taioas) = case taioas of
     (P.Nothing, T.TIdStart2 (T.TId "Real", []), P.Nothing) -> "Double"
     (P.Nothing, T.TIdStart2 (T.TId "Int", []), P.Nothing) -> "Integer"
     (msouip1, taioasm, msouip2) -> case taioasm of
       T.AHTV3 ahtv ->
-        in_paren_if_needed (GTH.to_haskell ahtv) souip_hs
+        in_paren_if_needed (GTC.to_haskell ahtv) souip_hs
         where
-        souip_hs :: GTH.Haskell
-        souip_hs = GTH.to_haskell msouip1 ++ GTH.to_haskell msouip2
+        souip_hs :: GTC.Haskell
+        souip_hs = GTC.to_haskell msouip1 ++ GTC.to_haskell msouip2
 
       T.TIdStart2 (tid, souip_str_pairs) ->
         in_paren_if_needed tid_hs souip_hs
         where
-        tid_hs :: GTH.Haskell
+        tid_hs :: GTC.Haskell
         tid_hs =
-          GTH.maybe_prefix_args_hs GPH.upper_prefix msouip1 ++ GTH.to_haskell tid ++
-          GTH.args_strs_hs souip_str_pairs ++ GTH.single_quotes_hs msouip2
+          GH.maybe_prefix_args_hs GPH.upper_prefix msouip1 ++ GTC.to_haskell tid ++
+          GH.args_strs_hs souip_str_pairs ++ GH.single_quotes_hs msouip2
 
-        souip_hs :: GTH.Haskell
+        souip_hs :: GTC.Haskell
         souip_hs =
-          GTH.to_haskell msouip1 ++ GTH.to_haskell (P.map P.fst souip_str_pairs) ++
-          GTH.to_haskell msouip2
+          GTC.to_haskell msouip1 ++ GTC.to_haskell (P.map P.fst souip_str_pairs) ++
+          GTC.to_haskell msouip2
       where
-      in_paren_if_needed :: GTH.Haskell -> GTH.Haskell -> GTH.Haskell
+      in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
       in_paren_if_needed = \hs souip_hs ->
         case souip_hs of
           "" -> hs
-          _ -> GTH.in_paren_if needs_paren $ hs ++ souip_hs
+          _ -> GH.in_paren_if needs_paren $ hs ++ souip_hs
 
-instance GTH.ToHaskell T.SubsOrUndersInParen where
-  to_haskell = \(T.SOUIP (sou, sous)) -> GTH.to_haskell $ sou : sous
+instance GTC.ToHaskell T.SubsOrUndersInParen where
+  to_haskell = \(T.SOUIP (sou, sous)) -> GTC.to_haskell $ sou : sous
 
-instance GTH.ToHaskell T.SubOrUnder where
+instance GTC.ToHaskell T.SubOrUnder where
   to_haskell = \case
-    T.TVS1 tvs -> " " ++ GTH.to_haskell tvs
+    T.TVS1 tvs -> " " ++ GTC.to_haskell tvs
     T.Underscore4 -> ""
 
-instance GTH.ToHaskell T.PowerTypeSub where
+instance GTC.ToHaskell T.PowerTypeSub where
   to_haskell = \(T.PoTS (pbts, i)) ->
     "(" ++
-    (L.replicate (P.fromIntegral i) pbts &> P.map GTH.to_haskell &> L.intercalate ", ")
+    (L.replicate (P.fromIntegral i) pbts &> P.map GTC.to_haskell &> L.intercalate ", ")
     ++
     ")"
 
-instance GTH.ToHaskell T.PowerBaseTypeSub where
+instance GTC.ToHaskell T.PowerBaseTypeSub where
   to_haskell = \case
     T.Underscore5 -> P.undefined
-    T.PTV5 tv -> GTH.to_haskell tv
-    T.TAIOAS2 tasoi -> GTH.to_haskell (GTH.NoParen, tasoi)
-    T.IPTS ipts -> GTH.to_haskell ipts
+    T.PTV5 tv -> GTC.to_haskell tv
+    T.TAIOAS2 tasoi -> GTC.to_haskell (GTC.NoParen, tasoi)
+    T.IPTS ipts -> GTC.to_haskell ipts
 
-instance GTH.ToHaskell T.InParenTSub where
+instance GTC.ToHaskell T.InParenTSub where
   to_haskell = \case
-    T.PTS2 pts -> "(" ++ GTH.to_haskell pts ++ ")"
-    T.FTS2 fts -> "(" ++ GTH.to_haskell fts ++ ")"
+    T.PTS2 pts -> "(" ++ GTC.to_haskell pts ++ ")"
+    T.FTS2 fts -> "(" ++ GTC.to_haskell fts ++ ")"
 
-instance GTH.ToHaskell T.ProdTypeSub where
+instance GTC.ToHaskell T.ProdTypeSub where
   to_haskell = \(T.PTS (fts, fts_l)) ->
-    "(" ++ ((fts : fts_l) &> P.map GTH.to_haskell &> L.intercalate ", ") ++ ")"
+    "(" ++ ((fts : fts_l) &> P.map GTC.to_haskell &> L.intercalate ", ") ++ ")"
 
-instance GTH.ToHaskell T.FieldTypeSub where
+instance GTC.ToHaskell T.FieldTypeSub where
   to_haskell = \case
-    T.PBTS1 pbts -> GTH.to_haskell pbts
-    T.PoTS2 pots -> GTH.to_haskell pots
+    T.PBTS1 pbts -> GTC.to_haskell pbts
+    T.PoTS2 pots -> GTC.to_haskell pots
 
-instance GTH.ToHaskell T.FuncTypeSub where
+instance GTC.ToHaskell T.FuncTypeSub where
   to_haskell = \(T.FTS (in_ts, out_ts)) ->
-    GTH.to_haskell in_ts ++ " -> " ++ GTH.to_haskell out_ts
+    GTC.to_haskell in_ts ++ " -> " ++ GTC.to_haskell out_ts
 
-instance GTH.ToHaskell T.InOrOutTypeSub where
+instance GTC.ToHaskell T.InOrOutTypeSub where
   to_haskell = \case
     T.Underscore6 -> P.undefined
-    T.PTV6 tv -> GTH.to_haskell tv
-    T.TAIOAS3 tasoi -> GTH.to_haskell (GTH.NoParen, tasoi)
-    T.PoTS3 pots -> GTH.to_haskell pots
-    T.PTS3 pts -> GTH.to_haskell pts
-    T.FTS3 fts -> GTH.to_haskell fts
+    T.PTV6 tv -> GTC.to_haskell tv
+    T.TAIOAS3 tasoi -> GTC.to_haskell (GTC.NoParen, tasoi)
+    T.PoTS3 pots -> GTC.to_haskell pots
+    T.PTS3 pts -> GTC.to_haskell pts
+    T.FTS3 fts -> GTC.to_haskell fts
 
-instance GTH.ToHaskell T.Proof where
+instance GTC.ToHaskell T.Proof where
   to_haskell = \case
-    T.P1 (iooe, le) -> GTH.to_haskell iooe ++ " " ++ GTH.to_haskell le
-    T.P2 (iooe, ttve) -> GTH.to_haskell iooe ++ GTH.to_haskell ttve
+    T.P1 (iooe, le) -> GTC.to_haskell iooe ++ " " ++ GTC.to_haskell le
+    T.P2 (iooe, ttve) -> GTC.to_haskell iooe ++ GTC.to_haskell ttve
 
-instance GTH.ToHaskell T.IdOrOpEq where
+instance GTC.ToHaskell T.IdOrOpEq where
   to_haskell (T.IOOE (id, maybe_op_id)) =
-    GTH.change_id_hs_if_needed1 (GTH.to_haskell id) ++ maybe_op_id_hs ++ " ="
+    GH.change_id_hs_if_needed1 (GTC.to_haskell id) ++ maybe_op_id_hs ++ " ="
     where
-    maybe_op_id_hs :: GTH.Haskell
+    maybe_op_id_hs :: GTC.Haskell
     maybe_op_id_hs = case maybe_op_id of
       P.Nothing -> ""
-      P.Just (op, id) -> GTH.to_haskell op ++ GTH.to_haskell id
+      P.Just (op, id) -> GTC.to_haskell op ++ GTC.to_haskell id
 
-instance GTH.ToHaskell T.TTValueExpr where
+instance GTC.ToHaskell T.TTValueExpr where
   to_haskell = \case
-    T.LE2 le -> " " ++ GTH.to_haskell le
+    T.LE2 le -> " " ++ GTC.to_haskell le
     T.VEMWE (ve, maybe_we) ->
       "\n" ++
-      GTH.run_generator
-        (GTH.twice_deeper (GTH.to_hs_wil (ve, GTH.mwe_to_pwe maybe_we)))
+      GH.run_generator
+        (GH.twice_deeper (GTC.to_hs_wil (ve, GH.mwe_to_pwe maybe_we)))
 
 -- Program
 
-instance GTH.ToHaskell T.Program where
+instance GTC.ToHaskell T.Program where
   to_haskell = \(T.P (pp, pps)) ->
-    GTH.to_haskell pp ++ GTH.to_hs_prepend_list "\n\n" pps
+    GTC.to_haskell pp ++ GH.to_hs_prepend_list "\n\n" pps
 
-instance GTH.ToHaskell T.ProgramPart where
+instance GTC.ToHaskell T.ProgramPart where
   to_haskell = \case
-    T.VD2 vd -> GTH.run_generator $ GTH.to_hs_wil vd
-    T.GVDs2 gvds -> GTH.run_generator $ GTH.to_hs_wil gvds
-    T.TD td -> GTH.to_haskell td
-    T.TNN1 tnn -> GTH.to_haskell tnn
-    T.TPD tpd -> GTH.to_haskell tpd
-    T.TT1 tt -> GTH.to_haskell tt
+    T.VD2 vd -> GH.run_generator $ GTC.to_hs_wil vd
+    T.GVDs2 gvds -> GH.run_generator $ GTC.to_hs_wil gvds
+    T.TD td -> GTC.to_haskell td
+    T.TNN1 tnn -> GTC.to_haskell tnn
+    T.TPD tpd -> GTC.to_haskell tpd
+    T.TT1 tt -> GTC.to_haskell tt
 
 -- Helper instances
 
-instance GTH.ToHsWithIndentLvl GTH.PossiblyWhereExpr where
+instance GTC.ToHsWithIndentLvl GTC.PossiblyWhereExpr where
   to_hs_wil = \case
-    GTH.NoWhereExpr -> P.return ""
-    GTH.HasWhereExpr we -> GTH.to_hs_wil we
+    GTC.NoWhereExpr -> P.return ""
+    GTC.HasWhereExpr we -> GTC.to_hs_wil we
 
 {-
 For fast vim file navigation:

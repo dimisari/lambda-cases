@@ -379,7 +379,7 @@ Helpers.hs
 ShowInstances.hs
 Parsing/TypesAndHelpers.hs
 Parsing/AST.hs
-Generation/TypesAndHelpers.hs
+Generation/Helpers.hs
 Generation/Collect.hs
 Generation/Preprocess.hs
 Generation/CheckCompatibility.hs

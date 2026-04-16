@@ -24,7 +24,8 @@ import ASTTypes qualified as T
 import Parsing.TypesAndClasses qualified as PTC
 import Parsing.AST qualified as PA
 
-import Generation.TypesAndHelpers qualified as GTH
+import Generation.TypesAndClasses qualified as GTC
+import Generation.Helpers qualified as GH
 import Generation.AST qualified as GAST
 
 -- types
@@ -56,16 +57,16 @@ compile_examples (file_name, comp_ex_func) =
 get_test_outputs_path :: P.IO P.FilePath
 get_test_outputs_path = SE.getArgs >$> (!!1) >$> (++ "/")
 
-compile_example_func :: (PTC.HasParser a, GTH.ToHaskell a) => Compile a
+compile_example_func :: (PTC.HasParser a, GTC.ToHaskell a) => Compile a
 compile_example_func = PA.parse .> parse_res_to_final_res
 
 parse_res_to_final_res ::
-  GTH.ToHaskell a => P.Either TP.ParseError a -> ResultString a
+  GTC.ToHaskell a => P.Either TP.ParseError a -> ResultString a
 parse_res_to_final_res = RS . (++ "\n\n") . \case
   P.Left err -> "Error :( ==>" ++ P.show err
-  P.Right res -> GTH.to_haskell res
+  P.Right res -> GTC.to_haskell res
 
-extract_res_str :: ResultString a -> GTH.Haskell
+extract_res_str :: ResultString a -> GTC.Haskell
 extract_res_str = \(RS s) -> s
 
 -- Reading the examples from a file
@@ -89,7 +90,7 @@ file_str_to_examples = SPL.endBy "#\n\n"
 file_name_compile_func_pairs :: [(H.FileName, CompileExFunc)]
 file_name_compile_func_pairs =
   [ ( "literals.txt"
-    , (compile_example_func :: Compile (GTH.NeedsAnnotBool, T.Literal)) .>
+    , (compile_example_func :: Compile (GTC.NeedsAnnotBool, T.Literal)) .>
       extract_res_str
     )
   , ( "identifiers.txt"
@@ -130,12 +131,12 @@ file_name_compile_func_pairs =
     )
   , ( "big_func_expr.txt"
     , ( compile_example_func ::
-        Compile (THWIL (T.BigFuncExpr, GTH.PossiblyWhereExpr))
+        Compile (THWIL (T.BigFuncExpr, GTC.PossiblyWhereExpr))
       ) .> extract_res_str
     )
   , ( "cases_func_expr.txt"
     , ( compile_example_func ::
-        Compile (THWIL (T.CasesFuncExpr, GTH.PossiblyWhereExpr))
+        Compile (THWIL (T.CasesFuncExpr, GTC.PossiblyWhereExpr))
       ) .> extract_res_str
     )
   , ( "value_def.txt"
@@ -158,7 +159,7 @@ file_name_compile_func_pairs =
     , (compile_example_func :: Compile T.ProdType) .> extract_res_str
     )
   , ( "type_app.txt"
-    , (compile_example_func :: Compile (GTH.NeedsParenBool, T.TypeAppIdOrAHTV))
+    , (compile_example_func :: Compile (GTC.NeedsParenBool, T.TypeAppIdOrAHTV))
       .>
       extract_res_str
     )
@@ -191,25 +192,25 @@ file_name_compile_func_pairs =
     )
   ]
 
--- to have GTH.ToHaskell from GTH.ToHsWithIndentLvl and also PTC.HasParser
+-- to have GTC.ToHaskell from GTC.ToHsWithIndentLvl and also PTC.HasParser
 -- for compile_example_func
 
 newtype THWIL a = THWIL a
 
-instance GTH.ToHsWithIndentLvl a => GTH.ToHaskell (THWIL a) where
-   to_haskell (THWIL a) = GTH.to_hs_wil a &> GTH.run_generator
+instance GTC.ToHsWithIndentLvl a => GTC.ToHaskell (THWIL a) where
+   to_haskell (THWIL a) = GTC.to_hs_wil a &> GH.run_generator
 
 instance PTC.HasParser a => PTC.HasParser (THWIL a) where
    parser = THWIL <$> PTC.parser
 
-instance PTC.HasParser a => PTC.HasParser (a, GTH.PossiblyWhereExpr) where
-   parser = PTC.parser >$> \a -> (a, GTH.NoWhereExpr)
+instance PTC.HasParser a => PTC.HasParser (a, GTC.PossiblyWhereExpr) where
+   parser = PTC.parser >$> \a -> (a, GTC.NoWhereExpr)
 
-instance PTC.HasParser a => PTC.HasParser (GTH.NeedsParenBool, a) where
-   parser = PTC.parser >$> \a -> (GTH.NoParen, a)
+instance PTC.HasParser a => PTC.HasParser (GTC.NeedsParenBool, a) where
+   parser = PTC.parser >$> \a -> (GTC.NoParen, a)
 
-instance PTC.HasParser a => PTC.HasParser (GTH.NeedsAnnotBool, a) where
-   parser = PTC.parser >$> \a -> (GTH.NoAnnot, a)
+instance PTC.HasParser a => PTC.HasParser (GTC.NeedsAnnotBool, a) where
+   parser = PTC.parser >$> \a -> (GTC.NoAnnot, a)
 
 -- For fast vim file navigation:
 {-

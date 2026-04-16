@@ -30,7 +30,7 @@ import Parsing.AST qualified as PA
 import Preprocessing.TypesAndClasses qualified as PTC
 import Preprocessing.Collect qualified as PC
 import Preprocessing.CheckCompatibility qualified as PCC
-import Generation.TypesAndHelpers qualified as GTH
+import Generation.Helpers qualified as GH
 import Generation.PrefixesAndHardcoded qualified as GPH
 
 -- Preprocess instances, general preprocess functions, automatic instances
@@ -65,9 +65,9 @@ preprocess_triple = \(a, b, c) ->
 
 instance PTC.Preprocess T.Identifier where
   preprocess = \id ->
-    GTH.check_if_id_is_sid id &> \case
+    GH.check_if_id_is_sid id &> \case
       P.Nothing -> P.return id
-      P.Just sid -> PTC.preprocess sid >$> GTH.sid_to_id
+      P.Just sid -> PTC.preprocess sid >$> GH.sid_to_id
 
 instance PTC.Preprocess T.SimpleId where
   preprocess = \sid ->
@@ -131,8 +131,8 @@ instance PTC.Preprocess T.ArgsStr where
 instance PTC.Preprocess T.ParenFuncAppOrId where
   preprocess =
     \pfaoi@(T.PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
-    GTH.check_if_pfaoi_is_sid pfaoi &> \case
-      P.Just sid -> PTC.preprocess sid >$> GTH.sid_to_pfaoi
+    GH.check_if_pfaoi_is_sid pfaoi &> \case
+      P.Just sid -> PTC.preprocess sid >$> GH.sid_to_pfaoi
       P.Nothing ->
         preprocess_triple (margs1, args_str_pairs, margs2) >$>
         \(margs1', args_str_pairs', margs2') ->
@@ -376,7 +376,7 @@ instance PTC.ToMaybePostFuncApp T.BasicExpr where
 
 instance PTC.ToMaybePostFuncApp T.ParenFuncAppOrId where
   to_maybe_post_func_app =
-    GTH.check_if_pfaoi_is_sid .> \case
+    GH.check_if_pfaoi_is_sid .> \case
       P.Nothing -> P.return P.Nothing
       P.Just sid -> PTC.to_maybe_post_func_app sid
 
@@ -472,7 +472,7 @@ add_constructor_prefix = \(T.SId (T.IS str, mdigit)) ->
 
 change_if_particular_sid :: T.SimpleId -> T.SimpleId
 change_if_particular_sid = \case
-  T.SId (T.IS str, P.Nothing) -> str &> change_if_particular &> GTH.str_to_sid
+  T.SId (T.IS str, P.Nothing) -> str &> change_if_particular &> GH.str_to_sid
   sid -> sid
 
 change_if_particular :: P.String -> P.String
@@ -492,7 +492,7 @@ change_pfarg_if_under :: T.PostFuncArg -> T.PostFuncArg
 change_pfarg_if_under = \case
   T.Underscore2 ->
     T.BE2 $ T.PFAOI1 $
-      GTH.sid_to_pfaoi (T.SId (T.IS GPH.under_pfarg_param, P.Nothing))
+      GH.sid_to_pfaoi (T.SId (T.IS GPH.under_pfarg_param, P.Nothing))
   other -> other
 
 {-

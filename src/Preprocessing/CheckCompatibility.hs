@@ -22,7 +22,7 @@ import Control.Monad.State qualified as MS
 import ASTTypes qualified as T
 import Helpers ((>$>), (.>))
 
-import Generation.TypesAndHelpers qualified as GTH
+import Generation.Helpers qualified as GH
 import Preprocessing.TypesAndClasses qualified as PTC
 
 -- types
@@ -121,7 +121,7 @@ instance PTC.CheckCompatibility T.TypesInParen T.SubsOrUndersInParen where
 instance PTC.CheckCompatibility T.TAIOAMiddle T.TAIOASMiddle where
   check_compat = \case
     (T.AHTV2 ahtv, taioasm) ->
-      PTC.Compatible $ M.singleton ahtv $ GTH.taioasm_to_sou taioasm
+      PTC.Compatible $ M.singleton ahtv $ GH.taioasm_to_sou taioasm
     (T.TIdStart1 (tid1, tip_str_pairs), T.TIdStart2 (tid2, souip_str_pairs)) ->
       case tid1 == tid2 of
         P.False -> PTC.NotCompatible

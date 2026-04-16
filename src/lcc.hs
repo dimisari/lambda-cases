@@ -25,7 +25,7 @@ import Helpers qualified as H
 import Parsing.AST qualified as PA
 
 import Preprocessing.Preprocess qualified as GP
-import Generation.TypesAndHelpers qualified as GTH
+import Generation.TypesAndClasses qualified as GTC
 import Generation.AST qualified as GA
 
 -- types
@@ -40,13 +40,13 @@ predef_list =
   SE.getEnv "HOME" >$> (++ "/.local/share/lcc/PredefImports/") >$> \x ->
     P.map (x ++) [ "OpsInHaskell.hs", "Predefined.hs" ]
 
-lang_ext_names :: [GTH.Haskell]
+lang_ext_names :: [GTC.Haskell]
 lang_ext_names =
   [ "FlexibleInstances", "MultiParamTypeClasses", "ScopedTypeVariables"
   , "UndecidableInstances", "FlexibleContexts"
   ]
 
-import_names :: [GTH.Haskell]
+import_names :: [GTC.Haskell]
 import_names =
   [ "qualified Prelude as P", "PredefImports.Predefined"
   , "PredefImports.OpsInHaskell"
@@ -82,7 +82,7 @@ compile_to_hs pfn =
   hs_file :: P.String
   hs_file = H.make_extension_hs pfn
 
-compile :: H.Lcases -> GTH.Haskell
+compile :: H.Lcases -> GTC.Haskell
 compile =
   PA.parse .> parse_res_to_final_res
   where
@@ -91,16 +91,16 @@ compile =
     P.Left err -> "Error :( ==> " ++ P.show err
     P.Right prog -> prog_to_hs prog
 
-  prog_to_hs :: T.Program -> GTH.Haskell
-  prog_to_hs = GP.preprocess_prog .> GTH.to_haskell .> (top_hs ++)
+  prog_to_hs :: T.Program -> GTC.Haskell
+  prog_to_hs = GP.preprocess_prog .> GTC.to_haskell .> (top_hs ++)
 
 -- language extensions and imports
 
-top_hs :: GTH.Haskell
+top_hs :: GTC.Haskell
 top_hs = lang_exts ++ imports
 
-lang_exts :: GTH.Haskell
+lang_exts :: GTC.Haskell
 lang_exts = "{-# language " ++ DL.intercalate ", " lang_ext_names ++ " #-}\n"
 
-imports :: GTH.Haskell
+imports :: GTC.Haskell
 imports = P.concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"

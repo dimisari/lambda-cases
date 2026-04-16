@@ -23,7 +23,7 @@ import ASTTypes qualified as T
 import Helpers ((&>))
 import Helpers qualified as H
 
-import Generation.TypesAndHelpers qualified as GTH
+import Generation.Helpers qualified as GH
 import Preprocessing.TypesAndClasses qualified as PTC
 
 -- CollectFieldIds final function
@@ -41,7 +41,7 @@ renaming_props = \prog -> MS.execState (PTC.collect_rps prog) []
 init_or_val_map :: PTC.FullOrValuesMap
 init_or_val_map =
   M.fromList $
-    P.map (\(s1, s2) -> (GTH.str_to_sid s1, GTH.str_to_id s2)) predefined
+    P.map (\(s1, s2) -> (GH.str_to_sid s1, GH.str_to_id s2)) predefined
   where
   predefined :: [(P.String, P.String)]
   predefined =
