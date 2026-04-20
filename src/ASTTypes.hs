@@ -281,10 +281,10 @@ newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 newtype FieldNames = PCSIs (SimpleId, [SimpleId])
 
 newtype OrTypeDef =
-  OTD (TypeName, PossibleValue, [PossibleValue])
+  OTD (TypeName, OrTypeValue, [OrTypeValue])
 
-newtype PossibleValue =
-  PV (SimpleId, P.Maybe (Identifier, SimpleType))
+newtype OrTypeValue =
+  OTV (SimpleId, P.Maybe (Identifier, SimpleType))
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 

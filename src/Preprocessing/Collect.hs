@@ -183,8 +183,8 @@ instance PTC.CollectOrValues T.TypeDef where
 instance PTC.CollectOrValues T.OrTypeDef where
   collect_ovms = \(T.OTD (_, pv, pvs)) -> P.mapM_ PTC.collect_ovms $ pv : pvs
 
-instance PTC.CollectOrValues T.PossibleValue where
-  collect_ovms = \(T.PV (ov, maybe_id_st)) -> case maybe_id_st of
+instance PTC.CollectOrValues T.OrTypeValue where
+  collect_ovms = \(T.OTV (ov, maybe_id_st)) -> case maybe_id_st of
     P.Just (id, _) -> MS.modify $ \(nc, fovm) -> (nc, M.insert ov id fovm)
     P.Nothing -> MS.modify $ \(nc, fovm) -> (S.insert ov nc, fovm)
 

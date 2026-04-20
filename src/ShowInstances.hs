@@ -505,8 +505,8 @@ instance P.Show T.OrTypeDef where
     "or type: " ++ P.show tn ++
     "\nvalues:\n  " ++ P.show pv ++ show_list_sep " | " pvs
 
-instance P.Show T.PossibleValue where
-  show = \(T.PV (sid, maybe_with_val)) ->
+instance P.Show T.OrTypeValue where
+  show = \(T.OTV (sid, maybe_with_val)) ->
     P.show sid ++ case maybe_with_val of
       P.Nothing -> ""
       P.Just (id, st) -> "--<" ++ P.show id ++ " : " ++ P.show st ++ ">"

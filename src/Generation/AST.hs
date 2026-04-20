@@ -803,8 +803,8 @@ instance GTC.ToHaskell T.OrTypeDef where
     "data " ++ GTC.to_haskell (GTC.NoParen, tn) ++ " =\n  " ++
     (P.map GTC.to_haskell (pv : pvs) &> L.intercalate " |\n  ")
 
-instance GTC.ToHaskell T.PossibleValue where
-  to_haskell = \(T.PV (sid, maybe_with_val)) ->
+instance GTC.ToHaskell T.OrTypeValue where
+  to_haskell = \(T.OTV (sid, maybe_with_val)) ->
     GPH.constructor_prefix ++ GTC.to_haskell sid ++ case maybe_with_val of
       P.Nothing -> ""
       P.Just (id, st) -> " " ++ GTC.to_haskell (GTC.Paren, st)

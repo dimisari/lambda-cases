@@ -611,13 +611,15 @@ instance PTC.HasParser T.FieldNames where
 instance PTC.HasParser T.OrTypeDef where
   parser =
     T.OTD <$>
-      (TP.try (TP.string "or type:") *> PH.opt_space *> PTC.parser) ++<
-      (PH.nl *> TP.string "values:" *> PH.space_or_nl *> PTC.parser) +++<
+      (TP.try (TP.string "or type:") *> PH.opt_space *> PTC.parser)
+      ++<
+      (PH.nl *> TP.string "values:" *> TP.optional PH.space_or_nl *> PTC.parser)
+      +++<
       TP.many (PH.opt_space_around (TP.string "|") *> PTC.parser)
 
-instance PTC.HasParser T.PossibleValue where
+instance PTC.HasParser T.OrTypeValue where
   parser =
-    T.PV <$>
+    T.OTV <$>
       PTC.parser ++<
       ( TP.optionMaybe $
         (TP.string "--<" *> PTC.parser <* PH.opt_space_around (TP.char ':')) ++<
@@ -804,4 +806,4 @@ instance PTC.HasParser T.ProgramPart where
     T.TPD <$> PTC.parser <|> T.GVDs2 <$> TP.try PTC.parser <|>
     T.VD2 <$> PTC.parser
 
--- TypesAndHelpers.hs
+-- Helpers.hs
