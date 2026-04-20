@@ -524,11 +524,11 @@ instance GTC.ToHsWithIndentLvl T.CaseBody where
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
 instance GTC.ToHsWithIndentLvl T.ValueDef where
-  to_hs_wil (T.VD (id, t, ve, maybe_we)) =
+  to_hs_wil (T.VD (id, t, maybe_ve)) =
     GH.indent <++ (GTC.to_haskell id ++ " :: ") >++<
     (forall_hs <$> MS.get) <++ (GTC.to_haskell t ++ "\n") >++<
     GH.indent <++ (GTC.to_haskell id ++ " =\n") >++<
-    GH.deeper (GTC.to_hs_wil (ve, GH.mwe_to_pwe maybe_we))
+    GH.deeper maybe_ve_wil
     where
     forall_hs :: P.Int -> GTC.Haskell
     forall_hs = \case
@@ -540,6 +540,15 @@ instance GTC.ToHsWithIndentLvl T.ValueDef where
 
     param_t_vars_hs_list :: [GTC.Haskell]
     param_t_vars_hs_list = C.param_t_vars t &> P.map GTC.to_haskell
+
+    maybe_ve_wil :: GTC.WithIndentLvl GTC.Haskell
+    maybe_ve_wil = case maybe_ve of
+      P.Nothing -> GH.indent <++ "P.undefined"
+      P.Just ve -> GTC.to_hs_wil ve
+
+instance GTC.ToHsWithIndentLvl T.ValueEquals where
+  to_hs_wil = \(T.VE (ve, maybe_we)) ->
+    GTC.to_hs_wil (ve, GH.mwe_to_pwe maybe_we)
 
 instance GTC.ToHsWithIndentLvl (T.ValueExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil = \(ve, pwe) -> case ve of
@@ -573,7 +582,8 @@ instance GTC.ToHsWithIndentLvl T.GroupedValueDefs where
     to_val_def_list = \case
       ([], [], []) -> []
       (id : ids, t : ts, le : les) ->
-        T.VD (id, t, le_to_ve le, P.Nothing) : to_val_def_list (ids, ts, les)
+        T.VD (id, t, P.Just $ T.VE (le_to_ve le, P.Nothing)) :
+        to_val_def_list (ids, ts, les)
       _ ->
         P.error $
           "identifiers, types and expressions don't match in number " ++

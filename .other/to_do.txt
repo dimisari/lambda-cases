@@ -1,6 +1,4 @@
 
-* undefined without needing to write the "= line"
-
 * test/outputs
   * types (+ propositions and theoreams) only
   * values only

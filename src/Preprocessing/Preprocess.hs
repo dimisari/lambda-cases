@@ -294,8 +294,11 @@ instance PTC.Preprocess T.CaseBody where
     T.BFB1 bfb -> T.BFB1 <$> preprocess_pair bfb
 
 instance PTC.Preprocess T.ValueDef where
-  preprocess = \(T.VD (id, t, ve, mwe)) ->
-    preprocess_pair (ve, mwe) >$> \(ve', mwe') -> T.VD (id, t, ve', mwe')
+  preprocess = \(T.VD (id, t, mve)) ->
+    PTC.preprocess mve >$> \mve' -> T.VD (id, t, mve')
+
+instance PTC.Preprocess T.ValueEquals where
+  preprocess = \(T.VE ve) -> T.VE <$> preprocess_pair ve
 
 instance PTC.Preprocess T.ValueExpr where
   preprocess = \case

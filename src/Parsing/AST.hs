@@ -448,8 +448,17 @@ instance PTC.HasParser T.ValueDef where
 
     PH.increase_il_by 1 >>
 
-    PH.has_type_symbol *> PTC.parser >>= \type_ ->
-    PH.nl_indent *> TP.string "= " *>
+    PH.has_type *> PTC.parser >>= \type_ ->
+
+    TP.optionMaybe PTC.parser >>= \maybe_ve ->
+
+    PH.decrease_il_by 1 >>
+
+    P.pure (T.VD (identifier, type_, maybe_ve))
+
+instance PTC.HasParser T.ValueEquals where
+  parser =
+    TP.try (PH.nl_indent *> TP.string "= ") *>
 
     PH.set_in_equal_line P.True >>
     PH.increase_il_by 1 >>
@@ -458,11 +467,11 @@ instance PTC.HasParser T.ValueDef where
 
     PH.set_in_equal_line P.False >>
 
-    TP.optionMaybe (TP.try PTC.parser) >>= \maybe_where_expr ->
+    TP.optionMaybe (TP.try PTC.parser) >>= \maybe_we ->
 
-    PH.decrease_il_by 2 >>
+    PH.decrease_il_by 1 >>
 
-    P.return (T.VD (identifier, type_, value_expr, maybe_where_expr))
+    P.pure (T.VE (value_expr, maybe_we))
 
 instance PTC.HasParser T.ValueExpr where
   parser =
@@ -479,7 +488,7 @@ instance PTC.HasParser T.GroupedValueDefs where
     P.return $ T.GVDs (id, ids, ts, equal_les, les_l)
     where
     types_p :: PTC.Parser T.Types
-    types_p = PH.has_type_symbol *> PTC.parser
+    types_p = PH.has_type *> PTC.parser
 
     equal_les_p :: PTC.Parser T.LineExprs
     equal_les_p = PH.nl_indent *> TP.string "= " *> PTC.parser

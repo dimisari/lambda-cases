@@ -365,9 +365,12 @@ instance P.Show T.CaseBody where
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 instance P.Show T.ValueDef where
-  show = \(T.VD (id, t, ve, maybe_we)) ->
-    P.show id ++ "\n  : " ++ P.show t ++ "\n  = " ++ P.show ve ++
-    show_maybe maybe_we
+  show = \(T.VD (id, t, maybe_ve)) ->
+    P.show id ++ "\n  : " ++ P.show t ++ show_maybe maybe_ve
+
+instance P.Show T.ValueEquals where
+  show = \(T.VE (ve, maybe_we)) ->
+    "\n  = " ++ P.show ve ++ show_maybe maybe_we
 
 instance P.Show T.ValueExpr where
   show = \case

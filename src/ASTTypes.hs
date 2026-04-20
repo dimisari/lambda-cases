@@ -196,7 +196,9 @@ data CaseBody =
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
-newtype ValueDef = VD (Identifier, Type, ValueExpr, P.Maybe WhereExpr)
+newtype ValueDef = VD (Identifier, Type, P.Maybe ValueEquals)
+
+newtype ValueEquals = VE (ValueExpr, P.Maybe WhereExpr)
 
 data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList

@@ -17,3 +17,5 @@ foo :Int
 foo:Int
   = 42#
 
+foo:Int#
+
