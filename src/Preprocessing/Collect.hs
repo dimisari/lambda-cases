@@ -181,11 +181,23 @@ instance PTC.CollectOrValues T.TypeDef where
     _ -> H.do_nothing
 
 instance PTC.CollectOrValues T.OrTypeDef where
-  collect_ovms = \(T.OTD (_, pv, pvs)) -> P.mapM_ PTC.collect_ovms $ pv : pvs
+  collect_ovms = \(T.OTD (_, otvs)) -> PTC.collect_ovms otvs
+
+instance PTC.CollectOrValues T.OrTypeValues where
+  collect_ovms = \case
+    T.VL otvsl ->  PTC.collect_ovms otvsl
+    T.Ls otvsls -> PTC.collect_ovms otvsls
+
+instance PTC.CollectOrValues T.OrTypeValuesLine where
+  collect_ovms = \(T.OTVL (otv, otvs)) -> P.mapM_ PTC.collect_ovms $ otv : otvs
+
+instance PTC.CollectOrValues T.OrTypeValuesLines where
+  collect_ovms = \(T.OTVLs (otvl, otvls)) ->
+    P.mapM_ PTC.collect_ovms $ otvl : otvls
 
 instance PTC.CollectOrValues T.OrTypeValue where
   collect_ovms = \(T.OTV (ov, maybe_id_st)) -> case maybe_id_st of
-    P.Just (id, _) -> MS.modify $ \(nc, fovm) -> (nc, M.insert ov id fovm)
+    P.Just (T.IV (id, _)) -> MS.modify $ \(nc, fovm) -> (nc, M.insert ov id fovm)
     P.Nothing -> MS.modify $ \(nc, fovm) -> (S.insert ov nc, fovm)
 
 {-

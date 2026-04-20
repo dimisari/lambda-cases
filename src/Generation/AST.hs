@@ -487,8 +487,8 @@ instance GTC.ToHaskell T.TupleMatching where
     where
     ims_hs :: GTC.Haskell
     ims_hs =
-      (im : im_l) &> P.map (\im -> GTC.to_haskell (GTC.NoParen, im)) &>
-      L.intercalate ", "
+      (im : im_l) &> P.map (\im -> (GTC.NoParen, im)) &>
+      GH.to_hs_intercalate ", "
 
 instance GTC.ToHaskell T.ListMatching where
   to_haskell (T.LM m_list_internals) =
@@ -500,8 +500,8 @@ instance GTC.ToHaskell T.ListMatching where
     where
     commas_ims_hs :: (T.InnerMatching, [T.InnerMatching]) -> GTC.Haskell
     commas_ims_hs = \(im, im_l) ->
-      (im : im_l) &> P.map (\im -> GTC.to_haskell (GTC.NoParen, im)) &>
-      L.intercalate ", "
+      (im : im_l) &> P.map (\im -> (GTC.NoParen, im)) &>
+      GH.to_hs_intercalate ", "
 
     colons_ims_hs :: (T.InnerMatching, [T.InnerMatching]) -> GTC.Haskell
     colons_ims_hs = \(im, im_l) ->
@@ -662,7 +662,7 @@ instance GTC.ToHaskell T.TypesInParen where
 
 instance GTC.ToHaskell T.ProdType where
   to_haskell = \(T.PT (ft, fts)) ->
-    "(" ++ ((ft : fts) &> P.map GTC.to_haskell &> L.intercalate ", ") ++ ")"
+    "(" ++ ((ft : fts) &> GH.to_hs_intercalate ", ") ++ ")"
 
 instance GTC.ToHaskell T.FieldType where
   to_haskell = \case
@@ -684,7 +684,7 @@ instance GTC.ToHaskell T.InParenT where
 instance GTC.ToHaskell T.PowerType where
   to_haskell = \(T.PoT (ft, i)) ->
     "(" ++
-    (L.replicate (P.fromIntegral i) ft &> P.map GTC.to_haskell &> L.intercalate ", ") ++
+    (L.replicate (P.fromIntegral i) ft &> GH.to_hs_intercalate ", ") ++
     ")"
 
 instance GTC.ToHaskell T.FuncType where
@@ -799,15 +799,30 @@ instance GTC.ToHaskell T.ParamVarsInParen where
   to_haskell = \(T.PVIP (ptv, ptvs)) -> GH.to_hs_prepend_list " " $ ptv : ptvs
 
 instance GTC.ToHaskell T.OrTypeDef where
-  to_haskell (T.OTD (tn, pv, pvs)) =
-    "data " ++ GTC.to_haskell (GTC.NoParen, tn) ++ " =\n  " ++
-    (P.map GTC.to_haskell (pv : pvs) &> L.intercalate " |\n  ")
+  to_haskell (T.OTD (tn, otv)) =
+    "data " ++ GTC.to_haskell (GTC.NoParen, tn) ++ " =\n  " ++ GTC.to_haskell otv
+
+instance GTC.ToHaskell T.OrTypeValues where
+  to_haskell = \case
+    T.VL otvsl -> GTC.to_haskell otvsl
+    T.Ls otvsls -> GTC.to_haskell otvsls
+
+instance GTC.ToHaskell T.OrTypeValuesLine where
+  to_haskell = \(T.OTVL (otv, otvs)) ->
+    GTC.to_haskell otv ++ GH.to_hs_prepend_list " |\n  " otvs
+
+instance GTC.ToHaskell T.OrTypeValuesLines where
+  to_haskell = \(T.OTVLs (otvsl, otvsls)) ->
+    GH.to_hs_intercalate " |\n  " $ otvsl : otvsls
 
 instance GTC.ToHaskell T.OrTypeValue where
   to_haskell = \(T.OTV (sid, maybe_with_val)) ->
     GPH.constructor_prefix ++ GTC.to_haskell sid ++ case maybe_with_val of
       P.Nothing -> ""
-      P.Just (id, st) -> " " ++ GTC.to_haskell (GTC.Paren, st)
+      P.Just iv -> GTC.to_haskell iv
+
+instance GTC.ToHaskell T.InternalValue where
+  to_haskell = \(T.IV (_, st)) -> " " ++ GTC.to_haskell (GTC.Paren, st)
 
 instance GTC.ToHaskell T.TypeNickname where
   to_haskell = \(T.TNN (tn, st)) ->
@@ -867,7 +882,7 @@ instance GTC.ToHaskell T.TypeTheo where
     pnws_l_hs = case pnws_l of
       [] -> P.error "to_haskell type_theo: no pnws before arrow"
       [pnws] -> GTC.to_haskell pnws
-      _ -> P.map GTC.to_haskell pnws_l &> L.intercalate ", " &> \x -> "(" ++ x ++ ")"
+      _ -> GH.to_hs_intercalate ", " pnws_l &> \x -> "(" ++ x ++ ")"
 
     mpnws_to_hs :: P.Maybe T.PropNameWithSubs -> P.String
     mpnws_to_hs = \case
@@ -952,7 +967,7 @@ instance GTC.ToHaskell T.SubOrUnder where
 instance GTC.ToHaskell T.PowerTypeSub where
   to_haskell = \(T.PoTS (pbts, i)) ->
     "(" ++
-    (L.replicate (P.fromIntegral i) pbts &> P.map GTC.to_haskell &> L.intercalate ", ")
+    (L.replicate (P.fromIntegral i) pbts &> GH.to_hs_intercalate ", ")
     ++
     ")"
 
@@ -970,7 +985,7 @@ instance GTC.ToHaskell T.InParenTSub where
 
 instance GTC.ToHaskell T.ProdTypeSub where
   to_haskell = \(T.PTS (fts, fts_l)) ->
-    "(" ++ ((fts : fts_l) &> P.map GTC.to_haskell &> L.intercalate ", ") ++ ")"
+    "(" ++ ((fts : fts_l) &> GH.to_hs_intercalate ", ") ++ ")"
 
 instance GTC.ToHaskell T.FieldTypeSub where
   to_haskell = \case

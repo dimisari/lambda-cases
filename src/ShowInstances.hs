@@ -501,15 +501,31 @@ instance P.Show T.FieldNames where
     "(" ++ P.show sid ++ show_list_comma sids ++ ")"
 
 instance P.Show T.OrTypeDef where
-  show = \(T.OTD (tn, pv, pvs)) ->
+  show = \(T.OTD (tn, otvs)) ->
     "or type: " ++ P.show tn ++
-    "\nvalues:\n  " ++ P.show pv ++ show_list_sep " | " pvs
+    "\nvalues:\n  " ++ P.show otvs
+
+instance P.Show T.OrTypeValues where
+  show = \case
+    T.VL otvsl -> P.show otvsl
+    T.Ls otvls -> P.show otvls
+
+instance P.Show T.OrTypeValuesLine where
+  show = \(T.OTVL (otv, otvs)) ->
+    P.show otvs ++ " | " ++ show_list_sep " | " otvs
+
+instance P.Show T.OrTypeValuesLines where
+  show = \(T.OTVLs (otvl, otvls)) ->
+    "\n  " ++ P.show otvl ++ " |\n  " ++ show_list_sep " |\n  " otvls
 
 instance P.Show T.OrTypeValue where
-  show = \(T.OTV (sid, maybe_with_val)) ->
-    P.show sid ++ case maybe_with_val of
+  show = \(T.OTV (sid, maybe_iv)) ->
+    P.show sid ++ case maybe_iv of
       P.Nothing -> ""
-      P.Just (id, st) -> "--<" ++ P.show id ++ " : " ++ P.show st ++ ">"
+      P.Just iv -> "--<" ++ P.show iv ++ ">"
+
+instance P.Show T.InternalValue where
+  show = \(T.IV (id, st)) -> P.show id ++ " : " ++ P.show st
 
 instance P.Show T.TypeNickname where
   show = \(T.TNN (tn, st)) ->

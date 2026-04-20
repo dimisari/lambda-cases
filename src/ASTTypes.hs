@@ -280,11 +280,17 @@ newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
 newtype FieldNames = PCSIs (SimpleId, [SimpleId])
 
-newtype OrTypeDef =
-  OTD (TypeName, OrTypeValue, [OrTypeValue])
+newtype OrTypeDef = OTD (TypeName, OrTypeValues)
 
-newtype OrTypeValue =
-  OTV (SimpleId, P.Maybe (Identifier, SimpleType))
+data OrTypeValues = VL OrTypeValuesLine | Ls OrTypeValuesLines
+
+newtype OrTypeValuesLine = OTVL (OrTypeValue, [OrTypeValue])
+
+newtype OrTypeValuesLines = OTVLs (OrTypeValuesLine, [OrTypeValuesLine])
+
+newtype OrTypeValue = OTV (SimpleId, P.Maybe InternalValue)
+
+newtype InternalValue = IV (Identifier, SimpleType)
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 

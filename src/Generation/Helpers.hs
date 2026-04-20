@@ -42,6 +42,10 @@ to_hs_prepend_list :: GTC.ToHaskell a => P.String -> [a] -> GTC.Haskell
 to_hs_prepend_list =
   \prepend_hs -> P.concatMap ((prepend_hs ++) . GTC.to_haskell)
 
+to_hs_intercalate :: GTC.ToHaskell a => P.String -> [a] -> GTC.Haskell
+to_hs_intercalate =
+  \intercalate_hs -> P.map GTC.to_haskell .> L.intercalate intercalate_hs
+
 -- ToHsWithParamNum class and helper instances
 
 instance GTC.ToHsWithParamNum a => GTC.ToHsWithParamNum (P.Maybe a) where

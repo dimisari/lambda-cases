@@ -611,20 +611,34 @@ instance PTC.HasParser T.FieldNames where
 instance PTC.HasParser T.OrTypeDef where
   parser =
     T.OTD <$>
-      (TP.try (TP.string "or type:") *> PH.opt_space *> PTC.parser)
-      ++<
-      (PH.nl *> TP.string "values:" *> TP.optional PH.space_or_nl *> PTC.parser)
-      +++<
-      TP.many (PH.opt_space_around (TP.string "|") *> PTC.parser)
+      (TP.try (TP.string "or type:") *> PH.opt_space *> PTC.parser) ++<
+      (PH.nl *> TP.string "values:" *> PTC.parser)
+
+instance PTC.HasParser T.OrTypeValues where
+  parser =
+    T.VL <$> TP.try (PH.opt_space *> PTC.parser) <|> T.Ls <$> PTC.parser
+
+instance PTC.HasParser T.OrTypeValuesLine where
+  parser =
+    T.OTVL <$>
+      PTC.parser ++<
+      TP.many (TP.try $ PH.opt_space_around (TP.char '|') *> PTC.parser)
+
+instance PTC.HasParser T.OrTypeValuesLines where
+  parser =
+    T.OTVLs <$>
+      (PH.nl_d_sp *> PTC.parser) ++<
+      TP.many (PH.opt_space *> TP.char '|' *> PH.nl_d_sp *> PTC.parser)
 
 instance PTC.HasParser T.OrTypeValue where
+  parser = T.OTV <$> PTC.parser ++< TP.optionMaybe PTC.parser
+
+instance PTC.HasParser T.InternalValue where
   parser =
-    T.OTV <$>
-      PTC.parser ++<
-      ( TP.optionMaybe $
-        (TP.string "--<" *> PTC.parser <* PH.opt_space_around (TP.char ':')) ++<
-        (PTC.parser <* TP.char '>')
-      )
+    T.IV <$> (TP.string "--<" *> PH.opt_space_around pair_p <* TP.char '>')
+    where
+    pair_p :: PTC.Parser (T.Identifier, T.SimpleType)
+    pair_p = (PTC.parser <* PH.opt_space_around (TP.char ':')) ++< PTC.parser
 
 instance PTC.HasParser T.TypeNickname where
   parser =

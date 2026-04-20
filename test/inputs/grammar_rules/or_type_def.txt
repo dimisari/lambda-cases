@@ -11,6 +11,13 @@ or type: ListOf(T1)s
 values:
   non_empty_list--<ne_list : NonEmptyListOf(T1)s> | empty_list#
 
+or type: ListOf(T1)s
+values:
+  non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
+  non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
+  non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
+  empty_list#
+
 or type: Bool
 values: true|false#
 
