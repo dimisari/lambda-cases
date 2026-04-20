@@ -93,7 +93,7 @@ test_all: $(hs_prs) $(hs_grs) $(execs)
 
 test_haskell_progs: $(hs_prs)
 
-test_grammar_rules: $(hs_grs)
+test_grammar_rules: $(hs_grs) $(wildcard $(t_ins_grs)/*)
 
 test_executables: $(execs)
 
