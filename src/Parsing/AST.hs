@@ -195,7 +195,7 @@ instance PTC.HasParser T.PreFuncApp where
 instance PTC.HasParser T.PostFunc where
   parser =
     TP.try (TP.char '.' *> TP.notFollowedBy (TP.string "change{")) *>
-    (T.SId1 <$> PTC.parser <|> T.SI2 <$> PTC.parser)
+    (T.Id1 <$> PTC.parser <|> T.SI2 <$> PTC.parser)
 
 instance PTC.HasParser T.SpecialId where
   parser =
@@ -397,7 +397,7 @@ instance PTC.HasParser T.OuterMatching where
   parser = T.M1 <$> TP.try PTC.parser <|> T.SId3 <$> PTC.parser
 
 instance PTC.HasParser T.EndCaseParam where
-  parser = T.Id1 <$> PTC.parser <|> TP.string "..." *> P.return T.Ellipsis
+  parser = T.Id2 <$> PTC.parser <|> TP.string "..." *> P.return T.Ellipsis
 
 instance PTC.HasParser T.Matching where
   parser =
@@ -406,7 +406,7 @@ instance PTC.HasParser T.Matching where
 
 instance PTC.HasParser T.InnerMatching where
   parser =
-    T.M2 <$> TP.try PTC.parser <|> T.Id2 <$> PTC.parser <|>
+    T.M2 <$> TP.try PTC.parser <|> T.Id3 <$> PTC.parser <|>
     TP.char '*' *> P.return T.Star
 
 instance PTC.HasParser T.TupleMatching where
@@ -481,11 +481,10 @@ instance PTC.HasParser T.ValueExpr where
 
 instance PTC.HasParser T.GroupedValueDefs where
   parser =
-    PH.indent *> PTC.parser >>= \id ->
-    TP.many1 (PH.comma *> PTC.parser) >>= \ids ->
+    PH.indent *> PTC.parser >>= \ids ->
     PH.deeper (types_p ++< equal_les_p +++< les_l_p) >>=
       \(ts, equal_les, les_l) ->
-    P.return $ T.GVDs (id, ids, ts, equal_les, les_l)
+    P.return $ T.GVDs (ids, ts, equal_les, les_l)
     where
     types_p :: PTC.Parser T.Types
     types_p = PH.has_type *> PTC.parser
@@ -614,8 +613,10 @@ instance PTC.HasParser T.ParamVarsInParen where
     T.PVIP <$> PH.in_paren (PTC.parser ++< TP.many (PH.comma *> PTC.parser))
 
 instance PTC.HasParser T.FieldNames where
-  parser =
-    T.PCSIs <$> PH.in_paren (PTC.parser ++< TP.many1 (PH.comma *> PTC.parser))
+  parser = T.PCSIs <$> PH.in_paren PTC.parser
+
+instance PTC.HasParser T.Identifiers where
+  parser = T.Ids <$> PTC.parser ++< TP.many1 (PH.comma *> PTC.parser)
 
 instance PTC.HasParser T.OrTypeDef where
   parser =

@@ -197,7 +197,7 @@ instance GTC.ToHaskell T.PreFuncApp where
 
 instance GTC.ToHaskell T.PostFunc where
   to_haskell = \case
-    T.SId1 sid -> GTC.to_haskell sid
+    T.Id1 id -> GTC.to_haskell id
     T.SI2 spid -> GPH.spid_projection_prefix ++ GTC.to_haskell spid
 
 instance GTC.ToHaskell T.SpecialId where
@@ -463,7 +463,7 @@ instance GTC.ToHaskell T.OuterMatching where
 
 instance GTC.ToHaskell T.EndCaseParam where
   to_haskell = \case
-    T.Id1 id -> GTC.to_haskell id
+    T.Id2 id -> GTC.to_haskell id
     T.Ellipsis -> "_"
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.Matching) where
@@ -478,7 +478,7 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.Matching) where
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.InnerMatching) where
   to_haskell = \(needs_paren, im) -> case im of
     T.Star -> "_"
-    T.Id2 id -> GTC.to_haskell id
+    T.Id3 id -> GTC.to_haskell id
     T.M2 m -> GTC.to_haskell (needs_paren, m)
 
 instance GTC.ToHaskell T.TupleMatching where
@@ -561,7 +561,7 @@ instance GTC.ToHsWithIndentLvl (T.ValueExpr, GTC.PossiblyWhereExpr) where
         T.BL1 bl -> GTC.to_hs_wil bl
 
 instance GTC.ToHsWithIndentLvl T.GroupedValueDefs where
-  to_hs_wil (T.GVDs (id, ids, ts, les, les_l)) =
+  to_hs_wil (T.GVDs (T.Ids (id, ids), ts, les, les_l)) =
     GH.to_hs_wil_list vd_list >$> L.intercalate "\n\n"
     where
     vd_list :: [T.ValueDef]
@@ -723,7 +723,7 @@ instance GTC.ToHaskell T.TypeDef where
     T.OTD1 otd -> GTC.to_haskell otd
 
 instance GTC.ToHaskell T.TupleTypeDef where
-  to_haskell (T.TTD (tn, popt, T.PCSIs (si, sis))) =
+  to_haskell (T.TTD (tn, popt, T.PCSIs (T.Ids (id, ids)))) =
     data_hs ++ "\n\n" ++ instance_hs ++ "\n" ++
     change_types_hs ++ change_defs_hs
     where
@@ -747,7 +747,7 @@ instance GTC.ToHaskell T.TupleTypeDef where
     change_defs_hs = GH.combine_with_defs change_hs_list sid_hs_list
 
     sid_hs_list :: [GTC.Haskell]
-    sid_hs_list = P.map GTC.to_haskell $ si : sis
+    sid_hs_list = P.map GTC.to_haskell $ id : ids
 
     change_hs_list :: [GTC.Haskell]
     change_hs_list = P.map (GPH.change_prefix ++) sid_hs_list

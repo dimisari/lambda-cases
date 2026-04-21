@@ -76,10 +76,13 @@ instance PTC.CollectFieldIds T.TupleTypeDef where
   collect_fids = \(T.TTD (_, _, idt)) -> PTC.collect_fids idt
 
 instance PTC.CollectFieldIds T.FieldNames where
-  collect_fids = \(T.PCSIs (si, sis)) -> P.mapM_ PTC.collect_fids $ si : sis
+  collect_fids = \(T.PCSIs ids) -> PTC.collect_fids ids
 
-instance PTC.CollectFieldIds T.SimpleId where
-  collect_fids = \sid -> MS.modify (S.insert sid)
+instance PTC.CollectFieldIds T.Identifiers where
+  collect_fids = \(T.Ids (id, ids)) -> P.mapM_ PTC.collect_fids $ id : ids
+
+instance PTC.CollectFieldIds T.Identifier where
+  collect_fids = \id -> MS.modify (S.insert id)
 
 -- CollectParamTVars instances
 
@@ -199,12 +202,15 @@ instance PTC.CollectOrValues T.OrTypeValuesLines where
     P.mapM_ PTC.collect_ovms $ otvl : otvls
 
 instance PTC.CollectOrValues T.OrTypeValue where
-  collect_ovms = \(T.OTV (ov, maybe_id_st)) -> case maybe_id_st of
-    P.Just (T.IV (id, _)) -> MS.modify $ \(nc, fovm) -> (nc, M.insert ov id fovm)
-    P.Nothing -> MS.modify $ \(nc, fovm) -> (S.insert ov nc, fovm)
+  collect_ovms = \(T.OTV (sid, maybe_id_st)) -> case maybe_id_st of
+    P.Just (T.IV (id, _)) ->
+      MS.modify $ \(nc, fovm) -> (nc, M.insert sid id fovm)
+    P.Nothing -> MS.modify $ \(nc, fovm) -> (S.insert sid nc, fovm)
 
 {-
 For fast vim file navigation:
+CheckCompatibility.hs
+Collect.hs
 Preprocess.hs
-AST.hs
+TypesAndClasses.hs
 -}

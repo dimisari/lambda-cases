@@ -298,20 +298,11 @@ str_to_sid = \str -> T.SId (T.IS str, P.Nothing)
 str_to_id :: P.String -> T.Identifier
 str_to_id = \str -> T.Id (P.Nothing, T.IS str, [], P.Nothing, P.Nothing)
 
-sid_to_pfaoi :: T.SimpleId -> T.ParenFuncAppOrId
-sid_to_pfaoi = \(T.SId (id_start, mdigit)) ->
-  T.PFAOI (P.Nothing, id_start, [], mdigit, P.Nothing)
-
 sid_to_id :: T.SimpleId -> T.Identifier
 sid_to_id = \(T.SId (id_start, mdigit)) ->
   T.Id (P.Nothing, id_start, [], mdigit, P.Nothing)
 
 -- check if node can symplify to a SimpleId
-
-check_if_pfaoi_is_sid :: T.ParenFuncAppOrId -> P.Maybe T.SimpleId
-check_if_pfaoi_is_sid = \case
-  T.PFAOI (P.Nothing, id_strt, [], mdigit, P.Nothing) -> P.Just $ T.SId (id_strt, mdigit)
-  _ -> P.Nothing
 
 check_if_id_is_sid :: T.Identifier -> P.Maybe T.SimpleId
 check_if_id_is_sid = \case

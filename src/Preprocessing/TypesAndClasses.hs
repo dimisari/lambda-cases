@@ -9,7 +9,7 @@ import ASTTypes qualified as T
 
 -- Collect types
 
-type FieldId = T.SimpleId
+type FieldId = T.Identifier
 
 type FieldIds = S.Set FieldId
 

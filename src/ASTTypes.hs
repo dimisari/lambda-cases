@@ -16,6 +16,7 @@ newtype Identifier =
   ( P.Maybe UndersInParen, IdStart, [IdCont], P.Maybe P.Char
   , P.Maybe UndersInParen
   )
+  deriving (P.Eq, P.Ord)
 
 newtype SimpleId = SId (IdStart, P.Maybe P.Char)
   deriving (P.Eq, P.Ord)
@@ -24,9 +25,10 @@ newtype IdStart = IS P.String
   deriving (P.Eq, P.Ord)
 
 newtype IdCont = IC (UndersInParen, P.String)
+  deriving (P.Eq, P.Ord)
 
 newtype UndersInParen = UIP P.Int
-
+  deriving (P.Eq, P.Ord)
 
 newtype ParenExpr = PE InsideParenExpr
 
@@ -76,7 +78,7 @@ newtype PreFunc = PF SimpleId
 newtype PreFuncApp = PrFA (PreFunc, Operand)
 
 data PostFunc =
-  SId1 SimpleId | SI2 SpecialId
+  Id1 Identifier | SI2 SpecialId
 
 data SpecialId =
   First | Second | Third | Fourth | Fifth
@@ -94,7 +96,7 @@ newtype DotChange = DC (FieldChange, [FieldChange])
 newtype FieldChange = FC (Field, LineExprOrUnder)
 
 data Field =
-  SId2 SimpleId | SI3 SpecialId
+  SId2 Identifier | SI3 SpecialId
 
 
 -- Values: OpExpr
@@ -174,14 +176,14 @@ data OuterMatching =
   SId3 SimpleId | M1 Matching
 
 data EndCaseParam =
-  Id1 Identifier | Ellipsis
+  Id2 Identifier | Ellipsis
 
 data Matching =
   Lit2 Literal | PFM (PreFunc, InnerMatching) | TM1 TupleMatching |
   LM1 ListMatching
 
 data InnerMatching =
-  Star | Id2 Identifier | M2 Matching
+  Star | Id3 Identifier | M2 Matching
 
 newtype TupleMatching = TM (InnerMatching, [InnerMatching])
 
@@ -203,8 +205,7 @@ newtype ValueEquals = VE (ValueExpr, P.Maybe WhereExpr)
 data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
-newtype GroupedValueDefs =
-  GVDs (Identifier, [Identifier], Types, LineExprs, [LineExprs])
+newtype GroupedValueDefs = GVDs (Identifiers, Types, LineExprs, [LineExprs])
 
 data Types =
   Ts (Type, [Type]) | All Type
@@ -278,7 +279,9 @@ newtype TypeName =
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
-newtype FieldNames = PCSIs (SimpleId, [SimpleId])
+newtype FieldNames = PCSIs Identifiers
+
+newtype Identifiers = Ids (Identifier, [Identifier])
 
 newtype OrTypeDef = OTD (TypeName, OrTypeValues)
 

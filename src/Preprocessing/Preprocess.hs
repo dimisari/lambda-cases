@@ -131,8 +131,8 @@ instance PTC.Preprocess T.ArgsStr where
 instance PTC.Preprocess T.ParenFuncAppOrId where
   preprocess =
     \pfaoi@(T.PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
-    GH.check_if_pfaoi_is_sid pfaoi &> \case
-      P.Just sid -> PTC.preprocess sid >$> GH.sid_to_pfaoi
+    check_if_pfaoi_is_sid pfaoi &> \case
+      P.Just sid -> PTC.preprocess sid >$> sid_to_pfaoi
       P.Nothing ->
         preprocess_triple (margs1, args_str_pairs, margs2) >$>
         \(margs1', args_str_pairs', margs2') ->
@@ -260,7 +260,7 @@ instance PTC.Preprocess T.OuterMatching where
   preprocess = \case
     T.SId3 sid ->
       lookup_sid_in_ovm sid >>= \case
-        P.Just id -> P.return $ T.M1 $ T.PFM (T.PF sid, T.Id2 id)
+        P.Just id -> P.return $ T.M1 $ T.PFM (T.PF sid, T.Id3 id)
         P.Nothing -> T.SId3 <$> PTC.preprocess sid
     T.M1 m -> T.M1 <$> PTC.preprocess m
 
@@ -274,7 +274,7 @@ instance PTC.Preprocess T.Matching where
 instance PTC.Preprocess T.InnerMatching where
   preprocess = \case
     T.Star -> P.return T.Star
-    T.Id2 id -> T.Id2 <$> PTC.preprocess id
+    T.Id3 id -> T.Id3 <$> PTC.preprocess id
     T.M2 m -> T.M2 <$> PTC.preprocess m
 
 instance PTC.Preprocess T.TupleMatching where
@@ -309,9 +309,9 @@ instance PTC.Preprocess T.ValueExpr where
     T.BL1 bl -> T.BL1 <$> PTC.preprocess bl
 
 instance PTC.Preprocess T.GroupedValueDefs where
-  preprocess = \(T.GVDs (id, ids, ts, les, les_l)) ->
+  preprocess = \(T.GVDs (ids, ts, les, les_l)) ->
     preprocess_pair (les, les_l) >$> \(les', les_l') ->
-    T.GVDs (id, ids, ts, les', les_l')
+    T.GVDs (ids, ts, les', les_l')
 
 instance PTC.Preprocess T.LineExprs where
   preprocess = \(T.LEs les) -> T.LEs <$> preprocess_pair les
@@ -379,17 +379,17 @@ instance PTC.ToMaybePostFuncApp T.BasicExpr where
 
 instance PTC.ToMaybePostFuncApp T.ParenFuncAppOrId where
   to_maybe_post_func_app =
-    GH.check_if_pfaoi_is_sid .> \case
+    check_if_pfaoi_is_sid .> \case
       P.Nothing -> P.return P.Nothing
-      P.Just sid -> PTC.to_maybe_post_func_app sid
+      P.Just sid -> PTC.to_maybe_post_func_app $ GH.sid_to_id sid
 
 instance PTC.ToMaybePostFuncApp T.SpecialId where
   to_maybe_post_func_app = \spid -> PTC.to_maybe_post_func_app $ T.SI2 spid
 
-instance PTC.ToMaybePostFuncApp T.SimpleId where
-  to_maybe_post_func_app = \sid ->
-    check_if_sid_in_fids sid >>= \case
-      P.True -> PTC.to_maybe_post_func_app $ T.SId1 sid
+instance PTC.ToMaybePostFuncApp T.Identifier where
+  to_maybe_post_func_app = \id ->
+    check_if_id_in_fids id >>= \case
+      P.True -> PTC.to_maybe_post_func_app $ T.Id1 id
       _ -> P.return P.Nothing
 
 instance PTC.ToMaybePostFuncApp T.PostFunc where
@@ -426,8 +426,8 @@ get_ovm = MS.get >$> \(_, _, _, _, ovm) -> ovm
 
 --   checking membership and lookup
 
-check_if_sid_in_fids :: T.SimpleId -> PTC.PreprocessState P.Bool
-check_if_sid_in_fids = \sid -> S.member sid <$> get_fids
+check_if_id_in_fids :: T.Identifier -> PTC.PreprocessState P.Bool
+check_if_id_in_fids = \id -> S.member id <$> get_fids
 
 check_if_sid_in_ncs :: T.SimpleId -> PTC.PreprocessState P.Bool
 check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
@@ -495,12 +495,23 @@ change_pfarg_if_under :: T.PostFuncArg -> T.PostFuncArg
 change_pfarg_if_under = \case
   T.Underscore2 ->
     T.BE2 $ T.PFAOI1 $
-      GH.sid_to_pfaoi (T.SId (T.IS GPH.under_pfarg_param, P.Nothing))
+      sid_to_pfaoi (T.SId (T.IS GPH.under_pfarg_param, P.Nothing))
   other -> other
+
+check_if_pfaoi_is_sid :: T.ParenFuncAppOrId -> P.Maybe T.SimpleId
+check_if_pfaoi_is_sid = \case
+  T.PFAOI (P.Nothing, id_strt, [], mdigit, P.Nothing) ->
+    P.Just $ T.SId (id_strt, mdigit)
+  _ -> P.Nothing
+
+sid_to_pfaoi :: T.SimpleId -> T.ParenFuncAppOrId
+sid_to_pfaoi = \(T.SId (id_start, mdigit)) ->
+  T.PFAOI (P.Nothing, id_start, [], mdigit, P.Nothing)
 
 {-
 For fast vim file navigation:
-Collect.hs
 CheckCompatibility.hs
-AST.hs
+Collect.hs
+Preprocess.hs
+TypesAndClasses.hs
 -}

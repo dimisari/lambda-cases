@@ -26,3 +26,6 @@ field names: (name, nationality, date_of_birth)#
 tuple type: NonEmptyListOf(T1)s = T1 x ListOf(T1)s
 field names: (head, tail)#
 
+tuple type: Funcs = FuncT x FuncTT
+field names: ((_)f1(_), (_)f(_)f(_))#
+

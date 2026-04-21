@@ -60,11 +60,11 @@ arguments? id-start ( arguments lower-or-under+ )* [0-9]? arguments?
 
 arguments ::= paren-start line-expr-or-unders paren-end
 
-pre-func ::= simple-id ':'
+pre-func ::= simple-id '--'
 
 pre-func-app ::= pre-func operand
 
-post-func ::= '.' ( simple-id | special-id )
+post-func ::= '.' ( identifier | special-id )
 
 special-id ::= '1st' | '2nd' | '3rd' | '4th' | '5th'
 
@@ -75,7 +75,7 @@ post-func-app ::=
 dot-change ::=
 '.change{' opt-space field-change ( comma field-change )* opt-space '}'
 
-field-change ::= ( simple-id | special-id ) equals line-expr-or-under
+field-change ::= ( identifier | special-id ) equals line-expr-or-under
 
 equals ::= opt-space '=' opt-space
 
@@ -163,8 +163,6 @@ value-equals ::= nl-indent-equals value-expr where-expr?
 value-expr ::=
 basic-or-app-expr | op-expr | func-expr | big-tuple | big-list
 
-identifiers ::= identifier ( comma identifier )+
-
 types ::=  type ( comma type )+ | 'all ' type
 
 lines-exprs ::= line-exprs ( nl-indent comma line-exprs )*
@@ -225,7 +223,7 @@ space-or-nl-double-space ::= ' ' | nl-double-space
 
 tuple-type-def ::=
 'tuple type:' opt-space type-name equals prod-or-power-type nl
-'field names:' space-or-nl-double-space id-tuple opt-space-colon
+'field names:' space-or-nl-double-space field-names
 
 type-name ::=
 param-vars-in-paren? type-id ( param-vars-in-paren [A-Za-z]+ )*
@@ -234,7 +232,9 @@ param-vars-in-paren?
 param-vars-in-paren ::=
 paren-start param-t-var ( comma param-t-var )* paren-end
 
-id-tuple ::= paren-start simple-id ( comma simple-id )+ paren-end
+field-names ::= paren-start identifiers paren-end
+
+identifiers ::= identifier ( comma identifier )+
 
 or-type-def ::=
 'or type:' opt-space type-name nl
