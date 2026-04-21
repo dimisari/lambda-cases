@@ -1,0 +1,330 @@
+
+literal ::= int-lit | real-lit | char-lit | string-lit
+
+identifier ::= unders-in-paren? id-start id-cont* [0-9]? unders-in-paren?
+
+simple-id ::= id-start [0-9]?
+
+lower-or-under ::= [a-z_]
+
+id-start ::= [a-z] lower-or-under*
+
+id-cont ::= unders-in-paren lower-or-under+
+
+unders-in-paren ::= '(_' ( comma '_' )* ')'
+
+opt-space ::= ' '?
+
+comma ::= ',' opt-space
+
+paren-start ::= '(' opt-space
+
+paren-end ::= opt-space ')'
+
+line-op-or-func-expr ::= line-op-expr | line-func-expr
+
+paren-expr ::= paren-start line-op-or-func-expr paren-end
+
+tuple ::= paren-start line-expr-or-under comma line-expr-or-unders paren-end
+
+line-expr-or-unders ::= line-expr-or-under ( comma line-expr-or-under )*
+
+line-expr-or-under ::= line-expr | '_'
+
+line-expr ::= basic-or-app-expr | line-op-or-func-expr
+
+basic-or-app-expr ::= basic-expr | pre-func-app | post-func-app
+
+basic-expr ::= literal | paren-func-app-or-id | special-id | tuple | list
+
+nl-indent ::= nl indent
+
+big-tuple ::=
+paren-start line-expr-or-under nl-indent?
+comma line-expr-or-unders
+( nl-indent comma line-expr-or-unders )*
+nl-indent ')'
+
+sq-brack-start ::= '[' opt-space
+
+sq-brack-end ::= opt-space ']'
+
+list ::= sq-brack-start line-expr-or-unders? sq-brack-end
+
+big-list ::=
+sq-brack-start line-expr-or-unders
+( nl-indent comma line-expr-or-unders )* nl-indent ']'
+
+paren-func-app-or-id ::=
+arguments? id-start ( arguments lower-or-under+ )* [0-9]? arguments?
+
+arguments ::= paren-start line-expr-or-unders paren-end
+
+pre-func ::= simple-id ':'
+
+pre-func-app ::= pre-func operand
+
+post-func ::= '.' ( simple-id | special-id )
+
+special-id ::= '1st' | '2nd' | '3rd' | '4th' | '5th'
+
+post-func-app ::=
+( basic-expr | paren-expr | '_' )
+( dot-change | post-func+ dot-change? )
+
+dot-change ::=
+'.change{' opt-space field-change ( comma field-change )* opt-space '}'
+
+field-change ::= ( simple-id | special-id ) equals line-expr-or-under
+
+equals ::= opt-space '=' opt-space
+
+op-expr ::= line-op-expr | big-op-expr
+
+op-expr-start ::= ( operand op )+
+
+line-op-expr ::= op-expr-start ( operand | line-func-expr )
+
+big-op-expr ::= big-op-expr-op-split | big-op-expr-func-split
+
+big-op-expr-op-split ::= op-split-line+ op-expr-start? ( operand | func-expr )
+
+op-split-line ::= ( op-expr-start ( nl | oper-fco ) | oper-fco ) indent
+
+oper-fco ::= operand ' ' func-comp-op '\n'
+
+big-op-expr-func-split ::= op-expr-start ( big-func-expr | cases-func-expr )
+
+operand ::= basic-or-app-expr | paren-expr | '_'
+
+op ::= ' ' func-comp-op ' ' | opt-space optional-spaces-op opt-space
+
+func-comp-op ::= 'o>' | '<o'
+
+optional-spaces-op ::=
+'->' | '<-' | '^' | '*' | '/' | '+' | '-' | '==' | '!=' | '>' | '<' | '>=' |
+'<=' | '&' | '|' | '>>' | ';'
+
+func-expr ::= line-func-expr | big-func-expr | cases-func-expr
+
+func-arrow ::= opt-space '=>'
+
+parameters-arrow ::= parameters func-arrow
+
+line-func-expr ::= parameters-arrow line-func-body
+
+big-func-expr ::= parameters-arrow big-func-body
+
+parameters ::=
+identifier | '*' | paren-start parameters ( comma parameters )+ paren-end
+
+line-func-body ::=
+opt-space
+( basic-or-app-expr | line-op-expr | paren-start line-func-expr paren-end )
+
+big-func-body ::=
+nl-indent ( basic-or-app-expr | op-expr | paren-start line-func-expr paren-end )
+
+cases-func-expr ::= cases-params case+ end-case?
+
+cases-params ::=
+identifier | '?' | '*' |
+paren-start cases-params ( comma cases-params )+ paren-end
+
+case ::=  nl-indent (simple-id | matching) func-arrow case-body
+
+end-case ::= nl-indent ( '...' | identifier ) func-arrow case-body
+
+matching ::= literal | pre-func inner-matching | tuple-matching | list-matching
+
+inner-matching ::= '*' | identifier | matching
+
+tuple-matching ::= paren-start inner-matching ( comma inner-matching )+ paren-end
+
+list-matching ::=
+sq-brack-start
+(inner-matching ( comma inner-matching )* rest-list-matching?)?
+sq-brack-end
+
+rest-list-matching ::= comma (simple-id equals)? '...'
+
+case-body ::= line-func-body | big-func-body where-expr?
+
+opt-space-colon ::= opt-space ':' opt-space
+
+has-type ::= opt-space-colon | nl-indent ': '
+
+nl-indent-equals ::= nl-indent '= '
+
+value-def ::= indent identifier has-type type value-equals?
+
+value-equals ::= nl-indent-equals value-expr where-expr?
+
+value-expr ::=
+basic-or-app-expr | op-expr | func-expr | big-tuple | big-list
+
+identifiers ::= identifier ( comma identifier )+
+
+types ::=  type ( comma type )+ | 'all ' type
+
+lines-exprs ::= line-exprs ( nl-indent comma line-exprs )*
+
+grouped-value-defs ::=
+indent identifiers has-type types
+nl-indent-equals lines-exprs
+
+line-exprs ::= line-expr ( comma line-expr )*
+
+where-expr ::=
+nl-indent 'where' nl value-def-or-defs ( nl nl value-def-or-defs )*
+
+value-def-or-defs ::= value-def | grouped-value-defs
+
+type ::= condition?  simple-type
+
+simple-type ::=
+param-t-var | type-app-id-or-ahtv | prod-or-power-type | func-type
+
+type-id ::= [A-Z] [A-Za-z]*
+
+param-t-var ::= 'T' [0-9]
+
+ad-hoc-t-var ::= '@' [A-Z]
+
+type-app-id-or-ahtv ::= types-in-paren? taioa-middle types-in-paren?
+
+taioa-middle ::= type-id ( types-in-paren [A-Za-z]+ )* | ad-hoc-t-var
+
+types-in-paren ::= paren-start simple-type ( comma simple-type )* paren-end
+
+prod-type ::= field-type ( ' x ' field-type )+
+
+field-type ::= power-base-type | power-type
+
+power-base-type ::=
+param-t-var | type-app-id-or-ahtv |
+paren-start ( prod-type | func-type ) paren-end
+
+power-type ::= power-base-type '^' int-greater-than-one
+
+func-type ::= in-or-out-type ' => ' in-or-out-type
+
+in-or-out-type ::=
+param-t-var | type-app-id-or-ahtv | prod-or-power-type |
+paren-start func-type paren-end
+
+condition ::= prop-name ' --> '
+
+type-def ::= tuple-type-def | or-type-def
+
+nl-double-space ::= nl '  '
+
+space-or-nl-double-space ::= ' ' | nl-double-space
+
+tuple-type-def ::=
+'tuple type:' opt-space type-name equals prod-or-power-type nl
+'field names:' space-or-nl-double-space id-tuple opt-space-colon
+
+prod-or-power-type ::= prod-type | power-type
+
+type-name ::=
+param-vars-in-paren? type-id ( param-vars-in-paren [A-Za-z]+ )*
+param-vars-in-paren?
+
+param-vars-in-paren ::=
+paren-start param-t-var ( comma param-t-var )* paren-end
+
+id-tuple ::= paren-start simple-id ( comma simple-id )+ paren-end
+
+or-type-def ::=
+'or type:' opt-space type-name nl
+'values:' or-type-values
+
+or-type-values ::= opt-space or-type-values-line | or-type-values-lines
+
+or-type-values-line ::= or-type-value (opt-space '|' opt-space or-type-value)*
+
+or-type-values-lines ::=
+nl-double-space or-type-values-line
+(opt-space '|' nl-double-space or-type-values-line)*
+
+or-type-value ::= simple-id internal-value?
+
+internal-value ::=
+'--<' opt-space identifier opt-space ':' opt-space simple-type opt-space '>'
+
+t-nickname ::= 'type_nickname ' type-name equals simple-type
+
+type-prop-def ::= atom-prop-def | renaming-prop-def
+
+atom-prop-def ::=
+prop-name-line nl 'needed' space-or-nl-double-space
+identifier opt-space-colon simple-type
+
+renaming-prop-def ::=
+prop-name-line nl
+'equivalent' space-or-nl-double-space prop-name ( comma prop-name )*
+
+prop-name-line ::= 'type_proposition ' prop-name
+
+prop-name ::=
+[A-Z] ( name-part types-in-paren )+ name-part?
+| " "( types-in-paren name-part )+ types-in-paren?
+
+name-part ::= ( [A-Za-z] | '_'[A-Z] )+
+
+type-theo ::=
+'type_theorem ' prop-name-with-subs (' --> ' prop-name-with-subs)? nl
+'proof' proof
+
+prop-name-with-subs ::=
+[A-Z] ( name-part subs-in-paren )+ name-part?
+| " "( subs-in-paren name-part )+ subs-in-paren?
+
+subs-in-paren ::=
+paren-start t-var-sub ( comma t-var-sub )* paren-end
+
+t-var-sub ::=
+param-t-var | type-app-id-or-ahtv-sub | power-type-sub | prod-type-sub |
+func-type-sub
+
+type-app-id-or-ahtv-sub ::=
+subs-or-unders-in-paren? taioas-middle subs-or-unders-in-paren?
+
+taioas-middle ::=
+type-id ( subs-or-unders-in-paren [A-Za-z]+ )* | ad-hoc-t-var
+
+subs-or-unders-in-paren ::=
+paren-start sub-or-under ( comma sub-or-under )* paren-end
+
+sub-or-under ::= t-var-sub | '_'
+
+power-type-sub ::= power-base-type-sub '^' int-greater-than-one
+
+power-base-type-sub ::=
+'_' | param-t-var | type-app-id-or-ahtv-sub |
+paren-start ( prod-type-sub | func-type-sub ) paren-end
+
+prod-type-sub ::= field-type-sub ( ' x ' field-type-sub )+
+
+field-type-sub ::= power-base-type-sub | power-type-sub
+
+func-type-sub ::= in-or-out-type-sub ' => ' in-or-out-type-sub
+
+in-or-out-type-sub ::=
+'_' | param-t-var | type-app-id-or-ahtv-sub | power-type-sub |
+prod-type-sub | paren-start func-type-sub paren-end
+
+proof ::= ' ' id-or-op-eq ' ' line-expr | nl '  ' id-or-op-eq  tt-value-expr
+
+id-or-op-eq ::= identifier (op identifier)? ' ='
+
+tt-value-expr ::= ' ' line-expr | nl-indent value-expr where-expr?
+
+program ::= nl* program-part ( nl nl program-part )* nl*
+
+program-part ::=
+value-def | grouped-value-defs | type-def | t-nickname |
+type-prop-def | type-theo
+
+nl ::= ( ' ' | 't' )* '\n'
