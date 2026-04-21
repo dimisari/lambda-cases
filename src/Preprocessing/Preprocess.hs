@@ -384,12 +384,13 @@ instance PTC.ToMaybePostFuncApp T.ParenFuncAppOrId where
       P.Just sid -> PTC.to_maybe_post_func_app $ GH.sid_to_id sid
 
 instance PTC.ToMaybePostFuncApp T.SpecialId where
-  to_maybe_post_func_app = \spid -> PTC.to_maybe_post_func_app $ T.SI2 spid
+  to_maybe_post_func_app = \spid ->
+    PTC.to_maybe_post_func_app $ T.PoF $ T.SI2 spid
 
 instance PTC.ToMaybePostFuncApp T.Identifier where
   to_maybe_post_func_app = \id ->
     check_if_id_in_fids id >>= \case
-      P.True -> PTC.to_maybe_post_func_app $ T.Id1 id
+      P.True -> PTC.to_maybe_post_func_app $ T.PoF $ T.Id1 id
       _ -> P.return P.Nothing
 
 instance PTC.ToMaybePostFuncApp T.PostFunc where

@@ -77,7 +77,9 @@ newtype PreFunc = PF SimpleId
 
 newtype PreFuncApp = PrFA (PreFunc, Operand)
 
-data PostFunc =
+newtype PostFunc = PoF IdOrSpecialId
+
+data IdOrSpecialId =
   Id1 Identifier | SI2 SpecialId
 
 data SpecialId =
@@ -93,10 +95,7 @@ data PostFuncAppEnd =
 
 newtype DotChange = DC (FieldChange, [FieldChange])
 
-newtype FieldChange = FC (Field, LineExprOrUnder)
-
-data Field =
-  SId2 Identifier | SI3 SpecialId
+newtype FieldChange = FC (IdOrSpecialId, LineExprOrUnder)
 
 
 -- Values: OpExpr

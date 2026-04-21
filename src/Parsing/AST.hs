@@ -194,8 +194,13 @@ instance PTC.HasParser T.PreFuncApp where
 
 instance PTC.HasParser T.PostFunc where
   parser =
-    TP.try (TP.char '.' *> TP.notFollowedBy (TP.string "change{")) *>
-    (T.Id1 <$> PTC.parser <|> T.SI2 <$> PTC.parser)
+    P.fmap T.PoF $
+      TP.try (TP.char '.' *> TP.notFollowedBy (TP.string "change{")) *>
+      PTC.parser
+
+instance PTC.HasParser T.IdOrSpecialId where
+  parser =
+    T.Id1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
 
 instance PTC.HasParser T.SpecialId where
   parser =
@@ -229,10 +234,7 @@ instance PTC.HasParser T.DotChange where
     field_changes_p = field_change_p ++< TP.many (PH.comma *> field_change_p)
 
     field_change_p :: PTC.Parser T.FieldChange
-    field_change_p = T.FC <$> field_p ++< (PH.equals *> PTC.parser)
-
-    field_p :: PTC.Parser T.Field
-    field_p = T.SId2 <$> PTC.parser <|> T.SI3 <$> PTC.parser
+    field_change_p = T.FC <$> PTC.parser ++< (PH.equals *> PTC.parser)
 
 --  OpExpr
 

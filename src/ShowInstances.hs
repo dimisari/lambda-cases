@@ -140,9 +140,12 @@ instance P.Show T.PreFuncApp where
   show = \(T.PrFA (pf, oper)) -> P.show pf ++ P.show oper
 
 instance P.Show T.PostFunc where
+  show = \(T.PoF id) -> "." ++ P.show id
+
+instance P.Show T.IdOrSpecialId where
   show = \case
-    T.Id1 sid -> "." ++ P.show sid
-    T.SI2 sid -> "." ++ P.show sid
+    T.Id1 id -> P.show id
+    T.SI2 sid -> P.show sid
 
 instance P.Show T.SpecialId where
   show = \case
@@ -172,11 +175,6 @@ instance P.Show T.DotChange where
 
 instance P.Show T.FieldChange where
   show = \(T.FC (f, le)) -> P.show f ++ " = " ++ P.show le
-
-instance P.Show T.Field where
-  show = \case
-    T.SId2 sid -> P.show sid
-    T.SI3 sid -> P.show sid
 
 -- Values: OpExpr
 instance P.Show T.OpExpr where

@@ -196,9 +196,18 @@ instance GTC.ToHaskell T.PreFuncApp where
     GH.add_params_to $ (GTC.to_haskell pf ++ "(") ++> GTC.to_hs_wpn oper <++ ")"
 
 instance GTC.ToHaskell T.PostFunc where
+  to_haskell (T.PoF iosi) =
+    iosi_prefix ++ GTC.to_haskell iosi
+    where
+    iosi_prefix :: GTC.Haskell
+    iosi_prefix = case iosi of
+      T.Id1 id -> ""
+      T.SI2 spid -> GPH.spid_projection_prefix
+
+instance GTC.ToHaskell T.IdOrSpecialId where
   to_haskell = \case
     T.Id1 id -> GTC.to_haskell id
-    T.SI2 spid -> GPH.spid_projection_prefix ++ GTC.to_haskell spid
+    T.SI2 spid -> GTC.to_haskell spid
 
 instance GTC.ToHaskell T.SpecialId where
   to_haskell = \case
@@ -250,13 +259,13 @@ instance GTC.ToHaskell (T.DotChange, GTC.DotChangeArgHs) where
         fcs_hs_list -> "(" ++ L.intercalate " .> " fcs_hs_list ++ ")"
 
 instance GTC.ToHsWithParamNum T.FieldChange where
-  to_hs_wpn = \(T.FC (f, leou)) ->
-    (GTC.to_haskell f ++ "(") ++> GTC.to_hs_wpn leou <++ ")"
-
-instance GTC.ToHaskell T.Field where
-  to_haskell = \case
-    T.SId2 id -> GPH.change_prefix ++ GTC.to_haskell id
-    T.SI3 spid -> GPH.spid_change_prefix ++ GTC.to_haskell spid
+  to_hs_wpn (T.FC (f, leou)) =
+    (f_prefix ++ GTC.to_haskell f ++ "(") ++> GTC.to_hs_wpn leou <++ ")"
+    where
+    f_prefix :: GTC.Haskell
+    f_prefix = case f of
+      T.Id1 _ -> GPH.change_prefix
+      T.SI2 _ -> GPH.spid_change_prefix
 
 -- Values: OpExpr
 
