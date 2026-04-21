@@ -521,9 +521,11 @@ instance PTC.HasParser T.Type where
 
 instance PTC.HasParser T.SimpleType where
   parser =
-    T.FT1 <$> TP.try PTC.parser <|> T.PT1 <$> TP.try PTC.parser <|>
-    T.PoT1 <$> TP.try PTC.parser <|> T.PTV1 <$> TP.try PTC.parser <|>
-    T.TAIOA1 <$> PTC.parser
+    T.FT1 <$> TP.try PTC.parser <|> T.POPT1 <$> TP.try PTC.parser <|>
+    T.PTV1 <$> TP.try PTC.parser <|> T.TAIOA1 <$> PTC.parser
+
+instance PTC.HasParser T.ProdOrPowerType where
+  parser = T.PT4 <$> TP.try PTC.parser <|> T.PoT5 <$> PTC.parser
 
 instance PTC.HasParser T.TypeId where
   parser = T.TId <$> TP.upper >:< TP.many (TP.upper <|> TP.lower)
@@ -577,8 +579,9 @@ instance PTC.HasParser T.FuncType where
 
 instance PTC.HasParser T.InOrOutType where
   parser =
-    T.PT2 <$> TP.try PTC.parser <|> T.FT2 <$> TP.try (PH.in_paren PTC.parser) <|>
-    T.PoT4 <$> TP.try PTC.parser <|> T.PTV3 <$> TP.try PTC.parser <|>
+    T.POPT2 <$> TP.try PTC.parser <|>
+    T.FT2 <$> TP.try (PH.in_paren PTC.parser) <|>
+    T.PTV3 <$> TP.try PTC.parser <|>
     T.TAIOA3 <$> PTC.parser
 
 instance PTC.HasParser T.Condition where
@@ -594,12 +597,9 @@ instance PTC.HasParser T.TupleTypeDef where
     T.TTD <$>
       (TP.try (TP.string "tuple type:") *> PH.opt_space *> PTC.parser)
       ++<
-      (PH.opt_space_around (TP.char '=') *> PTC.parser)
+      (PH.equals *> PTC.parser)
       +++<
       (PH.nl *> TP.string "field names:" *> PH.space_or_nl *> PTC.parser)
-
-instance PTC.HasParser T.ProdOrPowerType where
-  parser = T.PT4 <$> TP.try PTC.parser <|> T.PoT5 <$> PTC.parser
 
 instance PTC.HasParser T.TypeName where
   parser =
@@ -741,9 +741,12 @@ instance PTC.HasParser T.SubsInParen where
 
 instance PTC.HasParser T.TVarSub where
   parser =
-    T.FTS1 <$> TP.try PTC.parser <|> T.PTS1 <$> TP.try PTC.parser <|>
-    T.PoTS1 <$> TP.try PTC.parser <|> T.PTV4 <$> TP.try PTC.parser <|>
-    T.TAIOAS1 <$> PTC.parser
+    T.FTS1 <$> TP.try PTC.parser <|> T.POPTS1 <$> TP.try PTC.parser <|>
+    T.PTV4 <$> TP.try PTC.parser <|> T.TAIOAS1 <$> PTC.parser
+
+instance PTC.HasParser T.ProdOrPowerTypeSub where
+  parser =
+    T.PTS1 <$> TP.try PTC.parser <|> T.PoTS1 <$> PTC.parser
 
 instance PTC.HasParser T.TypeAppIdOrAHTVSub where
   parser =
@@ -791,7 +794,7 @@ instance PTC.HasParser T.FuncTypeSub where
 instance PTC.HasParser T.InOrOutTypeSub where
   parser =
     T.FTS3 <$> TP.try (PH.in_paren PTC.parser) <|>
-    T.PTS3 <$> TP.try PTC.parser <|> T.PoTS3 <$> TP.try PTC.parser <|>
+    T.POPTS2 <$> TP.try PTC.parser <|>
     T.TAIOAS3 <$> TP.try PTC.parser <|> T.PTV6 <$> PTC.parser <|>
     PH.underscore *> P.return T.Underscore6
 

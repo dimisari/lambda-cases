@@ -87,9 +87,13 @@ instance PTC.CheckCompatibility T.SimpleType T.TVarSub where
   check_compat = \case
     (T.PTV1 _, T.PTV4 _) -> PTC.Compatible M.empty
     (T.TAIOA1 taioa, T.TAIOAS1 taioas) -> PTC.check_compat(taioa, taioas)
-    (T.PoT1 pt, T.PoTS1 pts) -> PTC.check_compat(pt, pts)
-    (T.PT1 pt, T.PTS1 pts) -> PTC.check_compat(pt, pts)
+    (T.POPT1 popt, T.POPTS1 popts) -> PTC.check_compat(popt, popts)
     (T.FT1 ft, T.FTS1 fts) -> PTC.check_compat(ft, fts)
+
+instance PTC.CheckCompatibility T.ProdOrPowerType T.ProdOrPowerTypeSub where
+  check_compat = \case
+    (T.PoT5 pt, T.PoTS1 pts) -> PTC.check_compat(pt, pts)
+    (T.PT4 pt, T.PTS1 pts) -> PTC.check_compat(pt, pts)
 
 instance PTC.CheckCompatibility T.TypeAppIdOrAHTV T.TypeAppIdOrAHTVSub where
   check_compat =
@@ -145,8 +149,7 @@ instance PTC.CheckCompatibility T.InOrOutType T.InOrOutTypeSub where
   check_compat = \case
     (T.PTV3 _, T.PTV6 _) -> PTC.Compatible M.empty
     (T.TAIOA3 taioa, T.TAIOAS3 taioas) -> PTC.check_compat(taioa, taioas)
-    (T.PoT4 pt, T.PoTS3 pts) -> PTC.check_compat(pt, pts)
-    (T.PT2 pt, T.PTS3 pts) -> PTC.check_compat(pt, pts)
+    (T.POPT2 popt, T.POPTS2 popts) -> PTC.check_compat(popt, popts)
     (T.FT2 ft, T.FTS3 fts) -> PTC.check_compat(ft, fts)
     _ -> PTC.NotCompatible
 
@@ -215,9 +218,13 @@ instance PTC.AddSubs T.SimpleType T.TVarSub where
     T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)) -> PTC.add_subs ahtv
     T.PTV1 ptv -> P.return $ T.PTV4 ptv
     T.TAIOA1 taioa -> T.TAIOAS1 <$> PTC.add_subs taioa
-    T.PoT1 pt -> T.PoTS1 <$> PTC.add_subs pt
-    T.PT1 pt -> T.PTS1 <$> PTC.add_subs pt
+    T.POPT1 popt -> T.POPTS1 <$> PTC.add_subs popt
     T.FT1 ft -> T.FTS1 <$> PTC.add_subs ft
+
+instance PTC.AddSubs T.ProdOrPowerType T.ProdOrPowerTypeSub where
+  add_subs = \case
+    T.PT4 pt -> T.PTS1 <$> PTC.add_subs pt
+    T.PoT5 pt -> T.PoTS1 <$> PTC.add_subs pt
 
 instance PTC.AddSubs T.AdHocTVar T.TVarSub where
   add_subs = \ahtv ->
@@ -264,8 +271,7 @@ instance PTC.AddSubs T.InOrOutType T.InOrOutTypeSub where
   add_subs = \case
     T.PTV3 ptv -> P.return $ T.PTV6 ptv
     T.TAIOA3 taioa -> T.TAIOAS3 <$> PTC.add_subs taioa
-    T.PoT4 pt -> T.PoTS3 <$> PTC.add_subs pt
-    T.PT2 pt -> T.PTS3 <$> PTC.add_subs pt
+    T.POPT2 popt -> T.POPTS2 <$> PTC.add_subs popt
     T.FT2 ft -> T.FTS3 <$> PTC.add_subs ft
 
 instance PTC.AddSubs PTC.TIP_STR PTC.SOUIP_STR where

@@ -273,7 +273,7 @@ change_id_hs_if_needed2 = \case
 ft_to_st :: T.FieldType -> T.SimpleType
 ft_to_st = \case
   T.PBT1 pbt -> pbt_to_st pbt
-  T.PoT2 pt -> T.PoT1 pt
+  T.PoT2 pt -> T.POPT1 $ T.PoT5 pt
 
 pbt_to_st :: T.PowerBaseType -> T.SimpleType
 pbt_to_st = \case
@@ -283,7 +283,7 @@ pbt_to_st = \case
 
 ipt_to_st :: T.InParenT -> T.SimpleType
 ipt_to_st = \case
-  T.PT3 pt -> T.PT1 pt
+  T.PT3 pt -> T.POPT1 $ T.PT4 pt
   T.FT3 ft -> T.FT1 ft
 
 taioasm_to_sou :: T.TAIOASMiddle -> T.SubOrUnder

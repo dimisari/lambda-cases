@@ -185,6 +185,8 @@ type ::= condition?  simple-type
 simple-type ::=
 param-t-var | type-app-id-or-ahtv | prod-or-power-type | func-type
 
+prod-or-power-type ::= prod-type | power-type
+
 type-id ::= [A-Z] [A-Za-z]*
 
 param-t-var ::= 'T' [0-9]
@@ -224,8 +226,6 @@ space-or-nl-double-space ::= ' ' | nl-double-space
 tuple-type-def ::=
 'tuple type:' opt-space type-name equals prod-or-power-type nl
 'field names:' space-or-nl-double-space id-tuple opt-space-colon
-
-prod-or-power-type ::= prod-type | power-type
 
 type-name ::=
 param-vars-in-paren? type-id ( param-vars-in-paren [A-Za-z]+ )*
@@ -285,8 +285,9 @@ subs-in-paren ::=
 paren-start t-var-sub ( comma t-var-sub )* paren-end
 
 t-var-sub ::=
-param-t-var | type-app-id-or-ahtv-sub | power-type-sub | prod-type-sub |
-func-type-sub
+param-t-var | type-app-id-or-ahtv-sub | prod-or-power-type-sub | func-type-sub
+
+prod-or-power-type-sub ::= prod-type-sub | power-type-sub
 
 type-app-id-or-ahtv-sub ::=
 subs-or-unders-in-paren? taioas-middle subs-or-unders-in-paren?
@@ -312,8 +313,8 @@ field-type-sub ::= power-base-type-sub | power-type-sub
 func-type-sub ::= in-or-out-type-sub ' => ' in-or-out-type-sub
 
 in-or-out-type-sub ::=
-'_' | param-t-var | type-app-id-or-ahtv-sub | power-type-sub |
-prod-type-sub | paren-start func-type-sub paren-end
+'_' | param-t-var | type-app-id-or-ahtv-sub | prod-or-power-type-sub |
+paren-start func-type-sub paren-end
 
 proof ::= ' ' id-or-op-eq ' ' line-expr | nl '  ' id-or-op-eq  tt-value-expr
 

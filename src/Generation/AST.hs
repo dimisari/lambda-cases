@@ -616,9 +616,13 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.SimpleType) where
   to_haskell = \(needs_paren, st) -> case st of
     T.PTV1 ptv -> GTC.to_haskell ptv
     T.TAIOA1 taioa -> GTC.to_haskell (needs_paren, taioa)
-    T.PoT1 pt -> GTC.to_haskell pt
-    T.PT1 pt -> GTC.to_haskell pt
+    T.POPT1 popt -> GTC.to_haskell popt
     T.FT1 ft -> GH.in_paren_if needs_paren $ GTC.to_haskell ft
+
+instance GTC.ToHaskell T.ProdOrPowerType where
+  to_haskell = \case
+    T.PT4 pt -> GTC.to_haskell pt
+    T.PoT5 pt -> GTC.to_haskell pt
 
 instance GTC.ToHaskell T.TypeId where
   to_haskell = \(T.TId str) -> str
@@ -705,8 +709,7 @@ instance GTC.ToHaskell T.InOrOutType where
   to_haskell = \case
     T.PTV3 ptv -> GTC.to_haskell ptv
     T.TAIOA3 taioa -> GTC.to_haskell (GTC.NoParen, taioa)
-    T.PoT4 pt -> GTC.to_haskell pt
-    T.PT2 pt -> GTC.to_haskell pt
+    T.POPT2 popt -> GTC.to_haskell popt
     T.FT2 ft -> "(" ++ GTC.to_haskell ft ++ ")"
 
 instance GTC.ToHaskell T.Condition where
@@ -786,11 +789,6 @@ instance GTC.ToHaskell T.TupleTypeDef where
 
     params_list :: [GTC.Haskell]
     params_list = [1..size] &> P.map (\i -> "x" ++ P.show i)
-
-instance GTC.ToHaskell T.ProdOrPowerType where
-  to_haskell = \case
-    T.PT4 pt -> GTC.to_haskell pt
-    T.PoT5 pt -> GTC.to_haskell pt
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeName) where
   to_haskell (needs_paren, tn@(T.TN (mpvip1, _, pvip_str_pairs, mpvip2))) =
@@ -932,9 +930,13 @@ instance GTC.ToHaskell T.TVarSub where
   to_haskell = \case
     T.PTV4 tv -> GTC.to_haskell tv
     T.TAIOAS1 tasoi -> GTC.to_haskell (GTC.Paren, tasoi)
-    T.PoTS1 pts -> GTC.to_haskell pts
-    T.PTS1 pts -> GTC.to_haskell pts
+    T.POPTS1 popts -> GTC.to_haskell popts
     T.FTS1 fts -> "(" ++ GTC.to_haskell fts  ++ ")"
+
+instance GTC.ToHaskell T.ProdOrPowerTypeSub where
+  to_haskell = \case
+    T.PTS1 pts -> GTC.to_haskell pts
+    T.PoTS1 pts -> GTC.to_haskell pts
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
   to_haskell (needs_paren, T.TAIOAS taioas) = case taioas of
@@ -1011,8 +1013,7 @@ instance GTC.ToHaskell T.InOrOutTypeSub where
     T.Underscore6 -> P.undefined
     T.PTV6 tv -> GTC.to_haskell tv
     T.TAIOAS3 tasoi -> GTC.to_haskell (GTC.NoParen, tasoi)
-    T.PoTS3 pots -> GTC.to_haskell pots
-    T.PTS3 pts -> GTC.to_haskell pts
+    T.POPTS2 popts -> GTC.to_haskell popts
     T.FTS3 fts -> GTC.to_haskell fts
 
 instance GTC.ToHaskell T.Proof where

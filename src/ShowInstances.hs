@@ -411,9 +411,13 @@ instance P.Show T.SimpleType where
   show = \case
     T.PTV1 ptv -> P.show ptv
     T.TAIOA1 ta -> P.show ta
-    T.PoT1 pt -> P.show pt
-    T.PT1 pt -> P.show pt
+    T.POPT1 popt -> P.show popt
     T.FT1 ft -> P.show ft
+
+instance P.Show T.ProdOrPowerType where
+  show = \case
+    T.PT4 pt -> P.show pt
+    T.PoT5 pt -> P.show pt
 
 instance P.Show T.TypeId where
   show = \(T.TId str) -> str
@@ -466,8 +470,7 @@ instance P.Show T.InOrOutType where
   show = \case
     T.PTV3 ptv -> P.show ptv
     T.TAIOA3 ta -> P.show ta
-    T.PoT4 pt -> P.show pt
-    T.PT2 pt -> P.show pt
+    T.POPT2 popt -> P.show popt
     T.FT2 ft -> "(" ++ P.show ft ++ ")"
 
 instance P.Show T.Condition where
@@ -483,11 +486,6 @@ instance P.Show T.TupleTypeDef where
   show = \(T.TTD (tn, pcsis, ttde)) ->
     "tuple_type " ++ P.show tn ++ "\nvalue\n  " ++ P.show pcsis ++ " : " ++
     P.show ttde
-
-instance P.Show T.ProdOrPowerType where
-  show = \case
-    T.PT4 pt -> P.show pt
-    T.PoT5 pt -> P.show pt
 
 instance P.Show T.TypeName where
   show = \(T.TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) ->
@@ -587,9 +585,13 @@ instance P.Show T.TVarSub where
   show = \case
     T.PTV4 ptv -> P.show ptv
     T.TAIOAS1 tas -> P.show tas
-    T.PoTS1 pts -> P.show pts
-    T.PTS1 pts -> P.show pts
+    T.POPTS1 popts -> P.show popts
     T.FTS1 fts -> P.show fts
+
+instance P.Show T.ProdOrPowerTypeSub where
+  show = \case
+    T.PTS1 pts -> P.show pts
+    T.PoTS1 pts -> P.show pts
 
 instance P.Show T.TypeAppIdOrAHTVSub where
   show = \(T.TAIOAS (msouip1, taioasm, msouip2)) ->
@@ -642,8 +644,7 @@ instance P.Show T.InOrOutTypeSub where
     T.Underscore6 -> "_"
     T.PTV6 ptv -> P.show ptv
     T.TAIOAS3 tas -> P.show tas
-    T.PoTS3 pots -> P.show pots
-    T.PTS3 pts -> P.show pts
+    T.POPTS2 popts -> P.show popts
     T.FTS3 fts -> P.show fts
 
 instance P.Show T.Proof where

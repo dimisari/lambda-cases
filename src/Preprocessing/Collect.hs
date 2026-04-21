@@ -87,9 +87,13 @@ instance PTC.CollectParamTVars T.SimpleType where
   collect_ptvs = \case
     T.PTV1 ptv -> MS.modify (S.insert ptv)
     T.TAIOA1 taioa -> PTC.collect_ptvs taioa
-    T.PoT1 pt -> PTC.collect_ptvs pt
-    T.PT1 pt -> PTC.collect_ptvs pt
+    T.POPT1 popt -> PTC.collect_ptvs popt
     T.FT1 ft -> PTC.collect_ptvs ft
+
+instance PTC.CollectParamTVars T.ProdOrPowerType where
+  collect_ptvs = \case
+    T.PT4 pt -> PTC.collect_ptvs pt
+    T.PoT5 pt -> PTC.collect_ptvs pt
 
 instance PTC.CollectParamTVars T.TypeAppIdOrAHTV where
   collect_ptvs = \(T.TAIOA (mtip1, taioam, mtip2)) ->
@@ -133,8 +137,7 @@ instance PTC.CollectParamTVars T.InOrOutType where
   collect_ptvs = \case
     T.PTV3 ptv -> MS.modify (S.insert ptv)
     T.TAIOA3 taioa -> PTC.collect_ptvs taioa
-    T.PoT4 pt -> PTC.collect_ptvs pt
-    T.PT2 pt -> PTC.collect_ptvs pt
+    T.POPT2 popt -> PTC.collect_ptvs popt
     T.FT2 ft -> PTC.collect_ptvs ft
 
 instance PTC.CollectParamTVars (T.TypesInParen, P.String) where
