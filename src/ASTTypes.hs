@@ -213,9 +213,9 @@ data Types =
 
 newtype LineExprs = LEs (LineExpr, [LineExpr])
 
-newtype WhereExpr = WE (WhereDefExpr, [WhereDefExpr])
+newtype WhereExpr = WE (ValueDefOrDefs, [ValueDefOrDefs])
 
-data WhereDefExpr =
+data ValueDefOrDefs =
   VD1 ValueDef | GVDs1 GroupedValueDefs
 
 
@@ -385,7 +385,7 @@ data TTValueExpr =
 newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart =
-  VD2 ValueDef | GVDs2 GroupedValueDefs | TD TypeDef | TNN1 TypeNickname |
+  VDD ValueDefOrDefs | TD TypeDef | TNN1 TypeNickname |
   TPD TypePropDef | TT1 TypeTheo
 
 

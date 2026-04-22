@@ -83,19 +83,21 @@ equals ::= opt-space '=' opt-space
 
 op-expr ::= line-op-expr | big-op-expr
 
-op-expr-start ::= ( operand op )+
+line-op-expr-start ::= ( operand op )+
 
-line-op-expr ::= op-expr-start ( operand | line-func-expr )
+line-op-expr ::= line-op-expr-start ( operand | line-func-expr )
 
 big-op-expr ::= big-op-expr-op-split | big-op-expr-func-split
 
-big-op-expr-op-split ::= op-split-line+ op-expr-start? ( operand | func-expr )
+big-op-expr-op-split ::=
+op-split-line+ line-op-expr-start? ( operand | func-expr )
 
-op-split-line ::= ( op-expr-start ( nl | oper-fco-nl ) | oper-fco-nl ) indent
+op-split-line ::=
+( line-op-expr-start ( nl | oper-fco-nl ) | oper-fco-nl ) indent
 
 oper-fco-nl ::= operand ' ' func-comp-op '\n'
 
-big-op-expr-func-split ::= op-expr-start ( big-func-expr | cases-func-expr )
+big-op-expr-func-split ::= line-op-expr-start ( big-func-expr | cases-func-expr )
 
 operand ::= basic-or-app-expr | paren-expr | '_'
 
@@ -134,7 +136,7 @@ cases-params ::=
 identifier | '?' | '*' |
 paren-start cases-params ( comma cases-params )+ paren-end
 
-case ::=  nl-indent (simple-id | matching) func-arrow case-body
+case ::= nl-indent (simple-id | matching) func-arrow case-body
 
 end-case ::= nl-indent ( '...' | identifier ) func-arrow case-body
 
@@ -157,7 +159,7 @@ has-type ::= (opt-space | nl-indent) ':' opt-space
 
 nl-indent-equals ::= nl-indent '= '
 
-value-def ::= indent identifier has-type type value-equals?
+value-def ::= identifier has-type type value-equals?
 
 value-equals ::= nl-indent-equals value-expr where-expr?
 
@@ -168,16 +170,14 @@ types ::=  type ( comma type )+ | 'all ' type
 
 lines-exprs ::= line-exprs ( nl-indent comma line-exprs )*
 
-grouped-value-defs ::=
-indent identifiers has-type types
-nl-indent-equals lines-exprs
+grouped-value-defs ::= identifiers has-type types nl-indent-equals lines-exprs
 
 line-exprs ::= line-expr ( comma line-expr )*
 
 where-expr ::=
 nl-indent 'where' nl value-def-or-defs ( nl nl value-def-or-defs )*
 
-value-def-or-defs ::= value-def | grouped-value-defs
+value-def-or-defs ::= indent (value-def | grouped-value-defs)
 
 type ::= condition?  simple-type
 
@@ -327,7 +327,6 @@ tt-value-expr ::= ' ' line-expr | nl-indent value-expr where-expr?
 program ::= nl* program-part ( nl nl program-part )* nl*
 
 program-part ::=
-value-def | grouped-value-defs | type-def | t-nickname |
-type-prop-def | type-theo
+value-def-or-defs | type-def | t-nickname | type-prop-def | type-theo
 
 nl ::= ( ' ' | 't' )* '\n'

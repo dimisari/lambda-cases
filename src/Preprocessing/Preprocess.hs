@@ -322,7 +322,7 @@ instance PTC.Preprocess T.LineExprs where
 instance PTC.Preprocess T.WhereExpr where
   preprocess = \(T.WE we) -> T.WE <$> preprocess_pair we
 
-instance PTC.Preprocess T.WhereDefExpr where
+instance PTC.Preprocess T.ValueDefOrDefs where
   preprocess = \case
     T.VD1 vd -> T.VD1 <$> PTC.preprocess vd
     T.GVDs1 gvds -> T.GVDs1 <$> PTC.preprocess gvds
@@ -367,8 +367,7 @@ instance PTC.Preprocess T.Program where
 
 instance PTC.Preprocess T.ProgramPart where
   preprocess = \case
-    T.VD2 vd -> T.VD2 <$> PTC.preprocess vd
-    T.GVDs2 gvds -> T.GVDs2 <$> PTC.preprocess gvds
+    T.VDD vdd -> T.VDD <$> PTC.preprocess vdd
     T.TT1 tt -> T.TT1 <$> PTC.preprocess tt
     other -> P.return other
 

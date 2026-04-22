@@ -613,7 +613,7 @@ instance GTC.ToHsWithIndentLvl T.WhereExpr where
     (GH.to_hs_wil_list (wde : wdes) >$> L.intercalate "\n\n") <++ "\n" >++<
     GH.indent <++ "in\n"
 
-instance GTC.ToHsWithIndentLvl T.WhereDefExpr where
+instance GTC.ToHsWithIndentLvl T.ValueDefOrDefs where
   to_hs_wil = \case
     T.VD1 vd -> GTC.to_hs_wil vd
     T.GVDs1 gvd -> GTC.to_hs_wil gvd
@@ -1060,8 +1060,7 @@ instance GTC.ToHaskell T.Program where
 
 instance GTC.ToHaskell T.ProgramPart where
   to_haskell = \case
-    T.VD2 vd -> GH.run_generator $ GTC.to_hs_wil vd
-    T.GVDs2 gvds -> GH.run_generator $ GTC.to_hs_wil gvds
+    T.VDD vdd -> GH.run_generator $ GTC.to_hs_wil vdd
     T.TD td -> GTC.to_haskell td
     T.TNN1 tnn -> GTC.to_haskell tnn
     T.TPD tpd -> GTC.to_haskell tpd

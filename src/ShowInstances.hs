@@ -399,7 +399,7 @@ instance P.Show T.WhereExpr where
   show =
     \(T.WE (wde, wdes)) -> "\nwhere\n" ++ P.show wde ++ show_list_sep "\n\n" wdes
 
-instance P.Show T.WhereDefExpr where
+instance P.Show T.ValueDefOrDefs where
   show = \case
     T.VD1 vd -> P.show vd
     T.GVDs1 gvd -> P.show gvd
@@ -669,8 +669,7 @@ instance P.Show T.Program where
 
 instance P.Show T.ProgramPart where
   show = \case
-    T.VD2 vd -> P.show vd
-    T.GVDs2 gvds -> P.show gvds
+    T.VDD vdd -> P.show vdd
     T.TD td -> P.show td
     T.TNN1 tnn -> P.show tnn
     T.TPD tpd -> P.show tpd

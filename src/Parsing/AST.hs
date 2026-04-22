@@ -447,7 +447,7 @@ instance PTC.HasParser T.CaseBody where
 
 instance PTC.HasParser T.ValueDef where
   parser =
-    PH.indent *> PTC.parser >>= \identifier ->
+    PTC.parser >>= \identifier ->
 
     PH.increase_il_by 1 >>
 
@@ -484,7 +484,7 @@ instance PTC.HasParser T.ValueExpr where
 
 instance PTC.HasParser T.GroupedValueDefs where
   parser =
-    PH.indent *> PTC.parser >>= \ids ->
+    PTC.parser >>= \ids ->
     PH.deeper (types_p ++< equal_les_p +++< les_l_p) >>=
       \(ts, equal_les, les_l) ->
     P.return $ T.GVDs (ids, ts, equal_les, les_l)
@@ -509,12 +509,12 @@ instance PTC.HasParser T.LineExprs where
 instance PTC.HasParser T.WhereExpr where
   parser =
     T.WE <$>
-      (TP.try (PH.nl_indent *> TP.string "where") *> PH.nl *> where_def_expr_p)
-      ++<
-      TP.many (TP.try $ PH.nl *> PH.nl *> where_def_expr_p)
-    where
-    where_def_expr_p :: PTC.Parser T.WhereDefExpr
-    where_def_expr_p = T.VD1 <$> TP.try PTC.parser <|> T.GVDs1 <$> PTC.parser
+      (TP.try (PH.nl_indent *> TP.string "where") *> PH.nl *> PTC.parser) ++<
+      TP.many (TP.try $ PH.nl *> PH.nl *> PTC.parser)
+
+instance PTC.HasParser T.ValueDefOrDefs where
+  parser = PH.indent *> (T.VD1 <$> TP.try PTC.parser <|> T.GVDs1 <$> PTC.parser)
+
 
 --  Type
 
@@ -832,7 +832,6 @@ instance PTC.HasParser T.Program where
 instance PTC.HasParser T.ProgramPart where
   parser =
     T.TD <$> PTC.parser <|> T.TNN1 <$> PTC.parser <|> T.TT1 <$> PTC.parser <|>
-    T.TPD <$> PTC.parser <|> T.GVDs2 <$> TP.try PTC.parser <|>
-    T.VD2 <$> PTC.parser
+    T.TPD <$> PTC.parser <|> T.VDD <$> PTC.parser
 
 -- Helpers.hs
