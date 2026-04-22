@@ -153,9 +153,7 @@ rest-list-matching ::= comma (simple-id equals)? '...'
 
 case-body ::= line-func-body | big-func-body where-expr?
 
-opt-space-colon ::= opt-space ':' opt-space
-
-has-type ::= opt-space-colon | nl-indent ': '
+has-type ::= (opt-space | nl-indent) ':' opt-space
 
 nl-indent-equals ::= nl-indent '= '
 
@@ -253,7 +251,9 @@ nl-double-space or-type-values-line
 or-type-value ::= simple-id internal-value?
 
 internal-value ::=
-'--<' opt-space identifier opt-space ':' opt-space simple-type opt-space '>'
+'--<' opt-space identifier opt-space-colon simple-type opt-space '>'
+
+opt-space-colon ::= opt-space ':' opt-space
 
 t-nickname ::= 'type_nickname ' type-name equals simple-type
 

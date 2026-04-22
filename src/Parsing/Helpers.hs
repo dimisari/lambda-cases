@@ -81,9 +81,7 @@ deeper_if_not_in_equal_line = \parser ->
   :: [PTC.Parser P.String]
 
 has_type :: PTC.Parser ()
-has_type =
-  (TP.try nl_indent *> TP.string ": " <|> opt_space_around (TP.string ":")) *>
-  H.nothing
+has_type = (TP.try nl_indent <|> opt_space ) *> TP.string ":" *> opt_space
 
 opt_space_around :: PTC.Parser a -> PTC.Parser a
 opt_space_around = \a -> opt_space *> a <* opt_space
