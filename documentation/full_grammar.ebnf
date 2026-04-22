@@ -121,11 +121,12 @@ parameters ::=
 identifier | '*' | paren-start parameters ( comma parameters )+ paren-end
 
 line-func-body ::=
-opt-space
-( basic-or-app-expr | line-op-expr | paren-start line-func-expr paren-end )
+opt-space ( basic-or-app-expr | line-op-expr | paren-line-func-expr )
+
+paren-line-func-expr ::= paren-start line-func-expr paren-end
 
 big-func-body ::=
-nl-indent ( basic-or-app-expr | op-expr | paren-start line-func-expr paren-end )
+nl-indent ( basic-or-app-expr | op-expr | paren-line-func-expr )
 
 cases-func-expr ::= cases-params case+ end-case?
 

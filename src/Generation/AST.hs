@@ -418,13 +418,16 @@ instance GTC.ToHaskell T.LineFuncBody where
   to_haskell = \case
     T.BOAE3 boae -> GTC.to_haskell boae
     T.LOE4 loe -> GTC.to_haskell loe
-    T.LFE5 lfe -> "(" ++ GTC.to_haskell lfe ++ ")"
+    T.PLFE1 plfe -> GTC.to_haskell plfe
+
+instance GTC.ToHaskell T.ParenLineFuncExpr where
+  to_haskell = \(T.PLFE lfe) -> "(" ++ GTC.to_haskell lfe ++ ")"
 
 instance GTC.ToHsWithIndentLvl T.BigFuncBody where
   to_hs_wil = \case
     T.BOAE4 boae -> GH.indent <++ GTC.to_haskell boae
     T.OE1 oe -> GTC.to_hs_wil oe
-    T.LFE6 lfe -> GH.indent <++ ("(" ++ GTC.to_haskell lfe ++ ")")
+    T.PLFE2 plfe -> GH.indent <++ GTC.to_haskell plfe
 
 instance GTC.ToHsWithIndentLvl (T.CasesFuncExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil (T.CFE (cps, cs, maybe_ec), pwe) =

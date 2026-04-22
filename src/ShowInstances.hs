@@ -283,13 +283,16 @@ instance P.Show T.LineFuncBody where
   show = \case
     T.BOAE3 npoa -> " " ++ P.show npoa
     T.LOE4 soe -> " " ++ P.show soe
-    T.LFE5 lfe -> " (" ++ P.show lfe ++ ")"
+    T.PLFE1 plfe -> " " ++ P.show plfe
+
+instance P.Show T.ParenLineFuncExpr where
+  show = \(T.PLFE lfe) -> "(" ++ P.show lfe ++ ")"
 
 instance P.Show T.BigFuncBody where
   show = \case
     T.BOAE4 npoa -> "\n" ++ P.show npoa
     T.OE1 oe -> "\n" ++ P.show oe
-    T.LFE6 lfe -> "\n(" ++ P.show lfe ++ ")"
+    T.PLFE2 plfe -> "\n" ++ P.show plfe ++ ""
 
 instance P.Show T.CasesFuncExpr where
   show = \(T.CFE (cps, cs, maybe_ec)) ->

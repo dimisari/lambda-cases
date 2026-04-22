@@ -237,13 +237,16 @@ instance PTC.Preprocess T.LineFuncBody where
   preprocess = \case
     T.BOAE3 boae -> T.BOAE3 <$> PTC.preprocess boae
     T.LOE4 loe -> T.LOE4 <$> PTC.preprocess loe
-    T.LFE5 lfe -> T.LFE5 <$> PTC.preprocess lfe
+    T.PLFE1 plfe -> T.PLFE1 <$> PTC.preprocess plfe
+
+instance PTC.Preprocess T.ParenLineFuncExpr where
+  preprocess = \(T.PLFE lfe) -> T.PLFE <$> PTC.preprocess lfe
 
 instance PTC.Preprocess T.BigFuncBody where
   preprocess = \case
     T.BOAE4 boae -> T.BOAE4 <$> PTC.preprocess boae
     T.OE1 oe -> T.OE1 <$> PTC.preprocess oe
-    T.LFE6 lfe -> T.LFE6 <$> PTC.preprocess lfe
+    T.PLFE2 plfe -> T.PLFE2 <$> PTC.preprocess plfe
 
 instance PTC.Preprocess T.CasesFuncExpr where
   preprocess = \(T.CFE (cparams, cases, mec)) ->

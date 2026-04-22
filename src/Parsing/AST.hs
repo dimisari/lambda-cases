@@ -339,14 +339,17 @@ instance PTC.HasParser T.LineFuncBody where
   parser =
     PH.opt_space *>
     ( T.LOE4 <$> TP.try PTC.parser <|> T.BOAE3 <$> TP.try PTC.parser <|>
-      T.LFE5 <$> (TP.char '(' *> PH.opt_space_around PTC.parser <* TP.char ')')
+      T.PLFE1 <$> PTC.parser
     )
+
+instance PTC.HasParser T.ParenLineFuncExpr where
+  parser = PH.in_paren (PH.opt_space_around PTC.parser)
 
 instance PTC.HasParser T.BigFuncBody where
   parser =
     PH.nl_indent *> PH.set_in_equal_line P.False *>
     ( T.OE1 <$> TP.try PTC.parser <|> T.BOAE4 <$> TP.try PTC.parser <|>
-      T.LFE6 <$> (TP.char '(' *> PH.opt_space_around PTC.parser <* TP.char ')')
+      T.PLFE2 <$> PTC.parser
     )
 
 instance PTC.HasParser T.CasesFuncExpr where
