@@ -1,6 +1,6 @@
 
 * test/outputs
-  * types (+ propositions and theoreams) only
+  * types (+ propositions and theorems) only
   * values only
 
 * group PredefImports one file per module
@@ -21,6 +21,9 @@
       * Κάπως να βρω ένα καλύτερο representation με το UndersInParen
 
 * Να γράφω τα errors των grammar rules σε άλλο αρχείο
+
+* Allow identifiers to start with underscore
+  * id-start ::= '_' lower-or-under+ | lower lower-or-under*
 
 * μετονομασία cases func expr σε qmark func expr
 

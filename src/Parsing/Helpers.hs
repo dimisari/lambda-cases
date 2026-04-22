@@ -77,7 +77,7 @@ deeper_if_not_in_equal_line = \parser ->
   :: [PTC.Parser P.Char]
 
 [digits, func_arr]
-  = [TP.many1 TP.digit, opt_space *> TP.string "=>"]
+  = [TP.many1 TP.digit, opt_space_around (TP.string "=>")]
   :: [PTC.Parser P.String]
 
 has_type :: PTC.Parser ()

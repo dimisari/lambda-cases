@@ -1,13 +1,13 @@
 
 literal ::= int-lit | real-lit | char-lit | string-lit
 
-identifier ::= unders-in-paren? id-start id-cont* [0-9]? unders-in-paren?
+identifier ::= unders-in-paren? id-start id-cont* digit? unders-in-paren?
 
-simple-id ::= id-start [0-9]?
+simple-id ::= id-start digit?
 
-lower-or-under ::= [a-z_]
+lower-or-under ::= lower | '_'
 
-id-start ::= [a-z] lower-or-under*
+id-start ::= lower lower-or-under*
 
 id-cont ::= unders-in-paren lower-or-under+
 
@@ -56,7 +56,7 @@ sq-brack-start line-expr-or-unders
 ( nl-indent comma line-expr-or-unders )* nl-indent ']'
 
 paren-func-app-or-id ::=
-arguments? id-start ( arguments lower-or-under+ )* [0-9]? arguments?
+arguments? id-start ( arguments lower-or-under+ )* digit? arguments?
 
 arguments ::= paren-start line-expr-or-unders paren-end
 
@@ -91,9 +91,9 @@ big-op-expr ::= big-op-expr-op-split | big-op-expr-func-split
 
 big-op-expr-op-split ::= op-split-line+ op-expr-start? ( operand | func-expr )
 
-op-split-line ::= ( op-expr-start ( nl | oper-fco ) | oper-fco ) indent
+op-split-line ::= ( op-expr-start ( nl | oper-fco-nl ) | oper-fco-nl ) indent
 
-oper-fco ::= operand ' ' func-comp-op '\n'
+oper-fco-nl ::= operand ' ' func-comp-op '\n'
 
 big-op-expr-func-split ::= op-expr-start ( big-func-expr | cases-func-expr )
 
@@ -109,7 +109,7 @@ optional-spaces-op ::=
 
 func-expr ::= line-func-expr | big-func-expr | cases-func-expr
 
-func-arrow ::= opt-space '=>'
+func-arrow ::= opt-space '=>' opt-space
 
 parameters-arrow ::= parameters func-arrow
 
@@ -121,7 +121,7 @@ parameters ::=
 identifier | '*' | paren-start parameters ( comma parameters )+ paren-end
 
 line-func-body ::=
-opt-space ( basic-or-app-expr | line-op-expr | paren-line-func-expr )
+basic-or-app-expr | line-op-expr | paren-line-func-expr
 
 paren-line-func-expr ::= paren-start line-func-expr paren-end
 
@@ -187,17 +187,17 @@ simple-type ::= type-app-id-or-tv | prod-or-power-type | func-type
 
 prod-or-power-type ::= prod-type | power-type
 
-type-id ::= [A-Z] [A-Za-z]*
+type-id ::= upper letter*
 
-param-t-var ::= 'T' [0-9]
+param-t-var ::= 'T' digit
 
-ad-hoc-t-var ::= '@' [A-Z]
+ad-hoc-t-var ::= '@' upper
 
 type-app-id-or-tv ::=
 types-in-paren? taioa-middle types-in-paren? | param-t-var
 
 taioa-middle ::=
-type-id ( types-in-paren [A-Za-z]+ )* | ad-hoc-t-var
+type-id ( types-in-paren letter+ )* | ad-hoc-t-var
 
 types-in-paren ::= paren-start simple-type ( comma simple-type )* paren-end
 
@@ -228,7 +228,7 @@ tuple-type-def ::=
 'field names:' space-or-nl-double-space field-names
 
 type-name ::=
-param-vars-in-paren? type-id ( param-vars-in-paren [A-Za-z]+ )*
+param-vars-in-paren? type-id ( param-vars-in-paren letter+ )*
 param-vars-in-paren?
 
 param-vars-in-paren ::=
@@ -270,17 +270,17 @@ prop-name-line nl
 prop-name-line ::= 'type_proposition ' prop-name
 
 prop-name ::=
-[A-Z] ( name-part types-in-paren )+ name-part?
+upper ( name-part types-in-paren )+ name-part?
 | " "( types-in-paren name-part )+ types-in-paren?
 
-name-part ::= ( [A-Za-z] | '_'[A-Z] )+
+name-part ::= ( letter | '_'upper )+
 
 type-theo ::=
 'type_theorem ' prop-name-with-subs (' --> ' prop-name-with-subs)? nl
 'proof' proof
 
 prop-name-with-subs ::=
-[A-Z] ( name-part subs-in-paren )+ name-part?
+upper ( name-part subs-in-paren )+ name-part?
 | " "( subs-in-paren name-part )+ subs-in-paren?
 
 subs-in-paren ::=
@@ -295,7 +295,7 @@ type-app-id-or-tv-sub ::=
 subs-or-unders-in-paren? taioas-middle subs-or-unders-in-paren? | param-t-var
 
 taioas-middle ::=
-type-id ( subs-or-unders-in-paren [A-Za-z]+ )* | ad-hoc-t-var
+type-id ( subs-or-unders-in-paren letter+ )* | ad-hoc-t-var
 
 subs-or-unders-in-paren ::=
 paren-start sub-or-under ( comma sub-or-under )* paren-end

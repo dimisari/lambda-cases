@@ -337,10 +337,8 @@ instance PTC.HasParser T.Parameters where
 
 instance PTC.HasParser T.LineFuncBody where
   parser =
-    PH.opt_space *>
-    ( T.LOE4 <$> TP.try PTC.parser <|> T.BOAE3 <$> TP.try PTC.parser <|>
-      T.PLFE1 <$> PTC.parser
-    )
+    T.LOE4 <$> TP.try PTC.parser <|> T.BOAE3 <$> TP.try PTC.parser <|>
+    T.PLFE1 <$> PTC.parser
 
 instance PTC.HasParser T.ParenLineFuncExpr where
   parser = PH.in_paren (PH.opt_space_around PTC.parser)
