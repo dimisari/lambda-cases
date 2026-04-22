@@ -526,7 +526,7 @@ instance PTC.HasParser T.Type where
 instance PTC.HasParser T.SimpleType where
   parser =
     T.FT1 <$> TP.try PTC.parser <|> T.POPT1 <$> TP.try PTC.parser <|>
-    T.PTV1 <$> TP.try PTC.parser <|> T.TAIOA1 <$> PTC.parser
+    T.TAIOA1 <$> PTC.parser
 
 instance PTC.HasParser T.ProdOrPowerType where
   parser = T.PT4 <$> TP.try PTC.parser <|> T.PoT5 <$> PTC.parser
@@ -540,14 +540,15 @@ instance PTC.HasParser T.ParamTVar where
 instance PTC.HasParser T.AdHocTVar where
   parser = T.AHTV <$> (TP.char '@' *> TP.upper)
 
-instance PTC.HasParser T.TypeAppIdOrAHTV where
+instance PTC.HasParser T.TypeAppIdOrTV where
   parser =
     T.TAIOA <$> TP.optionMaybe PTC.parser ++< PTC.parser +++<
     TP.optionMaybe PTC.parser
 
 instance PTC.HasParser T.TAIOAMiddle where
   parser =
-    T.AHTV2 <$> PTC.parser <|>
+    T.PTV1 <$> TP.try PTC.parser <|>
+    T.AHTV1 <$> PTC.parser <|>
     T.TIdStart1 <$> PTC.parser ++<
     TP.many (TP.try $ PTC.parser ++< TP.many1 (TP.lower <|> TP.upper))
 
@@ -564,8 +565,7 @@ instance PTC.HasParser T.FieldType where
 
 instance PTC.HasParser T.PowerBaseType where
   parser =
-    T.PTV2 <$> TP.try PTC.parser <|> T.TAIOA2 <$> TP.try PTC.parser <|>
-    T.IPT <$> PTC.parser
+    T.TAIOA2 <$> TP.try PTC.parser <|> T.IPT <$> PTC.parser
 
 instance PTC.HasParser T.InParenT where
   parser =
@@ -585,7 +585,6 @@ instance PTC.HasParser T.InOrOutType where
   parser =
     T.POPT2 <$> TP.try PTC.parser <|>
     T.FT2 <$> TP.try (PH.in_paren PTC.parser) <|>
-    T.PTV3 <$> TP.try PTC.parser <|>
     T.TAIOA3 <$> PTC.parser
 
 instance PTC.HasParser T.Condition where
@@ -748,20 +747,20 @@ instance PTC.HasParser T.SubsInParen where
 instance PTC.HasParser T.TVarSub where
   parser =
     T.FTS1 <$> TP.try PTC.parser <|> T.POPTS1 <$> TP.try PTC.parser <|>
-    T.PTV4 <$> TP.try PTC.parser <|> T.TAIOAS1 <$> PTC.parser
+    T.TAIOAS1 <$> PTC.parser
 
 instance PTC.HasParser T.ProdOrPowerTypeSub where
   parser =
     T.PTS1 <$> TP.try PTC.parser <|> T.PoTS1 <$> PTC.parser
 
-instance PTC.HasParser T.TypeAppIdOrAHTVSub where
+instance PTC.HasParser T.TypeAppIdOrTVSub where
   parser =
     T.TAIOAS <$>
       TP.optionMaybe PTC.parser ++< PTC.parser +++< TP.optionMaybe PTC.parser
 
 instance PTC.HasParser T.TAIOASMiddle where
   parser =
-    T.AHTV3 <$> PTC.parser <|>
+    T.AHTV2 <$> PTC.parser <|>
     T.TIdStart2 <$> PTC.parser ++<
     TP.many (TP.try $ PTC.parser ++< TP.many1 (TP.lower <|> TP.upper))
 
@@ -781,7 +780,7 @@ instance PTC.HasParser T.PowerTypeSub where
 instance PTC.HasParser T.PowerBaseTypeSub where
   parser =
     T.IPTS <$> TP.try (PH.in_paren PTC.parser) <|>
-    T.TAIOAS2 <$> TP.try PTC.parser <|> T.PTV5 <$> PTC.parser <|>
+    T.TAIOAS2 <$> TP.try PTC.parser <|>
     PH.underscore *> P.return T.Underscore5
 
 instance PTC.HasParser T.InParenTSub where
@@ -801,7 +800,7 @@ instance PTC.HasParser T.InOrOutTypeSub where
   parser =
     T.FTS3 <$> TP.try (PH.in_paren PTC.parser) <|>
     T.POPTS2 <$> TP.try PTC.parser <|>
-    T.TAIOAS3 <$> TP.try PTC.parser <|> T.PTV6 <$> PTC.parser <|>
+    T.TAIOAS3 <$> TP.try PTC.parser  <|>
     PH.underscore *> P.return T.Underscore6
 
 instance PTC.HasParser T.Proof where

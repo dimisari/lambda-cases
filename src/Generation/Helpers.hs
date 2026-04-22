@@ -277,7 +277,6 @@ ft_to_st = \case
 
 pbt_to_st :: T.PowerBaseType -> T.SimpleType
 pbt_to_st = \case
-  T.PTV2 ptv -> T.PTV1 ptv
   T.TAIOA2 taioa -> T.TAIOA1 taioa
   T.IPT ipt -> ipt_to_st ipt
 

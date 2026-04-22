@@ -626,7 +626,6 @@ instance GTC.ToHaskell T.Type where
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.SimpleType) where
   to_haskell = \(needs_paren, st) -> case st of
-    T.PTV1 ptv -> GTC.to_haskell ptv
     T.TAIOA1 taioa -> GTC.to_haskell (needs_paren, taioa)
     T.POPT1 popt -> GTC.to_haskell popt
     T.FT1 ft -> GH.in_paren_if needs_paren $ GTC.to_haskell ft
@@ -645,7 +644,7 @@ instance GTC.ToHaskell T.ParamTVar where
 instance GTC.ToHaskell T.AdHocTVar where
   to_haskell = \(T.AHTV c) -> GPH.ad_hoc_t_var_prefix ++ P.show (CH.ord c - 65)
 
-instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTV) where
   to_haskell (needs_paren, T.TAIOA taioa) = case taioa of
     (P.Nothing, T.TIdStart1 (T.TId tid, []), P.Nothing) ->
       tid &> \case
@@ -657,11 +656,9 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
         _ -> GTC.to_haskell tid
 
     (mtip1, taioam, mtip2) -> case taioam of
-      T.AHTV2 ahtv ->
-        in_paren_if_needed (GTC.to_haskell ahtv) tip_hs
-        where
-        tip_hs :: GTC.Haskell
-        tip_hs = GTC.to_haskell mtip1 ++ GTC.to_haskell mtip2
+      T.PTV1 ptv -> ptv_or_ahtv (GTC.to_haskell ptv)
+
+      T.AHTV1 ahtv -> ptv_or_ahtv (GTC.to_haskell ahtv)
 
       T.TIdStart1 (tid, tip_str_pairs) ->
         in_paren_if_needed tid_hs tip_hs
@@ -673,14 +670,22 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
 
         tip_hs :: GTC.Haskell
         tip_hs =
-          GTC.to_haskell mtip1 ++ GTC.to_haskell (P.map P.fst tip_str_pairs) ++
-          GTC.to_haskell mtip2
+          mtip1_hs ++ GTC.to_haskell (P.map P.fst tip_str_pairs) ++ mtip2_hs
       where
+      ptv_or_ahtv :: GTC.Haskell -> GTC.Haskell
+      ptv_or_ahtv = \hs -> in_paren_if_needed hs $ mtip1_hs ++ mtip2_hs
+
       in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
       in_paren_if_needed = \hs tip_hs ->
         case tip_hs of
           "" -> hs
           _ -> GH.in_paren_if needs_paren $ hs ++ tip_hs
+
+      mtip1_hs :: GTC.Haskell
+      mtip1_hs = GTC.to_haskell mtip1
+
+      mtip2_hs :: GTC.Haskell
+      mtip2_hs = GTC.to_haskell mtip2
 
 instance GTC.ToHaskell T.TypesInParen where
   to_haskell = \(T.TIP (st, sts)) ->
@@ -697,7 +702,6 @@ instance GTC.ToHaskell T.FieldType where
 
 instance GTC.ToHaskell T.PowerBaseType where
   to_haskell = \case
-    T.PTV2 ptv -> GTC.to_haskell ptv
     T.TAIOA2 taioa -> GTC.to_haskell (GTC.NoParen, taioa)
     T.IPT ipt -> GTC.to_haskell ipt
 
@@ -719,7 +723,6 @@ instance GTC.ToHaskell T.FuncType where
 
 instance GTC.ToHaskell T.InOrOutType where
   to_haskell = \case
-    T.PTV3 ptv -> GTC.to_haskell ptv
     T.TAIOA3 taioa -> GTC.to_haskell (GTC.NoParen, taioa)
     T.POPT2 popt -> GTC.to_haskell popt
     T.FT2 ft -> "(" ++ GTC.to_haskell ft ++ ")"
@@ -940,7 +943,6 @@ instance GTC.ToHaskell T.SubsInParen where
 
 instance GTC.ToHaskell T.TVarSub where
   to_haskell = \case
-    T.PTV4 tv -> GTC.to_haskell tv
     T.TAIOAS1 tasoi -> GTC.to_haskell (GTC.Paren, tasoi)
     T.POPTS1 popts -> GTC.to_haskell popts
     T.FTS1 fts -> "(" ++ GTC.to_haskell fts  ++ ")"
@@ -950,12 +952,12 @@ instance GTC.ToHaskell T.ProdOrPowerTypeSub where
     T.PTS1 pts -> GTC.to_haskell pts
     T.PoTS1 pts -> GTC.to_haskell pts
 
-instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTVSub) where
   to_haskell (needs_paren, T.TAIOAS taioas) = case taioas of
     (P.Nothing, T.TIdStart2 (T.TId "Real", []), P.Nothing) -> "Double"
     (P.Nothing, T.TIdStart2 (T.TId "Int", []), P.Nothing) -> "Integer"
     (msouip1, taioasm, msouip2) -> case taioasm of
-      T.AHTV3 ahtv ->
+      T.AHTV2 ahtv ->
         in_paren_if_needed (GTC.to_haskell ahtv) souip_hs
         where
         souip_hs :: GTC.Haskell
@@ -966,12 +968,14 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
         where
         tid_hs :: GTC.Haskell
         tid_hs =
-          GH.maybe_prefix_args_hs GPH.upper_prefix msouip1 ++ GTC.to_haskell tid ++
-          GH.args_strs_hs souip_str_pairs ++ GH.single_quotes_hs msouip2
+          GH.maybe_prefix_args_hs GPH.upper_prefix msouip1 ++
+          GTC.to_haskell tid ++ GH.args_strs_hs souip_str_pairs ++
+          GH.single_quotes_hs msouip2
 
         souip_hs :: GTC.Haskell
         souip_hs =
-          GTC.to_haskell msouip1 ++ GTC.to_haskell (P.map P.fst souip_str_pairs) ++
+          GTC.to_haskell msouip1 ++
+          GTC.to_haskell (P.map P.fst souip_str_pairs) ++
           GTC.to_haskell msouip2
       where
       in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
@@ -998,7 +1002,6 @@ instance GTC.ToHaskell T.PowerTypeSub where
 instance GTC.ToHaskell T.PowerBaseTypeSub where
   to_haskell = \case
     T.Underscore5 -> P.undefined
-    T.PTV5 tv -> GTC.to_haskell tv
     T.TAIOAS2 tasoi -> GTC.to_haskell (GTC.NoParen, tasoi)
     T.IPTS ipts -> GTC.to_haskell ipts
 
@@ -1023,7 +1026,6 @@ instance GTC.ToHaskell T.FuncTypeSub where
 instance GTC.ToHaskell T.InOrOutTypeSub where
   to_haskell = \case
     T.Underscore6 -> P.undefined
-    T.PTV6 tv -> GTC.to_haskell tv
     T.TAIOAS3 tasoi -> GTC.to_haskell (GTC.NoParen, tasoi)
     T.POPTS2 popts -> GTC.to_haskell popts
     T.FTS3 fts -> GTC.to_haskell fts

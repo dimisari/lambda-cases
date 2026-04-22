@@ -85,7 +85,6 @@ instance PTC.CheckCompatibility PTC.TIP_NP_Pair PTC.SIP_NP_Pair where
 
 instance PTC.CheckCompatibility T.SimpleType T.TVarSub where
   check_compat = \case
-    (T.PTV1 _, T.PTV4 _) -> PTC.Compatible M.empty
     (T.TAIOA1 taioa, T.TAIOAS1 taioas) -> PTC.check_compat(taioa, taioas)
     (T.POPT1 popt, T.POPTS1 popts) -> PTC.check_compat(popt, popts)
     (T.FT1 ft, T.FTS1 fts) -> PTC.check_compat(ft, fts)
@@ -95,7 +94,7 @@ instance PTC.CheckCompatibility T.ProdOrPowerType T.ProdOrPowerTypeSub where
     (T.PoT5 pt, T.PoTS1 pts) -> PTC.check_compat(pt, pts)
     (T.PT4 pt, T.PTS1 pts) -> PTC.check_compat(pt, pts)
 
-instance PTC.CheckCompatibility T.TypeAppIdOrAHTV T.TypeAppIdOrAHTVSub where
+instance PTC.CheckCompatibility T.TypeAppIdOrTV T.TypeAppIdOrTVSub where
   check_compat =
     \(T.TAIOA (mtip1, taioam, mtip2), T.TAIOAS (msouip1, taioasm, msouip2)) ->
     compat_list_union
@@ -124,7 +123,7 @@ instance PTC.CheckCompatibility T.TypesInParen T.SubsOrUndersInParen where
 
 instance PTC.CheckCompatibility T.TAIOAMiddle T.TAIOASMiddle where
   check_compat = \case
-    (T.AHTV2 ahtv, taioasm) ->
+    (T.AHTV1 ahtv, taioasm) ->
       PTC.Compatible $ M.singleton ahtv $ GH.taioasm_to_sou taioasm
     (T.TIdStart1 (tid1, tip_str_pairs), T.TIdStart2 (tid2, souip_str_pairs)) ->
       case tid1 == tid2 of
@@ -134,7 +133,6 @@ instance PTC.CheckCompatibility T.TAIOAMiddle T.TAIOASMiddle where
 
 instance PTC.CheckCompatibility T.PowerBaseType T.PowerBaseTypeSub where
   check_compat = \case
-    (T.PTV2 _, T.PTV5 _) -> PTC.Compatible M.empty
     (T.TAIOA2 taioa, T.TAIOAS2 taioas) -> PTC.check_compat(taioa, taioas)
     (T.IPT ipt, T.IPTS ipts) -> PTC.check_compat(ipt, ipts)
     _ -> PTC.NotCompatible
@@ -147,7 +145,6 @@ instance PTC.CheckCompatibility T.FieldType T.FieldTypeSub where
 
 instance PTC.CheckCompatibility T.InOrOutType T.InOrOutTypeSub where
   check_compat = \case
-    (T.PTV3 _, T.PTV6 _) -> PTC.Compatible M.empty
     (T.TAIOA3 taioa, T.TAIOAS3 taioas) -> PTC.check_compat(taioa, taioas)
     (T.POPT2 popt, T.POPTS2 popts) -> PTC.check_compat(popt, popts)
     (T.FT2 ft, T.FTS3 fts) -> PTC.check_compat(ft, fts)
@@ -155,7 +152,7 @@ instance PTC.CheckCompatibility T.InOrOutType T.InOrOutTypeSub where
 
 instance PTC.CheckCompatibility T.SimpleType T.SubOrUnder where
   check_compat = \case
-    (T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)), sou) ->
+    (T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing)), sou) ->
       PTC.Compatible $ M.singleton ahtv sou
     (st, T.TVS1 tvs) -> PTC.check_compat(st, tvs)
     _ -> PTC.NotCompatible
@@ -215,8 +212,7 @@ instance PTC.AddSubs T.TypesInParen T.SubsInParen where
 
 instance PTC.AddSubs T.SimpleType T.TVarSub where
   add_subs = \case
-    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)) -> PTC.add_subs ahtv
-    T.PTV1 ptv -> P.return $ T.PTV4 ptv
+    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing)) -> PTC.add_subs ahtv
     T.TAIOA1 taioa -> T.TAIOAS1 <$> PTC.add_subs taioa
     T.POPT1 popt -> T.POPTS1 <$> PTC.add_subs popt
     T.FT1 ft -> T.FTS1 <$> PTC.add_subs ft
@@ -233,7 +229,7 @@ instance PTC.AddSubs T.AdHocTVar T.TVarSub where
       P.Just T.Underscore4 -> P.error "PTC.add_subs st tvs: ahtv is underscore"
       P.Nothing -> P.error "PTC.add_subs st tvs: didn't find ahtv"
 
-instance PTC.AddSubs T.TypeAppIdOrAHTV T.TypeAppIdOrAHTVSub where
+instance PTC.AddSubs T.TypeAppIdOrTV T.TypeAppIdOrTVSub where
   add_subs = \(T.TAIOA taioa) -> T.TAIOAS <$> add_subs_triple taioa
 
 instance PTC.AddSubs T.PowerType T.PowerTypeSub where
@@ -251,14 +247,14 @@ instance PTC.AddSubs T.TAIOAMiddle T.TAIOASMiddle where
     T.TIdStart1 (tid, tip_str_pairs) ->
       PTC.add_subs tip_str_pairs >$> \souip_str_pairs ->
       T.TIdStart2 (tid, souip_str_pairs)
-    T.AHTV2 ahtv -> P.undefined
+    T.PTV1 ptv -> P.undefined
+    T.AHTV1 ahtv -> P.undefined
 
 instance PTC.AddSubs T.TypesInParen T.SubsOrUndersInParen where
   add_subs = \(T.TIP sts) -> T.SOUIP <$> add_subs_pair sts
 
 instance PTC.AddSubs T.PowerBaseType T.PowerBaseTypeSub where
   add_subs = \case
-    T.PTV2 ptv -> P.return $ T.PTV5 ptv
     T.TAIOA2 taioa -> T.TAIOAS2 <$> PTC.add_subs taioa
     T.IPT ipt -> T.IPTS <$> PTC.add_subs ipt
 
@@ -269,7 +265,6 @@ instance PTC.AddSubs T.FieldType T.FieldTypeSub where
 
 instance PTC.AddSubs T.InOrOutType T.InOrOutTypeSub where
   add_subs = \case
-    T.PTV3 ptv -> P.return $ T.PTV6 ptv
     T.TAIOA3 taioa -> T.TAIOAS3 <$> PTC.add_subs taioa
     T.POPT2 popt -> T.POPTS2 <$> PTC.add_subs popt
     T.FT2 ft -> T.FTS3 <$> PTC.add_subs ft
@@ -279,7 +274,7 @@ instance PTC.AddSubs PTC.TIP_STR PTC.SOUIP_STR where
 
 instance PTC.AddSubs T.SimpleType T.SubOrUnder where
   add_subs = \case
-    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV2 ahtv, P.Nothing)) -> PTC.add_subs ahtv
+    T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing)) -> PTC.add_subs ahtv
     st -> T.TVS1 <$> PTC.add_subs st
 
 instance PTC.AddSubs T.AdHocTVar T.SubOrUnder where

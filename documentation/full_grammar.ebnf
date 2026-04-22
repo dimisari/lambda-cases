@@ -183,8 +183,7 @@ value-def-or-defs ::= value-def | grouped-value-defs
 
 type ::= condition?  simple-type
 
-simple-type ::=
-param-t-var | type-app-id-or-ahtv | prod-or-power-type | func-type
+simple-type ::= type-app-id-or-tv | prod-or-power-type | func-type
 
 prod-or-power-type ::= prod-type | power-type
 
@@ -194,9 +193,10 @@ param-t-var ::= 'T' [0-9]
 
 ad-hoc-t-var ::= '@' [A-Z]
 
-type-app-id-or-ahtv ::= types-in-paren? taioa-middle types-in-paren?
+type-app-id-or-tv ::= types-in-paren? taioa-middle types-in-paren?
 
-taioa-middle ::= type-id ( types-in-paren [A-Za-z]+ )* | ad-hoc-t-var
+taioa-middle ::=
+type-id ( types-in-paren [A-Za-z]+ )* | param-t-var | ad-hoc-t-var
 
 types-in-paren ::= paren-start simple-type ( comma simple-type )* paren-end
 
@@ -205,16 +205,14 @@ prod-type ::= field-type ( ' x ' field-type )+
 field-type ::= power-base-type | power-type
 
 power-base-type ::=
-param-t-var | type-app-id-or-ahtv |
-paren-start ( prod-type | func-type ) paren-end
+type-app-id-or-tv | paren-start ( prod-type | func-type ) paren-end
 
 power-type ::= power-base-type '^' int-greater-than-one
 
 func-type ::= in-or-out-type ' => ' in-or-out-type
 
 in-or-out-type ::=
-param-t-var | type-app-id-or-ahtv | prod-or-power-type |
-paren-start func-type paren-end
+type-app-id-or-tv | prod-or-power-type | paren-start func-type paren-end
 
 condition ::= prop-name ' --> '
 
@@ -288,15 +286,15 @@ subs-in-paren ::=
 paren-start t-var-sub ( comma t-var-sub )* paren-end
 
 t-var-sub ::=
-param-t-var | type-app-id-or-ahtv-sub | prod-or-power-type-sub | func-type-sub
+type-app-id-or-tv-sub | prod-or-power-type-sub | func-type-sub
 
 prod-or-power-type-sub ::= prod-type-sub | power-type-sub
 
-type-app-id-or-ahtv-sub ::=
+type-app-id-or-tv-sub ::=
 subs-or-unders-in-paren? taioas-middle subs-or-unders-in-paren?
 
 taioas-middle ::=
-type-id ( subs-or-unders-in-paren [A-Za-z]+ )* | ad-hoc-t-var
+type-id ( subs-or-unders-in-paren [A-Za-z]+ )* | param-t-var | ad-hoc-t-var
 
 subs-or-unders-in-paren ::=
 paren-start sub-or-under ( comma sub-or-under )* paren-end
@@ -306,7 +304,7 @@ sub-or-under ::= t-var-sub | '_'
 power-type-sub ::= power-base-type-sub '^' int-greater-than-one
 
 power-base-type-sub ::=
-'_' | param-t-var | type-app-id-or-ahtv-sub |
+'_' | type-app-id-or-tv-sub |
 paren-start ( prod-type-sub | func-type-sub ) paren-end
 
 prod-type-sub ::= field-type-sub ( ' x ' field-type-sub )+
@@ -316,7 +314,7 @@ field-type-sub ::= power-base-type-sub | power-type-sub
 func-type-sub ::= in-or-out-type-sub ' => ' in-or-out-type-sub
 
 in-or-out-type-sub ::=
-'_' | param-t-var | type-app-id-or-ahtv-sub | prod-or-power-type-sub |
+'_' | type-app-id-or-tv-sub | prod-or-power-type-sub |
 paren-start func-type-sub paren-end
 
 proof ::= ' ' id-or-op-eq ' ' line-expr | nl '  ' id-or-op-eq  tt-value-expr

@@ -159,7 +159,7 @@ file_name_compile_func_pairs =
     , (compile_example_func :: Compile T.ProdType) .> extract_res_str
     )
   , ( "type_app.txt"
-    , (compile_example_func :: Compile (GTC.NeedsParenBool, T.TypeAppIdOrAHTV))
+    , (compile_example_func :: Compile (GTC.NeedsParenBool, T.TypeAppIdOrTV))
       .>
       extract_res_str
     )

@@ -224,7 +224,7 @@ data WhereDefExpr =
 newtype Type = Ty (P.Maybe Condition, SimpleType)
 
 data SimpleType =
-  PTV1 ParamTVar | TAIOA1 TypeAppIdOrAHTV | POPT1 ProdOrPowerType | FT1 FuncType
+  TAIOA1 TypeAppIdOrTV | POPT1 ProdOrPowerType | FT1 FuncType
 
 data ProdOrPowerType =
   PT4 ProdType | PoT5 PowerType
@@ -238,11 +238,12 @@ newtype ParamTVar = PTV P.Int
 newtype AdHocTVar = AHTV P.Char
   deriving (P.Eq, P.Ord)
 
-newtype TypeAppIdOrAHTV =
+newtype TypeAppIdOrTV =
   TAIOA (P.Maybe TypesInParen, TAIOAMiddle, P.Maybe TypesInParen)
 
 data TAIOAMiddle =
-  TIdStart1 (TypeId, [(TypesInParen, P.String)]) | AHTV2 AdHocTVar
+  TIdStart1 (TypeId, [(TypesInParen, P.String)]) | PTV1 ParamTVar |
+  AHTV1 AdHocTVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
 
@@ -252,7 +253,7 @@ data FieldType =
   PBT1 PowerBaseType | PoT2 PowerType
 
 data PowerBaseType =
-  PTV2 ParamTVar | TAIOA2 TypeAppIdOrAHTV | IPT InParenT
+  TAIOA2 TypeAppIdOrTV | IPT InParenT
 
 data InParenT =
   PT3 ProdType | FT3 FuncType | PoT3 PowerType
@@ -262,7 +263,7 @@ newtype PowerType = PoT (PowerBaseType, P.Integer)
 newtype FuncType = FT (InOrOutType, InOrOutType)
 
 data InOrOutType =
-  PTV3 ParamTVar | TAIOA3 TypeAppIdOrAHTV | POPT2 ProdOrPowerType | FT2 FuncType
+  TAIOA3 TypeAppIdOrTV | POPT2 ProdOrPowerType | FT2 FuncType
 
 newtype Condition = Co PropName
 
@@ -332,17 +333,18 @@ data PropNameWithSubs =
 newtype SubsInParen = SIP (TVarSub, [TVarSub])
 
 data TVarSub =
-  PTV4 ParamTVar | TAIOAS1 TypeAppIdOrAHTVSub | POPTS1 ProdOrPowerTypeSub |
+  TAIOAS1 TypeAppIdOrTVSub | POPTS1 ProdOrPowerTypeSub |
   FTS1 FuncTypeSub
 
 data ProdOrPowerTypeSub =
   PTS1 ProdTypeSub | PoTS1 PowerTypeSub
 
-newtype TypeAppIdOrAHTVSub =
+newtype TypeAppIdOrTVSub =
   TAIOAS (P.Maybe SubsOrUndersInParen, TAIOASMiddle, P.Maybe SubsOrUndersInParen)
 
 data TAIOASMiddle =
-  TIdStart2 (TypeId, [(SubsOrUndersInParen, P.String)]) | AHTV3 AdHocTVar
+  TIdStart2 (TypeId, [(SubsOrUndersInParen, P.String)]) | PTV2 ParamTVar |
+  AHTV2 AdHocTVar
 
 newtype SubsOrUndersInParen = SOUIP (SubOrUnder, [SubOrUnder])
 
@@ -352,7 +354,7 @@ data SubOrUnder =
 newtype PowerTypeSub = PoTS (PowerBaseTypeSub, P.Integer)
 
 data PowerBaseTypeSub =
-  Underscore5 | PTV5 ParamTVar | TAIOAS2 TypeAppIdOrAHTVSub | IPTS InParenTSub
+  Underscore5 | TAIOAS2 TypeAppIdOrTVSub | IPTS InParenTSub
 
 data InParenTSub =
   PTS2 ProdTypeSub | FTS2 FuncTypeSub
@@ -365,8 +367,8 @@ data FieldTypeSub =
 newtype FuncTypeSub = FTS (InOrOutTypeSub, InOrOutTypeSub)
 
 data InOrOutTypeSub =
-  Underscore6 | PTV6 ParamTVar | TAIOAS3 TypeAppIdOrAHTVSub |
-  POPTS2 ProdOrPowerTypeSub | FTS3 FuncTypeSub
+  Underscore6 | TAIOAS3 TypeAppIdOrTVSub | POPTS2 ProdOrPowerTypeSub |
+  FTS3 FuncTypeSub
 
 data Proof =
   P1 (IdOrOpEq, LineExpr) | P2 (IdOrOpEq, TTValueExpr)

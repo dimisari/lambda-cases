@@ -410,7 +410,6 @@ instance P.Show T.Type where
 
 instance P.Show T.SimpleType where
   show = \case
-    T.PTV1 ptv -> P.show ptv
     T.TAIOA1 ta -> P.show ta
     T.POPT1 popt -> P.show popt
     T.FT1 ft -> P.show ft
@@ -429,7 +428,7 @@ instance P.Show T.ParamTVar where
 instance P.Show T.AdHocTVar where
   show = \(T.AHTV c) -> "@" ++ [c]
 
-instance P.Show T.TypeAppIdOrAHTV where
+instance P.Show T.TypeAppIdOrTV where
   show = \(T.TAIOA (mtip1, taioam, mtip2)) ->
     show_maybe mtip1 ++ P.show taioam ++ show_maybe mtip2
 
@@ -437,7 +436,7 @@ instance P.Show T.TAIOAMiddle where
   show = \case
     T.TIdStart1 (tid, tip_str_pairs) ->
       P.show tid ++ P.concatMap (\(tip, str) -> P.show tip ++ str) tip_str_pairs
-    T.AHTV2 ahtv -> P.show ahtv
+    T.AHTV1 ahtv -> P.show ahtv
 
 instance P.Show T.TypesInParen where
   show = \(T.TIP (st, sts)) -> "(" ++ P.show st ++ show_list_comma sts ++ ")"
@@ -452,7 +451,6 @@ instance P.Show T.FieldType where
 
 instance P.Show T.PowerBaseType where
   show = \case
-    T.PTV2 ptv -> P.show ptv
     T.TAIOA2 ta -> P.show ta
     T.IPT ipt -> P.show ipt
 
@@ -469,7 +467,6 @@ instance P.Show T.FuncType where
 
 instance P.Show T.InOrOutType where
   show = \case
-    T.PTV3 ptv -> P.show ptv
     T.TAIOA3 ta -> P.show ta
     T.POPT2 popt -> P.show popt
     T.FT2 ft -> "(" ++ P.show ft ++ ")"
@@ -586,7 +583,6 @@ instance P.Show T.SubsInParen where
 
 instance P.Show T.TVarSub where
   show = \case
-    T.PTV4 ptv -> P.show ptv
     T.TAIOAS1 tas -> P.show tas
     T.POPTS1 popts -> P.show popts
     T.FTS1 fts -> P.show fts
@@ -596,7 +592,7 @@ instance P.Show T.ProdOrPowerTypeSub where
     T.PTS1 pts -> P.show pts
     T.PoTS1 pts -> P.show pts
 
-instance P.Show T.TypeAppIdOrAHTVSub where
+instance P.Show T.TypeAppIdOrTVSub where
   show = \(T.TAIOAS (msouip1, taioasm, msouip2)) ->
     show_maybe msouip1 ++ P.show taioasm ++ show_maybe msouip2
 
@@ -605,7 +601,7 @@ instance P.Show T.TAIOASMiddle where
     T.TIdStart2 (tid, souip_str_pairs) ->
       P.show tid ++
       P.concatMap (\(souip, str) -> P.show souip ++ str) souip_str_pairs
-    T.AHTV3 ahtv -> P.show ahtv
+    T.AHTV2 ahtv -> P.show ahtv
 
 instance P.Show T.SubsOrUndersInParen where
   show = \(T.SOUIP (sou, sous)) ->
@@ -622,7 +618,6 @@ instance P.Show T.PowerTypeSub where
 instance P.Show T.PowerBaseTypeSub where
   show = \case
     T.Underscore5 -> "_"
-    T.PTV5 ptv -> P.show ptv
     T.TAIOAS2 tas -> P.show tas
     T.IPTS ipts -> "(" ++ P.show ipts ++ ")"
 
@@ -645,7 +640,6 @@ instance P.Show T.FuncTypeSub where
 instance P.Show T.InOrOutTypeSub where
   show = \case
     T.Underscore6 -> "_"
-    T.PTV6 ptv -> P.show ptv
     T.TAIOAS3 tas -> P.show tas
     T.POPTS2 popts -> P.show popts
     T.FTS3 fts -> P.show fts
