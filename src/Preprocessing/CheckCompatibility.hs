@@ -95,13 +95,15 @@ instance PTC.CheckCompatibility T.ProdOrPowerType T.ProdOrPowerTypeSub where
     (T.PT4 pt, T.PTS1 pts) -> PTC.check_compat(pt, pts)
 
 instance PTC.CheckCompatibility T.TypeAppIdOrTV T.TypeAppIdOrTVSub where
-  check_compat =
-    \(T.TAIOA (mtip1, taioam, mtip2), T.TAIOAS (msouip1, taioasm, msouip2)) ->
-    compat_list_union
-      [ PTC.check_compat(mtip1, msouip1)
-      , PTC.check_compat(taioam, taioasm)
-      , PTC.check_compat(mtip2, msouip2)
-      ]
+  check_compat = \case
+    (T.TAIOA (mtip1, taioam, mtip2), T.TAIOAS (msouip1, taioasm, msouip2)) ->
+      compat_list_union
+        [ PTC.check_compat(mtip1, msouip1)
+        , PTC.check_compat(taioam, taioasm)
+        , PTC.check_compat(mtip2, msouip2)
+        ]
+    (T.PTV1 _, T.PTV2 _) -> PTC.Compatible M.empty
+    _ -> P.undefined
 
 instance PTC.CheckCompatibility T.PowerType T.PowerTypeSub where
   check_compat = \(T.PoT (pbt, i), T.PoTS (pbts, j)) ->
@@ -247,7 +249,6 @@ instance PTC.AddSubs T.TAIOAMiddle T.TAIOASMiddle where
     T.TIdStart1 (tid, tip_str_pairs) ->
       PTC.add_subs tip_str_pairs >$> \souip_str_pairs ->
       T.TIdStart2 (tid, souip_str_pairs)
-    T.PTV1 ptv -> P.undefined
     T.AHTV1 ahtv -> P.undefined
 
 instance PTC.AddSubs T.TypesInParen T.SubsOrUndersInParen where

@@ -193,10 +193,11 @@ param-t-var ::= 'T' [0-9]
 
 ad-hoc-t-var ::= '@' [A-Z]
 
-type-app-id-or-tv ::= types-in-paren? taioa-middle types-in-paren?
+type-app-id-or-tv ::=
+types-in-paren? taioa-middle types-in-paren? | param-t-var
 
 taioa-middle ::=
-type-id ( types-in-paren [A-Za-z]+ )* | param-t-var | ad-hoc-t-var
+type-id ( types-in-paren [A-Za-z]+ )* | ad-hoc-t-var
 
 types-in-paren ::= paren-start simple-type ( comma simple-type )* paren-end
 
@@ -291,10 +292,10 @@ type-app-id-or-tv-sub | prod-or-power-type-sub | func-type-sub
 prod-or-power-type-sub ::= prod-type-sub | power-type-sub
 
 type-app-id-or-tv-sub ::=
-subs-or-unders-in-paren? taioas-middle subs-or-unders-in-paren?
+subs-or-unders-in-paren? taioas-middle subs-or-unders-in-paren? | param-t-var
 
 taioas-middle ::=
-type-id ( subs-or-unders-in-paren [A-Za-z]+ )* | param-t-var | ad-hoc-t-var
+type-id ( subs-or-unders-in-paren [A-Za-z]+ )* | ad-hoc-t-var
 
 subs-or-unders-in-paren ::=
 paren-start sub-or-under ( comma sub-or-under )* paren-end

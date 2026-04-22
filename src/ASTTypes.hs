@@ -238,12 +238,12 @@ newtype ParamTVar = PTV P.Int
 newtype AdHocTVar = AHTV P.Char
   deriving (P.Eq, P.Ord)
 
-newtype TypeAppIdOrTV =
-  TAIOA (P.Maybe TypesInParen, TAIOAMiddle, P.Maybe TypesInParen)
+data TypeAppIdOrTV =
+  TAIOA (P.Maybe TypesInParen, TAIOAMiddle, P.Maybe TypesInParen) |
+  PTV1 ParamTVar
 
 data TAIOAMiddle =
-  TIdStart1 (TypeId, [(TypesInParen, P.String)]) | PTV1 ParamTVar |
-  AHTV1 AdHocTVar
+  TIdStart1 (TypeId, [(TypesInParen, P.String)]) | AHTV1 AdHocTVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
 
@@ -339,12 +339,13 @@ data TVarSub =
 data ProdOrPowerTypeSub =
   PTS1 ProdTypeSub | PoTS1 PowerTypeSub
 
-newtype TypeAppIdOrTVSub =
+data TypeAppIdOrTVSub =
   TAIOAS (P.Maybe SubsOrUndersInParen, TAIOASMiddle, P.Maybe SubsOrUndersInParen)
+  |
+  PTV2 ParamTVar
 
 data TAIOASMiddle =
-  TIdStart2 (TypeId, [(SubsOrUndersInParen, P.String)]) | PTV2 ParamTVar |
-  AHTV2 AdHocTVar
+  TIdStart2 (TypeId, [(SubsOrUndersInParen, P.String)]) | AHTV2 AdHocTVar
 
 newtype SubsOrUndersInParen = SOUIP (SubOrUnder, [SubOrUnder])
 

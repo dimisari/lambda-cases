@@ -98,8 +98,10 @@ instance PTC.CollectParamTVars T.ProdOrPowerType where
     T.PoT5 pt -> PTC.collect_ptvs pt
 
 instance PTC.CollectParamTVars T.TypeAppIdOrTV where
-  collect_ptvs = \(T.TAIOA (mtip1, taioam, mtip2)) ->
-    PTC.collect_ptvs mtip1 >> PTC.collect_ptvs taioam >> PTC.collect_ptvs mtip2
+  collect_ptvs = \case
+    (T.TAIOA (mtip1, taioam, mtip2)) ->
+      PTC.collect_ptvs mtip1 >> PTC.collect_ptvs taioam >> PTC.collect_ptvs mtip2
+    T.PTV1 ptv -> MS.modify (S.insert ptv)
 
 instance PTC.CollectParamTVars T.PowerType where
   collect_ptvs = \(T.PoT (pbt, _)) -> PTC.collect_ptvs pbt
@@ -122,7 +124,6 @@ instance PTC.CollectParamTVars T.TypesInParen where
 instance PTC.CollectParamTVars T.TAIOAMiddle where
   collect_ptvs = \case
     T.TIdStart1 (_, tip_str_pairs) -> P.mapM_ PTC.collect_ptvs $ tip_str_pairs
-    T.PTV1 ptv -> MS.modify (S.insert ptv)
     T.AHTV1 _ -> H.do_nothing
 
 instance PTC.CollectParamTVars T.PowerBaseType where

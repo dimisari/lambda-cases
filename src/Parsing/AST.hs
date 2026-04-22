@@ -542,12 +542,12 @@ instance PTC.HasParser T.AdHocTVar where
 
 instance PTC.HasParser T.TypeAppIdOrTV where
   parser =
+    T.PTV1 <$> TP.try PTC.parser <|>
     T.TAIOA <$> TP.optionMaybe PTC.parser ++< PTC.parser +++<
     TP.optionMaybe PTC.parser
 
 instance PTC.HasParser T.TAIOAMiddle where
   parser =
-    T.PTV1 <$> TP.try PTC.parser <|>
     T.AHTV1 <$> PTC.parser <|>
     T.TIdStart1 <$> PTC.parser ++<
     TP.many (TP.try $ PTC.parser ++< TP.many1 (TP.lower <|> TP.upper))

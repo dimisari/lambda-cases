@@ -645,47 +645,47 @@ instance GTC.ToHaskell T.AdHocTVar where
   to_haskell = \(T.AHTV c) -> GPH.ad_hoc_t_var_prefix ++ P.show (CH.ord c - 65)
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTV) where
-  to_haskell (needs_paren, T.TAIOA taioa) = case taioa of
-    (P.Nothing, T.TIdStart1 (T.TId tid, []), P.Nothing) ->
-      tid &> \case
-        "Bool" -> GPH.bool
-        "Int" -> GPH.integer
-        "Real" -> GPH.double
-        "Char" -> GPH.char
-        "String" -> GPH.string
-        _ -> GTC.to_haskell tid
+  to_haskell (needs_paren, taiot) = case taiot of
+    T.PTV1 ptv -> GTC.to_haskell ptv
+    T.TAIOA taioa ->
+      case taioa of
+        (P.Nothing, T.TIdStart1 (T.TId tid, []), P.Nothing) ->
+          tid &> \case
+            "Bool" -> GPH.bool
+            "Int" -> GPH.integer
+            "Real" -> GPH.double
+            "Char" -> GPH.char
+            "String" -> GPH.string
+            _ -> GTC.to_haskell tid
 
-    (mtip1, taioam, mtip2) -> case taioam of
-      T.PTV1 ptv -> ptv_or_ahtv (GTC.to_haskell ptv)
+        (mtip1, taioam, mtip2) -> case taioam of
+          T.AHTV1 ahtv ->
+            in_paren_if_needed (GTC.to_haskell ahtv) $ mtip1_hs ++ mtip2_hs
 
-      T.AHTV1 ahtv -> ptv_or_ahtv (GTC.to_haskell ahtv)
+          T.TIdStart1 (tid, tip_str_pairs) ->
+            in_paren_if_needed tid_hs tip_hs
+            where
+            tid_hs :: GTC.Haskell
+            tid_hs =
+              GH.maybe_prefix_args_hs GPH.upper_prefix mtip1 ++
+              GTC.to_haskell tid ++ GH.args_strs_hs tip_str_pairs ++
+              GH.single_quotes_hs mtip2
 
-      T.TIdStart1 (tid, tip_str_pairs) ->
-        in_paren_if_needed tid_hs tip_hs
-        where
-        tid_hs :: GTC.Haskell
-        tid_hs =
-          GH.maybe_prefix_args_hs GPH.upper_prefix mtip1 ++ GTC.to_haskell tid ++
-          GH.args_strs_hs tip_str_pairs ++ GH.single_quotes_hs mtip2
+            tip_hs :: GTC.Haskell
+            tip_hs =
+              mtip1_hs ++ GTC.to_haskell (P.map P.fst tip_str_pairs) ++ mtip2_hs
+          where
+          in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
+          in_paren_if_needed = \hs tip_hs ->
+            case tip_hs of
+              "" -> hs
+              _ -> GH.in_paren_if needs_paren $ hs ++ tip_hs
 
-        tip_hs :: GTC.Haskell
-        tip_hs =
-          mtip1_hs ++ GTC.to_haskell (P.map P.fst tip_str_pairs) ++ mtip2_hs
-      where
-      ptv_or_ahtv :: GTC.Haskell -> GTC.Haskell
-      ptv_or_ahtv = \hs -> in_paren_if_needed hs $ mtip1_hs ++ mtip2_hs
+          mtip1_hs :: GTC.Haskell
+          mtip1_hs = GTC.to_haskell mtip1
 
-      in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
-      in_paren_if_needed = \hs tip_hs ->
-        case tip_hs of
-          "" -> hs
-          _ -> GH.in_paren_if needs_paren $ hs ++ tip_hs
-
-      mtip1_hs :: GTC.Haskell
-      mtip1_hs = GTC.to_haskell mtip1
-
-      mtip2_hs :: GTC.Haskell
-      mtip2_hs = GTC.to_haskell mtip2
+          mtip2_hs :: GTC.Haskell
+          mtip2_hs = GTC.to_haskell mtip2
 
 instance GTC.ToHaskell T.TypesInParen where
   to_haskell = \(T.TIP (st, sts)) ->
