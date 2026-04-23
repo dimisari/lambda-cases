@@ -71,13 +71,13 @@ newtype ParenFuncAppOrId =
 newtype Arguments = As LineExprOrUnders
 
 
--- Values: PreFunc, PostFunc, BasicExpr, Change
+-- Values: PreFunc, DotId, BasicExpr, Change
 
 newtype PreFunc = PF SimpleId
 
 newtype PreFuncApp = PrFA (PreFunc, Operand)
 
-newtype PostFunc = PoF SimpleOrSpecialId
+newtype DotId = PoF SimpleOrSpecialId
 
 data SimpleOrSpecialId =
   SId1 SimpleId | SI2 SpecialId
@@ -85,13 +85,13 @@ data SimpleOrSpecialId =
 data SpecialId =
   First | Second | Third | Fourth | Fifth
 
-newtype PostFuncApp = PoFA (PostFuncArg, PostFuncAppEnd)
+newtype PostFuncApp = PoFA (PostFuncArg, PostFuncs)
 
 data PostFuncArg =
   PE2 ParenExpr | BE2 BasicExpr | Underscore2
 
-data PostFuncAppEnd =
-  DC1 DotChange | PFsMDC ([PostFunc], P.Maybe DotChange)
+data PostFuncs =
+  DC1 DotChange | PFsMDC ([DotId], P.Maybe DotChange)
 
 newtype DotChange = DC (FieldChange, [FieldChange])
 

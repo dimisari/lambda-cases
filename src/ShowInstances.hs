@@ -132,14 +132,14 @@ instance P.Show T.ParenFuncAppOrId where
 instance P.Show T.Arguments where
   show = \(T.As loues) -> "(" ++ P.show loues ++ ")"
 
--- Values: PreFunc, PostFunc, BasicExpr, Change
+-- Values: PreFunc, DotId, BasicExpr, Change
 instance P.Show T.PreFunc where
   show = \(T.PF sid) -> P.show sid ++ ":"
 
 instance P.Show T.PreFuncApp where
   show = \(T.PrFA (pf, oper)) -> P.show pf ++ P.show oper
 
-instance P.Show T.PostFunc where
+instance P.Show T.DotId where
   show = \(T.PoF id) -> "." ++ P.show id
 
 instance P.Show T.SimpleOrSpecialId where
@@ -164,7 +164,7 @@ instance P.Show T.PostFuncArg where
     T.BE2 be -> P.show be
     T.Underscore2 -> "_"
 
-instance P.Show T.PostFuncAppEnd where
+instance P.Show T.PostFuncs where
   show = \case
     T.DC1 dc -> P.show dc
     T.PFsMDC (pfs, mdc) -> show_list pfs ++ show_maybe mdc

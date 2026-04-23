@@ -184,7 +184,7 @@ instance PTC.HasParser T.ParenFuncAppOrId where
 instance PTC.HasParser T.Arguments where
   parser = T.As <$> PH.in_paren PTC.parser
 
---  PreFunc, PostFunc, BasicExpr, Change
+--  PreFunc, DotId, BasicExpr, Change
 
 instance PTC.HasParser T.PreFunc where
   parser = T.PF <$> PTC.parser <* TP.string "--"
@@ -192,7 +192,7 @@ instance PTC.HasParser T.PreFunc where
 instance PTC.HasParser T.PreFuncApp where
   parser = T.PrFA <$> PTC.parser ++< PTC.parser
 
-instance PTC.HasParser T.PostFunc where
+instance PTC.HasParser T.DotId where
   parser =
     P.fmap T.PoF $
       TP.try (TP.char '.' *> TP.notFollowedBy (TP.string "change{")) *>
@@ -218,7 +218,7 @@ instance PTC.HasParser T.PostFuncArg where
     T.PE2 <$> TP.try PTC.parser <|> T.BE2 <$> PTC.parser <|>
     PH.underscore *> P.return T.Underscore2
 
-instance PTC.HasParser T.PostFuncAppEnd where
+instance PTC.HasParser T.PostFuncs where
   parser =
     T.DC1 <$> PTC.parser <|>
     T.PFsMDC <$> TP.many1 PTC.parser ++< TP.optionMaybe PTC.parser

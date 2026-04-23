@@ -64,15 +64,17 @@ pre_func ::= simple_id '--'
 
 pre_func_app ::= pre_func operand
 
-post_func ::= '.' simple_or_special_id
+dot_id ::= '.' simple_or_special_id
 
 simple_or_special_id ::= simple_id | special_id
 
 special_id ::= '1st' | '2nd' | '3rd' | '4th' | '5th'
 
-post_func_app ::=
-( basic_expr | paren_expr | '_' )
-( dot_change | post_func+ dot_change? )
+post_func_app ::= post_func_arg post_funcs
+
+post_func_arg ::= basic_expr | paren_expr | '_'
+
+post_funcs ::= dot_change | dot_id+ dot_change?
 
 dot_change ::=
 '.change{' opt_space field_change ( comma field_change )* opt_space '}'

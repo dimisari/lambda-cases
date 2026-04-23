@@ -180,7 +180,7 @@ instance GTC.ToHsWithParamNum [T.Arguments] where
 instance GTC.ToHsWithParamNum T.Arguments where
   to_hs_wpn = \(T.As leous) -> GTC.to_hs_wpn leous
 
--- Values: PreFunc, PostFunc, BasicExpr, Change
+-- Values: PreFunc, DotId, BasicExpr, Change
 
 instance GTC.ToHaskell T.PreFunc where
   to_haskell = \(T.PF id) ->
@@ -195,7 +195,7 @@ instance GTC.ToHaskell T.PreFuncApp where
     GH.run_generator $
     GH.add_params_to $ (GTC.to_haskell pf ++ "(") ++> GTC.to_hs_wpn oper <++ ")"
 
-instance GTC.ToHaskell T.PostFunc where
+instance GTC.ToHaskell T.DotId where
   to_haskell (T.PoF iosi) =
     iosi_prefix ++ GTC.to_haskell iosi
     where
@@ -236,7 +236,7 @@ instance GTC.ToHaskell T.PostFuncApp where
         pfa_pfs_hs :: GTC.Haskell
         pfa_pfs_hs = pfa_pfs_to_hs $ P.reverse pfs
 
-        pfa_pfs_to_hs :: [T.PostFunc] -> GTC.Haskell
+        pfa_pfs_to_hs :: [T.DotId] -> GTC.Haskell
         pfa_pfs_to_hs = \case
           [] -> pfa_hs
           pf : pfs -> GTC.to_haskell pf ++ "(" ++ pfa_pfs_to_hs pfs ++ ")"

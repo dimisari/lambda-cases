@@ -157,7 +157,7 @@ instance PTC.Preprocess T.PostFuncArg where
     T.BE2 be -> T.BE2 <$> PTC.preprocess be
     T.Underscore2 -> P.return T.Underscore2
 
-instance PTC.Preprocess T.PostFuncAppEnd where
+instance PTC.Preprocess T.PostFuncs where
   preprocess = \case
     T.DC1 dc -> T.DC1 <$> PTC.preprocess dc
     T.PFsMDC pfs_mdc -> T.PFsMDC <$> preprocess_second pfs_mdc
@@ -395,7 +395,7 @@ instance PTC.ToMaybePostFuncApp T.SimpleId where
       P.True -> PTC.to_maybe_post_func_app $ T.PoF $ T.SId1 sid
       _ -> P.return P.Nothing
 
-instance PTC.ToMaybePostFuncApp T.PostFunc where
+instance PTC.ToMaybePostFuncApp T.DotId where
   to_maybe_post_func_app = \pf ->
     get_pfarg_if_in_dot_change >$>
     P.fmap (\pfarg -> pfarg_pf_to_pfapp (pfarg, pf))
@@ -490,7 +490,7 @@ change_if_particular = \case
   "pi" -> GPH.ppi
   str -> str
 
-pfarg_pf_to_pfapp :: (T.PostFuncArg, T.PostFunc) -> T.PostFuncApp
+pfarg_pf_to_pfapp :: (T.PostFuncArg, T.DotId) -> T.PostFuncApp
 pfarg_pf_to_pfapp = \(pfarg, pf) ->
   T.PoFA (change_pfarg_if_under pfarg, T.PFsMDC ([pf], P.Nothing))
 
