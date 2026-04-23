@@ -201,12 +201,12 @@ instance GTC.ToHaskell T.PostFunc where
     where
     iosi_prefix :: GTC.Haskell
     iosi_prefix = case iosi of
-      T.Id1 id -> ""
-      T.SI2 spid -> GPH.spid_projection_prefix
+      T.SId1 _ -> ""
+      T.SI2 _ -> GPH.spid_projection_prefix
 
-instance GTC.ToHaskell T.IdOrSpecialId where
+instance GTC.ToHaskell T.SimpleOrSpecialId where
   to_haskell = \case
-    T.Id1 id -> GTC.to_haskell id
+    T.SId1 sid -> GTC.to_haskell sid
     T.SI2 spid -> GTC.to_haskell spid
 
 instance GTC.ToHaskell T.SpecialId where
@@ -264,7 +264,7 @@ instance GTC.ToHsWithParamNum T.FieldChange where
     where
     f_prefix :: GTC.Haskell
     f_prefix = case f of
-      T.Id1 _ -> GPH.change_prefix
+      T.SId1 _ -> GPH.change_prefix
       T.SI2 _ -> GPH.spid_change_prefix
 
 -- Values: OpExpr
@@ -470,7 +470,7 @@ instance GTC.ToHsWithIndentLvl T.EndCase where
 
 instance GTC.ToHaskell T.OuterMatching where
   to_haskell = \case
-    T.SId3 sid -> GTC.to_haskell sid
+    T.SId2 sid -> GTC.to_haskell sid
     T.M1 m -> GTC.to_haskell (GTC.NoParen, m)
 
 instance GTC.ToHaskell T.EndCaseParam where
@@ -738,7 +738,7 @@ instance GTC.ToHaskell T.TypeDef where
     T.OTD1 otd -> GTC.to_haskell otd
 
 instance GTC.ToHaskell T.TupleTypeDef where
-  to_haskell (T.TTD (tn, popt, T.PCSIs (T.Ids (id, ids)))) =
+  to_haskell (T.TTD (tn, popt, T.PCSIs (T.SIds (sid, sids)))) =
     data_hs ++ "\n\n" ++ instance_hs ++ "\n" ++
     change_types_hs ++ change_defs_hs
     where
@@ -762,7 +762,7 @@ instance GTC.ToHaskell T.TupleTypeDef where
     change_defs_hs = GH.combine_with_defs change_hs_list sid_hs_list
 
     sid_hs_list :: [GTC.Haskell]
-    sid_hs_list = P.map GTC.to_haskell $ id : ids
+    sid_hs_list = P.map GTC.to_haskell $ sid : sids
 
     change_hs_list :: [GTC.Haskell]
     change_hs_list = P.map (GPH.change_prefix ++) sid_hs_list

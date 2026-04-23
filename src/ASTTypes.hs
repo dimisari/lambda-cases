@@ -77,10 +77,10 @@ newtype PreFunc = PF SimpleId
 
 newtype PreFuncApp = PrFA (PreFunc, Operand)
 
-newtype PostFunc = PoF IdOrSpecialId
+newtype PostFunc = PoF SimpleOrSpecialId
 
-data IdOrSpecialId =
-  Id1 Identifier | SI2 SpecialId
+data SimpleOrSpecialId =
+  SId1 SimpleId | SI2 SpecialId
 
 data SpecialId =
   First | Second | Third | Fourth | Fifth
@@ -95,7 +95,7 @@ data PostFuncAppEnd =
 
 newtype DotChange = DC (FieldChange, [FieldChange])
 
-newtype FieldChange = FC (IdOrSpecialId, LineExprOrUnder)
+newtype FieldChange = FC (SimpleOrSpecialId, LineExprOrUnder)
 
 
 -- Values: OpExpr
@@ -174,7 +174,7 @@ newtype Case = Ca (OuterMatching, CaseBody)
 newtype EndCase = EC (EndCaseParam, CaseBody)
 
 data OuterMatching =
-  SId3 SimpleId | M1 Matching
+  SId2 SimpleId | M1 Matching
 
 data EndCaseParam =
   Id2 Identifier | Ellipsis
@@ -207,6 +207,8 @@ data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
 newtype GroupedValueDefs = GVDs (Identifiers, Types, LineExprs, [LineExprs])
+
+newtype Identifiers = Ids (Identifier, [Identifier])
 
 data Types =
   Ts (Type, [Type]) | All Type
@@ -281,9 +283,9 @@ newtype TypeName =
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
-newtype FieldNames = PCSIs Identifiers
+newtype FieldNames = PCSIs SimpleIds
 
-newtype Identifiers = Ids (Identifier, [Identifier])
+newtype SimpleIds = SIds (SimpleId, [SimpleId])
 
 newtype OrTypeDef = OTD (TypeName, OrTypeValues)
 

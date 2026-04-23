@@ -142,9 +142,9 @@ instance P.Show T.PreFuncApp where
 instance P.Show T.PostFunc where
   show = \(T.PoF id) -> "." ++ P.show id
 
-instance P.Show T.IdOrSpecialId where
+instance P.Show T.SimpleOrSpecialId where
   show = \case
-    T.Id1 id -> P.show id
+    T.SId1 id -> P.show id
     T.SI2 sid -> P.show sid
 
 instance P.Show T.SpecialId where
@@ -313,7 +313,7 @@ instance P.Show T.EndCase where
 
 instance P.Show T.OuterMatching where
   show = \case
-    T.SId3 sid -> P.show sid
+    T.SId2 sid -> P.show sid
     T.M1 m -> P.show m
 
 instance P.Show T.EndCaseParam where
@@ -386,6 +386,9 @@ instance P.Show T.GroupedValueDefs where
     P.show ids ++
     "\n  : " ++ P.show ts ++
     "\n  = " ++ P.show csles ++ show_list_sep "\n  , " csles_l
+
+instance P.Show T.Identifiers where
+  show = \(T.Ids (id, ids)) -> P.show id ++ show_list_comma ids
 
 instance P.Show T.Types where
   show = \case
@@ -498,8 +501,8 @@ instance P.Show T.ParamVarsInParen where
 instance P.Show T.FieldNames where
   show = \(T.PCSIs ids) -> "(" ++ P.show ids ++ ")"
 
-instance P.Show T.Identifiers where
-  show = \(T.Ids (id, ids)) -> P.show id ++ show_list_comma ids
+instance P.Show T.SimpleIds where
+  show = \(T.SIds (sid, sids)) -> P.show sid ++ show_list_comma sids
 
 instance P.Show T.OrTypeDef where
   show = \(T.OTD (tn, otvs)) ->

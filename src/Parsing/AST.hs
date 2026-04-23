@@ -198,9 +198,9 @@ instance PTC.HasParser T.PostFunc where
       TP.try (TP.char '.' *> TP.notFollowedBy (TP.string "change{")) *>
       PTC.parser
 
-instance PTC.HasParser T.IdOrSpecialId where
+instance PTC.HasParser T.SimpleOrSpecialId where
   parser =
-    T.Id1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
+    T.SId1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
 
 instance PTC.HasParser T.SpecialId where
   parser =
@@ -397,7 +397,7 @@ instance PTC.HasParser T.EndCase where
     (PH.func_arr *> PH.deeper PTC.parser)
 
 instance PTC.HasParser T.OuterMatching where
-  parser = T.M1 <$> TP.try PTC.parser <|> T.SId3 <$> PTC.parser
+  parser = T.M1 <$> TP.try PTC.parser <|> T.SId2 <$> PTC.parser
 
 instance PTC.HasParser T.EndCaseParam where
   parser = T.Id2 <$> PTC.parser <|> TP.string "..." *> P.return T.Ellipsis
@@ -497,6 +497,9 @@ instance PTC.HasParser T.GroupedValueDefs where
 
     les_l_p :: PTC.Parser [T.LineExprs]
     les_l_p = TP.many $ TP.try (PH.nl_indent *> PH.comma) *> PTC.parser
+
+instance PTC.HasParser T.Identifiers where
+  parser = T.Ids <$> PTC.parser ++< TP.many1 (PH.comma *> PTC.parser)
 
 instance PTC.HasParser T.Types where
   parser =
@@ -617,8 +620,8 @@ instance PTC.HasParser T.ParamVarsInParen where
 instance PTC.HasParser T.FieldNames where
   parser = T.PCSIs <$> PH.in_paren PTC.parser
 
-instance PTC.HasParser T.Identifiers where
-  parser = T.Ids <$> PTC.parser ++< TP.many1 (PH.comma *> PTC.parser)
+instance PTC.HasParser T.SimpleIds where
+  parser = T.SIds <$> PTC.parser ++< TP.many1 (PH.comma *> PTC.parser)
 
 instance PTC.HasParser T.OrTypeDef where
   parser =
@@ -695,7 +698,8 @@ instance PTC.HasParser T.PropName where
     tip_start_p
       :: PTC.Parser ([(T.TypesInParen, T.NamePart)], P.Maybe T.TypesInParen)
     tip_start_p =
-      (TP.many1 $ TP.try $ PTC.parser ++< PTC.parser) ++< TP.optionMaybe PTC.parser
+      (TP.many1 $ TP.try $ PTC.parser ++< PTC.parser) ++<
+      TP.optionMaybe PTC.parser
 
 instance PTC.HasParser T.NamePart where
   parser =

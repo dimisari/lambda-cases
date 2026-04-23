@@ -76,13 +76,13 @@ instance PTC.CollectFieldIds T.TupleTypeDef where
   collect_fids = \(T.TTD (_, _, idt)) -> PTC.collect_fids idt
 
 instance PTC.CollectFieldIds T.FieldNames where
-  collect_fids = \(T.PCSIs ids) -> PTC.collect_fids ids
+  collect_fids = \(T.PCSIs sids) -> PTC.collect_fids sids
 
-instance PTC.CollectFieldIds T.Identifiers where
-  collect_fids = \(T.Ids (id, ids)) -> P.mapM_ PTC.collect_fids $ id : ids
+instance PTC.CollectFieldIds T.SimpleIds where
+  collect_fids = \(T.SIds (sid, sids)) -> P.mapM_ PTC.collect_fids $ sid : sids
 
-instance PTC.CollectFieldIds T.Identifier where
-  collect_fids = \id -> MS.modify (S.insert id)
+instance PTC.CollectFieldIds T.SimpleId where
+  collect_fids = \sid -> MS.modify (S.insert sid)
 
 -- CollectParamTVars instances
 

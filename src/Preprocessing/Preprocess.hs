@@ -261,10 +261,10 @@ instance PTC.Preprocess T.EndCase where
 
 instance PTC.Preprocess T.OuterMatching where
   preprocess = \case
-    T.SId3 sid ->
+    T.SId2 sid ->
       lookup_sid_in_ovm sid >>= \case
         P.Just id -> P.return $ T.M1 $ T.PFM (T.PF sid, T.Id3 id)
-        P.Nothing -> T.SId3 <$> PTC.preprocess sid
+        P.Nothing -> T.SId2 <$> PTC.preprocess sid
     T.M1 m -> T.M1 <$> PTC.preprocess m
 
 instance PTC.Preprocess T.Matching where
@@ -383,16 +383,16 @@ instance PTC.ToMaybePostFuncApp T.ParenFuncAppOrId where
   to_maybe_post_func_app =
     check_if_pfaoi_is_sid .> \case
       P.Nothing -> P.return P.Nothing
-      P.Just sid -> PTC.to_maybe_post_func_app $ GH.sid_to_id sid
+      P.Just sid -> PTC.to_maybe_post_func_app sid
 
 instance PTC.ToMaybePostFuncApp T.SpecialId where
   to_maybe_post_func_app = \spid ->
     PTC.to_maybe_post_func_app $ T.PoF $ T.SI2 spid
 
-instance PTC.ToMaybePostFuncApp T.Identifier where
-  to_maybe_post_func_app = \id ->
-    check_if_id_in_fids id >>= \case
-      P.True -> PTC.to_maybe_post_func_app $ T.PoF $ T.Id1 id
+instance PTC.ToMaybePostFuncApp T.SimpleId where
+  to_maybe_post_func_app = \sid ->
+    check_if_sid_in_fids sid >>= \case
+      P.True -> PTC.to_maybe_post_func_app $ T.PoF $ T.SId1 sid
       _ -> P.return P.Nothing
 
 instance PTC.ToMaybePostFuncApp T.PostFunc where
@@ -429,8 +429,8 @@ get_ovm = MS.get >$> \(_, _, _, _, ovm) -> ovm
 
 --   checking membership and lookup
 
-check_if_id_in_fids :: T.Identifier -> PTC.PreprocessState P.Bool
-check_if_id_in_fids = \id -> S.member id <$> get_fids
+check_if_sid_in_fids :: T.SimpleId -> PTC.PreprocessState P.Bool
+check_if_sid_in_fids = \id -> S.member id <$> get_fids
 
 check_if_sid_in_ncs :: T.SimpleId -> PTC.PreprocessState P.Bool
 check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
