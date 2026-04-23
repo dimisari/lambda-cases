@@ -14,7 +14,7 @@ by the ToMaybePostFuncApp class.
 
 module Preprocessing.Preprocess where
 
-import Prelude (($), (++), (>>=), (<$>), (/=), (>>))
+import Prelude (($), (++), (>>=), (<$>), (/=), (>>), (<*))
 import Prelude qualified as P
 import Data.Set qualified as S
 import Data.Map qualified as M
@@ -144,23 +144,34 @@ instance PTC.Preprocess T.PreFuncApp where
   preprocess = \(T.PrFA prfa) -> T.PrFA <$> preprocess_second prfa
 
 instance PTC.Preprocess T.PostFuncApp where
-  preprocess = \(T.PoFA (pfarg, pfae)) ->
-    PTC.preprocess pfarg >>= \pfarg' ->
-    push_post_func_arg pfarg >>
-    PTC.preprocess pfae >>= \pfae' ->
-    pop_post_func_arg >>
-    P.return (T.PoFA (pfarg', pfae'))
+  preprocess pfa =
+    res <* pop_post_func_arg
+    where
+    res :: PTC.PreprocessState T.PostFuncApp
+    res = case pfa of
+      T.DIA1 dia -> T.DIA1 <$> PTC.preprocess dia
+      T.DCA1 dca -> T.DCA1 <$> PTC.preprocess dca
+
+instance PTC.Preprocess T.DotIdsApp where
+  preprocess = \(T.DIA dia_pair) -> T.DIA <$> preprocess_first dia_pair
 
 instance PTC.Preprocess T.PostFuncArg where
-  preprocess = \case
-    T.PE2 pe -> T.PE2 <$> PTC.preprocess pe
-    T.BE2 be -> T.BE2 <$> PTC.preprocess be
-    T.Underscore2 -> P.return T.Underscore2
+  preprocess pfarg =
+    res <* push_post_func_arg pfarg
+    where
+    res :: PTC.PreprocessState T.PostFuncArg
+    res = case pfarg of
+      T.PE2 pe -> T.PE2 <$> PTC.preprocess pe
+      T.BE2 be -> T.BE2 <$> PTC.preprocess be
+      T.Underscore2 -> P.return T.Underscore2
 
-instance PTC.Preprocess T.PostFuncs where
+instance PTC.Preprocess T.DotChangeApp where
+  preprocess = \(T.DCA dca_pair) -> T.DCA <$> preprocess_pair dca_pair
+
+instance PTC.Preprocess T.DotChangeArg where
   preprocess = \case
-    T.DC1 dc -> T.DC1 <$> PTC.preprocess dc
-    T.PFsMDC pfs_mdc -> T.PFsMDC <$> preprocess_second pfs_mdc
+    T.PFA pfa -> T.PFA <$> PTC.preprocess pfa
+    T.DIA2 dia -> T.DIA2 <$> PTC.preprocess dia
 
 instance PTC.Preprocess T.DotChange where
   preprocess = \(T.DC dc) -> T.DC <$> preprocess_pair dc
@@ -387,18 +398,18 @@ instance PTC.ToMaybePostFuncApp T.ParenFuncAppOrId where
 
 instance PTC.ToMaybePostFuncApp T.SpecialId where
   to_maybe_post_func_app = \spid ->
-    PTC.to_maybe_post_func_app $ T.PoF $ T.SI2 spid
+    PTC.to_maybe_post_func_app $ T.DI $ T.SI2 spid
 
 instance PTC.ToMaybePostFuncApp T.SimpleId where
   to_maybe_post_func_app = \sid ->
     check_if_sid_in_fids sid >>= \case
-      P.True -> PTC.to_maybe_post_func_app $ T.PoF $ T.SId1 sid
+      P.True -> PTC.to_maybe_post_func_app $ T.DI $ T.SId1 sid
       _ -> P.return P.Nothing
 
 instance PTC.ToMaybePostFuncApp T.DotId where
-  to_maybe_post_func_app = \pf ->
+  to_maybe_post_func_app = \di ->
     get_pfarg_if_in_dot_change >$>
-    P.fmap (\pfarg -> pfarg_pf_to_pfapp (pfarg, pf))
+    P.fmap (\pfarg -> pfarg_di_to_pfapp (pfarg, di))
 
 -- State helpers
 --   initial state
@@ -468,7 +479,7 @@ get_pfarg_if_in_dot_change =
   get_pidc >$> \case
     PTC.NotInDotChange -> P.Nothing
     PTC.InDotChange [] -> P.error "should not be possible"
-    PTC.InDotChange (pfarg : pfargs) -> P.Just pfarg
+    PTC.InDotChange (pfarg : _) -> P.Just pfarg
 
 -- other helpers
 
@@ -490,9 +501,9 @@ change_if_particular = \case
   "pi" -> GPH.ppi
   str -> str
 
-pfarg_pf_to_pfapp :: (T.PostFuncArg, T.DotId) -> T.PostFuncApp
-pfarg_pf_to_pfapp = \(pfarg, pf) ->
-  T.PoFA (change_pfarg_if_under pfarg, T.PFsMDC ([pf], P.Nothing))
+pfarg_di_to_pfapp :: (T.PostFuncArg, T.DotId) -> T.PostFuncApp
+pfarg_di_to_pfapp = \(pfarg, di) ->
+  T.DIA1 (T.DIA (change_pfarg_if_under pfarg, [di]))
 
 change_pfarg_if_under :: T.PostFuncArg -> T.PostFuncArg
 change_pfarg_if_under = \case

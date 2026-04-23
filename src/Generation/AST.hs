@@ -196,11 +196,11 @@ instance GTC.ToHaskell T.PreFuncApp where
     GH.add_params_to $ (GTC.to_haskell pf ++ "(") ++> GTC.to_hs_wpn oper <++ ")"
 
 instance GTC.ToHaskell T.DotId where
-  to_haskell (T.PoF iosi) =
-    iosi_prefix ++ GTC.to_haskell iosi
+  to_haskell (T.DI sosi) =
+    sosi_prefix ++ GTC.to_haskell sosi
     where
-    iosi_prefix :: GTC.Haskell
-    iosi_prefix = case iosi of
+    sosi_prefix :: GTC.Haskell
+    sosi_prefix = case sosi of
       T.SId1 _ -> ""
       T.SI2 _ -> GPH.spid_projection_prefix
 
@@ -218,28 +218,24 @@ instance GTC.ToHaskell T.SpecialId where
     T.Fifth -> "5th"
 
 instance GTC.ToHaskell T.PostFuncApp where
-  to_haskell (T.PoFA (pfa, pfae)) =
-    case pfa of
-      T.Underscore2 -> "(\\" ++ GPH.under_pfarg_param ++ " -> " ++ inside_hs ++")"
-      _ -> inside_hs
+  to_haskell = \case
+    T.DIA1 dia@(T.DIA (T.Underscore2, _)) ->
+      GH.add_under_pfarg_param (GTC.to_haskell dia)
+    T.DIA1 dia -> GTC.to_haskell dia
+    T.DCA1 dca@(T.DCA (T.PFA T.Underscore2, _)) ->
+      GH.add_under_pfarg_param (GTC.to_haskell dca)
+    T.DCA1 dca@(T.DCA (T.DIA2 (T.DIA (T.Underscore2, _)), _)) ->
+      GH.add_under_pfarg_param (GTC.to_haskell dca)
+    T.DCA1 dca -> GTC.to_haskell dca
+
+instance GTC.ToHaskell T.DotIdsApp where
+  to_haskell (T.DIA (pfa, dis)) =
+    pfa_dis_to_hs $ P.reverse dis
     where
-    pfa_hs :: GTC.Haskell
-    pfa_hs = GTC.to_haskell pfa
-
-    inside_hs :: GTC.Haskell
-    inside_hs = case pfae of
-      T.DC1 dc -> GTC.to_haskell (dc, pfa_hs)
-      T.PFsMDC (pfs, mdc) -> case mdc of
-        P.Nothing -> pfa_pfs_hs
-        P.Just dc -> GTC.to_haskell (dc, pfa_pfs_hs)
-        where
-        pfa_pfs_hs :: GTC.Haskell
-        pfa_pfs_hs = pfa_pfs_to_hs $ P.reverse pfs
-
-        pfa_pfs_to_hs :: [T.DotId] -> GTC.Haskell
-        pfa_pfs_to_hs = \case
-          [] -> pfa_hs
-          pf : pfs -> GTC.to_haskell pf ++ "(" ++ pfa_pfs_to_hs pfs ++ ")"
+    pfa_dis_to_hs :: [T.DotId] -> GTC.Haskell
+    pfa_dis_to_hs = \case
+      [] -> GTC.to_haskell pfa
+      di : dis -> GTC.to_haskell di ++ "(" ++ pfa_dis_to_hs dis ++ ")"
 
 instance GTC.ToHaskell T.PostFuncArg where
   to_haskell = \case
@@ -247,9 +243,18 @@ instance GTC.ToHaskell T.PostFuncArg where
     T.BE2 be -> GTC.to_haskell be
     T.Underscore2 -> GPH.under_pfarg_param
 
-instance GTC.ToHaskell (T.DotChange, GTC.DotChangeArgHs) where
-  to_haskell (T.DC (fc, fcs), dcahs) =
-    GH.run_generator $ GH.add_params_to (change_hs_gen <++ (" " ++ dcahs))
+instance GTC.ToHaskell T.DotChangeApp where
+  to_haskell = \(T.DCA (dca, dc)) ->
+    GTC.to_haskell dc ++ " " ++ GTC.to_haskell dca
+
+instance GTC.ToHaskell T.DotChangeArg where
+  to_haskell = \case
+    T.PFA pfa -> GTC.to_haskell pfa
+    T.DIA2 dia -> GTC.to_haskell dia
+
+instance GTC.ToHaskell T.DotChange where
+  to_haskell (T.DC (fc, fcs)) =
+    GH.run_generator (GH.add_params_to change_hs_gen)
     where
     change_hs_gen :: GTC.WithParamNum GTC.Haskell
     change_hs_gen =

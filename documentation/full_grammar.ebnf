@@ -70,11 +70,15 @@ simple_or_special_id ::= simple_id | special_id
 
 special_id ::= '1st' | '2nd' | '3rd' | '4th' | '5th'
 
-post_func_app ::= post_func_arg post_funcs
+post_func_app ::= dot_ids_app | dot_change_app
+
+dot_ids_app ::= post_func_arg dot_id+
 
 post_func_arg ::= basic_expr | paren_expr | '_'
 
-post_funcs ::= dot_change | dot_id+ dot_change?
+dot_change_app ::= dot_change_arg dot_change
+
+dot_change_arg ::= post_func_arg | dot_ids_app
 
 dot_change ::=
 '.change{' opt_space field_change ( comma field_change )* opt_space '}'

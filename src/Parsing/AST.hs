@@ -193,14 +193,10 @@ instance PTC.HasParser T.PreFuncApp where
   parser = T.PrFA <$> PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.DotId where
-  parser =
-    P.fmap T.PoF $
-      TP.try (TP.char '.' *> TP.notFollowedBy (TP.string "change{")) *>
-      PTC.parser
+  parser = T.DI <$> (TP.char '.' *> PTC.parser)
 
 instance PTC.HasParser T.SimpleOrSpecialId where
-  parser =
-    T.SId1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
+  parser = T.SId1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
 
 instance PTC.HasParser T.SpecialId where
   parser =
@@ -211,17 +207,27 @@ instance PTC.HasParser T.SpecialId where
     TP.string "5th" *> P.return T.Fifth
 
 instance PTC.HasParser T.PostFuncApp where
-  parser = T.PoFA <$> PTC.parser ++< PTC.parser
+  parser =
+    PTC.parser >>= \pfa ->
+    T.DCA1 <$> dca1_parser pfa <|> (dia_parser pfa >>= dca2_or_dia_pfapp_parser)
+    where
+    dca1_parser :: T.PostFuncArg -> PTC.Parser T.DotChangeApp
+    dca1_parser = \pfa -> PTC.parser >$> \dc -> T.DCA (T.PFA pfa, dc)
+
+    dca2_or_dia_pfapp_parser :: T.DotIdsApp -> PTC.Parser T.PostFuncApp
+    dca2_or_dia_pfapp_parser = \dia ->
+      T.DCA1 <$> dca2_parser dia <|> P.pure (T.DIA1 dia)
+
+    dia_parser :: T.PostFuncArg -> PTC.Parser T.DotIdsApp
+    dia_parser = \pfa -> TP.many1 PTC.parser >$> \dis -> T.DIA (pfa, dis)
+
+    dca2_parser :: T.DotIdsApp -> PTC.Parser T.DotChangeApp
+    dca2_parser = \dia -> PTC.parser >$> \dc -> T.DCA (T.DIA2 dia, dc)
 
 instance PTC.HasParser T.PostFuncArg where
   parser =
     T.PE2 <$> TP.try PTC.parser <|> T.BE2 <$> PTC.parser <|>
     PH.underscore *> P.return T.Underscore2
-
-instance PTC.HasParser T.PostFuncs where
-  parser =
-    T.DC1 <$> PTC.parser <|>
-    T.PFsMDC <$> TP.many1 PTC.parser ++< TP.optionMaybe PTC.parser
 
 instance PTC.HasParser T.DotChange where
   parser =
@@ -231,10 +237,10 @@ instance PTC.HasParser T.DotChange where
     )
     where
     field_changes_p :: PTC.Parser (T.FieldChange, [T.FieldChange])
-    field_changes_p = field_change_p ++< TP.many (PH.comma *> field_change_p)
+    field_changes_p = PTC.parser ++< TP.many (PH.comma *> PTC.parser)
 
-    field_change_p :: PTC.Parser T.FieldChange
-    field_change_p = T.FC <$> PTC.parser ++< (PH.equals *> PTC.parser)
+instance PTC.HasParser T.FieldChange where
+  parser = T.FC <$> PTC.parser ++< (PH.equals *> PTC.parser)
 
 --  OpExpr
 

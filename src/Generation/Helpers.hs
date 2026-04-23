@@ -251,6 +251,10 @@ tn_to_tid_hs = \(T.TN (mpvip1, T.TId str, pvip_str_pairs, mpvip2)) ->
 tn_to_cons_hs :: T.TypeName -> GTC.Haskell
 tn_to_cons_hs = tn_to_tid_hs .> (++ "'")
 
+add_under_pfarg_param :: GTC.Haskell -> GTC.Haskell
+add_under_pfarg_param = \hs ->
+  "(\\" ++ GPH.under_pfarg_param ++ " -> " ++ hs ++")"
+
 -- Changed specific parts of the generated haskell
 
 change_prop_hs_if_needed :: GTC.Haskell -> GTC.Haskell

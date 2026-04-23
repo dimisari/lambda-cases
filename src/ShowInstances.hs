@@ -140,7 +140,7 @@ instance P.Show T.PreFuncApp where
   show = \(T.PrFA (pf, oper)) -> P.show pf ++ P.show oper
 
 instance P.Show T.DotId where
-  show = \(T.PoF id) -> "." ++ P.show id
+  show = \(T.DI id) -> "." ++ P.show id
 
 instance P.Show T.SimpleOrSpecialId where
   show = \case
@@ -156,7 +156,12 @@ instance P.Show T.SpecialId where
     T.Fifth -> "5th"
 
 instance P.Show T.PostFuncApp where
-  show = \(T.PoFA (pfa, pfae)) -> P.show pfa ++ P.show pfae
+  show = \case
+    T.DIA1 dia -> P.show dia
+    T.DCA1 dca -> P.show dca
+
+instance P.Show T.DotIdsApp where
+  show = \(T.DIA (pfa, dis)) -> P.show pfa ++ show_list dis
 
 instance P.Show T.PostFuncArg where
   show = \case
@@ -164,10 +169,13 @@ instance P.Show T.PostFuncArg where
     T.BE2 be -> P.show be
     T.Underscore2 -> "_"
 
-instance P.Show T.PostFuncs where
+instance P.Show T.DotChangeApp where
+  show = \(T.DCA (dca, dc)) -> P.show dca ++ P.show dc
+
+instance P.Show T.DotChangeArg where
   show = \case
-    T.DC1 dc -> P.show dc
-    T.PFsMDC (pfs, mdc) -> show_list pfs ++ show_maybe mdc
+    T.PFA pfa -> P.show pfa
+    T.DIA2 dia -> P.show dia
 
 instance P.Show T.DotChange where
   show = \(T.DC (fc, fcs)) ->
