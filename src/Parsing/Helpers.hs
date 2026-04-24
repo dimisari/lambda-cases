@@ -18,7 +18,7 @@ import Text.Parsec ((<?>), (<|>))
 import Text.Parsec qualified as TP
 import Text.Parsec.Token qualified as TPT
 
-import Helpers ((>$>))
+import Helpers ((>$>), (>++<))
 import Helpers qualified as H
 import Parsing.TypesAndClasses qualified as PTC
 
@@ -79,6 +79,17 @@ deeper_if_not_in_equal_line = \parser ->
 [digits, func_arr]
   = [TP.many1 TP.digit, opt_space_around (TP.string "=>")]
   :: [PTC.Parser P.String]
+
+non_zero_digit :: PTC.Parser P.String
+non_zero_digit =
+  TP.digit >>= \case
+    '0' -> TP.unexpected "zero digit"
+    c -> P.pure [c]
+
+int_str_p :: PTC.Parser P.String
+int_str_p =
+  TP.string "0" <|>
+  TP.option "" (TP.string "-") >++< non_zero_digit >++< TP.many TP.digit
 
 has_type :: PTC.Parser ()
 has_type = (TP.try nl_indent <|> opt_space ) *> TP.string ":" *> opt_space

@@ -13,3 +13,6 @@ type InEqualLine = P.Bool
 
 class HasParser a where
   parser :: Parser a
+
+class HasParserWithPrefix a b where
+  parser_wp :: a -> Parser b

@@ -7,7 +7,7 @@ instance of the HasParser type class
 
 module Parsing.AST where
 
-import Prelude ((<$>), (<*), (*>), ($), (>>=), (>>), (>), (++), (+))
+import Prelude ((<$>), (<*), (*>), ($), (>>=), (>>), (>), (++), (+), (.))
 import Prelude qualified as P
 import Control.Monad ((>=>))
 import Text.Parsec ((<|>), (<?>))
@@ -29,18 +29,17 @@ parse = TP.runParser (PTC.parser <* TP.eof) (0, P.False) ""
 --   Literal
 
 instance PTC.HasParser P.Integer where
-  parser = P.read <$> TP.option "" (TP.string "-") >++< PH.digits
+  parser = P.read <$> PH.int_str_p
 
-instance PTC.HasParser P.Double where
-  parser =
-    P.read <$> int_p >++< TP.string "." >++< PH.digits >++<
-    TP.option "" exponent_p
+instance PTC.HasParserWithPrefix P.String P.Double where
+  parser_wp = \i_str ->
+    P.read . (i_str ++) <$> point_onwards
     where
-    int_p :: PTC.Parser P.String
-    int_p = P.show <$> (PTC.parser :: PTC.Parser P.Integer)
+    point_onwards :: PTC.Parser P.String
+    point_onwards = TP.char '.' >:< PH.digits >++< TP.option "" exponent_p
 
     exponent_p :: PTC.Parser P.String
-    exponent_p = (TP.char 'e' <|> TP.char 'E') >:< int_p
+    exponent_p = (TP.char 'e' <|> TP.char 'E') >:< PH.int_str_p
 
 instance PTC.HasParser P.Char where
   parser = PH.charLiteral
@@ -50,8 +49,12 @@ instance PTC.HasParser P.String where
 
 instance PTC.HasParser T.Literal where
   parser =
-    T.R <$> TP.try PTC.parser <|> T.Int <$> PTC.parser <|>
-    T.Ch <$> PTC.parser <|> T.S <$> PTC.parser <?> "Literal"
+    int_or_real_p <|> T.Ch <$> PTC.parser <|> T.S <$> PTC.parser <?> "Literal"
+    where
+    int_or_real_p :: PTC.Parser T.Literal
+    int_or_real_p =
+      PH.int_str_p >>= \i_str ->
+      T.R <$> PTC.parser_wp i_str <|> P.pure (T.Int $ P.read i_str)
 
 --  Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 
@@ -120,7 +123,7 @@ instance PTC.HasParser T.LineExpr where
 
 instance PTC.HasParser T.BasicOrAppExpr where
   parser =
-    T.PrFA1 <$> TP.try PTC.parser <|> T.PoFA1 <$> TP.try PTC.parser <|>
+    T.PrFA1 <$> PTC.parser <|> T.PoFA1 <$> TP.try PTC.parser <|>
     T.BE3 <$> PTC.parser
 
 instance PTC.HasParser T.BasicExpr where
@@ -190,7 +193,7 @@ instance PTC.HasParser T.PreFunc where
   parser = T.PF <$> PTC.parser <* TP.string "--"
 
 instance PTC.HasParser T.PreFuncApp where
-  parser = T.PrFA <$> PTC.parser ++< PTC.parser
+  parser = T.PrFA <$> TP.try PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.DotId where
   parser = T.DI <$> (TP.char '.' *> PTC.parser)
@@ -209,20 +212,22 @@ instance PTC.HasParser T.SpecialId where
 instance PTC.HasParser T.PostFuncApp where
   parser =
     PTC.parser >>= \pfa ->
-    T.DCA1 <$> dca1_parser pfa <|> (dia_parser pfa >>= dca2_or_dia_pfapp_parser)
+    T.DCA1 <$> PTC.parser_wp pfa <|> (dia_parser pfa >>= PTC.parser_wp)
     where
-    dca1_parser :: T.PostFuncArg -> PTC.Parser T.DotChangeApp
-    dca1_parser = \pfa -> PTC.parser >$> \dc -> T.DCA (T.PFA pfa, dc)
-
-    dca2_or_dia_pfapp_parser :: T.DotIdsApp -> PTC.Parser T.PostFuncApp
-    dca2_or_dia_pfapp_parser = \dia ->
-      T.DCA1 <$> dca2_parser dia <|> P.pure (T.DIA1 dia)
-
     dia_parser :: T.PostFuncArg -> PTC.Parser T.DotIdsApp
-    dia_parser = \pfa -> TP.many1 PTC.parser >$> \dis -> T.DIA (pfa, dis)
+    dia_parser = PTC.parser_wp
 
-    dca2_parser :: T.DotIdsApp -> PTC.Parser T.DotChangeApp
-    dca2_parser = \dia -> PTC.parser >$> \dc -> T.DCA (T.DIA2 dia, dc)
+instance PTC.HasParserWithPrefix T.PostFuncArg T.DotChangeApp where
+  parser_wp = \pfa -> PTC.parser >$> \dc -> T.DCA (T.PFA pfa, dc)
+
+instance PTC.HasParserWithPrefix T.PostFuncArg T.DotIdsApp where
+  parser_wp = \pfa -> TP.many1 PTC.parser >$> \dis -> T.DIA (pfa, dis)
+
+instance PTC.HasParserWithPrefix T.DotIdsApp T.PostFuncApp where
+  parser_wp = \dia -> T.DCA1 <$> PTC.parser_wp dia <|> P.pure (T.DIA1 dia)
+
+instance PTC.HasParserWithPrefix T.DotIdsApp T.DotChangeApp where
+  parser_wp = \dia -> PTC.parser >$> \dc -> T.DCA (T.DIA2 dia, dc)
 
 instance PTC.HasParser T.PostFuncArg where
   parser =
