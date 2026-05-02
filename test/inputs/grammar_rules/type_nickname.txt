@@ -1,16 +1,24 @@
-type nickname: Ints = ListOf(Int)s#
+TYPE NICKNAME
+Ints = ListOf(Int)s#
 
-type nickname: IntStringPairs = ListOf(Int x String)s#
+TYPE NICKNAME
+IntStringPairs = ListOf(Int x String)s#
 
-type nickname: IO = (EmptyVal)FromIO#
+TYPE NICKNAME
+IO = (EmptyVal)FromIO#
 
-type nickname: ErrOrRes(T1) = Error(String)OrResult(T1)#
+TYPE NICKNAME
+ErrOrRes(T1) = Error(String)OrResult(T1)#
 
-type nickname: Parse(T1)FuncT = String => T1 x String#
+TYPE NICKNAME
+Parse(T1)FuncT = String => T1 x String#
 
-type nickname: IntsTwo= ListOf(Int)s#
+TYPE NICKNAME
+IntsTwo= ListOf(Int)s#
 
-type nickname: IntStringPairsTwo= ListOf(Int x String)s#
+TYPE NICKNAME
+IntStringPairsTwo= ListOf(Int x String)s#
 
-type nickname: IOTwo=(EmptyVal)FromIO#
+TYPE NICKNAME
+IOTwo=(EmptyVal)FromIO#
 

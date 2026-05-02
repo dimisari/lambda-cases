@@ -1,6 +1,7 @@
 
-tuple type: FibsAndIndex = Int^3
-field names: (prev, cur, cur_index)
+TUPLE TYPE
+FibsAndIndex = Int^3
+(prev, cur, cur_index)
 
 print(_)fib_nums: Int => Program
   = ?

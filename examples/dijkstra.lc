@@ -1,29 +1,39 @@
-type nickname: Graph = ListOf(Node)s
+TYPE NICKNAME
+Graph = ListOf(Node)s
 
-tuple type: Node = Char x ListOf(Neighbor)s
-field names: (n_name, neighbors)
+TUPLE TYPE
+Node = Char x ListOf(Neighbor)s
+(n_name, neighbors)
 
-type nickname: Dist = Int
+TYPE NICKNAME
+Dist = Int
 
-tuple type: NameAndDist = Char x Dist
-field names: (name, dist)
+TUPLE TYPE
+NameAndDist = Char x Dist
+(name, dist)
 
-type nickname: Neighbor = NameAndDist
+TYPE NICKNAME
+Neighbor = NameAndDist
 
-tuple type: State = ListOf(DoneNode)s x ListOf(ReachableNode)s
-field names: (dns, rns)
+TUPLE TYPE
+State = ListOf(DoneNode)s x ListOf(ReachableNode)s
+(dns, rns)
 
-or type: InRNsPossibilities
-values:
-  in_rns--<dist_and_rns : Dist x ListOf(ReachableNode)s> | not_in_rns
+OR TYPE
+InRNsPossibilities
+in_rns--<dist_and_rns : Dist x ListOf(ReachableNode)s> | not_in_rns
 
-type nickname: DoneNode = NameAndDist
+TYPE NICKNAME
+DoneNode = NameAndDist
 
-type nickname: ReachableNode = NameAndDist
+TYPE NICKNAME
+ReachableNode = NameAndDist
 
-type nickname: StateManipulationWith(T1) = (T1)FState(State)Man
+TYPE NICKNAME
+StateManipulationWith(T1) = (T1)FState(State)Man
 
-type nickname: StateMan = State(State)Man
+TYPE NICKNAME
+StateMan = State(State)Man
 
 set_rns(_) : ListOf(ReachableNode)s => StateMan
   = rns => modify_state_with(s => (s.dns, rns))

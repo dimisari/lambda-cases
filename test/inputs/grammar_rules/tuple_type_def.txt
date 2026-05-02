@@ -1,31 +1,41 @@
-tuple type: Name = String^2
-field names: (first_name, last_name)#
+TUPLE TYPE
+Name = String^2
+(first_name, last_name)#
 
-tuple type: Date = Int^3
-field names: (day, month, year)#
+TUPLE TYPE
+Date = Int^3
+(day, month, year)#
 
-tuple type: MathematicianInfo = Name x String x Date
+TUPLE TYPE
+MathematicianInfo = Name x String x Date
 field names:
   (name, nationality, date_of_birth)#
 
-tuple type: TreeOf(T1)s = T1 x ListOf(TreeOf(T1)s)s
-field names: (root, subtrees)#
+TUPLE TYPE
+TreeOf(T1)s = T1 x ListOf(TreeOf(T1)s)s
+(root, subtrees)#
 
-tuple type: Indexed(T1) = Int x T1
-field names: (index, val)#
+TUPLE TYPE
+Indexed(T1) = Int x T1
+(index, val)#
 
-tuple type: Name =String^2
-field names: (first_name, last_name)#
+TUPLE TYPE
+Name =String^2
+(first_name, last_name)#
 
-tuple type: Date =Int^3
-field names: (day, month, year)#
+TUPLE TYPE
+Date =Int^3
+(day, month, year)#
 
-tuple type: MathematicianInfo =Name x String x Date
-field names: (name, nationality, date_of_birth)#
+TUPLE TYPE
+MathematicianInfo =Name x String x Date
+(name, nationality, date_of_birth)#
 
-tuple type: NonEmptyListOf(T1)s = T1 x ListOf(T1)s
-field names: (head, tail)#
+TUPLE TYPE
+NonEmptyListOf(T1)s = T1 x ListOf(T1)s
+(head, tail)#
 
-tuple type: Funcs = FuncT x FuncTT
-field names: ((_)f1(_), (_)f(_)f(_))#
+TUPLE TYPE
+Funcs = FuncT x FuncTT
+((_)f1(_), (_)f(_)f(_))#
 

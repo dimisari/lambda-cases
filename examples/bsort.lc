@@ -1,5 +1,6 @@
 
-type nickname: IsSorted = Bool
+TYPE NICKNAME
+IsSorted = Bool
 
 bubble_sort_pass(_): ListOf(Int)s => ListOf(Int)s x IsSorted
   = ?

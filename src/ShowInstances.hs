@@ -492,9 +492,8 @@ instance P.Show T.TypeDef where
     T.OTD1 otd -> P.show otd
 
 instance P.Show T.TupleTypeDef where
-  show = \(T.TTD (tn, pcsis, ttde)) ->
-    "tuple_type " ++ P.show tn ++ "\nvalue\n  " ++ P.show pcsis ++ " : " ++
-    P.show ttde
+  show = \(T.TTD (tn, popt, fn)) ->
+    "TUPLE TYPE\n" ++ P.show tn ++ " = " ++ P.show popt ++ "\n" ++ P.show fn
 
 instance P.Show T.TypeName where
   show = \(T.TN (maybe_pvip1, tid, pvip_str_pairs, maybe_pvip2)) ->
@@ -514,7 +513,7 @@ instance P.Show T.SimpleIds where
 
 instance P.Show T.OrTypeDef where
   show = \(T.OTD (tn, otvs)) ->
-    "or type: " ++ P.show tn ++
+    "OR TYPE\n" ++ P.show tn ++
     "\nvalues:\n  " ++ P.show otvs
 
 instance P.Show T.OrTypeValues where

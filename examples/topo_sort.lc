@@ -1,21 +1,29 @@
-type nickname: Graph = ListOf(Node)s
+TYPE NICKNAME
+Graph = ListOf(Node)s
 
-tuple type: Node = Char x Children
-field names: (n_name, n_children)
+TUPLE TYPE
+Node = Char x Children
+(n_name, n_children)
 
-type nickname: Children = ListOf(Char)s
+TYPE NICKNAME
+Children = ListOf(Char)s
 
-tuple type: State = ListOf(VisitedNode)s x ListOf(DoneNode)s
-field names: (vns, dns)
+TUPLE TYPE
+State = ListOf(VisitedNode)s x ListOf(DoneNode)s
+(vns, dns)
 
-type nickname: StateMan = State(State)Man
+TYPE NICKNAME
+StateMan = State(State)Man
 
-type nickname: VisitedNode = Char
+TYPE NICKNAME
+VisitedNode = Char
 
-type nickname: DoneNode = Char
+TYPE NICKNAME
+DoneNode = Char
 
-or type: AllDoneOutcome
-values: not_all_done--<node_to_do : Char> | all_done
+OR TYPE
+AllDoneOutcome
+not_all_done--<node_to_do : Char> | all_done
 
 topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
   = g => final_state_of(topo_sort_from_state)on_init_state(is).dns

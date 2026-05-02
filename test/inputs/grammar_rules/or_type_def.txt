@@ -1,32 +1,39 @@
-or type: Bool
-values: true | false#
+OR TYPE
+Bool
+true | false#
 
-or type: Possibly(T1)
-values: a_value--<the_value : T1> | no_value#
+OR TYPE
+Possibly(T1)
+a_value--<the_value : T1> | no_value#
 
-or type: Error(T1)OrResult(T2)
-values: error--<error_value : T1> | result--<result_value : T2>#
+OR TYPE
+Error(T1)OrResult(T2)
+error--<error_value : T1> | result--<result_value : T2>#
 
-or type: ListOf(T1)s
-values:
+OR TYPE
+ListOf(T1)s
   non_empty_list--<ne_list : NonEmptyListOf(T1)s> | empty_list#
 
-or type: ListOf(T1)s
-values:
+OR TYPE
+ListOf(T1)s
   non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
   non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
   non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
   empty_list#
 
-or type: Bool
-values: true|false#
+OR TYPE
+Bool
+true|false#
 
-or type: Possibly(T1)
-values: a_value--<the_value : T1> | no_value#
+OR TYPE
+Possibly(T1)
+a_value--<the_value : T1> | no_value#
 
-or type: ListOf(T1)s
-values: non_empty_list--<ne_list : NonEmptyListOf(T1)s> |empty_l#
+OR TYPE
+ListOf(T1)s
+non_empty_list--<ne_list : NonEmptyListOf(T1)s> |empty_l#
 
-or type: (T1)Or(T2)
-values: t1--<val1 : T1> | t2--<val2 : T2>#
+OR TYPE
+(T1)Or(T2)
+t1--<val1 : T1> | t2--<val2 : T2>#
 

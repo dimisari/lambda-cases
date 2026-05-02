@@ -610,11 +610,11 @@ instance PTC.HasParser T.TypeDef where
 instance PTC.HasParser T.TupleTypeDef where
   parser =
     T.TTD <$>
-      (TP.try (TP.string "tuple type:") *> PH.opt_space *> PTC.parser)
+      (TP.try (TP.string "TUPLE TYPE") *> PH.nl *> PTC.parser)
       ++<
       (PH.equals *> PTC.parser)
       +++<
-      (PH.nl *> TP.string "field names:" *> PH.space_or_nl *> PTC.parser)
+      (PH.nl *> PTC.parser)
 
 instance PTC.HasParser T.TypeName where
   parser =
@@ -637,8 +637,8 @@ instance PTC.HasParser T.SimpleIds where
 instance PTC.HasParser T.OrTypeDef where
   parser =
     T.OTD <$>
-      (TP.try (TP.string "or type:") *> PH.opt_space *> PTC.parser) ++<
-      (PH.nl *> TP.string "values:" *> PTC.parser)
+      (TP.try (TP.string "OR TYPE") *> PH.nl *> PTC.parser) ++<
+      (PH.nl *> PTC.parser)
 
 instance PTC.HasParser T.OrTypeValues where
   parser =
@@ -669,7 +669,7 @@ instance PTC.HasParser T.InternalValue where
 instance PTC.HasParser T.TypeNickname where
   parser =
     T.TNN <$>
-      (TP.try (TP.string "type nickname:") *> PH.opt_space *> PTC.parser) ++<
+      (TP.try (TP.string "TYPE NICKNAME") *> PH.nl *> PTC.parser) ++<
       (PH.equals *> PTC.parser)
 
 --  TypePropDef

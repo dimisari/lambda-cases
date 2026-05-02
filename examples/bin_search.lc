@@ -1,10 +1,13 @@
 
-or type: Comparison
-values: lesser | equal | greater
+OR TYPE
+Comparison
+lesser | equal | greater
 
-type nickname: ArrayWithLength = ArrayOf(Int)s x Int
+TYPE NICKNAME
+ArrayWithLength = ArrayOf(Int)s x Int
 
-type nickname: Index = Int
+TYPE NICKNAME
+Index = Int
 
 compare(_)with(_) : Int x Int => Comparison
   = (a, b) =>

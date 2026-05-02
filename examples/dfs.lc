@@ -1,18 +1,24 @@
 
-tuple type: (T1)Tree = T1 x (T1)Trees
-field names: (root, subtrees)
+TUPLE TYPE
+(T1)Tree = T1 x (T1)Trees
+(root, subtrees)
 
-type nickname: (T1)Trees = ListOf((T1)Tree)s
+TYPE NICKNAME
+(T1)Trees = ListOf((T1)Tree)s
 
-type nickname: IndexAnd(T1) = Int x T1
+TYPE NICKNAME
+IndexAnd(T1) = Int x T1
 
-type nickname: Done(T1)Tree = (IndexAnd(T1))Tree
+TYPE NICKNAME
+Done(T1)Tree = (IndexAnd(T1))Tree
 
-tuple type: (T1)DoneTreeAndNext = Done(T1)Tree x Int
-field names: (tree, t_next)
+TUPLE TYPE
+(T1)DoneTreeAndNext = Done(T1)Tree x Int
+(tree, t_next)
 
-tuple type: (T1)DoneTreesAndNext = (IndexAnd(T1))Trees x Int
-field names: (trees, ts_next)
+TUPLE TYPE
+(T1)DoneTreesAndNext = (IndexAnd(T1))Trees x Int
+(trees, ts_next)
 
 dfs_on_tree(_) : (T1)Tree => Done(T1)Tree
   = dfs_on_tree(_)with_next(1) o> _.tree

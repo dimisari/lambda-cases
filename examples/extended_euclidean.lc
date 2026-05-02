@@ -1,9 +1,11 @@
 
-tuple type: Coeffs = Int^2
-field names: (prev, curr)
+TUPLE TYPE
+Coeffs = Int^2
+(prev, curr)
 
-tuple type: GcdAndCoeffs = Int^3
-field names: (gcd, a, b)
+TUPLE TYPE
+GcdAndCoeffs = Int^3
+(gcd, a, b)
 
 extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
   = ee_recursion(init_a_coeffs, init_b_coeffs, _)
