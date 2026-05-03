@@ -77,10 +77,13 @@ compile_to_exec pfn =
 
 compile_to_hs :: ProgramFileName -> P.IO HsFileName
 compile_to_hs pfn =
-  P.readFile pfn >>= compile .> P.writeFile hs_file >> P.return hs_file
+  P.readFile new_pfn >>= compile .> P.writeFile hs_file >> P.return hs_file
   where
-  hs_file :: P.String
-  hs_file = H.make_extension_hs pfn
+  new_pfn :: ProgramFileName
+  new_pfn = H.add_dotlc_if_needed pfn
+
+  hs_file :: HsFileName
+  hs_file = H.make_extension_hs new_pfn
 
 compile :: H.Lcases -> GTC.Haskell
 compile =

@@ -4,11 +4,14 @@ This file defines some helpers:
 - Functor and Applicative operators
 - Other
 -}
+{-# language LambdaCase #-}
 
 module Helpers where
 
 import Prelude ((.), ($), (<$>), (++), (*), (/=))
 import Prelude qualified as P
+
+import System.FilePath qualified as SFP
 
 -- types
 
@@ -62,19 +65,21 @@ fas1 >++< fas2 = P.liftA2 (++) fas1 fas2
 ind_lvl_to_spaces :: P.Int -> P.String
 ind_lvl_to_spaces = \i -> P.replicate (2 * i) ' '
 
+add_dotlc_if_needed :: FileName -> FileName
+add_dotlc_if_needed = \pfn ->
+  SFP.takeExtension pfn &> \case
+    "" -> pfn ++ ".lc"
+    _ -> pfn
+
 make_extension_hs :: FileName -> FileName
 make_extension_hs =
-  P.reverse .> P.span (/= '.') .> \(reversed_extension, reversed_name) ->
-  let
-  extension :: P.String
-  extension = P.reverse reversed_extension
-  in
-  case P.elem extension ["lc", "txt"] of
-    P.True -> reversed_name &> P.tail &> P.reverse ++ ".hs"
+  SFP.splitExtension .> \(without_ext, ext) ->
+  case P.elem ext [".lc", ".txt"] of
+    P.True -> without_ext ++ ".hs"
     P.False ->
       P.error $
         "make_extension_hs: did not receive .lc file\n" ++
-        "make_extension_hs: instead I got " ++ extension
+        "make_extension_hs: instead I got " ++ ext
 
 do_nothing :: P.Monad m => m ()
 do_nothing = P.return ()

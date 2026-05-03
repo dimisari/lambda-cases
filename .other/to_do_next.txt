@@ -1,4 +1,7 @@
 
+* fix grammar to match the new parser
+   * TUPLE TYPE, OR TYPE, TUPLE TYPE
+
 * finish comments and descriptions
   * Generation
     * add README.md
