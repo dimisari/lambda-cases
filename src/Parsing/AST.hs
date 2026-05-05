@@ -524,7 +524,7 @@ instance PTC.HasParser T.WhereExpr where
   parser =
     T.WE <$>
       (TP.try (PH.nl_indent *> TP.string "where") *> PH.nl *> PTC.parser) ++<
-      TP.many (TP.try $ PH.nl *> PH.nl *> PTC.parser)
+      TP.many (TP.try $ PH.nl_nl *> PTC.parser)
 
 instance PTC.HasParser T.ValueDefOrDefs where
   parser = PH.indent *> (T.VD1 <$> TP.try PTC.parser <|> T.GVDs1 <$> PTC.parser)
@@ -836,17 +836,26 @@ instance PTC.HasParser T.TTValueExpr where
       PH.twice_deeper
       (TP.try PH.nl_indent *> PTC.parser ++< TP.optionMaybe PTC.parser)
 
---  Program
+-- Comment
+
+instance PTC.HasParser T.Comment where
+  parser =
+    T.C <$>
+      ( TP.try (TP.string "COMMENT") *> PH.nl *>
+        TP.manyTill TP.anyChar (TP.lookAhead $ TP.try PH.nl_nl)
+      )
+
+-- Program
 
 instance PTC.HasParser T.Program where
   parser =
     T.P <$>
       (TP.many PH.nl *> PTC.parser) ++<
-      TP.many (TP.try $ PH.nl *> PH.nl *> PTC.parser) <* TP.spaces <* TP.eof
+      TP.many (TP.try $ PH.nl_nl *> PTC.parser) <* TP.spaces <* TP.eof
 
 instance PTC.HasParser T.ProgramPart where
   parser =
     T.TD <$> PTC.parser <|> T.TNN1 <$> PTC.parser <|> T.TT1 <$> PTC.parser <|>
-    T.TPD <$> PTC.parser <|> T.VDD <$> PTC.parser
+    T.TPD <$> PTC.parser <|> T.VDD <$> PTC.parser <|> T.C1 <$> PTC.parser
 
 -- Helpers.hs

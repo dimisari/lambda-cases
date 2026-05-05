@@ -1070,6 +1070,7 @@ instance GTC.ToHaskell T.ProgramPart where
     T.TNN1 tnn -> GTC.to_haskell tnn
     T.TPD tpd -> GTC.to_haskell tpd
     T.TT1 tt -> GTC.to_haskell tt
+    T.C1 c -> ""
 
 -- Helper instances
 

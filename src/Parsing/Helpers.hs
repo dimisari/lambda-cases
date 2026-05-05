@@ -61,8 +61,9 @@ deeper_if_not_in_equal_line = \parser ->
 
 -- helper parsers
 
-[nl, nl_indent, nl_d_sp, space_or_nl, opt_space, comma, equals]
+[nl, nl_nl, nl_indent, nl_d_sp, space_or_nl, opt_space, comma, equals]
   = [ TP.many (TP.char ' ' <|> TP.char '\t') *> TP.char '\n' *> H.nothing
+    , nl *> nl
     , nl *> indent
     , nl <* TP.string "  "
     , (TP.try nl_d_sp <|> (TP.string " " *> H.nothing))

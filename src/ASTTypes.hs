@@ -386,14 +386,17 @@ newtype IdOrOpEq = IOOE (Identifier, P.Maybe (Op, Identifier))
 data TTValueExpr =
   LE2 LineExpr | VEMWE (ValueExpr, P.Maybe WhereExpr)
 
+-- Comment
+
+newtype Comment = C P.String
 
 -- Program
 
 newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart =
-  VDD ValueDefOrDefs | TD TypeDef | TNN1 TypeNickname |
-  TPD TypePropDef | TT1 TypeTheo
+  VDD ValueDefOrDefs | TD TypeDef | TNN1 TypeNickname | TPD TypePropDef |
+  TT1 TypeTheo | C1 Comment
 
 
 -- For fast vim file navigation:
