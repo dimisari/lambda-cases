@@ -39,7 +39,7 @@ connected_components_of(_) : Graph => ConnComps
     _.2nd
     where
     is : State
-      = (apply((_, is_repr--1))to_all_in(g.nodes), (g.nodes)length)
+      = (apply((_, is_repr--1))to_all_in(g.nodes), length_of(g.nodes))
 
     edge_union(_) : Edge => StateMan
       = e =>

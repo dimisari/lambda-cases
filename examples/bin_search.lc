@@ -25,7 +25,7 @@ array : ArrayWithLength
   = zip(indexes)with(list) -> array_from_list(_) -> (_, ll)
     where
     ll : Int
-      = (list)length
+      = length_of(list)
 
     indexes : ListOf(Index)s
       = from(0)to(ll - 1)

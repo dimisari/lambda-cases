@@ -214,8 +214,8 @@ a'div' = P.uncurry P.div
 a'mod' :: P.Integral a => (a, a) -> a
 a'mod' = P.uncurry P.mod
 
-a'length :: [a] -> P.Integer
-a'length = P.fromIntegral . P.length
+length_of' :: [a] -> P.Integer
+length_of' = P.fromIntegral . P.length
 
 a'is_in' :: P.Eq a => (a, [a]) -> P.Bool
 a'is_in' = P.uncurry P.elem
