@@ -153,12 +153,9 @@ data OptionalSpacesOp =
 data FuncExpr =
   LFE4 LineFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
 
-newtype LineFuncExpr = LFE (Parameters, LineFuncBody)
+newtype LineFuncExpr = LFE (InnerMatching, LineFuncBody)
 
-newtype BigFuncExpr = BFE (Parameters, BigFuncBody)
-
-data Parameters =
-  ParamId Identifier | Star1 | Params (Parameters, [Parameters])
+newtype BigFuncExpr = BFE (InnerMatching, BigFuncBody)
 
 data LineFuncBody =
   BOAE3 BasicOrAppExpr | LOE4 LineOpExpr | PLFE1 ParenLineFuncExpr

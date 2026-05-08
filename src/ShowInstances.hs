@@ -280,13 +280,6 @@ instance P.Show T.LineFuncExpr where
 instance P.Show T.BigFuncExpr where
   show = \(T.BFE (params, bfb)) -> P.show params ++ " =>" ++ P.show bfb
 
-instance P.Show T.Parameters where
-  show = \case
-    T.ParamId id -> P.show id
-    T.Star1 -> "*"
-    T.Params (params, params_l) ->
-      "(" ++ P.show params ++ show_list_comma params_l ++ ")"
-
 instance P.Show T.LineFuncBody where
   show = \case
     T.BOAE3 npoa -> " " ++ P.show npoa

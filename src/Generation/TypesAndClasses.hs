@@ -15,7 +15,7 @@ type DotChangeArgHs = Haskell
 
 type MargsPair = (P.Maybe T.Arguments, P.Maybe T.Arguments)
 
-newtype WholeParams = Whole T.Parameters
+newtype WholeParams = Whole T.InnerMatching
 
 data NeedsParenBool = Paren | NoParen
 

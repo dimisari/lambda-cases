@@ -391,33 +391,27 @@ instance GTC.ToHsWithIndentLvl (T.FuncExpr, GTC.PossiblyWhereExpr) where
     T.CFE2 cfe -> GTC.to_hs_wil (cfe, pwe)
 
 instance GTC.ToHaskell T.LineFuncExpr where
-  to_haskell = \(T.LFE (params, lfb)) ->
-    GTC.to_haskell (GTC.Whole params) ++ " " ++ GTC.to_haskell lfb
+  to_haskell = \(T.LFE (im, lfb)) ->
+    GTC.to_haskell (GTC.Whole im) ++ " " ++ GTC.to_haskell lfb
 
 instance GTC.ToHsWithIndentLvl (T.LineFuncExpr, GTC.PossiblyWhereExpr) where
-  to_hs_wil = \(lfe@(T.LFE (params, lfb)), pwe) ->
+  to_hs_wil = \(lfe@(T.LFE (im, lfb)), pwe) ->
     case pwe of
       GTC.NoWhereExpr -> P.return $ GTC.to_haskell lfe
       GTC.HasWhereExpr we ->
-        (GTC.to_haskell (GTC.Whole params) ++ "\n") ++> GTC.to_hs_wil we >++<
+        (GTC.to_haskell (GTC.Whole im) ++ "\n") ++> GTC.to_hs_wil we >++<
         GH.indent <++ GTC.to_haskell lfb
 
 instance GTC.ToHsWithIndentLvl (T.BigFuncExpr, GTC.PossiblyWhereExpr) where
-  to_hs_wil (T.BFE (params, bfb), pwe) =
+  to_hs_wil (T.BFE (im, bfb), pwe) =
     params_hs ++> GTC.to_hs_wil pwe >++< GTC.to_hs_wil bfb
     where
     params_hs :: GTC.Haskell
-    params_hs = GTC.to_haskell (GTC.Whole params) ++ "\n"
+    params_hs = GTC.to_haskell (GTC.Whole im) ++ "\n"
 
 instance GTC.ToHaskell GTC.WholeParams where
-  to_haskell = \(GTC.Whole params) -> "\\" ++ GTC.to_haskell params ++ " ->"
-
-instance GTC.ToHaskell T.Parameters where
-  to_haskell = \case
-    T.ParamId id -> GTC.to_haskell id
-    T.Star1 -> "_"
-    T.Params (params, params_l) ->
-      "(" ++ GTC.to_haskell params ++ GH.to_hs_prepend_list ", " params_l ++ ")"
+  to_haskell = \(GTC.Whole im) ->
+    "\\" ++ GTC.to_haskell (GTC.NoParen, im) ++ " ->"
 
 instance GTC.ToHaskell T.LineFuncBody where
   to_haskell = \case

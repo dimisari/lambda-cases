@@ -341,11 +341,6 @@ instance PTC.HasParser T.LineFuncExpr where
 instance PTC.HasParser T.BigFuncExpr where
   parser = T.BFE <$> PTC.parser ++< (PH.func_arr *> PTC.parser)
 
-instance PTC.HasParser T.Parameters where
-  parser =
-    T.ParamId <$> TP.try PTC.parser <|> TP.char '*' *> P.return T.Star1 <|>
-    T.Params <$> PH.in_paren (PTC.parser ++< TP.many1 (PH.comma *> PTC.parser))
-
 instance PTC.HasParser T.LineFuncBody where
   parser =
     T.LOE4 <$> TP.try PTC.parser <|> T.BOAE3 <$> TP.try PTC.parser <|>
