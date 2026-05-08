@@ -35,6 +35,7 @@ import Data.Char qualified as CH
 import System.Exit qualified as E
 import System.Console.ANSI qualified as ANSI
 import System.Process qualified as SP
+import System.Environment qualified as SE
 import PredefImports.OpsInHaskell ((.>))
 
 -- types
@@ -53,9 +54,6 @@ type SMapTo' = HM.HashMap P.String
 type ArrayOf's = IM.IntMap
 
 -- values
-
-get_line :: ProgramWith' P.String
-get_line = P.getLine
 
 split'to_words :: P.String -> [P.String]
 split'to_words = P.words
@@ -138,6 +136,12 @@ get_char = P.getChar
 get_input :: ProgramWith' P.String
 get_input = P.getContents
 
+get_line :: ProgramWith' P.String
+get_line = P.fmap U.toString C.getLine
+
+print'and_get_line :: P.String -> ProgramWith' P.String
+print'and_get_line = print' .> (P.>> get_line)
+
 read_file' :: P.String -> ProgramWith' P.String
 read_file' = BS.readFile .> P.fmap U.toString
 
@@ -147,6 +151,13 @@ write'to_file' =
   where
   write_file :: P.String -> P.String -> Program
   write_file = \pn str -> BS.writeFile pn (U.fromString str)
+
+append'to_file' :: (P.String, P.String) -> Program
+append'to_file' =
+  P.uncurry (P.flip append_file)
+  where
+  append_file :: P.String -> P.String -> Program
+  append_file = \pn str -> BS.appendFile pn (U.fromString str)
 
 print_string' :: P.String -> Program
 print_string' = U.fromString .> BS.putStr
@@ -250,6 +261,9 @@ not' = P.not
 
 for_all_in'' :: P.Monad m => ([a], a -> m b) -> m EmptyVal
 for_all_in'' = P.uncurry P.$ P.flip P.mapM_
+
+get_arguments :: ProgramWith' [P.String]
+get_arguments = SE.getArgs
 
 -- Hash map
 
