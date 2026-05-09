@@ -22,7 +22,7 @@ This file contains:
 
 module PredefImports.Predefined where
 
-import Prelude ((.), (<), (>>), (>>=), (++))
+import Prelude ((.), (<), (>>), (>>=), (++), ($), (+))
 import Prelude qualified as P
 import Control.Monad.State qualified as MS
 import Data.List.Split qualified as LS
@@ -242,7 +242,7 @@ split'at_index' =
   P.uncurry (P.flip P.splitAt) . \(l, i) -> (l, P.fromIntegral i)
 
 split'at_string' :: (P.String, P.String) -> [P.String]
-split'at_string' = P.uncurry P.$ P.flip LS.splitOn
+split'at_string' = P.uncurry $ P.flip LS.splitOn
 
 concat_lists_in' :: [[a]] -> [a]
 concat_lists_in' = P.concat
@@ -260,7 +260,7 @@ not' :: P.Bool -> P.Bool
 not' = P.not
 
 for_all_in'' :: P.Monad m => ([a], a -> m b) -> m EmptyVal
-for_all_in'' = P.uncurry P.$ P.flip P.mapM_
+for_all_in'' = P.uncurry $ P.flip P.mapM_
 
 get_arguments :: ProgramWith' [P.String]
 get_arguments = SE.getArgs
@@ -302,6 +302,15 @@ from'to' :: (P.Integer, P.Integer) -> [P.Integer]
 from'to' = \(i1, i2) -> case i1 < i2 of
   P.True -> [i1..i2]
   _ -> P.reverse [i2..i1]
+
+add_indexes_to'starting_from' :: ([a], P.Integer) -> [(P.Integer, a)]
+add_indexes_to'starting_from' = \(l, i) -> P.zip [i..] l
+
+add_one_indexes_to' :: [a] -> [(P.Integer, a)]
+add_one_indexes_to' = \l -> add_indexes_to'starting_from' (l, 1)
+
+add_zero_indexes_to' :: [a] -> [(P.Integer, a)]
+add_zero_indexes_to' = \l -> add_indexes_to'starting_from' (l, 0)
 
 -- IsFirst'
 
