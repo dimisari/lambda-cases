@@ -97,6 +97,9 @@ test_grammar_rules: $(hs_grs) $(wildcard $(t_ins_grs)/*)
 
 test_executables: $(execs)
 
+test_rules_correct:
+	grep -n --color=auto Err $(hs_grs)
+
 run_executables:
 	for f in $(execs); do echo "$$f start\n"; ./$$f; echo "\n$$f finish\n" ; done
 

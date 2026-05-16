@@ -155,7 +155,10 @@ data FuncExpr =
 
 newtype LineFuncExpr = LFE (InnerMatching, LineFuncBody)
 
-newtype BigFuncExpr = BFE (InnerMatching, BigFuncBody)
+newtype BigFuncExpr = BFE (InnerMatching, BigFuncBodyOrDeeperBody)
+
+data BigFuncBodyOrDeeperBody =
+  BFB BigFuncBody | DB (BigFuncBody, WhereExpr)
 
 data LineFuncBody =
   BOAE3 BasicOrAppExpr | LOE4 LineOpExpr | PLFE1 ParenLineFuncExpr

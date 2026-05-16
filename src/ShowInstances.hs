@@ -280,6 +280,11 @@ instance P.Show T.LineFuncExpr where
 instance P.Show T.BigFuncExpr where
   show = \(T.BFE (params, bfb)) -> P.show params ++ " =>" ++ P.show bfb
 
+instance P.Show T.BigFuncBodyOrDeeperBody where
+  show = \case
+    T.BFB bfb -> P.show bfb
+    T.DB db -> P.show db
+
 instance P.Show T.LineFuncBody where
   show = \case
     T.BOAE3 npoa -> " " ++ P.show npoa

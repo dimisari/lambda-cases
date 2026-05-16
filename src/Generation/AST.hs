@@ -409,6 +409,11 @@ instance GTC.ToHsWithIndentLvl (T.BigFuncExpr, GTC.PossiblyWhereExpr) where
     params_hs :: GTC.Haskell
     params_hs = GTC.to_haskell (GTC.Whole im) ++ "\n"
 
+instance GTC.ToHsWithIndentLvl T.BigFuncBodyOrDeeperBody where
+  to_hs_wil = \case
+    T.BFB bfb -> GTC.to_hs_wil bfb
+    T.DB (bfb, we) -> GH.deeper (GTC.to_hs_wil we >++< GTC.to_hs_wil bfb)
+
 instance GTC.ToHaskell GTC.WholeParams where
   to_haskell = \(GTC.Whole im) ->
     "\\" ++ GTC.to_haskell (GTC.NoParen, im) ++ " ->"

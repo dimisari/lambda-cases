@@ -345,6 +345,11 @@ instance PTC.HasParser T.LineFuncExpr where
 instance PTC.HasParser T.BigFuncExpr where
   parser = T.BFE <$> PTC.parser ++< (PH.func_arr *> PTC.parser)
 
+instance PTC.HasParser T.BigFuncBodyOrDeeperBody where
+  parser =
+    T.BFB <$> TP.try PTC.parser <|>
+    T.DB <$> PH.deeper (PTC.parser ++< PTC.parser)
+
 instance PTC.HasParser T.LineFuncBody where
   parser =
     T.LOE4 <$> TP.try PTC.parser <|> T.BOAE3 <$> TP.try PTC.parser <|>

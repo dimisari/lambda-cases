@@ -244,6 +244,11 @@ instance PTC.Preprocess T.LineFuncExpr where
 instance PTC.Preprocess T.BigFuncExpr where
   preprocess = \(T.BFE bfe) -> T.BFE <$> preprocess_second bfe
 
+instance PTC.Preprocess T.BigFuncBodyOrDeeperBody where
+  preprocess = \case
+    T.BFB bfb -> T.BFB <$> PTC.preprocess bfb
+    T.DB db -> T.DB <$> preprocess_pair db
+
 instance PTC.Preprocess T.LineFuncBody where
   preprocess = \case
     T.BOAE3 boae -> T.BOAE3 <$> PTC.preprocess boae
