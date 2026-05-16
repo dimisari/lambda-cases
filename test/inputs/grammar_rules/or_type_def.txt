@@ -12,14 +12,14 @@ error--<error_value : T1> | result--<result_value : T2>#
 
 OR TYPE
 ListOf(T1)s
-  non_empty_list--<ne_list : NonEmptyListOf(T1)s> | empty_list#
+non_empty_list--<ne_list : NonEmptyListOf(T1)s> | empty_list#
 
 OR TYPE
 ListOf(T1)s
-  non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
-  non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
-  non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
-  empty_list#
+non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
+non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
+non_empty_list--<ne_list : NonEmptyListOf(T1)s> |
+empty_list#
 
 OR TYPE
 Bool

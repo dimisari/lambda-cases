@@ -188,11 +188,6 @@ instance PTC.CollectOrValues T.TypeDef where
 instance PTC.CollectOrValues T.OrTypeDef where
   collect_ovms = \(T.OTD (_, otvs)) -> PTC.collect_ovms otvs
 
-instance PTC.CollectOrValues T.OrTypeValues where
-  collect_ovms = \case
-    T.VL otvsl ->  PTC.collect_ovms otvsl
-    T.Ls otvsls -> PTC.collect_ovms otvsls
-
 instance PTC.CollectOrValues T.OrTypeValuesLine where
   collect_ovms = \(T.OTVL (otv, otvs)) -> P.mapM_ PTC.collect_ovms $ otv : otvs
 

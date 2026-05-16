@@ -22,7 +22,7 @@ This file contains:
 
 module PredefImports.Predefined where
 
-import Prelude ((.), (<), (>>), (>>=), (++), ($), (+))
+import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!))
 import Prelude qualified as P
 import Control.Monad.State qualified as MS
 import Data.List.Split qualified as LS
@@ -231,6 +231,9 @@ length_of' = P.fromIntegral . P.length
 a'is_in' :: P.Eq a => (a, [a]) -> P.Bool
 a'is_in' = P.uncurry P.elem
 
+elem'of' :: (P.Integer, [a]) -> a
+elem'of' = \(i, l) -> l!!(P.fromIntegral i-1)
+
 ignore'from' :: (P.Integer, [a]) -> [a]
 ignore'from' = P.uncurry P.drop . \(x, y) -> (P.fromIntegral x, y)
 
@@ -244,8 +247,8 @@ split'at_index' =
 split'at_string' :: (P.String, P.String) -> [P.String]
 split'at_string' = P.uncurry $ P.flip LS.splitOn
 
-concat_lists_in' :: [[a]] -> [a]
-concat_lists_in' = P.concat
+concat_lists' :: [[a]] -> [a]
+concat_lists' = P.concat
 
 do_nothing :: P.Applicative f => f EmptyVal
 do_nothing = P.pure empty_val

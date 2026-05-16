@@ -44,14 +44,14 @@ proof
     a : Int
       = b#
 
-type_theorem (ListOf(T1)s)And(T1)Add_To(ListOf(T1)s)
+type_theorem (ListOf(T)s)And(T)Add_To(ListOf(T)s)
 proof
   l + a =
     l -> ?
       empty_l => non_empty_l--(a, empty_l)
       non_empty_l--(head, tail) => non_empty_l--(head, tail + a)#
 
-type_theorem (ListOf(T1)s)And(T1)Add_To(ListOf(T1)s)
+type_theorem (ListOf(T)s)And(T)Add_To(ListOf(T)s)
 proof
   l + a =
     l#

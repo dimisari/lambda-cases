@@ -824,11 +824,6 @@ instance GTC.ToHaskell T.OrTypeDef where
   to_haskell (T.OTD (tn, otv)) =
     "data " ++ GTC.to_haskell (GTC.NoParen, tn) ++ " =\n  " ++ GTC.to_haskell otv
 
-instance GTC.ToHaskell T.OrTypeValues where
-  to_haskell = \case
-    T.VL otvsl -> GTC.to_haskell otvsl
-    T.Ls otvsls -> GTC.to_haskell otvsls
-
 instance GTC.ToHaskell T.OrTypeValuesLine where
   to_haskell = \(T.OTVL (otv, otvs)) ->
     GTC.to_haskell otv ++ GH.to_hs_prepend_list " |\n  " otvs

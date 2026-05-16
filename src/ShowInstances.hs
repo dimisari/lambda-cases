@@ -509,11 +509,6 @@ instance P.Show T.OrTypeDef where
     "OR TYPE\n" ++ P.show tn ++
     "\nvalues:\n  " ++ P.show otvs
 
-instance P.Show T.OrTypeValues where
-  show = \case
-    T.VL otvsl -> P.show otvsl
-    T.Ls otvls -> P.show otvls
-
 instance P.Show T.OrTypeValuesLine where
   show = \(T.OTVL (otv, otvs)) ->
     P.show otvs ++ " | " ++ show_list_sep " | " otvs

@@ -1,6 +1,18 @@
 
+* allow big function bodies to indent deeper to have a scope for a "where"
+
 * fix grammar to match the new parser
    * TUPLE TYPE, OR TYPE, TUPLE TYPE
+
+* lists and tuple in value def propositions
+  * instead of "all <Type>"?
+  * e.g.
+
+    [x,y,z] : ListOf(Int)s
+      = [1,2,3]
+
+    (x,y) : Int x String
+      = (1, "hi")
 
 * finish comments and descriptions
   * Generation

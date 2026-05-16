@@ -289,9 +289,7 @@ newtype FieldNames = PCSIs SimpleIds
 
 newtype SimpleIds = SIds (SimpleId, [SimpleId])
 
-newtype OrTypeDef = OTD (TypeName, OrTypeValues)
-
-data OrTypeValues = VL OrTypeValuesLine | Ls OrTypeValuesLines
+newtype OrTypeDef = OTD (TypeName, OrTypeValuesLines)
 
 newtype OrTypeValuesLine = OTVL (OrTypeValue, [OrTypeValue])
 

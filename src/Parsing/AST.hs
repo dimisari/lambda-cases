@@ -196,7 +196,11 @@ instance PTC.HasParser T.PreFuncApp where
   parser = T.PrFA <$> TP.try PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.DotId where
-  parser = T.DI <$> (TP.char '.' *> PTC.parser)
+  parser =
+    T.DI <$>
+      TP.try
+      (TP.char '.' *> TP.notFollowedBy (TP.string "change{") *> PTC.parser)
+
 
 instance PTC.HasParser T.SimpleOrSpecialId where
   parser = T.SId1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
@@ -446,7 +450,7 @@ instance PTC.HasParser T.RestListMatching where
 
 instance PTC.HasParser T.CaseBody where
   parser =
-    T.BFB1 <$> TP.try PTC.parser ++< TP.optionMaybe (TP.try PTC.parser) <|>
+    T.BFB1 <$> TP.try PTC.parser ++< TP.optionMaybe PTC.parser <|>
     T.LFB1 <$> PTC.parser
 
 --  ValueDef, WhereExpr
@@ -635,10 +639,6 @@ instance PTC.HasParser T.OrTypeDef where
       (TP.try (TP.string "OR TYPE") *> PH.nl *> PTC.parser) ++<
       (PH.nl *> PTC.parser)
 
-instance PTC.HasParser T.OrTypeValues where
-  parser =
-    T.VL <$> TP.try (PH.opt_space *> PTC.parser) <|> T.Ls <$> PTC.parser
-
 instance PTC.HasParser T.OrTypeValuesLine where
   parser =
     T.OTVL <$>
@@ -648,8 +648,8 @@ instance PTC.HasParser T.OrTypeValuesLine where
 instance PTC.HasParser T.OrTypeValuesLines where
   parser =
     T.OTVLs <$>
-      (PH.nl_d_sp *> PTC.parser) ++<
-      TP.many (PH.opt_space *> TP.char '|' *> PH.nl_d_sp *> PTC.parser)
+      PTC.parser ++<
+      TP.many (TP.try $ PH.opt_space *> TP.char '|' *> PH.nl *> PTC.parser)
 
 instance PTC.HasParser T.OrTypeValue where
   parser = T.OTV <$> PTC.parser ++< TP.optionMaybe PTC.parser

@@ -8,8 +8,7 @@ Date = Int^3
 
 TUPLE TYPE
 MathematicianInfo = Name x String x Date
-field names:
-  (name, nationality, date_of_birth)#
+(name, nationality, date_of_birth)#
 
 TUPLE TYPE
 TreeOf(T1)s = T1 x ListOf(TreeOf(T1)s)s
@@ -34,8 +33,4 @@ MathematicianInfo =Name x String x Date
 TUPLE TYPE
 NonEmptyListOf(T1)s = T1 x ListOf(T1)s
 (head, tail)#
-
-TUPLE TYPE
-Funcs = FuncT x FuncTT
-((_)f1(_), (_)f(_)f(_))#
 
