@@ -617,7 +617,7 @@ instance GTC.ToHsWithIndentLvl T.WhereExpr where
     (GH.to_hs_wil_list (wde : wdes) >$> L.intercalate "\n\n") <++ "\n" >++<
     GH.indent <++ "in\n"
 
-instance GTC.ToHsWithIndentLvl T.ValueDefOrDefs where
+instance GTC.ToHsWithIndentLvl T.ValueDefs where
   to_hs_wil = \case
     T.VD1 vd -> GTC.to_hs_wil vd
     T.GVDs1 gvd -> GTC.to_hs_wil gvd

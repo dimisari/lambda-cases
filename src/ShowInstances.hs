@@ -408,7 +408,7 @@ instance P.Show T.WhereExpr where
   show =
     \(T.WE (wde, wdes)) -> "\nwhere\n" ++ P.show wde ++ show_list_sep "\n\n" wdes
 
-instance P.Show T.ValueDefOrDefs where
+instance P.Show T.ValueDefs where
   show = \case
     T.VD1 vd -> P.show vd
     T.GVDs1 gvd -> P.show gvd

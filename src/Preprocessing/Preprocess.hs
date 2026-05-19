@@ -338,7 +338,7 @@ instance PTC.Preprocess T.LineExprs where
 instance PTC.Preprocess T.WhereExpr where
   preprocess = \(T.WE we) -> T.WE <$> preprocess_pair we
 
-instance PTC.Preprocess T.ValueDefOrDefs where
+instance PTC.Preprocess T.ValueDefs where
   preprocess = \case
     T.VD1 vd -> T.VD1 <$> PTC.preprocess vd
     T.GVDs1 gvds -> T.GVDs1 <$> PTC.preprocess gvds

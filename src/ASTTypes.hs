@@ -220,9 +220,9 @@ data Types =
 
 newtype LineExprs = LEs (LineExpr, [LineExpr])
 
-newtype WhereExpr = WE (ValueDefOrDefs, [ValueDefOrDefs])
+newtype WhereExpr = WE (ValueDefs, [ValueDefs])
 
-data ValueDefOrDefs =
+data ValueDefs =
   VD1 ValueDef | GVDs1 GroupedValueDefs
 
 
@@ -393,7 +393,7 @@ newtype Comment = C P.String
 newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart =
-  VDD ValueDefOrDefs | TD TypeDef | TNN1 TypeNickname | TPD TypePropDef |
+  VDD ValueDefs | TD TypeDef | TNN1 TypeNickname | TPD TypePropDef |
   TT1 TypeTheo | C1 Comment
 
 

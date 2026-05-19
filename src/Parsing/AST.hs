@@ -530,7 +530,7 @@ instance PTC.HasParser T.WhereExpr where
       (TP.try (PH.nl_indent *> TP.string "where") *> PH.nl *> PTC.parser) ++<
       TP.many (TP.try $ PH.nl_nl *> PTC.parser)
 
-instance PTC.HasParser T.ValueDefOrDefs where
+instance PTC.HasParser T.ValueDefs where
   parser = PH.indent *> (T.VD1 <$> TP.try PTC.parser <|> T.GVDs1 <$> PTC.parser)
 
 

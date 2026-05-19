@@ -1,4 +1,6 @@
 
+* indexes in predefined list operations should start with 1
+
 * test/outputs
   * types (+ propositions and theorems) only
   * values only
