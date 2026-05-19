@@ -327,10 +327,14 @@ instance PTC.Preprocess T.ValueExpr where
     T.BT1 bt -> T.BT1 <$> PTC.preprocess bt
     T.BL1 bl -> T.BL1 <$> PTC.preprocess bl
 
-instance PTC.Preprocess T.GroupedValueDefs where
-  preprocess = \(T.GVDs (ids, ts, les, les_l)) ->
-    preprocess_pair (les, les_l) >$> \(les', les_l') ->
-    T.GVDs (ids, ts, les', les_l')
+instance PTC.Preprocess T.ListValueDefs where
+  preprocess = \(T.LVDs (ids, t, mlobl)) ->
+    PTC.preprocess mlobl >$> \mlobl' -> T.LVDs (ids, t, mlobl')
+
+instance PTC.Preprocess T.ListOrBigList where
+  preprocess = \case
+    T.L2 l -> T.L2 <$> PTC.preprocess l
+    T.BL2 bl -> T.BL2 <$> PTC.preprocess bl
 
 instance PTC.Preprocess T.LineExprs where
   preprocess = \(T.LEs les) -> T.LEs <$> preprocess_pair les
@@ -341,7 +345,7 @@ instance PTC.Preprocess T.WhereExpr where
 instance PTC.Preprocess T.ValueDefs where
   preprocess = \case
     T.VD1 vd -> T.VD1 <$> PTC.preprocess vd
-    T.GVDs1 gvds -> T.GVDs1 <$> PTC.preprocess gvds
+    T.LVDs1 lvds -> T.LVDs1 <$> PTC.preprocess lvds
 
 instance PTC.Preprocess T.TypeTheo where
   preprocess (T.TT (pnws_l, mpnws, proof)) = case pnws_l of

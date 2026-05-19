@@ -387,19 +387,17 @@ instance P.Show T.ValueExpr where
     T.BT1 bt -> P.show bt
     T.BL1 bl -> P.show bl
 
-instance P.Show T.GroupedValueDefs where
-  show = \(T.GVDs (ids, ts, csles, csles_l)) ->
-    P.show ids ++
-    "\n  : " ++ P.show ts ++
-    "\n  = " ++ P.show csles ++ show_list_sep "\n  , " csles_l
+instance P.Show T.ListValueDefs where
+  show = \(T.LVDs (idl, t, lobl)) ->
+    P.show idl ++ " : " ++ P.show t ++ " = " ++ P.show lobl
 
-instance P.Show T.Identifiers where
-  show = \(T.Ids (id, ids)) -> P.show id ++ show_list_comma ids
-
-instance P.Show T.Types where
+instance P.Show T.ListOrBigList where
   show = \case
-    T.Ts (t, ts) -> P.show t ++ show_list_comma ts
-    T.All t -> "all " ++ P.show t
+   T.L2 l -> P.show l
+   T.BL2 bl -> P.show bl
+
+instance P.Show T.IdList where
+  show = \(T.IL (i, is)) -> "[" ++ P.show i ++ show_list_comma is ++ "]"
 
 instance P.Show T.LineExprs where
   show = \(T.LEs (le, les)) -> P.show le ++ show_list_comma les
@@ -411,7 +409,7 @@ instance P.Show T.WhereExpr where
 instance P.Show T.ValueDefs where
   show = \case
     T.VD1 vd -> P.show vd
-    T.GVDs1 gvd -> P.show gvd
+    T.LVDs1 lvd -> P.show lvd
 
 -- Type
 instance P.Show T.Type where

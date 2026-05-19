@@ -211,19 +211,19 @@ newtype ValueEquals = VE (ValueExpr, P.Maybe WhereExpr)
 data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
-newtype GroupedValueDefs = GVDs (Identifiers, Types, LineExprs, [LineExprs])
+newtype ListValueDefs = LVDs (IdList, Type, P.Maybe ListOrBigList)
 
-newtype Identifiers = Ids (Identifier, [Identifier])
+data ListOrBigList =
+   L2 List | BL2 BigList
 
-data Types =
-  Ts (Type, [Type]) | All Type
+newtype IdList = IL (Identifier, [Identifier])
 
 newtype LineExprs = LEs (LineExpr, [LineExpr])
 
 newtype WhereExpr = WE (ValueDefs, [ValueDefs])
 
 data ValueDefs =
-  VD1 ValueDef | GVDs1 GroupedValueDefs
+  VD1 ValueDef | LVDs1 ListValueDefs
 
 
 -- Type

@@ -1,7 +1,7 @@
 
 where
-less_l, greater_l : all ListOf(Int)s
-  = filter(l.tail)with(_ < l.head), filter(l.tail)with(_ >= l.head)#
+[less_l, greater_l] : ListOf(Int)s
+  = [filter(l.tail)with(_ < l.head), filter(l.tail)with(_ >= l.head)]#
 
 
 where
@@ -12,9 +12,10 @@ sum_list : ListOf(Int)s => Int
 
 
 where
-s1, s2, s3, s4 : all String
-  = "Hello, my name is Struggling Programmer."
-  , "I have tried way too many times to fit a big chunk of text"
-  , "inside my program, without it hitting the half-screen mark!"
-  , "I am so glad I finally discovered lcases!"#
+[s1, s2, s3, s4] : String
+  = [ "Hello, my name is Struggling Programmer."
+    , "I have tried way too many times to fit a big chunk of text"
+    , "inside my program, without it hitting the half-screen mark!"
+    , "I am so glad I finally discovered lcases!"
+    ]#
 

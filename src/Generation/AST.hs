@@ -576,40 +576,35 @@ instance GTC.ToHsWithIndentLvl (T.ValueExpr, GTC.PossiblyWhereExpr) where
         T.BT1 bt -> GTC.to_hs_wil bt
         T.BL1 bl -> GTC.to_hs_wil bl
 
-instance GTC.ToHsWithIndentLvl T.GroupedValueDefs where
-  to_hs_wil (T.GVDs (T.Ids (id, ids), ts, les, les_l)) =
-    GH.to_hs_wil_list vd_list >$> L.intercalate "\n\n"
+instance GTC.ToHsWithIndentLvl T.ListValueDefs where
+  to_hs_wil (T.LVDs (idl, t, maybe_lobl)) =
+    GH.indent <++ idl_type >++<
+    GH.indent <++ (GTC.to_haskell (idl, GTC.SquareBrackets) ++ " =\n") >++<
+    GH.deeper maybe_lobl_wil
     where
-    vd_list :: [T.ValueDef]
-    vd_list = to_val_def_list (total_ids, t_list, total_le_list)
+    idl_type :: GTC.Haskell
+    idl_type =
+      GTC.to_haskell (idl, GTC.NoSquareBrackets) ++ " :: " ++ GTC.to_haskell t ++
+      "\n"
 
-    total_ids :: [T.Identifier]
-    total_ids = id : ids
+    maybe_lobl_wil :: GTC.WithIndentLvl GTC.Haskell
+    maybe_lobl_wil = case maybe_lobl of
+      P.Nothing -> GH.indent <++ "P.undefined"
+      P.Just lobl -> GTC.to_hs_wil lobl
 
-    t_list :: [T.Type]
-    t_list = case ts of
-      T.Ts (t, ts) -> t : ts
-      T.All t -> L.replicate (P.length total_ids) t
+instance GTC.ToHsWithIndentLvl T.ListOrBigList where
+  to_hs_wil = \case
+   T.L2 l -> GH.indent <++ GTC.to_haskell l
+   T.BL2 bl -> GTC.to_hs_wil bl
 
-    total_le_list :: [T.LineExpr]
-    total_le_list = P.concatMap (\(T.LEs (le, le_l)) -> le : le_l) (les : les_l)
-
-    to_val_def_list :: ([T.Identifier], [T.Type], [T.LineExpr]) -> [T.ValueDef]
-    to_val_def_list = \case
-      ([], [], []) -> []
-      (id : ids, t : ts, le : les) ->
-        T.VD (id, t, P.Just $ T.VE (le_to_ve le, P.Nothing)) :
-        to_val_def_list (ids, ts, les)
-      _ ->
-        P.error $
-          "identifiers, types and expressions don't match in number " ++
-          "in grouped value definitions"
-
-    le_to_ve :: T.LineExpr -> T.ValueExpr
-    le_to_ve = \case
-      T.BOAE1 boae -> T.BOAE5 boae
-      T.LOE2 loe -> T.OE2 $ T.LOE3 loe
-      T.LFE2 lfe -> T.FE2 $ T.LFE4 lfe
+instance GTC.ToHaskell (T.IdList, GTC.NeedsSquareBrackets) where
+  to_haskell (T.IL (id, ids), nsb) =
+    case nsb of
+      GTC.SquareBrackets -> "[" ++ comma_sep_ids ++ "]"
+      GTC.NoSquareBrackets -> comma_sep_ids
+    where
+    comma_sep_ids :: GTC.Haskell
+    comma_sep_ids = GTC.to_haskell id ++ GH.to_hs_prepend_list ", " ids
 
 instance GTC.ToHsWithIndentLvl T.WhereExpr where
   to_hs_wil (T.WE (wde, wdes)) =
@@ -620,7 +615,7 @@ instance GTC.ToHsWithIndentLvl T.WhereExpr where
 instance GTC.ToHsWithIndentLvl T.ValueDefs where
   to_hs_wil = \case
     T.VD1 vd -> GTC.to_hs_wil vd
-    T.GVDs1 gvd -> GTC.to_hs_wil gvd
+    T.LVDs1 lvd -> GTC.to_hs_wil lvd
 
 -- Type
 

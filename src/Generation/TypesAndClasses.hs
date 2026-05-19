@@ -21,6 +21,8 @@ data NeedsParenBool = Paren | NoParen
 
 data NeedsAnnotBool = Annot | NoAnnot
 
+data NeedsSquareBrackets = SquareBrackets | NoSquareBrackets
+
 data PossiblyWhereExpr = HasWhereExpr T.WhereExpr | NoWhereExpr
 
 class ToHaskell a where

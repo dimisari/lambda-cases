@@ -142,8 +142,8 @@ file_name_compile_func_pairs =
   , ( "value_def.txt"
     , (compile_example_func :: Compile (THWIL T.ValueDef)) .> extract_res_str
     )
-  , ( "grouped_val_defs.txt"
-    , (compile_example_func :: Compile (THWIL T.GroupedValueDefs)) .>
+  , ( "list_val_defs.txt"
+    , (compile_example_func :: Compile (THWIL T.ListValueDefs)) .>
       extract_res_str
     )
   , ( "where_expr.txt"

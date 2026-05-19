@@ -497,29 +497,32 @@ instance PTC.HasParser T.ValueExpr where
     T.BT1 <$> TP.try PTC.parser <|> T.BL1 <$> TP.try PTC.parser <|>
     T.BOAE5 <$> PTC.parser <?> "value expression"
 
-instance PTC.HasParser T.GroupedValueDefs where
+instance PTC.HasParser T.ListValueDefs where
   parser =
-    PTC.parser >>= \ids ->
-    PH.deeper (types_p ++< equal_les_p +++< les_l_p) >>=
-      \(ts, equal_les, les_l) ->
-    P.return $ T.GVDs (ids, ts, equal_les, les_l)
-    where
-    types_p :: PTC.Parser T.Types
-    types_p = PH.has_type *> PTC.parser
+    PTC.parser >>= \idl ->
 
-    equal_les_p :: PTC.Parser T.LineExprs
-    equal_les_p = PH.nl_indent *> TP.string "= " *> PTC.parser
+    PH.increase_il_by 1 >>
 
-    les_l_p :: PTC.Parser [T.LineExprs]
-    les_l_p = TP.many $ TP.try (PH.nl_indent *> PH.comma) *> PTC.parser
+    PH.has_type *> PTC.parser >>= \t ->
 
-instance PTC.HasParser T.Identifiers where
-  parser = T.Ids <$> PTC.parser ++< TP.many1 (PH.comma *> PTC.parser)
+    TP.optionMaybe PTC.parser >>= \maybe_lobl ->
 
-instance PTC.HasParser T.Types where
+    PH.decrease_il_by 1 >>
+
+    P.pure (T.LVDs (idl, t, maybe_lobl))
+
+instance PTC.HasParser T.ListOrBigList where
   parser =
-    T.Ts <$> (PTC.parser ++< TP.many1 (PH.comma *> PTC.parser)) <|>
-    T.All <$> (TP.string "all " *> PTC.parser)
+    TP.try (PH.nl_indent *> TP.string "= ") *>
+    PH.deeper (T.BL2 <$> TP.try PTC.parser <|> T.L2 <$> PTC.parser)
+
+instance PTC.HasParser T.IdList where
+  parser =
+    T.IL <$>
+      ( TP.char '[' *>
+        PH.opt_space_around (PTC.parser ++< TP.many (PH.comma *> PTC.parser)) <*
+        TP.char ']'
+      )
 
 instance PTC.HasParser T.LineExprs where
   parser = T.LEs <$> PTC.parser ++< TP.many (PH.comma *> PTC.parser)
@@ -531,7 +534,7 @@ instance PTC.HasParser T.WhereExpr where
       TP.many (TP.try $ PH.nl_nl *> PTC.parser)
 
 instance PTC.HasParser T.ValueDefs where
-  parser = PH.indent *> (T.VD1 <$> TP.try PTC.parser <|> T.GVDs1 <$> PTC.parser)
+  parser = PH.indent *> (T.VD1 <$> TP.try PTC.parser <|> T.LVDs1 <$> PTC.parser)
 
 
 --  Type

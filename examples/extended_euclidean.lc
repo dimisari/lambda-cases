@@ -10,8 +10,8 @@ GcdAndCoeffs = Int^3
 extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
   = ee_recursion(init_a_coeffs, init_b_coeffs, _)
     where
-    init_a_coeffs, init_b_coeffs: all Coeffs
-      = (1, 0), (0, 1)
+    [init_a_coeffs, init_b_coeffs]: Coeffs
+      = [(1, 0), (0, 1)]
 
     ee_recursion(_, _, _): Coeffs x Coeffs x Int^2 => GcdAndCoeffs
       = (a_coeffs, b_coeffs, (x, ?))
