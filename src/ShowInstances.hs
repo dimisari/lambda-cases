@@ -389,15 +389,21 @@ instance P.Show T.ValueExpr where
     T.BT1 bt -> P.show bt
     T.BL1 bl -> P.show bl
 
+instance P.Show T.WhereExpr where
+  show =
+    \(T.WE (wde, wdes)) -> "\nwhere\n" ++ P.show wde ++ show_list_sep "\n\n" wdes
+
 instance P.Show T.ListValueDefs where
   show = \(T.LVDs (idl, tmve)) -> P.show idl ++ P.show tmve
 
 instance P.Show T.IdList where
   show = \(T.IL (i, is)) -> "[" ++ P.show i ++ show_list_comma is ++ "]"
 
-instance P.Show T.WhereExpr where
-  show =
-    \(T.WE (wde, wdes)) -> "\nwhere\n" ++ P.show wde ++ show_list_sep "\n\n" wdes
+instance P.Show T.TupleValueDefs where
+  show = \(T.TVDs (idt, tmve)) -> P.show idt ++ P.show tmve
+
+instance P.Show T.IdTuple where
+  show = \(T.IT (i, is)) -> "(" ++ P.show i ++ show_list_comma is ++ ")"
 
 instance P.Show T.ValueDefs where
   show = \case

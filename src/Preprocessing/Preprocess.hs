@@ -329,16 +329,20 @@ instance PTC.Preprocess T.ValueExpr where
     T.BT1 bt -> T.BT1 <$> PTC.preprocess bt
     T.BL1 bl -> T.BL1 <$> PTC.preprocess bl
 
+instance PTC.Preprocess T.WhereExpr where
+  preprocess = \(T.WE we) -> T.WE <$> preprocess_pair we
+
 instance PTC.Preprocess T.ListValueDefs where
   preprocess = \(T.LVDs lvds) -> T.LVDs <$> preprocess_second lvds
 
-instance PTC.Preprocess T.WhereExpr where
-  preprocess = \(T.WE we) -> T.WE <$> preprocess_pair we
+instance PTC.Preprocess T.TupleValueDefs where
+  preprocess = \(T.TVDs tvds) -> T.TVDs <$> preprocess_second tvds
 
 instance PTC.Preprocess T.ValueDefs where
   preprocess = \case
     T.VD1 vd -> T.VD1 <$> PTC.preprocess vd
     T.LVDs1 lvds -> T.LVDs1 <$> PTC.preprocess lvds
+    T.TVDs1 tvds -> T.TVDs1 <$> PTC.preprocess tvds
 
 instance PTC.Preprocess T.TypeTheo where
   preprocess (T.TT (pnws_l, mpnws, proof)) = case pnws_l of

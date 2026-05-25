@@ -581,6 +581,12 @@ instance GTC.ToHsWithIndentLvl (T.ValueExpr, GTC.PossiblyWhereExpr) where
         T.BT1 bt -> GTC.to_hs_wil bt
         T.BL1 bl -> GTC.to_hs_wil bl
 
+instance GTC.ToHsWithIndentLvl T.WhereExpr where
+  to_hs_wil (T.WE (wde, wdes)) =
+    GH.indent <++ "let\n" >++<
+    (GH.to_hs_wil_list (wde : wdes) >$> L.intercalate "\n\n") <++ "\n" >++<
+    GH.indent <++ "in\n"
+
 instance GTC.ToHsWithIndentLvl T.ListValueDefs where
   to_hs_wil (T.LVDs (idl, tmve)) =
     GTC.to_hs_wil (id_hs1, id_hs2, tmve)
@@ -600,16 +606,34 @@ instance GTC.ToHaskell (T.IdList, GTC.NeedsSquareBrackets) where
     comma_sep_ids :: GTC.Haskell
     comma_sep_ids = GTC.to_haskell id ++ GH.to_hs_prepend_list ", " ids
 
-instance GTC.ToHsWithIndentLvl T.WhereExpr where
-  to_hs_wil (T.WE (wde, wdes)) =
-    GH.indent <++ "let\n" >++<
-    (GH.to_hs_wil_list (wde : wdes) >$> L.intercalate "\n\n") <++ "\n" >++<
-    GH.indent <++ "in\n"
+instance GTC.ToHsWithIndentLvl T.TupleValueDefs where
+  to_hs_wil (T.TVDs (idt, tmve)) =
+    GH.indent <++ (id_hs1 ++ " = " ++ id_hs2 ++ "\n") >++<
+    GTC.to_hs_wil (id_hs1, id_hs2, tmve)
+    where
+    id_hs1 :: GTC.Haskell
+    id_hs1 = GTC.to_haskell (idt, GTC.NoSquareBrackets)
+
+    id_hs2 :: GTC.Haskell
+    id_hs2 = GTC.to_haskell (idt, GTC.SquareBrackets)
+
+instance GTC.ToHaskell (T.IdTuple, GTC.NeedsSquareBrackets) where
+  to_haskell (T.IT (id, ids), nsb) =
+    case nsb of
+      GTC.SquareBrackets -> "(" ++ comma_sep_ids ++ ")"
+      GTC.NoSquareBrackets -> big_merged_id
+    where
+    comma_sep_ids :: GTC.Haskell
+    comma_sep_ids = GTC.to_haskell id ++ GH.to_hs_prepend_list ", " ids
+
+    big_merged_id :: GTC.Haskell
+    big_merged_id = GTC.to_haskell id ++ GH.to_hs_prepend_list "'comma'" ids
 
 instance GTC.ToHsWithIndentLvl T.ValueDefs where
   to_hs_wil = \case
     T.VD1 vd -> GTC.to_hs_wil vd
-    T.LVDs1 lvd -> GTC.to_hs_wil lvd
+    T.LVDs1 lvds -> GTC.to_hs_wil lvds
+    T.TVDs1 tvds -> GTC.to_hs_wil tvds
 
 -- Type
 

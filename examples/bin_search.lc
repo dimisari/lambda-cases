@@ -24,11 +24,8 @@ list : ListOf(Int)s
 array : ArrayWithLength
   = zip(indexes)with(list) -> array_from_list(_) -> (_, ll)
     where
-    ll : Int
-      = length_of(list)
-
-    indexes : ListOf(Index)s
-      = from(0)to(ll - 1)
+    (ll, indexes) : Int x ListOf(Index)s
+      = (length_of(list), from(0)to(ll - 1))
 
 arr_bin_search(_, _, _) : Index x ArrayWithLength x Int => Possibly(Index)
   = (ind, arr, target) =>
@@ -43,11 +40,8 @@ arr_bin_search(_, _, _) : Index x ArrayWithLength x Int => Possibly(Index)
               greater => arr_bin_search(ind, new_arr, target)
               equal => a_value--middle_ind
     where
-    middle_ind : Index
-      = ind + (arr.2nd - 1)div(2)
-
-    new_arr : ArrayWithLength
-      = (arr.1st, (arr.2nd)div(2))
+    (middle_ind, new_arr) : Index x ArrayWithLength
+      = (ind + (arr.2nd - 1)div(2), (arr.1st, (arr.2nd)div(2)))
 
 try(_) : Int => Program
   = i => print("Trying " + i) ; result_msg(arr_bin_search(0, array, i))

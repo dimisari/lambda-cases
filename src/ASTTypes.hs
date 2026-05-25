@@ -213,14 +213,18 @@ newtype ValueEquals = VE (ValueExpr, P.Maybe WhereExpr)
 data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
+newtype WhereExpr = WE (ValueDefs, [ValueDefs])
+
 newtype ListValueDefs = LVDs (IdList, TypeMaybeValueEquals)
 
 newtype IdList = IL (Identifier, [Identifier])
 
-newtype WhereExpr = WE (ValueDefs, [ValueDefs])
+newtype TupleValueDefs = TVDs (IdTuple, TypeMaybeValueEquals)
+
+newtype IdTuple = IT (Identifier, [Identifier])
 
 data ValueDefs =
-  VD1 ValueDef | LVDs1 ListValueDefs
+  VD1 ValueDef | LVDs1 ListValueDefs | TVDs1 TupleValueDefs
 
 
 -- Type
