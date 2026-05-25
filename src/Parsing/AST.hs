@@ -524,9 +524,6 @@ instance PTC.HasParser T.IdList where
         TP.char ']'
       )
 
-instance PTC.HasParser T.LineExprs where
-  parser = T.LEs <$> PTC.parser ++< TP.many (PH.comma *> PTC.parser)
-
 instance PTC.HasParser T.WhereExpr where
   parser =
     T.WE <$>

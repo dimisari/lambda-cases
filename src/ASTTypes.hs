@@ -218,8 +218,6 @@ data ListOrBigList =
 
 newtype IdList = IL (Identifier, [Identifier])
 
-newtype LineExprs = LEs (LineExpr, [LineExpr])
-
 newtype WhereExpr = WE (ValueDefs, [ValueDefs])
 
 data ValueDefs =

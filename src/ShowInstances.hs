@@ -399,9 +399,6 @@ instance P.Show T.ListOrBigList where
 instance P.Show T.IdList where
   show = \(T.IL (i, is)) -> "[" ++ P.show i ++ show_list_comma is ++ "]"
 
-instance P.Show T.LineExprs where
-  show = \(T.LEs (le, les)) -> P.show le ++ show_list_comma les
-
 instance P.Show T.WhereExpr where
   show =
     \(T.WE (wde, wdes)) -> "\nwhere\n" ++ P.show wde ++ show_list_sep "\n\n" wdes

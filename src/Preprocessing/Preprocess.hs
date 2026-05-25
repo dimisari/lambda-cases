@@ -336,9 +336,6 @@ instance PTC.Preprocess T.ListOrBigList where
     T.L2 l -> T.L2 <$> PTC.preprocess l
     T.BL2 bl -> T.BL2 <$> PTC.preprocess bl
 
-instance PTC.Preprocess T.LineExprs where
-  preprocess = \(T.LEs les) -> T.LEs <$> preprocess_pair les
-
 instance PTC.Preprocess T.WhereExpr where
   preprocess = \(T.WE we) -> T.WE <$> preprocess_pair we
 
