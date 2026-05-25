@@ -204,17 +204,16 @@ data CaseBody =
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
-newtype ValueDef = VD (Identifier, Type, P.Maybe ValueEquals)
+newtype ValueDef = VD (Identifier, TypeMaybeValueEquals)
+
+newtype TypeMaybeValueEquals = TMVE (Type, P.Maybe ValueEquals)
 
 newtype ValueEquals = VE (ValueExpr, P.Maybe WhereExpr)
 
 data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
 
-newtype ListValueDefs = LVDs (IdList, Type, P.Maybe ListOrBigList)
-
-data ListOrBigList =
-   L2 List | BL2 BigList
+newtype ListValueDefs = LVDs (IdList, TypeMaybeValueEquals)
 
 newtype IdList = IL (Identifier, [Identifier])
 

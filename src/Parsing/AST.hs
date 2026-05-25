@@ -461,18 +461,12 @@ instance PTC.HasParser T.CaseBody where
 --  ValueDef, WhereExpr
 
 instance PTC.HasParser T.ValueDef where
+  parser = T.VD <$> PTC.parser ++< PTC.parser
+
+instance PTC.HasParser T.TypeMaybeValueEquals where
   parser =
-    PTC.parser >>= \identifier ->
-
-    PH.increase_il_by 1 >>
-
-    PH.has_type *> PTC.parser >>= \type_ ->
-
-    TP.optionMaybe PTC.parser >>= \maybe_ve ->
-
-    PH.decrease_il_by 1 >>
-
-    P.pure (T.VD (identifier, type_, maybe_ve))
+    T.TMVE <$>
+      PH.deeper ((PH.has_type *> PTC.parser) ++< TP.optionMaybe PTC.parser)
 
 instance PTC.HasParser T.ValueEquals where
   parser =
@@ -498,23 +492,7 @@ instance PTC.HasParser T.ValueExpr where
     T.BOAE5 <$> PTC.parser <?> "value expression"
 
 instance PTC.HasParser T.ListValueDefs where
-  parser =
-    PTC.parser >>= \idl ->
-
-    PH.increase_il_by 1 >>
-
-    PH.has_type *> PTC.parser >>= \t ->
-
-    TP.optionMaybe PTC.parser >>= \maybe_lobl ->
-
-    PH.decrease_il_by 1 >>
-
-    P.pure (T.LVDs (idl, t, maybe_lobl))
-
-instance PTC.HasParser T.ListOrBigList where
-  parser =
-    TP.try (PH.nl_indent *> TP.string "= ") *>
-    PH.deeper (T.BL2 <$> TP.try PTC.parser <|> T.L2 <$> PTC.parser)
+  parser = T.LVDs <$> PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.IdList where
   parser =

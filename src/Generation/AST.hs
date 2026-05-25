@@ -540,10 +540,15 @@ instance GTC.ToHsWithIndentLvl T.CaseBody where
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 
 instance GTC.ToHsWithIndentLvl T.ValueDef where
-  to_hs_wil (T.VD (id, t, maybe_ve)) =
-    GH.indent <++ (GTC.to_haskell id ++ " :: ") >++<
+  to_hs_wil (T.VD (id, tmve)) =
+    GTC.to_hs_wil (GTC.to_haskell id, GTC.to_haskell id, tmve)
+
+instance GTC.ToHsWithIndentLvl (GTC.Haskell, GTC.Haskell, T.TypeMaybeValueEquals)
+  where
+  to_hs_wil (id_hs1, id_hs2, T.TMVE (t, maybe_ve)) =
+    GH.indent <++ (id_hs1 ++ " :: ") >++<
     (forall_hs <$> MS.get) <++ (GTC.to_haskell t ++ "\n") >++<
-    GH.indent <++ (GTC.to_haskell id ++ " =\n") >++<
+    GH.indent <++ (id_hs2 ++ " =\n") >++<
     GH.deeper maybe_ve_wil
     where
     forall_hs :: P.Int -> GTC.Haskell
@@ -577,25 +582,14 @@ instance GTC.ToHsWithIndentLvl (T.ValueExpr, GTC.PossiblyWhereExpr) where
         T.BL1 bl -> GTC.to_hs_wil bl
 
 instance GTC.ToHsWithIndentLvl T.ListValueDefs where
-  to_hs_wil (T.LVDs (idl, t, maybe_lobl)) =
-    GH.indent <++ idl_type >++<
-    GH.indent <++ (GTC.to_haskell (idl, GTC.SquareBrackets) ++ " =\n") >++<
-    GH.deeper maybe_lobl_wil
+  to_hs_wil (T.LVDs (idl, tmve)) =
+    GTC.to_hs_wil (id_hs1, id_hs2, tmve)
     where
-    idl_type :: GTC.Haskell
-    idl_type =
-      GTC.to_haskell (idl, GTC.NoSquareBrackets) ++ " :: " ++ GTC.to_haskell t ++
-      "\n"
+    id_hs1 :: GTC.Haskell
+    id_hs1 = GTC.to_haskell (idl, GTC.NoSquareBrackets)
 
-    maybe_lobl_wil :: GTC.WithIndentLvl GTC.Haskell
-    maybe_lobl_wil = case maybe_lobl of
-      P.Nothing -> GH.indent <++ "P.undefined"
-      P.Just lobl -> GTC.to_hs_wil lobl
-
-instance GTC.ToHsWithIndentLvl T.ListOrBigList where
-  to_hs_wil = \case
-   T.L2 l -> GH.indent <++ GTC.to_haskell l
-   T.BL2 bl -> GTC.to_hs_wil bl
+    id_hs2 :: GTC.Haskell
+    id_hs2 = GTC.to_haskell (idl, GTC.SquareBrackets)
 
 instance GTC.ToHaskell (T.IdList, GTC.NeedsSquareBrackets) where
   to_haskell (T.IL (id, ids), nsb) =

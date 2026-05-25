@@ -313,8 +313,10 @@ instance PTC.Preprocess T.CaseBody where
     T.BFB1 bfb -> T.BFB1 <$> preprocess_pair bfb
 
 instance PTC.Preprocess T.ValueDef where
-  preprocess = \(T.VD (id, t, mve)) ->
-    PTC.preprocess mve >$> \mve' -> T.VD (id, t, mve')
+  preprocess = \(T.VD vd) -> T.VD <$> preprocess_second vd
+
+instance PTC.Preprocess T.TypeMaybeValueEquals where
+  preprocess = \(T.TMVE tmve) -> T.TMVE <$> preprocess_second tmve
 
 instance PTC.Preprocess T.ValueEquals where
   preprocess = \(T.VE ve) -> T.VE <$> preprocess_pair ve
@@ -328,13 +330,7 @@ instance PTC.Preprocess T.ValueExpr where
     T.BL1 bl -> T.BL1 <$> PTC.preprocess bl
 
 instance PTC.Preprocess T.ListValueDefs where
-  preprocess = \(T.LVDs (ids, t, mlobl)) ->
-    PTC.preprocess mlobl >$> \mlobl' -> T.LVDs (ids, t, mlobl')
-
-instance PTC.Preprocess T.ListOrBigList where
-  preprocess = \case
-    T.L2 l -> T.L2 <$> PTC.preprocess l
-    T.BL2 bl -> T.BL2 <$> PTC.preprocess bl
+  preprocess = \(T.LVDs lvds) -> T.LVDs <$> preprocess_second lvds
 
 instance PTC.Preprocess T.WhereExpr where
   preprocess = \(T.WE we) -> T.WE <$> preprocess_pair we

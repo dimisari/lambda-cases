@@ -372,8 +372,10 @@ instance P.Show T.CaseBody where
 
 -- Values: ValueDef, GroupedValueDefs, WhereExpr
 instance P.Show T.ValueDef where
-  show = \(T.VD (id, t, maybe_ve)) ->
-    P.show id ++ "\n  : " ++ P.show t ++ show_maybe maybe_ve
+  show = \(T.VD (id, tmve)) -> P.show id ++ P.show tmve
+
+instance P.Show T.TypeMaybeValueEquals where
+  show = \(T.TMVE (t, maybe_ve)) -> "\n  : " ++ P.show t ++ show_maybe maybe_ve
 
 instance P.Show T.ValueEquals where
   show = \(T.VE (ve, maybe_we)) ->
@@ -388,13 +390,7 @@ instance P.Show T.ValueExpr where
     T.BL1 bl -> P.show bl
 
 instance P.Show T.ListValueDefs where
-  show = \(T.LVDs (idl, t, lobl)) ->
-    P.show idl ++ " : " ++ P.show t ++ " = " ++ P.show lobl
-
-instance P.Show T.ListOrBigList where
-  show = \case
-   T.L2 l -> P.show l
-   T.BL2 bl -> P.show bl
+  show = \(T.LVDs (idl, tmve)) -> P.show idl ++ P.show tmve
 
 instance P.Show T.IdList where
   show = \(T.IL (i, is)) -> "[" ++ P.show i ++ show_list_comma is ++ "]"
