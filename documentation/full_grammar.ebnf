@@ -230,8 +230,7 @@ nl_double_space ::= nl '  '
 space_or_nl_double_space ::= ' ' | nl_double_space
 
 tuple_type_def ::=
-'tuple type:' opt_space type_name equals prod_or_power_type nl
-'field names:' space_or_nl_double_space field_names
+'TUPLE TYPE' nl type_name equals prod_or_power_type nl field_names
 
 type_name ::=
 param_vars_in_paren? type_id ( param_vars_in_paren letter+ )*
@@ -244,17 +243,14 @@ field_names ::= paren_start simple_ids paren_end
 
 simple_ids ::= simple_id ( comma simple_id )+
 
-or_type_def ::=
-'or type:' opt_space type_name nl
-'values:' or_type_values
-
-or_type_values ::= opt_space or_type_values_line | or_type_values_lines
+or_type_def ::= 'OR TYPE' nl type_name nl or_type_values_lines
 
 or_type_values_line ::= or_type_value (opt_space '|' opt_space or_type_value)*
 
 or_type_values_lines ::=
-nl_double_space or_type_values_line
-(opt_space '|' nl_double_space or_type_values_line)*
+or_type_values_line (opt_space '|' nl or_type_values_line)*
+
+or_type_values ::= opt_space or_type_values_line | or_type_values_lines
 
 or_type_value ::= simple_id internal_value?
 
