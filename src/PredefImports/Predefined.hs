@@ -36,6 +36,7 @@ import System.Exit qualified as E
 import System.Console.ANSI qualified as ANSI
 import System.Process qualified as SP
 import System.Environment qualified as SE
+import System.Directory qualified as SD
 import PredefImports.OpsInHaskell ((.>))
 
 -- types
@@ -158,6 +159,9 @@ append'to_file' =
   where
   append_file :: P.String -> P.String -> Program
   append_file = \pn str -> BS.appendFile pn (U.fromString str)
+
+does_file'exist :: P.String -> ProgramWith' P.Bool
+does_file'exist = SD.doesFileExist
 
 print_string' :: P.String -> Program
 print_string' = U.fromString .> BS.putStr
