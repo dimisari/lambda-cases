@@ -1,9 +1,8 @@
 {-
 This file contains various things:
-- Most notable are the definitions and some helper functions for the following
+- Most notable are the instances and some helper functions for the following
   classes:
   - ToHaskell, ToHsWithParamNum, ToHsWithIndentLvl
-  These are the classes for which AST.hs is just instances of
 - Another interesting class is the class HasArgs
   - For identifiers where arguments are expected in lcases there needs
     to be a mechanism to show that in the equivalent haskell identifiers. This
@@ -28,7 +27,7 @@ import Helpers qualified as H
 import Generation.TypesAndClasses qualified as GTC
 import Generation.PrefixesAndHardcoded qualified as GPH
 
--- ToHaskell class and helper instances
+-- ToHaskell helper instances and functions
 
 instance GTC.ToHaskell a => GTC.ToHaskell [a] where
   to_haskell = P.concatMap GTC.to_haskell
@@ -46,7 +45,7 @@ to_hs_intercalate :: GTC.ToHaskell a => P.String -> [a] -> GTC.Haskell
 to_hs_intercalate =
   \intercalate_hs -> P.map GTC.to_haskell .> L.intercalate intercalate_hs
 
--- ToHsWithParamNum class and helper instances
+-- ToHsWithParamNum helper instance and functions
 
 instance GTC.ToHsWithParamNum a => GTC.ToHsWithParamNum (P.Maybe a) where
   to_hs_wpn = \case
@@ -101,7 +100,7 @@ case_of_inner_hs_gen =
       P.True -> int_to_params_in_paren i
       P.False -> P.error "should be impossible: zero or negative cases params"
 
--- ToHsWithIndentLvl class, helper instance and related functions
+-- ToHsWithIndentLvl helper instance and functions
 
 instance GTC.ToHsWithIndentLvl a => GTC.ToHsWithIndentLvl (P.Maybe a) where
   to_hs_wil = \case
@@ -136,7 +135,7 @@ indent_all_and_concat :: [GTC.Haskell] -> GTC.WithIndentLvl GTC.Haskell
 indent_all_and_concat = \hs_list ->
   indent >$> \indent_hs -> P.map (indent_hs ++) hs_list &> L.intercalate "\n"
 
--- HasArgs class, instances and related functions
+-- HasArgs instances and related functions
 
 instance GTC.HasArgs a => GTC.HasArgs (P.Maybe a) where
   args_length = \case
@@ -178,8 +177,6 @@ maybe_prefix_args_hs :: GTC.HasArgs a => P.String -> P.Maybe a -> GTC.Haskell
 maybe_prefix_args_hs = \prefix -> \case
   P.Nothing -> ""
   P.Just a -> prefix ++ single_quotes_hs a
-
--- types
 
 -- NeedsParenBool
 
@@ -293,7 +290,11 @@ taioasm_to_sou :: T.TAIOASMiddle -> T.SubOrUnder
 taioasm_to_sou = \taioasm ->
   T.TVS1 $ T.TAIOAS1 $ T.TAIOAS (P.Nothing, taioasm, P.Nothing)
 
--- String and identifier functions
+sid_to_id :: T.SimpleId -> T.Identifier
+sid_to_id = \(T.SId (id_start, mdigit)) ->
+  T.Id (P.Nothing, id_start, [], mdigit, P.Nothing)
+
+-- String to identifier functions
 
 str_to_sid :: P.String -> T.SimpleId
 str_to_sid = \str -> T.SId (T.IS str, P.Nothing)
@@ -301,11 +302,7 @@ str_to_sid = \str -> T.SId (T.IS str, P.Nothing)
 str_to_id :: P.String -> T.Identifier
 str_to_id = \str -> T.Id (P.Nothing, T.IS str, [], P.Nothing, P.Nothing)
 
-sid_to_id :: T.SimpleId -> T.Identifier
-sid_to_id = \(T.SId (id_start, mdigit)) ->
-  T.Id (P.Nothing, id_start, [], mdigit, P.Nothing)
-
--- check if node can symplify to a SimpleId
+-- check if an identifier can simplify to a SimpleId
 
 check_if_id_is_sid :: T.Identifier -> P.Maybe T.SimpleId
 check_if_id_is_sid = \case
