@@ -163,6 +163,12 @@ append'to_file' =
 does_file'exist :: P.String -> ProgramWith' P.Bool
 does_file'exist = SD.doesFileExist
 
+does_directory'exist :: P.String -> ProgramWith' P.Bool
+does_directory'exist = SD.doesDirectoryExist
+
+list_directory' :: P.String -> ProgramWith' (ListOf's P.String)
+list_directory' = SD.listDirectory
+
 print_string' :: P.String -> Program
 print_string' = U.fromString .> BS.putStr
 
