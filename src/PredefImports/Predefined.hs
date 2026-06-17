@@ -22,7 +22,7 @@ This file contains:
 
 module PredefImports.Predefined where
 
-import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!))
+import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!), (/=))
 import Prelude qualified as P
 import Control.Monad.State qualified as MS
 import Data.List.Split qualified as LS
@@ -168,6 +168,9 @@ does_directory'exist = SD.doesDirectoryExist
 
 list_directory' :: P.String -> ProgramWith' (ListOf's P.String)
 list_directory' = SD.listDirectory
+
+get_directory_of' :: P.String -> P.String
+get_directory_of' = P.reverse .> P.dropWhile (/= '/') .> P.tail .> P.reverse
 
 print_string' :: P.String -> Program
 print_string' = U.fromString .> BS.putStr
