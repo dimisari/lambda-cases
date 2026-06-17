@@ -172,6 +172,9 @@ list_directory' = SD.listDirectory
 get_directory_of' :: P.String -> P.String
 get_directory_of' = P.reverse .> P.dropWhile (/= '/') .> P.tail .> P.reverse
 
+get_file_name_of' :: P.String -> P.String
+get_file_name_of' = P.reverse .> P.takeWhile (/= '/') .> P.reverse
+
 print_string' :: P.String -> Program
 print_string' = U.fromString .> BS.putStr
 
