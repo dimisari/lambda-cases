@@ -1055,14 +1055,6 @@ instance GTC.ToHaskell T.IdMaybeOpId where
       P.Nothing -> ""
       P.Just (op, id) -> GTC.to_haskell op ++ GTC.to_haskell id
 
-instance GTC.ToHaskell T.TTValueExpr where
-  to_haskell = \case
-    T.LE2 le -> " " ++ GTC.to_haskell le
-    T.VEMWE (ve, maybe_we) ->
-      "\n" ++
-      GH.run_generator
-        (GH.twice_deeper (GTC.to_hs_wil (ve, GH.mwe_to_pwe maybe_we)))
-
 -- Program
 
 instance GTC.ToHaskell T.Program where

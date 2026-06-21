@@ -659,11 +659,6 @@ instance P.Show T.IdMaybeOpId where
       P.Nothing -> ""
       P.Just op_id -> show_pair op_id
 
-instance P.Show T.TTValueExpr where
-  show = \case
-    T.LE2 le -> " " ++ P.show le
-    T.VEMWE (ve, mwe) -> "\n    " ++ P.show ve ++ show_maybe mwe
-
 -- Program
 instance P.Show T.Program where
   show = \(T.P (pp, pps)) -> P.show pp ++ show_list_sep "\n\n" pps

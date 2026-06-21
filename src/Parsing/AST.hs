@@ -818,15 +818,6 @@ instance PTC.HasParser T.IdMaybeOpId where
     T.IMOI <$>
       PTC.parser ++< TP.optionMaybe (TP.try $ PTC.parser ++< PTC.parser)
 
-instance PTC.HasParser T.TTValueExpr where
-  parser =
-    T.VEMWE <$> vemwe_p <|> T.LE2 <$> (TP.char ' ' *> PTC.parser)
-    where
-    vemwe_p :: PTC.Parser (T.ValueExpr, P.Maybe T.WhereExpr)
-    vemwe_p =
-      PH.twice_deeper
-      (TP.try PH.nl_indent *> PTC.parser ++< TP.optionMaybe PTC.parser)
-
 -- Comment
 
 instance PTC.HasParser T.Comment where

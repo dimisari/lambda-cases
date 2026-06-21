@@ -372,11 +372,6 @@ preprocess_pnws pnws =
 instance PTC.Preprocess T.Implementation where
   preprocess = \(T.I i) -> T.I <$> preprocess_second i
 
-instance PTC.Preprocess T.TTValueExpr where
-  preprocess = \case
-    T.LE2 le -> T.LE2 <$> PTC.preprocess le
-    T.VEMWE vemwe -> T.VEMWE <$> preprocess_pair vemwe
-
 instance PTC.Preprocess T.Program where
   preprocess = \(T.P pps) -> T.P <$> preprocess_pair pps
 

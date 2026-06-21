@@ -381,9 +381,6 @@ data Implementation = I (IdMaybeOpId, ValueExprMaybeWhere)
 
 newtype IdMaybeOpId = IMOI (Identifier, P.Maybe (Op, Identifier))
 
-data TTValueExpr =
-  LE2 LineExpr | VEMWE (ValueExpr, P.Maybe WhereExpr)
-
 -- Comment
 
 newtype Comment = C P.String
