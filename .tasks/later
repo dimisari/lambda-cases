@@ -1,12 +1,8 @@
 - indexes in predefined list operations should start with 1
+  - Make a list them and check if they all adhere
 - test/outputs
   - types (+ propositions and theorems) only
   - values only
-- group PredefImports one file per module
-  - currently importing things from prelude in 2 ways
-    - one is by importing PredefImports.Predefined which contains a lot of renamed values
-    - one is by "P.<whatever is needed>"
-    - maybe choose one of the two?
 - group error messages in seperate file
 - Να φτιάξω 2 διαφορετικά ASTs με διφορετικά types (πριν και μετά το preprocessing)
   - Αλλαγές
@@ -20,7 +16,6 @@
 - μετονομασία cases func expr σε qmark func expr
 - default printing tuples:
   - (a = 1, b = 2)
-- group type nicknames with "all"
 - comments (do we really need them?)
   - line: #
     - can also close in the same line with second #
@@ -33,3 +28,8 @@
 - reading files into bytestring instead of string?
   - src/lcc
 - Change syntax of type proposition and theorem
+- test/expected_outs
+  - run all compiled programs with some automated interaction and check against correct results
+- test/outputs/trees
+  - ASTs using dot
+    - I can literally graph the whole AST and all subtrees
