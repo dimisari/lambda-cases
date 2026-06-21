@@ -567,7 +567,7 @@ instance GTC.ToHsWithIndentLvl (GTC.Haskell, GTC.Haskell, T.TypeMaybeValueEquals
       P.Nothing -> GH.indent <++ "P.undefined"
       P.Just ve -> GTC.to_hs_wil ve
 
-instance GTC.ToHsWithIndentLvl T.ValueEquals where
+instance GTC.ToHsWithIndentLvl T.ValueExprMaybeWhere where
   to_hs_wil = \(T.VE (ve, maybe_we)) ->
     GTC.to_hs_wil (ve, GH.mwe_to_pwe maybe_we)
 
@@ -1042,14 +1042,13 @@ instance GTC.ToHaskell T.InOrOutTypeSub where
     T.POPTS2 popts -> GTC.to_haskell popts
     T.FTS3 fts -> GTC.to_haskell fts
 
-instance GTC.ToHaskell T.Proof where
-  to_haskell = \case
-    T.P1 (iooe, le) -> GTC.to_haskell iooe ++ " " ++ GTC.to_haskell le
-    T.P2 (iooe, ttve) -> GTC.to_haskell iooe ++ GTC.to_haskell ttve
+instance GTC.ToHaskell T.Implementation where
+  to_haskell = \(T.I (imoi, ve)) ->
+    GTC.to_haskell imoi ++ " = " ++ GH.run_gen_with_lvl 2 (GTC.to_hs_wil ve)
 
-instance GTC.ToHaskell T.IdOrOpEq where
-  to_haskell (T.IOOE (id, maybe_op_id)) =
-    GH.change_id_hs_if_needed1 (GTC.to_haskell id) ++ maybe_op_id_hs ++ " ="
+instance GTC.ToHaskell T.IdMaybeOpId where
+  to_haskell (T.IMOI (id, maybe_op_id)) =
+    GH.change_id_hs_if_needed1 (GTC.to_haskell id) ++ maybe_op_id_hs
     where
     maybe_op_id_hs :: GTC.Haskell
     maybe_op_id_hs = case maybe_op_id of

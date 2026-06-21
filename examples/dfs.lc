@@ -49,10 +49,9 @@ test_tree : (Char)Tree
     , [('b', [('e', []), ('f', [])]), ('c', []), ('d', [('g', []), ('h', [])])]
     )
 
-type_theorem (@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
-proof
-  (_)to_string =
-    tree => "\nroot: " + tree.root + "\nsubtrees:\n" + tree.subtrees + "\n"
+IMPLEMENTATION
+(@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
+(_)to_string = tree => "\nroot: " + tree.root + "\nsubtrees:\n" + tree.subtrees + "\n"
 
 main: Program
   = dfs_on_tree(test_tree) -> print(_)

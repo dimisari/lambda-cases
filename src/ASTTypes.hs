@@ -206,9 +206,9 @@ data CaseBody =
 
 newtype ValueDef = VD (Identifier, TypeMaybeValueEquals)
 
-newtype TypeMaybeValueEquals = TMVE (Type, P.Maybe ValueEquals)
+newtype TypeMaybeValueEquals = TMVE (Type, P.Maybe ValueExprMaybeWhere)
 
-newtype ValueEquals = VE (ValueExpr, P.Maybe WhereExpr)
+newtype ValueExprMaybeWhere = VE (ValueExpr, P.Maybe WhereExpr)
 
 data ValueExpr =
   BOAE5 BasicOrAppExpr | OE2 OpExpr | FE2 FuncExpr | BT1 BigTuple | BL1 BigList
@@ -329,7 +329,7 @@ newtype NamePart = NP P.String
 -- TypeTheo
 
 newtype TypeTheo =
-  TT ([PropNameWithSubs], P.Maybe PropNameWithSubs, Proof)
+  TT ([PropNameWithSubs], P.Maybe PropNameWithSubs, Implementation)
 
 type NPStart2 = (P.Char, [(NamePart, SubsInParen)], P.Maybe NamePart)
 type SIPStart = ([(SubsInParen, NamePart)], P.Maybe SubsInParen)
@@ -377,10 +377,9 @@ data InOrOutTypeSub =
   Underscore6 | TAIOAS3 TypeAppIdOrTVSub | POPTS2 ProdOrPowerTypeSub |
   FTS3 FuncTypeSub
 
-data Proof =
-  P1 (IdOrOpEq, LineExpr) | P2 (IdOrOpEq, TTValueExpr)
+data Implementation = I (IdMaybeOpId, ValueExprMaybeWhere)
 
-newtype IdOrOpEq = IOOE (Identifier, P.Maybe (Op, Identifier))
+newtype IdMaybeOpId = IMOI (Identifier, P.Maybe (Op, Identifier))
 
 data TTValueExpr =
   LE2 LineExpr | VEMWE (ValueExpr, P.Maybe WhereExpr)

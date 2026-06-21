@@ -163,11 +163,11 @@ case_body ::= line_func_body | big_func_body where_expr?
 
 has_type ::= (opt_space | nl_indent) ':' opt_space
 
-nl_indent_equals ::= nl_indent '= '
+value_def ::= identifier type_maybe_value_equals
 
-value_def ::= identifier has_type type value_equals?
+type_maybe_value_equals ::= has_type type (nl_indent value_equals)?
 
-value_equals ::= nl_indent_equals value_expr where_expr?
+value_equals ::= '= ' value_expr where_expr?
 
 value_expr ::=
 basic_or_app_expr | op_expr | func_expr | big_tuple | big_list
@@ -176,7 +176,7 @@ types ::=  type ( comma type )+ | 'all ' type
 
 lines_exprs ::= line_exprs ( nl_indent comma line_exprs )*
 
-grouped_value_defs ::= identifiers has_type types nl_indent_equals lines_exprs
+grouped_value_defs ::= identifiers has_type types nl_indent '= ' lines_exprs
 
 identifiers ::= identifier ( comma identifier )+
 
@@ -280,8 +280,8 @@ upper ( name_part types_in_paren )+ name_part?
 name_part ::= ( letter | '_'upper )+
 
 type_theo ::=
-'type_theorem ' prop_name_with_subs (' --> ' prop_name_with_subs)? nl
-'proof' proof
+'IMPLEMENTATION' nl prop_name_with_subs (' --> ' prop_name_with_subs)? nl
+implementation
 
 prop_name_with_subs ::=
 upper ( name_part subs_in_paren )+ name_part?
@@ -322,9 +322,10 @@ in_or_out_type_sub ::=
 '_' | type_app_id_or_tv_sub | prod_or_power_type_sub |
 paren_start func_type_sub paren_end
 
-proof ::= ' ' id_or_op_eq ' ' line_expr | nl '  ' id_or_op_eq  tt_value_expr
+implementation ::=
+' ' id_maybe_op_id ' ' line_expr | nl '  ' id_maybe_op_id  tt_value_expr
 
-id_or_op_eq ::= identifier (op identifier)? ' ='
+id_maybe_op_id ::= identifier (op identifier)?
 
 tt_value_expr ::= ' ' line_expr | nl_indent value_expr where_expr?
 

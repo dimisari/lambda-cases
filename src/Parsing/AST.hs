@@ -466,12 +466,14 @@ instance PTC.HasParser T.ValueDef where
 instance PTC.HasParser T.TypeMaybeValueEquals where
   parser =
     T.TMVE <$>
-      PH.deeper ((PH.has_type *> PTC.parser) ++< TP.optionMaybe PTC.parser)
+      PH.deeper
+        ( (PH.has_type *> PTC.parser) ++<
+          (TP.optionMaybe $ TP.try $ PH.nl_indent *> TP.string "= " *> PTC.parser
+          )
+        )
 
-instance PTC.HasParser T.ValueEquals where
+instance PTC.HasParser T.ValueExprMaybeWhere where
   parser =
-    TP.try (PH.nl_indent *> TP.string "= ") *>
-
     PH.set_in_equal_line P.True >>
     PH.increase_il_by 1 >>
 
@@ -719,16 +721,14 @@ instance PTC.HasParser T.NamePart where
 
 instance PTC.HasParser T.TypeTheo where
   parser =
-    T.TT <$> pnws_p ++< mpnws_p +++< proof_p
+    T.TT <$> pnws_p ++< mpnws_p +++< (PH.nl *> PTC.parser)
     where
     pnws_p :: PTC.Parser [T.PropNameWithSubs]
-    pnws_p = TP.try (TP.string "type_theorem ") *> PTC.parser >$> (\x -> [x])
+    pnws_p =
+      TP.try (TP.string "IMPLEMENTATION") *> PH.nl *> PTC.parser >$> (\x -> [x])
 
     mpnws_p :: PTC.Parser (P.Maybe T.PropNameWithSubs)
     mpnws_p = TP.optionMaybe (TP.string " --> " *> PTC.parser)
-
-    proof_p :: PTC.Parser T.Proof
-    proof_p = PH.nl *> TP.string "proof" *> PTC.parser
 
 instance PTC.HasParser T.PropNameWithSubs where
   parser =
@@ -809,16 +809,14 @@ instance PTC.HasParser T.InOrOutTypeSub where
     T.TAIOAS3 <$> TP.try PTC.parser  <|>
     PH.underscore *> P.return T.Underscore6
 
-instance PTC.HasParser T.Proof where
+instance PTC.HasParser T.Implementation where
   parser =
-    T.P1 <$> (TP.char ' ' *> PTC.parser) ++< (TP.char ' ' *> PTC.parser) <|>
-    T.P2 <$> (PH.nl *> TP.string "  " *> PTC.parser) ++< PTC.parser
+    T.I <$> PTC.parser ++< (TP.string " =" *> PH.space_or_nl *> PTC.parser)
 
-instance PTC.HasParser T.IdOrOpEq where
+instance PTC.HasParser T.IdMaybeOpId where
   parser =
-    T.IOOE <$>
-      PTC.parser ++< TP.optionMaybe (TP.try $ PTC.parser ++< PTC.parser) <*
-      TP.string " ="
+    T.IMOI <$>
+      PTC.parser ++< TP.optionMaybe (TP.try $ PTC.parser ++< PTC.parser)
 
 instance PTC.HasParser T.TTValueExpr where
   parser =

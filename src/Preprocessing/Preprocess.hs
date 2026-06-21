@@ -318,7 +318,7 @@ instance PTC.Preprocess T.ValueDef where
 instance PTC.Preprocess T.TypeMaybeValueEquals where
   preprocess = \(T.TMVE tmve) -> T.TMVE <$> preprocess_second tmve
 
-instance PTC.Preprocess T.ValueEquals where
+instance PTC.Preprocess T.ValueExprMaybeWhere where
   preprocess = \(T.VE ve) -> T.VE <$> preprocess_pair ve
 
 instance PTC.Preprocess T.ValueExpr where
@@ -369,10 +369,8 @@ preprocess_pnws pnws =
   add_subs_with_map :: PTC.AHTVMap -> T.PropName -> T.PropNameWithSubs
   add_subs_with_map = \m pn -> MS.evalState (PTC.add_subs pn) m
 
-instance PTC.Preprocess T.Proof where
-  preprocess = \case
-    T.P1 iooe_le -> T.P1 <$> preprocess_second iooe_le
-    T.P2 iooe_ttve -> T.P2 <$> preprocess_second iooe_ttve
+instance PTC.Preprocess T.Implementation where
+  preprocess = \(T.I i) -> T.I <$> preprocess_second i
 
 instance PTC.Preprocess T.TTValueExpr where
   preprocess = \case

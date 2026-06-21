@@ -28,8 +28,11 @@ show_list_sep = \sep -> P.concatMap ((sep ++) . P.show)
 show_list_comma :: P.Show a => [a] -> P.String
 show_list_comma = show_list_sep ", "
 
+show_pair :: (P.Show a, P.Show b) => (a, b) -> P.String
+show_pair = \(a, b) -> P.show a ++ P.show b
+
 show_pair_list :: (P.Show a, P.Show b) => [(a, b)] -> P.String
-show_pair_list = P.concatMap (\(a, b) -> P.show a ++ P.show b)
+show_pair_list = P.concatMap show_pair
 
 show_md :: P.Maybe P.Char -> P.String
 show_md = \case
@@ -194,7 +197,7 @@ instance P.Show T.OpExprStart where
   show = \(T.OES oper_op_pairs) -> show_pair_list oper_op_pairs
 
 instance P.Show T.LineOpExpr where
-  show = \(T.LOE (oes, loee)) -> P.show oes ++ P.show loee
+  show = \(T.LOE loe) -> show_pair loe
 
 instance P.Show T.LineOpExprEnd where
   show = \case
@@ -377,7 +380,7 @@ instance P.Show T.ValueDef where
 instance P.Show T.TypeMaybeValueEquals where
   show = \(T.TMVE (t, maybe_ve)) -> "\n  : " ++ P.show t ++ show_maybe maybe_ve
 
-instance P.Show T.ValueEquals where
+instance P.Show T.ValueExprMaybeWhere where
   show = \(T.VE (ve, maybe_we)) ->
     "\n  = " ++ P.show ve ++ show_maybe maybe_we
 
@@ -563,8 +566,8 @@ instance P.Show T.NamePart where
 -- TypeTheo
 instance P.Show T.TypeTheo where
   show = \(T.TT (pnws, maybe_pnws, proof)) ->
-    "type_theorem " ++ P.show pnws ++ show_mpnws maybe_pnws ++
-    "\nproof" ++ P.show proof
+    "IMPLEMENTATION\n" ++ P.show pnws ++ show_mpnws maybe_pnws ++
+    "\n" ++ P.show proof
     where
     show_mpnws :: P.Maybe T.PropNameWithSubs -> P.String
     show_mpnws = \case
@@ -644,19 +647,17 @@ instance P.Show T.InOrOutTypeSub where
     T.POPTS2 popts -> P.show popts
     T.FTS3 fts -> P.show fts
 
-instance P.Show T.Proof where
-  show = \case
-    T.P1 (iooe, le) -> " " ++ P.show iooe ++ " " ++ P.show le
-    T.P2 (iooe, ttve) -> "\n  " ++ P.show iooe ++ P.show ttve
+instance P.Show T.Implementation where
+  show = \(T.I i) -> show_pair i
 
-instance P.Show T.IdOrOpEq where
-  show = \(T.IOOE (id, maybe_op_id)) ->
-    P.show id ++ show_moi maybe_op_id ++ " ="
+instance P.Show T.IdMaybeOpId where
+  show = \(T.IMOI (id, maybe_op_id)) ->
+    P.show id ++ show_moi maybe_op_id
     where
     show_moi :: P.Maybe (T.Op, T.Identifier) -> P.String
     show_moi = \case
       P.Nothing -> ""
-      P.Just (op, id) -> P.show op ++ P.show id
+      P.Just op_id -> show_pair op_id
 
 instance P.Show T.TTValueExpr where
   show = \case

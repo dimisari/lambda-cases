@@ -135,9 +135,9 @@ test_graph : Graph
     , ('f', [('c', 7), ('e', 3)])
     ]
 
-type_theorem (NameAndDist)Has_Str_Rep
-proof
-  (_)to_string = nam => "(name = " + nam.name + ", dist = " + nam.dist + ")"
+IMPLEMENTATION
+(NameAndDist)Has_Str_Rep
+(_)to_string = nam => "(name = " + nam.name + ", dist = " + nam.dist + ")"
 
 main : Program
   = dijkstra('a', test_graph) -> print(_)

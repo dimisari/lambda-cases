@@ -1,58 +1,63 @@
-type_theorem (Possibly(_))Has_A_Wrapper
-proof wrap(_) = the_value--_#
+IMPLEMENTATION
+(Possibly(_))Has_A_Wrapper
+wrap(_) = the_value--_#
 
-type_theorem (ListOf(_)s)Has_A_Wrapper
-proof wrap(_) = [_]#
+IMPLEMENTATION
+(ListOf(_)s)Has_A_Wrapper
+wrap(_) = [_]#
 
-type_theorem (Possibly(_))Has_Internal_App
-proof
-  apply(_)inside(_) =
-    (f(_), ?)
-      no_value => no_value
-      the_value--x => the_value--f(x)#
+IMPLEMENTATION
+(Possibly(_))Has_Internal_App
+apply(_)inside(_) =
+  (f(_), ?)
+    no_value => no_value
+    the_value--x => the_value--f(x)#
 
-type_theorem (ListOf(_)s)Has_Internal_App
-proof
-  apply(_)inside(_) =
-    (f(_), ?)
-      [] => []
-      [head, tail = ...] => f(head) + apply(f(_))inside(tail)#
+IMPLEMENTATION
+(ListOf(_)s)Has_Internal_App
+apply(_)inside(_) =
+  (f(_), ?)
+    [] => []
+    [head, tail = ...] => f(head) + apply(f(_))inside(tail)#
 
-type_theorem (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
-proof a != b = not(a == b)#
+IMPLEMENTATION
+(@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
+a != b = not(a == b)#
 
-type_theorem (@A)Can_Be_Greater_Than(@B) --> (@A)Can_Be_Le_Or_Eq_To(@B)
-proof a <= b = not(a > b)#
+IMPLEMENTATION
+(@A)Can_Be_Greater_Than(@B) --> (@A)Can_Be_Le_Or_Eq_To(@B)
+a <= b = not(a > b)#
 
-type_theorem (@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
-proof a >= b = a == b | a > b#
+IMPLEMENTATION
+(@A)And(@B)Have_Eq_And_Gr --> (@A)Can_Be_Gr_Or_Eq_To(@B)
+a >= b = a == b | a > b#
 
-type_theorem (Possibly(_))Has_A_Wrapper
-proof
-  wrap(_) = the_value--_#
+IMPLEMENTATION
+(Possibly(_))Has_A_Wrapper
+wrap(_) = the_value--_#
 
-type_theorem (ListOf(_)s)Has_A_Wrapper
-proof
-  wrap(_) =
-    [_]#
+IMPLEMENTATION
+(ListOf(_)s)Has_A_Wrapper
+wrap(_) =
+  [_]#
 
-type_theorem (ListOf(_)s)Has_A_Wrapper
-proof
-  wrap(_) =
-    a
-    where
-    a : Int
-      = b#
+IMPLEMENTATION
+(ListOf(_)s)Has_A_Wrapper
+wrap(_) =
+  a
+  where
+  a : Int
+    = b#
 
-type_theorem (ListOf(T)s)And(T)Add_To(ListOf(T)s)
-proof
-  l + a =
-    l -> ?
-      empty_l => non_empty_l--(a, empty_l)
-      non_empty_l--(head, tail) => non_empty_l--(head, tail + a)#
+IMPLEMENTATION
+(ListOf(T)s)And(T)Add_To(ListOf(T)s)
+l + a =
+  l -> ?
+    empty_l => non_empty_l--(a, empty_l)
+    non_empty_l--(head, tail) => non_empty_l--(head, tail + a)#
 
-type_theorem (ListOf(T)s)And(T)Add_To(ListOf(T)s)
-proof
-  l + a =
-    l#
+IMPLEMENTATION
+(ListOf(T)s)And(T)Add_To(ListOf(T)s)
+l + a =
+  l#
 

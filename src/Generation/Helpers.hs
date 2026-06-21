@@ -233,7 +233,10 @@ comb_sid_def_hs = \hs1 hs2 ->
 -- other
 
 run_generator :: MS.State P.Int a -> a
-run_generator = \hs_gen -> MS.evalState hs_gen 0
+run_generator = run_gen_with_lvl 0
+
+run_gen_with_lvl :: P.Int -> MS.State P.Int a -> a
+run_gen_with_lvl = \i hs_gen -> MS.evalState hs_gen i
 
 to_hs_maybe_np :: P.Maybe T.NamePart -> GTC.Haskell
 to_hs_maybe_np = \case
