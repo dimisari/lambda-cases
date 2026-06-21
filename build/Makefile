@@ -65,7 +65,7 @@ $(t_outs_grs)/%.hs: $(b_grs) $(t_ins_grs)/%.txt
 
 $(t_outs_c_prs)/%.out: $(b_lcc) $(t_ins_prs)/%.lc $(p_imp_cp_pr) $(p_imp_cp_ops)
 	$(mkd)
-	lcc $(prereq2)
+	lcc -c $(prereq2)
 	mv $(prereq2_no_ext) $@
 
 # executable running grammar rule examples

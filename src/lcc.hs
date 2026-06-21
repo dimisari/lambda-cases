@@ -28,6 +28,8 @@ import Preprocessing.Preprocess qualified as GP
 import Generation.TypesAndClasses qualified as GTC
 import Generation.AST qualified as GA
 
+import System.FilePath qualified as SFP
+
 -- types
 
 type ProgramFileName = H.FileName
@@ -57,9 +59,15 @@ import_names =
 main :: P.IO ()
 main = SE.getArgs >>= \case
   [] -> P.putStrLn "No arguments"
-  [program_file_name] -> compile_to_exec program_file_name
+  [program_file_name] -> compile_and_run program_file_name
+  ["-c", program_file_name] -> compile_to_exec program_file_name
   ["-h", program_file_name] -> compile_to_hs program_file_name >> P.return ()
   _  -> P.putStrLn "Weird arguments"
+
+compile_and_run :: ProgramFileName -> P.IO ()
+compile_and_run = \pfn ->
+  compile_to_exec pfn >> P.putStrLn "\nRunning\n" >>
+  SP.callCommand ("./" ++ SFP.dropExtension pfn)
 
 compile_to_exec :: ProgramFileName -> P.IO ()
 compile_to_exec pfn =
