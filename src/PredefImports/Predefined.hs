@@ -53,6 +53,7 @@ type Z = P.Integer
 type R = P.Double
 type SMapTo' = HM.HashMap P.String
 type ArrayOf's = IM.IntMap
+type Strings = ListOf's P.String
 
 -- values
 
