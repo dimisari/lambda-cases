@@ -1044,7 +1044,7 @@ instance GTC.ToHaskell T.InOrOutTypeSub where
 
 instance GTC.ToHaskell T.Implementation where
   to_haskell = \(T.I (imoi, ve)) ->
-    GTC.to_haskell imoi ++ " = " ++ GH.run_gen_with_lvl 2 (GTC.to_hs_wil ve)
+    GTC.to_haskell imoi ++ " =\n" ++ GH.run_gen_with_lvl 2 (GTC.to_hs_wil ve)
 
 instance GTC.ToHaskell T.IdMaybeOpId where
   to_haskell (T.IMOI (id, maybe_op_id)) =
