@@ -259,7 +259,7 @@ add_under_pfarg_param = \hs ->
 
 change_prop_hs_if_needed :: GTC.Haskell -> GTC.Haskell
 change_prop_hs_if_needed = \case
-  "A'Has_Str_Rep" -> GPH.show_class
+  "A'Has_String_Representation" -> GPH.show_class
   hs -> hs
 
 change_id_hs_if_needed1 :: GTC.Haskell -> GTC.Haskell

@@ -50,7 +50,7 @@ test_tree : (Char)Tree
     )
 
 IMPLEMENTATION
-(@A)Has_Str_Rep --> ((@A)Tree)Has_Str_Rep
+(@A)Has_String_Representation --> ((@A)Tree)Has_String_Representation
 (_)to_string = tree => "\nroot: " + tree.root + "\nsubtrees:\n" + tree.subtrees + "\n"
 
 main: Program

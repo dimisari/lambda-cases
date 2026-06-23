@@ -136,7 +136,7 @@ test_graph : Graph
     ]
 
 IMPLEMENTATION
-(NameAndDist)Has_Str_Rep
+(NameAndDist)Has_String_Representation
 (_)to_string = nam => "(name = " + nam.name + ", dist = " + nam.dist + ")"
 
 main : Program
