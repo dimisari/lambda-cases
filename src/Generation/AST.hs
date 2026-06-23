@@ -667,13 +667,7 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTV) where
     T.TAIOA taioa ->
       case taioa of
         (P.Nothing, T.TIdStart1 (T.TId tid, []), P.Nothing) ->
-          tid &> \case
-            "Bool" -> GPH.bool
-            "Int" -> GPH.integer
-            "Real" -> GPH.double
-            "Char" -> GPH.char
-            "String" -> GPH.string
-            _ -> GTC.to_haskell tid
+          GH.change_tid_hs tid
 
         (mtip1, taioam, mtip2) -> case taioam of
           T.AHTV1 ahtv ->
@@ -966,8 +960,7 @@ instance GTC.ToHaskell T.ProdOrPowerTypeSub where
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTVSub) where
   to_haskell (needs_paren, T.TAIOAS taioas) = case taioas of
-    (P.Nothing, T.TIdStart2 (T.TId "Real", []), P.Nothing) -> "Double"
-    (P.Nothing, T.TIdStart2 (T.TId "Int", []), P.Nothing) -> "Integer"
+    (P.Nothing, T.TIdStart2 (T.TId tid, []), P.Nothing) -> GH.change_tid_hs tid
     (msouip1, taioasm, msouip2) -> case taioasm of
       T.AHTV2 ahtv ->
         in_paren_if_needed (GTC.to_haskell ahtv) souip_hs

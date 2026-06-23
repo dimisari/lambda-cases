@@ -255,7 +255,7 @@ add_under_pfarg_param :: GTC.Haskell -> GTC.Haskell
 add_under_pfarg_param = \hs ->
   "(\\" ++ GPH.under_pfarg_param ++ " -> " ++ hs ++")"
 
--- Changed specific parts of the generated haskell
+-- Change specific parts of the generated haskell
 
 change_prop_hs_if_needed :: GTC.Haskell -> GTC.Haskell
 change_prop_hs_if_needed = \case
@@ -271,6 +271,15 @@ change_id_hs_if_needed2 :: GTC.Haskell -> GTC.Haskell
 change_id_hs_if_needed2 = \case
   "a'to_string" -> GPH.show_val2
   hs -> hs
+
+change_tid_hs :: GTC.Haskell -> GTC.Haskell
+change_tid_hs = \case
+  "Bool" -> GPH.bool
+  "Int" -> GPH.integer
+  "Real" -> GPH.double
+  "Char" -> GPH.char
+  "String" -> GPH.string
+  tid -> tid
 
 -- AST conversions between different type nodes
 
