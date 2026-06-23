@@ -13,9 +13,6 @@ State = ListOf(VisitedNode)s x ListOf(DoneNode)s
 (vns, dns)
 
 TYPE NICKNAME
-StateMan = State(State)Man
-
-TYPE NICKNAME
 VisitedNode = Char
 
 TYPE NICKNAME
@@ -31,7 +28,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
     is : State
       = ([], [])
 
-    topo_sort_from_state : StateMan
+    topo_sort_from_state : State(State)
       = get_state >> _.dns o> check_all_done o> ?
         all_done => do_nothing
         not_all_done => topo_sort_on_node(node_to_do) ; topo_sort_from_state
@@ -50,7 +47,7 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
         node_names : ListOf(Char)s
           = apply(_.n_name)to_all_in(g)
 
-    topo_sort_on_node(_) : Char => StateMan
+    topo_sort_on_node(_) : Char => State(State)
       = node_name =>
         children -> ?
           [] => add_to_done
@@ -69,13 +66,13 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
                     true => n.n_children
                     false => get_children_from_list(ns)
 
-        add_to_done : StateMan
+        add_to_done : State(State)
           = modify_state_with(s => (s.vns, node_name + s.dns))
 
-        add_to_visited : StateMan
+        add_to_visited : State(State)
           = modify_state_with(s => (node_name + s.vns, s.dns))
 
-        remove_from_visited : StateMan
+        remove_from_visited : State(State)
           = modify_state_with(s => (remove_from(s.vns), s.dns))
             where
             remove_from(_) : ListOf(VisitedNode)s => ListOf(VisitedNode)s
@@ -86,18 +83,18 @@ topo_sort_on_graph(_) : Graph => ListOf(DoneNode)s
                     true => vns
                     false => vn + remove_from(vns)
 
-    topo_sort_on_children(_) : Children => StateMan
+    topo_sort_on_children(_) : Children => State(State)
       = ?
         [] => do_nothing
         [c, cs = ...] =>
           topo_sort_on_child ; topo_sort_on_children(cs)
           where
-          topo_sort_on_child : StateMan
+          topo_sort_on_child : State(State)
             = check_not_in_visited_or_done >> ?
               true => topo_sort_on_node(c)
               false => do_nothing
 
-          check_not_in_visited_or_done : (Bool)FState(State)Man
+          check_not_in_visited_or_done : State(State)With(Bool)
             = apply(f)inside(get_state)
               where
               f : State => Bool

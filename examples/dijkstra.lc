@@ -30,12 +30,9 @@ TYPE NICKNAME
 ReachableNode = NameAndDist
 
 TYPE NICKNAME
-StateManipulationWith(T1) = (T1)FState(State)Man
+StateWith(T1) = State(State)With(T1)
 
-TYPE NICKNAME
-StateMan = State(State)Man
-
-set_rns(_) : ListOf(ReachableNode)s => StateMan
+set_rns(_) : ListOf(ReachableNode)s => State(State)
   = rns => modify_state_with(s => (s.dns, rns))
 
 dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
@@ -44,7 +41,7 @@ dijkstra(_, _) : Char x Graph => ListOf(DoneNode)s
     is : State
       = ([], [(source_name, 0)])
 
-get_result(_) : Graph => StateManipulationWith(ListOf(DoneNode)s)
+get_result(_) : Graph => StateWith(ListOf(DoneNode)s)
   = g =>
     get_state >> state =>
     state.rns -> ?
@@ -65,7 +62,7 @@ get_neighbors(_, _) : DoneNode x Graph => ListOf(Neighbor)s
             true => n.neighbors
             false => get_neighbors_from_nodes(ns)
 
-update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
+update_neighbor(_)of(_) : Neighbor x DoneNode => State(State)
   = (ne, dn) =>
     check_if_ne_in_rns >> ?
       in_rns => add_ne_to_rns_from_dn_if_better(dist_and_rns)
@@ -74,11 +71,11 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
           true => do_nothing
           false => add_ne_to_rns_from_dn
     where
-    check_if_ne_in_rns : StateManipulationWith(InRNsPossibilities)
+    check_if_ne_in_rns : StateWith(InRNsPossibilities)
       = get_state >> _.rns o> check_ne_in_rns_rec([], _)
         where
         check_ne_in_rns_rec(_, _)
-          : ListOf(ReachableNode)s^2 => StateManipulationWith(InRNsPossibilities)
+          : ListOf(ReachableNode)s^2 => StateWith(InRNsPossibilities)
           = (checked, ?)
             [] => wrap(not_in_rns)
             [rn1, rns = ...] =>
@@ -87,7 +84,7 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
                 false => check_ne_in_rns_rec(checked + rn1, rns)
 
     add_ne_to_rns_from_dn_if_better(_)
-      : Dist x ListOf(ReachableNode)s => StateMan
+      : Dist x ListOf(ReachableNode)s => State(State)
       = (d, other_rns) =>
         (new_d < d) -> ?
           true => set_rns(_) <- add((ne.name, new_d))to_rns(other_rns)
@@ -96,11 +93,11 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
         new_d : Dist
           = dn.dist + ne.dist
 
-    check_if_ne_in_dns : StateManipulationWith(Bool)
+    check_if_ne_in_dns : StateWith(Bool)
       = get_state >> _.dns o> check_ne_name_in(_)
         where
         check_ne_name_in(_)
-          : ListOf(DoneNode)s => StateManipulationWith(Bool)
+          : ListOf(DoneNode)s => StateWith(Bool)
           = ?
             [] => wrap(false)
             [dn, dns = ... ] =>
@@ -108,11 +105,11 @@ update_neighbor(_)of(_) : Neighbor x DoneNode => StateMan
                 true => wrap(true)
                 false => check_ne_name_in(dns)
 
-    add_ne_to_rns_from_dn : StateMan
+    add_ne_to_rns_from_dn : State(State)
       = get_state >> _.rns o> add((ne.name, dn.dist + ne.dist))to_rns(_) o>
         set_rns(_)
 
-add_new_rns(_, _) : DoneNode x ListOf(Neighbor)s => StateMan
+add_new_rns(_, _) : DoneNode x ListOf(Neighbor)s => State(State)
   = (dn, ?)
     [] => do_nothing
     [ne1, nes = ...] => update_neighbor(ne1)of(dn) ; add_new_rns(dn, nes)

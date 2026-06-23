@@ -30,9 +30,6 @@ Info = Node x IsReprOrHasPar
 TYPE NICKNAME
 ConnComps = Int
 
-TYPE NICKNAME
-StateMan = State(State)Man
-
 connected_components_of(_) : Graph => ConnComps
   = g =>
     for_all_in(g.edges, edge_union(_)) -> final_state_of(_)on_init_state(is) ->
@@ -41,7 +38,7 @@ connected_components_of(_) : Graph => ConnComps
     is : State
       = (apply((_, is_repr--1))to_all_in(g.nodes), length_of(g.nodes))
 
-    edge_union(_) : Edge => StateMan
+    edge_union(_) : Edge => State(State)
       = e =>
         find(e.u) >> u_rep =>
         find(e.v) >> v_rep =>
@@ -53,13 +50,13 @@ connected_components_of(_) : Graph => ConnComps
               true => make(v_rep.name)parent_of(u_rep.name)with(new_rank)
               false => make(u_rep.name)parent_of(v_rep.name)with(new_rank)
             where
-            decrease_cps : StateMan
+            decrease_cps : State(State)
               = modify_state_with((l, cps) => (l, cps - 1))
 
             new_rank : Rank
               = u_rep.rank + v_rep.rank
 
-    make(_)parent_of(_)with(_) : Node x Node x Rank => StateMan
+    make(_)parent_of(_)with(_) : Node x Node x Rank => State(State)
       = (pn, cn, new_rank) =>
         modify_state_with((l, cps) => (change_node_list(l), cps))
         where
@@ -75,13 +72,13 @@ connected_components_of(_) : Graph => ConnComps
                   true => (n, has_parent--pn)
                   false => (n, irohp)
 
-    find(_) : Node => (Representative)FState(State)Man
+    find(_) : Node => State(State)With(Representative)
       = n =>
         get_from_info_list >> ?
           is_repr => wrap(_) <- (n, rank)
           has_parent => find(parent)
         where
-        get_from_info_list : (IsReprOrHasPar)FState(State)Man
+        get_from_info_list : State(State)With(IsReprOrHasPar)
           = apply(_.1st o> get_from_list(_))inside(get_state)
             where
             get_from_list(_)
