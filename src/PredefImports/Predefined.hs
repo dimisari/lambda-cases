@@ -37,6 +37,7 @@ import System.Console.ANSI qualified as ANSI
 import System.Process qualified as SP
 import System.Environment qualified as SE
 import System.Directory qualified as SD
+import System.FilePath qualified as SF
 import Text.Read qualified as TR
 import PredefImports.OpsInHaskell ((.>))
 
@@ -63,6 +64,9 @@ split'to_words = P.words
 
 split'to_lines :: P.String -> [P.String]
 split'to_lines = P.lines
+
+string_from_lines' :: [P.String] -> P.String
+string_from_lines' = P.unlines
 
 apply'to_all_in' :: (a -> b, [a]) -> [b]
 apply'to_all_in' = P.uncurry P.map
@@ -180,6 +184,9 @@ create_directory' = SD.createDirectory
 get_file_name_of' :: P.String -> P.String
 get_file_name_of' = P.reverse .> P.takeWhile (/= '/') .> P.reverse
 
+get_file_extension_of' :: P.String -> P.String
+get_file_extension_of' = SF.takeExtension
+
 print_string' :: P.String -> Program
 print_string' = U.fromString .> BS.putStr
 
@@ -194,6 +201,9 @@ success = E.exitSuccess
 
 run' :: P.String -> Program
 run' = SP.callCommand
+
+run'and_get_output :: P.String -> ProgramWith' P.String
+run'and_get_output = \c -> SP.readCreateProcess (SP.shell c) ""
 
 ask_to_run' :: P.String -> Program
 ask_to_run' = \s ->
@@ -292,6 +302,9 @@ not' = P.not
 
 for_all_in'' :: P.Monad m => ([a], a -> m b) -> m EmptyVal
 for_all_in'' = P.uncurry $ P.flip P.mapM_
+
+to_all_in'' :: P.Monad m => ([a], a -> m b) -> m [b]
+to_all_in'' = P.uncurry $ P.flip P.mapM
 
 get_arguments :: ProgramWith' [P.String]
 get_arguments = SE.getArgs
