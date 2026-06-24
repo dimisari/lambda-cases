@@ -195,6 +195,13 @@ success = E.exitSuccess
 run' :: P.String -> Program
 run' = SP.callCommand
 
+ask_to_run' :: P.String -> Program
+ask_to_run' = \s ->
+  print'("Should I run \"" ++ s ++ "\"? (y + Enter for yes)") >>
+  get_line >>= \case
+    "y" -> SP.callCommand s
+    _ -> do_nothing
+
 clear_screen4 :: Program
 clear_screen4 =
   ANSI.getCursorPosition >>= \case
