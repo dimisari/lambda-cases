@@ -141,7 +141,7 @@ instance a ~ P.Double => A'Divided_By'Is' P.Double P.Integer a where
 
 --   A'And'Add_To'
 
-instance P.Show a => A'And'Add_To' a P.String P.String where
+instance (P.Show a, b ~ P.String) => A'And'Add_To' a P.String b where
   x !+ str = P.show x ++ str
 
 instance (P.Show a, b ~ P.String) => A'And'Add_To' P.String a b where
