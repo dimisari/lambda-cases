@@ -45,19 +45,19 @@ f <& x = f x
 
 -- arithmetic operators
 
-class A'To_The'Is' a b c | a b -> c where
+class A'To_The'Is' a b c where
   (!^) :: a -> b -> c
 
-class A'And'Multiply_To' a b c | a b -> c where
+class A'And'Multiply_To' a b c where
   (!*) :: a -> b -> c
 
-class A'Divided_By'Is' a b c | a b -> c  where
+class A'Divided_By'Is' a b c  where
   (!/) :: a -> b -> c
 
-class A'And'Add_To' a b c | a b -> c where
+class A'And'Add_To' a b c where
   (!+) :: a -> b -> c
 
-class A'Minus'Is' a b c | a b -> c where
+class A'Minus'Is' a b c where
   (!-) :: a -> b -> c
 
 -- comparison operators
@@ -99,44 +99,44 @@ class A'Has_Then t where
 -- Instances
 --   A'To_The'Is'
 
-instance P.Floating a => A'To_The'Is' a a a where
-  (!^) = (**)
+instance a ~ P.Double => A'To_The'Is' P.Double P.Integer a where
+  x !^ i = x ** P.fromIntegral i
 
-instance A'To_The'Is' P.Integer P.Integer P.Integer where
+instance a ~ P.Integer => A'To_The'Is' P.Integer P.Integer a where
   (!^) = (^)
 
-instance A'To_The'Is' P.Integer P.Double P.Double where
+instance a ~ P.Double => A'To_The'Is' P.Integer P.Double a where
   i !^ x = P.fromIntegral i ** x
 
-instance A'To_The'Is' P.Double P.Integer P.Double where
-  x !^ i = x ** P.fromIntegral i
+instance a ~ P.Double => A'To_The'Is' P.Double P.Double a where
+  (!^) = (**)
 
 --   A'And'Multiply_To'
 
-instance P.Num a => A'And'Multiply_To' a a a where
-  (!*) = (*)
-
-instance A'And'Multiply_To' P.Integer P.Double P.Double where
+instance a ~ P.Double => A'And'Multiply_To' P.Integer P.Double a where
   i !* x  = P.fromIntegral i * x
 
-instance A'And'Multiply_To' P.Double P.Integer P.Double where
+instance a ~ P.Double => A'And'Multiply_To' P.Double P.Integer a where
   x !* i = x * P.fromIntegral i
 
-instance A'And'Multiply_To' P.Integer P.Char P.String where
+instance a ~ P.String => A'And'Multiply_To' P.Integer P.Char a where
   i !* c = P.replicate (P.fromIntegral i) c
 
-instance A'And'Multiply_To' P.Integer P.String P.String where
+instance a ~ P.String => A'And'Multiply_To' P.Integer P.String a where
   i !* s = P.concat $ P.replicate (P.fromIntegral i) s
+
+instance a ~ P.Integer => A'And'Multiply_To' P.Integer P.Integer a where
+  (!*) = (*)
 
 --   A'Divided_By'Is'
 
-instance A'Divided_By'Is' P.Integer P.Integer P.Double where
+instance a ~ P.Double => A'Divided_By'Is' P.Integer P.Integer a where
   x !/ y = P.fromIntegral x / P.fromIntegral y
 
-instance A'Divided_By'Is' P.Integer P.Double P.Double where
+instance a ~ P.Double => A'Divided_By'Is' P.Integer P.Double a where
   i !/ x  = P.fromIntegral i / x
 
-instance A'Divided_By'Is' P.Double P.Integer P.Double where
+instance a ~ P.Double => A'Divided_By'Is' P.Double P.Integer a where
   x !/ i = x / P.fromIntegral i
 
 --   A'And'Add_To'
@@ -144,54 +144,70 @@ instance A'Divided_By'Is' P.Double P.Integer P.Double where
 instance P.Show a => A'And'Add_To' a P.String P.String where
   x !+ str = P.show x ++ str
 
-instance P.Show a => A'And'Add_To' P.String a P.String where
+instance (P.Show a, b ~ P.String) => A'And'Add_To' P.String a b where
   str !+ x = str ++ P.show x
 
 instance A'And'Add_To' [a] [a] [a] where
   (!+) = (++)
 
-instance A'And'Add_To' [P.Char] [P.Char] [P.Char] where
-  (!+) = (++)
-
 instance b ~ [a] => A'And'Add_To' a [a] b where
+  (!+) = (:)
+
+instance A'And'Add_To' a [a] [a] where
   (!+) = (:)
 
 instance b ~ [a] => A'And'Add_To' [a] a b where
   l !+ a = l ++ [a]
 
-instance P.Num a => A'And'Add_To' a a a where
-  (!+) = (+)
-
-instance A'And'Add_To' P.Integer P.Double P.Double where
+instance a ~ P.Double => A'And'Add_To' P.Integer P.Double a where
   i !+ x  = P.fromIntegral i + x
 
-instance A'And'Add_To' P.Double P.Integer P.Double where
+instance a ~ P.Double => A'And'Add_To' P.Double P.Integer a where
   x !+ i = x + P.fromIntegral i
 
 instance (a ~ P.String) => A'And'Add_To' P.Char P.Char a where
   c' !+ c2 = c' : [c2]
 
-instance A'And'Add_To' P.Char P.String P.String where
-  (!+) = (:)
+instance a ~ P.Integer => A'And'Add_To' a P.Integer P.Integer where
+  (!+) = (+)
+
+instance a ~ P.Integer => A'And'Add_To' P.Integer P.Integer a where
+  (!+) = (+)
+
+instance a ~ P.Integer => A'And'Add_To' P.Integer a P.Integer where
+  (!+) = (+)
+
+instance (a ~ P.Double, b ~ P.Double) => A'And'Add_To' a b P.Double where
+  (!+) = (+)
 
 --   A'Minus'Is'
 
-instance P.Num a => A'Minus'Is' a a a where
-  (!-) = (-)
-
-instance A'Minus'Is' P.String P.Char P.String where
+instance a ~ P.String => A'Minus'Is' P.String P.Char a where
   s !- c = P.filter (/= c) s
 
-instance P.Eq a => A'Minus'Is' [a] [a] [a] where
-  l1 !- l2 = case P.length l2 > P.length l1 of
+remove_list_from_list :: P.Eq a => [a] -> [a] -> [a]
+remove_list_from_list = \l1 l2 ->
+  case P.length l2 > P.length l1 of
     P.True -> l1
     P.False ->
       let
       (l11, l12) = P.splitAt (P.length l2) l1
       in
       case l11 == l2 of
-        P.True -> l12 !- l2
-        P.False -> P.head l1 : (P.tail l1 !- l2)
+        P.True -> remove_list_from_list l12 l2
+        P.False -> P.head l1 : (remove_list_from_list l1 l2)
+
+instance a ~ P.String => A'Minus'Is' P.String P.String a where
+  (!-) = remove_list_from_list
+
+instance (a ~ b, P.Num b) => A'Minus'Is' a b b where
+  (!-) = (-)
+
+instance (P.Num a, a ~ b) => A'Minus'Is' a a b where
+  (!-) = (-)
+
+instance (P.Num a, a ~ b) => A'Minus'Is' a b a where
+  (!-) = (-)
 
 --   A'And'Can_Be_Equal
 
