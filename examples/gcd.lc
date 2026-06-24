@@ -7,8 +7,16 @@ my_gcd_of(_)and(_): Int^2 => Int
 read_two_ints: ProgramWith(Int^2)
   = print("Please give me 2 ints");
     get_line >> split(_)to_words o> ?
-      [x, y] => (from_string(x), from_string(y)) -> program_with(_)
-      ... => error("You didn't give me 2 ints")
+      [x, y] => (string(x)to_int, string(y)to_int) -> program_with(_)
+      ... => error(message)
+
+string(_)to_int : String => Int
+  = from_string(_) o> ?
+    a_value => the_value
+    no_value => error(message)
+
+message: String
+  = "You didn't give me 2 ints"
 
 TUPLE TYPE
 NumsAndGcd = Int^3

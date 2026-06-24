@@ -7,8 +7,16 @@ my_gcd_of(_)and(_): Int^2 => Int
 read_two_ints: ProgramWith(Int^2)
   = print("Please give me 2 ints");
     get_line >> split(_)to_words o> ?
-      [s1, s2] => (from_string(s1), from_string(s2)) -> program_with(_)
-      ... => error("You didn't give me 2 ints")
+      [x, y] => (string(x)to_int, string(y)to_int) -> program_with(_)
+      ... => error(message)
+
+string(_)to_int : String => Int
+  = from_string(_) o> ?
+    a_value => the_value
+    no_value => error(message)
+
+message: String
+  = "You didn't give me 2 ints"
 
 ints(_, _, _)to_message: Int^3 => String
   = (x, y, gcd) => "The GCD of " + x + " and " + y + " is " + gcd

@@ -37,6 +37,7 @@ import System.Console.ANSI qualified as ANSI
 import System.Process qualified as SP
 import System.Environment qualified as SE
 import System.Directory qualified as SD
+import Text.Read qualified as TR
 import PredefImports.OpsInHaskell ((.>))
 
 -- types
@@ -273,8 +274,8 @@ concat_lists' = P.concat
 do_nothing :: P.Applicative f => f EmptyVal
 do_nothing = P.pure empty_val
 
-from_string' :: P.Read a => P.String -> a
-from_string' = P.read
+from_string' :: P.Read a => P.String -> Possibly' a
+from_string' = TR.readMaybe
 
 program_with' :: a -> ProgramWith' a
 program_with' = P.return

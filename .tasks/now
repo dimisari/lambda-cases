@@ -1,1 +1,1 @@
-- String does not get converted to P.String in instances
+- Generate operator instances with result type a as type variable which is bound by a the a context that makes the variable the same as the type

@@ -13,5 +13,7 @@ hanoi_with(_)rings_from(_)to(_)through(_)
 
 main: Program
   = print("Number of rings?");
-    get_line >> from_string(_) o>
-    hanoi_with(_)rings_from("left")to("right")through("middle")
+    get_line >> from_string(_) o> ?
+      a_value =>
+        hanoi_with(the_value)rings_from("left")to("right")through("middle")
+      no_value => print("This is not a integer")

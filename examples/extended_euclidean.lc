@@ -25,8 +25,16 @@ extended_euclidean_of(_)and(_): Int^2 => GcdAndCoeffs
 read_two_ints: ProgramWith(Int^2)
   = print("Please give me 2 ints");
     get_line >> split(_)to_words o> ?
-      [i, j] => (from_string(i), from_string(j)) -> program_with(_)
-      ... => error("You didn't give me 2 ints")
+      [x, y] => (string(x)to_int, string(y)to_int) -> program_with(_)
+      ... => error(message)
+
+string(_)to_int : String => Int
+  = from_string(_) o> ?
+    a_value => the_value
+    no_value => error(message)
+
+message: String
+  = "You didn't give me 2 ints"
 
 print_gcd_and_coeffs_of(_): GcdAndCoeffs => Program
   = gac => print(message)

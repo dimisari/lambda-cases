@@ -26,4 +26,6 @@ print_fib(_,_): Int x Int => Program
 
 main: Program
   = print("How many fibonacci numbers?");
-    get_line >> from_string(_) o> print(_)fib_nums
+    get_line >> from_string(_) o> ?
+      a_value => print(the_value)fib_nums
+      no_value => print("This is not an integer")
