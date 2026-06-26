@@ -147,6 +147,9 @@ instance (P.Show a, b ~ P.String) => A'And'Add_To' a P.String b where
 instance (P.Show a, b ~ P.String) => A'And'Add_To' P.String a b where
   str !+ x = str ++ P.show x
 
+instance a ~ P.String => A'And'Add_To' P.String P.Char a where
+  str !+ c = str ++ [c]
+
 instance A'And'Add_To' [a] [a] [a] where
   (!+) = (++)
 

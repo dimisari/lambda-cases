@@ -25,6 +25,7 @@ module PredefImports.Predefined where
 import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!), (/=))
 import Prelude qualified as P
 import Control.Monad.State qualified as MS
+import Data.List qualified as DL
 import Data.List.Split qualified as LS
 import Data.HashMap.Strict qualified as HM
 import Data.IntMap.Strict qualified as IM
@@ -187,6 +188,12 @@ get_file_name_of' = P.reverse .> P.takeWhile (/= '/') .> P.reverse
 get_file_extension_of' :: P.String -> P.String
 get_file_extension_of' = SF.takeExtension
 
+remove_file_extension_of' :: P.String -> P.String
+remove_file_extension_of' = SF.dropExtension
+
+split_file'at_extension :: P.String -> (P.String, P.String)
+split_file'at_extension = SF.splitExtension
+
 print_string' :: P.String -> Program
 print_string' = U.fromString .> BS.putStr
 
@@ -278,6 +285,9 @@ ignore'from' = P.uncurry P.drop . \(x, y) -> (P.fromIntegral x, y)
 take'from' :: (P.Integer, [a]) -> [a]
 take'from' = P.uncurry P.take . \(x, y) -> (P.fromIntegral x, y)
 
+take_from'while' :: ([a], a -> P.Bool) -> [a]
+take_from'while' = P.uncurry $ P.flip P.takeWhile
+
 split'at_index' :: ([a], P.Integer) -> ([a], [a])
 split'at_index' =
   P.uncurry (P.flip P.splitAt) . \(l, i) -> (l, P.fromIntegral i)
@@ -308,6 +318,9 @@ to_all_in'' = P.uncurry $ P.flip P.mapM
 
 get_arguments :: ProgramWith' [P.String]
 get_arguments = SE.getArgs
+
+sort'after_applying' :: P.Ord b => ([a], a -> b) -> [a]
+sort'after_applying' = P.uncurry $ P.flip DL.sortOn
 
 -- Hash map
 
