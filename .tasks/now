@@ -1,2 +1,3 @@
 - Generate operator instances with result type a as type variable which is bound by a the a context that makes the variable the same as the type
 - Make the parsing error show in the terminal instead of the .hs file
+- Add pattern matching for prefix string (if it does not exist) e.g. "prefix" + s => ... s ...

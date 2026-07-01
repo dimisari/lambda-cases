@@ -88,7 +88,7 @@ instance PTC.CollectFieldIds T.SimpleId where
 
 instance PTC.CollectParamTVars T.SimpleType where
   collect_ptvs = \case
-    T.TAIOA1 taioa -> PTC.collect_ptvs taioa
+    T.TAIOT1 taioa -> PTC.collect_ptvs taioa
     T.POPT1 popt -> PTC.collect_ptvs popt
     T.FT1 ft -> PTC.collect_ptvs ft
 
@@ -99,9 +99,12 @@ instance PTC.CollectParamTVars T.ProdOrPowerType where
 
 instance PTC.CollectParamTVars T.TypeAppIdOrTV where
   collect_ptvs = \case
-    (T.TAIOA (mtip1, taioam, mtip2)) ->
-      PTC.collect_ptvs mtip1 >> PTC.collect_ptvs taioam >> PTC.collect_ptvs mtip2
+    T.TAIOA1 taioa -> PTC.collect_ptvs taioa
     T.PTV1 ptv -> MS.modify (S.insert ptv)
+
+instance PTC.CollectParamTVars T.TypeAppIdOrAHTV where
+  collect_ptvs = \(T.TAIOA (mtip1, taioam, mtip2)) ->
+    PTC.collect_ptvs mtip1 >> PTC.collect_ptvs taioam >> PTC.collect_ptvs mtip2
 
 instance PTC.CollectParamTVars T.PowerType where
   collect_ptvs = \(T.PoT (pbt, _)) -> PTC.collect_ptvs pbt
@@ -128,7 +131,7 @@ instance PTC.CollectParamTVars T.TAIOAMiddle where
 
 instance PTC.CollectParamTVars T.PowerBaseType where
   collect_ptvs = \case
-    T.TAIOA2 taioa -> PTC.collect_ptvs taioa
+    T.TAIOT2 taioa -> PTC.collect_ptvs taioa
     T.IPT ipt -> PTC.collect_ptvs ipt
 
 instance PTC.CollectParamTVars T.FieldType where
@@ -138,7 +141,7 @@ instance PTC.CollectParamTVars T.FieldType where
 
 instance PTC.CollectParamTVars T.InOrOutType where
   collect_ptvs = \case
-    T.TAIOA3 taioa -> PTC.collect_ptvs taioa
+    T.TAIOT3 taioa -> PTC.collect_ptvs taioa
     T.POPT2 popt -> PTC.collect_ptvs popt
     T.FT2 ft -> PTC.collect_ptvs ft
 

@@ -22,7 +22,7 @@ This file contains:
 
 module PredefImports.Predefined where
 
-import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!), (/=))
+import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!), (/=), (==))
 import Prelude qualified as P
 import Control.Monad.State qualified as MS
 import Data.List qualified as DL
@@ -40,7 +40,8 @@ import System.Environment qualified as SE
 import System.Directory qualified as SD
 import System.FilePath qualified as SF
 import Text.Read qualified as TR
-import PredefImports.OpsInHaskell ((.>))
+import Control.Concurrent.Async qualified as CCA
+import PredefImports.OpsInHaskell ((.>), (&>))
 
 -- types
 
@@ -209,8 +210,14 @@ success = E.exitSuccess
 run' :: P.String -> Program
 run' = SP.callCommand
 
+run_commands' :: ListOf's P.String -> Program
+run_commands' = P.mapM_ SP.callCommand
+
 run'and_get_output :: P.String -> ProgramWith' P.String
 run'and_get_output = \c -> SP.readCreateProcess (SP.shell c) ""
+
+run_commands'concurrently :: ListOf's P.String -> Program
+run_commands'concurrently = CCA.mapConcurrently_ SP.callCommand
 
 ask_to_run' :: P.String -> Program
 ask_to_run' = \s ->
@@ -294,6 +301,9 @@ split'at_index' =
 
 split'at_string' :: (P.String, P.String) -> [P.String]
 split'at_string' = P.uncurry $ P.flip LS.splitOn
+
+split'at_first' :: P.Eq a => ([a], a) -> ([a], [a])
+split'at_first' = \(l, e) -> P.break (== e) l &> \(l1, l2) -> (l1, P.drop 1 l2)
 
 concat_lists' :: [[a]] -> [a]
 concat_lists' = P.concat

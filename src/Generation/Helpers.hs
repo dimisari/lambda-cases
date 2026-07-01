@@ -290,7 +290,7 @@ ft_to_st = \case
 
 pbt_to_st :: T.PowerBaseType -> T.SimpleType
 pbt_to_st = \case
-  T.TAIOA2 taioa -> T.TAIOA1 taioa
+  T.TAIOT2 taioa -> T.TAIOT1 taioa
   T.IPT ipt -> ipt_to_st ipt
 
 ipt_to_st :: T.InParenT -> T.SimpleType
@@ -300,7 +300,7 @@ ipt_to_st = \case
 
 taioasm_to_sou :: T.TAIOASMiddle -> T.SubOrUnder
 taioasm_to_sou = \taioasm ->
-  T.TVS1 $ T.TAIOAS1 $ T.TAIOAS (P.Nothing, taioasm, P.Nothing)
+  T.TVS1 $ T.TAIOTS1 $ T.TAIOAS1 $ T.TAIOAS (P.Nothing, taioasm, P.Nothing)
 
 sid_to_id :: T.SimpleId -> T.Identifier
 sid_to_id = \(T.SId (id_start, mdigit)) ->

@@ -419,7 +419,7 @@ instance P.Show T.Type where
 
 instance P.Show T.SimpleType where
   show = \case
-    T.TAIOA1 ta -> P.show ta
+    T.TAIOT1 taiot -> P.show taiot
     T.POPT1 popt -> P.show popt
     T.FT1 ft -> P.show ft
 
@@ -438,6 +438,11 @@ instance P.Show T.AdHocTVar where
   show = \(T.AHTV c) -> "@" ++ [c]
 
 instance P.Show T.TypeAppIdOrTV where
+  show = \case
+    T.TAIOA1 taioa -> P.show taioa
+    T.PTV1 ptv -> P.show ptv
+
+instance P.Show T.TypeAppIdOrAHTV where
   show = \(T.TAIOA (mtip1, taioam, mtip2)) ->
     show_maybe mtip1 ++ P.show taioam ++ show_maybe mtip2
 
@@ -460,7 +465,7 @@ instance P.Show T.FieldType where
 
 instance P.Show T.PowerBaseType where
   show = \case
-    T.TAIOA2 ta -> P.show ta
+    T.TAIOT2 taiot -> P.show taiot
     T.IPT ipt -> P.show ipt
 
 instance P.Show T.InParenT where
@@ -476,7 +481,7 @@ instance P.Show T.FuncType where
 
 instance P.Show T.InOrOutType where
   show = \case
-    T.TAIOA3 ta -> P.show ta
+    T.TAIOT3 taiot -> P.show taiot
     T.POPT2 popt -> P.show popt
     T.FT2 ft -> "(" ++ P.show ft ++ ")"
 
@@ -586,7 +591,7 @@ instance P.Show T.SubsInParen where
 
 instance P.Show T.TVarSub where
   show = \case
-    T.TAIOAS1 tas -> P.show tas
+    T.TAIOTS1 taiots -> P.show taiots
     T.POPTS1 popts -> P.show popts
     T.FTS1 fts -> P.show fts
 
@@ -596,6 +601,11 @@ instance P.Show T.ProdOrPowerTypeSub where
     T.PoTS1 pts -> P.show pts
 
 instance P.Show T.TypeAppIdOrTVSub where
+  show = \case
+    T.TAIOAS1 taioas -> P.show taioas
+    T.PTV2 ptv -> P.show ptv
+
+instance P.Show T.TypeAppIdOrAHTVSub where
   show = \(T.TAIOAS (msouip1, taioasm, msouip2)) ->
     show_maybe msouip1 ++ P.show taioasm ++ show_maybe msouip2
 
@@ -621,7 +631,7 @@ instance P.Show T.PowerTypeSub where
 instance P.Show T.PowerBaseTypeSub where
   show = \case
     T.Underscore5 -> "_"
-    T.TAIOAS2 tas -> P.show tas
+    T.TAIOTS2 taiots -> P.show taiots
     T.IPTS ipts -> "(" ++ P.show ipts ++ ")"
 
 instance P.Show T.InParenTSub where
@@ -643,7 +653,7 @@ instance P.Show T.FuncTypeSub where
 instance P.Show T.InOrOutTypeSub where
   show = \case
     T.Underscore6 -> "_"
-    T.TAIOAS3 tas -> P.show tas
+    T.TAIOTS3 taiots -> P.show taiots
     T.POPTS2 popts -> P.show popts
     T.FTS3 fts -> P.show fts
 
