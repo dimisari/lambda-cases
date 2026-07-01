@@ -180,6 +180,13 @@ maybe_prefix_args_hs = \prefix -> \case
 
 -- NeedsParenBool
 
+in_paren_if_needs_and_non_empty
+  :: GTC.NeedsParenBool -> GTC.Haskell -> GTC.Haskell -> GTC.Haskell
+in_paren_if_needs_and_non_empty = \needs_paren hs1 hs2 ->
+  case hs2 of
+    "" -> hs1
+    _ -> in_paren_if needs_paren $ hs1 ++ hs2
+
 in_paren_if :: GTC.NeedsParenBool -> GTC.Haskell -> GTC.Haskell
 in_paren_if = \case
   GTC.NoParen -> P.id

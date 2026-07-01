@@ -673,10 +673,11 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
 
     T.TAIOA (mtip1, taioam, mtip2) -> case taioam of
       T.AHTV1 ahtv ->
-        in_paren_if_needed (GTC.to_haskell ahtv) $ mtip1_hs ++ mtip2_hs
+        GH.in_paren_if_needs_and_non_empty needs_paren (GTC.to_haskell ahtv) $
+        mtip1_hs ++ mtip2_hs
 
       T.TIdStart1 (tid, tip_str_pairs) ->
-        in_paren_if_needed tid_hs tip_hs
+        GH.in_paren_if_needs_and_non_empty needs_paren tid_hs tip_hs
         where
         tid_hs :: GTC.Haskell
         tid_hs =
@@ -688,12 +689,6 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
         tip_hs =
           mtip1_hs ++ GTC.to_haskell (P.map P.fst tip_str_pairs) ++ mtip2_hs
       where
-      in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
-      in_paren_if_needed = \hs tip_hs ->
-        case tip_hs of
-          "" -> hs
-          _ -> GH.in_paren_if needs_paren $ hs ++ tip_hs
-
       mtip1_hs :: GTC.Haskell
       mtip1_hs = GTC.to_haskell mtip1
 
@@ -970,13 +965,14 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
     (P.Nothing, T.TIdStart2 (T.TId tid, []), P.Nothing) -> GH.change_tid_hs tid
     (msouip1, taioasm, msouip2) -> case taioasm of
       T.AHTV2 ahtv ->
-        in_paren_if_needed (GTC.to_haskell ahtv) souip_hs
+        GH.in_paren_if_needs_and_non_empty
+          needs_paren (GTC.to_haskell ahtv) souip_hs
         where
         souip_hs :: GTC.Haskell
         souip_hs = GTC.to_haskell msouip1 ++ GTC.to_haskell msouip2
 
       T.TIdStart2 (tid, souip_str_pairs) ->
-        in_paren_if_needed tid_hs souip_hs
+        GH.in_paren_if_needs_and_non_empty needs_paren tid_hs souip_hs
         where
         tid_hs :: GTC.Haskell
         tid_hs =
@@ -989,12 +985,6 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
           GTC.to_haskell msouip1 ++
           GTC.to_haskell (P.map P.fst souip_str_pairs) ++
           GTC.to_haskell msouip2
-      where
-      in_paren_if_needed :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
-      in_paren_if_needed = \hs souip_hs ->
-        case souip_hs of
-          "" -> hs
-          _ -> GH.in_paren_if needs_paren $ hs ++ souip_hs
 
 instance GTC.ToHaskell T.SubsOrUndersInParen where
   to_haskell = \(T.SOUIP (sou, sous)) -> GTC.to_haskell $ sou : sous
