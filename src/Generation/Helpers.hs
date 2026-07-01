@@ -178,6 +178,12 @@ maybe_prefix_args_hs = \prefix -> \case
   P.Nothing -> ""
   P.Just a -> prefix ++ single_quotes_hs a
 
+maybe_lower_prefix_args_hs :: GTC.HasArgs a => P.Maybe a -> GTC.Haskell
+maybe_lower_prefix_args_hs = maybe_prefix_args_hs GPH.lower_prefix
+
+maybe_upper_prefix_args_hs :: GTC.HasArgs a => P.Maybe a -> GTC.Haskell
+maybe_upper_prefix_args_hs = maybe_prefix_args_hs GPH.upper_prefix
+
 -- NeedsParenBool
 
 in_paren_if_needs_and_non_empty
@@ -252,8 +258,14 @@ to_hs_maybe_np = \case
 
 tn_to_tid_hs :: T.TypeName -> GTC.Haskell
 tn_to_tid_hs = \(T.TN (mpvip1, T.TId str, pvip_str_pairs, mpvip2)) ->
-  maybe_prefix_args_hs GPH.upper_prefix mpvip1 ++ str ++
-  args_strs_hs pvip_str_pairs ++ single_quotes_hs mpvip2
+  complete_with_single_quotes (mpvip1, str, pvip_str_pairs, mpvip2)
+
+complete_with_single_quotes
+  :: GTC.HasArgs a => (P.Maybe a, GTC.Haskell, [(a, P.String)], P.Maybe a) ->
+     GTC.Haskell
+complete_with_single_quotes = \(ma1, hs, a_str_pairs, ma2) ->
+  maybe_upper_prefix_args_hs ma1 ++ hs ++ args_strs_hs a_str_pairs ++
+  single_quotes_hs ma2
 
 tn_to_cons_hs :: T.TypeName -> GTC.Haskell
 tn_to_cons_hs = tn_to_tid_hs .> (++ "'")

@@ -356,7 +356,11 @@ newtype TypeAppIdOrAHTVSub =
 data TAIOASMiddle =
   TIdStart2 (TypeId, [(SubsOrUndersInParen, P.String)]) | AHTV2 AdHocTVar
 
+type SOUIP_STR = (SubsOrUndersInParen, P.String)
+
 newtype SubsOrUndersInParen = SOUIP (SubOrUnder, [SubOrUnder])
+
+type SOUIP = SubsOrUndersInParen
 
 data SubOrUnder =
   TVS1 TVarSub | Underscore4

@@ -45,7 +45,7 @@ instance GTC.ToHaskell (GTC.NeedsAnnotBool, T.Literal) where
 
 instance GTC.ToHaskell T.Identifier where
   to_haskell (T.Id (muip1, id_start, id_conts, mdigit, muip2)) =
-    GH.maybe_prefix_args_hs GPH.lower_prefix muip1 ++ GTC.to_haskell id_start ++
+    GH.maybe_lower_prefix_args_hs muip1 ++ GTC.to_haskell id_start ++
     GTC.to_haskell id_conts ++ GTC.to_haskell mdigit ++
     GH.single_quotes_hs muip2
 
@@ -167,7 +167,7 @@ instance GTC.ToHaskell T.ParenFuncAppOrId where
 
       total_id_hs :: GTC.Haskell
       total_id_hs =
-        GH.maybe_prefix_args_hs GPH.lower_prefix margs1 ++ GTC.to_haskell id_start ++
+        GH.maybe_lower_prefix_args_hs margs1 ++ GTC.to_haskell id_start ++
         GH.args_strs_hs args_str_pairs ++ GTC.to_haskell mdigit ++
         GH.single_quotes_hs margs2
 
@@ -681,7 +681,7 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
         where
         tid_hs :: GTC.Haskell
         tid_hs =
-          GH.maybe_prefix_args_hs GPH.upper_prefix mtip1 ++
+          GH.maybe_upper_prefix_args_hs mtip1 ++
           GTC.to_haskell tid ++ GH.args_strs_hs tip_str_pairs ++
           GH.single_quotes_hs mtip2
 
@@ -964,27 +964,25 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
   to_haskell (needs_paren, T.TAIOAS taioas) = case taioas of
     (P.Nothing, T.TIdStart2 (T.TId tid, []), P.Nothing) -> GH.change_tid_hs tid
     (msouip1, taioasm, msouip2) -> case taioasm of
-      T.AHTV2 ahtv ->
-        GH.in_paren_if_needs_and_non_empty
-          needs_paren (GTC.to_haskell ahtv) souip_hs
-        where
-        souip_hs :: GTC.Haskell
-        souip_hs = GTC.to_haskell msouip1 ++ GTC.to_haskell msouip2
-
+      T.AHTV2 ahtv -> final_hs (GTC.to_haskell ahtv) ""
       T.TIdStart2 (tid, souip_str_pairs) ->
-        GH.in_paren_if_needs_and_non_empty needs_paren tid_hs souip_hs
+        final_hs tid_hs souip_str_pairs_hs
         where
         tid_hs :: GTC.Haskell
-        tid_hs =
-          GH.maybe_prefix_args_hs GPH.upper_prefix msouip1 ++
-          GTC.to_haskell tid ++ GH.args_strs_hs souip_str_pairs ++
-          GH.single_quotes_hs msouip2
+          = GH.complete_with_single_quotes
+            (msouip1, GTC.to_haskell tid, souip_str_pairs, msouip2)
 
-        souip_hs :: GTC.Haskell
-        souip_hs =
-          GTC.to_haskell msouip1 ++
-          GTC.to_haskell (P.map P.fst souip_str_pairs) ++
-          GTC.to_haskell msouip2
+        souip_str_pairs_hs :: GTC.Haskell
+          = GTC.to_haskell $ P.map P.fst souip_str_pairs
+      where
+      final_hs :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
+        = \ahtv_or_tid_hs souip_hs ->
+          GH.in_paren_if_needs_and_non_empty needs_paren ahtv_or_tid_hs $
+          GTC.to_haskell (msouip1, souip_hs, msouip2)
+
+instance GTC.ToHaskell (P.Maybe T.SOUIP, GTC.Haskell, P.Maybe T.SOUIP) where
+  to_haskell = \(msouip1, middle_hs, msouip2) ->
+    GTC.to_haskell msouip1 ++ middle_hs ++ GTC.to_haskell msouip2
 
 instance GTC.ToHaskell T.SubsOrUndersInParen where
   to_haskell = \(T.SOUIP (sou, sous)) -> GTC.to_haskell $ sou : sous

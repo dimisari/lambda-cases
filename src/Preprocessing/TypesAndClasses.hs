@@ -63,8 +63,6 @@ type SIP_NP_Pair = (T.SubsInParen, T.NamePart)
 
 type TIP_STR = (T.TypesInParen, P.String)
 
-type SOUIP_STR = (T.SubsOrUndersInParen, P.String)
-
 type WAHTVMap a = MS.State AHTVMap a
 
 data Compatibility =

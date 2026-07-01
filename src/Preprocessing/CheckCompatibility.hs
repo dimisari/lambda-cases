@@ -163,7 +163,7 @@ instance PTC.CheckCompatibility T.SimpleType T.SubOrUnder where
     (st, T.TVS1 tvs) -> PTC.check_compat(st, tvs)
     _ -> PTC.NotCompatible
 
-instance PTC.CheckCompatibility PTC.TIP_STR PTC.SOUIP_STR where
+instance PTC.CheckCompatibility PTC.TIP_STR T.SOUIP_STR where
   check_compat = \((tip, str1), (souip, str2)) ->
     case str1 == str2 of
       P.False -> PTC.NotCompatible
@@ -280,7 +280,7 @@ instance PTC.AddSubs T.InOrOutType T.InOrOutTypeSub where
     T.POPT2 popt -> T.POPTS2 <$> PTC.add_subs popt
     T.FT2 ft -> T.FTS3 <$> PTC.add_subs ft
 
-instance PTC.AddSubs PTC.TIP_STR PTC.SOUIP_STR where
+instance PTC.AddSubs PTC.TIP_STR T.SOUIP_STR where
   add_subs = \(tip, str) -> PTC.add_subs tip >$> \souip -> (souip, str)
 
 instance PTC.AddSubs T.SimpleType T.SubOrUnder where
