@@ -37,6 +37,14 @@ instance GTC.ToHaskell a => GTC.ToHaskell (P.Maybe a) where
     P.Nothing -> ""
     P.Just a -> GTC.to_haskell a
 
+instance
+  GTC.ToHaskell a => GTC.ToHaskell (P.Maybe a, GTC.Haskell, P.Maybe a)
+  where
+  to_haskell = \(ma1, hs, ma2) -> GTC.to_haskell ma1 ++ hs ++ GTC.to_haskell ma2
+
+instance GTC.ToHaskell a => GTC.ToHaskell (a, P.String) where
+  to_haskell = P.fst .> GTC.to_haskell
+
 to_hs_prepend_list :: GTC.ToHaskell a => P.String -> [a] -> GTC.Haskell
 to_hs_prepend_list =
   \prepend_hs -> P.concatMap ((prepend_hs ++) . GTC.to_haskell)

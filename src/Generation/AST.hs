@@ -140,14 +140,16 @@ instance GTC.ToHsWithIndentLvl T.BigTuple where
 
 instance GTC.ToHaskell T.List where
   to_haskell (T.L maybe_leous) =
-    GH.run_generator $ GH.add_params_to $ "[" ++> GTC.to_hs_wpn maybe_leous <++ "]"
+    GH.run_generator $
+      GH.add_params_to $ "[" ++> GTC.to_hs_wpn maybe_leous <++ "]"
 
 instance GTC.ToHsWithIndentLvl T.BigList where
   to_hs_wil (T.BL (leous, leous_l)) =
     GH.indent_all_and_concat big_list_hs_list
     where
     big_list_hs_list :: [GTC.Haskell]
-    big_list_hs_list = GH.run_generator $ GH.add_params_to_list big_list_hs_list_gen
+    big_list_hs_list =
+      GH.run_generator $ GH.add_params_to_list big_list_hs_list_gen
 
     big_list_hs_list_gen :: GTC.WithParamNum [GTC.Haskell]
     big_list_hs_list_gen =
@@ -667,33 +669,21 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTV) where
     T.TAIOA1 taioa -> GTC.to_haskell (needs_paren, taioa)
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
-  to_haskell (needs_paren, taioa) = case taioa of
-    T.TAIOA (P.Nothing, T.TIdStart1 (T.TId tid, []), P.Nothing) ->
-      GH.change_tid_hs tid
-
-    T.TAIOA (mtip1, taioam, mtip2) -> case taioam of
-      T.AHTV1 ahtv ->
-        GH.in_paren_if_needs_and_non_empty needs_paren (GTC.to_haskell ahtv) $
-        mtip1_hs ++ mtip2_hs
-
+  to_haskell (needs_paren, T.TAIOA taioa) = case taioa of
+    (P.Nothing, T.TIdStart1 (T.TId tid, []), P.Nothing) -> GH.change_tid_hs tid
+    (mtip1, taioam, mtip2) -> case taioam of
+      T.AHTV1 ahtv -> final_hs (GTC.to_haskell ahtv) ""
       T.TIdStart1 (tid, tip_str_pairs) ->
-        GH.in_paren_if_needs_and_non_empty needs_paren tid_hs tip_hs
+        final_hs tid_hs $ GTC.to_haskell tip_str_pairs
         where
         tid_hs :: GTC.Haskell
-        tid_hs =
-          GH.maybe_upper_prefix_args_hs mtip1 ++
-          GTC.to_haskell tid ++ GH.args_strs_hs tip_str_pairs ++
-          GH.single_quotes_hs mtip2
-
-        tip_hs :: GTC.Haskell
-        tip_hs =
-          mtip1_hs ++ GTC.to_haskell (P.map P.fst tip_str_pairs) ++ mtip2_hs
+          = GH.complete_with_single_quotes
+            (mtip1, GTC.to_haskell tid, tip_str_pairs, mtip2)
       where
-      mtip1_hs :: GTC.Haskell
-      mtip1_hs = GTC.to_haskell mtip1
-
-      mtip2_hs :: GTC.Haskell
-      mtip2_hs = GTC.to_haskell mtip2
+      final_hs :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
+        = \ahtv_or_tid_hs tip_hs ->
+          GH.in_paren_if_needs_and_non_empty needs_paren ahtv_or_tid_hs $
+          GTC.to_haskell (mtip1, tip_hs, mtip2)
 
 instance GTC.ToHaskell T.TypesInParen where
   to_haskell = \(T.TIP (st, sts)) ->
@@ -966,23 +956,16 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
     (msouip1, taioasm, msouip2) -> case taioasm of
       T.AHTV2 ahtv -> final_hs (GTC.to_haskell ahtv) ""
       T.TIdStart2 (tid, souip_str_pairs) ->
-        final_hs tid_hs souip_str_pairs_hs
+        final_hs tid_hs $ GTC.to_haskell souip_str_pairs
         where
         tid_hs :: GTC.Haskell
           = GH.complete_with_single_quotes
             (msouip1, GTC.to_haskell tid, souip_str_pairs, msouip2)
-
-        souip_str_pairs_hs :: GTC.Haskell
-          = GTC.to_haskell $ P.map P.fst souip_str_pairs
       where
       final_hs :: GTC.Haskell -> GTC.Haskell -> GTC.Haskell
         = \ahtv_or_tid_hs souip_hs ->
           GH.in_paren_if_needs_and_non_empty needs_paren ahtv_or_tid_hs $
           GTC.to_haskell (msouip1, souip_hs, msouip2)
-
-instance GTC.ToHaskell (P.Maybe T.SOUIP, GTC.Haskell, P.Maybe T.SOUIP) where
-  to_haskell = \(msouip1, middle_hs, msouip2) ->
-    GTC.to_haskell msouip1 ++ middle_hs ++ GTC.to_haskell msouip2
 
 instance GTC.ToHaskell T.SubsOrUndersInParen where
   to_haskell = \(T.SOUIP (sou, sous)) -> GTC.to_haskell $ sou : sous
