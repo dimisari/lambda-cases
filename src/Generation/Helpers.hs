@@ -176,7 +176,8 @@ args_strs_hs = P.concatMap (\(a, str) -> single_quotes_hs a ++ str)
 
 args_nps_hs :: GTC.HasArgs a => [(a, T.NamePart)] -> GTC.Haskell
 args_nps_hs =
-  P.concatMap (\(a, T.NP str) -> single_quotes_hs a ++ str) .> (GPH.upper_prefix ++)
+  P.concatMap (\(a, T.NP str) -> single_quotes_hs a ++ str) .>
+  (GPH.upper_prefix ++)
 
 nps_args_hs :: GTC.HasArgs a => [(T.NamePart, a)] -> GTC.Haskell
 nps_args_hs = P.concatMap (\(T.NP str, a) -> str ++ single_quotes_hs a)

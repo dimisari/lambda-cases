@@ -72,14 +72,7 @@ add_dotlc_if_needed = \pfn ->
     _ -> pfn
 
 make_extension_hs :: FileName -> FileName
-make_extension_hs =
-  SFP.splitExtension .> \(without_ext, ext) ->
-  case P.elem ext [".lc", ".txt"] of
-    P.True -> without_ext ++ ".hs"
-    P.False ->
-      P.error $
-        "make_extension_hs: did not receive .lc file\n" ++
-        "make_extension_hs: instead I got " ++ ext
+make_extension_hs = SFP.dropExtension .> (++ ".hs")
 
 do_nothing :: P.Monad m => m ()
 do_nothing = P.return ()

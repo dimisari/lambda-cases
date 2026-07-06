@@ -778,13 +778,15 @@ instance GTC.ToHaskell T.TupleTypeDef where
     types_list :: [T.SimpleType]
     types_list = case popt of
       T.PT4 (T.PT (ft, fts)) -> P.map GH.ft_to_st $ ft : fts
-      T.PoT5 (T.PoT (pbt, i)) -> L.replicate (P.fromIntegral i) $ GH.pbt_to_st pbt
+      T.PoT5 (T.PoT (pbt, i)) ->
+        L.replicate (P.fromIntegral i) $ GH.pbt_to_st pbt
 
     types_hs_list :: [GTC.Haskell]
     types_hs_list = P.map (\st -> GTC.to_haskell (GTC.NoParen, st)) types_list
 
     types_hs :: GTC.Haskell
-    types_hs = P.concatMap (\st -> " " ++ GTC.to_haskell (GTC.Paren, st)) types_list
+    types_hs =
+      P.concatMap (\st -> " " ++ GTC.to_haskell (GTC.Paren, st)) types_list
 
     size :: P.Int
     size = P.length types_hs_list

@@ -1,3 +1,7 @@
-- Generate operator instances with result type a as type variable which is bound by a the a context that makes the variable the same as the type
+- Generate instances with type equality for the last type
+  - Has to be done for both NPStart2 and SIPStart
 - Make the parsing error show in the terminal instead of the .hs file
 - Add pattern matching for prefix string (if it does not exist) e.g. "prefix" + s => ... s ...
+  - Add a new type called StringPrefixMatching 
+  - Put it inside the Matching type
+  - (String, InnerMatching)?

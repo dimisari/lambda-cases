@@ -151,6 +151,9 @@ get_line = P.fmap U.toString C.getLine
 print'and_get_line :: P.String -> ProgramWith' P.String
 print'and_get_line = print' .> (P.>> get_line)
 
+print_strings'in_lines :: Strings -> Program
+print_strings'in_lines = string_from_lines' .> print'
+
 read_file' :: P.String -> ProgramWith' P.String
 read_file' = BS.readFile .> P.fmap U.toString
 
@@ -215,6 +218,9 @@ run_commands' = P.mapM_ SP.callCommand
 
 run'and_get_output :: P.String -> ProgramWith' P.String
 run'and_get_output = \c -> SP.readCreateProcess (SP.shell c) ""
+
+run'and_get_outputs :: Strings -> ProgramWith' Strings
+run'and_get_outputs = P.mapM run'and_get_output
 
 run_commands'concurrently :: ListOf's P.String -> Program
 run_commands'concurrently = CCA.mapConcurrently_ SP.callCommand
