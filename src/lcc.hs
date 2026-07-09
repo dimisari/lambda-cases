@@ -59,7 +59,7 @@ compile_to_exec_gen :: CompileFunction -> ProgramFileName -> P.IO ()
 compile_to_exec_gen cf pfn =
   compile_to_and_get_file_gen cf pfn >>= \hs_file ->
   ghc_command >>= \ghc_cmd ->
-  SP.callCommand (ghc_cmd ++ hs_file ++ "; " ++ "rm " ++ hs_file)
+  SP.callCommand (ghc_cmd ++ hs_file ++ " && " ++ "rm " ++ hs_file)
 
 ghc_command :: P.IO P.String
 ghc_command =

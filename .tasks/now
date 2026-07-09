@@ -1,6 +1,5 @@
 - Generate instances with type equality for the last type
   - Has to be done for both NPStart2 and SIPStart
-- Make the parsing error show in the terminal instead of the .hs file
 - Add pattern matching for prefix string (if it does not exist) e.g. "prefix" + s => ... s ...
   - Add a new type called StringPrefixMatching 
   - Put it inside the Matching type
