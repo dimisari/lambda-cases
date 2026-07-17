@@ -1,8 +1,10 @@
-type proposition: (@A)Has_Internal_Appl
-needed apply(_)inside1(_) : (T1 => T2) x @A(T1) => @A(T2)
+TYPE SIGNATURE
+(@A)Has_Internal_Appl
+apply(_)inside1(_) : (T1 => T2) x @A(T1) => @A(T2)
 
-type proposition: (@A)Has_Wrapped_Internal_App
-needed apply_wrp(_)inside(_) : @A(T1 => T2) x @A(T1) => @A(T2)
+TYPE SIGNATURE
+(@A)Has_Wrapped_Internal_App
+apply_wrp(_)inside(_) : @A(T1 => T2) x @A(T1) => @A(T2)
 
 type proposition: (@A)Has_Wrapped_Intern_App_And_Wrapper
 equivalent (@A)Has_Wrapped_Internal_App, (@A)Has_A_Wrapper

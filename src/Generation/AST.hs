@@ -854,7 +854,7 @@ instance GTC.ToHaskell T.TypePropDef where
     T.APD1 apd -> GTC.to_haskell apd
     T.RPD1 rpd -> GTC.to_haskell rpd
 
-instance GTC.ToHaskell T.AtomPropDef where
+instance GTC.ToHaskell T.TypeSigBlock where
   to_haskell = \(T.APD (pnl, id, st)) ->
     "class " ++ GTC.to_haskell pnl ++ " where\n  " ++
     GTC.to_haskell id ++ " :: " ++ GTC.to_haskell (GTC.NoParen, st)

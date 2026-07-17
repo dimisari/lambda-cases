@@ -311,9 +311,9 @@ newtype TypeNickname = TNN (TypeName, SimpleType)
 -- TypePropDef
 
 data TypePropDef =
-  APD1 AtomPropDef | RPD1 RenamingPropDef
+  APD1 TypeSigBlock | RPD1 RenamingPropDef
 
-newtype AtomPropDef = APD (PropNameLine, Identifier, SimpleType)
+newtype TypeSigBlock = APD (PropName, Identifier, SimpleType)
 
 newtype RenamingPropDef = RPD (PropNameLine, PropName, [PropName])
 

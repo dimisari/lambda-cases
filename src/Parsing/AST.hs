@@ -670,11 +670,11 @@ instance PTC.HasParser T.TypeNickname where
 instance PTC.HasParser T.TypePropDef where
   parser = T.APD1 <$> TP.try PTC.parser <|> T.RPD1 <$> PTC.parser
 
-instance PTC.HasParser T.AtomPropDef where
+instance PTC.HasParser T.TypeSigBlock where
   parser =
     T.APD <$>
-      PTC.parser ++<
-      (PH.nl *> TP.string "needed" *> PH.space_or_nl *> PTC.parser) +++<
+      (PH.block_start "TYPE SIGNATURE" *> PTC.parser) ++<
+      (PH.nl *> PTC.parser) +++<
       (PH.opt_space_around (TP.string ":") *> PTC.parser)
 
 instance PTC.HasParser T.RenamingPropDef where
@@ -753,8 +753,7 @@ instance PTC.HasParser T.TVarSub where
     T.TAIOTS1 <$> PTC.parser
 
 instance PTC.HasParser T.ProdOrPowerTypeSub where
-  parser =
-    T.PTS1 <$> TP.try PTC.parser <|> T.PoTS1 <$> PTC.parser
+  parser = T.PTS1 <$> TP.try PTC.parser <|> T.PoTS1 <$> PTC.parser
 
 instance PTC.HasParser T.TypeAppIdOrTVSub where
   parser = T.PTV2 <$> TP.try PTC.parser <|> T.TAIOAS1 <$> PTC.parser
@@ -815,8 +814,7 @@ instance PTC.HasParser T.Implementation where
 
 instance PTC.HasParser T.IdMaybeOpId where
   parser =
-    T.IMOI <$>
-      PTC.parser ++< TP.optionMaybe (TP.try $ PTC.parser ++< PTC.parser)
+    T.IMOI <$> PTC.parser ++< TP.optionMaybe (TP.try $ PTC.parser ++< PTC.parser)
 
 -- Comment
 

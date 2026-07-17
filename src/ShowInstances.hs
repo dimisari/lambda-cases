@@ -546,7 +546,7 @@ instance P.Show T.TypePropDef where
     T.APD1 apd -> P.show apd
     T.RPD1 rpd -> P.show rpd
 
-instance P.Show T.AtomPropDef where
+instance P.Show T.TypeSigBlock where
   show = \(T.APD (pnl, id, st)) ->
     P.show pnl ++ "\nvalue\n  " ++ P.show id ++ " : " ++ P.show st
 

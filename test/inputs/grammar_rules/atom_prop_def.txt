@@ -1,28 +1,36 @@
-type proposition: (@A)Is(@B)s_First
-needed (_)first : @B => @A#
+TYPE SIGNATURE
+(@A)Is(@B)s_First
+(_)first : @B => @A#
 
-type proposition: (@T)Has_String_Repr
-needed (_)to_string : @T => String#
+TYPE SIGNATURE
+(@T)Has_String_Repr
+(_)to_string : @T => String#
 
-type proposition: (@T)Has_A_Wrapper
-needed wrap(_) : T1 => @T(T1)#
+TYPE SIGNATURE
+(@T)Has_A_Wrapper
+wrap(_) : T1 => @T(T1)#
 
-type proposition: (@T)Has_Internal_App
-needed
-  apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)#
+TYPE SIGNATURE
+(@T)Has_Internal_App
+apply(_)inside(_) : (T1 => T2) x @T(T1) => @T(T2)#
 
-type proposition: (@A)Is(@B)s_First_One
-needed (_)first1 :@B => @A#
+TYPE SIGNATURE
+(@A)Is(@B)s_First_One
+(_)first1 :@B => @A#
 
-type proposition: (@A)Is(@B)s_First_Two
-needed (_)first2: @B => @A#
+TYPE SIGNATURE
+(@A)Is(@B)s_First_Two
+(_)first2: @B => @A#
 
-type proposition: (@T)Has_String_Repr_One
-needed (_)to_string1: @T => String#
+TYPE SIGNATURE
+(@T)Has_String_Repr_One
+(_)to_string1: @T => String#
 
-type proposition: Show(@T)
-needed show: @T => String#
+TYPE SIGNATURE
+Show(@T)
+show: @T => String#
 
-type proposition: (@A, @B)To(@C)
-needed ab_to_c: @A x @B => @C#
+TYPE SIGNATURE
+(@A, @B)To(@C)
+ab_to_c: @A x @B => @C#
 

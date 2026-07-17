@@ -176,7 +176,7 @@ file_name_compile_func_pairs =
     , (compile_example_func :: Compile T.TypeNickname) .> extract_res_str
     )
   , ( "atom_prop_def.txt"
-    , (compile_example_func :: Compile T.AtomPropDef) .> extract_res_str
+    , (compile_example_func :: Compile T.TypeSigBlock) .> extract_res_str
     )
   , ( "renaming_prop_def.txt"
     , (compile_example_func :: Compile T.RenamingPropDef) .> extract_res_str
