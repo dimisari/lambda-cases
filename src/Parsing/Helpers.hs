@@ -106,6 +106,9 @@ err_if_less_than_2 =  \i -> case (i < 2) of
   P.True -> TP.unexpected "integer in power type must be greater than 1"
   P.False -> P.return i
 
+block_start :: P.String -> PTC.Parser P.String
+block_start = \s -> TP.try (TP.string s) <* nl
+
 -- reserved words
 
 reserved_words :: [P.String]

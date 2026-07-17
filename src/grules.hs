@@ -182,7 +182,7 @@ file_name_compile_func_pairs =
     , (compile_example_func :: Compile T.RenamingPropDef) .> extract_res_str
     )
   , ( "type_theo.txt"
-    , (compile_example_func :: Compile T.TypeTheo) .> extract_res_str
+    , (compile_example_func :: Compile T.ImplementationBlock) .> extract_res_str
     )
   , ( "param_tv.txt"
     , (compile_example_func :: Compile T.ParamTVar) .> extract_res_str

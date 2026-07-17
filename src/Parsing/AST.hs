@@ -611,9 +611,7 @@ instance PTC.HasParser T.TypeDef where
 instance PTC.HasParser T.TupleTypeDef where
   parser =
     T.TTD <$>
-      (TP.try (TP.string "TUPLE TYPE") *> PH.nl *> PTC.parser)
-      ++<
-      (PH.equals *> PTC.parser)
+      (PH.block_start "TUPLE TYPE" *> PTC.parser) ++< (PH.equals *> PTC.parser)
       +++<
       (PH.nl *> PTC.parser)
 
@@ -637,9 +635,7 @@ instance PTC.HasParser T.SimpleIds where
 
 instance PTC.HasParser T.OrTypeDef where
   parser =
-    T.OTD <$>
-      (TP.try (TP.string "OR TYPE") *> PH.nl *> PTC.parser) ++<
-      (PH.nl *> PTC.parser)
+    T.OTD <$> (PH.block_start "OR TYPE" *> PTC.parser) ++< (PH.nl *> PTC.parser)
 
 instance PTC.HasParser T.OrTypeValuesLine where
   parser =
@@ -666,7 +662,7 @@ instance PTC.HasParser T.InternalValue where
 instance PTC.HasParser T.TypeNickname where
   parser =
     T.TNN <$>
-      (TP.try (TP.string "TYPE NICKNAME") *> PH.nl *> PTC.parser) ++<
+      (PH.block_start "TYPE NICKNAME" *> PTC.parser) ++<
       (PH.equals *> PTC.parser)
 
 --  TypePropDef
@@ -719,15 +715,14 @@ instance PTC.HasParser T.NamePart where
     under_upper :: PTC.Parser P.String
     under_upper = PH.underscore >:< P.fmap (:[]) TP.upper
 
---  TypeTheo
+--  ImplementationBlock
 
-instance PTC.HasParser T.TypeTheo where
+instance PTC.HasParser T.ImplementationBlock where
   parser =
     T.TT <$> pnws_p ++< mpnws_p +++< (PH.nl *> PTC.parser)
     where
     pnws_p :: PTC.Parser [T.PropNameWithSubs]
-    pnws_p =
-      TP.try (TP.string "IMPLEMENTATION") *> PH.nl *> PTC.parser >$> (\x -> [x])
+    pnws_p = PH.block_start "IMPLEMENTATION" *> PTC.parser >$> (\x -> [x])
 
     mpnws_p :: PTC.Parser (P.Maybe T.PropNameWithSubs)
     mpnws_p = TP.optionMaybe (TP.string " --> " *> PTC.parser)
@@ -828,7 +823,7 @@ instance PTC.HasParser T.IdMaybeOpId where
 instance PTC.HasParser T.Comment where
   parser =
     T.C <$>
-      ( TP.try (TP.string "COMMENT") *> PH.nl *>
+      ( PH.block_start "COMMENT" *>
         TP.manyTill TP.anyChar (TP.lookAhead $ TP.try PH.nl_nl)
       )
 

@@ -889,9 +889,9 @@ instance GTC.ToHaskell T.TIPStart where
 instance GTC.ToHaskell T.NamePart where
   to_haskell = \(T.NP str) -> str
 
--- TypeTheo
+-- ImplementationBlock
 
-instance GTC.ToHaskell T.TypeTheo where
+instance GTC.ToHaskell T.ImplementationBlock where
   to_haskell (T.TT (pnws_l, maybe_pnws, proof)) =
     "instance " ++ pnws_l_hs ++
     mpnws_to_hs maybe_pnws ++ " where\n  " ++ GTC.to_haskell proof

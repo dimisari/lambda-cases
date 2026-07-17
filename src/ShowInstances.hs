@@ -568,8 +568,8 @@ instance P.Show T.PropName where
 instance P.Show T.NamePart where
   show = \(T.NP str) -> str
 
--- TypeTheo
-instance P.Show T.TypeTheo where
+-- ImplementationBlock
+instance P.Show T.ImplementationBlock where
   show = \(T.TT (pnws, maybe_pnws, proof)) ->
     "IMPLEMENTATION\n" ++ P.show pnws ++ show_mpnws maybe_pnws ++
     "\n" ++ P.show proof

@@ -344,7 +344,7 @@ instance PTC.Preprocess T.ValueDefs where
     T.LVDs1 lvds -> T.LVDs1 <$> PTC.preprocess lvds
     T.TVDs1 tvds -> T.TVDs1 <$> PTC.preprocess tvds
 
-instance PTC.Preprocess T.TypeTheo where
+instance PTC.Preprocess T.ImplementationBlock where
   preprocess (T.TT (pnws_l, mpnws, proof)) = case pnws_l of
     [pnws] ->
       preprocess_pnws pnws >>= \pnws_l' ->

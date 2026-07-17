@@ -328,9 +328,9 @@ newtype NamePart = NP P.String
   deriving P.Eq
 
 
--- TypeTheo
+-- ImplementationBlock
 
-newtype TypeTheo =
+newtype ImplementationBlock =
   TT ([PropNameWithSubs], P.Maybe PropNameWithSubs, Implementation)
 
 type NPStart2 = (P.Char, [(NamePart, SubsInParen)], P.Maybe NamePart)
@@ -341,8 +341,7 @@ data PropNameWithSubs =
 newtype SubsInParen = SIP (TVarSub, [TVarSub])
 
 data TVarSub =
-  TAIOTS1 TypeAppIdOrTVSub | POPTS1 ProdOrPowerTypeSub |
-  FTS1 FuncTypeSub
+  TAIOTS1 TypeAppIdOrTVSub | POPTS1 ProdOrPowerTypeSub | FTS1 FuncTypeSub
 
 data ProdOrPowerTypeSub =
   PTS1 ProdTypeSub | PoTS1 PowerTypeSub
@@ -398,7 +397,7 @@ newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart =
   VDD ValueDefs | TD TypeDef | TNN1 TypeNickname | TPD TypePropDef |
-  TT1 TypeTheo | C1 Comment
+  TT1 ImplementationBlock | C1 Comment
 
 
 -- For fast vim file navigation:
