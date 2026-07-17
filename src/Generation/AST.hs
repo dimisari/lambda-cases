@@ -855,15 +855,12 @@ instance GTC.ToHaskell T.TypePropDef where
     T.RPD1 rpd -> GTC.to_haskell rpd
 
 instance GTC.ToHaskell T.TypeSigBlock where
-  to_haskell = \(T.APD (pnl, id, st)) ->
-    "class " ++ GTC.to_haskell pnl ++ " where\n  " ++
+  to_haskell = \(T.APD (pn, id, st)) ->
+    "class " ++ GTC.to_haskell pn ++ " where\n  " ++
     GTC.to_haskell id ++ " :: " ++ GTC.to_haskell (GTC.NoParen, st)
 
 instance GTC.ToHaskell T.RenamingPropDef where
   to_haskell = \_ -> ""
-
-instance GTC.ToHaskell T.PropNameLine where
-  to_haskell = \(T.PNL pn) -> GTC.to_haskell pn
 
 instance GTC.ToHaskell T.PropName where
   to_haskell = \case

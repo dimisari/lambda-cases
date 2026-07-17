@@ -170,7 +170,7 @@ instance PTC.CollectRenamingProps T.TypePropDef where
     _ -> H.do_nothing
 
 instance PTC.CollectRenamingProps T.RenamingPropDef where
-  collect_rps = \(T.RPD (T.PNL pn_key, pn1, pns)) ->
+  collect_rps = \(T.RPD (pn_key, pn1, pns)) ->
     MS.modify $ (:) (pn_key, pn1 : pns)
 
 -- CollectOrValues instances

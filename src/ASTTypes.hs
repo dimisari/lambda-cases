@@ -315,9 +315,7 @@ data TypePropDef =
 
 newtype TypeSigBlock = APD (PropName, Identifier, SimpleType)
 
-newtype RenamingPropDef = RPD (PropNameLine, PropName, [PropName])
-
-newtype PropNameLine = PNL PropName
+newtype RenamingPropDef = RPD (PropName, PropName, [PropName])
 
 type NPStart1 = (P.Char, [(NamePart, TypesInParen)], P.Maybe NamePart)
 type TIPStart = ([(TypesInParen, NamePart)], P.Maybe TypesInParen)

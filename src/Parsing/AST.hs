@@ -680,14 +680,9 @@ instance PTC.HasParser T.TypeSigBlock where
 instance PTC.HasParser T.RenamingPropDef where
   parser =
     T.RPD <$>
-      PTC.parser ++<
-      (PH.nl *> TP.string "equivalent" *> PH.space_or_nl *> PTC.parser) +++<
+      (PH.block_start "PROPOSITION EQUIVALENCE" *> PTC.parser) ++<
+      (PH.nl *> PTC.parser) +++<
       TP.many (PH.comma *> PTC.parser)
-
-instance PTC.HasParser T.PropNameLine where
-  parser =
-    T.PNL <$>
-      (TP.try (TP.string "type proposition:") *> PH.opt_space *> PTC.parser)
 
 instance PTC.HasParser T.PropName where
   parser =

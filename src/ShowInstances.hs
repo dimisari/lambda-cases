@@ -554,10 +554,6 @@ instance P.Show T.RenamingPropDef where
   show = \(T.RPD (pnl, pn, pns)) ->
     P.show pnl ++ "\nequivalent\n  " ++ P.show pn ++ show_list_comma pns
 
-instance P.Show T.PropNameLine where
-  show = \(T.PNL pn) ->
-    "type proposition: " ++ P.show pn
-
 instance P.Show T.PropName where
   show = \case
     T.NPStart1 (c, np_tip_pairs, maybe_np) ->
