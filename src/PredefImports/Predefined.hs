@@ -41,7 +41,7 @@ import System.Directory qualified as SD
 import System.FilePath qualified as SF
 import Text.Read qualified as TR
 import Control.Concurrent.Async qualified as CCA
-import PredefImports.OpsInHaskell ((.>), (&>))
+import PredefImports.Operators ((.>), (&>))
 
 -- types
 

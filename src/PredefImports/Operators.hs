@@ -10,7 +10,7 @@ This file defines equivalents of every lcases operator for haskell:
   UndecidableInstances, FunctionalDependencies, GADTs, IncoherentInstances
 #-}
 
-module PredefImports.OpsInHaskell where
+module PredefImports.Operators where
 
 import Prelude ((.), (^), (**), (*), ($), (/), (++), (+), (-), (==), (/=), (>))
 import Prelude ((<), (>=), (<=), (*>), (>>=), (&&), (||))

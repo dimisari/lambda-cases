@@ -4,36 +4,40 @@ test := ../test
 examples := ../examples
 local_stuff := $(HOME)/.local/share/lcc
 
-b_lcc := $(HOME)/.local/bin/lcc
-b_grs := grules
-
-t_ins := $(test)/inputs
-t_outs := $(test)/outputs
-
-c_prs := compiled_progs
-grs := grammar_rules
-grs_hs := grammar_rules_hs
-prs := programs
-prs_hs := programs_hs
+lcc_exec := $(HOME)/.local/bin/lcc
+rules_exec := grules
 
 p_imps := $(src)/PredefImports/
 p_imp_pr := $(p_imps)/Predefined.hs
-p_imp_ops := $(p_imps)/OpsInHaskell.hs
+p_imp_ops := $(p_imps)/Operators.hs
 
 p_imps_cp := $(local_stuff)/PredefImports/
 p_imp_cp_pr := $(p_imps_cp)/Predefined.hs
-p_imp_cp_ops := $(p_imps_cp)/OpsInHaskell.hs
+p_imp_cp_ops := $(p_imps_cp)/Operators.hs
 
-t_outs_prs := $(t_outs)/$(prs_hs)
-t_outs_grs := $(t_outs)/$(grs_hs)
-t_outs_c_prs := $(t_outs)/$(c_prs)
+# test input
 
-t_ins_prs := $(t_ins)/$(prs)
-t_ins_grs := $(t_ins)/$(grs)
+test_ins := $(test)/inputs
 
-# file names
+test_prog_dir := $(test_ins)/programs
+test_ins_grs := $(test_ins)/grammar_rules
 
-pr_names := $(shell ls $(t_ins_prs))
-gr_names := $(shell ls $(t_ins_grs))
+test_prog_files := $(shell ls $(test_prog_dir))
+test_rule_files := $(shell ls $(test_ins_grs))
 
-# Makefile
+test_prog_pattern := $(test_prog_dir)/%.lc
+
+# test output
+
+test_outs := $(test)/outputs
+
+test_rules_out_dir := $(test_outs)/grammar_rules_hs
+
+test_hs_prog_pattern := $(test_outs)/programs_hs/%.hs
+test_hs_rule_pattern := $(test_rules_out_dir)/%.hs
+test_exec_pattern := $(test_outs)/compiled_progs/%.out
+
+test_hs_prog_files := \
+  $(patsubst %.lc, $(test_hs_prog_pattern), $(test_prog_files))
+hs_grs := $(patsubst %.txt, $(test_hs_rule_pattern), $(test_rule_files))
+execs := $(patsubst %.lc, $(test_exec_pattern), $(test_prog_files))

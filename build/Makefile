@@ -5,7 +5,7 @@ include Makefile.paths
 
 ghc_flags := -no-keep-hi-files -no-keep-o-files
 ghc = ghc $(ghc_flags) -i$(src) -o $@
-mkd = @mkdir -p $(@D)
+mkdir = @mkdir -p $(@D)
 
 # prerequisites
 
@@ -17,90 +17,81 @@ grs_prereqs := $(src)/grules.hs $(common_prereqs)
 prereq2 = $(word 2, $^)
 prereq2_no_ext = $(basename $(prereq2))
 
-# files to create
-
-hs_prs := $(patsubst %.lc, $(t_outs_prs)/%.hs, $(pr_names))
-hs_grs := $(patsubst %.txt, $(t_outs_grs)/%.hs, $(gr_names))
-execs := $(patsubst %.lc, $(t_outs_c_prs)/%.out, $(pr_names))
-
 # rules
 
 .PHONY: all
-
 all:
 	make examples_clean
 	make test_all
 
-install: $(b_lcc) $(p_imp_cp_pr) $(p_imp_cp_ops)
+.PHONY: install
+install: $(lcc_exec) $(p_imp_cp_pr) $(p_imp_cp_ops)
 
 # lambda-cases compiler
 
-$(b_lcc): $(lcc_prereqs)
+$(lcc_exec): $(lcc_prereqs)
 	$(ghc) $(src)/lcc.hs
 
 # predefined imports
 
 $(p_imp_cp_pr): $(p_imp_pr)
-	$(mkd)
+	$(mkdir)
 	cp -u $< $@
 
 $(p_imp_cp_ops): $(p_imp_ops)
-	$(mkd)
+	$(mkdir)
 	cp -u $< $@
 
-# haskell programs in $(hs_prs)
-
-$(t_outs_prs)/%.hs: $(b_lcc) $(t_ins_prs)/%.lc
-	$(mkd)
+$(test_hs_prog_pattern): $(lcc_exec) $(test_prog_pattern)
+	$(mkdir)
 	lcc -h $(prereq2)
 	mv $(prereq2_no_ext).hs $@
 
-# haskell results of examples for particular grammar rules in $(hs_grs)
+$(test_hs_rule_pattern): $(rules_exec) $(test_ins_grs)/%.txt
+	$(mkdir)
+	./$< $(test_ins_grs) $(test_rules_out_dir)
 
-$(t_outs_grs)/%.hs: $(b_grs) $(t_ins_grs)/%.txt
-	$(mkd)
-	./$< $(t_ins_grs) $(t_outs_grs)
-
-# executables in $(execs)
-
-$(t_outs_c_prs)/%.out: $(b_lcc) $(t_ins_prs)/%.lc $(p_imp_cp_pr) $(p_imp_cp_ops)
-	$(mkd)
+$(test_exec_pattern): $(lcc_exec) $(test_prog_pattern) $(p_imp_cp_pr) $(p_imp_cp_ops)
+	$(mkdir)
 	lcc -c $(prereq2)
 	mv $(prereq2_no_ext) $@
 
-# executable running grammar rule examples
-
-$(b_grs): $(grs_prereqs)
+$(rules_exec): $(grs_prereqs)
 	$(ghc) $(src)/$@.hs
 
 # cleaning
 
-.PHONY: clean examples_clean uninstall
-
+.PHONY: clean
 clean:
-	$(RM) -r $(b_lcc) $(b_grs) $(t_outs)
+	$(RM) -r $(lcc_exec) $(rules_exec) $(test_outs)
 	find $(examples) -name "*.hs" -delete
 
+.PHONY: examples_clean
 examples_clean:
 	find $(examples) -name "*.hs" -delete
 
+.PHONY: uninstall
 uninstall:
-	$(RM) -r $(b_lcc) $(local_stuff)
+	$(RM) -r $(lcc_exec) $(local_stuff)
 
 # testing
 
-test_all: $(hs_prs) $(hs_grs) $(execs)
+.PHONY: test_all
+test_all: $(test_hs_prog_files) $(hs_grs) $(execs)
 
-test_haskell_progs: $(hs_prs)
+.PHONY: test_haskell_progs
+test_haskell_progs: $(test_hs_prog_files)
 
-test_grammar_rules: $(hs_grs) $(wildcard $(t_ins_grs)/*)
+.PHONY: test_grammar_rules
+test_grammar_rules: $(hs_grs)
 
+.PHONY: test_executables
 test_executables: $(execs)
 
+.PHONY: test_rules_correct
 test_rules_correct:
 	grep -n --color=auto Err $(hs_grs)
 
+.PHONY: run_executables
 run_executables:
 	for f in $(execs); do echo "$$f start\n"; ./$$f; echo "\n$$f finish\n" ; done
-
-# Makefile.paths
