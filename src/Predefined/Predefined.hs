@@ -20,7 +20,7 @@ This file contains:
   UndecidableInstances, IncoherentInstances, LambdaCase
 #-}
 
-module PredefImports.Predefined where
+module Predefined.Predefined where
 
 import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!), (/=), (==))
 import Prelude qualified as P
@@ -41,7 +41,7 @@ import System.Directory qualified as SD
 import System.FilePath qualified as SF
 import Text.Read qualified as TR
 import Control.Concurrent.Async qualified as CCA
-import PredefImports.Operators ((.>), (&>))
+import Predefined.Operators ((.>), (&>))
 
 -- types
 

@@ -7,11 +7,11 @@ local_stuff := $(HOME)/.local/share/lcc
 lcc_exec := $(HOME)/.local/bin/lcc
 rules_exec := grules
 
-p_imps := $(src)/PredefImports/
+p_imps := $(src)/Predefined/
 p_imp_pr := $(p_imps)/Predefined.hs
 p_imp_ops := $(p_imps)/Operators.hs
 
-p_imps_cp := $(local_stuff)/PredefImports/
+p_imps_cp := $(local_stuff)/Predefined/
 p_imp_cp_pr := $(p_imps_cp)/Predefined.hs
 p_imp_cp_ops := $(p_imps_cp)/Operators.hs
 

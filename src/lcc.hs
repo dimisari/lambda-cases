@@ -117,7 +117,7 @@ make_predef = predef_list >$> P.concatMap (" --make " ++)
 
 predef_list :: P.IO [P.FilePath]
 predef_list =
-  SE.getEnv "HOME" >$> (++ "/.local/share/lcc/PredefImports/") >$> \x ->
+  SE.getEnv "HOME" >$> (++ "/.local/share/lcc/Predefined/") >$> \x ->
     P.map (x ++) [ "Operators.hs", "Predefined.hs" ]
 
 lang_ext_names :: [GTC.Haskell]
@@ -128,8 +128,8 @@ lang_ext_names =
 
 import_names :: [GTC.Haskell]
 import_names =
-  [ "qualified Prelude as P", "PredefImports.Predefined"
-  , "PredefImports.Operators"
+  [ "qualified Prelude as P", "Predefined.Predefined"
+  , "Predefined.Operators"
   ]
 
 top_hs :: GTC.Haskell
