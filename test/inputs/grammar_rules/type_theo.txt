@@ -10,15 +10,15 @@ IMPLEMENTATION
 (Possibly(_))Has_Internal_App
 apply(_)inside(_) =
   (f(_), ?)
-    no_value => no_value
-    the_value--x => the_value--f(x)#
+  no_value => no_value
+  the_value--x => the_value--f(x)#
 
 IMPLEMENTATION
 (ListOf(_)s)Has_Internal_App
 apply(_)inside(_) =
   (f(_), ?)
-    [] => []
-    [head, tail = ...] => f(head) + apply(f(_))inside(tail)#
+  [] => []
+  [head, tail = ...] => f(head) + apply(f(_))inside(tail)#
 
 IMPLEMENTATION
 (@A)And(@B)Can_Be_Equal --> (@A)And(@B)Can_Be_Unequal
@@ -53,8 +53,8 @@ IMPLEMENTATION
 (ListOf(T)s)And(T)Add_To(ListOf(T)s)
 l + a =
   l -> ?
-    empty_l => non_empty_l--(a, empty_l)
-    non_empty_l--(head, tail) => non_empty_l--(head, tail + a)#
+  empty_l => non_empty_l--(a, empty_l)
+  non_empty_l--(head, tail) => non_empty_l--(head, tail + a)#
 
 IMPLEMENTATION
 (ListOf(T)s)And(T)Add_To(ListOf(T)s)
