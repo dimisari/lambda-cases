@@ -201,7 +201,6 @@ instance PTC.HasParser T.DotId where
       TP.try
       (TP.char '.' *> TP.notFollowedBy (TP.string "change{") *> PTC.parser)
 
-
 instance PTC.HasParser T.SimpleOrSpecialId where
   parser = T.SId1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
 

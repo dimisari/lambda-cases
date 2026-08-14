@@ -289,8 +289,35 @@ length_of' = P.fromIntegral . P.length
 a'is_in' :: P.Eq a => (a, [a]) -> P.Bool
 a'is_in' = P.uncurry P.elem
 
-elem'of' :: (P.Integer, [a]) -> a
-elem'of' = \(i, l) -> l!!(P.fromIntegral i-1)
+elem'of' :: (P.Integer, [a]) -> Possibly' a
+elem'of' = \(i, l) ->
+  case i < 1 of
+    P.True -> P.Nothing
+    P.False ->
+      case (i, l) of
+        (1, a : _) -> P.Just a
+        (_, []) -> P.Nothing
+        (_, a : as) -> elem'of' (i - 1, as)
+
+remove_last_of' :: [a] -> Possibly' [a]
+remove_last_of' = \case
+  [] -> P.Nothing
+  [a] -> P.Just []
+  a : as -> P.fmap (a :) (remove_last_of' as)
+
+last_of' :: [a] -> Possibly' a
+last_of' = \case
+  [] -> P.Nothing
+  [a] -> P.Just a
+  a : as -> last_of' as
+
+insert'at'in' :: (a, P.Integer, [a]) -> Possibly' [a]
+insert'at'in' = \(a, i, as) ->
+  case i of
+    1 -> P.Just (a : as)
+    _ -> case as of
+      [] -> P.Nothing
+      h : t -> P.fmap (h :) (insert'at'in' (a, i - 1, t))
 
 ignore'from' :: (P.Integer, [a]) -> [a]
 ignore'from' = P.uncurry P.drop . \(x, y) -> (P.fromIntegral x, y)
@@ -337,6 +364,9 @@ get_arguments = SE.getArgs
 
 sort'after_applying' :: P.Ord b => ([a], a -> b) -> [a]
 sort'after_applying' = P.uncurry $ P.flip DL.sortOn
+
+delimit'with' :: ([[a]], [a]) -> [a]
+delimit'with' = P.uncurry $ P.flip DL.intercalate
 
 -- Hash map
 

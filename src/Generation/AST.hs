@@ -890,8 +890,8 @@ instance GTC.ToHaskell T.NamePart where
 
 instance GTC.ToHaskell T.ImplementationBlock where
   to_haskell (T.TT (pnws_l, maybe_pnws, proof)) =
-    "instance " ++ pnws_l_hs ++
-    mpnws_to_hs maybe_pnws ++ " where\n  " ++ GTC.to_haskell proof
+    "instance " ++ pnws_l_hs ++ mpnws_to_hs maybe_pnws ++
+    " where\n  " ++ GTC.to_haskell proof
     where
     pnws_l_hs :: GTC.Haskell
     pnws_l_hs = case pnws_l of
