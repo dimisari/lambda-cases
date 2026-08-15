@@ -12,18 +12,10 @@ read_file' :: P.String -> PT.ProgramWith' P.String
 read_file' = BS.readFile .> P.fmap U.toString
 
 write'to_file' :: (P.String, P.String) -> PT.Program
-write'to_file' =
-  P.uncurry (P.flip write_file)
-  where
-  write_file :: P.String -> P.String -> PT.Program
-  write_file = \pn str -> BS.writeFile pn (U.fromString str)
+write'to_file' = \(str, f) -> BS.writeFile f (U.fromString str)
 
 append'to_file' :: (P.String, P.String) -> PT.Program
-append'to_file' =
-  P.uncurry (P.flip append_file)
-  where
-  append_file :: P.String -> P.String -> PT.Program
-  append_file = \pn str -> BS.appendFile pn (U.fromString str)
+append'to_file' = \(str, f) -> BS.appendFile f (U.fromString str)
 
 print_string' :: P.String -> PT.Program
 print_string' = U.fromString .> BS.putStr

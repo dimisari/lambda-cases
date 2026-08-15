@@ -198,7 +198,10 @@ remove_list_from_list = \l1 l2 ->
       in
       case l11 == l2 of
         P.True -> remove_list_from_list l12 l2
-        P.False -> P.head l1 : (remove_list_from_list l1 l2)
+        P.False ->
+          case l1 of
+            [] -> []
+            h : t -> h : (remove_list_from_list t l2)
 
 instance a ~ P.String => A'Minus'Is' P.String P.String a where
   (!-) = remove_list_from_list

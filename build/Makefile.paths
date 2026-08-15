@@ -1,11 +1,22 @@
 
+# dirs
+
 src := ../src
 test := ../test
 examples := ../examples
 local_stuff := $(HOME)/.local/share/lcc
 
+# main execs
+
+common_prereqs := \
+	$(shell find $(src) -type f -not -name lcc.hs -not -name grules.hs)
+lcc_prereqs := $(src)/lcc.hs $(common_prereqs)
+grs_prereqs := $(src)/grules.hs $(common_prereqs)
+
 lcc_exec := $(HOME)/.local/bin/lcc
 rules_exec := grules
+
+# predefined
 
 predef_dir := $(src)/Predefined
 predef_file_pattern := $(predef_dir)/%
@@ -39,5 +50,6 @@ test_exec_pattern := $(test_outs)/compiled_progs/%.out
 
 test_hs_prog_files := \
   $(patsubst %.lc, $(test_hs_prog_pattern), $(test_prog_files))
-hs_grs := $(patsubst %.txt, $(test_hs_rule_pattern), $(test_rule_files))
-execs := $(patsubst %.lc, $(test_exec_pattern), $(test_prog_files))
+test_hs_rules_files := \
+  $(patsubst %.txt, $(test_hs_rule_pattern), $(test_rule_files))
+test_exec_files := $(patsubst %.lc, $(test_exec_pattern), $(test_prog_files))
