@@ -1,6 +1,4 @@
-- Refactor PredefImports
-  - Split Predefined.hs into Types.hs Functions.hs Classes.hs
-  - Edit makefile accordingly
+- Read makefile for further refactoring
 - Generate instances with type equality for the last type
   - Has to be done for both NPStart2 and SIPStart
 - Add pattern matching for prefix string (if it does not exist) e.g. "prefix" + s => ... s ...

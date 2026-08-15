@@ -113,8 +113,30 @@ error_to_str = P.show .> ("Error :( ==> " ++)
 prog_to_hs :: T.Program -> GTC.Haskell
 prog_to_hs = GP.preprocess_prog .> GTC.to_haskell
 
--- language extensions and imports
+-- language extensions and imports code
 
+top_code :: P.IO GTC.Haskell
+top_code = (lang_exts ++) <$> import_code
+
+-- language extesions code
+
+lang_ext_names :: [GTC.Haskell]
+lang_ext_names =
+  [ "FlexibleInstances", "MultiParamTypeClasses", "ScopedTypeVariables"
+  , "UndecidableInstances", "FlexibleContexts"
+  ]
+
+lang_exts :: GTC.Haskell
+lang_exts = "{-# language " ++ DL.intercalate ", " lang_ext_names ++ " #-}\n"
+
+-- imports code
+
+import_code :: P.IO GTC.Haskell
+import_code = module_names_to_import_code <$> module_names
+
+module_names_to_import_code :: [GTC.Haskell] -> GTC.Haskell
+module_names_to_import_code = \module_names ->
+  P.concatMap (\im_n -> "import " ++ im_n ++ "\n") module_names ++ "\n"
 predef_imports :: P.IO P.String
 predef_imports = predef_file_paths >$> P.concatMap (" --make " ++)
 
@@ -127,12 +149,6 @@ predef_files = predef_dir >>= SD.listDirectory
 predef_file_paths :: P.IO [P.FilePath]
 predef_file_paths = predef_dir >>= \dir -> (P.map (dir ++)) <$> predef_files
 
-lang_ext_names :: [GTC.Haskell]
-lang_ext_names =
-  [ "FlexibleInstances", "MultiParamTypeClasses", "ScopedTypeVariables"
-  , "UndecidableInstances", "FlexibleContexts"
-  ]
-
 module_names :: P.IO [GTC.Haskell]
 module_names = (["qualified Prelude as P"] ++) <$> predef_module_names
 
@@ -142,15 +158,3 @@ predef_module_names = P.map file_to_module_name <$> predef_files
 file_to_module_name :: GTC.Haskell -> GTC.Haskell
 file_to_module_name = SFP.dropExtension .> ("Predefined." ++)
 
-top_code :: P.IO GTC.Haskell
-top_code = (lang_exts ++) <$> import_code
-
-lang_exts :: GTC.Haskell
-lang_exts = "{-# language " ++ DL.intercalate ", " lang_ext_names ++ " #-}\n"
-
-import_code :: P.IO GTC.Haskell
-import_code = module_names_to_import_code <$> module_names
-
-module_names_to_import_code :: [GTC.Haskell] -> GTC.Haskell
-module_names_to_import_code = \module_names ->
-  P.concatMap (\im_n -> "import " ++ im_n ++ "\n") module_names ++ "\n"

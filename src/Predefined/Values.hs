@@ -1,26 +1,11 @@
 {-
 This file contains:
-- Types and values that can be used in every lcases program.  Most of it is
-  simply renaming standard haskell stuff.
-- Type classes for implementing .1st, .2nd, ... and .change when translating to
-  haskell. This is done by a class that defines a function that gives you the
-  n-th element for any tuple that has size >= n (and <= 5 for now). Similarly,
-  there is class that changes the n-th element. (For now n <= 3)
-- Type classes for automatically calling constructors in the translation of
-  tuples. This is done by a class that defines a function from a product type
-  of size n to any equivalent tuple type (and it is implemented automatically
-  during the translation of the tuple type by calling its constructor). This
-  allows to simply call that function when translating tuples without needing
-  to know to which of potentially many equivalent tuple types it belongs to
-  (or of it's simply a tuple of the equivalent product type).
+- Values that can be used in every lcases program
 -}
 
-{-# language
-  MultiParamTypeClasses, FlexibleInstances, FunctionalDependencies,
-  UndecidableInstances, IncoherentInstances, LambdaCase
-#-}
+{-# language LambdaCase #-}
 
-module Predefined.Predefined where
+module Predefined.Values where
 
 import Prelude ((.), (<), (>>), (>>=), (++), ($), (+), (-), (!!), (/=), (==))
 import Prelude qualified as P
@@ -29,9 +14,6 @@ import Data.List qualified as DL
 import Data.List.Split qualified as LS
 import Data.HashMap.Strict qualified as HM
 import Data.IntMap.Strict qualified as IM
-import Data.ByteString qualified as BS
-import Data.ByteString.Char8 qualified as C
-import Data.ByteString.UTF8 qualified as U
 import Data.Char qualified as CH
 import System.Exit qualified as E
 import System.Console.ANSI qualified as ANSI
@@ -44,8 +26,8 @@ import Control.Concurrent.Async qualified as CCA
 
 import Predefined.Operators ((.>), (&>))
 import Predefined.Types qualified as PT
-
--- values
+import Predefined.Classes qualified as PC
+import Predefined.UTF8IO qualified as PU
 
 split'to_words :: P.String -> [P.String]
 split'to_words = P.words
@@ -131,31 +113,11 @@ get_char = P.getChar
 get_input :: PT.ProgramWith' P.String
 get_input = P.getContents
 
-get_line :: PT.ProgramWith' P.String
-get_line = P.fmap U.toString C.getLine
-
 print'and_get_line :: P.String -> PT.ProgramWith' P.String
-print'and_get_line = print' .> (P.>> get_line)
+print'and_get_line = PC.print' .> (P.>> PU.get_line)
 
 print_strings'in_lines :: PT.Strings -> PT.Program
-print_strings'in_lines = string_from_lines' .> print'
-
-read_file' :: P.String -> PT.ProgramWith' P.String
-read_file' = BS.readFile .> P.fmap U.toString
-
-write'to_file' :: (P.String, P.String) -> PT.Program
-write'to_file' =
-  P.uncurry (P.flip write_file)
-  where
-  write_file :: P.String -> P.String -> PT.Program
-  write_file = \pn str -> BS.writeFile pn (U.fromString str)
-
-append'to_file' :: (P.String, P.String) -> PT.Program
-append'to_file' =
-  P.uncurry (P.flip append_file)
-  where
-  append_file :: P.String -> P.String -> PT.Program
-  append_file = \pn str -> BS.appendFile pn (U.fromString str)
+print_strings'in_lines = string_from_lines' .> PC.print'
 
 does_file'exist :: P.String -> PT.ProgramWith' P.Bool
 does_file'exist = SD.doesFileExist
@@ -184,9 +146,6 @@ remove_file_extension_of' = SF.dropExtension
 split_file'at_extension :: P.String -> (P.String, P.String)
 split_file'at_extension = SF.splitExtension
 
-print_string' :: P.String -> PT.Program
-print_string' = U.fromString .> BS.putStr
-
 empty_val :: ()
 empty_val = ()
 
@@ -213,8 +172,8 @@ run_commands'concurrently = CCA.mapConcurrently_ SP.callCommand
 
 ask_to_run' :: P.String -> PT.Program
 ask_to_run' = \s ->
-  print'("Should I run \"" ++ s ++ "\"? (y + Enter for yes)") >>
-  get_line >>= \case
+  PC.print'("Should I run \"" ++ s ++ "\"? (y + Enter for yes)") >>
+  PU.get_line >>= \case
     "y" -> SP.callCommand s
     _ -> do_nothing
 
@@ -400,155 +359,4 @@ add_one_indexes_to' = \l -> add_indexes_to'starting_from' (l, 1)
 
 add_zero_indexes_to' :: [a] -> [(P.Integer, a)]
 add_zero_indexes_to' = \l -> add_indexes_to'starting_from' (l, 0)
-
--- IsFirst'
-
-class IsFirst' a b | b -> a where
-  p1st :: b -> a
-
-instance IsFirst' a (a, b) where
-  p1st = P.fst
-
-instance IsFirst' a (a, b, c) where
-  p1st = \(a, _, _) -> a
-
-instance IsFirst' a (a, b, c, d) where
-  p1st = \(a, _, _, _) -> a
-
-instance IsFirst' a (a, b, c, d, e) where
-  p1st = \(a, _, _, _, _) -> a
-
--- IsSecond'
-
-class IsSecond' a b | b -> a where
-  p2nd :: b -> a
-
-instance IsSecond' b (a, b) where
-  p2nd = P.snd
-
-instance IsSecond' b (a, b, c) where
-  p2nd = \(_, b, _) -> b
-
-instance IsSecond' b (a, b, c, d) where
-  p2nd = \(_, b, _, _) -> b
-
-instance IsSecond' b (a, b, c, d, e) where
-  p2nd = \(_, b, _, _, _) -> b
-
--- IsThird'
-
-class IsThird' a b | b -> a where
-  p3rd :: b -> a
-
-instance IsThird' c (a, b, c) where
-  p3rd = \(_, _, c) -> c
-
-instance IsThird' c (a, b, c, d) where
-  p3rd = \(_, _, c, _) -> c
-
-instance IsThird' c (a, b, c, d, e) where
-  p3rd = \(_, _, c, _, _) -> c
-
--- ChangeFirst'
-
-class ChangeFirstTo' a b | b -> a where
-  c1st :: a -> b -> b
-
-instance ChangeFirstTo' a (a, b) where
-  c1st = \a (_, b) -> (a, b)
-
-instance ChangeFirstTo' a (a, b, c) where
-  c1st = \a (_, b, c) -> (a, b, c)
-
-instance ChangeFirstTo' a (a, b, c, d) where
-  c1st = \a (_, b, c, d) -> (a, b, c, d)
-
-instance ChangeFirstTo' a (a, b, c, d, e) where
-  c1st = \a (_, b, c, d, e) -> (a, b, c, d, e)
-
--- ChangeSecond'
-
-class ChangeSecondTo' a b | b -> a where
-  c2nd :: a -> b -> b
-
-instance ChangeSecondTo' b (a, b) where
-  c2nd = \b (a, _) -> (a, b)
-
-instance ChangeSecondTo' b (a, b, c) where
-  c2nd = \b (a, _, c) -> (a, b, c)
-
-instance ChangeSecondTo' b (a, b, c, d) where
-  c2nd = \b (a, _, c, d) -> (a, b, c, d)
-
-instance ChangeSecondTo' b (a, b, c, d, e) where
-  c2nd = \b (a, _, c, d, e) -> (a, b, c, d, e)
-
--- ChangeThird'
-
-class ChangeThirdTo' a b | b -> a where
-  c3rd :: a -> b -> b
-
-instance ChangeThirdTo' c (a, b, c) where
-  c3rd = \c (a, b, _) -> (a, b, c)
-
-instance ChangeThirdTo' c (a, b, c, d) where
-  c3rd = \c (a, b, _, d) -> (a, b, c, d)
-
-instance ChangeThirdTo' c (a, b, c, d, e) where
-  c3rd = \c (a, b, _, d, e) -> (a, b, c, d, e)
-
--- FromTuple classes
-
-class FromTuple2 a b c | c -> a b where
-  ft2 :: (a, b) -> c
-
-class FromTuple3 a b c d | d -> a b c where
-  ft3 :: (a, b, c) -> d
-
-class FromTuple4 a b c d e | e -> a b c d where
-  ft4 :: (a, b, c, d) -> e
-
-class FromTuple5 a b c d e f | f -> a b c d e where
-  ft5 :: (a, b, c, d, e) -> f
-
--- FromTuple instances for regular tuples
-
-instance FromTuple2 a b (a, b) where
-  ft2 = P.id
-
-instance FromTuple3 a b c (a, b, c) where
-  ft3 = P.id
-
-instance FromTuple4 a b c d (a, b, c, d) where
-  ft4 = P.id
-
-instance FromTuple5 a b c d e (a, b, c, d, e) where
-  ft5 = P.id
-
--- Isolate the "pure" function into a new type class and call it "wrap"
-
-class A'Has_A_Wrapper t where
-  wrap' :: a -> t a
-
-instance P.Applicative f => A'Has_A_Wrapper f where
-  wrap' = P.pure
-
--- Renaming functor
-
-class A'Has_Internal_App t where
-  apply'inside' :: (a -> b, t a) -> t b
-
-instance P.Functor f => A'Has_Internal_App f where
-  apply'inside' = P.uncurry P.fmap
-
--- Print class
-
-class Print a where
-  print' :: a -> PT.Program
-
-instance {- OVERLAPS -} P.Show P.String where
-  show = P.id
-
-instance P.Show a => Print a where
-  print' = P.show .> (++ "\n") .> print_string'
 
