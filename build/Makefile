@@ -25,7 +25,7 @@ all:
 	make test_all
 
 .PHONY: install
-install: $(lcc_exec) $(p_imp_cp_pr) $(p_imp_cp_ops)
+install: $(lcc_exec) $(predef_cp_files)
 
 # lambda-cases compiler
 
@@ -34,11 +34,7 @@ $(lcc_exec): $(lcc_prereqs)
 
 # predefined imports
 
-$(p_imp_cp_pr): $(p_imp_pr)
-	$(mkdir)
-	cp -u $< $@
-
-$(p_imp_cp_ops): $(p_imp_ops)
+$(predef_cp_file_pattern): $(predef_file_pattern)
 	$(mkdir)
 	cp -u $< $@
 
@@ -51,7 +47,7 @@ $(test_hs_rule_pattern): $(rules_exec) $(test_ins_grs)/%.txt
 	$(mkdir)
 	./$< $(test_ins_grs) $(test_rules_out_dir)
 
-$(test_exec_pattern): $(lcc_exec) $(test_prog_pattern) $(p_imp_cp_pr) $(p_imp_cp_ops)
+$(test_exec_pattern): $(lcc_exec) $(test_prog_pattern) $(predef_cp_files)
 	$(mkdir)
 	lcc -c $(prereq2)
 	mv $(prereq2_no_ext) $@
@@ -95,3 +91,5 @@ test_rules_correct:
 .PHONY: run_executables
 run_executables:
 	for f in $(execs); do echo "$$f start\n"; ./$$f; echo "\n$$f finish\n" ; done
+
+print-%: ; @echo '$* = $($*)'

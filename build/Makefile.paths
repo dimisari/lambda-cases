@@ -7,13 +7,13 @@ local_stuff := $(HOME)/.local/share/lcc
 lcc_exec := $(HOME)/.local/bin/lcc
 rules_exec := grules
 
-p_imps := $(src)/Predefined/
-p_imp_pr := $(p_imps)/Predefined.hs
-p_imp_ops := $(p_imps)/Operators.hs
+predef_dir := $(src)/Predefined
+predef_file_pattern := $(predef_dir)/%
+predef_files := $(shell ls $(predef_dir))
 
-p_imps_cp := $(local_stuff)/Predefined/
-p_imp_cp_pr := $(p_imps_cp)/Predefined.hs
-p_imp_cp_ops := $(p_imps_cp)/Operators.hs
+predef_cp_dir := $(local_stuff)/Predefined
+predef_cp_file_pattern := $(predef_cp_dir)/%
+predef_cp_files := $(addprefix $(predef_cp_dir)/, $(predef_files))
 
 # test input
 

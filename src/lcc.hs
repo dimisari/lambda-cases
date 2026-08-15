@@ -10,7 +10,7 @@ module Main where
 
 -- imports
 
-import Prelude ((++), (>>), (>>=), ($))
+import Prelude ((++), (>>), (>>=), ($), (<$>))
 import Prelude qualified as P
 
 import System.Environment qualified as SE
@@ -28,6 +28,7 @@ import Preprocessing.Preprocess qualified as GP
 import Generation.TypesAndClasses qualified as GTC
 import Generation.AST qualified as GA
 
+import System.Directory qualified as SD
 import System.FilePath qualified as SFP
 
 -- types
@@ -63,7 +64,7 @@ compile_to_exec_gen cf pfn =
 
 ghc_command :: P.IO P.String
 ghc_command =
-  make_predef >$> ("ghc" ++) >$> (++ " -no-keep-hi-files -no-keep-o-files ")
+   ("ghc" ++) <$> predef_imports >$> (++ " -no-keep-hi-files -no-keep-o-files ")
 
 compile_to_hs_or_err_and_get_file :: ProgramFileName -> P.IO HsFileName
 compile_to_hs_or_err_and_get_file =
@@ -79,7 +80,9 @@ compile_to_hs_or_error_file = compile_to_file_gen compile_lc_to_hs_or_err_str
 
 compile_to_file_gen :: CompileFunction -> ProgramFileName -> P.IO ()
 compile_to_file_gen = \cf pfn ->
-  compile_file_to_hs_gen cf pfn >>= P.writeFile (H.make_extension_hs pfn)
+  compile_file_to_hs_gen cf pfn >>= \generated_code ->
+  top_code >>= \tc ->
+  P.writeFile (H.make_extension_hs pfn) $ tc ++ generated_code
 
 compile_file_to_hs_gen :: CompileFunction -> ProgramFileName -> P.IO GTC.Haskell
 compile_file_to_hs_gen = \cf pfn ->
@@ -108,17 +111,21 @@ error_to_str :: TP.ParseError -> P.String
 error_to_str = P.show .> ("Error :( ==> " ++)
 
 prog_to_hs :: T.Program -> GTC.Haskell
-prog_to_hs = GP.preprocess_prog .> GTC.to_haskell .> (top_hs ++)
+prog_to_hs = GP.preprocess_prog .> GTC.to_haskell
 
 -- language extensions and imports
 
-make_predef :: P.IO P.String
-make_predef = predef_list >$> P.concatMap (" --make " ++)
+predef_imports :: P.IO P.String
+predef_imports = predef_file_paths >$> P.concatMap (" --make " ++)
 
-predef_list :: P.IO [P.FilePath]
-predef_list =
-  SE.getEnv "HOME" >$> (++ "/.local/share/lcc/Predefined/") >$> \x ->
-    P.map (x ++) [ "Operators.hs", "Predefined.hs" ]
+predef_dir :: P.IO P.FilePath
+predef_dir = SE.getEnv "HOME" >$> (++ "/.local/share/lcc/Predefined/")
+
+predef_files :: P.IO [P.String]
+predef_files = predef_dir >>= SD.listDirectory
+
+predef_file_paths :: P.IO [P.FilePath]
+predef_file_paths = predef_dir >>= \dir -> (P.map (dir ++)) <$> predef_files
 
 lang_ext_names :: [GTC.Haskell]
 lang_ext_names =
@@ -126,17 +133,24 @@ lang_ext_names =
   , "UndecidableInstances", "FlexibleContexts"
   ]
 
-import_names :: [GTC.Haskell]
-import_names =
-  [ "qualified Prelude as P", "Predefined.Predefined"
-  , "Predefined.Operators"
-  ]
+module_names :: P.IO [GTC.Haskell]
+module_names = (["qualified Prelude as P"] ++) <$> predef_module_names
 
-top_hs :: GTC.Haskell
-top_hs = lang_exts ++ imports
+predef_module_names :: P.IO [GTC.Haskell]
+predef_module_names = P.map file_to_module_name <$> predef_files
+
+file_to_module_name :: GTC.Haskell -> GTC.Haskell
+file_to_module_name = SFP.dropExtension .> ("Predefined." ++)
+
+top_code :: P.IO GTC.Haskell
+top_code = (lang_exts ++) <$> import_code
 
 lang_exts :: GTC.Haskell
 lang_exts = "{-# language " ++ DL.intercalate ", " lang_ext_names ++ " #-}\n"
 
-imports :: GTC.Haskell
-imports = P.concatMap (\im_n -> "import " ++ im_n ++ "\n") import_names ++ "\n"
+import_code :: P.IO GTC.Haskell
+import_code = module_names_to_import_code <$> module_names
+
+module_names_to_import_code :: [GTC.Haskell] -> GTC.Haskell
+module_names_to_import_code = \module_names ->
+  P.concatMap (\im_n -> "import " ++ im_n ++ "\n") module_names ++ "\n"

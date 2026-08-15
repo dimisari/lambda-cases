@@ -1,5 +1,4 @@
 - Refactor PredefImports
-  - Rename PredefImports dir to Predefined dir
   - Split Predefined.hs into Types.hs Functions.hs Classes.hs
   - Edit makefile accordingly
 - Generate instances with type equality for the last type

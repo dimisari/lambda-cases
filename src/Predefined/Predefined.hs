@@ -41,23 +41,9 @@ import System.Directory qualified as SD
 import System.FilePath qualified as SF
 import Text.Read qualified as TR
 import Control.Concurrent.Async qualified as CCA
+
 import Predefined.Operators ((.>), (&>))
-
--- types
-
-type ProgramWith' = P.IO
-type EmptyVal = ()
-type Program = ProgramWith' EmptyVal
-type ListOf's = []
-type State'With' a b = MS.State a b
-type State' a = State'With' a EmptyVal
-type Possibly' = P.Maybe
-type Result'OrError' a b = P.Either b a
-type Z = P.Integer
-type R = P.Double
-type SMapTo' = HM.HashMap P.String
-type ArrayOf's = IM.IntMap
-type Strings = ListOf's P.String
+import Predefined.Types qualified as PT
 
 -- values
 
@@ -139,51 +125,51 @@ zip'with' = P.uncurry P.zip
 unzip' :: [(a, b)] -> ([a], [b])
 unzip' = P.unzip
 
-get_char :: ProgramWith' P.Char
+get_char :: PT.ProgramWith' P.Char
 get_char = P.getChar
 
-get_input :: ProgramWith' P.String
+get_input :: PT.ProgramWith' P.String
 get_input = P.getContents
 
-get_line :: ProgramWith' P.String
+get_line :: PT.ProgramWith' P.String
 get_line = P.fmap U.toString C.getLine
 
-print'and_get_line :: P.String -> ProgramWith' P.String
+print'and_get_line :: P.String -> PT.ProgramWith' P.String
 print'and_get_line = print' .> (P.>> get_line)
 
-print_strings'in_lines :: Strings -> Program
+print_strings'in_lines :: PT.Strings -> PT.Program
 print_strings'in_lines = string_from_lines' .> print'
 
-read_file' :: P.String -> ProgramWith' P.String
+read_file' :: P.String -> PT.ProgramWith' P.String
 read_file' = BS.readFile .> P.fmap U.toString
 
-write'to_file' :: (P.String, P.String) -> Program
+write'to_file' :: (P.String, P.String) -> PT.Program
 write'to_file' =
   P.uncurry (P.flip write_file)
   where
-  write_file :: P.String -> P.String -> Program
+  write_file :: P.String -> P.String -> PT.Program
   write_file = \pn str -> BS.writeFile pn (U.fromString str)
 
-append'to_file' :: (P.String, P.String) -> Program
+append'to_file' :: (P.String, P.String) -> PT.Program
 append'to_file' =
   P.uncurry (P.flip append_file)
   where
-  append_file :: P.String -> P.String -> Program
+  append_file :: P.String -> P.String -> PT.Program
   append_file = \pn str -> BS.appendFile pn (U.fromString str)
 
-does_file'exist :: P.String -> ProgramWith' P.Bool
+does_file'exist :: P.String -> PT.ProgramWith' P.Bool
 does_file'exist = SD.doesFileExist
 
-does_directory'exist :: P.String -> ProgramWith' P.Bool
+does_directory'exist :: P.String -> PT.ProgramWith' P.Bool
 does_directory'exist = SD.doesDirectoryExist
 
-list_directory' :: P.String -> ProgramWith' (ListOf's P.String)
+list_directory' :: P.String -> PT.ProgramWith' (PT.ListOf's P.String)
 list_directory' = SD.listDirectory
 
 get_directory_of' :: P.String -> P.String
 get_directory_of' = P.reverse .> P.dropWhile (/= '/') .> P.tail .> P.reverse
 
-create_directory' :: P.String -> Program
+create_directory' :: P.String -> PT.Program
 create_directory' = SD.createDirectory
 
 get_file_name_of' :: P.String -> P.String
@@ -198,7 +184,7 @@ remove_file_extension_of' = SF.dropExtension
 split_file'at_extension :: P.String -> (P.String, P.String)
 split_file'at_extension = SF.splitExtension
 
-print_string' :: P.String -> Program
+print_string' :: P.String -> PT.Program
 print_string' = U.fromString .> BS.putStr
 
 empty_val :: ()
@@ -207,38 +193,38 @@ empty_val = ()
 apply'to_all_in_zipped'' :: ((a, b) -> c, [a], [b]) -> [c]
 apply'to_all_in_zipped'' = \(f, l1, l2) -> P.zipWith (P.curry f) l1 l2
 
-success :: Program
+success :: PT.Program
 success = E.exitSuccess
 
-run' :: P.String -> Program
+run' :: P.String -> PT.Program
 run' = SP.callCommand
 
-run_commands' :: ListOf's P.String -> Program
+run_commands' :: PT.ListOf's P.String -> PT.Program
 run_commands' = P.mapM_ SP.callCommand
 
-run'and_get_output :: P.String -> ProgramWith' P.String
+run'and_get_output :: P.String -> PT.ProgramWith' P.String
 run'and_get_output = \c -> SP.readCreateProcess (SP.shell c) ""
 
-run'and_get_outputs :: Strings -> ProgramWith' Strings
+run'and_get_outputs :: PT.Strings -> PT.ProgramWith' PT.Strings
 run'and_get_outputs = P.mapM run'and_get_output
 
-run_commands'concurrently :: ListOf's P.String -> Program
+run_commands'concurrently :: PT.ListOf's P.String -> PT.Program
 run_commands'concurrently = CCA.mapConcurrently_ SP.callCommand
 
-ask_to_run' :: P.String -> Program
+ask_to_run' :: P.String -> PT.Program
 ask_to_run' = \s ->
   print'("Should I run \"" ++ s ++ "\"? (y + Enter for yes)") >>
   get_line >>= \case
     "y" -> SP.callCommand s
     _ -> do_nothing
 
-clear_screen4 :: Program
+clear_screen4 :: PT.Program
 clear_screen4 =
   ANSI.getCursorPosition >>= \case
     P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 4
     P.Nothing -> error' "Could not get cursor position"
 
-clear_screen :: Program
+clear_screen :: PT.Program
 clear_screen =
   ANSI.getCursorPosition >>= \case
     P.Just (l, _) -> ANSI.scrollPageUp l >> ANSI.setCursorPosition 0 0
@@ -262,10 +248,10 @@ lcm_of'and' = P.uncurry P.lcm
 get_state :: MS.State a a
 get_state = MS.get
 
-set_state' :: s -> MS.State s EmptyVal
+set_state' :: s -> MS.State s PT.EmptyVal
 set_state' = MS.put
 
-modify_state_with' :: (s -> s) -> MS.State s EmptyVal
+modify_state_with' :: (s -> s) -> MS.State s PT.EmptyVal
 modify_state_with' = MS.modify
 
 result_of'on_init_state' :: (MS.State s a, s) -> a
@@ -289,7 +275,7 @@ length_of' = P.fromIntegral . P.length
 a'is_in' :: P.Eq a => (a, [a]) -> P.Bool
 a'is_in' = P.uncurry P.elem
 
-elem'of' :: (P.Integer, [a]) -> Possibly' a
+elem'of' :: (P.Integer, [a]) -> PT.Possibly' a
 elem'of' = \(i, l) ->
   case i < 1 of
     P.True -> P.Nothing
@@ -299,19 +285,19 @@ elem'of' = \(i, l) ->
         (_, []) -> P.Nothing
         (_, a : as) -> elem'of' (i - 1, as)
 
-remove_last_of' :: [a] -> Possibly' [a]
+remove_last_of' :: [a] -> PT.Possibly' [a]
 remove_last_of' = \case
   [] -> P.Nothing
   [a] -> P.Just []
   a : as -> P.fmap (a :) (remove_last_of' as)
 
-last_of' :: [a] -> Possibly' a
+last_of' :: [a] -> PT.Possibly' a
 last_of' = \case
   [] -> P.Nothing
   [a] -> P.Just a
   a : as -> last_of' as
 
-insert'at'in' :: (a, P.Integer, [a]) -> Possibly' [a]
+insert'at'in' :: (a, P.Integer, [a]) -> PT.Possibly' [a]
 insert'at'in' = \(a, i, as) ->
   case i of
     1 -> P.Just (a : as)
@@ -341,25 +327,25 @@ split'at_first' = \(l, e) -> P.break (== e) l &> \(l1, l2) -> (l1, P.drop 1 l2)
 concat_lists' :: [[a]] -> [a]
 concat_lists' = P.concat
 
-do_nothing :: P.Applicative f => f EmptyVal
+do_nothing :: P.Applicative f => f PT.EmptyVal
 do_nothing = P.pure empty_val
 
-from_string' :: P.Read a => P.String -> Possibly' a
+from_string' :: P.Read a => P.String -> PT.Possibly' a
 from_string' = TR.readMaybe
 
-program_with' :: a -> ProgramWith' a
+program_with' :: a -> PT.ProgramWith' a
 program_with' = P.return
 
 not' :: P.Bool -> P.Bool
 not' = P.not
 
-for_all_in'' :: P.Monad m => ([a], a -> m b) -> m EmptyVal
+for_all_in'' :: P.Monad m => ([a], a -> m b) -> m PT.EmptyVal
 for_all_in'' = P.uncurry $ P.flip P.mapM_
 
 to_all_in'' :: P.Monad m => ([a], a -> m b) -> m [b]
 to_all_in'' = P.uncurry $ P.flip P.mapM
 
-get_arguments :: ProgramWith' [P.String]
+get_arguments :: PT.ProgramWith' [P.String]
 get_arguments = SE.getArgs
 
 sort'after_applying' :: P.Ord b => ([a], a -> b) -> [a]
@@ -370,33 +356,33 @@ delimit'with' = P.uncurry $ P.flip DL.intercalate
 
 -- Hash map
 
-empty_smap :: SMapTo' v
+empty_smap :: PT.SMapTo' v
 empty_smap = HM.empty
 
-insert'to_smap' :: ((P.String, v), SMapTo' v) -> SMapTo' v
+insert'to_smap' :: ((P.String, v), PT.SMapTo' v) -> PT.SMapTo' v
 insert'to_smap' = \((s,v), m) -> HM.insert s v m
 
-look_for'in_smap' :: (P.String, SMapTo' v) -> P.Maybe v
+look_for'in_smap' :: (P.String, PT.SMapTo' v) -> P.Maybe v
 look_for'in_smap' = \(s,m) -> HM.lookup s m
 
-smap_from_list' :: [(P.String, v)] -> SMapTo' v
+smap_from_list' :: [(P.String, v)] -> PT.SMapTo' v
 smap_from_list' = HM.fromList
 
 -- int map
 
-empty_array :: ArrayOf's v
+empty_array :: PT.ArrayOf's v
 empty_array = IM.empty
 
-insert'to_array' :: ((P.Integer, v), ArrayOf's v) -> ArrayOf's v
+insert'to_array' :: ((P.Integer, v), PT.ArrayOf's v) -> PT.ArrayOf's v
 insert'to_array' = \((i, v), m) -> IM.insert (P.fromInteger i) v m
 
-index'of_array' :: (P.Integer, ArrayOf's v) -> P.Maybe v
+index'of_array' :: (P.Integer, PT.ArrayOf's v) -> P.Maybe v
 index'of_array' = \(i, m) -> IM.lookup (P.fromInteger i) m
 
-array_from_list' :: ListOf's (P.Integer, v) -> ArrayOf's v
+array_from_list' :: PT.ListOf's (P.Integer, v) -> PT.ArrayOf's v
 array_from_list' = IM.fromList . P.map (\(i, v) -> (P.fromInteger i, v))
 
-array_size :: ArrayOf's v -> P.Integer
+array_size :: PT.ArrayOf's v -> P.Integer
 array_size = P.toInteger . IM.size
 
 -- mine
@@ -558,7 +544,7 @@ instance P.Functor f => A'Has_Internal_App f where
 -- Print class
 
 class Print a where
-  print' :: a -> Program
+  print' :: a -> PT.Program
 
 instance {- OVERLAPS -} P.Show P.String where
   show = P.id
