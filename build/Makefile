@@ -10,6 +10,9 @@ mkdir = @mkdir -p $(@D)
 # rules
 
 .PHONY: all
+lcc: $(lcc_exec)
+
+.PHONY: all
 all:
 	make examples_clean
 	make test_all

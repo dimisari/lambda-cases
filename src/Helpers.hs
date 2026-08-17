@@ -71,11 +71,8 @@ add_dotlc_if_needed = \pfn ->
     "" -> pfn ++ ".lc"
     _ -> pfn
 
-make_extension_hs :: FileName -> FileName
-make_extension_hs = SFP.dropExtension .> (++ ".hs")
+make_extension :: P.String -> FileName -> FileName
+make_extension = \ext -> SFP.dropExtension .> (++ ("." ++ ext))
 
 do_nothing :: P.Monad m => m ()
 do_nothing = P.return ()
-
--- ASTTypes.hs
--- grules.hs

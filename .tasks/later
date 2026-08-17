@@ -32,3 +32,4 @@
 - Bring grammar up to date
 - Think what to do with show instances
   - One idea is to actually generate lamda-cases code again and add it as a test to check that parsing and regenerating code is the same as the original
+- Check libraries or make one for cli flags

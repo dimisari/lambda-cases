@@ -15,7 +15,7 @@ import Prelude ((>>=), (++), (!!), (.), (<$>))
 import Prelude qualified as P
 import System.Environment qualified as SE
 import Text.Parsec qualified as TP
-import Data.List.Split qualified as SPL
+import Data.List.Split qualified as DLS
 
 import Helpers ((>$>), (.>), (&>))
 import Helpers qualified as H
@@ -52,7 +52,7 @@ compile_examples (file_name, comp_ex_func) =
   P.writeFile out_path ex_outs
   where
   get_out_path :: P.IO P.FilePath
-  get_out_path = get_test_outputs_path >$> (++ H.make_extension_hs file_name)
+  get_out_path = get_test_outputs_path >$> (++ H.make_extension "hs" file_name)
 
 get_test_outputs_path :: P.IO P.FilePath
 get_test_outputs_path = SE.getArgs >$> (!!1) >$> (++ "/")
@@ -82,7 +82,7 @@ get_test_inputs_path :: P.IO P.FilePath
 get_test_inputs_path = SE.getArgs >$> P.head >$> (++ "/")
 
 file_str_to_examples :: FileString -> [ TestExample ]
-file_str_to_examples = SPL.endBy "#\n\n"
+file_str_to_examples = DLS.endBy "#\n\n"
 
 -- Pairs of file names and the correcsponding compile function for
 -- each example in the file

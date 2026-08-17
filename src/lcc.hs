@@ -24,7 +24,8 @@ import Helpers qualified as H
 
 import Parsing.ASTInstances qualified as PA
 
-import SyntaxTreeGen.ASTInstances qualified as PA
+import SyntaxTreeGen.TypesAndClasses qualified as STC
+import SyntaxTreeGen.ASTInstances qualified as SA
 
 import Preprocessing.Preprocess qualified as PP
 
@@ -39,7 +40,12 @@ import System.FilePath qualified as SFP
 type ProgramFileName = H.FileName
 type HsFileName = P.String
 type ErrChoiceAndProgName = (ThrowErrorOrDont, ProgramFileName)
-type ParseErrorOr = P.Either TP.ParseError
+type ParseErrOrGenRes = P.Either TP.ParseError P.String
+type GenerateFunction = T.Program -> P.String
+type GenerateTuple = (GenerateFunction, ThrowErrorOrDont)
+type CompileFunction = H.Lcases -> P.String
+type CompileTuple = (CompileFunction, ProgramFileName, NewExtension)
+type NewExtension = P.String
 
 data ThrowErrorOrDont = Throw_err | Dont_throw_err
 
@@ -51,6 +57,8 @@ main = SE.getArgs >>= \case
   [program_file_name] -> compile_and_run program_file_name
   ["-c", program_file_name] -> compile_for_tests program_file_name
   ["-h", program_file_name] -> compile_to_hs_or_error_file program_file_name
+  ["-d", program_file_name] -> compile_file_to_dot program_file_name
+  ["-p", program_file_name] -> compile_file_to_png program_file_name
   _  -> P.putStrLn "Weird arguments"
 
 -- compiling files
@@ -91,27 +99,62 @@ ecapn_to_hs_file ecapn@(teon, pfn) =
   P.pure hs_file
   where
   hs_file :: HsFileName
-    = H.make_extension_hs pfn
+    = H.make_extension "hs" pfn
 
 ecapn_to_hs :: ErrChoiceAndProgName -> P.IO GTC.Haskell
-ecapn_to_hs (teon, pfn) = read_prog_file pfn >$> compile_lc_to_hs teon
+ecapn_to_hs (teon, pfn) = compile_file_to_string (compile_lc_to_hs teon) pfn
+
+compile_file_to_png :: ProgramFileName -> P.IO ()
+compile_file_to_png = \pfn ->
+  compile_file_to_dot pfn >> run_dot_and_remove_dot_file pfn
+
+run_dot_and_remove_dot_file :: ProgramFileName -> P.IO ()
+run_dot_and_remove_dot_file pfn =
+  SP.callCommand
+  ( "dot -T png " ++ dot_file ++ " > " ++ H.make_extension "png" pfn ++
+    " && rm " ++ dot_file
+  )
+  where
+  dot_file :: P.String
+    = H.make_extension "dot" pfn
+
+compile_file_to_dot :: ProgramFileName -> P.IO ()
+compile_file_to_dot = \pfn ->
+  compile_file_to_file (compile_lc_to_dot, pfn, "dot")
+
+compile_file_to_file :: CompileTuple -> P.IO ()
+compile_file_to_file = \(cf, pfn, ne) ->
+  compile_file_to_string cf pfn >>= P.writeFile (H.make_extension ne pfn)
+
+compile_file_to_string :: CompileFunction -> ProgramFileName -> P.IO P.String
+compile_file_to_string = \cf pfn -> read_prog_file pfn >$> cf
 
 read_prog_file :: ProgramFileName -> P.IO H.Lcases
 read_prog_file = H.add_dotlc_if_needed .> P.readFile
 
--- compiling and generating strings
+-- compiling to haskell
 
 compile_lc_to_hs :: ThrowErrorOrDont -> H.Lcases -> GTC.Haskell
-compile_lc_to_hs = \teon ->
-  compile_lc_to_parse_err_or_hs .> \case
-    P.Left err -> throw_error_or_dont teon err
-    P.Right hs -> hs
-
-compile_lc_to_parse_err_or_hs :: H.Lcases -> ParseErrorOr GTC.Haskell
-compile_lc_to_parse_err_or_hs = PA.parse .> P.fmap prog_to_hs
+compile_lc_to_hs = \teon -> generate_to_compile (prog_to_hs, teon)
 
 prog_to_hs :: T.Program -> GTC.Haskell
 prog_to_hs = PP.preprocess_prog .> GTC.to_haskell
+
+-- compiling to dot
+
+compile_lc_to_dot :: H.Lcases -> STC.Dot
+compile_lc_to_dot = generate_to_compile (SA.to_dot_final, Throw_err)
+
+-- generate to compile
+
+generate_to_compile :: GenerateTuple -> H.Lcases -> P.String
+generate_to_compile = \(gen_f, teon) ->
+  generate_to_compile_parse_err gen_f .> \case
+    P.Left err -> throw_error_or_dont teon err
+    P.Right a -> a
+
+generate_to_compile_parse_err :: GenerateFunction -> H.Lcases -> ParseErrOrGenRes
+generate_to_compile_parse_err = \gen -> PA.parse .> P.fmap gen
 
 throw_error_or_dont :: ThrowErrorOrDont -> TP.ParseError -> P.String
 throw_error_or_dont = \case
