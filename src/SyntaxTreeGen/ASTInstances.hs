@@ -1,10 +1,13 @@
+{-# language LambdaCase #-}
+
 module SyntaxTreeGen.ASTInstances where
 
-import Prelude ((++))
+import Prelude ((++), ($))
 import Helpers ((.>))
 import Prelude qualified as P
 import ASTTypes qualified as T
 import SyntaxTreeGen.TypesAndClasses qualified as STC
+import SyntaxTreeGen.Helpers qualified as SH
 
 to_dot_final :: STC.ToDot a => a -> STC.Dot
 to_dot_final = STC.to_dot .> \(root, dot) ->
@@ -410,10 +413,19 @@ instance STC.ToDot T.IdMaybeOpId where
   to_dot = P.undefined
 
 instance STC.ToDot T.Comment where
-  to_dot = P.undefined
+  to_dot = \(T.C c) ->
+    SH.make_root_and_connect "CommentString" $ SH.make_node_string c
 
 instance STC.ToDot T.Program where
-  to_dot = \_ -> ("prog", "dot -- out")
+  to_dot = \(T.P (pp, pps)) ->
+    SH.collect_and_connect_with_roots "Program" $ pp : pps
 
 instance STC.ToDot T.ProgramPart where
-  to_dot = P.undefined
+  to_dot = \case
+    T.VDD vds -> SH.add_connect_with_root "ValueDefs" vds
+    T.TD td -> SH.add_connect_with_root "TypeDef" td
+    T.TNN1 tn -> SH.add_connect_with_root "TypeNickname" tn
+    T.TPD tpd -> SH.add_connect_with_root "TypePropDef" tpd
+    T.TT1 ib -> SH.add_connect_with_root "ImplementationBlock" ib
+    T.C1 c -> SH.add_connect_with_root "Comment" c
+

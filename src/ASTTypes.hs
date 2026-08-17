@@ -384,11 +384,7 @@ data Implementation = I (IdMaybeOpId, ValueExprMaybeWhere)
 
 newtype IdMaybeOpId = IMOI (Identifier, P.Maybe (Op, Identifier))
 
--- Comment
-
 newtype Comment = C P.String
-
--- Program
 
 newtype Program = P (ProgramPart, [ProgramPart])
 
