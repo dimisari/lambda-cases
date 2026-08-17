@@ -22,11 +22,11 @@ import Helpers qualified as H
 import ASTTypes qualified as T
 
 import Parsing.TypesAndClasses qualified as PTC
-import Parsing.AST qualified as PA
+import Parsing.ASTInstances qualified as PA
 
 import Generation.TypesAndClasses qualified as GTC
 import Generation.Helpers qualified as GH
-import Generation.AST qualified as GAST
+import Generation.ASTInstances qualified as GA
 
 -- types
 

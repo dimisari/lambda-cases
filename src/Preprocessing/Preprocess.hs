@@ -24,9 +24,8 @@ import Control.Monad.State qualified as MS
 import ASTTypes qualified as T
 import Helpers ((&>), (>$>), (.>), (++<), (+++<))
 import Helpers qualified as H
-import ShowInstances qualified as S
 
-import Parsing.AST qualified as PA
+import Parsing.ASTInstances qualified as PA
 import Preprocessing.TypesAndClasses qualified as PTC
 import Preprocessing.Collect qualified as PC
 import Preprocessing.CheckCompatibility qualified as PCC

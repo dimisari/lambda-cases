@@ -11,7 +11,7 @@ The AST provided to this code is the preprocessed AST.
 
 {-# language LambdaCase, FlexibleInstances #-}
 
-module Generation.AST where
+module Generation.ASTInstances where
 
 import Prelude (($), (++), (!!), (-), (<$>), (>>=), (+))
 import Prelude qualified as P
@@ -24,7 +24,6 @@ import Data.Char qualified as CH
 import ASTTypes qualified as T
 import Helpers ((&>), (<++), (>++<), (>$>), (++>))
 import Helpers qualified as H
-import ShowInstances qualified as S
 
 import Generation.TypesAndClasses qualified as GTC
 import Generation.Helpers qualified as GH
@@ -108,7 +107,7 @@ instance GTC.ToHaskell T.BasicExpr where
     T.PFAOI1 pfaoi -> GTC.to_haskell pfaoi
     T.T1 tuple -> GTC.to_haskell tuple
     T.L1 list -> GTC.to_haskell list
-    T.SI1 spid -> P.error $ "special id in basic expr:" ++ P.show spid
+    T.SI1 spid -> P.error $ "special id in basic expr:" ++ GTC.to_haskell spid
 
 instance GTC.ToHsWithIndentLvl T.BigTuple where
   to_hs_wil (T.BT (leou, btsplit, leous, leous_l)) =

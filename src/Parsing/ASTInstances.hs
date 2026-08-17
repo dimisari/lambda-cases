@@ -5,7 +5,7 @@ instance of the HasParser type class
 
 {-# language LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
-module Parsing.AST where
+module Parsing.ASTInstances where
 
 import Prelude ((<$>), (<*), (*>), ($), (>>=), (>>), (>), (++), (+), (.))
 import Prelude qualified as P
@@ -20,7 +20,7 @@ import Helpers qualified as H
 import Parsing.TypesAndClasses qualified as PTC
 import Parsing.Helpers qualified as PH
 
--- HasParser class + parse function
+-- parse function
 
 parse :: PTC.HasParser a => P.String -> P.Either TP.ParseError a
 parse = TP.runParser (PTC.parser <* TP.eof) (0, P.False) ""

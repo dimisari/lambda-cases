@@ -1,4 +1,5 @@
-- Read makefile for further refactoring
+- Add syntax tree image generation
+  - Add flag to lcc and to grules to use dot
 - Generate instances with type equality for the last type
   - Has to be done for both NPStart2 and SIPStart
 - Add pattern matching for prefix string (if it does not exist) e.g. "prefix" + s => ... s ...

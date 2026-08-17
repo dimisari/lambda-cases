@@ -35,7 +35,6 @@ newtype ParenExpr = PE InsideParenExpr
 data InsideParenExpr =
   LOE1 LineOpExpr | LFE1 LineFuncExpr
 
-
 newtype Tuple = T (LineExprOrUnder, LineExprOrUnders)
 
 newtype LineExprOrUnders = LEOUs (LineExprOrUnder, [LineExprOrUnder])
