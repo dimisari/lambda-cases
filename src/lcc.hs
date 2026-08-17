@@ -19,14 +19,17 @@ import Data.List qualified as DL
 import Text.Parsec qualified as TP
 
 import ASTTypes qualified as T
-import Helpers ((.>), (>$>), (&>))
+import Helpers ((.>), (>$>), (&>), (>++<))
 import Helpers qualified as H
 
-import Parsing.AST qualified as PA
+import Parsing.ASTInstances qualified as PA
 
-import Preprocessing.Preprocess qualified as GP
+import SyntaxTreeGen.ASTInstances qualified as PA
+
+import Preprocessing.Preprocess qualified as PP
+
 import Generation.TypesAndClasses qualified as GTC
-import Generation.AST qualified as GA
+import Generation.ASTInstances qualified as GA
 
 import System.Directory qualified as SD
 import System.FilePath qualified as SFP
@@ -35,8 +38,10 @@ import System.FilePath qualified as SFP
 
 type ProgramFileName = H.FileName
 type HsFileName = P.String
-type GenerateFunction = P.Either TP.ParseError T.Program -> P.String
-type CompileFunction = H.Lcases -> GTC.Haskell
+type ErrChoiceAndProgName = (ThrowErrorOrDont, ProgramFileName)
+type ParseErrorOr = P.Either TP.ParseError
+
+data ThrowErrorOrDont = Throw_err | Dont_throw_err
 
 -- main
 
@@ -48,75 +53,78 @@ main = SE.getArgs >>= \case
   ["-h", program_file_name] -> compile_to_hs_or_error_file program_file_name
   _  -> P.putStrLn "Weird arguments"
 
+-- compiling files
+
 compile_and_run :: ProgramFileName -> P.IO ()
 compile_and_run = \pfn ->
-  compile_to_exec_gen compile_lc_to_hs pfn >> P.putStrLn "\nRunning\n" >>
+  compile_to_exec_gen (Throw_err, pfn) >>
+  P.putStrLn "\nRunning\n" >>
   SP.callCommand ("./" ++ SFP.dropExtension pfn)
 
 compile_for_tests :: ProgramFileName -> P.IO ()
-compile_for_tests = compile_to_exec_gen compile_lc_to_hs_or_err_str
+compile_for_tests = (Dont_throw_err,) .> compile_to_exec_gen
 
-compile_to_exec_gen :: CompileFunction -> ProgramFileName -> P.IO ()
-compile_to_exec_gen cf pfn =
-  compile_to_and_get_file_gen cf pfn >>= \hs_file ->
-  ghc_command >>= \ghc_cmd ->
-  SP.callCommand (ghc_cmd ++ hs_file ++ " && " ++ "rm " ++ hs_file)
+compile_to_exec_gen :: ErrChoiceAndProgName -> P.IO ()
+compile_to_exec_gen = \ecapn ->
+  get_ghc_command >>= \ghc_command ->
+  ecapn_to_hs_file ecapn >>= \hs_file ->
+  run_ghc_and_remove_hs_file ghc_command hs_file
 
-ghc_command :: P.IO P.String
-ghc_command =
-   ("ghc" ++) <$> predef_imports >$> (++ " -no-keep-hi-files -no-keep-o-files ")
+run_ghc_and_remove_hs_file :: P.String -> HsFileName -> P.IO ()
+run_ghc_and_remove_hs_file = \ghc_command hs_file ->
+  SP.callCommand (ghc_command ++ hs_file ++ " && rm " ++ hs_file)
 
-compile_to_hs_or_err_and_get_file :: ProgramFileName -> P.IO HsFileName
-compile_to_hs_or_err_and_get_file =
-  compile_to_and_get_file_gen compile_lc_to_hs_or_err_str
-
-compile_to_and_get_file_gen
-  :: CompileFunction -> ProgramFileName -> P.IO HsFileName
-compile_to_and_get_file_gen = \cf pfn ->
-  compile_to_file_gen cf pfn >> P.return (H.make_extension_hs pfn)
+get_ghc_command :: P.IO P.String
+get_ghc_command =
+   ("ghc" ++) <$> get_predef_imports >$>
+   (++ " -no-keep-hi-files -no-keep-o-files ")
 
 compile_to_hs_or_error_file :: ProgramFileName -> P.IO ()
-compile_to_hs_or_error_file = compile_to_file_gen compile_lc_to_hs_or_err_str
+compile_to_hs_or_error_file =
+  (Dont_throw_err,) .> ecapn_to_hs_file .> (>> P.pure ())
 
-compile_to_file_gen :: CompileFunction -> ProgramFileName -> P.IO ()
-compile_to_file_gen = \cf pfn ->
-  compile_file_to_hs_gen cf pfn >>= \generated_code ->
-  top_code >>= \tc ->
-  P.writeFile (H.make_extension_hs pfn) $ tc ++ generated_code
+ecapn_to_hs_file :: ErrChoiceAndProgName -> P.IO HsFileName
+ecapn_to_hs_file ecapn@(teon, pfn) =
+  ecapn_to_hs ecapn >>= \comp_hs ->
+  get_lang_exts_and_imports_hs >>= \lang_exts_and_imports_hs ->
+  P.writeFile hs_file (lang_exts_and_imports_hs ++ comp_hs) >>
+  P.pure hs_file
+  where
+  hs_file :: HsFileName
+    = H.make_extension_hs pfn
 
-compile_file_to_hs_gen :: CompileFunction -> ProgramFileName -> P.IO GTC.Haskell
-compile_file_to_hs_gen = \cf pfn ->
-  H.add_dotlc_if_needed pfn &> P.readFile >$> cf
+ecapn_to_hs :: ErrChoiceAndProgName -> P.IO GTC.Haskell
+ecapn_to_hs (teon, pfn) = read_prog_file pfn >$> compile_lc_to_hs teon
 
-compile_lc_to_hs_or_err_str :: CompileFunction
-compile_lc_to_hs_or_err_str = compile generate_hs_or_error_str
+read_prog_file :: ProgramFileName -> P.IO H.Lcases
+read_prog_file = H.add_dotlc_if_needed .> P.readFile
 
-compile_lc_to_hs :: CompileFunction
-compile_lc_to_hs = compile generate_hs
+-- compiling and generating strings
 
-compile :: GenerateFunction -> CompileFunction
-compile = \gn -> PA.parse .> gn
+compile_lc_to_hs :: ThrowErrorOrDont -> H.Lcases -> GTC.Haskell
+compile_lc_to_hs = \teon ->
+  compile_lc_to_parse_err_or_hs .> \case
+    P.Left err -> throw_error_or_dont teon err
+    P.Right hs -> hs
 
-generate_hs_or_error_str :: GenerateFunction
-generate_hs_or_error_str = \case
-  P.Left err -> error_to_str err
-  P.Right prog -> prog_to_hs prog
+compile_lc_to_parse_err_or_hs :: H.Lcases -> ParseErrorOr GTC.Haskell
+compile_lc_to_parse_err_or_hs = PA.parse .> P.fmap prog_to_hs
 
-generate_hs :: GenerateFunction
-generate_hs = \case
-  P.Left err -> P.error $ error_to_str err
-  P.Right prog -> prog_to_hs prog
+prog_to_hs :: T.Program -> GTC.Haskell
+prog_to_hs = PP.preprocess_prog .> GTC.to_haskell
+
+throw_error_or_dont :: ThrowErrorOrDont -> TP.ParseError -> P.String
+throw_error_or_dont = \case
+  Throw_err -> error_to_str .> P.error
+  Dont_throw_err -> error_to_str
 
 error_to_str :: TP.ParseError -> P.String
 error_to_str = P.show .> ("Error :( ==> " ++)
 
-prog_to_hs :: T.Program -> GTC.Haskell
-prog_to_hs = GP.preprocess_prog .> GTC.to_haskell
+-- language extensions and imports haskell
 
--- language extensions and imports code
-
-top_code :: P.IO GTC.Haskell
-top_code = (lang_exts ++) <$> import_code
+get_lang_exts_and_imports_hs :: P.IO GTC.Haskell
+get_lang_exts_and_imports_hs = (lang_exts ++) <$> get_imports_hs
 
 -- language extesions code
 
@@ -131,30 +139,31 @@ lang_exts = "{-# language " ++ DL.intercalate ", " lang_ext_names ++ " #-}\n"
 
 -- imports code
 
-import_code :: P.IO GTC.Haskell
-import_code = module_names_to_import_code <$> module_names
+get_imports_hs :: P.IO GTC.Haskell
+get_imports_hs = module_names_to_import_code <$> get_module_names
 
 module_names_to_import_code :: [GTC.Haskell] -> GTC.Haskell
 module_names_to_import_code = \module_names ->
   P.concatMap (\im_n -> "import " ++ im_n ++ "\n") module_names ++ "\n"
-predef_imports :: P.IO P.String
-predef_imports = predef_file_paths >$> P.concatMap (" --make " ++)
 
-predef_dir :: P.IO P.FilePath
-predef_dir = SE.getEnv "HOME" >$> (++ "/.local/share/lcc/Predefined/")
+get_predef_imports :: P.IO P.String
+get_predef_imports = get_predef_file_paths >$> P.concatMap (" --make " ++)
 
-predef_files :: P.IO [P.String]
-predef_files = predef_dir >>= SD.listDirectory
+get_predef_dir :: P.IO P.FilePath
+get_predef_dir = SE.getEnv "HOME" >$> (++ "/.local/share/lcc/Predefined/")
 
-predef_file_paths :: P.IO [P.FilePath]
-predef_file_paths = predef_dir >>= \dir -> (P.map (dir ++)) <$> predef_files
+get_predef_files :: P.IO [P.String]
+get_predef_files = get_predef_dir >>= SD.listDirectory
 
-module_names :: P.IO [GTC.Haskell]
-module_names = (["qualified Prelude as P"] ++) <$> predef_module_names
+get_predef_file_paths :: P.IO [P.FilePath]
+get_predef_file_paths =
+  get_predef_dir >>= \dir -> (P.map (dir ++)) <$> get_predef_files
 
-predef_module_names :: P.IO [GTC.Haskell]
-predef_module_names = P.map file_to_module_name <$> predef_files
+get_module_names :: P.IO [GTC.Haskell]
+get_module_names = (["qualified Prelude as P"] ++) <$> get_predef_module_names
+
+get_predef_module_names :: P.IO [GTC.Haskell]
+get_predef_module_names = P.map file_to_module_name <$> get_predef_files
 
 file_to_module_name :: GTC.Haskell -> GTC.Haskell
 file_to_module_name = SFP.dropExtension .> ("Predefined." ++)
-
