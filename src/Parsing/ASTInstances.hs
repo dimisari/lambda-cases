@@ -627,7 +627,7 @@ instance PTC.HasParser T.ParamVarsInParen where
     T.PVIP <$> PH.in_paren (PTC.parser ++< TP.many (PH.comma *> PTC.parser))
 
 instance PTC.HasParser T.FieldNames where
-  parser = T.PCSIs <$> PH.in_paren PTC.parser
+  parser = T.FN <$> PH.in_paren PTC.parser
 
 instance PTC.HasParser T.SimpleIds where
   parser = T.SIds <$> PTC.parser ++< TP.many1 (PH.comma *> PTC.parser)
@@ -667,11 +667,11 @@ instance PTC.HasParser T.TypeNickname where
 --  TypePropDef
 
 instance PTC.HasParser T.TypePropDef where
-  parser = T.APD1 <$> TP.try PTC.parser <|> T.RPD1 <$> PTC.parser
+  parser = T.TSB1 <$> TP.try PTC.parser <|> T.RPD1 <$> PTC.parser
 
 instance PTC.HasParser T.TypeSigBlock where
   parser =
-    T.APD <$>
+    T.TSB <$>
       (PH.block_start "TYPE SIGNATURE" *> PTC.parser) ++<
       (PH.nl *> PTC.parser) +++<
       (PH.opt_space_around (TP.string ":") *> PTC.parser)
@@ -713,7 +713,7 @@ instance PTC.HasParser T.NamePart where
 
 instance PTC.HasParser T.ImplementationBlock where
   parser =
-    T.TT <$> pnws_p ++< mpnws_p +++< (PH.nl *> PTC.parser)
+    T.IB <$> pnws_p ++< mpnws_p +++< (PH.nl *> PTC.parser)
     where
     pnws_p :: PTC.Parser [T.PropNameWithSubs]
     pnws_p = PH.block_start "IMPLEMENTATION" *> PTC.parser >$> (\x -> [x])

@@ -735,7 +735,7 @@ instance GTC.ToHaskell T.TypeDef where
     T.OTD1 otd -> GTC.to_haskell otd
 
 instance GTC.ToHaskell T.TupleTypeDef where
-  to_haskell (T.TTD (tn, popt, T.PCSIs (T.SIds (sid, sids)))) =
+  to_haskell (T.TTD (tn, popt, T.FN (T.SIds (sid, sids)))) =
     data_hs ++ "\n\n" ++ instance_hs ++ "\n" ++
     change_types_hs ++ change_defs_hs
     where
@@ -850,11 +850,11 @@ instance GTC.ToHaskell T.TypeNickname where
 
 instance GTC.ToHaskell T.TypePropDef where
   to_haskell = \case
-    T.APD1 apd -> GTC.to_haskell apd
+    T.TSB1 apd -> GTC.to_haskell apd
     T.RPD1 rpd -> GTC.to_haskell rpd
 
 instance GTC.ToHaskell T.TypeSigBlock where
-  to_haskell = \(T.APD (pn, id, st)) ->
+  to_haskell = \(T.TSB (pn, id, st)) ->
     "class " ++ GTC.to_haskell pn ++ " where\n  " ++
     GTC.to_haskell id ++ " :: " ++ GTC.to_haskell (GTC.NoParen, st)
 
@@ -888,7 +888,7 @@ instance GTC.ToHaskell T.NamePart where
 -- ImplementationBlock
 
 instance GTC.ToHaskell T.ImplementationBlock where
-  to_haskell (T.TT (pnws_l, maybe_pnws, proof)) =
+  to_haskell (T.IB (pnws_l, maybe_pnws, proof)) =
     "instance " ++ pnws_l_hs ++ mpnws_to_hs maybe_pnws ++
     " where\n  " ++ GTC.to_haskell proof
     where

@@ -344,11 +344,11 @@ instance PTC.Preprocess T.ValueDefs where
     T.TVDs1 tvds -> T.TVDs1 <$> PTC.preprocess tvds
 
 instance PTC.Preprocess T.ImplementationBlock where
-  preprocess (T.TT (pnws_l, mpnws, proof)) = case pnws_l of
+  preprocess (T.IB (pnws_l, mpnws, proof)) = case pnws_l of
     [pnws] ->
       preprocess_pnws pnws >>= \pnws_l' ->
       PTC.preprocess proof >>= \proof' ->
-      P.return $ T.TT (pnws_l', mpnws, proof')
+      P.return $ T.IB (pnws_l', mpnws, proof')
     _ ->
       P.error "Should be impossible: many pnws at type theo before preprocessing"
 

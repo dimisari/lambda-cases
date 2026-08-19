@@ -200,9 +200,6 @@ newtype RestListMatching = RLM (P.Maybe SimpleId)
 data CaseBody =
   LFB1 LineFuncBody | BFB1 (BigFuncBody, P.Maybe WhereExpr)
 
-
--- Values: ValueDef, GroupedValueDefs, WhereExpr
-
 newtype ValueDef = VD (Identifier, TypeMaybeValueEquals)
 
 newtype TypeMaybeValueEquals = TMVE (Type, P.Maybe ValueExprMaybeWhere)
@@ -224,9 +221,6 @@ newtype IdTuple = IT (Identifier, [Identifier])
 
 data ValueDefs =
   VD1 ValueDef | LVDs1 ListValueDefs | TVDs1 TupleValueDefs
-
-
--- Type
 
 newtype Type = Ty (P.Maybe Condition, SimpleType)
 
@@ -276,9 +270,6 @@ data InOrOutType =
 
 newtype Condition = Co PropName
 
-
--- TypeDef, TypeNickname
-
 data TypeDef =
   TTD1 TupleTypeDef | OTD1 OrTypeDef
 
@@ -290,7 +281,7 @@ newtype TypeName =
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
-newtype FieldNames = PCSIs SimpleIds
+newtype FieldNames = FN SimpleIds
 
 newtype SimpleIds = SIds (SimpleId, [SimpleId])
 
@@ -306,13 +297,10 @@ newtype InternalValue = IV (Identifier, SimpleType)
 
 newtype TypeNickname = TNN (TypeName, SimpleType)
 
-
--- TypePropDef
-
 data TypePropDef =
-  APD1 TypeSigBlock | RPD1 RenamingPropDef
+  TSB1 TypeSigBlock | RPD1 RenamingPropDef
 
-newtype TypeSigBlock = APD (PropName, Identifier, SimpleType)
+newtype TypeSigBlock = TSB (PropName, Identifier, SimpleType)
 
 newtype RenamingPropDef = RPD (PropName, PropName, [PropName])
 
@@ -324,11 +312,8 @@ data PropName =
 newtype NamePart = NP P.String
   deriving P.Eq
 
-
--- ImplementationBlock
-
 newtype ImplementationBlock =
-  TT ([PropNameWithSubs], P.Maybe PropNameWithSubs, Implementation)
+  IB ([PropNameWithSubs], P.Maybe PropNameWithSubs, Implementation)
 
 type NPStart2 = (P.Char, [(NamePart, SubsInParen)], P.Maybe NamePart)
 type SIPStart = ([(SubsInParen, NamePart)], P.Maybe SubsInParen)

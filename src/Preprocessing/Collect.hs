@@ -76,7 +76,7 @@ instance PTC.CollectFieldIds T.TupleTypeDef where
   collect_fids = \(T.TTD (_, _, idt)) -> PTC.collect_fids idt
 
 instance PTC.CollectFieldIds T.FieldNames where
-  collect_fids = \(T.PCSIs sids) -> PTC.collect_fids sids
+  collect_fids = \(T.FN sids) -> PTC.collect_fids sids
 
 instance PTC.CollectFieldIds T.SimpleIds where
   collect_fids = \(T.SIds (sid, sids)) -> P.mapM_ PTC.collect_fids $ sid : sids

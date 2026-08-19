@@ -509,7 +509,7 @@ instance P.Show T.ParamVarsInParen where
     "(" ++ P.show ptv ++ show_list_comma ptvs ++ ")"
 
 instance P.Show T.FieldNames where
-  show = \(T.PCSIs ids) -> "(" ++ P.show ids ++ ")"
+  show = \(T.FN ids) -> "(" ++ P.show ids ++ ")"
 
 instance P.Show T.SimpleIds where
   show = \(T.SIds (sid, sids)) -> P.show sid ++ show_list_comma sids
@@ -543,11 +543,11 @@ instance P.Show T.TypeNickname where
 -- TypePropDef
 instance P.Show T.TypePropDef where
   show = \case
-    T.APD1 apd -> P.show apd
+    T.TSB1 apd -> P.show apd
     T.RPD1 rpd -> P.show rpd
 
 instance P.Show T.TypeSigBlock where
-  show = \(T.APD (pnl, id, st)) ->
+  show = \(T.TSB (pnl, id, st)) ->
     P.show pnl ++ "\nvalue\n  " ++ P.show id ++ " : " ++ P.show st
 
 instance P.Show T.RenamingPropDef where
@@ -566,7 +566,7 @@ instance P.Show T.NamePart where
 
 -- ImplementationBlock
 instance P.Show T.ImplementationBlock where
-  show = \(T.TT (pnws, maybe_pnws, proof)) ->
+  show = \(T.IB (pnws, maybe_pnws, proof)) ->
     "IMPLEMENTATION\n" ++ P.show pnws ++ show_mpnws maybe_pnws ++
     "\n" ++ P.show proof
     where
