@@ -200,232 +200,299 @@ instance STC.ToDot T.OuterMatching where
   to_dot = P.undefined
 
 instance STC.ToDot T.EndCaseParam where
-  to_dot = P.undefined
+  to_dot = \case
+    T.Id2 id -> SH.add_new_root "EndCaseParam" id
+    T.Ellipsis -> SH.connect_node_with_new_root "EndCaseParam" "..."
 
 instance STC.ToDot T.Matching where
-  to_dot = P.undefined
+  to_dot = \case
+    T.Lit2 lit -> SH.add_new_root "Matching" lit
+    T.PFM pfm -> SH.add_new_root "Matching" pfm
+    T.TM1 tm -> SH.add_new_root "Matching" tm
+    T.LM1 lm -> SH.add_new_root "Matching" lm
 
 instance STC.ToDot T.InnerMatching where
-  to_dot = P.undefined
+  to_dot = \case
+    T.Star -> SH.connect_node_with_new_root "TypeId" "*"
+    T.Id3 id -> SH.add_new_root "InnerMatching" id
+    T.M2 m -> SH.add_new_root "InnerMatching" m
 
 instance STC.ToDot T.TupleMatching where
-  to_dot = P.undefined
+  to_dot = \(T.TM tm) -> SH.add_new_root "TupleMatching" tm
 
 instance STC.ToDot T.ListMatching where
-  to_dot = P.undefined
+  to_dot = \(T.LM lm) -> SH.add_new_root "ListMatching" lm
 
 instance STC.ToDot T.RestListMatching where
-  to_dot = P.undefined
+  to_dot = \(T.RLM rlm) -> SH.add_new_root "RestListMatching" rlm
 
 instance STC.ToDot T.CaseBody where
-  to_dot = P.undefined
+  to_dot = \case
+    T.LFB1 lfb -> SH.add_new_root "CaseBody" lfb
+    T.BFB1 bfb -> SH.add_new_root "CaseBody" bfb
 
 instance STC.ToDot T.ValueDef where
-  to_dot = P.undefined
+  to_dot = \(T.VD vd) -> SH.add_new_root "ValueDef" vd
 
 instance STC.ToDot T.TypeMaybeValueEquals where
-  to_dot = P.undefined
+  to_dot = \(T.TMVE tmve) -> SH.add_new_root "TypeMaybeValueEquals" tmve
 
 instance STC.ToDot T.ValueExprMaybeWhere where
-  to_dot = P.undefined
+  to_dot = \(T.VE ve) -> SH.add_new_root "ValueExprMaybeWhere" ve
 
 instance STC.ToDot T.ValueExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BOAE5 boae -> SH.add_new_root "ValueExpr" boae
+    T.OE2 oe -> SH.add_new_root "ValueExpr" oe
+    T.FE2 fe -> SH.add_new_root "ValueExpr" fe
+    T.BT1 bt -> SH.add_new_root "ValueExpr" bt
+    T.BL1 bl -> SH.add_new_root "ValueExpr" bl
 
 instance STC.ToDot T.WhereExpr where
-  to_dot = P.undefined
+  to_dot = \(T.WE we) -> SH.add_new_root "WhereExpr" we
 
 instance STC.ToDot T.ListValueDefs where
-  to_dot = P.undefined
+  to_dot = \(T.LVDs lvds) -> SH.add_new_root "ListValueDefs" lvds
 
 instance STC.ToDot T.IdList where
-  to_dot = P.undefined
+  to_dot = \(T.IL il) -> SH.add_new_root "IdList" il
 
 instance STC.ToDot T.TupleValueDefs where
-  to_dot = P.undefined
+  to_dot = \(T.TVDs tvds) -> SH.add_new_root "TupleValueDefs" tvds
 
 instance STC.ToDot T.IdTuple where
-  to_dot = P.undefined
+  to_dot = \(T.IT it) -> SH.add_new_root "IdTuple" it
 
 instance STC.ToDot T.ValueDefs where
-  to_dot = P.undefined
+  to_dot = \case
+    T.VD1 vd -> SH.add_new_root "ValueDefs" vd
+    T.LVDs1 lvd -> SH.add_new_root "ValueDefs" lvd
+    T.TVDs1 tvd -> SH.add_new_root "ValueDefs" tvd
 
 instance STC.ToDot T.Type where
-  to_dot = P.undefined
+  to_dot = \(T.Ty ty) -> SH.add_new_root "Type" ty
 
 instance STC.ToDot T.SimpleType where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TAIOT1 taiot -> SH.add_new_root "SimpleType" taiot
+    T.POPT1 popt -> SH.add_new_root "SimpleType" popt
+    T.FT1 ft -> SH.add_new_root "SimpleType" ft
 
 instance STC.ToDot T.ProdOrPowerType where
-  to_dot = P.undefined
+  to_dot = \case
+    T.PT4 pt -> SH.add_new_root "ProdOrPowerType" pt
+    T.PoT5 pt -> SH.add_new_root "ProdOrPowerType" pt
 
 instance STC.ToDot T.TypeId where
-  to_dot = P.undefined
+  to_dot = \(T.TId tid) -> SH.connect_node_with_new_root "TypeId" tid
 
 instance STC.ToDot T.ParamTVar where
-  to_dot = P.undefined
+  to_dot = \(T.PTV ptv) -> SH.connect_node_with_new_root "ParamTVar" $ P.show ptv
 
 instance STC.ToDot T.AdHocTVar where
-  to_dot = P.undefined
+  to_dot = \(T.AHTV ahtv) -> SH.connect_node_with_new_root "AdHocTVar" [ahtv]
 
 instance STC.ToDot T.TypeAppIdOrTV where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TAIOA1 taioa -> SH.add_new_root "TypeAppIdOrTV" taioa
+    T.PTV1 ptv -> SH.add_new_root "TypeAppIdOrTV" ptv
 
 instance STC.ToDot T.TypeAppIdOrAHTV where
-  to_dot = P.undefined
+  to_dot = \(T.TAIOA taioa) -> SH.add_new_root "TypeAppIdOrAHTV" taioa
 
 instance STC.ToDot T.TAIOAMiddle where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TIdStart1 tis -> SH.add_new_root "TAIOAMiddle" tis
+    T.AHTV1 ahtv -> SH.add_new_root "TAIOAMiddle" ahtv
 
 instance STC.ToDot T.TypesInParen where
-  to_dot = P.undefined
+  to_dot = \(T.TIP tip) -> SH.add_new_root "TypesInParen" tip
 
 instance STC.ToDot T.ProdType where
-  to_dot = P.undefined
+  to_dot = \(T.PT pt) -> SH.add_new_root "ProdType" pt
 
 instance STC.ToDot T.FieldType where
-  to_dot = P.undefined
+  to_dot = \case
+    T.PBT1 pbt -> SH.add_new_root "FieldType" pbt
+    T.PoT2 pt -> SH.add_new_root "FieldType" pt
 
 instance STC.ToDot T.PowerBaseType where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TAIOT2 taoit -> SH.add_new_root "PowerBaseType" taoit
+    T.IPT ipt -> SH.add_new_root "PowerBaseType" ipt
 
 instance STC.ToDot T.InParenT where
-  to_dot = P.undefined
+  to_dot = \case
+    T.PT3 pt -> SH.add_new_root "InParenT" pt
+    T.FT3 ft -> SH.add_new_root "InParenT" ft
+    T.PoT3 pt -> SH.add_new_root "InParenT" pt
 
 instance STC.ToDot T.PowerType where
-  to_dot = P.undefined
+  to_dot = \(T.PoT pt) -> SH.add_new_root "PowerType" pt
 
 instance STC.ToDot T.FuncType where
-  to_dot = P.undefined
+  to_dot = \(T.FT ft) -> SH.add_new_root "FuncType" ft
 
 instance STC.ToDot T.InOrOutType where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TAIOT3 taiot -> SH.add_new_root "InOrOutType" taiot
+    T.POPT2 popt -> SH.add_new_root "InOrOutType" popt
+    T.FT2 ft -> SH.add_new_root "InOrOutType" ft
 
 instance STC.ToDot T.Condition where
-  to_dot = P.undefined
+  to_dot = \(T.Co co) -> SH.add_new_root "Condition" co
 
 instance STC.ToDot T.TypeDef where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TTD1 ttd -> SH.add_new_root "TypeDef" ttd
+    T.OTD1 otd -> SH.add_new_root "TypeDef" otd
 
 instance STC.ToDot T.TupleTypeDef where
-  to_dot = P.undefined
+  to_dot = \(T.TTD ttd) -> SH.add_new_root "TupleTypeDef" ttd
 
 instance STC.ToDot T.TypeName where
-  to_dot = P.undefined
+  to_dot = \(T.TN tn) -> SH.add_new_root "TypeName" tn
 
 instance STC.ToDot T.ParamVarsInParen where
-  to_dot = P.undefined
+  to_dot = \(T.PVIP pvip) -> SH.add_new_root "ParamVarsInParen" pvip
 
 instance STC.ToDot T.FieldNames where
-  to_dot = P.undefined
+  to_dot = \(T.FN fn) -> SH.add_new_root "FieldNames" fn
 
 instance STC.ToDot T.SimpleIds where
-  to_dot = P.undefined
+  to_dot = \(T.SIds sids) -> SH.add_new_root "SimpleIds" sids
 
 instance STC.ToDot T.OrTypeDef where
-  to_dot = P.undefined
+  to_dot = \(T.OTD otd) -> SH.add_new_root "OrTypeDef" otd
 
 instance STC.ToDot T.OrTypeValuesLine where
-  to_dot = P.undefined
+  to_dot = \(T.OTVL otvl) -> SH.add_new_root "OrTypeValueLine" otvl
 
 instance STC.ToDot T.OrTypeValuesLines where
-  to_dot = P.undefined
+  to_dot = \(T.OTVLs otvls) -> SH.add_new_root "OrTypeValueLines" otvls
 
 instance STC.ToDot T.OrTypeValue where
-  to_dot = P.undefined
+  to_dot = \(T.OTV otv) -> SH.add_new_root "OrTypeValue" otv
 
 instance STC.ToDot T.InternalValue where
-  to_dot = P.undefined
+  to_dot = \(T.IV iv) -> SH.add_new_root "InternalValue" iv
 
 instance STC.ToDot T.TypeNickname where
-  to_dot = P.undefined
+  to_dot = \(T.TNN tnn) -> SH.add_new_root "TypeNickname" tnn
 
 instance STC.ToDot T.TypePropDef where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TSB1 tsb -> SH.add_new_root "TypePropDef" tsb
+    T.RPD1 rpd -> SH.add_new_root "TypePropDef" rpd
 
 instance STC.ToDot T.TypeSigBlock where
-  to_dot = P.undefined
+  to_dot = \(T.TSB tsb) -> SH.add_new_root "TypeSigBlock" tsb
 
 instance STC.ToDot T.RenamingPropDef where
-  to_dot = P.undefined
+  to_dot = \(T.RPD rpd) -> SH.add_new_root "RenamingPropDef" rpd
 
 instance STC.ToDot T.PropName where
-  to_dot = P.undefined
+  to_dot = \case
+    T.NPStart1 nps -> SH.add_new_root "PropName" nps
+    T.TIPStart tips -> SH.add_new_root "PropName" tips
 
 instance STC.ToDot T.NamePart where
-  to_dot = P.undefined
+  to_dot = \(T.NP str) -> SH.connect_node_with_new_root "NamePart" str
 
 instance STC.ToDot T.ImplementationBlock where
-  to_dot = P.undefined
+  to_dot = \(T.IB ib) -> SH.add_new_root "ImplementationBlock" ib
 
 instance STC.ToDot T.PropNameWithSubs where
-  to_dot = P.undefined
+  to_dot = \case
+    T.NPStart2 nps -> SH.add_new_root "PropNameWithSubs" nps
+    T.SIPStart sips -> SH.add_new_root "PropNameWithSubs" sips
 
 instance STC.ToDot T.SubsInParen where
-  to_dot = P.undefined
+  to_dot = \(T.SIP sip) -> SH.add_new_root "SubsInParen" sip
 
 instance STC.ToDot T.TVarSub where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TAIOTS1 taiots -> SH.add_new_root "TVarSub" taiots
+    T.POPTS1 popts -> SH.add_new_root "TVarSub" popts
+    T.FTS1 fts -> SH.add_new_root "TVarSub" fts
 
 instance STC.ToDot T.ProdOrPowerTypeSub where
-  to_dot = P.undefined
+  to_dot = \case
+    T.PTS1 pts -> SH.add_new_root "ProdOrPowerTypeSub" pts
+    T.PoTS1 pots -> SH.add_new_root "ProdOrPowerTypeSub" pots
 
 instance STC.ToDot T.TypeAppIdOrTVSub where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TAIOAS1 taioas -> SH.add_new_root "TypeAppIdOrTVSub" taioas
+    T.PTV2 ptv -> SH.add_new_root "TypeAppIdOrTVSub" ptv
 
 instance STC.ToDot T.TypeAppIdOrAHTVSub where
-  to_dot = P.undefined
+  to_dot = \(T.TAIOAS taioas) -> SH.add_new_root "TypeAppIdOrAHTVSub" taioas
 
 instance STC.ToDot T.TAIOASMiddle where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TIdStart2 tid_start_pair -> SH.add_new_root "TAIOASMiddle" tid_start_pair
+    T.AHTV2 ahtv -> SH.add_new_root "TAIOASMiddle" ahtv
 
 instance STC.ToDot T.SubsOrUndersInParen where
-  to_dot = P.undefined
+  to_dot = \(T.SOUIP souip) -> SH.add_new_root "SubsOrUndersInParen" souip
 
 instance STC.ToDot T.SubOrUnder where
-  to_dot = P.undefined
+  to_dot = \case
+    T.TVS1 tvs -> SH.add_new_root "SubOrUnder" tvs
+    T.Underscore4 -> SH.connect_node_with_new_root "SubOrUnder" "_"
 
 instance STC.ToDot T.PowerTypeSub where
-  to_dot = P.undefined
+  to_dot = \(T.PoTS pots_pair) -> SH.add_new_root "PowerTypeSub" pots_pair
 
 instance STC.ToDot T.PowerBaseTypeSub where
-  to_dot = P.undefined
+  to_dot = \case
+    T.Underscore5 -> SH.connect_node_with_new_root "PowerBaseTypeSub" "_"
+    T.TAIOTS2 taiots -> SH.add_new_root "PowerBaseTypeSub" taiots
+    T.IPTS ipts -> SH.add_new_root "PowerBaseTypeSub" ipts
 
 instance STC.ToDot T.InParenTSub where
-  to_dot = P.undefined
+  to_dot = \case
+    T.PTS2 pts -> SH.add_new_root "InParenTSub" pts
+    T.FTS2 fts -> SH.add_new_root "InParenTSub" fts
 
 instance STC.ToDot T.ProdTypeSub where
-  to_dot = P.undefined
+  to_dot = \(T.PTS pts) -> SH.add_new_root "FuncTypeSub" pts
 
 instance STC.ToDot T.FieldTypeSub where
-  to_dot = P.undefined
+  to_dot = \case
+    T.PBTS1 pbts -> SH.add_new_root "FieldTypeSub" pbts
+    T.PoTS2 pts -> SH.add_new_root "FieldTypeSub" pts
 
 instance STC.ToDot T.FuncTypeSub where
-  to_dot = P.undefined
+  to_dot = \(T.FTS fts_pair) -> SH.add_new_root "FuncTypeSub" fts_pair
 
 instance STC.ToDot T.InOrOutTypeSub where
-  to_dot = P.undefined
+  to_dot = \case
+    T.Underscore6 -> SH.connect_node_with_new_root "InOrOutTypeSub" "_"
+    T.TAIOTS3 taiots -> SH.add_new_root "InOrOutTypeSub" taiots
+    T.POPTS2 popts -> SH.add_new_root "InOrOutTypeSub" popts
+    T.FTS3 fts -> SH.add_new_root "InOrOutTypeSub" fts
 
 instance STC.ToDot T.Implementation where
-  to_dot = P.undefined
+  to_dot = \(T.I imoi_veme) -> SH.add_new_root "Implementation" imoi_veme
 
 instance STC.ToDot T.IdMaybeOpId where
-  to_dot = P.undefined
+  to_dot = \(T.IMOI imoi) -> SH.add_new_root "IdMaybeOpId" imoi
 
 instance STC.ToDot T.Comment where
   to_dot = \(T.C c) ->
-    SH.make_root_and_connect "CommentString" $ SH.make_node_string c
+    SH.connect_node_with_new_root "Comment" $ SH.string_to_node_string c
 
 instance STC.ToDot T.Program where
-  to_dot = \(T.P (pp, pps)) ->
-    SH.collect_and_connect_with_roots "Program" $ pp : pps
+  to_dot = \(T.P p) -> SH.add_new_root "Program" p
 
 instance STC.ToDot T.ProgramPart where
   to_dot = \case
-    T.VDD vds -> SH.add_connect_with_root "ValueDefs" vds
-    T.TD td -> SH.add_connect_with_root "TypeDef" td
-    T.TNN1 tn -> SH.add_connect_with_root "TypeNickname" tn
-    T.TPD tpd -> SH.add_connect_with_root "TypePropDef" tpd
-    T.TT1 ib -> SH.add_connect_with_root "ImplementationBlock" ib
-    T.C1 c -> SH.add_connect_with_root "Comment" c
+    T.VDD vds -> SH.add_new_root "ProgramPart" vds
+    T.TD td -> SH.add_new_root "ProgramPart" td
+    T.TNN1 tn -> SH.add_new_root "ProgramPart" tn
+    T.TPD tpd -> SH.add_new_root "ProgramPart" tpd
+    T.TT1 ib -> SH.add_new_root "ProgramPart" ib
+    T.C1 c -> SH.add_new_root "ProgramPart" c
 
