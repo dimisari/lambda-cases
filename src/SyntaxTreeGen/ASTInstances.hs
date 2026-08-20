@@ -3,201 +3,284 @@
 module SyntaxTreeGen.ASTInstances where
 
 import Prelude ((++), ($))
-import Helpers ((.>))
+import Helpers ((.>), (&>))
 import Prelude qualified as P
 import ASTTypes qualified as T
 import SyntaxTreeGen.TypesAndClasses qualified as STC
 import SyntaxTreeGen.Helpers qualified as SH
 
+import Control.Monad.State.Lazy qualified as CMSL
+
 to_dot_final :: STC.ToDot a => a -> STC.Dot
-to_dot_final = STC.to_dot .> \(root, dot) ->
+to_dot_final =
+  STC.to_dot .> \a_to_dot ->
+  CMSL.evalState a_to_dot 0 &> \(root, dot) ->
   "graph " ++ root ++ "\n{\n" ++ dot ++  "\n}"
 
-instance STC.ToDot P.Integer where
-  to_dot = P.undefined
-
-instance STC.ToDot P.Double where
-  to_dot = P.undefined
-
-instance STC.ToDot P.Char where
-  to_dot = P.undefined
-
-instance STC.ToDot P.String where
-  to_dot = P.undefined
-
 instance STC.ToDot T.Literal where
-  to_dot = P.undefined
+  to_dot = \case
+    T.Int i -> SH.connect_node_with_new_root "Literal" $ P.show i
+    T.R d -> SH.connect_node_with_new_root "Literal" $ P.show d
+    T.Ch c -> SH.connect_node_with_new_root "Literal" $ P.show c
+    T.S s -> SH.connect_node_with_new_root "Literal" s
 
 instance STC.ToDot T.Identifier where
-  to_dot = P.undefined
+  to_dot = \(T.Id i) -> SH.add_new_root "Identifier" i
 
 instance STC.ToDot T.SimpleId where
-  to_dot = P.undefined
+  to_dot = \(T.SId si) -> SH.add_new_root "SimpleId" si
 
 instance STC.ToDot T.IdStart where
-  to_dot = P.undefined
+  to_dot = \(T.IS is) -> SH.add_new_root "IdStart" is
 
 instance STC.ToDot T.IdCont where
-  to_dot = P.undefined
+  to_dot = \(T.IC ic) -> SH.add_new_root "IdCont" ic
 
 instance STC.ToDot T.UndersInParen where
-  to_dot = P.undefined
+  to_dot = \(T.UIP uip) -> SH.add_new_root "UndersInParen" $ P.show uip
 
 instance STC.ToDot T.ParenExpr where
-  to_dot = P.undefined
+  to_dot = \(T.PE pe) -> SH.add_new_root "ParenExpr" pe
 
 instance STC.ToDot T.InsideParenExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.LOE1 loe -> SH.add_new_root "InsideParenExpr" loe
+    T.LFE1 lfe -> SH.add_new_root "InsideParenExpr" lfe
 
 instance STC.ToDot T.Tuple where
-  to_dot = P.undefined
+  to_dot = \(T.T t) -> SH.add_new_root "Tuple" t
 
 instance STC.ToDot T.LineExprOrUnders where
-  to_dot = P.undefined
+  to_dot = \(T.LEOUs leous) -> SH.add_new_root "LineExprOrUnders" leous
 
 instance STC.ToDot T.LineExprOrUnder where
-  to_dot = P.undefined
+  to_dot = \case
+    T.LE1 le -> SH.add_new_root "LineExprOrUnder" le
+    T.Underscore1 -> SH.connect_node_with_new_root "LineExprOrUnder" "_"
 
 instance STC.ToDot T.LineExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BOAE1 boae -> SH.add_new_root "LineExpr" boae
+    T.LOE2 loe -> SH.add_new_root "LineExpr" loe
+    T.LFE2 le -> SH.add_new_root "LineExpr" le
 
 instance STC.ToDot T.BasicOrAppExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BE3 be -> SH.add_new_root "BasicOrAppExpr" be
+    T.PrFA1 pfa -> SH.add_new_root "BasicOrAppExpr" pfa
+    T.PoFA1 pfa -> SH.add_new_root "BasicOrAppExpr" pfa
 
 instance STC.ToDot T.BasicExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.Lit1 lit -> SH.add_new_root "BasicExpr" lit
+    T.PFAOI1 pfaoi -> SH.add_new_root "BasicExpr" pfaoi
+    T.T1 t -> SH.add_new_root "BasicExpr" t
+    T.L1 l -> SH.add_new_root "BasicExpr" l
+    T.SI1 si -> SH.add_new_root "BasicExpr" si
 
 instance STC.ToDot T.BigTuple where
-  to_dot = P.undefined
+  to_dot = \(T.BT bt) -> SH.add_new_root "BigTuple" bt
+
+instance STC.ToDot T.BigTupleSplit where
+  to_dot = \case
+    T.Split -> SH.connect_node_with_new_root "BigTupleSplit" "Split"
+    T.NoSplit -> SH.connect_node_with_new_root "BigTupleSplit" "NoSplit"
 
 instance STC.ToDot T.List where
-  to_dot = P.undefined
+  to_dot = \(T.L l) -> SH.add_new_root "List" l
 
 instance STC.ToDot T.BigList where
-  to_dot = P.undefined
-
-instance STC.ToDot T.ArgsStr where
-  to_dot = P.undefined
+  to_dot = \(T.BL bl) -> SH.add_new_root "BigList" bl
 
 instance STC.ToDot T.ParenFuncAppOrId where
-  to_dot = P.undefined
+  to_dot = \(T.PFAOI pfaoi) -> SH.add_new_root "ParenFuncAppOrId" pfaoi
 
 instance STC.ToDot T.Arguments where
-  to_dot = P.undefined
+  to_dot = \(T.As as) -> SH.add_new_root "Arguments" as
 
 instance STC.ToDot T.PreFunc where
-  to_dot = P.undefined
+  to_dot = \(T.PF pf) -> SH.add_new_root "PreFunc" pf
 
 instance STC.ToDot T.PreFuncApp where
-  to_dot = P.undefined
+  to_dot = \(T.PrFA prfa) -> SH.add_new_root "PreFuncApp" prfa
 
 instance STC.ToDot T.DotId where
-  to_dot = P.undefined
+  to_dot = \(T.DI di) -> SH.add_new_root "DotId" di
 
 instance STC.ToDot T.SimpleOrSpecialId where
-  to_dot = P.undefined
+  to_dot = \case
+    T.SId1 si -> SH.add_new_root "SimpleOrSpecialId" si
+    T.SI2 si -> SH.add_new_root "SimpleOrSpecialId" si
 
 instance STC.ToDot T.SpecialId where
-  to_dot = P.undefined
+  to_dot = \case
+    T.First -> SH.connect_node_with_new_root "SpecialId" "1st"
+    T.Second -> SH.connect_node_with_new_root "SpecialId" "2nd"
+    T.Third -> SH.connect_node_with_new_root "SpecialId" "3rd"
+    T.Fourth -> SH.connect_node_with_new_root "SpecialId" "4th"
+    T.Fifth -> SH.connect_node_with_new_root "SpecialId" "5th"
 
 instance STC.ToDot T.PostFuncApp where
-  to_dot = P.undefined
-
-instance STC.ToDot T.DotChangeApp where
-  to_dot = P.undefined
+  to_dot = \case
+    T.DIA1 dia -> SH.add_new_root "PostFuncApp" dia
+    T.DCA1 dca -> SH.add_new_root "PostFuncApp" dca
 
 instance STC.ToDot T.DotIdsApp where
-  to_dot = P.undefined
+  to_dot = \(T.DIA dia) -> SH.add_new_root "DotIdsApp" dia
 
 instance STC.ToDot T.PostFuncArg where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BE2 be -> SH.add_new_root "PostFuncArg" be
+    T.PE2 pe -> SH.add_new_root "PostFuncArg" pe
+    T.Underscore2 -> SH.connect_node_with_new_root "PostFuncArg" "_"
+
+instance STC.ToDot T.DotChangeApp where
+  to_dot = \(T.DCA dca) -> SH.add_new_root "DotChangeApp" dca
+
+instance STC.ToDot T.DotChangeArg where
+  to_dot = \case
+    T.PFA pfa -> SH.add_new_root "DotChangeArg" pfa
+    T.DIA2 dia -> SH.add_new_root "DotChangeArg" dia
 
 instance STC.ToDot T.DotChange where
-  to_dot = P.undefined
+  to_dot = \(T.DC dc) -> SH.add_new_root "DotChange" dc
 
 instance STC.ToDot T.FieldChange where
-  to_dot = P.undefined
+  to_dot = \(T.FC fc) -> SH.add_new_root "FieldChange" fc
 
 instance STC.ToDot T.OpExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.LOE3 loe -> SH.add_new_root "OpExpr" loe
+    T.BOE1 boe -> SH.add_new_root "OpExpr" boe
 
 instance STC.ToDot T.OpExprStart where
-  to_dot = P.undefined
+  to_dot = \(T.OES oes) -> SH.add_new_root "OpExprStart" oes
 
 instance STC.ToDot T.LineOpExpr where
-  to_dot = P.undefined
+  to_dot = \(T.LOE loe) -> SH.add_new_root "LineOpExpr" loe
 
 instance STC.ToDot T.LineOpExprEnd where
-  to_dot = P.undefined
+  to_dot = \case
+    T.O1 op -> SH.add_new_root "LineOpExprEnd" op
+    T.LFE3 loe -> SH.add_new_root "LineOpExprEnd" loe
 
 instance STC.ToDot T.BigOpExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BOEOS1 boeos -> SH.add_new_root "BigOpExpr" boeos
+    T.BOEFS1 boefs -> SH.add_new_root "BigOpExpr" boefs
 
 instance STC.ToDot T.BigOpExprOpSplit where
-  to_dot = P.undefined
+  to_dot = \(T.BOEOS boeos) -> SH.add_new_root "BigOpExprOpSplit" boeos
 
 instance STC.ToDot T.OpSplitLine where
-  to_dot = P.undefined
+  to_dot = \case
+    T.OESMOFCO oesmofco -> SH.add_new_root "OpSplitLine" oesmofco
+    T.OFCO1 ofco -> SH.add_new_root "OpSplitLine" ofco
 
 instance STC.ToDot T.OperFCO where
-  to_dot = P.undefined
+  to_dot = \(T.OFCO ofco) -> SH.add_new_root "OperFCO" ofco
 
 instance STC.ToDot T.OpSplitEnd where
-  to_dot = P.undefined
+  to_dot = \case
+    T.O2 op -> SH.add_new_root "OpSplitEnd" op
+    T.FE1 fe -> SH.add_new_root "OpSplitEnd" fe
 
 instance STC.ToDot T.BigOpExprFuncSplit where
-  to_dot = P.undefined
+  to_dot = \(T.BOEFS boefs) -> SH.add_new_root "BigOpExprFuncSplit" boefs
 
 instance STC.ToDot T.BigOrCasesFuncExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BFE1 bfe -> SH.add_new_root "BigOrCasesFuncExpr" bfe
+    T.CFE1 cfe -> SH.add_new_root "BigOrCasesFuncExpr" cfe
 
 instance STC.ToDot T.Operand where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BOAE2 boae -> SH.add_new_root "Operand" boae
+    T.PE3 pe -> SH.add_new_root "Operand" pe
+    T.Underscore3 -> SH.connect_node_with_new_root "Operand" "_"
 
 instance STC.ToDot T.Op where
-  to_dot = P.undefined
+  to_dot = \case
+    T.FCO3 fco -> SH.add_new_root "Op" fco
+    T.OSO oso -> SH.add_new_root "Op" oso
 
 instance STC.ToDot T.FuncCompOp where
-  to_dot = P.undefined
+  to_dot = \case
+    T.RightComp -> SH.connect_node_with_new_root "FuncCompOp" "o>"
+    T.LeftComp -> SH.connect_node_with_new_root "FuncCompOp" "<o"
 
 instance STC.ToDot T.OptionalSpacesOp where
-  to_dot = P.undefined
+  to_dot = \case
+    T.RightApp -> SH.connect_node_with_new_root "OptionalSpacesOp" "->"
+    T.LeftApp -> SH.connect_node_with_new_root "OptionalSpacesOp" "<-"
+    T.Power -> SH.connect_node_with_new_root "OptionalSpacesOp" "^"
+    T.Mult -> SH.connect_node_with_new_root "OptionalSpacesOp" "*"
+    T.Div -> SH.connect_node_with_new_root "OptionalSpacesOp" "/"
+    T.Plus -> SH.connect_node_with_new_root "OptionalSpacesOp" "+"
+    T.Minus -> SH.connect_node_with_new_root "OptionalSpacesOp" "-"
+    T.Equal -> SH.connect_node_with_new_root "OptionalSpacesOp" "=="
+    T.NotEqual -> SH.connect_node_with_new_root "OptionalSpacesOp" "!="
+    T.Greater -> SH.connect_node_with_new_root "OptionalSpacesOp" ">"
+    T.Less -> SH.connect_node_with_new_root "OptionalSpacesOp" "<"
+    T.GrEq -> SH.connect_node_with_new_root "OptionalSpacesOp" ">="
+    T.LeEq -> SH.connect_node_with_new_root "OptionalSpacesOp" "<="
+    T.And -> SH.connect_node_with_new_root "OptionalSpacesOp" "&"
+    T.Or -> SH.connect_node_with_new_root "OptionalSpacesOp" "|"
+    T.Use -> SH.connect_node_with_new_root "OptionalSpacesOp" ">>"
+    T.Then -> SH.connect_node_with_new_root "OptionalSpacesOp" ";"
 
 instance STC.ToDot T.FuncExpr where
-  to_dot = P.undefined
+  to_dot = \case
+    T.LFE4 lfe -> SH.add_new_root "FuncExpr" lfe
+    T.BFE2 bfe -> SH.add_new_root "FuncExpr" bfe
+    T.CFE2 cfe -> SH.add_new_root "FuncExpr" cfe
 
 instance STC.ToDot T.LineFuncExpr where
-  to_dot = P.undefined
+  to_dot = \(T.LFE lfe) -> SH.add_new_root "LineFuncExpr" lfe
 
 instance STC.ToDot T.BigFuncExpr where
-  to_dot = P.undefined
+  to_dot = \(T.BFE bfe) -> SH.add_new_root "BigFuncExpr" bfe
 
 instance STC.ToDot T.BigFuncBodyOrDeeperBody where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BFB bfb -> SH.add_new_root "BigFuncBodyOrDeeperBody" bfb
+    T.DB db -> SH.add_new_root "BigFuncBodyOrDeeperBody" db
 
 instance STC.ToDot T.LineFuncBody where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BOAE3 boae -> SH.add_new_root "LineFuncBody" boae
+    T.LOE4 loe -> SH.add_new_root "LineFuncBody" loe
+    T.PLFE1 plfe -> SH.add_new_root "LineFuncBody" plfe
 
 instance STC.ToDot T.ParenLineFuncExpr where
-  to_dot = P.undefined
+  to_dot = \(T.PLFE plfe) -> SH.add_new_root "ParenLineFuncExpr" plfe
 
 instance STC.ToDot T.BigFuncBody where
-  to_dot = P.undefined
+  to_dot = \case
+    T.BOAE4 boae -> SH.add_new_root "BigFuncBody" boae
+    T.OE1 oe -> SH.add_new_root "BigFuncBody" oe
+    T.PLFE2 plfe -> SH.add_new_root "BigFuncBody" plfe
 
 instance STC.ToDot T.CasesFuncExpr where
-  to_dot = P.undefined
+  to_dot = \(T.CFE cfe) -> SH.add_new_root "CasesFuncExpr" cfe
 
 instance STC.ToDot T.CasesParams where
-  to_dot = P.undefined
+  to_dot = \case
+    T.CParamId id -> SH.add_new_root "CasesParams" id
+    T.QuestionMark -> SH.connect_node_with_new_root "CasesParams" "?"
+    T.Star2 -> SH.connect_node_with_new_root "CasesParams" "*"
+    T.CParams cps -> SH.add_new_root "CasesParams" cps
 
 instance STC.ToDot T.Case where
-  to_dot = P.undefined
+  to_dot = \(T.Ca ca) -> SH.add_new_root "Case" ca
 
 instance STC.ToDot T.EndCase where
-  to_dot = P.undefined
+  to_dot = \(T.EC ec) -> SH.add_new_root "EndCase" ec
 
 instance STC.ToDot T.OuterMatching where
-  to_dot = P.undefined
+  to_dot = \case
+    T.SId2 sid -> SH.add_new_root "OuterMatching" sid
+    T.M1 m -> SH.add_new_root "OuterMatching" m
 
 instance STC.ToDot T.EndCaseParam where
   to_dot = \case
@@ -482,7 +565,7 @@ instance STC.ToDot T.IdMaybeOpId where
 
 instance STC.ToDot T.Comment where
   to_dot = \(T.C c) ->
-    SH.connect_node_with_new_root "Comment" $ SH.string_to_node_string c
+    SH.connect_node_with_new_root "Comment"  c
 
 instance STC.ToDot T.Program where
   to_dot = \(T.P p) -> SH.add_new_root "Program" p

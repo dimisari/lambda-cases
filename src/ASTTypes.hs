@@ -57,7 +57,6 @@ newtype BigTuple =
 data BigTupleSplit =
   Split | NoSplit
 
-
 newtype List = L (P.Maybe LineExprOrUnders)
 
 newtype BigList = BL (LineExprOrUnders, [LineExprOrUnders])
@@ -68,9 +67,6 @@ newtype ParenFuncAppOrId =
     (P.Maybe Arguments, IdStart, [ArgsStr], P.Maybe P.Char, P.Maybe Arguments)
 
 newtype Arguments = As LineExprOrUnders
-
-
--- Values: PreFunc, DotId, BasicExpr, Change
 
 newtype PreFunc = PF SimpleId
 
@@ -101,12 +97,8 @@ newtype DotChange = DC (FieldChange, [FieldChange])
 
 newtype FieldChange = FC (SimpleOrSpecialId, LineExprOrUnder)
 
-
--- Values: OpExpr
-
 data OpExpr =
   LOE3 LineOpExpr | BOE1 BigOpExpr
-
 
 newtype OpExprStart = OES [(Operand, Op)]
 
@@ -145,9 +137,6 @@ data FuncCompOp =
 data OptionalSpacesOp =
   RightApp | LeftApp | Power | Mult | Div | Plus | Minus | Equal | NotEqual |
   Greater | Less | GrEq | LeEq | And | Or | Use | Then
-
-
--- Values: FuncExpr
 
 data FuncExpr =
   LFE4 LineFuncExpr | BFE2 BigFuncExpr | CFE2 CasesFuncExpr
