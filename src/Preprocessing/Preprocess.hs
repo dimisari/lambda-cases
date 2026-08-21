@@ -25,7 +25,7 @@ import ASTTypes qualified as T
 import Helpers ((&>), (>$>), (.>), (++<), (+++<))
 import Helpers qualified as H
 
-import Parsing.ASTInstances qualified as PA
+import Parsing.Instances qualified as PA
 import Preprocessing.TypesAndClasses qualified as PTC
 import Preprocessing.Collect qualified as PC
 import Preprocessing.CheckCompatibility qualified as PCC

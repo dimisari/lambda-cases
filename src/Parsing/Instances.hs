@@ -5,7 +5,7 @@ instance of the HasParser type class
 
 {-# language LambdaCase, FlexibleInstances, FlexibleContexts #-}
 
-module Parsing.ASTInstances where
+module Parsing.Instances where
 
 import Prelude ((<$>), (<*), (*>), ($), (>>=), (>>), (>), (++), (+), (.))
 import Prelude qualified as P
@@ -19,14 +19,6 @@ import Helpers qualified as H
 
 import Parsing.TypesAndClasses qualified as PTC
 import Parsing.Helpers qualified as PH
-
--- parse function
-
-parse :: PTC.HasParser a => P.String -> P.Either TP.ParseError a
-parse = TP.runParser (PTC.parser <* TP.eof) (0, P.False) ""
-
--- HasParser instances
---   Literal
 
 instance PTC.HasParser P.Integer where
   parser = P.read <$> PH.int_str_p
@@ -55,8 +47,6 @@ instance PTC.HasParser T.Literal where
     int_or_real_p =
       PH.int_str_p >>= \i_str ->
       T.R <$> PTC.parser_wp i_str <|> P.pure (T.Int $ P.read i_str)
-
---  Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 
 instance PTC.HasParser T.Identifier where
   parser =
@@ -187,8 +177,6 @@ instance PTC.HasParser T.ParenFuncAppOrId where
 instance PTC.HasParser T.Arguments where
   parser = T.As <$> PH.in_paren PTC.parser
 
---  PreFunc, DotId, BasicExpr, Change
-
 instance PTC.HasParser T.PreFunc where
   parser = T.PF <$> PTC.parser <* TP.string "--"
 
@@ -249,8 +237,6 @@ instance PTC.HasParser T.DotChange where
 
 instance PTC.HasParser T.FieldChange where
   parser = T.FC <$> PTC.parser ++< (PH.equals *> PTC.parser)
-
---  OpExpr
 
 instance PTC.HasParser T.OpExpr where
   parser = T.BOE1 <$> TP.try PTC.parser <|> T.LOE3 <$> PTC.parser
@@ -330,8 +316,6 @@ instance PTC.HasParser T.OptionalSpacesOp where
     TP.string "&" *> P.return T.And <|>
     TP.string "|" *> P.return T.Or <|>
     TP.string ";" *> P.return T.Then
-
---  FuncExpr
 
 instance PTC.HasParser T.FuncExpr where
   parser =
@@ -457,8 +441,6 @@ instance PTC.HasParser T.CaseBody where
     T.BFB1 <$> TP.try PTC.parser ++< TP.optionMaybe PTC.parser <|>
     T.LFB1 <$> PTC.parser
 
---  ValueDef, WhereExpr
-
 instance PTC.HasParser T.ValueDef where
   parser = T.VD <$> PTC.parser ++< PTC.parser
 
@@ -527,8 +509,6 @@ instance PTC.HasParser T.ValueDefs where
         T.TVDs1 <$> PTC.parser
       )
 
-
---  Type
 
 instance PTC.HasParser T.Type where
   parser = T.Ty <$> (TP.optionMaybe $ TP.try PTC.parser) ++< PTC.parser
@@ -602,8 +582,6 @@ instance PTC.HasParser T.InOrOutType where
 instance PTC.HasParser T.Condition where
   parser = T.Co <$> (PTC.parser <* TP.string " --> ")
 
---  TypeDef, TypeNickname
-
 instance PTC.HasParser T.TypeDef where
   parser = T.TTD1 <$> PTC.parser <|> T.OTD1 <$> PTC.parser
 
@@ -664,8 +642,6 @@ instance PTC.HasParser T.TypeNickname where
       (PH.block_start "TYPE NICKNAME" *> PTC.parser) ++<
       (PH.equals *> PTC.parser)
 
---  TypePropDef
-
 instance PTC.HasParser T.TypePropDef where
   parser = T.TSB1 <$> TP.try PTC.parser <|> T.RPD1 <$> PTC.parser
 
@@ -708,8 +684,6 @@ instance PTC.HasParser T.NamePart where
 
     under_upper :: PTC.Parser P.String
     under_upper = PH.underscore >:< P.fmap (:[]) TP.upper
-
---  ImplementationBlock
 
 instance PTC.HasParser T.ImplementationBlock where
   parser =
@@ -810,16 +784,12 @@ instance PTC.HasParser T.IdMaybeOpId where
   parser =
     T.IMOI <$> PTC.parser ++< TP.optionMaybe (TP.try $ PTC.parser ++< PTC.parser)
 
--- Comment
-
 instance PTC.HasParser T.Comment where
   parser =
     T.C <$>
       ( PH.block_start "COMMENT" *>
         TP.manyTill TP.anyChar (TP.lookAhead $ TP.try PH.nl_nl)
       )
-
--- Program
 
 instance PTC.HasParser T.Program where
   parser =
@@ -831,5 +801,3 @@ instance PTC.HasParser T.ProgramPart where
   parser =
     T.TD <$> PTC.parser <|> T.TNN1 <$> PTC.parser <|> T.TT1 <$> PTC.parser <|>
     T.TPD <$> PTC.parser <|> T.VDD <$> PTC.parser <|> T.C1 <$> PTC.parser
-
--- Helpers.hs

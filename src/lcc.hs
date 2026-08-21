@@ -22,16 +22,16 @@ import ASTTypes qualified as T
 import Helpers ((.>), (>$>), (&>), (>++<))
 import Helpers qualified as H
 
-import Parsing.ASTInstances qualified as PA
+import Parsing.Helpers qualified as PH
 
 import SyntaxTreeGen.TypesAndClasses qualified as STC
 import SyntaxTreeGen.Helpers qualified as SH
-import SyntaxTreeGen.ASTInstances qualified as SA
+import SyntaxTreeGen.Instances qualified as SA
 
 import Preprocessing.Preprocess qualified as PP
 
 import Generation.TypesAndClasses qualified as GTC
-import Generation.ASTInstances qualified as GA
+import Generation.Instances qualified as GA
 
 import System.Directory qualified as SD
 import System.FilePath qualified as SFP
@@ -155,7 +155,7 @@ generate_to_compile = \(gen_f, teon) ->
     P.Right a -> a
 
 generate_to_compile_parse_err :: GenerateFunction -> H.Lcases -> ParseErrOrGenRes
-generate_to_compile_parse_err = \gen -> PA.parse .> P.fmap gen
+generate_to_compile_parse_err = \gen -> PH.parse .> P.fmap gen
 
 throw_error_or_dont :: ThrowErrorOrDont -> TP.ParseError -> P.String
 throw_error_or_dont = \case

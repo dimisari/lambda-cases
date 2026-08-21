@@ -22,11 +22,12 @@ import Helpers qualified as H
 import ASTTypes qualified as T
 
 import Parsing.TypesAndClasses qualified as PTC
-import Parsing.ASTInstances qualified as PA
+import Parsing.Helpers qualified as PH
+import Parsing.Instances qualified as PA
 
 import Generation.TypesAndClasses qualified as GTC
 import Generation.Helpers qualified as GH
-import Generation.ASTInstances qualified as GA
+import Generation.Instances qualified as GA
 
 -- types
 
@@ -58,7 +59,7 @@ get_test_outputs_path :: P.IO P.FilePath
 get_test_outputs_path = SE.getArgs >$> (!!1) >$> (++ "/")
 
 compile_example_func :: (PTC.HasParser a, GTC.ToHaskell a) => Compile a
-compile_example_func = PA.parse .> parse_res_to_final_res
+compile_example_func = PH.parse .> parse_res_to_final_res
 
 parse_res_to_final_res ::
   GTC.ToHaskell a => P.Either TP.ParseError a -> ResultString a

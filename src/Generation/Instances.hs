@@ -11,7 +11,7 @@ The AST provided to this code is the preprocessed AST.
 
 {-# language LambdaCase, FlexibleInstances #-}
 
-module Generation.ASTInstances where
+module Generation.Instances where
 
 import Prelude (($), (++), (!!), (-), (<$>), (>>=), (+))
 import Prelude qualified as P
@@ -29,8 +29,6 @@ import Generation.TypesAndClasses qualified as GTC
 import Generation.Helpers qualified as GH
 import Preprocessing.Collect qualified as C
 import Generation.PrefixesAndHardcoded qualified as GPH
-
--- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
 
 instance GTC.ToHaskell P.Char where
   to_haskell = (:[])
@@ -181,8 +179,6 @@ instance GTC.ToHsWithParamNum [T.Arguments] where
 instance GTC.ToHsWithParamNum T.Arguments where
   to_hs_wpn = \(T.As leous) -> GTC.to_hs_wpn leous
 
--- Values: PreFunc, DotId, BasicExpr, Change
-
 instance GTC.ToHaskell T.PreFunc where
   to_haskell = \(T.PF id) ->
     case id of
@@ -272,8 +268,6 @@ instance GTC.ToHsWithParamNum T.FieldChange where
     f_prefix = case f of
       T.SId1 _ -> GPH.change_prefix
       T.SI2 _ -> GPH.spid_change_prefix
-
--- Values: OpExpr
 
 instance GTC.ToHsWithIndentLvl T.OpExpr where
   to_hs_wil = \case
@@ -382,8 +376,6 @@ instance GTC.ToHaskell T.OptionalSpacesOp where
     T.Or -> "!|"
     T.Use -> "!>>="
     T.Then -> "!>>"
-
--- Values: FuncExpr
 
 instance GTC.ToHsWithIndentLvl (T.FuncExpr, GTC.PossiblyWhereExpr) where
   to_hs_wil = \(fe, pwe) -> case fe of
@@ -538,8 +530,6 @@ instance GTC.ToHsWithIndentLvl T.CaseBody where
     T.BFB1 (bfb, maybe_we) ->
       "\n" ++> GTC.to_hs_wil maybe_we >++< GTC.to_hs_wil bfb
 
--- Values: ValueDef, GroupedValueDefs, WhereExpr
-
 instance GTC.ToHsWithIndentLvl T.ValueDef where
   to_hs_wil (T.VD (id, tmve)) =
     GTC.to_hs_wil (GTC.to_haskell id, GTC.to_haskell id, tmve)
@@ -636,8 +626,6 @@ instance GTC.ToHsWithIndentLvl T.ValueDefs where
     T.LVDs1 lvds -> GTC.to_hs_wil lvds
     T.TVDs1 tvds -> GTC.to_hs_wil tvds
 
--- Type
-
 instance GTC.ToHaskell T.Type where
   to_haskell = \(T.Ty (maybe_c, st)) ->
     GTC.to_haskell maybe_c ++ GTC.to_haskell (GTC.NoParen, st)
@@ -726,8 +714,6 @@ instance GTC.ToHaskell T.InOrOutType where
 
 instance GTC.ToHaskell T.Condition where
   to_haskell = \(T.Co pn) -> GTC.to_haskell pn ++ " => "
-
--- TypeDef, TypeNickname
 
 instance GTC.ToHaskell T.TypeDef where
   to_haskell = \case
@@ -846,8 +832,6 @@ instance GTC.ToHaskell T.TypeNickname where
     "type " ++ GTC.to_haskell (GTC.NoParen, tn) ++ " = " ++
     GTC.to_haskell (GTC.NoParen, st)
 
--- TypePropDef
-
 instance GTC.ToHaskell T.TypePropDef where
   to_haskell = \case
     T.TSB1 apd -> GTC.to_haskell apd
@@ -884,8 +868,6 @@ instance GTC.ToHaskell T.TIPStart where
 
 instance GTC.ToHaskell T.NamePart where
   to_haskell = \(T.NP str) -> str
-
--- ImplementationBlock
 
 instance GTC.ToHaskell T.ImplementationBlock where
   to_haskell (T.IB (pnws_l, maybe_pnws, proof)) =
@@ -1023,8 +1005,6 @@ instance GTC.ToHaskell T.IdMaybeOpId where
       P.Nothing -> ""
       P.Just (op, id) -> GTC.to_haskell op ++ GTC.to_haskell id
 
--- Program
-
 instance GTC.ToHaskell T.Program where
   to_haskell = \(T.P (pp, pps)) ->
     GTC.to_haskell pp ++ GH.to_hs_prepend_list "\n\n" pps
@@ -1038,15 +1018,7 @@ instance GTC.ToHaskell T.ProgramPart where
     T.TT1 tt -> GTC.to_haskell tt
     T.C1 c -> ""
 
--- Helper instances
-
 instance GTC.ToHsWithIndentLvl GTC.PossiblyWhereExpr where
   to_hs_wil = \case
     GTC.NoWhereExpr -> P.return ""
     GTC.HasWhereExpr we -> GTC.to_hs_wil we
-
-{-
-For fast vim file navigation:
-TypesAndHelpers.hs
-Preprocess.hs
--}

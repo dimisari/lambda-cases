@@ -22,6 +22,11 @@ import Helpers ((>$>), (>++<))
 import Helpers qualified as H
 import Parsing.TypesAndClasses qualified as PTC
 
+-- parse function
+
+parse :: PTC.HasParser a => P.String -> P.Either TP.ParseError a
+parse = TP.runParser (PTC.parser <* TP.eof) (0, P.False) ""
+
 -- state parsers: indentation level
 
 get_il :: PTC.Parser P.Int
@@ -159,8 +164,3 @@ stringChar = stringLetter <|> charEscape <?> "string character"
 
 stringLetter :: PTC.Parser P.Char
 stringLetter = TP.satisfy (\c -> (c /= '"') && (c /= '\\') && (c > '\026'))
-
-{-
-For fast vim file navigation:
-AST.hs
--}

@@ -1,6 +1,6 @@
 {-# language LambdaCase #-}
 
-module SyntaxTreeGen.ASTInstances where
+module SyntaxTreeGen.Instances where
 
 import Prelude ((++), ($))
 import Helpers ((.>), (&>))
