@@ -7,12 +7,14 @@ type Root = P.String
 type Dot = P.String
 type DotTuple = (Root, Dot)
 type NumState = CMSL.State P.Int
-type NumStateDotTuple = NumState DotTuple
 type LabelCode = P.String
 type NodeName = P.String
 
-class ToDot a where
-  to_dot :: a -> NumStateDotTuple
+newtype StringTree = ST (Root, [StringTree])
 
-class AddNewRootCode a where
-  add_new_root_code :: P.String -> a -> NumState Dot
+class ToStringTree a where
+  to_string_tree :: a -> StringTree
+
+class ToStringTrees a where
+  to_string_trees :: a -> [StringTree]
+

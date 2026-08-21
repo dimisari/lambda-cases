@@ -26,7 +26,7 @@ import Parsing.Helpers qualified as PH
 
 import SyntaxTreeGen.TypesAndClasses qualified as STC
 import SyntaxTreeGen.Helpers qualified as SH
-import SyntaxTreeGen.Instances qualified as SA
+import SyntaxTreeGen.ToStringTreeInstances qualified as STSTI
 
 import Preprocessing.Preprocess qualified as PP
 

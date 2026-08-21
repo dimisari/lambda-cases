@@ -44,10 +44,16 @@ test_outs := $(test)/outputs
 
 test_rules_out_dir := $(test_outs)/grammar_rules_hs
 
+test_dot_tree_pattern := $(test_outs)/dot_trees/%.dot
+test_png_tree_pattern := $(test_outs)/png_trees/%.png
 test_hs_prog_pattern := $(test_outs)/programs_hs/%.hs
 test_hs_rule_pattern := $(test_rules_out_dir)/%.hs
 test_exec_pattern := $(test_outs)/compiled_progs/%.out
 
+test_dot_tree_files := \
+  $(patsubst %.lc, $(test_dot_tree_pattern), $(test_prog_files))
+test_png_tree_files := \
+  $(patsubst %.lc, $(test_png_tree_pattern), $(test_prog_files))
 test_hs_prog_files := \
   $(patsubst %.lc, $(test_hs_prog_pattern), $(test_prog_files))
 test_hs_rules_files := \

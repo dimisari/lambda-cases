@@ -9,13 +9,17 @@ mkdir = @mkdir -p $(@D)
 
 # rules
 
-.PHONY: all
+.PHONY: lcc
 lcc: $(lcc_exec)
 
 .PHONY: all
 all:
 	make examples_clean
-	make test_all
+	make test_dot_trees
+	make test_png_trees
+	make test_haskell_progs
+	make test_grammar_rules
+	make test_executables
 	make test_rules_correct
 
 .PHONY: install
@@ -33,6 +37,16 @@ $(predef_cp_file_pattern): $(predef_file_pattern)
 	cp -u $< $@
 
 # testing files
+
+$(test_dot_tree_pattern): $(test_prog_pattern) $(lcc_exec)
+	$(mkdir)
+	lcc -d $<
+	mv $(basename $<).dot $@
+
+$(test_png_tree_pattern): $(test_prog_pattern) $(lcc_exec)
+	$(mkdir)
+	lcc -p $<
+	mv $(basename $<).png $@
 
 $(test_hs_prog_pattern): $(test_prog_pattern) $(lcc_exec)
 	$(mkdir)
@@ -53,8 +67,11 @@ $(rules_exec): $(grs_prereqs)
 
 # testing
 
-.PHONY: test_all
-test_all: $(test_hs_prog_files) $(test_hs_rules_files) $(test_exec_files)
+.PHONY: test_dot_trees
+test_dot_trees: $(test_dot_tree_files)
+
+.PHONY: test_png_trees
+test_png_trees: $(test_png_tree_files)
 
 .PHONY: test_haskell_progs
 test_haskell_progs: $(test_hs_prog_files)
@@ -82,11 +99,11 @@ print-%: ; @echo '$* = $($*)'
 .PHONY: clean
 clean:
 	$(RM) -r $(lcc_exec) $(rules_exec) $(test_outs)
-	find $(examples) -name "*.hs" -delete
+	make examples_clean
 
 .PHONY: examples_clean
 examples_clean:
-	find $(examples) -name "*.hs" -delete
+	find $(examples) -name "*.dot" -delete -name "*.png" -delete -name "*.hs" -delete
 
 .PHONY: uninstall
 uninstall:
