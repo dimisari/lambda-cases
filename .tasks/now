@@ -1,5 +1,7 @@
-- Add syntax tree image generation
-  - Add flag to lcc and to grules to use dot
+- Rewrite the tree image generation split into generating a string tree and then generating dot code from a string tree
+  - This will allow to create other trees from the original tree and then generate the dot code for these other trees
+  - Create relevant types and class in SyntaxTreeGen.TypesAndClasses
+  - Create instances module for the class in SyntaxTreeGen
 - Generate instances with type equality for the last type
   - Has to be done for both NPStart2 and SIPStart
 - Add pattern matching for prefix string (if it does not exist) e.g. "prefix" + s => ... s ...

@@ -6,9 +6,14 @@ import Prelude ((+), (++), (.), ($), (>>=))
 import Prelude qualified as P
 import Control.Monad.State.Lazy qualified as CMSL
 
-import Helpers ((.>), (>$>))
+import Helpers ((.>), (>$>), (&>))
 import SyntaxTreeGen.TypesAndClasses qualified as STC
 
+to_dot_final :: STC.ToDot a => a -> STC.Dot
+to_dot_final =
+  STC.to_dot .> \a_to_dot ->
+  CMSL.evalState a_to_dot 0 &> \(root, dot) ->
+  "graph " ++ root ++ "\n{\n" ++ dot ++ "}"
 
 add_new_root :: STC.AddNewRootCode a => P.String -> a -> STC.NumStateDotTuple
 add_new_root = \s a ->

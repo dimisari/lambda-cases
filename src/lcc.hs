@@ -25,6 +25,7 @@ import Helpers qualified as H
 import Parsing.ASTInstances qualified as PA
 
 import SyntaxTreeGen.TypesAndClasses qualified as STC
+import SyntaxTreeGen.Helpers qualified as SH
 import SyntaxTreeGen.ASTInstances qualified as SA
 
 import Preprocessing.Preprocess qualified as PP
@@ -143,7 +144,7 @@ prog_to_hs = PP.preprocess_prog .> GTC.to_haskell
 -- compiling to dot
 
 compile_lc_to_dot :: H.Lcases -> STC.Dot
-compile_lc_to_dot = generate_to_compile (SA.to_dot_final, Throw_err)
+compile_lc_to_dot = generate_to_compile (SH.to_dot_final, Throw_err)
 
 -- generate to compile
 
