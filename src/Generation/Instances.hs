@@ -1018,7 +1018,7 @@ instance GTC.ToHaskell T.ImportBlock where
 
 instance GTC.ToHaskell T.ImportLine where
   to_haskell = \(T.ImL (imf, ip)) ->
-    "import " ++ GTC.to_haskell imf ++ " qualified as " ++ GTC.to_haskell ip
+    "import " ++ GTC.to_haskell ip ++ " qualified as " ++ GTC.to_haskell ip
 
 instance GTC.ToHaskell T.ImportFile where
   to_haskell = \(T.IF imf) -> imf
