@@ -118,7 +118,7 @@ instance PTC.HasParser T.BasicOrAppExpr where
 
 instance PTC.HasParser T.BasicExpr where
   parser =
-    T.PFAOI1 <$> TP.try PTC.parser <|> T.SI1 <$> TP.try PTC.parser <|>
+    T.MFP1 <$> TP.try PTC.parser <|> T.SI1 <$> TP.try PTC.parser <|>
     T.Lit1 <$> PTC.parser <|> T.T1 <$> PTC.parser <|>
     T.L1 <$> PTC.parser <?> expecting_msg
     where
@@ -173,6 +173,11 @@ instance PTC.HasParser T.ParenFuncAppOrId where
     TP.optionMaybe TP.digit >>= \mdigit ->
     TP.optionMaybe PTC.parser >>= \margs2 ->
     P.return $ T.PFAOI (margs1, id_start, arg_str_pairs, mdigit, margs2)
+
+instance PTC.HasParser T.MaybeForeignPFAOI where
+  parser =
+    T.MFP <$>
+    TP.optionMaybe (TP.try $ PTC.parser <* TP.char '.') ++< PTC.parser
 
 instance PTC.HasParser T.Arguments where
   parser = T.As <$> PH.in_paren PTC.parser
@@ -784,6 +789,21 @@ instance PTC.HasParser T.IdMaybeOpId where
   parser =
     T.IMOI <$> PTC.parser ++< TP.optionMaybe (TP.try $ PTC.parser ++< PTC.parser)
 
+instance PTC.HasParser T.ImportBlock where
+  parser =
+    T.ImB <$>
+    (PH.block_start "IMPORT" *> PTC.parser) ++<
+    TP.many (TP.try $ PH.nl *> PTC.parser)
+
+instance PTC.HasParser T.ImportLine where
+  parser = T.ImL <$> PTC.parser ++< (TP.string " as " *> PTC.parser)
+
+instance PTC.HasParser T.ImportFile where
+  parser = T.IF <$> TP.many1 PH.alphanum_under <* TP.optional (TP.string ".lc")
+
+instance PTC.HasParser T.ImportPrefix where
+  parser = T.IP <$> TP.many1 TP.upper
+
 instance PTC.HasParser T.Comment where
   parser =
     T.C <$>
@@ -800,4 +820,5 @@ instance PTC.HasParser T.Program where
 instance PTC.HasParser T.ProgramPart where
   parser =
     T.TD <$> PTC.parser <|> T.TNN1 <$> PTC.parser <|> T.TT1 <$> PTC.parser <|>
-    T.TPD <$> PTC.parser <|> T.VDD <$> PTC.parser <|> T.C1 <$> PTC.parser
+    T.TPD <$> PTC.parser <|> T.VDD <$> PTC.parser <|> T.ImB1 <$> PTC.parser <|>
+    T.C1 <$> PTC.parser

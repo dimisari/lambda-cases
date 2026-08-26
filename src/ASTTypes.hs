@@ -6,8 +6,6 @@ module ASTTypes where
 
 import Prelude qualified as P
 
--- Values: Literal, Identifier, ParenExpr, Tuple, List, ParenFuncAppOrId
-
 data Literal =
   Int P.Integer | R P.Double | Ch P.Char | S P.String
 
@@ -49,7 +47,7 @@ data BasicOrAppExpr =
   BE3 BasicExpr | PrFA1 PreFuncApp | PoFA1 PostFuncApp
 
 data BasicExpr =
-  Lit1 Literal | PFAOI1 ParenFuncAppOrId | T1 Tuple | L1 List | SI1 SpecialId
+  Lit1 Literal | MFP1 MaybeForeignPFAOI | T1 Tuple | L1 List | SI1 SpecialId
 
 newtype BigTuple =
   BT (LineExprOrUnder, BigTupleSplit, LineExprOrUnders, [LineExprOrUnders])
@@ -65,6 +63,8 @@ type ArgsStr = (Arguments, P.String)
 newtype ParenFuncAppOrId =
   PFAOI
     (P.Maybe Arguments, IdStart, [ArgsStr], P.Maybe P.Char, P.Maybe Arguments)
+
+newtype MaybeForeignPFAOI = MFP (P.Maybe ImportPrefix, ParenFuncAppOrId)
 
 newtype Arguments = As LineExprOrUnders
 
@@ -358,24 +358,18 @@ data Implementation = I (IdMaybeOpId, ValueExprMaybeWhere)
 
 newtype IdMaybeOpId = IMOI (Identifier, P.Maybe (Op, Identifier))
 
+newtype ImportBlock = ImB (ImportLine, [ImportLine])
+
+newtype ImportLine = ImL (ImportFile, ImportPrefix)
+
+newtype ImportFile = IF P.String
+
+newtype ImportPrefix = IP P.String
+
 newtype Comment = C P.String
 
 newtype Program = P (ProgramPart, [ProgramPart])
 
 data ProgramPart =
   VDD ValueDefs | TD TypeDef | TNN1 TypeNickname | TPD TypePropDef |
-  TT1 ImplementationBlock | C1 Comment
-
-
--- For fast vim file navigation:
-{-
-Helpers.hs
-ShowInstances.hs
-Parsing/TypesAndHelpers.hs
-Parsing/AST.hs
-Generation/Helpers.hs
-Generation/Collect.hs
-Generation/Preprocess.hs
-Generation/CheckCompatibility.hs
-Generation/AST.hs
--}
+  TT1 ImplementationBlock | ImB1 ImportBlock | C1 Comment

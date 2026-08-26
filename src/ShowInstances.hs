@@ -101,7 +101,7 @@ instance P.Show T.BasicOrAppExpr where
 instance P.Show T.BasicExpr where
   show = \case
     T.Lit1 lit -> P.show lit
-    T.PFAOI1 pfaoi -> P.show pfaoi
+    T.MFP1 pfaoi -> P.show pfaoi
     T.T1 tuple -> P.show tuple
     T.L1 list -> P.show list
     T.SI1 sid -> P.show sid

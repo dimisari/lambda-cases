@@ -140,12 +140,10 @@ remove_single_child_parents (STC.ST (root, sts)) =
   where
   new_sts :: [STC.StringTree]
   new_sts =
-    P.map (remove_single_child_parents .> replace_with_child_if_only_one) sts
+    P.map (remove_single_child_parents .> replace_with_child_if_has_one) sts
 
-
-
-replace_with_child_if_only_one :: STC.StringTree -> STC.StringTree
-replace_with_child_if_only_one = \t@(STC.ST (root, children)) ->
+replace_with_child_if_has_one :: STC.StringTree -> STC.StringTree
+replace_with_child_if_has_one = \t@(STC.ST (root, children)) ->
   case children of
     [child] -> child
     _ -> t

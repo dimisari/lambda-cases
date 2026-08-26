@@ -1,0 +1,6 @@
+IMPORT
+hello_world.lc as HW
+other.lc as O
+
+main : Program
+  = print(HW.hello_str)

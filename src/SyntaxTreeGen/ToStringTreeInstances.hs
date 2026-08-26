@@ -65,7 +65,7 @@ instance STC.ToStringTree T.BasicOrAppExpr where
 instance STC.ToStringTree T.BasicExpr where
   to_string_tree = \case
     T.Lit1 lit -> SH.add_new_root "BasicExpr" lit
-    T.PFAOI1 pfaoi -> SH.add_new_root "BasicExpr" pfaoi
+    T.MFP1 pfaoi -> SH.add_new_root "BasicExpr" pfaoi
     T.T1 t -> SH.add_new_root "BasicExpr" t
     T.L1 l -> SH.add_new_root "BasicExpr" l
     T.SI1 si -> SH.add_new_root "BasicExpr" si
@@ -86,6 +86,9 @@ instance STC.ToStringTree T.BigList where
 
 instance STC.ToStringTree T.ParenFuncAppOrId where
   to_string_tree = \(T.PFAOI pfaoi) -> SH.add_new_root "ParenFuncAppOrId" pfaoi
+
+instance STC.ToStringTree T.MaybeForeignPFAOI where
+  to_string_tree = \(T.MFP mfp) -> SH.add_new_root "MaybeForeignPFAOI" mfp
 
 instance STC.ToStringTree T.Arguments where
   to_string_tree = \(T.As as) -> SH.add_new_root "Arguments" as
@@ -555,6 +558,18 @@ instance STC.ToStringTree T.Implementation where
 instance STC.ToStringTree T.IdMaybeOpId where
   to_string_tree = \(T.IMOI imoi) -> SH.add_new_root "IdMaybeOpId" imoi
 
+instance STC.ToStringTree T.ImportBlock where
+  to_string_tree = \(T.ImB ib) -> SH.add_new_root "ImportBlock" ib
+
+instance STC.ToStringTree T.ImportLine where
+  to_string_tree = \(T.ImL il) -> SH.add_new_root "ImportLine" il
+
+instance STC.ToStringTree T.ImportFile where
+  to_string_tree = \(T.IF imf) -> SH.root_and_node_to_tree "ImportFile" imf
+
+instance STC.ToStringTree T.ImportPrefix where
+  to_string_tree = \(T.IP ip) -> SH.root_and_node_to_tree "ImportPrefix" ip
+
 instance STC.ToStringTree T.Comment where
   to_string_tree = \(T.C c) -> SH.root_and_node_to_tree "Comment" c
 
@@ -568,5 +583,6 @@ instance STC.ToStringTree T.ProgramPart where
     T.TNN1 tn -> SH.add_new_root "ProgramPart" tn
     T.TPD tpd -> SH.add_new_root "ProgramPart" tpd
     T.TT1 ib -> SH.add_new_root "ProgramPart" ib
+    T.ImB1 ib -> SH.add_new_root "ProgramPart" ib
     T.C1 c -> SH.add_new_root "ProgramPart" c
 

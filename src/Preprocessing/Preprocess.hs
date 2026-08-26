@@ -109,7 +109,7 @@ instance PTC.Preprocess T.BasicOrAppExpr where
 
 instance PTC.Preprocess T.BasicExpr where
   preprocess = \case
-    T.PFAOI1 pfaoi -> T.PFAOI1 <$> PTC.preprocess pfaoi
+    T.MFP1 mfp -> T.MFP1 <$> PTC.preprocess mfp
     T.T1 t -> T.T1 <$> PTC.preprocess t
     T.L1 l -> T.L1 <$> PTC.preprocess l
     other -> P.return other
@@ -126,6 +126,9 @@ instance PTC.Preprocess T.BigList where
 
 instance PTC.Preprocess T.ArgsStr where
   preprocess = preprocess_first
+
+instance PTC.Preprocess T.MaybeForeignPFAOI where
+  preprocess = \(T.MFP mfp) -> T.MFP <$> preprocess_second mfp
 
 instance PTC.Preprocess T.ParenFuncAppOrId where
   preprocess =
@@ -384,9 +387,15 @@ instance PTC.Preprocess T.ProgramPart where
 
 instance PTC.ToMaybePostFuncApp T.BasicExpr where
   to_maybe_post_func_app = \case
-    T.PFAOI1 pfaoi -> PTC.to_maybe_post_func_app pfaoi
+    T.MFP1 mfp -> PTC.to_maybe_post_func_app mfp
     T.SI1 spid -> PTC.to_maybe_post_func_app spid
     _ -> P.return P.Nothing
+
+instance PTC.ToMaybePostFuncApp T.MaybeForeignPFAOI where
+  to_maybe_post_func_app = \(T.MFP (mip, pfaoi)) ->
+    case mip of
+      P.Nothing -> PTC.to_maybe_post_func_app pfaoi
+      _ -> P.return P.Nothing
 
 instance PTC.ToMaybePostFuncApp T.ParenFuncAppOrId where
   to_maybe_post_func_app =
@@ -506,7 +515,7 @@ pfarg_di_to_pfapp = \(pfarg, di) ->
 change_pfarg_if_under :: T.PostFuncArg -> T.PostFuncArg
 change_pfarg_if_under = \case
   T.Underscore2 ->
-    T.BE2 $ T.PFAOI1 $
+    T.BE2 $ T.MFP1 $ T.MFP $ (P.Nothing,) $
       sid_to_pfaoi (T.SId (T.IS GPH.under_pfarg_param, P.Nothing))
   other -> other
 

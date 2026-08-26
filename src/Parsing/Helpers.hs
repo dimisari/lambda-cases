@@ -78,8 +78,8 @@ deeper_if_not_in_equal_line = \parser ->
     ]
   :: [PTC.Parser ()]
 
-[underscore, lower_under]
-  = [TP.char '_', TP.lower <|> underscore]
+[underscore, lower_under, alphanum_under]
+  = [TP.char '_', TP.lower <|> underscore, TP.alphaNum <|> underscore]
   :: [PTC.Parser P.Char]
 
 [digits, func_arr]

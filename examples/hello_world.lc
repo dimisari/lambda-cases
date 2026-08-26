@@ -1,2 +1,5 @@
+hello_str : String
+  = "Hello World!"
+
 main : Program
-  = print("Hello World!")
+  = print(hello_str)

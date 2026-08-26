@@ -13,7 +13,7 @@ The AST provided to this code is the preprocessed AST.
 
 module Generation.Instances where
 
-import Prelude (($), (++), (!!), (-), (<$>), (>>=), (+))
+import Prelude (($), (++), (!!), (-), (<$>), (>>=), (.), (+))
 import Prelude qualified as P
 import Control.Monad.State.Lazy qualified as MS
 import Control.Monad qualified as M
@@ -102,7 +102,7 @@ instance GTC.ToHaskell T.BasicOrAppExpr where
 instance GTC.ToHaskell T.BasicExpr where
   to_haskell = \case
     T.Lit1 lit -> GTC.to_haskell (GTC.Annot, lit)
-    T.PFAOI1 pfaoi -> GTC.to_haskell pfaoi
+    T.MFP1 pfaoi -> GTC.to_haskell pfaoi
     T.T1 tuple -> GTC.to_haskell tuple
     T.L1 list -> GTC.to_haskell list
     T.SI1 spid -> P.error $ "special id in basic expr:" ++ GTC.to_haskell spid
@@ -169,6 +169,13 @@ instance GTC.ToHaskell T.ParenFuncAppOrId where
         GH.maybe_lower_prefix_args_hs margs1 ++ GTC.to_haskell id_start ++
         GH.args_strs_hs args_str_pairs ++ GTC.to_haskell mdigit ++
         GH.single_quotes_hs margs2
+
+instance GTC.ToHaskell T.MaybeForeignPFAOI where
+  to_haskell (T.MFP (mip, pfaoi)) =
+    (++ GTC.to_haskell pfaoi) $
+    case mip of
+      P.Just ip -> GTC.to_haskell ip ++ "."
+      P.Nothing -> ""
 
 instance GTC.ToHsWithParamNum [T.Arguments] where
   to_hs_wpn = \args_l ->
@@ -1005,6 +1012,20 @@ instance GTC.ToHaskell T.IdMaybeOpId where
       P.Nothing -> ""
       P.Just (op, id) -> GTC.to_haskell op ++ GTC.to_haskell id
 
+instance GTC.ToHaskell T.ImportBlock where
+  to_haskell = \(T.ImB (il, ils)) ->
+    GTC.to_haskell il ++ GH.to_hs_prepend_list "\n" ils
+
+instance GTC.ToHaskell T.ImportLine where
+  to_haskell = \(T.ImL (imf, ip)) ->
+    "import " ++ GTC.to_haskell imf ++ " qualified as " ++ GTC.to_haskell ip
+
+instance GTC.ToHaskell T.ImportFile where
+  to_haskell = \(T.IF imf) -> imf
+
+instance GTC.ToHaskell T.ImportPrefix where
+  to_haskell = \(T.IP ip) -> ip
+
 instance GTC.ToHaskell T.Program where
   to_haskell = \(T.P (pp, pps)) ->
     GTC.to_haskell pp ++ GH.to_hs_prepend_list "\n\n" pps
@@ -1016,6 +1037,7 @@ instance GTC.ToHaskell T.ProgramPart where
     T.TNN1 tnn -> GTC.to_haskell tnn
     T.TPD tpd -> GTC.to_haskell tpd
     T.TT1 tt -> GTC.to_haskell tt
+    T.ImB1 ib -> GTC.to_haskell ib
     T.C1 c -> ""
 
 instance GTC.ToHsWithIndentLvl GTC.PossiblyWhereExpr where
