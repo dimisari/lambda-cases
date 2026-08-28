@@ -1,6 +1,6 @@
 IMPORT
 hello_world.lc as HW
-other.lc as O
+gcd_small.lc as G
 
 main : Program
-  = print(HW.hello_str)
+  = print(HW.hello_str); print(G.message)

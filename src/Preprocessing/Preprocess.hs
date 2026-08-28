@@ -18,6 +18,7 @@ import Prelude (($), (++), (>>=), (<$>), (/=), (>>), (<*))
 import Prelude qualified as P
 import Data.Set qualified as S
 import Data.Map qualified as M
+import Data.List qualified as L
 import Control.Monad qualified as MO
 import Control.Monad.State qualified as MS
 
@@ -375,7 +376,10 @@ instance PTC.Preprocess T.Implementation where
   preprocess = \(T.I i) -> T.I <$> preprocess_second i
 
 instance PTC.Preprocess T.Program where
-  preprocess = \(T.P pps) -> T.P <$> preprocess_pair pps
+  preprocess = \(T.P (pp, pps)) ->
+    T.P <$>
+      preprocess_pair
+      (imports_to_beginning (pp : pps) &> \l -> (P.head l, P.tail l))
 
 instance PTC.Preprocess T.ProgramPart where
   preprocess = \case
@@ -529,10 +533,13 @@ sid_to_pfaoi :: T.SimpleId -> T.ParenFuncAppOrId
 sid_to_pfaoi = \(T.SId (id_start, mdigit)) ->
   T.PFAOI (P.Nothing, id_start, [], mdigit, P.Nothing)
 
-{-
-For fast vim file navigation:
-CheckCompatibility.hs
-Collect.hs
-Preprocess.hs
-TypesAndClasses.hs
--}
+-- move imports to the beginning
+
+imports_to_beginning :: [T.ProgramPart] -> [T.ProgramPart]
+imports_to_beginning =
+  L.partition is_import .> \(imports, others) -> imports ++ others
+
+is_import :: T.ProgramPart -> P.Bool
+is_import = \case
+  T.ImB1 _ -> P.True
+  _ -> P.False

@@ -35,6 +35,10 @@ type ParamTVars = S.Set T.ParamTVar
 
 type ParamTVarsState = MS.State ParamTVars ()
 
+type ImportLines = S.Set T.ImportLine
+
+type ImportLinesState = MS.State ImportLines ()
+
 -- Collect classes
 
 class CollectFieldIds a where
@@ -48,6 +52,9 @@ class CollectOrValues a where
 
 class CollectParamTVars a where
   collect_ptvs :: a -> ParamTVarsState
+
+class CollectImportLines a where
+  collect_imls :: a -> ImportLinesState
 
 -- CheckCompatibility types
 

@@ -361,10 +361,13 @@ newtype IdMaybeOpId = IMOI (Identifier, P.Maybe (Op, Identifier))
 newtype ImportBlock = ImB (ImportLine, [ImportLine])
 
 newtype ImportLine = ImL (ImportFile, ImportPrefix)
+  deriving (P.Eq, P.Ord)
 
 newtype ImportFile = IF P.String
+  deriving (P.Eq, P.Ord)
 
 newtype ImportPrefix = IP P.String
+  deriving (P.Eq, P.Ord)
 
 newtype Comment = C P.String
 

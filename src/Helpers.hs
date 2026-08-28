@@ -12,11 +12,12 @@ import Prelude ((.), ($), (<$>), (++), (*), (/=))
 import Prelude qualified as P
 
 import System.FilePath qualified as SFP
+import Generation.TypesAndClasses qualified as GTC
 
 -- types
 
 type Lcases = P.String
-type FileName = P.String
+type FilePath = P.String
 
 -- func app/comp
 
@@ -65,14 +66,25 @@ fas1 >++< fas2 = P.liftA2 (++) fas1 fas2
 ind_lvl_to_spaces :: P.Int -> P.String
 ind_lvl_to_spaces = \i -> P.replicate (2 * i) ' '
 
-add_dotlc_if_needed :: FileName -> FileName
+add_dotlc_if_needed :: FilePath -> FilePath
 add_dotlc_if_needed = \pfn ->
   SFP.takeExtension pfn &> \case
     "" -> pfn ++ ".lc"
     _ -> pfn
 
-make_extension :: P.String -> FileName -> FileName
+make_extension :: P.String -> FilePath -> FilePath
 make_extension = \ext -> SFP.dropExtension .> (++ ("." ++ ext))
 
 do_nothing :: P.Monad m => m ()
 do_nothing = P.return ()
+
+-- module code
+
+import_lc_file :: FilePath -> P.String -> FilePath
+import_lc_file = \p imf -> SFP.takeDirectory p ++ "/" ++ imf
+
+import_hs_file :: FilePath -> P.String -> FilePath
+import_hs_file = \p imp -> SFP.takeDirectory p ++ "/" ++ imp ++ ".hs"
+
+module_line_hs :: P.String -> GTC.Haskell
+module_line_hs = \s -> "module " ++ s ++ " where\n"

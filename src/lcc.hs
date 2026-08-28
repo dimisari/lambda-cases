@@ -29,6 +29,7 @@ import SyntaxTreeGen.Helpers qualified as SH
 import SyntaxTreeGen.ToStringTreeInstances qualified as STSTI
 
 import Preprocessing.Preprocess qualified as PP
+import Preprocessing.Collect qualified as PC
 
 import Generation.TypesAndClasses qualified as GTC
 import Generation.Instances qualified as GA
@@ -38,14 +39,15 @@ import System.FilePath qualified as SFP
 
 -- types
 
-type ProgramFileName = H.FileName
-type HsFileName = P.String
-type ErrChoiceAndProgName = (ThrowErrorOrDont, ProgramFileName)
+type ProgramPath = H.FilePath
+type HsFilePath = P.String
+type ErrChoiceAndProgPath = (ThrowErrorOrDont, ProgramPath)
+type CompileToHsTuple = (ThrowErrorOrDont, ProgramPath, HsFilePath)
 type ParseErrOrGenRes = P.Either TP.ParseError P.String
 type GenerateFunction = T.Program -> P.String
 type GenerateTuple = (GenerateFunction, ThrowErrorOrDont)
 type CompileFunction = H.Lcases -> P.String
-type CompileTuple = (CompileFunction, ProgramFileName, NewExtension)
+type CompileTuple = (CompileFunction, ProgramPath, NewExtension)
 type NewExtension = P.String
 
 data ThrowErrorOrDont = Throw_err | Dont_throw_err
@@ -55,88 +57,119 @@ data ThrowErrorOrDont = Throw_err | Dont_throw_err
 main :: P.IO ()
 main = SE.getArgs >>= \case
   [] -> P.putStrLn "No arguments"
-  [program_file_name] -> compile_and_run program_file_name
-  ["-c", program_file_name] -> compile_for_tests program_file_name
-  ["-h", program_file_name] -> compile_to_hs_or_error_file program_file_name
-  ["-d", program_file_name] -> compile_file_to_dot program_file_name
-  ["-p", program_file_name] -> compile_file_to_png program_file_name
+  [program_path] -> compile_and_run program_path
+  ["-c", program_path] -> compile_for_tests program_path
+  ["-h", program_path] -> compile_to_hs_or_error_file program_path
+  ["-d", program_path] -> compile_file_to_dot program_path
+  ["-p", program_path] -> compile_file_to_png program_path
   _  -> P.putStrLn "Weird arguments"
 
 -- compiling files
 
-compile_and_run :: ProgramFileName -> P.IO ()
-compile_and_run = \pfn ->
-  compile_to_exec_gen (Throw_err, pfn) >>
+compile_and_run :: ProgramPath -> P.IO ()
+compile_and_run = \pp ->
+  compile_to_exec (Throw_err, pp) >>
   P.putStrLn "\nRunning\n" >>
-  SP.callCommand ("./" ++ SFP.dropExtension pfn)
+  SP.callCommand ("./" ++ SFP.dropExtension pp)
 
-compile_for_tests :: ProgramFileName -> P.IO ()
-compile_for_tests = (Dont_throw_err,) .> compile_to_exec_gen
+compile_for_tests :: ProgramPath -> P.IO ()
+compile_for_tests = (Dont_throw_err,) .> compile_to_exec
 
-compile_to_exec_gen :: ErrChoiceAndProgName -> P.IO ()
-compile_to_exec_gen = \ecapn ->
-  get_ghc_command >>= \ghc_command ->
-  ecapn_to_hs_file ecapn >>= \hs_file ->
-  run_ghc_and_remove_hs_file ghc_command hs_file
+compile_to_exec :: ErrChoiceAndProgPath -> P.IO ()
+compile_to_exec (teod, pp) =
+  get_import_lines pp >>= \import_lines ->
+  get_ghc_command pp import_lines >>= \ghc_command ->
+  compile_import_lines pp import_lines >>
+  compile_to_hs_file (teod, pp, hs_file) >>
+  run_ghc_and_remove_hs_file ghc_command hs_file >>
+  remove_import_lines_hs_files pp import_lines
+  where
+  hs_file :: HsFilePath
+    = H.make_extension "hs" pp
 
-run_ghc_and_remove_hs_file :: P.String -> HsFileName -> P.IO ()
+get_ghc_command :: ProgramPath -> [T.ImportLine] -> P.IO P.String
+get_ghc_command = \pp ils ->
+  ("ghc" ++) <$> get_predef_imports >$>
+  (++ P.concatMap (" --make " ++) (P.map (pp_il_to_hs_file pp) ils)) >$>
+  (++ " -no-keep-hi-files -no-keep-o-files ")
+
+pp_il_to_hs_file :: ProgramPath -> T.ImportLine -> P.String
+pp_il_to_hs_file = \pp il ->
+  H.import_hs_file pp (import_line_to_import_prefix il)
+
+import_line_to_import_prefix :: T.ImportLine -> P.String
+import_line_to_import_prefix = \(T.ImL (_, T.IP ip)) -> ip
+
+get_import_lines :: ProgramPath -> P.IO [T.ImportLine]
+get_import_lines = read_prog_file .> P.fmap source_to_import_lines
+
+run_ghc_and_remove_hs_file :: P.String -> HsFilePath -> P.IO ()
 run_ghc_and_remove_hs_file = \ghc_command hs_file ->
   SP.callCommand (ghc_command ++ hs_file ++ " && rm " ++ hs_file)
 
-get_ghc_command :: P.IO P.String
-get_ghc_command =
-   ("ghc" ++) <$> get_predef_imports >$>
-   (++ " -no-keep-hi-files -no-keep-o-files ")
+remove_import_line_hs_file :: ProgramPath -> T.ImportLine -> P.IO ()
+remove_import_line_hs_file = \pp il ->
+  SP.callCommand ("rm " ++ pp_il_to_hs_file pp il)
 
-compile_to_hs_or_error_file :: ProgramFileName -> P.IO ()
-compile_to_hs_or_error_file =
-  (Dont_throw_err,) .> ecapn_to_hs_file .> (>> P.pure ())
+remove_import_lines_hs_files :: ProgramPath -> [T.ImportLine] -> P.IO ()
+remove_import_lines_hs_files = \pp -> P.mapM_ (remove_import_line_hs_file pp)
 
-ecapn_to_hs_file :: ErrChoiceAndProgName -> P.IO HsFileName
-ecapn_to_hs_file ecapn@(teon, pfn) =
-  ecapn_to_hs ecapn >>= \comp_hs ->
-  get_lang_exts_and_imports_hs >>= \lang_exts_and_imports_hs ->
-  P.writeFile hs_file (lang_exts_and_imports_hs ++ comp_hs) >>
-  P.pure hs_file
-  where
-  hs_file :: HsFileName
-    = H.make_extension "hs" pfn
+compile_to_hs_or_error_file :: ProgramPath -> P.IO ()
+compile_to_hs_or_error_file = \pp ->
+  compile_to_hs_file (Dont_throw_err, pp, H.make_extension "hs" pp)
 
-ecapn_to_hs :: ErrChoiceAndProgName -> P.IO GTC.Haskell
-ecapn_to_hs (teon, pfn) = compile_file_to_string (compile_lc_to_hs teon) pfn
+compile_to_hs_file :: CompileToHsTuple -> P.IO ()
+compile_to_hs_file = \(teod, pp, hs_file) ->
+  ecapn_to_hs (teod, pp) >>= \comp_hs ->
+  get_lang_exts_and_imports_hs >>= \exts_imps_hs ->
+  P.writeFile hs_file (exts_imps_hs ++ comp_hs)
 
-compile_file_to_png :: ProgramFileName -> P.IO ()
-compile_file_to_png = \pfn ->
-  compile_file_to_dot pfn >> run_dot_and_remove_dot_file pfn
+compile_import_lines :: ProgramPath -> [T.ImportLine] -> P.IO ()
+compile_import_lines = \pp -> P.mapM_ (compile_import_line pp)
 
-run_dot_and_remove_dot_file :: ProgramFileName -> P.IO ()
-run_dot_and_remove_dot_file pfn =
+compile_import_line :: ProgramPath -> T.ImportLine -> P.IO ()
+compile_import_line = \pp (T.ImL (T.IF imf, T.IP imp)) ->
+  ecapn_to_hs (Dont_throw_err, H.import_lc_file pp imf) >>= \comp_hs ->
+  get_imports_hs >>= \imps_hs ->
+  P.writeFile
+    (H.import_hs_file pp imp)
+    (lang_exts ++ H.module_line_hs imp ++ imps_hs ++ comp_hs)
+
+ecapn_to_hs :: ErrChoiceAndProgPath -> P.IO GTC.Haskell
+ecapn_to_hs = \(teod, pp) -> compile_file_to_string (compile_lc_to_hs teod) pp
+
+compile_file_to_png :: ProgramPath -> P.IO ()
+compile_file_to_png = \pp ->
+  compile_file_to_dot pp >> run_dot_and_remove_dot_file pp
+
+run_dot_and_remove_dot_file :: ProgramPath -> P.IO ()
+run_dot_and_remove_dot_file pp =
   SP.callCommand
-  ( "dot -T png " ++ dot_file ++ " > " ++ H.make_extension "png" pfn ++
+  ( "dot -T png " ++ dot_file ++ " > " ++ H.make_extension "png" pp ++
     " && rm " ++ dot_file
   )
   where
-  dot_file :: P.String
-    = H.make_extension "dot" pfn
+  dot_file :: ProgramPath
+    = H.make_extension "dot" pp
 
-compile_file_to_dot :: ProgramFileName -> P.IO ()
-compile_file_to_dot = \pfn ->
-  compile_file_to_file (compile_lc_to_dot, pfn, "dot")
+compile_file_to_dot :: ProgramPath -> P.IO ()
+compile_file_to_dot = \pp ->
+  compile_file_to_file (compile_lc_to_dot, pp, "dot")
 
 compile_file_to_file :: CompileTuple -> P.IO ()
-compile_file_to_file = \(cf, pfn, ne) ->
-  compile_file_to_string cf pfn >>= P.writeFile (H.make_extension ne pfn)
+compile_file_to_file = \(cf, pp, ne) ->
+  compile_file_to_string cf pp >>= P.writeFile (H.make_extension ne pp)
 
-compile_file_to_string :: CompileFunction -> ProgramFileName -> P.IO P.String
-compile_file_to_string = \cf pfn -> read_prog_file pfn >$> cf
+compile_file_to_string :: CompileFunction -> ProgramPath -> P.IO P.String
+compile_file_to_string = \cf pp -> read_prog_file pp >$> cf
 
-read_prog_file :: ProgramFileName -> P.IO H.Lcases
+read_prog_file :: ProgramPath -> P.IO H.Lcases
 read_prog_file = H.add_dotlc_if_needed .> P.readFile
 
 -- compiling to haskell
 
 compile_lc_to_hs :: ThrowErrorOrDont -> H.Lcases -> GTC.Haskell
-compile_lc_to_hs = \teon -> generate_to_compile (prog_to_hs, teon)
+compile_lc_to_hs = \teod -> generate_to_compile (prog_to_hs, teod)
 
 prog_to_hs :: T.Program -> GTC.Haskell
 prog_to_hs = PP.preprocess_prog .> GTC.to_haskell
@@ -149,9 +182,9 @@ compile_lc_to_dot = generate_to_compile (SH.to_dot_final, Throw_err)
 -- generate to compile
 
 generate_to_compile :: GenerateTuple -> H.Lcases -> P.String
-generate_to_compile = \(gen_f, teon) ->
+generate_to_compile = \(gen_f, teod) ->
   generate_to_compile_parse_err gen_f .> \case
-    P.Left err -> throw_error_or_dont teon err
+    P.Left err -> throw_error_or_dont teod err
     P.Right a -> a
 
 generate_to_compile_parse_err :: GenerateFunction -> H.Lcases -> ParseErrOrGenRes
@@ -164,6 +197,14 @@ throw_error_or_dont = \case
 
 error_to_str :: TP.ParseError -> P.String
 error_to_str = P.show .> ("Error :( ==> " ++)
+
+-- collect import lines
+
+source_to_import_lines :: H.Lcases -> [T.ImportLine]
+source_to_import_lines =
+  PH.parse .> \case
+    P.Left err -> P.error $ error_to_str err
+    P.Right p -> PC.collect_total_imls p
 
 -- language extensions and imports haskell
 

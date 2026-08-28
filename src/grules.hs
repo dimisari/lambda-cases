@@ -46,7 +46,7 @@ main = P.mapM_ compile_examples file_name_compile_func_pairs
 
 -- compile the examples of a file
 
-compile_examples :: (H.FileName, CompileExFunc) -> P.IO ()
+compile_examples :: (H.FilePath, CompileExFunc) -> P.IO ()
 compile_examples (file_name, comp_ex_func) =
   read_examples file_name >$> P.concatMap comp_ex_func >>= \ex_outs ->
   get_out_path >>= \out_path ->
@@ -72,10 +72,10 @@ extract_res_str = \(RS s) -> s
 
 -- Reading the examples from a file
 
-read_examples :: H.FileName -> P.IO [FileString]
+read_examples :: H.FilePath -> P.IO [FileString]
 read_examples = \file_name -> read_exs_file file_name >$> file_str_to_examples
 
-read_exs_file :: H.FileName -> P.IO FileString
+read_exs_file :: H.FilePath -> P.IO FileString
 read_exs_file = \file_name ->
   get_test_inputs_path >$> (++ file_name) >>= P.readFile
 
@@ -88,7 +88,7 @@ file_str_to_examples = DLS.endBy "#\n\n"
 -- Pairs of file names and the correcsponding compile function for
 -- each example in the file
 
-file_name_compile_func_pairs :: [(H.FileName, CompileExFunc)]
+file_name_compile_func_pairs :: [(H.FilePath, CompileExFunc)]
 file_name_compile_func_pairs =
   [ ( "literals.txt"
     , (compile_example_func :: Compile (GTC.NeedsAnnotBool, T.Literal)) .>

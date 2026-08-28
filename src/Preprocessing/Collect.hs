@@ -57,6 +57,12 @@ param_t_vars :: T.Type -> [T.ParamTVar]
 param_t_vars =
   \(T.Ty (_, st)) -> MS.execState (PTC.collect_ptvs st) S.empty &> S.toList
 
+-- CollectImportLines final function
+
+collect_total_imls :: T.Program -> [T.ImportLine]
+collect_total_imls = \prog ->
+  MS.execState (PTC.collect_imls prog) S.empty &> S.toList
+
 -- CollectFieldIds instances
 
 instance PTC.CollectFieldIds T.Program where
@@ -204,10 +210,18 @@ instance PTC.CollectOrValues T.OrTypeValue where
       MS.modify $ \(nc, fovm) -> (nc, M.insert sid id fovm)
     P.Nothing -> MS.modify $ \(nc, fovm) -> (S.insert sid nc, fovm)
 
-{-
-For fast vim file navigation:
-CheckCompatibility.hs
-Collect.hs
-Preprocess.hs
-TypesAndClasses.hs
--}
+-- CollectImportLines instances
+
+instance PTC.CollectImportLines T.Program where
+  collect_imls = \(T.P (pp, pps)) -> P.mapM_ PTC.collect_imls $ pp : pps
+
+instance PTC.CollectImportLines T.ProgramPart where
+  collect_imls = \case
+    T.ImB1 imb -> PTC.collect_imls imb
+    _ -> H.do_nothing
+
+instance PTC.CollectImportLines T.ImportBlock where
+  collect_imls = \(T.ImB (il, ils)) -> P.mapM_ PTC.collect_imls $ il : ils
+
+instance PTC.CollectImportLines T.ImportLine where
+  collect_imls = \il -> MS.modify (S.insert il)
