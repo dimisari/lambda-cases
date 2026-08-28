@@ -103,7 +103,7 @@ clean:
 
 .PHONY: examples_clean
 examples_clean:
-	find $(examples) -name "*.dot" -delete -name "*.png" -delete -name "*.hs" -delete
+	find $(examples) -name "*.dot" -delete -or -name "*.png" -delete -or -name "*.hs" -delete
 
 .PHONY: uninstall
 uninstall:
