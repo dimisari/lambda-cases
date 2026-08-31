@@ -219,7 +219,7 @@ data SimpleType =
 data ProdOrPowerType =
   PT4 ProdType | PoT5 PowerType
 
-newtype TypeId = TId P.String
+newtype TypeIdStart = TId P.String
   deriving P.Eq
 
 newtype ParamTVar = PTV P.Int
@@ -235,7 +235,7 @@ newtype TypeAppIdOrAHTV =
   TAIOA (P.Maybe TypesInParen, TAIOAMiddle, P.Maybe TypesInParen)
 
 data TAIOAMiddle =
-  TIdStart1 (TypeId, [(TypesInParen, P.String)]) | AHTV1 AdHocTVar
+  TIdStart1 (TypeIdStart, [(TypesInParen, P.String)]) | AHTV1 AdHocTVar
 
 newtype TypesInParen = TIP (SimpleType, [SimpleType])
 
@@ -266,7 +266,7 @@ newtype TupleTypeDef = TTD (TypeName, ProdOrPowerType, FieldNames)
 
 type PVIPStr = (ParamVarsInParen, P.String)
 newtype TypeName =
-  TN (P.Maybe ParamVarsInParen, TypeId, [PVIPStr], P.Maybe ParamVarsInParen)
+  TN (P.Maybe ParamVarsInParen, TypeIdStart, [PVIPStr], P.Maybe ParamVarsInParen)
 
 newtype ParamVarsInParen = PVIP (ParamTVar, [ParamTVar])
 
@@ -324,7 +324,7 @@ newtype TypeAppIdOrAHTVSub =
   TAIOAS (P.Maybe SubsOrUndersInParen, TAIOASMiddle, P.Maybe SubsOrUndersInParen)
 
 data TAIOASMiddle =
-  TIdStart2 (TypeId, [(SubsOrUndersInParen, P.String)]) | AHTV2 AdHocTVar
+  TIdStart2 (TypeIdStart, [(SubsOrUndersInParen, P.String)]) | AHTV2 AdHocTVar
 
 type SOUIP_STR = (SubsOrUndersInParen, P.String)
 
@@ -354,7 +354,7 @@ data InOrOutTypeSub =
   Underscore6 | TAIOTS3 TypeAppIdOrTVSub | POPTS2 ProdOrPowerTypeSub |
   FTS3 FuncTypeSub
 
-data Implementation = I (IdMaybeOpId, ValueExprMaybeWhere)
+newtype Implementation = I (IdMaybeOpId, ValueExprMaybeWhere)
 
 newtype IdMaybeOpId = IMOI (Identifier, P.Maybe (Op, Identifier))
 

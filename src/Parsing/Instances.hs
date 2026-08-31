@@ -526,8 +526,8 @@ instance PTC.HasParser T.SimpleType where
 instance PTC.HasParser T.ProdOrPowerType where
   parser = T.PT4 <$> TP.try PTC.parser <|> T.PoT5 <$> PTC.parser
 
-instance PTC.HasParser T.TypeId where
-  parser = T.TId <$> TP.upper >:< TP.many (TP.upper <|> TP.lower)
+instance PTC.HasParser T.TypeIdStart where
+  parser = T.TId <$> TP.upper >:< TP.many TP.letter
 
 instance PTC.HasParser T.ParamTVar where
   parser = T.PTV <$> (TP.char 'T' *> H.mapf TP.digit (\d -> P.read [d]))
@@ -547,7 +547,7 @@ instance PTC.HasParser T.TAIOAMiddle where
   parser =
     T.AHTV1 <$> PTC.parser <|>
     T.TIdStart1 <$> PTC.parser ++<
-    TP.many (TP.try $ PTC.parser ++< TP.many1 (TP.lower <|> TP.upper))
+    TP.many (TP.try $ PTC.parser ++< TP.many1 TP.letter)
 
 instance PTC.HasParser T.TypesInParen where
   parser =
@@ -602,7 +602,7 @@ instance PTC.HasParser T.TypeName where
     T.TN <$>
       TP.optionMaybe PTC.parser ++<
       PTC.parser +++<
-      TP.many (TP.try $ PTC.parser ++< (TP.many1 $ TP.lower <|> TP.upper)) ++++<
+      TP.many (TP.try $ PTC.parser ++< TP.many1 TP.letter) ++++<
       TP.optionMaybe PTC.parser
 
 instance PTC.HasParser T.ParamVarsInParen where
@@ -682,10 +682,10 @@ instance PTC.HasParser T.PropName where
 
 instance PTC.HasParser T.NamePart where
   parser =
-    T.NP <$> P.concat <$> TP.many1 (lower_or_upper <|> under_upper)
+    T.NP <$> P.concat <$> TP.many1 (letter <|> under_upper)
     where
-    lower_or_upper :: PTC.Parser P.String
-    lower_or_upper = P.fmap (:[]) (TP.lower <|> TP.upper)
+    letter :: PTC.Parser P.String
+    letter = P.fmap (:[]) TP.letter
 
     under_upper :: PTC.Parser P.String
     under_upper = PH.underscore >:< P.fmap (:[]) TP.upper
@@ -740,7 +740,7 @@ instance PTC.HasParser T.TAIOASMiddle where
   parser =
     T.AHTV2 <$> PTC.parser <|>
     T.TIdStart2 <$> PTC.parser ++<
-    TP.many (TP.try $ PTC.parser ++< TP.many1 (TP.lower <|> TP.upper))
+    TP.many (TP.try $ PTC.parser ++< TP.many1 TP.letter)
 
 instance PTC.HasParser T.SubsOrUndersInParen where
   parser =

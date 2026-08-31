@@ -1,9 +1,9 @@
-- Add libraries
-  - Add an import block
-  - IMPORT then import lines foo as bar
+- Add imports for types by adding the import prefix
 - Generate instances with type equality for the last type
   - Has to be done for both NPStart2 and SIPStart
 - Add pattern matching for prefix string (if it does not exist) e.g. "prefix" + s => ... s ...
   - Add a new type called StringPrefixMatching 
   - Put it inside the Matching type
   - (String, InnerMatching)?
+- Think if adding a second stage ast is a good idea
+- Also think if adding an ast with position information is a good idea

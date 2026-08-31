@@ -291,7 +291,7 @@ instance STC.ToStringTree T.Matching where
 
 instance STC.ToStringTree T.InnerMatching where
   to_string_tree = \case
-    T.Star -> SH.root_and_node_to_tree "TypeId" "*"
+    T.Star -> SH.root_and_node_to_tree "TypeIdStart" "*"
     T.Id3 id -> SH.add_new_root "InnerMatching" id
     T.M2 m -> SH.add_new_root "InnerMatching" m
 
@@ -361,8 +361,8 @@ instance STC.ToStringTree T.ProdOrPowerType where
     T.PT4 pt -> SH.add_new_root "ProdOrPowerType" pt
     T.PoT5 pt -> SH.add_new_root "ProdOrPowerType" pt
 
-instance STC.ToStringTree T.TypeId where
-  to_string_tree = \(T.TId tid) -> SH.root_and_node_to_tree "TypeId" tid
+instance STC.ToStringTree T.TypeIdStart where
+  to_string_tree = \(T.TId tid) -> SH.root_and_node_to_tree "TypeIdStart" tid
 
 instance STC.ToStringTree T.ParamTVar where
   to_string_tree = \(T.PTV ptv) -> SH.add_new_root "ParamTVar" ptv

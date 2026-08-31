@@ -648,7 +648,7 @@ instance GTC.ToHaskell T.ProdOrPowerType where
     T.PT4 pt -> GTC.to_haskell pt
     T.PoT5 pt -> GTC.to_haskell pt
 
-instance GTC.ToHaskell T.TypeId where
+instance GTC.ToHaskell T.TypeIdStart where
   to_haskell = \(T.TId str) -> str
 
 instance GTC.ToHaskell T.ParamTVar where

@@ -428,7 +428,7 @@ instance P.Show T.ProdOrPowerType where
     T.PT4 pt -> P.show pt
     T.PoT5 pt -> P.show pt
 
-instance P.Show T.TypeId where
+instance P.Show T.TypeIdStart where
   show = \(T.TId str) -> str
 
 instance P.Show T.ParamTVar where
