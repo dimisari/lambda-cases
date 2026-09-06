@@ -32,7 +32,7 @@ import Generation.PrefixesAndHardcoded qualified as GPH
 instance GTC.ToHaskell a => GTC.ToHaskell [a] where
   to_haskell = P.concatMap GTC.to_haskell
 
-instance GTC.ToHaskell a => GTC.ToHaskell (P.Maybe a) where
+instance {-# OVERLAPPABLE #-} GTC.ToHaskell a => GTC.ToHaskell (P.Maybe a) where
   to_haskell = \case
     P.Nothing -> ""
     P.Just a -> GTC.to_haskell a
@@ -328,7 +328,8 @@ ipt_to_st = \case
 
 taioasm_to_sou :: T.TAIOASMiddle -> T.SubOrUnder
 taioasm_to_sou = \taioasm ->
-  T.TVS1 $ T.TAIOTS1 $ T.TAIOAS1 $ T.TAIOAS (P.Nothing, taioasm, P.Nothing)
+  T.TVS1 $ T.TAIOTS1 $ T.MFTS1 $
+    T.MFTS (P.Nothing, T.TAIOAS (P.Nothing, taioasm, P.Nothing))
 
 sid_to_id :: T.SimpleId -> T.Identifier
 sid_to_id = \(T.SId (id_start, mdigit)) ->

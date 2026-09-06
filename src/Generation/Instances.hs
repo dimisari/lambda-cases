@@ -210,7 +210,7 @@ instance GTC.ToHaskell T.DotId where
 
 instance GTC.ToHaskell T.SimpleOrSpecialId where
   to_haskell = \case
-    T.SId1 sid -> GTC.to_haskell sid
+    T.SId1 (mip, sid) -> GTC.to_haskell mip ++ GTC.to_haskell sid
     T.SI2 spid -> GTC.to_haskell spid
 
 instance GTC.ToHaskell T.SpecialId where
@@ -660,7 +660,7 @@ instance GTC.ToHaskell T.AdHocTVar where
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTV) where
   to_haskell (needs_paren, taiot) = case taiot of
     T.PTV1 ptv -> GTC.to_haskell ptv
-    T.TAIOA1 taioa -> GTC.to_haskell (needs_paren, taioa)
+    T.MFT1 mft -> GTC.to_haskell (needs_paren, mft)
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
   to_haskell (needs_paren, T.TAIOA taioa) = case taioa of
@@ -678,6 +678,10 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTV) where
         = \ahtv_or_tid_hs tip_hs ->
           GH.in_paren_if_needs_and_non_empty needs_paren ahtv_or_tid_hs $
           GTC.to_haskell (mtip1, tip_hs, mtip2)
+
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.MaybeForeignTAIOA) where
+  to_haskell (needs_paren, (T.MFT (mip, taioa))) =
+    GTC.to_haskell mip ++ GTC.to_haskell (needs_paren, taioa)
 
 instance GTC.ToHaskell T.TypesInParen where
   to_haskell = \(T.TIP (st, sts)) ->
@@ -934,7 +938,7 @@ instance GTC.ToHaskell T.ProdOrPowerTypeSub where
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrTVSub) where
   to_haskell (needs_paren, taiots) = case taiots of
-    T.TAIOAS1 taioas -> GTC.to_haskell (needs_paren, taioas)
+    T.MFTS1 mfts -> GTC.to_haskell (needs_paren, mfts)
     T.PTV2 ptv -> GTC.to_haskell ptv
 
 instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
@@ -953,6 +957,10 @@ instance GTC.ToHaskell (GTC.NeedsParenBool, T.TypeAppIdOrAHTVSub) where
         = \ahtv_or_tid_hs souip_hs ->
           GH.in_paren_if_needs_and_non_empty needs_paren ahtv_or_tid_hs $
           GTC.to_haskell (msouip1, souip_hs, msouip2)
+
+instance GTC.ToHaskell (GTC.NeedsParenBool, T.MaybeForeignTAIOAS) where
+  to_haskell (needs_paren, (T.MFTS (mip, taioas))) =
+    GTC.to_haskell mip ++ GTC.to_haskell (needs_paren, taioas)
 
 instance GTC.ToHaskell T.SubsOrUndersInParen where
   to_haskell = \(T.SOUIP (sou, sous)) -> GTC.to_haskell $ sou : sous
@@ -1022,6 +1030,11 @@ instance GTC.ToHaskell T.ImportLine where
 
 instance GTC.ToHaskell T.ImportFile where
   to_haskell = \(T.IF imf) -> imf
+
+instance GTC.ToHaskell (P.Maybe T.ImportPrefix) where
+  to_haskell = \case
+    P.Just ip -> GTC.to_haskell ip ++ "."
+    P.Nothing -> ""
 
 instance GTC.ToHaskell T.ImportPrefix where
   to_haskell = \(T.IP ip) -> ip

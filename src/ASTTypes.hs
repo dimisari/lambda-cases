@@ -75,7 +75,7 @@ newtype PreFuncApp = PrFA (PreFunc, Operand)
 newtype DotId = DI SimpleOrSpecialId
 
 data SimpleOrSpecialId =
-  SId1 SimpleId | SI2 SpecialId
+  SId1 (P.Maybe ImportPrefix, SimpleId) | SI2 SpecialId
 
 data SpecialId =
   First | Second | Third | Fourth | Fifth
@@ -229,10 +229,12 @@ newtype AdHocTVar = AHTV P.Char
   deriving (P.Eq, P.Ord)
 
 data TypeAppIdOrTV =
-  TAIOA1 TypeAppIdOrAHTV | PTV1 ParamTVar
+  MFT1 MaybeForeignTAIOA | PTV1 ParamTVar
 
 newtype TypeAppIdOrAHTV =
   TAIOA (P.Maybe TypesInParen, TAIOAMiddle, P.Maybe TypesInParen)
+
+newtype MaybeForeignTAIOA = MFT (P.Maybe ImportPrefix, TypeAppIdOrAHTV)
 
 data TAIOAMiddle =
   TIdStart1 (TypeIdStart, [(TypesInParen, P.String)]) | AHTV1 AdHocTVar
@@ -318,10 +320,12 @@ data ProdOrPowerTypeSub =
   PTS1 ProdTypeSub | PoTS1 PowerTypeSub
 
 data TypeAppIdOrTVSub =
-  TAIOAS1 TypeAppIdOrAHTVSub | PTV2 ParamTVar
+  MFTS1 MaybeForeignTAIOAS | PTV2 ParamTVar
 
 newtype TypeAppIdOrAHTVSub =
   TAIOAS (P.Maybe SubsOrUndersInParen, TAIOASMiddle, P.Maybe SubsOrUndersInParen)
+
+newtype MaybeForeignTAIOAS = MFTS (P.Maybe ImportPrefix, TypeAppIdOrAHTVSub)
 
 data TAIOASMiddle =
   TIdStart2 (TypeIdStart, [(SubsOrUndersInParen, P.String)]) | AHTV2 AdHocTVar

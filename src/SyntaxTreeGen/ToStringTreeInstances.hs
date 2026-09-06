@@ -372,8 +372,11 @@ instance STC.ToStringTree T.AdHocTVar where
 
 instance STC.ToStringTree T.TypeAppIdOrTV where
   to_string_tree = \case
-    T.TAIOA1 taioa -> SH.add_new_root "TypeAppIdOrTV" taioa
+    T.MFT1 mft -> SH.add_new_root "TypeAppIdOrTV" mft
     T.PTV1 ptv -> SH.add_new_root "TypeAppIdOrTV" ptv
+
+instance STC.ToStringTree T.MaybeForeignTAIOA where
+  to_string_tree = \(T.MFT mft) -> SH.add_new_root "MaybeForeignTAIOA" mft
 
 instance STC.ToStringTree T.TypeAppIdOrAHTV where
   to_string_tree = \(T.TAIOA taioa) -> SH.add_new_root "TypeAppIdOrAHTV" taioa
@@ -501,11 +504,15 @@ instance STC.ToStringTree T.ProdOrPowerTypeSub where
 
 instance STC.ToStringTree T.TypeAppIdOrTVSub where
   to_string_tree = \case
-    T.TAIOAS1 taioas -> SH.add_new_root "TypeAppIdOrTVSub" taioas
+    T.MFTS1 mfts -> SH.add_new_root "TypeAppIdOrTVSub" mfts
     T.PTV2 ptv -> SH.add_new_root "TypeAppIdOrTVSub" ptv
 
 instance STC.ToStringTree T.TypeAppIdOrAHTVSub where
-  to_string_tree = \(T.TAIOAS taioas) -> SH.add_new_root "TypeAppIdOrAHTVSub" taioas
+  to_string_tree = \(T.TAIOAS taioas) ->
+    SH.add_new_root "TypeAppIdOrAHTVSub" taioas
+
+instance STC.ToStringTree T.MaybeForeignTAIOAS where
+  to_string_tree = \(T.MFTS mfts) -> SH.add_new_root "MaybeForeignTAIOAS" mfts
 
 instance STC.ToStringTree T.TAIOASMiddle where
   to_string_tree = \case

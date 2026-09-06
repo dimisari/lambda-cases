@@ -414,7 +414,7 @@ instance PTC.ToMaybePostFuncApp T.SpecialId where
 instance PTC.ToMaybePostFuncApp T.SimpleId where
   to_maybe_post_func_app = \sid ->
     check_if_sid_in_fids sid >>= \case
-      P.True -> PTC.to_maybe_post_func_app $ T.DI $ T.SId1 sid
+      P.True -> PTC.to_maybe_post_func_app $ T.DI $ T.SId1 (P.Nothing, sid)
       _ -> P.return P.Nothing
 
 instance PTC.ToMaybePostFuncApp T.DotId where

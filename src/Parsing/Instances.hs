@@ -176,8 +176,7 @@ instance PTC.HasParser T.ParenFuncAppOrId where
 
 instance PTC.HasParser T.MaybeForeignPFAOI where
   parser =
-    T.MFP <$>
-    TP.optionMaybe (TP.try $ PTC.parser <* TP.char '.') ++< PTC.parser
+    T.MFP <$> PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.Arguments where
   parser = T.As <$> PH.in_paren PTC.parser
@@ -195,7 +194,7 @@ instance PTC.HasParser T.DotId where
       (TP.char '.' *> TP.notFollowedBy (TP.string "change{") *> PTC.parser)
 
 instance PTC.HasParser T.SimpleOrSpecialId where
-  parser = T.SId1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
+  parser = T.SId1 <$> PTC.parser ++< PTC.parser <|> T.SI2 <$> PTC.parser
 
 instance PTC.HasParser T.SpecialId where
   parser =
@@ -536,12 +535,15 @@ instance PTC.HasParser T.AdHocTVar where
   parser = T.AHTV <$> (TP.char '@' *> TP.upper)
 
 instance PTC.HasParser T.TypeAppIdOrTV where
-  parser = T.PTV1 <$> TP.try PTC.parser <|> T.TAIOA1 <$> PTC.parser
+  parser = T.PTV1 <$> TP.try PTC.parser <|> T.MFT1 <$> PTC.parser
 
 instance PTC.HasParser T.TypeAppIdOrAHTV where
   parser =
     T.TAIOA <$>
       TP.optionMaybe PTC.parser ++< PTC.parser +++< TP.optionMaybe PTC.parser
+
+instance PTC.HasParser T.MaybeForeignTAIOA where
+  parser = T.MFT <$> PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.TAIOAMiddle where
   parser =
@@ -729,12 +731,15 @@ instance PTC.HasParser T.ProdOrPowerTypeSub where
   parser = T.PTS1 <$> TP.try PTC.parser <|> T.PoTS1 <$> PTC.parser
 
 instance PTC.HasParser T.TypeAppIdOrTVSub where
-  parser = T.PTV2 <$> TP.try PTC.parser <|> T.TAIOAS1 <$> PTC.parser
+  parser = T.PTV2 <$> TP.try PTC.parser <|> T.MFTS1 <$> PTC.parser
 
 instance PTC.HasParser T.TypeAppIdOrAHTVSub where
   parser =
     T.TAIOAS <$>
       TP.optionMaybe PTC.parser ++< PTC.parser +++< TP.optionMaybe PTC.parser
+
+instance PTC.HasParser T.MaybeForeignTAIOAS where
+  parser = T.MFTS <$> PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.TAIOASMiddle where
   parser =
@@ -803,6 +808,9 @@ instance PTC.HasParser T.ImportFile where
 
 instance PTC.HasParser T.ImportPrefix where
   parser = T.IP <$> TP.many1 TP.upper
+
+instance PTC.HasParser (P.Maybe T.ImportPrefix) where
+  parser = TP.optionMaybe (TP.try $ PTC.parser <* TP.char '.')
 
 instance PTC.HasParser T.Comment where
   parser =

@@ -105,12 +105,15 @@ instance PTC.CollectParamTVars T.ProdOrPowerType where
 
 instance PTC.CollectParamTVars T.TypeAppIdOrTV where
   collect_ptvs = \case
-    T.TAIOA1 taioa -> PTC.collect_ptvs taioa
+    T.MFT1 mft -> PTC.collect_ptvs mft
     T.PTV1 ptv -> MS.modify (S.insert ptv)
 
 instance PTC.CollectParamTVars T.TypeAppIdOrAHTV where
   collect_ptvs = \(T.TAIOA (mtip1, taioam, mtip2)) ->
     PTC.collect_ptvs mtip1 >> PTC.collect_ptvs taioam >> PTC.collect_ptvs mtip2
+
+instance PTC.CollectParamTVars T.MaybeForeignTAIOA where
+  collect_ptvs = \(T.MFT (_, taioa)) -> PTC.collect_ptvs taioa
 
 instance PTC.CollectParamTVars T.PowerType where
   collect_ptvs = \(T.PoT (pbt, _)) -> PTC.collect_ptvs pbt

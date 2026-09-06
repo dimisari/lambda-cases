@@ -96,7 +96,7 @@ instance PTC.CheckCompatibility T.ProdOrPowerType T.ProdOrPowerTypeSub where
 
 instance PTC.CheckCompatibility T.TypeAppIdOrTV T.TypeAppIdOrTVSub where
   check_compat = \case
-    (T.TAIOA1 taioa, T.TAIOAS1 taioas) -> PTC.check_compat(taioa, taioas)
+    (T.MFT1 mft, T.MFTS1 mfts) -> PTC.check_compat(mft, mfts)
     (T.PTV1 _, T.PTV2 _) -> PTC.Compatible M.empty
     _ -> P.undefined
 
@@ -108,6 +108,12 @@ instance PTC.CheckCompatibility T.TypeAppIdOrAHTV T.TypeAppIdOrAHTVSub where
         , PTC.check_compat(taioam, taioasm)
         , PTC.check_compat(mtip2, msouip2)
         ]
+
+instance PTC.CheckCompatibility T.MaybeForeignTAIOA T.MaybeForeignTAIOAS where
+  check_compat = \(T.MFT (mip1, taioa), T.MFTS (mip2, taioas)) ->
+    case mip1 == mip2 of
+      P.True -> PTC.check_compat(taioa, taioas)
+      P.False -> PTC.NotCompatible
 
 instance PTC.CheckCompatibility T.PowerType T.PowerTypeSub where
   check_compat = \(T.PoT (pbt, i), T.PoTS (pbts, j)) ->
@@ -158,7 +164,10 @@ instance PTC.CheckCompatibility T.InOrOutType T.InOrOutTypeSub where
 
 instance PTC.CheckCompatibility T.SimpleType T.SubOrUnder where
   check_compat = \case
-    (T.TAIOT1 (T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing))), sou) ->
+    (T.TAIOT1
+      (T.MFT1
+        (T.MFT (P.Nothing, T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing)))), sou)
+          ->
       PTC.Compatible $ M.singleton ahtv sou
     (st, T.TVS1 tvs) -> PTC.check_compat(st, tvs)
     _ -> PTC.NotCompatible
@@ -176,6 +185,9 @@ instance PTC.CheckCompatibility T.InParenT T.InParenTSub where
     _ -> PTC.NotCompatible
 
 -- AddSubs Class
+
+add_subs_second :: (PTC.AddSubs b c) => (a, b) -> PTC.WAHTVMap (a, c)
+add_subs_second = \(a, b) -> PTC.add_subs b >>= \c -> P.return (a, c)
 
 add_subs_pair
   :: (PTC.AddSubs a b, PTC.AddSubs c d) => (a, c) -> PTC.WAHTVMap (b, d)
@@ -218,7 +230,9 @@ instance PTC.AddSubs T.TypesInParen T.SubsInParen where
 
 instance PTC.AddSubs T.SimpleType T.TVarSub where
   add_subs = \case
-    T.TAIOT1 (T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing))) ->
+    T.TAIOT1
+      (T.MFT1
+        (T.MFT (P.Nothing, T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing)))) ->
       PTC.add_subs ahtv
     T.TAIOT1 taioa -> T.TAIOTS1 <$> PTC.add_subs taioa
     T.POPT1 popt -> T.POPTS1 <$> PTC.add_subs popt
@@ -238,11 +252,14 @@ instance PTC.AddSubs T.AdHocTVar T.TVarSub where
 
 instance PTC.AddSubs T.TypeAppIdOrTV T.TypeAppIdOrTVSub where
   add_subs = \case
-    T.TAIOA1 taioa -> T.TAIOAS1 <$> PTC.add_subs taioa
+    T.MFT1 mft -> T.MFTS1 <$> PTC.add_subs mft
     T.PTV1 ptv -> P.pure $ T.PTV2 ptv
 
 instance PTC.AddSubs T.TypeAppIdOrAHTV T.TypeAppIdOrAHTVSub where
   add_subs = \(T.TAIOA taioa) -> T.TAIOAS <$> add_subs_triple taioa
+
+instance PTC.AddSubs T.MaybeForeignTAIOA T.MaybeForeignTAIOAS where
+  add_subs = \(T.MFT mft) -> T.MFTS <$> add_subs_second mft
 
 instance PTC.AddSubs T.PowerType T.PowerTypeSub where
   add_subs =
@@ -285,7 +302,9 @@ instance PTC.AddSubs PTC.TIP_STR T.SOUIP_STR where
 
 instance PTC.AddSubs T.SimpleType T.SubOrUnder where
   add_subs = \case
-    T.TAIOT1 (T.TAIOA1 (T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing))) ->
+    T.TAIOT1
+      (T.MFT1
+        (T.MFT (P.Nothing, T.TAIOA (P.Nothing, T.AHTV1 ahtv, P.Nothing)))) ->
       PTC.add_subs ahtv
     st -> T.TVS1 <$> PTC.add_subs st
 
@@ -315,9 +334,3 @@ error_zip = \case
   ([], []) -> []
   (a : as, b : bs) -> (a, b) : error_zip(as, bs)
   _ -> P.error "error_zip: lists not the same length"
-
-{-
-For fast vim file navigation:
-AST.hs
-Preprocess.hs
--}
