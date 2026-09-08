@@ -21,15 +21,15 @@ type RenamingProps = [RenamingProp]
 
 type RenamingPropsState = MS.State RenamingProps ()
 
-type OrValue = T.SimpleId
+type OrValueId = T.SimpleId
 
-type EmptyOrValues = S.Set OrValue
+type EmptyOrValueIds = S.Set OrValueId
 
-type FullOrValuesMap = M.Map OrValue T.Identifier
+type FullOrValueIdsMap = M.Map OrValueId T.Identifier
 
-type OrValues = (EmptyOrValues, FullOrValuesMap)
+type OrValueIds = (EmptyOrValueIds, FullOrValueIdsMap)
 
-type OrValuesState = MS.State OrValues ()
+type OrValueIdsState = MS.State OrValueIds ()
 
 type ParamTVars = S.Set T.ParamTVar
 
@@ -47,8 +47,8 @@ class CollectFieldIds a where
 class CollectRenamingProps a where
   collect_rps :: a -> RenamingPropsState
 
-class CollectOrValues a where
-  collect_ovms :: a -> OrValuesState
+class CollectOrValueIds a where
+  collect_ovms :: a -> OrValueIdsState
 
 class CollectParamTVars a where
   collect_ptvs :: a -> ParamTVarsState
@@ -89,7 +89,7 @@ data PossiblyInDC =
   InDotChange [T.PostFuncArg] | NotInDotChange
 
 type StateTuple =
-  (PossiblyInDC, FieldIds, EmptyOrValues, RenamingProps, FullOrValuesMap)
+  (PossiblyInDC, FieldIds, EmptyOrValueIds, RenamingProps, FullOrValueIdsMap)
 
 type PreprocessState = MS.State StateTuple
 

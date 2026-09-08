@@ -36,9 +36,9 @@ field_ids = \prog -> MS.execState (PTC.collect_fids prog) S.empty
 renaming_props :: T.Program -> PTC.RenamingProps
 renaming_props = \prog -> MS.execState (PTC.collect_rps prog) []
 
--- CollectOrValues initial map and final function
+-- CollectOrValueIds initial map and final function
 
-init_or_val_map :: PTC.FullOrValuesMap
+init_or_val_map :: PTC.FullOrValueIdsMap
 init_or_val_map =
   M.fromList $
     P.map (\(s1, s2) -> (GH.str_to_sid s1, GH.str_to_id s2)) predefined
@@ -47,7 +47,7 @@ init_or_val_map =
   predefined =
     [("a_value", "the_value"), ("error", "err"), ("result", "res")]
 
-or_values :: T.Program -> PTC.OrValues
+or_values :: T.Program -> PTC.OrValueIds
 or_values =
   \prog -> MS.execState (PTC.collect_ovms prog) (S.empty, init_or_val_map)
 
@@ -182,32 +182,32 @@ instance PTC.CollectRenamingProps T.RenamingPropDef where
   collect_rps = \(T.RPD (pn_key, pn1, pns)) ->
     MS.modify $ (:) (pn_key, pn1 : pns)
 
--- CollectOrValues instances
+-- CollectOrValueIds instances
 
-instance PTC.CollectOrValues T.Program where
+instance PTC.CollectOrValueIds T.Program where
   collect_ovms = \(T.P (pp, pps)) -> P.mapM_ PTC.collect_ovms $ pp : pps
 
-instance PTC.CollectOrValues T.ProgramPart where
+instance PTC.CollectOrValueIds T.ProgramPart where
   collect_ovms = \case
     T.TD td -> PTC.collect_ovms td
     _ -> H.do_nothing
 
-instance PTC.CollectOrValues T.TypeDef where
+instance PTC.CollectOrValueIds T.TypeDef where
   collect_ovms = \case
     T.OTD1 otd -> PTC.collect_ovms otd
     _ -> H.do_nothing
 
-instance PTC.CollectOrValues T.OrTypeDef where
+instance PTC.CollectOrValueIds T.OrTypeDef where
   collect_ovms = \(T.OTD (_, otvs)) -> PTC.collect_ovms otvs
 
-instance PTC.CollectOrValues T.OrTypeValuesLine where
+instance PTC.CollectOrValueIds T.OrTypeValuesLine where
   collect_ovms = \(T.OTVL (otv, otvs)) -> P.mapM_ PTC.collect_ovms $ otv : otvs
 
-instance PTC.CollectOrValues T.OrTypeValuesLines where
+instance PTC.CollectOrValueIds T.OrTypeValuesLines where
   collect_ovms = \(T.OTVLs (otvl, otvls)) ->
     P.mapM_ PTC.collect_ovms $ otvl : otvls
 
-instance PTC.CollectOrValues T.OrTypeValue where
+instance PTC.CollectOrValueIds T.OrTypeValue where
   collect_ovms = \(T.OTV (sid, maybe_id_st)) -> case maybe_id_st of
     P.Just (T.IV (id, _)) ->
       MS.modify $ \(nc, fovm) -> (nc, M.insert sid id fovm)

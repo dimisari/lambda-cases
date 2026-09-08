@@ -440,13 +440,13 @@ get_pidc = MS.get >$> \(pidc, _, _, _, _) -> pidc
 get_fids :: PTC.PreprocessState PTC.FieldIds
 get_fids = MS.get >$> \(_, fids, _, _, _) -> fids
 
-get_ncs :: PTC.PreprocessState PTC.EmptyOrValues
+get_ncs :: PTC.PreprocessState PTC.EmptyOrValueIds
 get_ncs = MS.get >$> \(_, _, ncs, _, _) -> ncs
 
 get_rps :: PTC.PreprocessState PTC.RenamingProps
 get_rps = MS.get >$> \(_, _, _, rps, _) -> rps
 
-get_ovm :: PTC.PreprocessState PTC.FullOrValuesMap
+get_ovm :: PTC.PreprocessState PTC.FullOrValueIdsMap
 get_ovm = MS.get >$> \(_, _, _, _, ovm) -> ovm
 
 --   checking membership and lookup
