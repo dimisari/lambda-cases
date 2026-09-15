@@ -36,6 +36,10 @@ import Generation.PrefixesAndHardcoded qualified as GPH
 -- Preprocess instances, general preprocess functions, automatic instances
 --   and instances for pairs and triples
 
+preprocess_prog_with_ovis :: PTC.MFOrValueIds -> T.Program -> T.Program
+preprocess_prog_with_ovis = \mf_ovis prog ->
+  MS.evalState (PTC.preprocess prog) (init_state_with_ovis mf_ovis prog)
+
 preprocess_prog :: T.Program -> T.Program
 preprocess_prog = \prog -> MS.evalState (PTC.preprocess prog) (init_state prog)
 
@@ -65,15 +69,18 @@ preprocess_triple = \(a, b, c) ->
 
 instance PTC.Preprocess T.Identifier where
   preprocess = \id ->
-    GH.check_if_id_is_sid id &> \case
+    check_if_id_is_sid id &> \case
       P.Nothing -> P.return id
-      P.Just sid -> PTC.preprocess sid >$> GH.sid_to_id
+      P.Just sid -> PTC.preprocess sid >$> sid_to_id
 
 instance PTC.Preprocess T.SimpleId where
+  preprocess = sid_to_mfsi .> PTC.preprocess .> P.fmap mfsi_to_sid
+
+instance PTC.Preprocess T.MaybeForeignSimpleId where
   preprocess = \sid ->
-    check_if_sid_in_ncs sid >$> \case
+    check_if_mfsi_in_ncs sid >$> \case
       P.True -> add_constructor_prefix sid
-      P.False -> change_if_particular_sid sid
+      P.False -> change_if_particular_mfsi sid
 
 deriving instance PTC.Preprocess T.ParenExpr
 
@@ -129,17 +136,17 @@ instance PTC.Preprocess T.ArgsStr where
   preprocess = preprocess_first
 
 instance PTC.Preprocess T.MaybeForeignPFAOI where
-  preprocess = \(T.MFP mfp) -> T.MFP <$> preprocess_second mfp
+  preprocess = \mfp@(T.MFP mfp_pair) ->
+    check_if_mfp_is_mfsi mfp &> \case
+      P.Just mfsi -> PTC.preprocess mfsi >$> mfsi_to_mfp
+      P.Nothing -> T.MFP <$> preprocess_second mfp_pair
 
 instance PTC.Preprocess T.ParenFuncAppOrId where
   preprocess =
-    \pfaoi@(T.PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
-    check_if_pfaoi_is_sid pfaoi &> \case
-      P.Just sid -> PTC.preprocess sid >$> sid_to_pfaoi
-      P.Nothing ->
-        preprocess_triple (margs1, args_str_pairs, margs2) >$>
-        \(margs1', args_str_pairs', margs2') ->
-        T.PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
+    \(T.PFAOI (margs1, ids, args_str_pairs, mdigit, margs2)) ->
+      preprocess_triple (margs1, args_str_pairs, margs2) >$>
+      \(margs1', args_str_pairs', margs2') ->
+      T.PFAOI (margs1', ids, args_str_pairs', mdigit, margs2')
 
 deriving instance PTC.Preprocess T.Arguments
 
@@ -280,10 +287,10 @@ instance PTC.Preprocess T.EndCase where
 
 instance PTC.Preprocess T.OuterMatching where
   preprocess = \case
-    T.SId2 sid ->
+    T.MFSI2 sid ->
       lookup_sid_in_ovm sid >>= \case
         P.Just id -> P.return $ T.M1 $ T.PFM (T.PF sid, T.Id3 id)
-        P.Nothing -> T.SId2 <$> PTC.preprocess sid
+        P.Nothing -> T.MFSI2 <$> PTC.preprocess sid
     T.M1 m -> T.M1 <$> PTC.preprocess m
 
 instance PTC.Preprocess T.Matching where
@@ -414,7 +421,8 @@ instance PTC.ToMaybePostFuncApp T.SpecialId where
 instance PTC.ToMaybePostFuncApp T.SimpleId where
   to_maybe_post_func_app = \sid ->
     check_if_sid_in_fids sid >>= \case
-      P.True -> PTC.to_maybe_post_func_app $ T.DI $ T.SId1 (P.Nothing, sid)
+      P.True ->
+        PTC.to_maybe_post_func_app $ T.DI $ T.MFSI1 $ T.MFSI (P.Nothing, sid)
       _ -> P.return P.Nothing
 
 instance PTC.ToMaybePostFuncApp T.DotId where
@@ -425,12 +433,43 @@ instance PTC.ToMaybePostFuncApp T.DotId where
 -- State helpers
 --   initial state
 
+init_state_with_ovis :: PTC.MFOrValueIds -> T.Program -> PTC.StateTuple
+init_state_with_ovis = \mf_ovis prog ->
+  mf_ovis_union mf_ovis (prog_to_mfovis prog) &>
+  prog_and_mf_ovis_to_init_state prog
+
 init_state :: T.Program -> PTC.StateTuple
-init_state = \prog ->
-  PC.or_values prog &> \(empty_or_values, full_or_values_map) ->
+init_state = \prog -> prog_to_mfovis prog &> prog_and_mf_ovis_to_init_state prog
+
+prog_and_mf_ovis_to_init_state :: T.Program -> PTC.MFOrValueIds -> PTC.StateTuple
+prog_and_mf_ovis_to_init_state = \prog (empty_or_values, full_or_values_map) ->
   ( PTC.NotInDotChange, PC.field_ids prog, empty_or_values
   , PC.renaming_props prog, full_or_values_map
   )
+
+mf_ovis_union :: PTC.MFOrValueIds -> PTC.MFOrValueIds -> PTC.MFOrValueIds
+mf_ovis_union = \(s1, m1) (s2, m2) -> (S.union s1 s2, M.union m1 m2)
+
+prog_to_mfovis :: T.Program -> PTC.MFOrValueIds
+prog_to_mfovis = PC.or_values .> make_or_value_ids_maybe_foreign
+
+make_or_value_ids_maybe_foreign :: PTC.OrValueIds -> PTC.MFOrValueIds
+make_or_value_ids_maybe_foreign = \(eovi, fovim) ->
+  ( make_empty_or_value_ids_maybe_foreign eovi
+  , make_full_or_value_ids_map_maybe_foreign fovim
+  )
+
+make_empty_or_value_ids_maybe_foreign
+  :: PTC.EmptyOrValueIds -> PTC.EmptyMFOrValueIds
+make_empty_or_value_ids_maybe_foreign = S.map make_or_value_id_maybe_foreign
+
+make_full_or_value_ids_map_maybe_foreign
+  :: PTC.FullOrValueIdsMap -> PTC.FullMFOrValueIdsMap
+make_full_or_value_ids_map_maybe_foreign =
+  M.mapKeys make_or_value_id_maybe_foreign
+
+make_or_value_id_maybe_foreign :: PTC.OrValueId -> PTC.MFOrValueId
+make_or_value_id_maybe_foreign = \ovi -> T.MFSI (P.Nothing, ovi)
 
 --   individual getters
 
@@ -440,13 +479,13 @@ get_pidc = MS.get >$> \(pidc, _, _, _, _) -> pidc
 get_fids :: PTC.PreprocessState PTC.FieldIds
 get_fids = MS.get >$> \(_, fids, _, _, _) -> fids
 
-get_ncs :: PTC.PreprocessState PTC.EmptyOrValueIds
+get_ncs :: PTC.PreprocessState PTC.EmptyMFOrValueIds
 get_ncs = MS.get >$> \(_, _, ncs, _, _) -> ncs
 
 get_rps :: PTC.PreprocessState PTC.RenamingProps
 get_rps = MS.get >$> \(_, _, _, rps, _) -> rps
 
-get_ovm :: PTC.PreprocessState PTC.FullOrValueIdsMap
+get_ovm :: PTC.PreprocessState PTC.FullMFOrValueIdsMap
 get_ovm = MS.get >$> \(_, _, _, _, ovm) -> ovm
 
 --   checking membership and lookup
@@ -454,10 +493,11 @@ get_ovm = MS.get >$> \(_, _, _, _, ovm) -> ovm
 check_if_sid_in_fids :: T.SimpleId -> PTC.PreprocessState P.Bool
 check_if_sid_in_fids = \id -> S.member id <$> get_fids
 
-check_if_sid_in_ncs :: T.SimpleId -> PTC.PreprocessState P.Bool
-check_if_sid_in_ncs = \sid -> S.member sid <$> get_ncs
+check_if_mfsi_in_ncs :: T.MaybeForeignSimpleId -> PTC.PreprocessState P.Bool
+check_if_mfsi_in_ncs = \sid -> S.member sid <$> get_ncs
 
-lookup_sid_in_ovm :: T.SimpleId -> PTC.PreprocessState (P.Maybe T.Identifier)
+lookup_sid_in_ovm
+  :: T.MaybeForeignSimpleId -> PTC.PreprocessState (P.Maybe T.Identifier)
 lookup_sid_in_ovm = \sid -> M.lookup sid <$> get_ovm
 
 --   post func arg
@@ -494,9 +534,18 @@ get_pfarg_if_in_dot_change =
 
 -- other helpers
 
-add_constructor_prefix :: T.SimpleId -> T.SimpleId
-add_constructor_prefix = \(T.SId (T.IS str, mdigit)) ->
+add_constructor_prefix :: T.MaybeForeignSimpleId -> T.MaybeForeignSimpleId
+add_constructor_prefix = \(T.MFSI (mip, sid)) ->
+  T.MFSI (mip, add_constructor_prefix_sid sid)
+
+add_constructor_prefix_sid :: T.SimpleId -> T.SimpleId
+add_constructor_prefix_sid = \(T.SId (T.IS str, mdigit)) ->
   T.SId (T.IS $ GPH.constructor_prefix ++ str, mdigit)
+
+change_if_particular_mfsi :: T.MaybeForeignSimpleId -> T.MaybeForeignSimpleId
+change_if_particular_mfsi = \case
+  T.MFSI (P.Nothing, sid) -> T.MFSI (P.Nothing, change_if_particular_sid sid)
+  mfsi -> mfsi
 
 change_if_particular_sid :: T.SimpleId -> T.SimpleId
 change_if_particular_sid = \case
@@ -523,15 +572,40 @@ change_pfarg_if_under = \case
       sid_to_pfaoi (T.SId (T.IS GPH.under_pfarg_param, P.Nothing))
   other -> other
 
+check_if_mfp_is_mfsi :: T.MaybeForeignPFAOI -> P.Maybe T.MaybeForeignSimpleId
+check_if_mfp_is_mfsi = \(T.MFP (mip, pfaoi)) ->
+  check_if_pfaoi_is_sid pfaoi &> P.fmap (\sid -> T.MFSI (mip, sid))
+
 check_if_pfaoi_is_sid :: T.ParenFuncAppOrId -> P.Maybe T.SimpleId
 check_if_pfaoi_is_sid = \case
   T.PFAOI (P.Nothing, id_strt, [], mdigit, P.Nothing) ->
     P.Just $ T.SId (id_strt, mdigit)
   _ -> P.Nothing
 
+mfsi_to_mfp :: T.MaybeForeignSimpleId -> T.MaybeForeignPFAOI
+mfsi_to_mfp = \(T.MFSI (mip, sid)) -> T.MFP (mip, sid_to_pfaoi sid)
+
 sid_to_pfaoi :: T.SimpleId -> T.ParenFuncAppOrId
 sid_to_pfaoi = \(T.SId (id_start, mdigit)) ->
   T.PFAOI (P.Nothing, id_start, [], mdigit, P.Nothing)
+
+sid_to_id :: T.SimpleId -> T.Identifier
+sid_to_id = \(T.SId (id_start, mdigit)) ->
+  T.Id (P.Nothing, id_start, [], mdigit, P.Nothing)
+
+check_if_id_is_sid :: T.Identifier -> P.Maybe T.SimpleId
+check_if_id_is_sid = \case
+  T.Id (P.Nothing, ids, [], mdigit, P.Nothing) -> P.Just $ T.SId (ids, mdigit)
+  _ -> P.Nothing
+
+sid_to_mfsi :: T.SimpleId -> T.MaybeForeignSimpleId
+sid_to_mfsi = \sid -> T.MFSI (P.Nothing, sid)
+
+mfsi_to_sid :: T.MaybeForeignSimpleId -> T.SimpleId
+mfsi_to_sid = \(T.MFSI (mip, sid)) ->
+  case mip of
+    P.Nothing -> sid
+    _ -> P.error "MaybeForeignSimpleId should not be foreign to make it SimpleId"
 
 -- move imports to the beginning
 

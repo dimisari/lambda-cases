@@ -171,11 +171,7 @@ instance GTC.ToHaskell T.ParenFuncAppOrId where
         GH.single_quotes_hs margs2
 
 instance GTC.ToHaskell T.MaybeForeignPFAOI where
-  to_haskell (T.MFP (mip, pfaoi)) =
-    (++ GTC.to_haskell pfaoi) $
-    case mip of
-      P.Just ip -> GTC.to_haskell ip ++ "."
-      P.Nothing -> ""
+  to_haskell (T.MFP (mip, pfaoi)) = GTC.to_haskell mip ++ GTC.to_haskell pfaoi
 
 instance GTC.ToHsWithParamNum [T.Arguments] where
   to_hs_wpn = \args_l ->
@@ -187,12 +183,12 @@ instance GTC.ToHsWithParamNum T.Arguments where
   to_hs_wpn = \(T.As leous) -> GTC.to_hs_wpn leous
 
 instance GTC.ToHaskell T.PreFunc where
-  to_haskell = \(T.PF id) ->
-    case id of
+  to_haskell = \(T.PF (T.MFSI (mip, sid))) ->
+    case sid of
       T.SId (T.IS "a_value", P.Nothing) -> GPH.just
       T.SId (T.IS "error", P.Nothing) -> GPH.left
       T.SId (T.IS "result", P.Nothing) -> GPH.right
-      _ -> GPH.constructor_prefix ++ GTC.to_haskell id
+      _ -> GTC.to_haskell mip ++ GPH.constructor_prefix ++ GTC.to_haskell sid
 
 instance GTC.ToHaskell T.PreFuncApp where
   to_haskell = \(T.PrFA (pf, oper)) ->
@@ -205,13 +201,16 @@ instance GTC.ToHaskell T.DotId where
     where
     sosi_prefix :: GTC.Haskell
     sosi_prefix = case sosi of
-      T.SId1 _ -> ""
+      T.MFSI1 _ -> ""
       T.SI2 _ -> GPH.spid_projection_prefix
 
 instance GTC.ToHaskell T.SimpleOrSpecialId where
   to_haskell = \case
-    T.SId1 (mip, sid) -> GTC.to_haskell mip ++ GTC.to_haskell sid
+    T.MFSI1 mfsi -> GTC.to_haskell mfsi
     T.SI2 spid -> GTC.to_haskell spid
+
+instance GTC.ToHaskell T.MaybeForeignSimpleId where
+  to_haskell = \(T.MFSI (mip, sid)) -> GTC.to_haskell mip ++ GTC.to_haskell sid
 
 instance GTC.ToHaskell T.SpecialId where
   to_haskell = \case
@@ -273,7 +272,7 @@ instance GTC.ToHsWithParamNum T.FieldChange where
     where
     f_prefix :: GTC.Haskell
     f_prefix = case f of
-      T.SId1 _ -> GPH.change_prefix
+      T.MFSI1 _ -> GPH.change_prefix
       T.SI2 _ -> GPH.spid_change_prefix
 
 instance GTC.ToHsWithIndentLvl T.OpExpr where
@@ -474,7 +473,7 @@ instance GTC.ToHsWithIndentLvl T.EndCase where
 
 instance GTC.ToHaskell T.OuterMatching where
   to_haskell = \case
-    T.SId2 sid -> GTC.to_haskell sid
+    T.MFSI2 mfsi -> GTC.to_haskell mfsi
     T.M1 m -> GTC.to_haskell (GTC.NoParen, m)
 
 instance GTC.ToHaskell T.EndCaseParam where

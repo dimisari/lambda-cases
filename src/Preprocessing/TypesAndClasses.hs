@@ -39,6 +39,14 @@ type ImportLines = S.Set T.ImportLine
 
 type ImportLinesState = MS.State ImportLines ()
 
+type MFOrValueId = T.MaybeForeignSimpleId
+
+type EmptyMFOrValueIds = S.Set MFOrValueId
+
+type FullMFOrValueIdsMap = M.Map MFOrValueId T.Identifier
+
+type MFOrValueIds = (EmptyMFOrValueIds, FullMFOrValueIdsMap)
+
 -- Collect classes
 
 class CollectFieldIds a where
@@ -89,7 +97,7 @@ data PossiblyInDC =
   InDotChange [T.PostFuncArg] | NotInDotChange
 
 type StateTuple =
-  (PossiblyInDC, FieldIds, EmptyOrValueIds, RenamingProps, FullOrValueIdsMap)
+  (PossiblyInDC, FieldIds, EmptyMFOrValueIds, RenamingProps, FullMFOrValueIdsMap)
 
 type PreprocessState = MS.State StateTuple
 

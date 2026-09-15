@@ -68,14 +68,17 @@ newtype MaybeForeignPFAOI = MFP (P.Maybe ImportPrefix, ParenFuncAppOrId)
 
 newtype Arguments = As LineExprOrUnders
 
-newtype PreFunc = PF SimpleId
+newtype PreFunc = PF MaybeForeignSimpleId
 
 newtype PreFuncApp = PrFA (PreFunc, Operand)
 
 newtype DotId = DI SimpleOrSpecialId
 
 data SimpleOrSpecialId =
-  SId1 (P.Maybe ImportPrefix, SimpleId) | SI2 SpecialId
+  MFSI1 MaybeForeignSimpleId | SI2 SpecialId
+
+newtype MaybeForeignSimpleId = MFSI (P.Maybe ImportPrefix, SimpleId)
+  deriving (P.Eq, P.Ord)
 
 data SpecialId =
   First | Second | Third | Fourth | Fifth
@@ -167,7 +170,7 @@ newtype Case = Ca (OuterMatching, CaseBody)
 newtype EndCase = EC (EndCaseParam, CaseBody)
 
 data OuterMatching =
-  SId2 SimpleId | M1 Matching
+  MFSI2 MaybeForeignSimpleId | M1 Matching
 
 data EndCaseParam =
   Id2 Identifier | Ellipsis

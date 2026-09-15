@@ -10,12 +10,18 @@ import Control.Monad.State.Lazy qualified as CMSL
 import Helpers ((.>), (>$>), (&>))
 import SyntaxTreeGen.TypesAndClasses qualified as STC
 
-to_dot_final :: STC.ToStringTree a => a -> STC.Dot
-to_dot_final =
-  STC.to_string_tree .> remove_single_child_parents .> string_tree_to_dot .>
-  \(root, dot) -> "graph " ++ root ++ "\n{\n" ++ dot ++ "}"
+to_dot_final_short :: STC.ToStringTree a => a -> STC.Dot
+to_dot_final_short =
+  STC.to_string_tree .> remove_single_child_parents .> string_tree_to_dot_string
+
+to_dot_final_full :: STC.ToStringTree a => a -> STC.Dot
+to_dot_final_full = STC.to_string_tree .> string_tree_to_dot_string
 
 -- string tree to dot
+
+string_tree_to_dot_string :: STC.StringTree -> STC.Dot
+string_tree_to_dot_string =
+  string_tree_to_dot .> \(root, dot) -> "graph " ++ root ++ "\n{\n" ++ dot ++ "}"
 
 string_tree_to_dot :: STC.StringTree -> STC.DotTuple
 string_tree_to_dot = \st -> CMSL.evalState (state_string_tree_to_dot st) 0

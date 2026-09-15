@@ -194,7 +194,10 @@ instance PTC.HasParser T.DotId where
       (TP.char '.' *> TP.notFollowedBy (TP.string "change{") *> PTC.parser)
 
 instance PTC.HasParser T.SimpleOrSpecialId where
-  parser = T.SId1 <$> PTC.parser ++< PTC.parser <|> T.SI2 <$> PTC.parser
+  parser = T.MFSI1 <$> PTC.parser <|> T.SI2 <$> PTC.parser
+
+instance PTC.HasParser T.MaybeForeignSimpleId where
+  parser = T.MFSI <$> PTC.parser ++< PTC.parser
 
 instance PTC.HasParser T.SpecialId where
   parser =
@@ -399,7 +402,7 @@ instance PTC.HasParser T.EndCase where
     (PH.func_arr *> PH.deeper PTC.parser)
 
 instance PTC.HasParser T.OuterMatching where
-  parser = T.M1 <$> TP.try PTC.parser <|> T.SId2 <$> PTC.parser
+  parser = T.M1 <$> TP.try PTC.parser <|> T.MFSI2 <$> PTC.parser
 
 instance PTC.HasParser T.EndCaseParam where
   parser = T.Id2 <$> PTC.parser <|> TP.string "..." *> P.return T.Ellipsis

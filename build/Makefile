@@ -16,7 +16,7 @@ lcc: $(lcc_exec)
 all:
 	make examples_clean
 	make test_dot_trees
-	make test_png_trees
+	make test_svg_trees
 	make test_haskell_progs
 	make test_grammar_rules
 	make test_executables
@@ -43,10 +43,10 @@ $(test_dot_tree_pattern): $(test_prog_pattern) $(lcc_exec)
 	lcc -d $<
 	mv $(basename $<).dot $@
 
-$(test_png_tree_pattern): $(test_prog_pattern) $(lcc_exec)
+$(test_svg_tree_pattern): $(test_prog_pattern) $(lcc_exec)
 	$(mkdir)
-	lcc -p $<
-	mv $(basename $<).png $@
+	lcc -s $<
+	mv $(basename $<).svg $@
 
 $(test_hs_prog_pattern): $(test_prog_pattern) $(lcc_exec)
 	$(mkdir)
@@ -70,8 +70,8 @@ $(rules_exec): $(grs_prereqs)
 .PHONY: test_dot_trees
 test_dot_trees: $(test_dot_tree_files)
 
-.PHONY: test_png_trees
-test_png_trees: $(test_png_tree_files)
+.PHONY: test_svg_trees
+test_svg_trees: $(test_svg_tree_files)
 
 .PHONY: test_haskell_progs
 test_haskell_progs: $(test_hs_prog_files)
@@ -103,7 +103,7 @@ clean:
 
 .PHONY: examples_clean
 examples_clean:
-	find $(examples) -name "*.dot" -delete -or -name "*.png" -delete -or -name "*.hs" -delete
+	find $(examples) -name "*.dot" -delete -or -name "*.svg" -delete -or -name "*.hs" -delete
 
 .PHONY: uninstall
 uninstall:

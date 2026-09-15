@@ -331,10 +331,6 @@ taioasm_to_sou = \taioasm ->
   T.TVS1 $ T.TAIOTS1 $ T.MFTS1 $
     T.MFTS (P.Nothing, T.TAIOAS (P.Nothing, taioasm, P.Nothing))
 
-sid_to_id :: T.SimpleId -> T.Identifier
-sid_to_id = \(T.SId (id_start, mdigit)) ->
-  T.Id (P.Nothing, id_start, [], mdigit, P.Nothing)
-
 -- String to identifier functions
 
 str_to_sid :: P.String -> T.SimpleId
@@ -342,17 +338,3 @@ str_to_sid = \str -> T.SId (T.IS str, P.Nothing)
 
 str_to_id :: P.String -> T.Identifier
 str_to_id = \str -> T.Id (P.Nothing, T.IS str, [], P.Nothing, P.Nothing)
-
--- check if an identifier can simplify to a SimpleId
-
-check_if_id_is_sid :: T.Identifier -> P.Maybe T.SimpleId
-check_if_id_is_sid = \case
-  T.Id (P.Nothing, ids, [], mdigit, P.Nothing) -> P.Just $ T.SId (ids, mdigit)
-  _ -> P.Nothing
-
-{-
-For fast vim file navigation:
-Collect.hs
-AST.hs
-PrefixesAndHardcoded.hs
--}

@@ -104,8 +104,11 @@ instance STC.ToStringTree T.DotId where
 
 instance STC.ToStringTree T.SimpleOrSpecialId where
   to_string_tree = \case
-    T.SId1 si -> SH.add_new_root "SimpleOrSpecialId" si
+    T.MFSI1 mfsi -> SH.add_new_root "SimpleOrSpecialId" mfsi
     T.SI2 si -> SH.add_new_root "SimpleOrSpecialId" si
+
+instance STC.ToStringTree T.MaybeForeignSimpleId where
+  to_string_tree = \(T.MFSI mfsi) -> SH.add_new_root "MaybeForeignSimpleId" mfsi
 
 instance STC.ToStringTree T.SpecialId where
   to_string_tree = \case
@@ -274,7 +277,7 @@ instance STC.ToStringTree T.EndCase where
 
 instance STC.ToStringTree T.OuterMatching where
   to_string_tree = \case
-    T.SId2 sid -> SH.add_new_root "OuterMatching" sid
+    T.MFSI2 sid -> SH.add_new_root "OuterMatching" sid
     T.M1 m -> SH.add_new_root "OuterMatching" m
 
 instance STC.ToStringTree T.EndCaseParam where
